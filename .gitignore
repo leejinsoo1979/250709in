@@ -51,3 +51,6 @@ out/
 *.tmp
 *.temp
 .vercel
+
+# Local Netlify folder
+.netlify

@@ -1,9 +1,9 @@
 # 🏠 가구 에디터 (Furniture Editor)
 
 ## 🌟 라이브 데모
-**[🚀 Vercel에서 실행하기](https://250709in-dj7wkzu5h-lee-jin-soos-projects.vercel.app)** ⭐ **추천**
+**[🚀 GitHub Pages에서 실행하기](https://leejinsoo1979.github.io/250709in/)** ⭐ **추천**
 
-**[🔗 GitHub Pages에서 실행하기](https://jinsoolee.github.io/furniture-editor/)**
+**[🔗 Vercel에서 실행하기](https://250709in.vercel.app)** (로그인 필요할 수 있음)
 
 ## 📝 프로젝트 소개
 React와 Three.js를 활용한 인터랙티브 3D 가구 배치 에디터입니다. 드래그 앤 드롭으로 가구를 배치하고, 실시간으로 3D 렌더링을 확인할 수 있습니다.
