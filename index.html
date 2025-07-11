@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/250709in/inshow.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>InShow - 인테리어 에디터</title>
+    <!-- GitHub Pages SPA 라우팅 지원 -->
+    <script type="text/javascript">
+      // GitHub Pages SPA 해결책: 404.html에서 리다이렉트된 경로를 복원
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
     <script type="module" crossorigin src="/250709in/assets/index-6DVlWD8I.js"></script>
     <link rel="modulepreload" crossorigin href="/250709in/assets/three-core-CV1u6Hpc.js">
     <link rel="modulepreload" crossorigin href="/250709in/assets/three-fiber-gElx9mfP.js">
