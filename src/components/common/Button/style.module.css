@@ -1,0 +1,82 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+/* Variants */
+.primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.primary:disabled {
+  background-color: var(--color-primary-light);
+  cursor: not-allowed;
+}
+
+.secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-primary);
+}
+
+.secondary:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+.secondary:disabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.small {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--text-sm);
+}
+
+.medium {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--text-base);
+}
+
+.large {
+  padding: var(--spacing-3) var(--spacing-6);
+  font-size: var(--text-lg);
+}
+
+/* Icon Button */
+.iconButton {
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+}
+
+/* Toggle Button */
+.toggle {
+  background-color: var(--color-secondary);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-1) var(--spacing-3);
+  border: 1px solid var(--color-border);
+}
+
+.toggle.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.toggle.active:hover {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: var(--color-text-secondary);
+} 

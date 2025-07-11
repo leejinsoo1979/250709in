@@ -1,0 +1,193 @@
+.container {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.testSection {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.testSection h2 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.testButtons {
+  margin-bottom: 10px;
+}
+
+.testButton {
+  margin-right: 10px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.testButton:hover {
+  background-color: #0056b3;
+}
+
+.testButton:last-child {
+  margin-right: 0;
+}
+
+.testResults {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.testResults pre {
+  margin: 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.userInfo {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+.userInfo h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.userInfo p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.logoutButton {
+  padding: 8px 16px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: #cc3333;
+}
+
+.googleLoginButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.googleLoginButton:hover {
+  background-color: #3367d6;
+}
+
+.loginForm {
+  margin-bottom: 20px;
+}
+
+.loginForm h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.inputGroup {
+  margin-bottom: 10px;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.primaryButton {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #0056b3;
+}
+
+.secondaryButton {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #545b62;
+}
+
+.message {
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.messageSuccess {
+  background-color: #e8f5e8;
+  border-color: #c8e6c8;
+  color: #155724;
+}
+
+.messageError {
+  background-color: #ffebee;
+  border-color: #ffcdd2;
+  color: #721c24;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 18px;
+}

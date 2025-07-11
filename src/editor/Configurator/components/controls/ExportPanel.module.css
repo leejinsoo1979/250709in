@@ -1,0 +1,352 @@
+.exportPanel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 도면 타입 선택 영역 */
+.drawingTypeSelection {
+  margin-bottom: 16px;
+}
+
+.selectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+}
+
+.drawingTypes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawingTypeItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.drawingTypeItem:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.drawingTypeItem:has(input:checked) {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.drawingTypeInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.drawingTypeIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.drawingTypeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawingTypeName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.drawingTypeDescription {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.status {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.statusMessage {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.spaceInfo {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.spaceSize {
+  color: #059669;
+  font-weight: 500;
+}
+
+.moduleCount {
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+.actions {
+  margin-bottom: 16px;
+}
+
+.exportButton {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.exportButton:hover:not(.disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.exportButton:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.exportButton.disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.icon {
+  font-size: 16px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.result {
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease;
+}
+
+.result.success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.result.error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.resultMessage {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.filename {
+  font-size: 12px;
+  opacity: 0.8;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.info {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.infoItem:last-child {
+  margin-bottom: 0;
+}
+
+.infoLabel {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.infoValue {
+  color: #374151;
+  font-weight: 400;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .exportPanel {
+    padding: 16px;
+  }
+  
+  .spaceInfo {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .exportButton {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+
+  .drawingTypes {
+    gap: 6px;
+  }
+
+  .drawingTypeItem {
+    padding: 10px;
+  }
+}
+
+/* 다크 모드 지원 (필요시) */
+@media (prefers-color-scheme: dark) {
+  .exportPanel {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .title {
+    color: #f9fafb;
+  }
+  
+  .description {
+    color: #d1d5db;
+  }
+  
+  .status {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .statusMessage {
+    color: #e5e7eb;
+  }
+  
+  .info {
+    border-top-color: #374151;
+  }
+  
+  .infoLabel {
+    color: #d1d5db;
+  }
+  
+  .infoValue {
+    color: #f3f4f6;
+  }
+
+  .drawingTypeItem {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .drawingTypeItem:hover {
+    border-color: #3b82f6;
+    background: #4b5563;
+  }
+
+  .drawingTypeItem:has(input:checked) {
+    border-color: #3b82f6;
+    background: #1e3a8a;
+  }
+
+  .drawingTypeName {
+    color: #f3f4f6;
+  }
+
+  .drawingTypeDescription {
+    color: #d1d5db;
+  }
+
+  .selectionTitle {
+    color: #f3f4f6;
+  }
+} 

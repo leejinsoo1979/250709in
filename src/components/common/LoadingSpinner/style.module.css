@@ -1,0 +1,117 @@
+/* 로딩 스피너 컨테이너 */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+  min-height: 200px;
+}
+
+/* 원형 스피너 */
+.spinner {
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.spinnerRing {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #667eea;
+  border-right-color: #667eea;
+  animation: spin 1s linear infinite;
+}
+
+/* 스피너 크기 */
+.small .spinnerRing {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+}
+
+.medium .spinnerRing {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+.large .spinnerRing {
+  width: 56px;
+  height: 56px;
+  border-width: 4px;
+}
+
+/* 점 애니메이션 */
+.dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #667eea;
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+/* 로딩 메시지 */
+.message {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 풀스크린 로딩 (필요시 사용) */
+.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} 

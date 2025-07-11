@@ -1,0 +1,299 @@
+.viewerControls {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  position: relative;
+  z-index: 10;
+}
+
+
+
+.leftControls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.toggleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggleIcon {
+  color: #6b7280;
+}
+
+.toggleLabel {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+  min-width: 24px;
+  text-align: center;
+  line-height: 16px;
+}
+
+.switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.switch.on {
+  background: #2ECC71 !important;
+}
+
+.switch.off {
+  background: #e0f7ea !important;
+}
+
+.switchHandle {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.switch.on .switchHandle {
+  left: 22px;
+}
+
+.switch.off .switchHandle {
+  left: 2px;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #374151;
+  line-height: 16px;
+}
+
+.checkbox {
+  display: none;
+}
+
+.checkmark {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #767676;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.checkbox:checked + .checkmark {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.checkbox:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 우측 컨트롤 */
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 보기 옵션 (Solid/Wireframe) */
+.renderModeGroup {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.renderModeButton {
+  padding: 8px 16px;
+  border: none;
+  background: white;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #e5e7eb;
+  min-width: 70px;
+}
+
+.renderModeButton:last-child {
+  border-right: none;
+}
+
+.renderModeButton:hover {
+  background: #f9fafb;
+}
+
+.renderModeButton.active {
+  background: #10b981;
+  color: white;
+}
+
+.renderModeButton.active:hover {
+  background: #059669;
+}
+
+/* 3D/2D 모드 토글 */
+.viewModeGroup {
+  display: flex;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewModeButton {
+  background: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #10b981;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 20px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+}
+
+.viewModeButton:not(:last-child) {
+  border-right: 1px solid #10b981;
+}
+
+.viewModeButton.active {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.viewModeButton:hover:not(.active) {
+  background: #f0f9ff;
+}
+
+/* 뷰 방향 선택 */
+.viewDirectionGroup {
+  display: flex;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewDirectionButton {
+  background: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #10b981;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 20px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+}
+
+.viewDirectionButton:not(:last-child) {
+  border-right: 1px solid #10b981;
+}
+
+.viewDirectionButton.active {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.viewDirectionButton:hover:not(.active) {
+  background: #f0f9ff;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .viewerControls {
+    padding: 6px 12px;
+    height: 48px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .leftControls {
+    gap: 16px;
+  }
+  
+  .rightControls {
+    gap: 16px;
+  }
+  
+  .checkboxGroup {
+    gap: 12px;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 6px 16px;
+    font-size: 13px;
+    height: 32px;
+    min-width: 60px;
+  }
+  
+  .viewDirectionButton {
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .viewerControls {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 8px 12px;
+  }
+  
+  .leftControls,
+  .rightControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+} 

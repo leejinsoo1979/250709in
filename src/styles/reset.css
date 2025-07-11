@@ -1,0 +1,67 @@
+/* Reset CSS - CSS 모듈과 충돌하지 않도록 개선 */
+
+/* 기본 박스 모델만 설정 (특이성 최소화) */
+* {
+  box-sizing: border-box;
+}
+
+/* 기본 마진/패딩은 구체적인 요소에만 적용 */
+html, body, h1, h2, h3, h4, h5, h6, p, ul, ol, li, 
+blockquote, pre, dl, dt, dd, figure, hr {
+  margin: 0;
+  padding: 0;
+}
+
+/* 가상 요소 초기화는 별도로 처리 */
+*::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* Remove list styles */
+ul, ol {
+  list-style: none;
+}
+
+/* Remove default button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Remove text decoration from links */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Better tables */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+} 

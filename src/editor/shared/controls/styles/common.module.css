@@ -1,0 +1,383 @@
+/* 컨테이너 및 레이아웃 */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 기본 정보 한 줄 레이아웃 */
+.inlineLayout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.titleField {
+  flex: 0 0 75%;
+}
+
+.locationField {
+  flex: 0 0 calc(25% - 8px);
+}
+
+/* 라벨 */
+.label {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inputLabel {
+  font-size: 11px;
+  color: #666;
+  line-height: 1.2;
+}
+
+/* 입력 필드 */
+.inputGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Step0에서 3개 필드를 한 줄로 배치하는 스타일 */
+.inputGroupThreeColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* Configurator에서 2개 필드를 한 줄로 배치하는 스타일 */
+.inputGroupTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 반응형 처리 - 작은 화면에서는 세로 배치 */
+@media (max-width: 768px) {
+  .inputGroupThreeColumns,
+  .inputGroupTwoColumns {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 반응형 처리 - 작은 화면에서는 세로 배치 */
+@media (max-width: 768px) {
+  .inputGroup {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 크기 요약 표시 (컨피규레이터용) */
+.dimensionsSummary {
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.summaryText {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputWithUnit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1abc9c;
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.1);
+}
+
+.inputWithUnitField {
+  padding-right: 40px; /* 단위 표시 영역 확보 */
+}
+
+.unit {
+  position: absolute;
+  right: 12px;
+  color: #666;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* 에러 상태 */
+.inputError {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.errorMessage {
+  font-size: 12px;
+  color: #e74c3c;
+  margin-top: 4px;
+}
+
+/* 토글 및 라디오 */
+.toggleGroup {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radioOption:hover {
+  border-color: #1abc9c;
+  background-color: #f0fffe;
+}
+
+.radioOptionSelected {
+  border-color: #1abc9c;
+  background-color: #e8f8f5;
+  color: #1abc9c;
+}
+
+.radioInput {
+  margin: 0;
+}
+
+.radioLabel {
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* 토글 버튼 그룹 (피그마 디자인) */
+.toggleButtonGroup {
+  display: flex;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: #ffffff;
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #10b981;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggleButton:last-child {
+  border-right: none;
+}
+
+.toggleButton:hover {
+  background: #f0fdf9;
+}
+
+.toggleButtonActive {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.toggleButtonActive:hover {
+  background: #059669;
+}
+
+/* 버튼 */
+.button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.button:hover {
+  border-color: #1abc9c;
+  background-color: #f0fffe;
+}
+
+.buttonActive {
+  border-color: #1abc9c;
+  background-color: #1abc9c;
+  color: white;
+}
+
+/* 설명 텍스트 */
+.description {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* 알림 박스 스타일 */
+.infoBox {
+  background-color: #f0f8ff;
+  border: 1px solid #cce5ff;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoDetail {
+  font-size: 0.85em;
+  color: #666;
+}
+
+/* 슬라이더 스타일 */
+.slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.slider:hover {
+  background: #ccc;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #1abc9c;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #16a085;
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #1abc9c;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #16a085;
+}
+
+/* 비활성화 스타일 */
+.disabledLabel {
+  color: #999 !important;
+  opacity: 0.6;
+}
+
+.disabledText {
+  font-size: 11px;
+  color: #f39c12;
+  font-weight: normal;
+}
+
+.input:disabled {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed;
+  border-color: #ddd !important;
+}
+
+.button:disabled {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  cursor: not-allowed;
+  border-color: #ddd !important;
+}
+
+.button:disabled:hover {
+  background-color: #f5f5f5 !important;
+  border-color: #ddd !important;
+}
+
+.slider:disabled {
+  background: #f5f5f5 !important;
+  cursor: not-allowed;
+}
+
+.slider:disabled::-webkit-slider-thumb {
+  background: #ccc !important;
+  cursor: not-allowed;
+}
+
+.slider:disabled::-moz-range-thumb {
+  background: #ccc !important;
+  cursor: not-allowed;
+} 

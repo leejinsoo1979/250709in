@@ -1,0 +1,337 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background-color: transparent; /* 회색 반투명 오버레이 제거 */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1000;
+  padding-top: 60px;
+}
+
+.panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  max-height: calc(100vh - 120px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #ffaa00;
+  color: white;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.moduleInfo {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modulePreview {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.moduleBox {
+  width: 45px;
+  height: 45px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.moduleDetails {
+  flex: 1;
+}
+
+.moduleName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.property {
+  display: flex;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.property:last-child {
+  margin-bottom: 0;
+}
+
+.propertyLabel {
+  flex-shrink: 0;
+  width: 60px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+.propertyValue {
+  flex: 1;
+  font-size: 12px;
+  color: #333;
+  word-break: break-word;
+}
+
+.propertySection {
+  margin-bottom: 24px;
+}
+
+.propertySection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 깊이 입력 필드 스타일 */
+.depthInputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputWithUnit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.depthInput {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.depthInput:focus {
+  outline: none;
+  border-color: #ffaa00;
+  box-shadow: 0 0 0 2px rgba(255, 170, 0, 0.1);
+}
+
+.depthInput.inputError {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.unit {
+  position: absolute;
+  right: 12px;
+  color: #666;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.errorMessage {
+  font-size: 12px;
+  color: #e74c3c;
+  margin: 0;
+}
+
+.depthRange {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+}
+
+/* 기존 버튼 스타일은 제거 또는 주석처리
+.depthSelector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.depthOption {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.depthOption:hover {
+  border-color: #ffaa00;
+  color: #ffaa00;
+}
+
+.depthOption.selected {
+  background: #ffaa00;
+  border-color: #ffaa00;
+  color: white;
+  font-weight: 600;
+}
+*/
+
+/* 도어 선택기 스타일 */
+.doorSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* 힌지 서브섹션 스타일 */
+.hingeSubSection {
+  padding-left: 16px;
+  border-left: 2px solid #f0f0f0;
+}
+
+.subSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.hingeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.radioLabel:hover {
+  border-color: #2ECC71;
+  background-color: #f6fff8;
+}
+
+.radioLabel input[type="radio"] {
+  margin-right: 8px;
+  accent-color: #2ECC71;
+}
+
+.radioLabel input[type="radio"]:checked + .radioText {
+  font-weight: 600;
+  color: #2ECC71;
+}
+
+.radioText {
+  font-size: 13px;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.editGuide {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 16px;
+  border-left: 3px solid #ffaa00;
+}
+
+.editGuide p {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.editGuide p:last-child {
+  margin-bottom: 0;
+}
+
+/* 반응형 대응 */
+@media (max-width: 768px) {
+  .overlay {
+    width: 100%;
+    padding-top: 40px;
+  }
+  
+  .panel {
+    width: 90%;
+    max-width: 350px;
+  }
+  
+  .depthSelector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+} 

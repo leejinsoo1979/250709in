@@ -1,0 +1,150 @@
+.container {
+  padding: 0;
+  margin: 0;
+}
+
+/* 탭 메뉴 */
+.tabMenu {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 16px;
+  background-color: #f8f9fa;
+  padding: 2px;  /* 탭 메뉴 전체 패딩도 4px에서 2px로 줄임 */
+  border-radius: 8px;
+}
+
+.tabButton {
+  flex: 1;
+  padding: 6px 16px;  /* 위아래 패딩을 10px에서 6px로 줄임 */
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  background-color: #e9ecef;
+}
+
+.activeTab {
+  background-color: white;
+  color: #1abc9c;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 썸네일 그리드 (2열) */
+.thumbnailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* 썸네일 아이템 */
+.thumbnailItem {
+  position: relative;
+  aspect-ratio: 3 / 4; /* 세로가 더 긴 비율 */
+  background-color: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.thumbnailItem:hover {
+  border-color: #1abc9c;
+  box-shadow: 0 4px 12px rgba(26, 188, 156, 0.15);
+  transform: translateY(-2px);
+}
+
+.thumbnailItem:active {
+  cursor: grabbing;
+  transform: translateY(0);
+}
+
+/* 비활성화 상태 */
+.thumbnailItem.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #d1d5db;
+}
+
+.thumbnailItem.disabled:hover {
+  border-color: #d1d5db;
+  box-shadow: none;
+  transform: none;
+}
+
+/* 썸네일 이미지 */
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnailImage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* 비활성화 오버레이 */
+.disabledOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.disabledOverlay::before {
+  content: '🚫';
+  font-size: 24px;
+  opacity: 0.8;
+}
+
+/* 빈 상태 메시지 */
+.emptyMessage {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 4 / 3; /* 모바일에서는 가로가 더 긴 비율 */
+  }
+  
+  .tabButton {
+    padding: 5px 12px;  /* 모바일에서도 위아래 패딩 줄임 */
+    font-size: 13px;
+  }
+} 

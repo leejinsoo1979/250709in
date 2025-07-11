@@ -1,0 +1,282 @@
+/* 모달 배경 (어두운 오버레이) - !important 제거하고 특이성 높이기 */
+.container.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 모달 콘텐츠 박스 - !important 제거하고 특이성 높이기 */
+.modalContent.modalContent {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #eee;
+  background-color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.header h1 {
+  color: #1abc9c;
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: 12px;
+}
+
+.header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.content {
+  padding: 0;
+}
+
+.formSection {
+  width: 100%;
+  background-color: white;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.uploadArea {
+  padding: 48px;
+  text-align: center;
+  background-color: white;
+  border-bottom: 1px solid #eee;
+}
+
+.uploadIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background-color: #f0f8f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1abc9c;
+}
+
+.uploadArea h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.uploadArea p {
+  color: #666;
+}
+
+.form {
+  padding: 32px;
+  padding-bottom: 24px; /* 하단 패딩 조정 */
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.footer {
+  display: none;
+}
+
+.pagination {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.current {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1abc9c;
+}
+
+.total {
+  color: #666;
+}
+
+/* 공간 설정 섹션 스타일 추가 */
+.spaceSettings {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid #eee;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 24px;
+}
+
+/* 공간 크기 섹션 스타일 */
+.spaceSizeSection {
+  margin-bottom: 24px;
+}
+
+.spaceSizeSection .label {
+  display: block;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* 2개 필드를 한 줄로 배치하는 스타일 */
+.inputGroupTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 반응형 처리 - 작은 화면에서는 세로 배치 */
+@media (max-width: 768px) {
+  .inputGroupTwoColumns {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.spaceSizeSection .dimensionsSummary {
+  padding: 8px 12px;
+  background-color: #f1f3f4;
+  border: 1px dashed #d0d7de;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: default;
+  opacity: 0.8;
+}
+
+.spaceSizeSection .summaryText {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* 벽장 제작 시작하기 버튼 컨테이너 - 간격 축소로 스크롤 문제 해결 */
+.startButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* 32px → 20px로 축소 */
+  padding: 0px 0 20px 0; /* 24px 0 32px 0 → 16px 0 20px 0으로 축소 */
+  border-radius: 0 0 12px 12px;
+  background-color: white;
+}
+
+/* 로딩 스크린 스타일 */
+.loadingScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  z-index: 1000;
+}
+
+.loadingSubtext {
+  margin: 16px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* 작은 화면에서의 반응형 대응 */
+@media (max-height: 700px) {
+  .container {
+    align-items: flex-start;
+    padding: 10px;
+  }
+  
+  .modalContent {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .uploadArea {
+    padding: 32px;
+  }
+  
+  .form {
+    padding: 24px;
+    padding-bottom: 16px;
+  }
+  
+  .startButtonContainer {
+    margin-top: 16px; /* 24px → 16px로 축소 */
+    padding: 12px 0 16px 0; /* 16px 0 24px 0 → 12px 0 16px 0으로 축소 */
+  }
+}
+
+/* 매우 작은 화면에서의 추가 대응 */
+@media (max-height: 600px) {
+  .uploadArea {
+    padding: 24px;
+  }
+  
+  .uploadIcon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+  }
+  
+  .uploadArea h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  
+  .form {
+    padding: 20px;
+    padding-bottom: 12px;
+  }
+  
+  .spaceSettings {
+    margin-top: 24px;
+    padding-top: 24px;
+  }
+  
+  .startButtonContainer {
+    margin-top: 12px; /* 20px → 12px로 축소 */
+    padding: 8px 0 12px 0; /* 12px 0 20px 0 → 8px 0 12px 0으로 축소 */
+  }
+} 

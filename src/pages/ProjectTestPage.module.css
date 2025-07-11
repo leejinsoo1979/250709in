@@ -1,0 +1,155 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+}
+
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.headerInfo h1 {
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.headerInfo p {
+  color: #666;
+  margin: 0;
+}
+
+.createSection {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.createSection h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.createForm {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.createInput {
+  flex: 1;
+}
+
+.error {
+  background: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #fcc;
+  margin-bottom: 20px;
+}
+
+.projectsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.projectsHeader h3 {
+  color: #333;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.projectsList {
+  display: grid;
+  gap: 15px;
+}
+
+.projectCard {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.projectCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.projectInfo h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.projectInfo p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.projectActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.deleteButton {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deleteButton:hover {
+  background: #c82333;
+}
+
+.testStatus {
+  margin-top: 30px;
+  padding: 20px;
+  background: #e8f5e8;
+  border-radius: 8px;
+}
+
+.testStatus h4 {
+  color: #155724;
+  margin: 0 0 15px 0;
+}
+
+.testStatus p {
+  margin: 8px 0;
+  color: #155724;
+}

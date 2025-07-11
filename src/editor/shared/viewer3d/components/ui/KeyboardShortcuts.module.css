@@ -1,0 +1,186 @@
+.shortcutsPanel {
+  position: relative;  /* absolute에서 relative로 변경 */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 11px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* 접힌 상태 */
+.shortcutsPanel.collapsed {
+  width: 46px;  /* 36px에서 46px로 크기 증가 */
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 펼친 상태 */
+.shortcutsPanel.expanded {
+  width: 140px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  text-align: left;
+  font-size: 10px;
+}
+
+
+
+/* 접힌 상태의 확장 버튼 */
+.expandButton {
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+}
+
+.expandButton:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
+.expandIcon {
+  font-size: 14px;
+  color: #666;
+  font-weight: bold;
+}
+
+/* 접기 버튼 */
+.collapseButton {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.collapseButton:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.collapseButton:active {
+  transform: scale(0.95);
+}
+
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shortcutItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+  min-width: 0;
+}
+
+.key {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  padding: 2px 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: #555;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.action {
+  color: #666;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 다크 모드 대응 */
+@media (prefers-color-scheme: dark) {
+  .shortcutsPanel {
+    background: rgba(60, 60, 60, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .title {
+    color: #f0f0f0;
+  }
+  
+  .key {
+    background: #555;
+    border-color: #666;
+    color: #f0f0f0;
+  }
+  
+  .action {
+    color: #f0f0f0;
+  }
+  
+  .expandButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .expandIcon {
+    color: #ccc;
+  }
+  
+  .collapseButton {
+    color: #ccc;
+  }
+  
+  .collapseButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f0f0f0;
+  }
+} 

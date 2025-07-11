@@ -1,0 +1,254 @@
+.container {
+  padding: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.internalSpaceInfo {
+  background-color: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.internalSpaceTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: #0369a1;
+  margin-bottom: 4px;
+}
+
+.internalSpaceDimensions {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0c4a6e;
+  margin-bottom: 8px;
+}
+
+.internalSpaceNote {
+  font-size: 11px;
+  color: #0369a1;
+  line-height: 1.4;
+}
+
+.category {
+  margin-bottom: 24px;
+}
+
+.categoryTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 탭 메뉴 스타일 */
+.tabMenu {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+}
+
+.tabButton:hover {
+  color: #1abc9c;
+}
+
+.activeTab {
+  color: #1abc9c;
+  border-bottom-color: #1abc9c;
+}
+
+.tabDescription {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.tabDescription p {
+  margin: 0;
+}
+
+.emptyMessage {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border: 1px dashed #ddd;
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.moduleItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.moduleItem:hover {
+  border-color: #1abc9c;
+  box-shadow: 0 2px 4px rgba(26, 188, 156, 0.1);
+}
+
+.moduleItem:active {
+  cursor: grabbing;
+}
+
+.moduleItemDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.moduleItemDisabled:hover {
+  border-color: #e5e7eb;
+  box-shadow: none;
+}
+
+.moduleItemDynamic {
+  border-left: 3px solid #1abc9c;
+}
+
+.moduleItemDynamic:hover {
+  border-left-color: #16a085;
+}
+
+.modulePreview {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  position: relative;
+}
+
+.moduleBox {
+  width: 30px;
+  height: 30px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.invalidIcon {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.dynamicIcon {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 16px;
+  height: 16px;
+  background-color: #1abc9c;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.moduleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.moduleNameDisabled {
+  color: #999;
+}
+
+.dynamicBadge {
+  font-size: 9px;
+  background-color: #1abc9c;
+  color: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.moduleDimensions {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.moduleDescription {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.3;
+}
+
+.validationError {
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* 도어 아이콘 버튼 스타일 */
+.doorOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+} 

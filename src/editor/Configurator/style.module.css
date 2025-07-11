@@ -1,0 +1,543 @@
+/* 메인 컨테이너 */
+.configurator {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: -apple-system, 'Apple SD Gothic Neo', Roboto, sans-serif;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+/* 메인 컨텐츠 영역 */
+.mainContent {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 사이드바 컨텐츠 패널 */
+.sidebarContent {
+  width: 360px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* 사이드바 패널 공통 */
+.sidebarPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 모듈 패널 스타일 */
+.modulePanelContent {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modulePanelTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+/* 도어 관리 섹션 */
+.doorManagementSection {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.doorInstallButton {
+  width: 100%;
+  padding: 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorInstallButton:hover {
+  background: #059669;
+}
+
+.doorManagementGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doorStatusInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.doorStatusLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doorStatusIcon {
+  font-size: 16px;
+}
+
+.doorStatusText {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.doorToggleButton {
+  padding: 6px 12px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorToggleButton:hover {
+  background: #059669;
+}
+
+.doorRemoveButton {
+  width: 100%;
+  padding: 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.doorRemoveButton:hover {
+  background: #dc2626;
+}
+
+.moduleSection {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 뷰어 영역 */
+.viewerArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: white;
+  }
+  
+  .viewer {
+    flex: 1;
+    position: relative;
+    background: #f8fafc;
+    min-height: 0;
+  }
+  
+  /* 뷰어 상단 도어 토글 버튼 */
+.viewerDoorToggle {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+
+.viewerDoorButton {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e1e5e9;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  min-width: 60px;
+}
+
+.viewerDoorButton:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #c1c8cd;
+}
+
+.viewerDoorButton.active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.viewerDoorButton.active:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+/* 우측 패널 */
+.rightPanel {
+  width: 340px;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rightPanelHeader {
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.rightPanelTabs {
+  display: flex;
+}
+
+.rightPanelTab {
+  flex: 1;
+  padding: 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.rightPanelTab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.rightPanelTab.active {
+  color: #10b981;
+  border-bottom-color: #10b981;
+  background: #f0fdf4;
+}
+
+.rightPanelContent {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* 공간 컨트롤 */
+.spaceControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 설정 섹션 */
+.configSection {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 0;
+}
+
+.configSection:last-child {
+  border-bottom: none;
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sectionDot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #00c092;
+  margin: 0;
+}
+
+/* 입력 그룹 */
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.inputGroup:last-child {
+  margin-bottom: 0;
+}
+
+/* 입력 행 */
+.inputRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.inputLabel {
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+/* 숫자 입력 그룹 */
+.numberInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 2px;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.decrementButton,
+.incrementButton {
+  width: 14px;
+  height: 21px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: background-color 0.2s;
+}
+
+.decrementButton:hover,
+.incrementButton:hover {
+  background: #e5e7eb;
+}
+
+.numberInput {
+  width: 84px;
+  height: 20px;
+  border: none;
+  background: none;
+  text-align: right;
+  padding-right: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  outline: none;
+}
+
+/* 도어 슬라이더 */
+.doorSliderContainer {
+  margin-top: 8px;
+}
+
+.doorSlider {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.doorSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.doorSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sliderLabel {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+  transition: color 0.2s;
+}
+
+.sliderLabel.active {
+  color: #059669;
+  font-weight: 500;
+}
+
+/* 슬롯 정보 박스 */
+.slotInfoBox {
+  background: #fffbeb;
+  border-radius: 2px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+.slotInfoText {
+  font-size: 12px;
+  color: #d97706;
+  line-height: 1.33;
+  margin: 0;
+}
+
+.spaceSizeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.dimensionsSummary {
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.summaryText {
+  font-size: 14px;
+  color: #6b7280;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.inputGroupTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.moduleSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  font-style: italic;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+/* 로딩 상태 */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  background: #f8fafc;
+}
+
+.loadingContainer p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) {
+  .sidebarContent {
+    width: 300px;
+  }
+  
+  .rightPanel {
+    width: 280px;
+  }
+  
+  .rightPanelContent {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .mainContent {
+    flex-direction: column;
+  }
+  
+  .sidebarContent {
+    width: 100%;
+    height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .rightPanel {
+    width: 100%;
+    height: 250px;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .modulePanelContent {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .rightPanelContent {
+    padding: 12px;
+  }
+  
+  .doorManagementSection {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .spaceControls {
+    gap: 16px;
+  }
+}
+
