@@ -13,6 +13,8 @@ const BoxWithEdges: React.FC<{
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
+  const { viewMode } = useSpace3DView();
+  
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (내부 표면도 동일)
   const processedMaterial = useMemo(() => {
     if (isInternalSurface && material instanceof THREE.MeshStandardMaterial) {
@@ -32,21 +34,37 @@ const BoxWithEdges: React.FC<{
       
       return innerMaterial;
     }
+    
+    // 2D 모드에서 솔리드 렌더링 시 투명도 적용
+    if (material instanceof THREE.MeshStandardMaterial) {
+      if (viewMode === '2D' && renderMode === 'solid') {
+        const transparentMaterial = material.clone();
+        transparentMaterial.transparent = true;
+        transparentMaterial.opacity = 0.5;
+        return transparentMaterial;
+      }
+    }
+    
     return material;
-  }, [material, isInternalSurface]);
-  
+  }, [material, isInternalSurface, renderMode, viewMode]);
+
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow castShadow>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <primitive object={processedMaterial} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 - 얇게 */}
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color="#888888" linewidth={1} />
-      </lineSegments>
+      {/* 윤곽선 렌더링 */}
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
+            linewidth={1} 
+          />
+        </lineSegments>
+      )}
     </group>
   );
 };

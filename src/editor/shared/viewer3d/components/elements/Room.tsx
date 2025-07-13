@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { 
@@ -9,7 +9,8 @@ import {
   calculateFrameThickness,
   calculateBaseFrameWidth,
   calculateTopBottomFrameHeight,
-  calculateBaseFrameHeight
+  calculateBaseFrameHeight,
+  calculateInternalSpace
 } from '../../utils/geometry';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
@@ -36,14 +37,23 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
 }> = ({ args, position, material, renderMode }) => {
-  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
+  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
+  const { viewMode } = useSpace3DView();
+  
+  // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      edgesGeometry.dispose();
+    };
+  }, [geometry, edgesGeometry]);
   
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow castShadow>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <primitive object={material} />
         </mesh>
       )}
@@ -63,49 +73,67 @@ const Room: React.FC<RoomProps> = ({
 }) => {
   const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   
-  const { width: widthMm, height: heightMm } = calculateRoomDimensions(spaceInfo);
-  const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
-  const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
-  const furnitureDepthMm = calculateFurnitureDepth(); // 가구/프레임용 (600mm)
-  const frameThicknessMm = calculateFrameThickness(spaceInfo);
-  const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
-  const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
-  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  // spaceInfo 변경 시 재계산되도록 메모이제이션
+  const dimensions = useMemo(() => {
+    const { width: widthMm, height: heightMm } = calculateRoomDimensions(spaceInfo);
+    const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
+    const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
+    const furnitureDepthMm = calculateFurnitureDepth(); // 가구/프레임용 (600mm)
+    const frameThicknessMm = calculateFrameThickness(spaceInfo);
+    const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
+    const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
+    const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+    
+    // mm를 Three.js 단위로 변환
+    return {
+      width: mmToThreeUnits(widthMm),
+      height: mmToThreeUnits(heightMm),
+      panelDepth: mmToThreeUnits(panelDepthMm), // 공간 메쉬용 (1500mm)
+      furnitureDepth: mmToThreeUnits(furnitureDepthMm), // 가구/프레임용 (600mm)
+      floorFinishHeight: mmToThreeUnits(floorFinishHeightMm),
+      frameThickness: {
+        left: mmToThreeUnits(frameThicknessMm.left),
+        right: mmToThreeUnits(frameThicknessMm.right)
+      },
+      baseFrame: {
+        width: mmToThreeUnits(baseFrameMm.width)
+      },
+      topBottomFrameHeight: mmToThreeUnits(topBottomFrameHeightMm),
+      baseFrameHeight: mmToThreeUnits(baseFrameHeightMm),
+      // 원본 mm 값들도 포함 (기존 코드에서 사용하기 위해)
+      widthMm,
+      heightMm,
+      panelDepthMm,
+      furnitureDepthMm,
+      floorFinishHeightMm,
+      frameThicknessMm,
+      baseFrameMm,
+      topBottomFrameHeightMm,
+      baseFrameHeightMm
+    };
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish]);
   
-  // mm를 Three.js 단위로 변환
-  const width = mmToThreeUnits(widthMm);
-  const height = mmToThreeUnits(heightMm);
-  const panelDepth = mmToThreeUnits(panelDepthMm); // 공간 메쉬용 (1500mm)
-  const furnitureDepth = mmToThreeUnits(furnitureDepthMm); // 가구/프레임용 (600mm)
-  const floorFinishHeight = mmToThreeUnits(floorFinishHeightMm);
-  const frameThickness = {
-    left: mmToThreeUnits(frameThicknessMm.left),
-    right: mmToThreeUnits(frameThicknessMm.right)
-  };
-  const baseFrame = {
-    width: mmToThreeUnits(baseFrameMm.width)
-  };
-  const topBottomFrameHeight = mmToThreeUnits(topBottomFrameHeightMm);
-  const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
+  const { 
+    width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
+    // 원본 mm 값들
+    widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
+  } = dimensions;
   
 
   
-  // 공통 프레임 재질 생성 함수 (자연스러운 목재 질감)
+  // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
   const createFrameMaterial = useCallback(() => {
     const frameColor = materialConfig?.doorColor || '#FFFFFF';
-    return new THREE.MeshPhysicalMaterial({
+    return new THREE.MeshStandardMaterial({
       color: new THREE.Color(frameColor),
-      transparent: renderMode === 'wireframe',  // 와이어프레임 모드에서만 투명
-      opacity: renderMode === 'wireframe' ? 0.3 : 1.0,  // 와이어프레임: 투명, 솔리드: 불투명
-      clearcoat: 0.1,        // 코팅 반사 최소화 (0.2 → 0.1)
-      clearcoatRoughness: 0.8, // 코팅 거칠기 증가 (0.6 → 0.8)
-      metalness: 0.0,        // 완전 비금속 (0.1 → 0.0)
-      roughness: 0.7,        // 표면 거칠기 증가 (0.5 → 0.7)
-      reflectivity: 0.2,     // 반사율 더 감소 (0.3 → 0.2)
+      metalness: 0.0,        // 완전 비금속 (도어와 동일)
+      roughness: 0.6,        // 도어와 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(0x000000)  // 자체발광 완전 제거
+      emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid'),  // 와이어프레임 모드 또는 2D 솔리드 모드에서 투명
+      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0,  // 투명도 조정
     });
-  }, [materialConfig?.doorColor, renderMode]);
+  }, [materialConfig?.doorColor, renderMode, viewMode]);
 
   // 각 프레임별 재질 생성
   const baseFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
@@ -347,6 +375,41 @@ const Room: React.FC<RoomProps> = ({
         />
       )}
       
+      {/* 슬롯 바닥면 - 그린색으로 표시 */}
+      {(() => {
+        // 내경 공간 계산 (ColumnGuides와 동일한 방식)
+        const internalSpace = calculateInternalSpace(spaceInfo);
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const frontZ = mmToThreeUnits(internalSpace.depth / 2);
+        const backZ = -frontZ;
+        
+        // 좌우 프레임의 앞쪽 끝 위치 계산
+        const frameEndZ = furnitureZOffset + furnitureDepth/2;
+        
+        // 바닥면의 시작점(뒤쪽)과 끝점(프레임 앞쪽) 사이의 거리
+        const floorDepth = frameEndZ - backZ;
+        
+        return (
+          <mesh
+            position={[
+              xOffset + width/2, 
+              panelStartY + (spaceInfo.baseConfig?.type === 'floor' ? baseFrameHeight : 0), 
+              backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
+            ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            receiveShadow
+          >
+            <planeGeometry args={[width, floorDepth]} />
+            <meshStandardMaterial 
+              color="#2ECC71" 
+              transparent={true} 
+              opacity={0.4}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      })()}
+      
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'built-in' || 
@@ -503,7 +566,8 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
-      {baseFrameHeightMm > 0 && (
+      {/* 받침대가 있는 경우에만 렌더링 */}
+      {baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
         <>
           {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
           {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 이격거리${spaceInfo.gapConfig.size}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`)}
@@ -527,7 +591,8 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 하단 서브프레임 - 하단 프레임에서 앞쪽으로 올라오는 판 (ㄱ자의 세로 부분, X축 기준 -90도 회전) */}
-      {baseFrameHeightMm > 0 && (
+      {/* 받침대가 있는 경우에만 렌더링 */}
+      {baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
                   <group 
             position={[
                           topBottomPanelX, // 중앙 정렬 (하단 프레임과 동일)

@@ -10,6 +10,12 @@ export interface CameraConfig {
   is2DMode: boolean;
   spaceWidth: number;
   spaceHeight: number;
+  viewportLeft: number;
+  viewportRight: number;
+  viewportTop: number;
+  viewportBottom: number;
+  canvasAspectRatio: number;
+  zoom: number;
 }
 
 /**
@@ -21,7 +27,8 @@ export interface CameraConfig {
  */
 export const useCameraManager = (
   viewMode: '2D' | '3D' = '3D',
-  cameraPosition: [number, number, number] = [0, 5, 10]
+  cameraPosition: [number, number, number] = [0, 5, 10],
+  view2DDirection?: 'front' | 'left' | 'right' | 'top'
 ): CameraConfig => {
   // 스토어에서 공간 정보 가져오기 (상위 의존성)
   const { spaceInfo } = useSpaceConfigStore();
@@ -39,6 +46,20 @@ export const useCameraManager = (
     
     const fov = calculateDynamicFOV(spaceInfo.width);
 
+    // 3D와 완전히 동일한 방식: calculateOptimalDistance로 자동 거리 계산
+    const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
+    
+    // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
+    const zoom = 1200 / distance; // 기본 1200을 거리로 나누어 조정
+    
+    const canvasAspectRatio = window.innerWidth / window.innerHeight;
+    
+    // 기본 뷰포트 (Three.js 기본값과 동일)
+    const viewportLeft = -1;
+    const viewportRight = 1;
+    const viewportTop = 1;
+    const viewportBottom = -1;
+
     return {
       position,
       target,
@@ -46,8 +67,14 @@ export const useCameraManager = (
       is2DMode,
       spaceWidth: spaceInfo.width,
       spaceHeight: spaceInfo.height,
+      viewportLeft,
+      viewportRight,
+      viewportTop,
+      viewportBottom,
+      canvasAspectRatio,
+      zoom,
     };
-  }, [viewMode, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, placedModules.length]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, placedModules.length]);
 
   return cameraConfig;
 }; 

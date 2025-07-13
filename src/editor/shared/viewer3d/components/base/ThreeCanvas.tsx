@@ -31,6 +31,7 @@ interface ThreeCanvasProps {
   children: React.ReactNode;
   cameraPosition?: [number, number, number];
   viewMode?: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top';
   renderMode?: 'solid' | 'wireframe';
 }
 
@@ -42,6 +43,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   children,
   cameraPosition,
   viewMode = '3D',
+  view2DDirection = 'front',
   renderMode = 'wireframe'
 }) => {
   // 마운트 상태 관리
@@ -55,7 +57,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
-  const camera = useCameraManager(viewMode, cameraPosition);
+  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection);
   const eventHandlers = useCanvasEventHandlers();
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
@@ -215,7 +217,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     >
       <Canvas
         key={`${canvasKey}-${forceRender}`}
-        shadows
+        shadows={viewMode === '3D'}
         style={{ 
           background: CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: 'default',
@@ -243,11 +245,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           // 전문적인 고품질 렌더링 설정
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
           
-          // 최고품질 그림자 설정 - 강제 활성화
-          gl.shadowMap.enabled = true;
-          gl.shadowMap.type = THREE.VSMShadowMap;  // 최고품질 그림자
-          gl.shadowMap.autoUpdate = true;
-          gl.shadowMap.needsUpdate = true;
+          // 최고품질 그림자 설정 - 3D 모드에서만 활성화
+          gl.shadowMap.enabled = viewMode === '3D';
+          if (viewMode === '3D') {
+            gl.shadowMap.type = THREE.VSMShadowMap;  // 최고품질 그림자
+            gl.shadowMap.autoUpdate = true;
+            gl.shadowMap.needsUpdate = true;
+          }
           
           // 그림자 품질 강화
           gl.capabilities.maxTextureSize = 4096;
@@ -317,10 +321,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           <OrthographicCamera 
             makeDefault 
             position={camera.position}
-            left={-camera.spaceWidth * 0.01 * 0.8}
-            right={camera.spaceWidth * 0.01 * 0.8}
-            top={camera.spaceHeight * 0.01 * 0.8}
-            bottom={-camera.spaceHeight * 0.01 * 0.8}
+            zoom={camera.zoom}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}
           />

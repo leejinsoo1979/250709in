@@ -64,10 +64,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   };
 
+  // Firebase 설정 확인
+  const isFirebaseConfigured = () => {
+    return !!(
+      import.meta.env.VITE_FIREBASE_API_KEY &&
+      import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
+      import.meta.env.VITE_FIREBASE_PROJECT_ID
+    );
+  };
+
   // 구글 로그인 처리
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
+
+    // Firebase가 설정되지 않은 경우 안내 메시지
+    if (!isFirebaseConfigured()) {
+      setError('데모 환경에서는 구글 로그인을 사용할 수 없습니다. "데모 체험하기" 버튼을 이용해주세요.');
+      setLoading(false);
+      return;
+    }
 
     try {
       const result = await signInWithGoogle();
@@ -86,20 +102,37 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   };
 
+  // 데모 체험하기 버튼 처리
+  const handleDemoAccess = () => {
+    console.log('🎨 데모 모드로 에디터 접속');
+    navigate('/configurator');
+  };
+
   return (
     <div className={styles.loginForm}>
       <div className={styles.container}>
         <h2>{isSignUp ? '회원가입' : '로그인'}</h2>
         
-        {/* 구글 로그인 버튼 */}
-        <Button 
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className={styles.googleButton}
-        >
-          <span className={styles.googleIcon}>🔍</span>
-          Google로 {isSignUp ? '회원가입' : '로그인'}
-        </Button>
+        {/* Firebase 설정 여부에 따른 버튼 표시 */}
+        {isFirebaseConfigured() ? (
+          <Button 
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className={styles.googleButton}
+          >
+            <span className={styles.googleIcon}>🔍</span>
+            Google로 {isSignUp ? '회원가입' : '로그인'}
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleDemoAccess}
+            disabled={loading}
+            className={styles.demoButton}
+          >
+            <span className={styles.demoIcon}>🎨</span>
+            데모 체험하기 (로그인 없이 사용)
+          </Button>
+        )}
         
         {/* 구분선 */}
         <div className={styles.divider}>

@@ -12,6 +12,7 @@ export interface Space3DViewContextType {
   // 3D 스타일 및 설정
   styles: Object3DStyles;
   renderMode: 'solid' | 'wireframe';
+  viewMode: '2D' | '3D';
   
   // 계산된 3D 치수
   roomDimensions: ReturnType<typeof calculateRoomDimensions>;

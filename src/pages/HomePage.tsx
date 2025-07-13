@@ -61,23 +61,53 @@ const HomePage: React.FC = () => {
   const [dropdownProject, setDropdownProject] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-  // 프로젝트 목록 로드
+  // Firebase 설정 확인
+  const isFirebaseConfigured = () => {
+    return !!(
+      import.meta.env.VITE_FIREBASE_API_KEY &&
+      import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
+      import.meta.env.VITE_FIREBASE_PROJECT_ID
+    );
+  };
+
+  // 프로젝트 목록 로드 (Firebase 또는 로컬)
   const loadProjects = useCallback(async () => {
-    if (!user) return;
-    
     setLoadingProjects(true);
     try {
-      const { projects: userProjects, error } = await getUserProjects();
-      if (error) {
-        console.error('프로젝트 목록 로드 에러:', error);
-        // Firebase 연결 문제일 수 있으므로 빈 배열로 설정
-        setProjects([]);
+      if (user && isFirebaseConfigured()) {
+        // Firebase에서 사용자 프로젝트 로드
+        const { projects: userProjects, error } = await getUserProjects();
+        if (error) {
+          console.error('프로젝트 목록 로드 에러:', error);
+          setProjects([]);
+        } else {
+          setProjects(userProjects);
+        }
       } else {
-        setProjects(userProjects);
+        // 데모 모드: 로컬 스토리지에서 데모 프로젝트 로드
+        const demoProjectData = localStorage.getItem('demoProject');
+        if (demoProjectData) {
+          const demoProject = JSON.parse(demoProjectData);
+          const demoProjectSummary: ProjectSummary = {
+            id: demoProject.id,
+            title: demoProject.title,
+            updatedAt: demoProject.savedAt,
+            thumbnail: demoProject.thumbnail,
+            furnitureCount: demoProject.furnitureCount || 0,
+            spaceSize: {
+              width: demoProject.spaceConfig?.width || 0,
+              height: demoProject.spaceConfig?.height || 0,
+              depth: demoProject.spaceConfig?.depth || 0
+            }
+          };
+          setProjects([demoProjectSummary]);
+          console.log('📦 데모 프로젝트 로드됨:', demoProject.title);
+        } else {
+          setProjects([]);
+        }
       }
     } catch (error) {
       console.error('프로젝트 목록 로드 실패:', error);
-      // 에러 발생 시 빈 배열로 설정하여 UI가 깨지지 않도록 함
       setProjects([]);
     } finally {
       setLoadingProjects(false);
@@ -457,12 +487,20 @@ const HomePage: React.FC = () => {
               <p>
                 프로젝트를 생성하고 관리하려면 먼저 로그인해주세요
               </p>
-              <button 
-                className={styles.loginButton}
-                onClick={() => navigate('/auth')}
-              >
-                로그인하기
-              </button>
+              <div className={styles.buttonGroup}>
+                <button 
+                  className={styles.loginButton}
+                  onClick={() => navigate('/auth')}
+                >
+                  로그인하기
+                </button>
+                <button 
+                  className={styles.demoButton}
+                  onClick={() => navigate('/configurator')}
+                >
+                  🎨 데모 체험하기
+                </button>
+              </div>
             </div>
           </div>
         )}

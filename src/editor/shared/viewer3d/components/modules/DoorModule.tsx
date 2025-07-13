@@ -17,18 +17,25 @@ const BoxWithEdges: React.FC<{
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
+  const { viewMode } = useSpace3DView();
+  
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow castShadow>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <primitive object={material} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 */}
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color="#666666" linewidth={1} />
-      </lineSegments>
+      {/* 윤곽선 렌더링 */}
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+            linewidth={1} 
+          />
+        </lineSegments>
+      )}
     </group>
   );
 };
@@ -80,41 +87,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 강제: 솔리드 모드에서는 무조건 고스트 아님
   const isGhost = renderMode !== 'solid' && !!color;
   
-  // 그림자와 조명에 최적화된 도어 재질 생성
+  // 도어 재질 생성 (프레임과 동일한 재질로 통일)
   const createDoorMaterial = () => {
-    // 솔리드 모드: 그림자 수신 최적화
-    if (renderMode === 'solid') {
-      return new THREE.MeshStandardMaterial({
-        color: doorColor,
-        metalness: 0.0,
-        roughness: 0.6,  // 그림자 수신을 위해 적당한 거칠기
-        envMapIntensity: 0.0,
-        emissive: new THREE.Color(0x000000),
-        transparent: false,
-        opacity: 1
-      });
-    }
-    // 고스트: 투명하지만 그림자는 받음
-    if (isGhost) {
-      return new THREE.MeshStandardMaterial({
-        color: doorColor,
-        metalness: 0.0,
-        roughness: 0.6,
-        envMapIntensity: 0.0,
-        emissive: new THREE.Color(0x000000),
-        transparent: true,
-        opacity: 0.4
-      });
-    }
-    // 와이어프레임: 기존대로
+    const { viewMode } = useSpace3DView();
+    
     return new THREE.MeshStandardMaterial({
-      color: doorColor,
-      metalness: 0.0,
-      roughness: 0.6,
-      envMapIntensity: 0.0,
-      emissive: new THREE.Color(0x000000),
-      transparent: true,
-      opacity: 0.3
+      color: new THREE.Color(doorColor),
+      metalness: 0.0,        // 완전 비금속 (프레임과 동일)
+      roughness: 0.6,        // 프레임과 동일한 거칠기
+      envMapIntensity: 0.0,  // 환경맵 완전 제거
+      emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isGhost,  // 프레임과 동일한 투명도 조건
+      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isGhost ? 0.4 : 1.0,  // 프레임과 동일한 투명도 처리
     });
   };
   

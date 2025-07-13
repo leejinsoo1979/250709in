@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ModuleData, SectionConfig } from '@/data/modules/shelving';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpace3DView } from '../../../context/useSpace3DView';
 
 // 백패널 두께 상수
 const BACK_PANEL_THICKNESS = 9;
@@ -19,7 +20,7 @@ interface BaseFurnitureOptions {
 // 가구 기본 설정 반환 타입
 interface BaseFurnitureResult {
   // 재질 관련
-  material: THREE.MeshPhysicalMaterial;
+  material: THREE.MeshStandardMaterial;
   doorColor: string;
   
   // 치수 관련
@@ -101,18 +102,31 @@ export const useBaseFurniture = (
   // 선반 Z축 위치 조정 계산
   const shelfZOffset = mmToThreeUnits(4);
   
-  // 재질 설정 (자연스러운 목재 질감)
-  const material = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(color || materialConfig.interiorColor),
-    clearcoat: 0.1,        // 코팅 반사 최소화 (0.3 → 0.1)
-    clearcoatRoughness: 0.8, // 코팅 거칠기 증가 (0.5 → 0.8)
-    metalness: 0.0,        // 완전 비금속 (0.1 → 0.0)
-    roughness: 0.7,        // 표면 거칠기 증가 (0.4 → 0.7)
-    reflectivity: 0.2,     // 반사율 더 감소 (0.4 → 0.2)
-    // 드래그 상태일 때만 반투명 처리
-    transparent: isDragging,
-    opacity: isDragging ? 0.4 : 1.0  // 더 투명하게 (0.6 → 0.4)
-  });
+  // 재질 설정 (도어와 완전히 동일한 재질로 통일)
+  const { renderMode, viewMode } = useSpace3DView();
+  
+  // 색상 결정: 특수 상태가 아닐 때 내부 색상과 도어 색상이 같으면 도어 색상을 직접 사용
+  const furnitureColor = color || (
+    !color && materialConfig.interiorColor === materialConfig.doorColor 
+      ? materialConfig.doorColor  // 같은 색상이면 도어 색상을 직접 사용하여 완전히 동일한 처리
+      : materialConfig.interiorColor
+  );
+  
+  // 공통 재질 생성 함수 (도어, 프레임과 완전히 동일)
+  const createUnifiedMaterial = (colorValue: string) => {
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(colorValue),
+      metalness: 0.0,        // 완전 비금속 (도어와 동일)
+      roughness: 0.6,        // 도어와 동일한 거칠기
+      envMapIntensity: 0.0,  // 환경맵 완전 제거
+      emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
+      // 도어와 동일한 투명도 처리 (단, 드래그 상태는 가구만의 특수 처리)
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging,
+      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isDragging ? 0.4 : 1.0,
+    });
+  };
+  
+  const material = createUnifiedMaterial(furnitureColor);
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;

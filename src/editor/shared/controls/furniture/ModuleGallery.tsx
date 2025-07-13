@@ -7,15 +7,22 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './ModuleGallery.module.css';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
+// import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
+const getImagePath = (filename: string) => {
+  const path = `${import.meta.env.BASE_URL}images/furniture-thumbnails/${filename}`;
+  console.log(`🖼️ [썸네일 경로] ${filename} → ${path}`);
+  return path;
+};
+
 const FURNITURE_ICONS: Record<string, string> = {
-  'single-2drawer-hanging': '/images/furniture-thumbnails/single-2drawer-hanging.png',
-  'single-2hanging': '/images/furniture-thumbnails/single-2hanging.png', 
-  'single-4drawer-hanging': '/images/furniture-thumbnails/single-4drawer-hanging.png',
-  'dual-2drawer-hanging': '/images/furniture-thumbnails/dual-2drawer-hanging.png',
-  'dual-2hanging': '/images/furniture-thumbnails/dual-2hanging.png',
-  'dual-4drawer-hanging': '/images/furniture-thumbnails/dual-4drawer-hanging.png',
-  'dual-2drawer-styler': '/images/furniture-thumbnails/dual-2drawer-styler.png',
-  'dual-4drawer-pantshanger': '/images/furniture-thumbnails/dual-4drawer-pantshanger.png',
+  'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
+  'single-2hanging': getImagePath('single-2hanging.png'), 
+  'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
+  'dual-2drawer-hanging': getImagePath('dual-2drawer-hanging.png'),
+  'dual-2hanging': getImagePath('dual-2hanging.png'),
+  'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
+  'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
+  'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
 };
 
 // 모듈 타입 정의
@@ -91,7 +98,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             const img = e.target as HTMLImageElement;
             if (!img.dataset.fallbackAttempted) {
               img.dataset.fallbackAttempted = 'true';
-              img.src = '/images/furniture-thumbnails/single-2drawer-hanging.png';
+              img.src = getImagePath('single-2drawer-hanging.png');
             }
           }}
         />

@@ -12,20 +12,27 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
 }> = ({ args, position, material, renderMode = 'solid' }) => {
+  const { viewMode } = useSpace3DView();
+
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh receiveShadow castShadow>
+        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <boxGeometry args={args} />
           <primitive object={material} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 */}
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-        <lineBasicMaterial color="#666666" linewidth={2} />
-      </lineSegments>
+      {/* 윤곽선 렌더링 */}
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+          <lineBasicMaterial 
+            color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+            linewidth={2} 
+          />
+        </lineSegments>
+      )}
     </group>
   );
 };

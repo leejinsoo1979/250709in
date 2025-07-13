@@ -1,5 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useSpace3DView } from '../../context/useSpace3DView';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -10,6 +11,8 @@ const BoxWithEdges: React.FC<{
 }> = ({ args, position, material, renderMode }) => {
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍도 동일)
   const createInnerMaterial = (originalMaterial: THREE.Material) => {
+    const { viewMode } = useSpace3DView();
+    
     if (originalMaterial instanceof THREE.MeshStandardMaterial) {
       const innerMaterial = originalMaterial.clone();
       
@@ -20,27 +23,39 @@ const BoxWithEdges: React.FC<{
       innerMaterial.envMapIntensity = 0.0;  // 환경맵 완전 제거
       innerMaterial.emissive = new THREE.Color(0x000000);  // 자체발광 완전 제거 (순수 그림자 의존)
       
+      // 2D 모드에서 솔리드 렌더링 시 투명도 적용
+      if (viewMode === '2D' && renderMode === 'solid') {
+        innerMaterial.transparent = true;
+        innerMaterial.opacity = 0.5;
+      }
+      
       return innerMaterial;
     }
     return material;
   };
 
   const innerMaterial = createInnerMaterial(material);
+  const { viewMode } = useSpace3DView();
 
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh receiveShadow castShadow>
+        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <boxGeometry args={args} />
           <primitive object={innerMaterial} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 - 얇게 */}
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-        <lineBasicMaterial color="#888888" linewidth={1} />
-      </lineSegments>
+      {/* 윤곽선 렌더링 */}
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+          <lineBasicMaterial 
+            color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
+            linewidth={1} 
+          />
+        </lineSegments>
+      )}
     </group>
   );
 };

@@ -1,6 +1,7 @@
 .container {
   padding: 0;
   margin: 0;
+  background: white !important;
 }
 
 /* 탭 메뉴 */
@@ -15,14 +16,14 @@
 
 .tabButton {
   flex: 1;
-  padding: 6px 16px;  /* 위아래 패딩을 10px에서 6px로 줄임 */
+  padding: 3px 8px; /* 패딩 대폭 축소 */
   border: none;
   background: transparent;
   color: #666;
-  font-size: 14px;
+  font-size: 10px; /* 폰트 크기 축소 */
   font-weight: 500;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 4px; /* 둥글기 축소 */
   transition: all 0.2s ease;
 }
 
@@ -37,28 +38,28 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 썸네일 그리드 (2열) */
+/* 썸네일 그리드 (4열로 변경해서 크기 대폭 축소) */
 .thumbnailGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 8px;
+  grid-template-columns: 1fr 1fr; /* 2열로 변경 */
+  gap: 8px;
+  margin-top: 4px;
 }
 
 /* 썸네일 아이템 */
 .thumbnailItem {
   position: relative;
-  aspect-ratio: 3 / 4; /* 세로가 더 긴 비율 */
+  aspect-ratio: 1 / 1; /* 정사각형으로 변경해서 더 작게 */
   background-color: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #e5e7eb; /* 테두리 얇게 */
+  border-radius: 4px;
   cursor: grab;
   transition: all 0.2s ease;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 2px; /* 패딩 최소화 */
 }
 
 .thumbnailItem:hover {
@@ -132,19 +133,176 @@
   border: 2px dashed #ddd;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
+/* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */
+
+/* 큰 데스크톱 (1920px 이상) */
+@media (min-width: 1920px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 3 / 4;
+    padding: 12px;
+  }
+}
+
+/* 일반 데스크톱 (1400-1919px) */
+@media (max-width: 1919px) and (min-width: 1400px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 3 / 4;
+    padding: 10px;
+  }
+}
+
+/* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 3 / 4;
+    padding: 8px;
+  }
+  
+  .tabButton {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+}
+
+/* 맥북 에어/프로 13인치 (1024-1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 3 / 4;
+    padding: 6px;
+  }
+  
+  .tabButton {
+    padding: 5px 12px;
+    font-size: 13px;
+  }
+  
+  .thumbnailImage img {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+}
+
+/* 태블릿 가로 (768-1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 4 / 3;
+    padding: 6px;
+  }
+  
+  .tabButton {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  
+  .tabMenu {
+    margin-bottom: 12px;
+  }
+}
+
+/* 태블릿 세로 및 모바일 가로 (481-767px) */
+@media (max-width: 767px) and (min-width: 481px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 4 / 3;
+    padding: 4px;
+  }
+  
+  .tabButton {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .tabMenu {
+    margin-bottom: 10px;
+    padding: 1px;
+  }
+}
+
+/* 작은 모바일 (480px 이하) */
+@media (max-width: 480px) {
   .thumbnailGrid {
     grid-template-columns: 1fr;
     gap: 8px;
   }
   
   .thumbnailItem {
-    aspect-ratio: 4 / 3; /* 모바일에서는 가로가 더 긴 비율 */
+    aspect-ratio: 5 / 3;
+    padding: 8px;
   }
   
   .tabButton {
-    padding: 5px 12px;  /* 모바일에서도 위아래 패딩 줄임 */
-    font-size: 13px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .tabMenu {
+    margin-bottom: 12px;
+  }
+}
+
+/* 세로 방향 최적화 */
+@media (orientation: portrait) and (max-width: 768px) {
+  .thumbnailGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+/* 가로 방향 최적화 (높이가 작은 경우) */
+@media (orientation: landscape) and (max-height: 600px) {
+  .thumbnailGrid {
+    gap: 6px;
+  }
+  
+  .thumbnailItem {
+    aspect-ratio: 4 / 3;
+    padding: 4px;
+  }
+  
+  .tabButton {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  
+  .tabMenu {
+    margin-bottom: 8px;
+  }
+}
+
+/* 고해상도 디스플레이 (Retina) 최적화 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .thumbnailImage img {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
   }
 } 

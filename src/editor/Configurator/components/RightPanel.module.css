@@ -82,18 +82,20 @@
 
 .formControl {
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .formHeader {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 16px;
   background: #f9fafb;
   cursor: pointer;
   transition: background 0.2s ease;
   gap: 12px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .formHeader:hover {
@@ -101,8 +103,8 @@
 }
 
 .formIndicator {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #10b981;
   flex-shrink: 0;
@@ -115,7 +117,6 @@
   color: #374151;
   margin: 0;
   flex: 1;
-  line-height: 20px;
 }
 
 .expandIcon {
@@ -129,12 +130,187 @@
 
 .formContent {
   padding: 16px;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
+/* 브랜드 타입 */
+.brandType {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brandLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.brandOptions {
+  display: flex;
+  gap: 8px;
+}
+
+.brandOption {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.brandOption:hover {
+  background: #f3f4f6;
+}
+
+/* 가격 정보 */
+.priceInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.priceLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.priceValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+/* 컬러 휠 */
+.colorWheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.colorWheelCircle {
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+.colorWheelSVG {
+  width: 100%;
+  height: 100%;
+}
+
+.colorSelector {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #6b7280;
+  cursor: pointer;
+}
+
+.colorSlider {
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to right, #000000, #ffffff);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.sliderHandle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border: 2px solid #6b7280;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.colorPreview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.colorValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+}
+
+/* 재질 토글 */
+.materialToggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.materialLabel {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* 프레임 색상 */
+.frameColor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.frameColorOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.frameColorOption:hover {
+  background: #f9fafb;
+}
+
+.frameColorSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.frameColorOption span {
+  font-size: 13px;
+  color: #374151;
+}
+
+/* 기존 스타일 유지 */
 .numberInput {
   display: flex;
   flex-direction: column;
@@ -142,29 +318,27 @@
 }
 
 .inputLabel {
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
+  color: #6b7280;
   font-weight: 500;
-  color: #374151;
-  line-height: 16px;
 }
 
 .inputGroup {
   display: flex;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  align-items: center;
+  gap: 1px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   overflow: hidden;
-  height: 36px;
 }
 
 .inputButton {
-  width: 36px;
   background: #f9fafb;
   border: none;
+  padding: 8px 12px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
   color: #6b7280;
   transition: all 0.2s ease;
 }
@@ -178,29 +352,46 @@
   background: #e5e7eb;
 }
 
+.inputButton:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.inputButton:disabled:hover {
+  background: #f3f4f6;
+  transform: none;
+}
+
 .inputField {
   flex: 1;
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
 .inputField input {
   width: 100%;
+  padding: 8px 12px;
   border: none;
   outline: none;
-  padding: 0 48px 0 12px;
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   color: #374151;
   background: #ffffff;
-  height: 100%;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.inputField input::-webkit-outer-spin-button,
+.inputField input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .inputUnit {
   position: absolute;
-  right: 12px;
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 12px;
   color: #9ca3af;
   pointer-events: none;
@@ -208,31 +399,26 @@
 
 .toggleGroup {
   display: flex;
-  border: 1px solid #10b981;
+  gap: 1px;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
 }
 
 .toggleButton {
   flex: 1;
-  background: #ffffff;
+  background: #f9fafb;
   border: none;
-  padding: 10px 16px;
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #10b981;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 20px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: 500;
 }
 
 .toggleButton:not(:last-child) {
-  border-right: 1px solid #10b981;
+  border-right: 1px solid #e5e7eb;
 }
 
 .toggleButton.active {
@@ -241,29 +427,37 @@
 }
 
 .toggleButton:hover:not(.active) {
-  background: #f0f9ff;
+  background: #f3f4f6;
 }
 
 .doorSlider {
   margin: 16px 0;
+  user-select: none;
 }
 
 .sliderTrack {
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
-  position: relative;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 0 16px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sliderTrack:hover {
+  background: #f3f4f6;
 }
 
 .sliderDivider {
   width: 2px;
-  height: 12px;
-  background: #9ca3af;
-  position: relative;
-  flex: 1;
+  height: 16px;
+  background: #d1d5db;
+  border-radius: 1px;
+  transition: background 0.2s ease;
 }
 
 .sliderDivider.active {
@@ -271,90 +465,174 @@
 }
 
 .sliderHandle {
-  width: 20px;
+  position: absolute;
+  top: 50%;
+  width: 16px;
   height: 20px;
   background: #10b981;
-  border-radius: 50%;
-  position: absolute;
-  left: 0;
-  top: 50%;
+  border-radius: 3px;
   transform: translateY(-50%);
-  cursor: pointer;
-  border: 3px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  z-index: 10;
+}
+
+.sliderHandle:hover {
+  background: #059669;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.sliderHandle:active {
+  cursor: grabbing;
+  background: #047857;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
 }
 
 .sliderLabels {
   display: flex;
   justify-content: space-between;
-  padding: 0 10px;
+  margin-top: 8px;
+  padding: 0 20px;
 }
 
 .sliderLabels span {
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sliderLabels span:hover {
+  background: #f3f4f6;
   color: #6b7280;
-  font-weight: 400;
 }
 
 .sliderLabels span.active {
   color: #10b981;
-  font-weight: 500;
+  font-weight: 600;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
 }
 
 .infoBox {
   background: #f0f9ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 4px;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
   padding: 12px;
   margin-top: 12px;
 }
 
 .infoBox p {
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  color: #1e40af;
   margin: 0;
-  line-height: 16px;
+  font-size: 12px;
+  color: #0369a1;
+  line-height: 1.4;
 }
 
 .infoBox p:not(:last-child) {
   margin-bottom: 4px;
 }
 
-.baseSettings {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
+.infoBox p:last-child {
+  font-weight: 600;
+  color: #10b981;
 }
 
-.subsectionTitle {
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+/* 슬롯 내경 정보 */
+.slotInnerDimensions {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.slotLabel {
   font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  text-align: center;
+}
+
+.slotValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #10b981;
+  text-align: center;
+  background: #ecfdf5;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #d1fae5;
+}
+
+.slotInfo {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  font-weight: 500;
+}
+
+.slotDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #64748b;
+  text-align: left;
+  width: 100%;
+}
+
+.slotDetails.slotWarning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.warningText {
+  color: #dc2626;
   font-weight: 600;
-  color: #374151;
-  margin: 0 0 16px 0;
-  line-height: 18px;
+  margin-top: 4px;
+}
+
+.successText {
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 4px;
 }
 
 .moduleSettings {
-  padding: 32px 16px;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .placeholder {
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  color: #9ca3af;
   text-align: center;
-  line-height: 20px;
+  color: #9ca3af;
+  font-size: 14px;
+  padding: 32px 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 .panelFooter {
-  border-top: 1px solid #e5e7eb;
   padding: 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .completeButton {
@@ -362,15 +640,13 @@
   background: #10b981;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
   padding: 12px 24px;
-  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 20px;
-  height: 44px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .completeButton:hover {
@@ -379,48 +655,46 @@
 
 .completeButton:active {
   background: #047857;
+  transform: translateY(1px);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .rightPanel {
     width: 280px;
   }
-  
+
   .formContainer {
     padding: 12px;
-    gap: 12px;
   }
-  
+
   .formHeader {
-    padding: 10px 12px;
+    padding: 12px;
   }
-  
+
   .formContent {
     padding: 12px;
-    gap: 12px;
   }
-  
+
   .inputGroup {
-    height: 32px;
-  }
-  
-  .inputButton {
-    width: 32px;
-  }
-  
-  .toggleButton {
-    padding: 8px 12px;
     height: 36px;
-    font-size: 13px;
   }
-  
+
+  .inputButton {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .toggleButton {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
   .panelFooter {
     padding: 12px;
   }
-  
+
   .completeButton {
-    height: 40px;
+    padding: 10px 20px;
     font-size: 13px;
   }
 } 

@@ -73,6 +73,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const handleViewDirectionChange = (direction: ViewDirection) => {
     setView2DDirection(direction);
     onViewDirectionChange(direction); // 기존 콜백도 호출 (호환성)
+    
+    // 3D 모드에서 상부 버튼을 누르면 자동으로 2D 모드로 전환
+    if (viewMode === '3D' && direction === 'top') {
+      onViewModeChange('2D');
+    }
   };
 
   return (
@@ -135,8 +140,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         {/* 두 번째 도어 토글 제거 (불필요) */}
       </div>
 
-      {/* 우측 뷰 컨트롤들 */}
-      <div className={styles.rightControls}>
+      {/* 중앙 뷰 컨트롤들 */}
+      <div className={styles.centerControls}>
         {/* 보기 옵션 (Solid/Wireframe) */}
         <div className={styles.renderModeGroup}>
           {renderModes.map((mode) => (
@@ -162,7 +167,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </button>
           ))}
         </div>
+      </div>
 
+      {/* 우측 뷰 컨트롤들 */}
+      <div className={styles.rightControls}>
         {/* 뷰 방향 선택 - 3D/2D 모드 모두에서 표시 */}
         <div className={styles.viewDirectionGroup}>
           {viewDirections.map((direction) => (

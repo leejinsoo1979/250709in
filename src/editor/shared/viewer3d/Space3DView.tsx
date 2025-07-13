@@ -56,23 +56,34 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       return frontPosition;
     }
 
-    // 2D 모드에서는 방향별 카메라 위치 - 모든 방향에서 동일한 거리 사용
+    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
     switch (view2DDirection) {
       case 'front':
-        return frontPosition;
+        // 정면: Z축에서 깊이를 고려한 최적 거리
+        return [centerX, centerY, distance] as [number, number, number];
       case 'left':
-        return [-distance, centerY, centerZ] as [number, number, number];
+        // 좌측: X축에서 너비를 고려한 최적 거리
+        const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
+        return [-leftDistance, centerY, centerZ] as [number, number, number];
       case 'right':
-        return [distance, centerY, centerZ] as [number, number, number];
+        // 우측: X축에서 너비를 고려한 최적 거리
+        const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
+        return [rightDistance, centerY, centerZ] as [number, number, number];
       case 'top':
-        return [centerX, mmToThreeUnits(height + distance * 10), centerZ] as [number, number, number];
+        // 상단: Y축에서 너비와 깊이를 고려한 최적 거리 (비율 보정)
+        const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
+        return [centerX, centerY + topDistance, centerZ] as [number, number, number];
       default:
         return frontPosition;
     }
-  }, [spaceInfo, viewMode, view2DDirection, placedModules.length]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, viewMode, view2DDirection, placedModules.length]);
   
   // 각 위치별 고유한 키를 생성하여 2D 방향 변경 시 ThreeCanvas 재생성 (OrbitControls 리셋)
-  const viewerKey = useMemo(() => `${location.pathname}-${viewMode}-${view2DDirection}`, [location.pathname, viewMode, view2DDirection]);
+  // 공간 크기 변경 시에도 강제 재렌더링하도록 spaceInfo 포함
+  const viewerKey = useMemo(() => 
+    `${location.pathname}-${viewMode}-${view2DDirection}-${spaceInfo.width}x${spaceInfo.height}x${spaceInfo.depth}`, 
+    [location.pathname, viewMode, view2DDirection, spaceInfo.width, spaceInfo.height, spaceInfo.depth]
+  );
   
   // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
@@ -129,7 +140,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
 
   return (
-    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode}>
+    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
       <div 
         key={viewerKey}
         style={{ 
@@ -142,19 +153,21 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         onDragOver={handleDragOver}
       >
         <ThreeCanvas 
+          key={viewerKey}
           cameraPosition={cameraPosition}
           viewMode={viewMode}
+          view2DDirection={view2DDirection}
           renderMode={renderMode}
         >
           <React.Suspense fallback={null}>
-            {/* 진하고 스무스한 그림자를 위한 최적화된 조명 */}
+            {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
             
-            {/* 메인 자연광 - 진한 스무스 그림자 생성 */}
+            {/* 메인 자연광 - 3D 모드에서만 그림자 생성 */}
             <directionalLight 
               position={[5, 15, 20]} 
               intensity={2.5} 
               color="#ffffff"
-              castShadow
+              castShadow={viewMode === '3D'}
               shadow-mapSize-width={4096}
               shadow-mapSize-height={4096}
               shadow-camera-far={50}
@@ -179,8 +192,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               color="#ffffff"
             />
             
-            {/* 환경광 감소 - 그림자 진하게 */}
-            <ambientLight intensity={0.5} color="#ffffff" />
+            {/* 환경광 - 2D 모드에서는 더 밝게 */}
+            <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
             
             {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
@@ -209,4 +222,4 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   );
 };
 
-export default React.memo(Space3DView); 
+export default Space3DView; 

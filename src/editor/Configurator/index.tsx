@@ -64,17 +64,69 @@ const Configurator: React.FC = () => {
   const [previousSpaceInfo, setPreviousSpaceInfo] = useState(spaceInfo);
 
   // 현재 컬럼 수를 안전하게 가져오는 함수
-  const getCurrentColumnCount = () => {
-    if (spaceInfo.customColumnCount) {
-      return spaceInfo.customColumnCount;
+  // 공간 넓이 기반 최소/최대 도어 개수 계산
+  const calculateDoorRange = (spaceWidth: number) => {
+    const FRAME_MARGIN = 100; // 양쪽 50mm씩
+    const usableWidth = spaceWidth - FRAME_MARGIN;
+    
+    // 슬롯 크기 제약 조건 (400mm ~ 600mm) - 이 범위를 절대 벗어날 수 없음
+    const MIN_SLOT_WIDTH = 400;
+    const MAX_SLOT_WIDTH = 600;
+    
+    // 엄격한 제약 조건: 슬롯이 400mm 미만이 되거나 600mm 초과가 되는 것을 방지
+    const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm 엄격히 제한
+    const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm 엄격히 제한
+    
+    // 실제 슬롯 크기가 400-600mm 범위 내에 있는지 검증
+    const finalMin = Math.max(minPossible, 1);
+    const finalMax = Math.min(maxPossible, 20);
+    
+    // 불가능한 경우 (공간이 너무 작아서 400mm 슬롯도 만들 수 없음)
+    if (finalMin > finalMax) {
+      return {
+        min: 1,
+        max: 1,
+        ideal: 1
+      };
     }
-    if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
-      return derivedSpaceStore.columnCount;
-    }
-    // 기본값 (내경폭 기준 자동 계산)
-    const internalWidth = (spaceInfo.width || 4800) - 100; // 기본 내경폭
-    return Math.max(8, Math.min(15, Math.floor(internalWidth / 600))); // 600mm당 1컬럼 기준
+    
+    return {
+      min: finalMin,
+      max: finalMax,
+      ideal: Math.max(finalMin, Math.min(finalMax, Math.round(usableWidth / 500)))
+    };
   };
+
+  const getCurrentColumnCount = () => {
+    const spaceWidth = spaceInfo.width || 4800;
+    const range = calculateDoorRange(spaceWidth);
+    
+    let count = range.ideal;
+    
+    if (spaceInfo.customColumnCount) {
+      count = spaceInfo.customColumnCount;
+    } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
+      count = derivedSpaceStore.columnCount;
+    }
+    
+    // 반드시 400-600mm 범위 안에서만 동작하도록 강제
+    count = Math.max(range.min, Math.min(range.max, count));
+    
+    // 실제 슬롯 크기 검증
+    const usableWidth = spaceWidth - 100;
+    const slotWidth = usableWidth / count;
+    
+    // 슬롯 크기가 400-600mm 범위를 벗어나면 조정
+    if (slotWidth < 400) {
+      count = Math.floor(usableWidth / 400);
+    } else if (slotWidth > 600) {
+      count = Math.ceil(usableWidth / 600);
+    }
+    
+    return Math.max(range.min, Math.min(range.max, count));
+  };
+
+
 
   // 특수 듀얼 가구 배치 여부 확인
   const hasSpecialDualFurniture = placedModules.some(module => 
@@ -119,13 +171,17 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // 프로젝트 저장
-  const saveProject = async () => {
-    if (!currentProjectId) {
-      alert('저장할 프로젝트가 없습니다.');
-      return;
-    }
+  // Firebase 설정 확인
+  const isFirebaseConfigured = () => {
+    return !!(
+      import.meta.env.VITE_FIREBASE_API_KEY &&
+      import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
+      import.meta.env.VITE_FIREBASE_PROJECT_ID
+    );
+  };
 
+  // 프로젝트 저장 (Firebase 또는 로컬 저장)
+  const saveProject = async () => {
     setSaving(true);
     setSaveStatus('idle');
     
@@ -139,36 +195,62 @@ const Configurator: React.FC = () => {
         console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
         thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
       }
-      
-      const { error } = await updateProject(currentProjectId, {
-        title: basicInfo.title,
-        projectData: basicInfo,
-        spaceConfig: spaceInfo,
-        furniture: {
-          placedModules: placedModules
-        }
-      }, thumbnail);
 
-      if (error) {
-        console.error('프로젝트 저장 에러:', error);
-        setSaveStatus('error');
-        alert('프로젝트 저장에 실패했습니다: ' + error);
-      } else {
-        setSaveStatus('success');
-        console.log('✅ 프로젝트 저장 성공 (썸네일 포함)');
-        
-        // 다른 창(대시보드)에 프로젝트 업데이트 알림
-        try {
-          const channel = new BroadcastChannel('project-updates');
-          channel.postMessage({ 
-            type: 'PROJECT_SAVED', 
-            projectId: currentProjectId,
-            timestamp: Date.now()
-          });
-          console.log('📡 다른 창에 프로젝트 업데이트 알림 전송');
-        } catch (error) {
-          console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+      if (isFirebaseConfigured() && currentProjectId) {
+        // Firebase 저장 모드
+        const { error } = await updateProject(currentProjectId, {
+          title: basicInfo.title,
+          projectData: basicInfo,
+          spaceConfig: spaceInfo,
+          furniture: {
+            placedModules: placedModules
+          }
+        }, thumbnail);
+
+        if (error) {
+          console.error('프로젝트 저장 에러:', error);
+          setSaveStatus('error');
+          alert('프로젝트 저장에 실패했습니다: ' + error);
+        } else {
+          setSaveStatus('success');
+          console.log('✅ 프로젝트 저장 성공 (썸네일 포함)');
+          
+          // 다른 창(대시보드)에 프로젝트 업데이트 알림
+          try {
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({ 
+              type: 'PROJECT_SAVED', 
+              projectId: currentProjectId,
+              timestamp: Date.now()
+            });
+            console.log('📡 다른 창에 프로젝트 업데이트 알림 전송');
+          } catch (error) {
+            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+          }
+          
+          setTimeout(() => setSaveStatus('idle'), 3000);
         }
+      } else {
+        // 데모 모드: 로컬 저장
+        const demoProject = {
+          id: currentProjectId || `demo-${Date.now()}`,
+          title: basicInfo.title || '데모 프로젝트',
+          projectData: basicInfo,
+          spaceConfig: spaceInfo,
+          furniture: {
+            placedModules: placedModules
+          },
+          thumbnail: thumbnail,
+          savedAt: new Date().toISOString(),
+          furnitureCount: placedModules.length
+        };
+        
+        // 로컬 스토리지에 저장
+        localStorage.setItem('demoProject', JSON.stringify(demoProject));
+        
+        setSaveStatus('success');
+        console.log('✅ 데모 프로젝트 로컬 저장 성공 (썸네일 포함)');
+        alert('데모 프로젝트가 로컬에 저장되었습니다!\n\n썸네일과 함께 저장되어 나중에 확인할 수 있습니다.');
         
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
@@ -229,7 +311,48 @@ const Configurator: React.FC = () => {
 
   // 공간 설정 업데이트 핸들러
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
-    setSpaceInfo(updates);
+    let finalUpdates = { ...updates };
+    
+    // 폭(width)이 변경되었을 때 도어 개수 자동 조정
+    if (updates.width && updates.width !== spaceInfo.width) {
+      const range = calculateDoorRange(updates.width);
+      const currentCount = spaceInfo.customColumnCount || getCurrentColumnCount();
+      
+      // 400-600mm 범위 엄격 적용
+      const usableWidth = updates.width - 100;
+      let adjustedCount = currentCount;
+      
+      // 현재 카운트로 계산한 슬롯 크기 확인
+      const currentSlotWidth = usableWidth / currentCount;
+      
+      if (currentSlotWidth < 400) {
+        adjustedCount = Math.floor(usableWidth / 400);
+      } else if (currentSlotWidth > 600) {
+        adjustedCount = Math.ceil(usableWidth / 600);
+      }
+      
+      // 최종 범위 검증
+      const finalCount = Math.max(range.min, Math.min(range.max, adjustedCount));
+      finalUpdates = { ...finalUpdates, customColumnCount: finalCount };
+    }
+    
+    // customColumnCount가 직접 변경되었을 때도 검증
+    if (updates.customColumnCount) {
+      const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
+      const range = calculateDoorRange(currentWidth);
+      const usableWidth = currentWidth - 100;
+      const proposedSlotWidth = usableWidth / updates.customColumnCount;
+      
+      // 400-600mm 범위를 벗어나면 조정
+      if (proposedSlotWidth < 400 || proposedSlotWidth > 600) {
+        const correctedCount = Math.max(range.min, Math.min(range.max, 
+          proposedSlotWidth < 400 ? Math.floor(usableWidth / 400) : Math.ceil(usableWidth / 600)
+        ));
+        finalUpdates = { ...finalUpdates, customColumnCount: correctedCount };
+      }
+    }
+    
+    setSpaceInfo(finalUpdates);
   };
 
   // 도어 설치/제거 핸들러
@@ -383,7 +506,8 @@ const Configurator: React.FC = () => {
                       className={styles.decrementButton}
                       onClick={() => {
                         const currentCount = getCurrentColumnCount();
-                        const newCount = Math.max(8, currentCount - 1);
+                        const range = calculateDoorRange(spaceInfo.width || 4800);
+                        const newCount = Math.max(range.min, currentCount - 1);
                         handleSpaceInfoUpdate({ customColumnCount: newCount });
                       }}
                     >
@@ -391,11 +515,18 @@ const Configurator: React.FC = () => {
                     </button>
                     <input
                       type="number"
-                      min="8"
-                      max="15"
+                      min={(() => {
+                        const range = calculateDoorRange(spaceInfo.width || 4800);
+                        return range.min;
+                      })()}
+                      max={(() => {
+                        const range = calculateDoorRange(spaceInfo.width || 4800);
+                        return range.max;
+                      })()}
                       value={getCurrentColumnCount()}
                       onChange={(e) => {
-                        const value = Math.min(15, Math.max(8, parseInt(e.target.value) || 8));
+                        const range = calculateDoorRange(spaceInfo.width || 4800);
+                        const value = Math.min(range.max, Math.max(range.min, parseInt(e.target.value) || range.min));
                         handleSpaceInfoUpdate({ customColumnCount: value });
                       }}
                       className={styles.numberInput}
@@ -404,7 +535,8 @@ const Configurator: React.FC = () => {
                       className={styles.incrementButton}
                       onClick={() => {
                         const currentCount = getCurrentColumnCount();
-                        const newCount = Math.min(15, currentCount + 1);
+                        const range = calculateDoorRange(spaceInfo.width || 4800);
+                        const newCount = Math.min(range.max, currentCount + 1);
                         handleSpaceInfoUpdate({ customColumnCount: newCount });
                       }}
                     >
@@ -416,35 +548,74 @@ const Configurator: React.FC = () => {
 
               {/* 도어 개수 슬라이더 */}
               <div className={styles.doorSliderContainer}>
-                <input
-                  type="range"
-                  min="8"
-                  max="15"
-                  value={getCurrentColumnCount()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    handleSpaceInfoUpdate({ customColumnCount: value });
-                  }}
-                  className={styles.doorSlider}
-                />
-                <div className={styles.sliderLabels}>
-                  {[8, 9, 10, 11, 12, 13, 14, 15].map(num => (
-                    <span 
-                      key={num} 
-                      className={`${styles.sliderLabel} ${getCurrentColumnCount() === num ? styles.active : ''}`}
-                    >
-                      {num}
-                    </span>
-                  ))}
-                </div>
+                {(() => {
+                  const range = calculateDoorRange(spaceInfo.width || 4800);
+                  return (
+                    <>
+                      <input
+                        type="range"
+                        min={range.min}
+                        max={range.max}
+                        value={getCurrentColumnCount()}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          handleSpaceInfoUpdate({ customColumnCount: value });
+                        }}
+                        className={styles.doorSlider}
+                      />
+                      <div className={styles.sliderLabels}>
+                        {(() => {
+                          const labels = [];
+                          for (let i = range.min; i <= range.max; i++) {
+                            labels.push(i);
+                          }
+                          return labels.map(num => (
+                            <span 
+                              key={num} 
+                              className={`${styles.sliderLabel} ${getCurrentColumnCount() === num ? styles.active : ''}`}
+                            >
+                              {num}
+                            </span>
+                          ));
+                        })()}
+                      </div>
+                      <div className={styles.sliderInfo}>
+                        {(() => {
+                          const currentWidth = spaceInfo.width || 4800;
+                          const range = calculateDoorRange(currentWidth);
+                          const usableWidth = currentWidth - 100;
+                          const currentSlotWidth = Math.round(usableWidth / getCurrentColumnCount());
+                          return (
+                            <div>
+                              <p>슬롯 크기 제약: 400mm ~ 600mm</p>
+                              <p>현재 슬롯당 할당: {currentSlotWidth}mm</p>
+                              <p>공간 기준 범위: {range.min}개 ~ {range.max}개</p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* 슬롯 생성 범위 안내 */}
               <div className={styles.slotInfoBox}>
-                <p className={styles.slotInfoText}>
-                  현 사이즈 기준 슬롯 생성 범위: 최소 8개 ~ 최대 15개<br/>
-                  도어 1개 너비: {Math.floor((spaceInfo.width || 4800) / getCurrentColumnCount())}mm
-                </p>
+                {(() => {
+                  const currentWidth = spaceInfo.width || 4800;
+                  const range = calculateDoorRange(currentWidth);
+                  const usableWidth = currentWidth - 100; // 프레임 마진
+                  const currentSlotWidth = Math.round(usableWidth / getCurrentColumnCount());
+                  
+                  return (
+                    <p className={styles.slotInfoText}>
+                      현 사이즈 기준 슬롯 생성 범위: 최소 {range.min}개 ~ 최대 {range.max}개<br/>
+                      도어 1개 너비: {currentSlotWidth}mm
+                      {currentSlotWidth < 400 && <span style={{color: '#ef4444'}}> (⚠️ 최소 400mm 미만)</span>}
+                      {currentSlotWidth > 600 && <span style={{color: '#ef4444'}}> (⚠️ 최대 600mm 초과)</span>}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
 
@@ -572,7 +743,7 @@ const Configurator: React.FC = () => {
               viewMode={viewMode}
               setViewMode={setViewMode}
               renderMode={renderMode}
-              svgSize={{ width: 600, height: 400 }}
+              svgSize={{ width: 800, height: 600 }}
             />
           </div>
         </div>

@@ -93,13 +93,9 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
         side={THREE.DoubleSide}
       />
       
-      {/* 뷰포트별 축 표시 */}
+      {/* 뷰포트별 공간 경계선만 표시 (축 제거) */}
       {currentViewDirection === 'front' && (
         <>
-          {/* 정면뷰: X축(가로), Y축(세로) */}
-          <Line points={[[-50, 0, 0.001], [50, 0, 0.001]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, -50, 0.001], [0, 50, 0.001]]} color="#44ff44" lineWidth={2} />
-          
           {/* 공간 경계선 */}
           <Line
             points={[
@@ -127,10 +123,6 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
       
       {currentViewDirection === 'left' && (
         <>
-          {/* 좌측뷰: Z축(가로), Y축(세로) */}
-          <Line points={[[0, 0, -50], [0, 0, 50]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, -50, 0], [0, 50, 0]]} color="#44ff44" lineWidth={2} />
-          
           {/* 공간 경계선 (좌측면) */}
           <Line
             points={[
@@ -145,10 +137,6 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
       
       {currentViewDirection === 'right' && (
         <>
-          {/* 우측뷰: Z축(가로), Y축(세로) */}
-          <Line points={[[spaceWidth, 0, -50], [spaceWidth, 0, 50]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[spaceWidth, -50, 0], [spaceWidth, 50, 0]]} color="#44ff44" lineWidth={2} />
-          
           {/* 공간 경계선 (우측면) */}
           <Line
             points={[
@@ -163,10 +151,6 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
       
       {currentViewDirection === 'top' && (
         <>
-          {/* 상단뷰: X축(가로), Z축(세로) */}
-          <Line points={[[-50, spaceHeight, 0], [50, spaceHeight, 0]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, spaceHeight, -50], [0, spaceHeight, 50]]} color="#4444ff" lineWidth={2} />
-          
           {/* 공간 경계선 (상단면) */}
           <Line
             points={[

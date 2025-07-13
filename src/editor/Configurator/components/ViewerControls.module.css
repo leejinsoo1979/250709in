@@ -8,6 +8,8 @@
   height: 52px;
   position: relative;
   z-index: 10;
+  min-height: 52px;
+  flex-shrink: 0;
 }
 
 
@@ -16,12 +18,15 @@
   display: flex;
   align-items: center;
   gap: 24px;
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .toggleGroup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px; /* 간격 축소 */
 }
 
 .toggleIcon {
@@ -33,15 +38,15 @@
   font-size: 12px;
   font-weight: 400;
   color: #6b7280;
-  min-width: 24px;
+  min-width: 22px;
   text-align: center;
   line-height: 16px;
 }
 
 .switch {
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
+  width: 36px;
+  height: 18px;
+  border-radius: 9px;
   border: none;
   cursor: pointer;
   position: relative;
@@ -58,8 +63,8 @@
 }
 
 .switchHandle {
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   background: #ffffff;
   border-radius: 50%;
   position: absolute;
@@ -69,7 +74,7 @@
 }
 
 .switch.on .switchHandle {
-  left: 22px;
+  left: 20px;
 }
 
 .switch.off .switchHandle {
@@ -79,13 +84,13 @@
 .checkboxGroup {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 6px; /* 간격 대폭 축소 */
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
@@ -99,8 +104,8 @@
 }
 
 .checkmark {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border: 1px solid #767676;
   border-radius: 50%;
   position: relative;
@@ -116,8 +121,8 @@
 .checkbox:checked + .checkmark::after {
   content: '';
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #ffffff;
   top: 50%;
@@ -126,10 +131,23 @@
 }
 
 /* 우측 컨트롤 */
+/* 중앙 뷰 컨트롤들 */
+.centerControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
 .rightControls {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 /* 보기 옵션 (Solid/Wireframe) */
@@ -142,16 +160,16 @@
 }
 
 .renderModeButton {
-  padding: 8px 16px;
+  padding: 6px 10px;
   border: none;
   background: white;
   color: #6b7280;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   border-right: 1px solid #e5e7eb;
-  min-width: 70px;
+  min-width: 50px;
 }
 
 .renderModeButton:last-child {
@@ -182,19 +200,19 @@
 .viewModeButton {
   background: #ffffff;
   border: none;
-  padding: 8px 20px;
+  padding: 5px 12px;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #10b981;
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 20px;
-  height: 36px;
+  line-height: 18px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 64px;
+  min-width: 35px;
 }
 
 .viewModeButton:not(:last-child) {
@@ -221,19 +239,19 @@
 .viewDirectionButton {
   background: #ffffff;
   border: none;
-  padding: 8px 20px;
+  padding: 6px 10px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #10b981;
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 20px;
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;
+  min-width: 45px;
 }
 
 .viewDirectionButton:not(:last-child) {
@@ -249,51 +267,331 @@
   background: #f0f9ff;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
+/* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */
+
+/* 큰 데스크톱 (1920px 이상) */
+@media (min-width: 1920px) {
   .viewerControls {
-    padding: 6px 12px;
-    height: 48px;
-    flex-wrap: wrap;
-    gap: 12px;
+    padding: 12px 24px;
+    height: 60px;
   }
   
   .leftControls {
+    gap: 32px;
+  }
+  
+  .centerControls {
     gap: 16px;
   }
   
   .rightControls {
+    gap: 24px;
+  }
+}
+
+/* 일반 데스크톱 (1400-1919px) */
+@media (max-width: 1919px) and (min-width: 1400px) {
+  .viewerControls {
+    padding: 10px 20px;
+    height: 56px;
+  }
+  
+  .leftControls {
+    gap: 28px;
+  }
+  
+  .centerControls {
+    gap: 14px;
+  }
+  
+  .rightControls {
+    gap: 20px;
+  }
+}
+
+/* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .viewerControls {
+    padding: 8px 16px;
+    height: 52px;
+  }
+  
+  .leftControls {
+    gap: 24px;
+  }
+  
+  .centerControls {
+    gap: 12px;
+  }
+  
+  .rightControls {
     gap: 16px;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 7px 18px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+  
+  .viewDirectionButton {
+    min-width: 80px;
+  }
+}
+
+/* 맥북 에어/프로 13인치 (1024-1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .viewerControls {
+    padding: 8px 14px;
+    height: 50px;
+    justify-content: space-between;
+  }
+  
+  .leftControls {
+    gap: 16px;
+    flex: 0 1 auto; /* 자동 크기 조정 */
+    max-width: 30%; /* 최대 너비 제한 */
+  }
+  
+  .centerControls {
+    gap: 10px;
+    flex: 0 1 auto;
+    max-width: 40%;
+  }
+  
+  .rightControls {
+    gap: 12px;
+    flex: 0 1 auto; /* 자동 크기 조정 */
+    max-width: 30%; /* 최대 너비 제한 */
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 55px;
+    white-space: nowrap;
+  }
+  
+  .viewDirectionButton {
+    min-width: 62px;
   }
   
   .checkboxGroup {
     gap: 12px;
   }
   
-  .viewModeButton,
-  .viewDirectionButton {
-    padding: 6px 16px;
-    font-size: 13px;
-    height: 32px;
-    min-width: 60px;
+  .toggleGroup {
+    gap: 8px;
   }
   
-  .viewDirectionButton {
-    min-width: 70px;
+  .checkboxLabel {
+    font-size: 11px;
   }
 }
 
+/* 태블릿 가로 (768-1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .viewerControls {
+    padding: 6px 12px;
+    height: 48px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  
+  .leftControls {
+    gap: 16px;
+    min-width: fit-content;
+  }
+  
+  .centerControls {
+    gap: 8px;
+    min-width: fit-content;
+  }
+  
+  .rightControls {
+    gap: 12px;
+    min-width: fit-content;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 5px 12px;
+    font-size: 11px;
+    height: 32px;
+    min-width: 50px;
+  }
+  
+  .viewDirectionButton {
+    min-width: 60px;
+  }
+  
+  .checkboxGroup {
+    gap: 12px;
+  }
+  
+  .checkboxLabel {
+    font-size: 11px;
+  }
+  
+  .toggleLabel {
+    font-size: 11px;
+  }
+}
+
+/* 태블릿 세로 및 모바일 가로 (481-767px) */
+@media (max-width: 767px) and (min-width: 481px) {
+  .viewerControls {
+    padding: 6px 10px;
+    height: 44px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  
+  .leftControls {
+    gap: 12px;
+    min-width: fit-content;
+  }
+  
+  .centerControls {
+    gap: 6px;
+    min-width: fit-content;
+  }
+  
+  .rightControls {
+    gap: 10px;
+    min-width: fit-content;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 4px 10px;
+    font-size: 10px;
+    height: 30px;
+    min-width: 45px;
+  }
+  
+  .viewDirectionButton {
+    min-width: 54px;
+  }
+  
+  .checkboxGroup {
+    gap: 10px;
+  }
+  
+  .checkboxLabel {
+    font-size: 10px;
+  }
+  
+  .toggleGroup {
+    gap: 8px;
+  }
+  
+  .switch {
+    width: 36px;
+    height: 20px;
+  }
+  
+  .switchHandle {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .switch.on .switchHandle {
+    left: 18px;
+  }
+}
+
+/* 작은 모바일 (480px 이하) */
 @media (max-width: 480px) {
   .viewerControls {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     height: auto;
     padding: 8px 12px;
+    gap: 8px;
   }
   
   .leftControls,
+  .centerControls,
   .rightControls {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .leftControls {
+    order: 2;
+  }
+  
+  .centerControls {
+    order: 1;
+  }
+  
+  .rightControls {
+    order: 3;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 6px 8px;
+    font-size: 10px;
+    height: 28px;
+    min-width: 40px;
+    flex: 1;
+  }
+  
+  .renderModeGroup,
+  .viewModeGroup,
+  .viewDirectionGroup {
+    flex: 1;
+  }
+}
+
+/* 세로 방향 최적화 */
+@media (orientation: portrait) and (max-width: 768px) {
+  .viewerControls {
+    flex-direction: column;
+    height: auto;
+    padding: 6px 8px;
+  }
+  
+  .leftControls,
+  .centerControls,
+  .rightControls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 가로 방향 최적화 (높이가 작은 경우) */
+@media (orientation: landscape) and (max-height: 600px) {
+  .viewerControls {
+    height: 40px;
+    padding: 4px 8px;
+  }
+  
+  .viewModeButton,
+  .viewDirectionButton {
+    padding: 3px 8px;
+    font-size: 10px;
+    height: 26px;
+    min-width: 40px;
+  }
+  
+  .switch {
+    width: 32px;
+    height: 16px;
+  }
+  
+  .switchHandle {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .switch.on .switchHandle {
+    left: 18px;
   }
 } 

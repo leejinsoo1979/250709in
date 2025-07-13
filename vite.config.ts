@@ -11,7 +11,7 @@ const __dirname = dirname(__filename)
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: process.env.VERCEL ? '/' : (process.env.NODE_ENV === 'production' ? '/furniture-editor/' : '/'),
+  base: process.env.VERCEL ? '/' : (process.env.NODE_ENV === 'production' ? '/250709in/' : '/'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

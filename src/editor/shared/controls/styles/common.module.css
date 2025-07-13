@@ -212,20 +212,22 @@
 
 .toggleButton {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px 20px;
   border: none;
   background: #ffffff;
   color: #10b981;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
   border-right: 1px solid #10b981;
-  min-height: 36px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .toggleButton:last-child {

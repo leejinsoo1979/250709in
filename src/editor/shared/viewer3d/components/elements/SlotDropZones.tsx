@@ -142,7 +142,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         z: 0
       },
       rotation: 0,
-      hasDoor: dragData.moduleData.hasDoor ?? false, // 기본값: 도어 없음
+      hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
       customDepth: customDepth, // 가구별 기본 깊이 설정
       slotIndex: slotIndex,
       isDualSlot: isDual,

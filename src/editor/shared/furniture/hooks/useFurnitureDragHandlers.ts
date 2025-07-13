@@ -88,7 +88,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             z: 0
           },
           rotation: 0,
-          hasDoor: currentDragData.moduleData.hasDoor ?? true, // 도어 정보 포함
+          hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: customDepth // 가구별 기본 깊이 설정
         };
         
