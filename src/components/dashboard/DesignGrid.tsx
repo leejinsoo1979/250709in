@@ -1,23 +1,38 @@
 import React from 'react';
 import styles from './DesignGrid.module.css';
 
+// 타입 정의 추가
+interface DesignCardProps {
+  design: any;
+  onEdit: (design: any) => void;
+  onCopy: (design: any) => void;
+  onDelete: (design: any) => void;
+}
+interface CreateDesignCardProps {
+  onCreateDesign: () => void;
+}
+interface EmptyStateProps {
+  onCreateDesign: () => void;
+}
+
 // 날짜 포맷팅 함수
-const formatDate = (date): any => {
+const formatDate = (date: Date | string | { seconds?: number } | null | undefined): string => {
+  if (!date) return '';
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(new Date(date));
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(date as any));
 };
 
 // 개별 디자인 카드
-const DesignCard = ({ design, onEdit, onCopy, onDelete }): any => {
-  const handleCardClick = (e): any => {
+const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelete }) => {
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     e.stopPropagation();
     // 디자인 상세 보기
   };
 
-  const handleAction = (action, e): any => {
+  const handleAction = (action: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     switch (action) {
       case 'copy':
@@ -78,7 +93,7 @@ const DesignCard = ({ design, onEdit, onCopy, onDelete }): any => {
 };
 
 // 새 디자인 생성 카드
-const CreateDesignCard = ({ onCreateDesign }): any => {
+const CreateDesignCard: React.FC<CreateDesignCardProps> = ({ onCreateDesign }) => {
   return (
     <div className={styles.createDesignCard} onClick={onCreateDesign}>
       <div className={styles.createIcon}>
@@ -90,7 +105,7 @@ const CreateDesignCard = ({ onCreateDesign }): any => {
 };
 
 // 빈 상태 컴포넌트
-const EmptyState = ({ onCreateDesign }): any => {
+const EmptyState: React.FC<EmptyStateProps> = ({ onCreateDesign }) => {
   return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>+</div>
@@ -106,14 +121,19 @@ const EmptyState = ({ onCreateDesign }): any => {
 };
 
 // 메인 디자인 그리드 컴포넌트
-const DesignGrid = ({ 
-  designs = [], 
-  viewMode = 'grid',
+const DesignGrid: React.FC<{
+  designs?: any[];
+  onCreateDesign: any;
+  onEditDesign: any;
+  onCopyDesign: any;
+  onDeleteDesign: any;
+}> = ({
+  designs = [],
   onCreateDesign,
   onEditDesign,
   onCopyDesign,
   onDeleteDesign
-}): any => {
+}) => {
   if (designs.length === 0) {
     return <EmptyState onCreateDesign={onCreateDesign} />;
   }
@@ -121,7 +141,7 @@ const DesignGrid = ({
   return (
     <div className={styles.designGrid}>
       <CreateDesignCard onCreateDesign={onCreateDesign} />
-      {designs.map((design) => (
+      {designs.map((design: any) => (
         <DesignCard
           key={design.id}
           design={design}

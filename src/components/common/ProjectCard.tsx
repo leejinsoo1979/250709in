@@ -13,8 +13,7 @@ import {
   ClipboardIcon,
   EyeIcon,
   EditIcon,
-  TrashIcon,
-  DownloadIcon
+  TrashIcon
 } from './Icons';
 import styles from './ProjectCard.module.css';
 

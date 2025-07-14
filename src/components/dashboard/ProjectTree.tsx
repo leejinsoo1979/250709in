@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProjectTree.module.css';
 
+// 타입 정의 추가
+interface ProjectTreeItem {
+  id: string;
+  name: string;
+  children?: ProjectTreeItem[];
+  expanded?: boolean;
+}
+
 const TreeItem = ({ 
   item, 
   level = 0, 
@@ -9,42 +17,50 @@ const TreeItem = ({
   onDelete, 
   onShare, 
   onDetails 
-}): any => {
+}: {
+  item: ProjectTreeItem;
+  level?: number;
+  onToggle: (item: ProjectTreeItem) => void;
+  onRename: (item: ProjectTreeItem) => void;
+  onDelete: (item: ProjectTreeItem) => void;
+  onShare: (item: ProjectTreeItem) => void;
+  onDetails: (item: ProjectTreeItem) => void;
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect((): any => {
-    const handleClickOutside = (event): any => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+  useEffect((): void => {
+    function handleClickOutside(event: MouseEvent): void {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
-    };
+    }
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return undefined;
   }, []);
 
-  const handleMenuToggle = (e): any => {
+  const handleMenuToggle = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleMenuAction = (action, e): any => {
+  const handleMenuAction = (action: string, e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
     setIsMenuOpen(false);
     
     switch (action) {
       case 'rename':
-        onRename?.(item);
+        onRename(item);
         break;
       case 'delete':
-        onDelete?.(item);
+        onDelete(item);
         break;
       case 'share':
-        onShare?.(item);
+        onShare(item);
         break;
       case 'details':
-        onDetails?.(item);
+        onDetails(item);
         break;
     }
   };
@@ -54,7 +70,7 @@ const TreeItem = ({
       <div 
         className={styles.itemContent}
         style={{ paddingLeft: `${level * 20 + 16}px` }}
-        onClick={() => onToggle?.(item)}
+        onClick={() => onToggle(item)}
       >
         <div className={styles.itemLeft}>
           <span className={styles.expandIcon}>
@@ -109,7 +125,7 @@ const TreeItem = ({
       
       {item.expanded && item.children && (
         <div className={styles.children}>
-          {item.children.map((child) => (
+          {item.children.map((child: ProjectTreeItem) => (
             <TreeItem
               key={child.id}
               item={child}
@@ -127,17 +143,27 @@ const TreeItem = ({
   );
 };
 
-const ProjectTree = ({
+const ProjectTree: React.FC<{
+  selectedProject: ProjectTreeItem | null;
+  projects: ProjectTreeItem[];
+  treeData: ProjectTreeItem[];
+  onProjectSelect: (project: ProjectTreeItem) => void;
+  onToggle: (item: ProjectTreeItem) => void;
+  onRename: (item: ProjectTreeItem) => void;
+  onDelete: (item: ProjectTreeItem) => void;
+  onShare: (item: ProjectTreeItem) => void;
+  onDetails: (item: ProjectTreeItem) => void;
+}> = ({
   selectedProject,
-  projects = [],
-  treeData = [],
+  projects,
+  treeData,
   onProjectSelect,
   onToggle,
   onRename,
   onDelete,
   onShare,
   onDetails
-}): any => {
+}) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
@@ -158,12 +184,12 @@ const ProjectTree = ({
           
           {isDropdownOpen && (
             <div className={styles.dropdownList}>
-              {projects.map((project) => (
+              {projects.map((project: ProjectTreeItem) => (
                 <button
                   key={project.id}
                   className={styles.dropdownItem}
-                  onClick={(): any => {
-                    onProjectSelect?.(project);
+                  onClick={(): void => {
+                    onProjectSelect(project);
                     setIsDropdownOpen(false);
                   }}
                 >
@@ -176,7 +202,7 @@ const ProjectTree = ({
       </div>
       
       <div className={styles.treeContainer}>
-        {treeData.map((item) => (
+        {treeData.map((item: ProjectTreeItem) => (
           <TreeItem
             key={item.id}
             item={item}
