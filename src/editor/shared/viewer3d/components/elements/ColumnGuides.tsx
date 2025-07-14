@@ -26,9 +26,13 @@ const ColumnGuides: React.FC = () => {
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // 바닥과 천장 높이 (Three.js 단위)
-  const floorY = mmToThreeUnits(internalSpace.startY);
-  const ceilingY = floorY + mmToThreeUnits(internalSpace.height);
+  // 띄워서 배치인지 확인
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  
+  // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
+  const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+  const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
   
   // 내경의 앞뒤 좌표 (Three.js 단위)
   const frontZ = mmToThreeUnits(internalSpace.depth / 2);

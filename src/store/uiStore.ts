@@ -4,6 +4,9 @@ import { persist } from 'zustand/middleware';
 // 2D 뷰 방향 타입 정의
 export type View2DDirection = 'front' | 'left' | 'right' | 'top';
 
+// 프레임 강조 타입 정의
+export type HighlightedFrame = 'left' | 'right' | 'top' | 'base' | null;
+
 // UI 상태 타입
 interface UIState {
   // 뷰어 모드 상태
@@ -21,12 +24,16 @@ interface UIState {
   // 속성 패널용 선택된 모듈
   selectedModuleForProperties: string | null;
   
+  // 강조된 프레임
+  highlightedFrame: HighlightedFrame;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
   toggleDimensions: () => void;
   setSelectedModuleForProperties: (moduleId: string | null) => void;
+  setHighlightedFrame: (frame: HighlightedFrame) => void;
   resetUI: () => void;
 }
 
@@ -37,6 +44,7 @@ const initialUIState = {
   doorsOpen: true,  // 기본값: 문 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
   selectedModuleForProperties: null,
+  highlightedFrame: null as HighlightedFrame,  // 기본값: 강조 없음
 };
 
 export const useUIStore = create<UIState>()(
@@ -58,6 +66,9 @@ export const useUIStore = create<UIState>()(
       
       setSelectedModuleForProperties: (moduleId) =>
         set({ selectedModuleForProperties: moduleId }),
+      
+      setHighlightedFrame: (frame) =>
+        set({ highlightedFrame: frame }),
       
       resetUI: () =>
         set(initialUIState),

@@ -332,7 +332,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
         );
       })}
       
-      {/* 좌측 전체 높이 치수선 */}
+      {/* 좌측 전체 높이 치수선 - 가구 배치 시에만 표시 */}
+      {placedModules.length > 0 && (
       <group>
         {/* 치수선 */}
         <Line
@@ -381,51 +382,105 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           lineWidth={1}
         />
       </group>
+      )}
       
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
       <group>
         {(() => {
           const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(is3DMode ? 120 : 200); // 우측 치수선 위치 (3D에서는 더 가까이)
+          
+          // 띄워서 배치인지 확인
+          const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+          
           const topFrameHeight = frameSize.top; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
-          const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight; // 캐비넷 배치 영역
+          const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight; // 캐비넷 배치 영역 (띄움 높이 제외)
           
-          const bottomY = 0; // 바닥
-          const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
-          const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
+          const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
+          const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
+          const cabinetAreaTopY = mmToThreeUnits(floatHeight + bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
           const topY = spaceHeight; // 최상단
           
           return (
             <>
-              {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
-              {bottomFrameHeight > 0 && (
+              {/* 0. 띄움 높이 - 띄워서 배치인 경우에만 표시 (우측) */}
+              {isFloating && floatHeight > 0 && (
                 <group>
                   <Line
-                    points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
-                    color="#666666"
-                    lineWidth={1}
+                    points={[[rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002]]}
+                    color="#ff6b35"
+                    lineWidth={2}
                   />
                   <Line
-                    points={createArrowHead([rightDimensionX, bottomY, 0.002], [rightDimensionX, 0.03, 0.002])}
-                    color="#666666"
-                    lineWidth={1}
+                    points={createArrowHead([rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), -0.03, 0.002])}
+                    color="#ff6b35"
+                    lineWidth={2}
                   />
                   <Line
-                    points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002])}
-                    color="#666666"
-                    lineWidth={1}
+                    points={createArrowHead([rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight) + 0.03, 0.002])}
+                    color="#ff6b35"
+                    lineWidth={2}
                   />
                   <Text
-                    position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight / 2), 0.01]}
-                    fontSize={baseFontSize}
-                    color="black"
+                    position={[rightDimensionX + mmToThreeUnits(100) + mmToThreeUnits(30), mmToThreeUnits(floatHeight / 2), 0.01]}
+                    fontSize={baseFontSize * 0.9}
+                    color="#ff6b35"
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
                   >
-                    {bottomFrameHeight}
+                    띄움 {floatHeight}
                   </Text>
+                  {/* 연장선들 - 좌측으로 1800mm 이동 */}
+                  <Line
+                    points={[[-mmToThreeUnits(1800), 0, 0.002], [mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(1800), 0, 0.002]]}
+                    color="#ff6b35"
+                    lineWidth={1}
+                    dashed
+                    dashSize={0.01}
+                    gapSize={0.005}
+                  />
+                  <Line
+                    points={[[-mmToThreeUnits(1800), mmToThreeUnits(floatHeight), 0.002], [mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(1800), mmToThreeUnits(floatHeight), 0.002]]}
+                    color="#ff6b35"
+                    lineWidth={1}
+                    dashed
+                    dashSize={0.01}
+                    gapSize={0.005}
+                  />
                 </group>
+              )}
+              
+              {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
+              {bottomFrameHeight > 0 && (
+              <group>
+                <Line
+                  points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([rightDimensionX, bottomY, 0.002], [rightDimensionX, 0.03, 0.002])}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002])}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                <Text
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight / 2), 0.01]}
+                  fontSize={baseFontSize}
+                  color="black"
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {bottomFrameHeight}
+                </Text>
+              </group>
               )}
               
               {/* 2. 캐비넷 배치 높이 */}
@@ -494,11 +549,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
               />
               {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
               {bottomFrameHeight > 0 && (
-                <Line
-                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, bottomFrameTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), bottomFrameTopY, 0.001]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
+              <Line
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, bottomFrameTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), bottomFrameTopY, 0.001]]}
+                color="#666666"
+                lineWidth={1}
+              />
               )}
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, cabinetAreaTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), cabinetAreaTopY, 0.001]]}
@@ -665,172 +720,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
     
     return (
       <group>
-        {/* 상단 전체 깊이 치수선 - 좌측뷰에서는 항상 표시 */}
-        {(currentViewDirection === 'left' || placedModules.filter(m => m.position.x < 0).length === 0) && (
-          <group>
-            {/* 치수선 */}
-            <Line
-              points={[[0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset - furnitureDepth/2], [0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset + furnitureDepth/2]]}
-              color="#666666"
-              lineWidth={1}
-            />
-            
-            {/* 좌측 화살표 */}
-            <Line
-              points={createArrowHead([0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset - furnitureDepth/2], [0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset - furnitureDepth/2 + 0.05])}
-              color="#666666"
-              lineWidth={1}
-            />
-            
-            {/* 우측 화살표 */}
-            <Line
-              points={createArrowHead([0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset + furnitureDepth/2], [0, actualSpaceHeight + mmToThreeUnits(200), furnitureZOffset + furnitureDepth/2 - 0.05])}
-              color="#666666"
-              lineWidth={1}
-            />
-            
-            {/* 전체 깊이 치수 텍스트 */}
-            <Text
-              position={[0, actualSpaceHeight + mmToThreeUnits(240), furnitureZOffset]}
-              fontSize={largeFontSize}
-              color="black"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {panelDepthMm}
-            </Text>
-            
-            {/* 연장선 (앞면) */}
-            <Line
-              points={[[0, 0, furnitureZOffset + furnitureDepth/2], [0, actualSpaceHeight + mmToThreeUnits(220), furnitureZOffset + furnitureDepth/2]]}
-              color="#666666"
-              lineWidth={1}
-            />
-            
-            {/* 연장선 (뒷면) */}
-            <Line
-              points={[[0, 0, furnitureZOffset - furnitureDepth/2], [0, actualSpaceHeight + mmToThreeUnits(220), furnitureZOffset - furnitureDepth/2]]}
-              color="#666666"
-              lineWidth={1}
-            />
-          </group>
-        )}
 
-        {/* 앞쪽 프레임 깊이 치수선 */}
-        <group>
-          {(() => {
-            // 앞쪽 프레임 두께 (도어 두께 + 여백)
-            const frontFrameThickness = 30; // mm
-            const dimY = actualSpaceHeight + mmToThreeUnits(80);
-            const frontFrameStart = furnitureZOffset + furnitureDepth/2;
-            const frontFrameEnd = frontFrameStart + mmToThreeUnits(frontFrameThickness);
-            
-            return (
-              <>
-                {/* 치수선 */}
-                <Line
-                  points={[[0, dimY, frontFrameStart], [0, dimY, frontFrameEnd]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                
-                {/* 화살표들 */}
-                <Line
-                  points={createArrowHead([0, dimY, frontFrameStart], [0, dimY, frontFrameStart + 0.02], 0.01)}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([0, dimY, frontFrameEnd], [0, dimY, frontFrameEnd - 0.02], 0.01)}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                
-                {/* 치수 텍스트 */}
-                <Text
-                  position={[0, dimY + mmToThreeUnits(40), (frontFrameStart + frontFrameEnd) / 2]}
-                  fontSize={baseFontSize}
-                  color="black"
-                  anchorX="center"
-                  anchorY="middle"
-                >
-                  {frontFrameThickness}
-                </Text>
 
-                {/* 연장선들 */}
-                <Line
-                  points={[[0, 0, frontFrameStart], [0, dimY + mmToThreeUnits(20), frontFrameStart]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[0, 0, frontFrameEnd], [0, dimY + mmToThreeUnits(20), frontFrameEnd]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-              </>
-            );
-          })()}
-        </group>
 
-        {/* 뒤쪽 프레임 깊이 치수선 */}
-        <group>
-          {(() => {
-            // 뒤쪽 프레임 두께
-            const backFrameThickness = (panelDepthMm - furnitureDepthMm) / 2; // mm
-            const dimY = actualSpaceHeight + mmToThreeUnits(80);
-            const backFrameStart = spaceZOffset;
-            const backFrameEnd = furnitureZOffset - furnitureDepth/2;
-            
-            return (
-              <>
-                {/* 치수선 */}
-                <Line
-                  points={[[0, dimY, backFrameStart], [0, dimY, backFrameEnd]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                
-                {/* 화살표들 */}
-                <Line
-                  points={createArrowHead([0, dimY, backFrameStart], [0, dimY, backFrameStart + 0.02], 0.01)}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={createArrowHead([0, dimY, backFrameEnd], [0, dimY, backFrameEnd - 0.02], 0.01)}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                
-                {/* 치수 텍스트 */}
-                <Text
-                  position={[0, dimY + mmToThreeUnits(40), (backFrameStart + backFrameEnd) / 2]}
-                  fontSize={baseFontSize}
-                  color="black"
-                  anchorX="center"
-                  anchorY="middle"
-                >
-                  {Math.round(backFrameThickness)}
-                </Text>
-
-                {/* 연장선들 */}
-                <Line
-                  points={[[0, 0, backFrameStart], [0, dimY + mmToThreeUnits(20), backFrameStart]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[0, 0, backFrameEnd], [0, dimY + mmToThreeUnits(20), backFrameEnd]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-              </>
-            );
-          })()}
-        </group>
-
-        {/* 캐비넷 배치 영역의 실제 깊이 치수선 */}
+        {/* 캐비넷이 배치된 경우에만 깊이 치수선 표시 */}
+        {placedModules.length > 0 && (
         <group>
           {(() => {
             const dimY = actualSpaceHeight + mmToThreeUnits(140);
@@ -865,6 +759,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                   color="black"
                   anchorX="center"
                   anchorY="middle"
+                    rotation={[0, -Math.PI / 2, 0]}
                 >
                   {furnitureDepthMm}
                 </Text>
@@ -884,8 +779,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             );
           })()}
         </group>
+        )}
         
-        {/* 좌측 전체 높이 치수선 */}
+        {/* 캐비넷이 배치된 경우에만 좌측 전체 높이 치수선 표시 */}
+        {placedModules.length > 0 && (
         <group>
           {/* 치수선 */}
           <Line
@@ -915,7 +812,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             color="black"
             anchorX="center"
             anchorY="middle"
-            rotation={[0, 0, -Math.PI / 2]}
+              rotation={[0, -Math.PI / 2, -Math.PI / 2]}
           >
             {spaceInfo.height}
           </Text>
@@ -934,8 +831,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             lineWidth={1}
           />
         </group>
+        )}
 
-        {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
+        {/* 캐비넷이 배치된 경우에만 우측 3구간 높이 치수선 표시 */}
+        {placedModules.length > 0 && (
         <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
@@ -952,33 +851,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
               <>
                 {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
-                  <group>
-                    <Line
-                      points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([0, bottomY, rightDimensionZ], [0, 0.03, rightDimensionZ])}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY - 0.03, rightDimensionZ])}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Text
-                      position={[0, mmToThreeUnits(bottomFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
-                      fontSize={baseFontSize}
-                      color="black"
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, -Math.PI / 2]}
-                    >
-                      {bottomFrameHeight}
-                    </Text>
-                  </group>
+                <group>
+                  <Line
+                    points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, bottomY, rightDimensionZ], [0, 0.03, rightDimensionZ])}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY - 0.03, rightDimensionZ])}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Text
+                    position={[0, mmToThreeUnits(bottomFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color="black"
+                    anchorX="center"
+                    anchorY="middle"
+                      rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                  >
+                    {bottomFrameHeight}
+                  </Text>
+                </group>
                 )}
                 
                 {/* 2. 캐비넷 배치 높이 */}
@@ -1004,7 +903,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                     color="black"
                     anchorX="center"
                     anchorY="middle"
-                    rotation={[0, 0, -Math.PI / 2]}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {cabinetPlacementHeight}
                   </Text>
@@ -1033,7 +932,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                     color="black"
                     anchorX="center"
                     anchorY="middle"
-                    rotation={[0, 0, -Math.PI / 2]}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {topFrameHeight}
                   </Text>
@@ -1047,11 +946,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 />
                 {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
-                  <Line
-                    points={[[0, bottomFrameTopY, spaceZOffset], [0, bottomFrameTopY, rightDimensionZ - mmToThreeUnits(20)]]}
-                    color="#666666"
-                    lineWidth={1}
-                  />
+                <Line
+                  points={[[0, bottomFrameTopY, spaceZOffset], [0, bottomFrameTopY, rightDimensionZ - mmToThreeUnits(20)]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
                 )}
                 <Line
                   points={[[0, cabinetAreaTopY, spaceZOffset], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(20)]]}
@@ -1067,134 +966,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             );
           })()}
         </group>
+        )}
 
-        {/* 우측 3구간 높이 치수선 */}
-        <group>
-          {(() => {
-            const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(3);
-            const topFrameHeight = frameSize.top;
-            const bottomFrameHeight = spaceInfo.baseConfig?.height || 65;
-            const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight;
-            
-            const bottomY = 0;
-            const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
-            const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
-            const topY = spaceHeight;
-            
-            return (
-              <>
-                {/* 1. 하부 프레임 높이 */}
-                <group>
-                  <Line
-                    points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, bottomY, rightDimensionZ], [0, 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY - 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Text
-                    position={[mmToThreeUnits(40), mmToThreeUnits(bottomFrameHeight / 2), rightDimensionZ]}
-                    fontSize={baseFontSize}
-                    color="black"
-                    anchorX="center"
-                    anchorY="middle"
-                    rotation={[0, 0, -Math.PI / 2]}
-                  >
-                    {bottomFrameHeight}
-                  </Text>
-                </group>
-                
-                {/* 2. 캐비넷 배치 높이 */}
-                <group>
-                  <Line
-                    points={[[0, bottomFrameTopY, rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY - 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Text
-                    position={[mmToThreeUnits(40), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), rightDimensionZ]}
-                    fontSize={baseFontSize}
-                    color="black"
-                    anchorX="center"
-                    anchorY="middle"
-                    rotation={[0, 0, -Math.PI / 2]}
-                  >
-                    {cabinetPlacementHeight}
-                  </Text>
-                </group>
-                
-                {/* 3. 상부 프레임 높이 */}
-                <group>
-                  <Line
-                    points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topY, rightDimensionZ]]}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.02, rightDimensionZ], 0.01)}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Line
-                    points={createArrowHead([0, topY, rightDimensionZ], [0, topY - 0.02, rightDimensionZ], 0.01)}
-                    color="#666666"
-                    lineWidth={1}
-                  />
-                  <Text
-                    position={[mmToThreeUnits(40), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight + topFrameHeight / 2), rightDimensionZ]}
-                    fontSize={baseFontSize}
-                    color="black"
-                    anchorX="center"
-                    anchorY="middle"
-                    rotation={[0, 0, -Math.PI / 2]}
-                  >
-                    {topFrameHeight}
-                  </Text>
-                </group>
-                
-                {/* 연장선들 (가구 후면에서 치수선까지) */}
-                <Line
-                  points={[[0, bottomY, furnitureZOffset + furnitureDepth/2], [0, bottomY, rightDimensionZ - mmToThreeUnits(10)]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[0, bottomFrameTopY, furnitureZOffset + furnitureDepth/2], [0, bottomFrameTopY, rightDimensionZ - mmToThreeUnits(10)]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[0, cabinetAreaTopY, furnitureZOffset + furnitureDepth/2], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(10)]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-                <Line
-                  points={[[0, topY, furnitureZOffset + furnitureDepth/2], [0, topY, rightDimensionZ - mmToThreeUnits(10)]]}
-                  color="#666666"
-                  lineWidth={1}
-                />
-              </>
-            );
-          })()}
-        </group>
         
         {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 모든 가구 표시 */}
         {placedModules.length > 0 && placedModules
@@ -1446,33 +1219,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
               <>
                 {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
-                  <group>
-                    <Line
-                      points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, 0.03, leftDimensionZ])}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Line
-                      points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY - 0.03, leftDimensionZ])}
-                      color="#666666"
-                      lineWidth={1}
-                    />
-                    <Text
-                      position={[spaceWidth, mmToThreeUnits(bottomFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
-                      fontSize={baseFontSize}
-                      color="black"
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, -Math.PI / 2]}
-                    >
-                      {bottomFrameHeight}
-                    </Text>
-                  </group>
+                <group>
+                  <Line
+                    points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, 0.03, leftDimensionZ])}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY - 0.03, leftDimensionZ])}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Text
+                    position={[spaceWidth, mmToThreeUnits(bottomFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color="black"
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {bottomFrameHeight}
+                  </Text>
+                </group>
                 )}
                 
                 {/* 2. 캐비넷 배치 높이 */}
@@ -1541,11 +1314,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 />
                 {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
-                  <Line
-                    points={[[spaceWidth, bottomFrameTopY, spaceZOffset + spaceDepth], [spaceWidth, bottomFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
-                    color="#666666"
-                    lineWidth={1}
-                  />
+                <Line
+                  points={[[spaceWidth, bottomFrameTopY, spaceZOffset + spaceDepth], [spaceWidth, bottomFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
                 )}
                 <Line
                   points={[[spaceWidth, cabinetAreaTopY, spaceZOffset + spaceDepth], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}
@@ -1825,13 +1598,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           /> */}
         </group>
 
-              {/* 좌측 치수선 - 좌측 프레임 앞면부터 가구 가장 뒷면까지 거리 */}
+              {/* 좌측 치수선 - 좌측에 배치된 캐비넷만 고려 */}
       {placedModules.length > 0 && (() => {
-        // 모든 배치된 가구 중에서 가장 깊은 가구 찾기
+        // 좌측에 배치된 가구 중에서 가장 깊은 가구 찾기 (x < 0인 가구만)
         let deepestBackZ = Infinity;
+        let deepestFrontZ = -Infinity;
         let deepestFurnitureRightX = spaceXOffset;
+        let hasLeftFurniture = false;
         
         placedModules.forEach((module) => {
+          // 좌측에 배치된 가구만 고려 (x 좌표가 음수)
+          if (module.position.x >= 0) return;
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -1842,9 +1619,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             return;
           }
           
-          // 실제 깊이 정보
+          // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
           const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
           const moduleWidthMm = moduleData.dimensions.width;
+          const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
           
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
@@ -1857,44 +1635,71 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const doorThickness = mmToThreeUnits(doorThicknessMm);
-          const depth = mmToThreeUnits(actualDepthMm);
           
-          // FurnitureItem.tsx와 동일한 계산
+          let furnitureBackZ, furnitureFrontZ;
+          
+          if (isStylerModule) {
+            // 스타일러장: 우측이 660mm로 더 깊음
+            const leftDepthMm = actualDepthMm; // 좌측: 600mm
+            const rightDepthMm = 660; // 우측: 스타일러장 고정 깊이
+            
+            const leftDepth = mmToThreeUnits(leftDepthMm);
+            const rightDepth = mmToThreeUnits(rightDepthMm);
+            
+            // 기본 가구 Z 오프셋
+            const zOffset = -panelDepth / 2;
+            const baseFurnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+            
+            // 좌측 부분 위치
+            const leftFurnitureZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - leftDepth/2;
+            const leftBackZ = leftFurnitureZ - leftDepth/2;
+            const leftFrontZ = leftFurnitureZ + leftDepth/2;
+            
+            // 우측 부분 위치 (깊이 차이만큼 뒤로 이동)
+            const depthOffset = (leftDepth - rightDepth) / 2; // (600-660)/2 = -30mm
+            const rightFurnitureZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2 + depthOffset;
+            const rightBackZ = rightFurnitureZ - rightDepth/2;
+            const rightFrontZ = rightFurnitureZ + rightDepth/2;
+            
+            // 전체에서 가장 뒤쪽과 앞쪽 선택
+            furnitureBackZ = Math.min(leftBackZ, rightBackZ);
+            furnitureFrontZ = Math.max(leftFrontZ, rightFrontZ);
+          } else {
+            // 일반 가구: 동일한 깊이
+            const depth = mmToThreeUnits(actualDepthMm);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
-          const furnitureBackZ = furnitureZ - depth/2;
+            furnitureBackZ = furnitureZ - depth/2;
+            furnitureFrontZ = furnitureZ + depth/2;
+          }
           
-          // 가장 뒤쪽에 있는 가구 찾기 (Z값이 가장 작은 것)
+          hasLeftFurniture = true; // 좌측에 가구가 있음을 표시
+          
+          // 가장 뒤쪽과 앞쪽 가구 찾기
           if (furnitureBackZ < deepestBackZ) {
             deepestBackZ = furnitureBackZ;
             deepestFurnitureRightX = rightX;
           }
+          if (furnitureFrontZ > deepestFrontZ) {
+            deepestFrontZ = furnitureFrontZ;
+          }
         });
         
-        if (deepestBackZ === Infinity) {
+        // 좌측에 가구가 없거나 유효한 치수가 없으면 표시하지 않음
+        if (!hasLeftFurniture || deepestBackZ === Infinity || deepestFrontZ === -Infinity) {
           return null;
         }
         
-        // 좌측 프레임 내측면 위치 계산
-        const panelDepthMm = 1500;
-        const furnitureDepthMm = 600;
-        const doorThicknessMm = 20;
-        const panelDepth = mmToThreeUnits(panelDepthMm);
-        const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-        const doorThickness = mmToThreeUnits(doorThicknessMm);
-        const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
-        const leftFrameInnerZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - mmToThreeUnits(30);
-        
-        // 실제 거리 계산 (mm 단위)
-        const distanceMm = Math.round((leftFrameInnerZ - deepestBackZ) / 0.01);
+        // 실제 캐비넷 깊이 계산 (mm 단위)
+        const cabinetDepthMm = Math.round((deepestFrontZ - deepestBackZ) / 0.01);
         const leftDimensionX = spaceXOffset - mmToThreeUnits(200);
         
         return (
-          <group key="left-frame-to-furniture-dimension">
+          <group key="cabinet-depth-dimension">
             {/* 치수선 */}
             <Line
-              points={[[leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, leftFrameInnerZ]]}
+              points={[[leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
               color="#666666"
               lineWidth={1}
             />
@@ -1906,32 +1711,166 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
               lineWidth={1}
             />
             <Line
-              points={createArrowHead([leftDimensionX, spaceHeight, leftFrameInnerZ], [leftDimensionX, spaceHeight, leftFrameInnerZ - 0.02], 0.01)}
+              points={createArrowHead([leftDimensionX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
               color="#666666"
               lineWidth={1}
             />
             
-            {/* 거리 텍스트 */}
+            {/* 캐비넷 깊이 텍스트 */}
             <Text
-              position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + leftFrameInnerZ) / 2]}
+              position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
               fontSize={baseFontSize}
               color="#666666"
               anchorX="center"
               anchorY="middle"
               rotation={[-Math.PI / 2, 0, 0]}
             >
-              {distanceMm}
+              {cabinetDepthMm}
             </Text>
 
-            {/* 연장선들 - 실제 가구의 정확한 위치에서 치수선까지 */}
+            {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
             <Line
               points={[[deepestFurnitureRightX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestBackZ]]}
               color="#666666"
               lineWidth={1}
             />
-            {/* 좌측 프레임 내측면 연장선 - 공간 벽에서 치수선까지 */}
             <Line
-              points={[[spaceXOffset, spaceHeight, leftFrameInnerZ], [leftDimensionX, spaceHeight, leftFrameInnerZ]]}
+              points={[[deepestFurnitureRightX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
+              color="#666666"
+              lineWidth={1}
+            />
+          </group>
+        );
+      })()}
+
+        {/* 우측 치수선 - 우측에 배치된 캐비넷만 고려 */}
+        {placedModules.length > 0 && (() => {
+          // 우측에 배치된 가구 중에서 가장 깊은 가구 찾기 (x >= 0인 가구만)
+          let deepestBackZ = Infinity;
+          let deepestFrontZ = -Infinity;
+          let deepestFurnitureLeftX = spaceXOffset;
+          let hasRightFurniture = false;
+          
+          placedModules.forEach((module) => {
+            // 우측에 배치된 가구만 고려 (x 좌표가 0 이상)
+            if (module.position.x < 0) return;
+            
+            const moduleData = getModuleById(
+              module.moduleId,
+              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              spaceInfo
+            );
+            
+            if (!moduleData || !moduleData.dimensions) {
+              return;
+            }
+            
+            // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
+            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+            const moduleWidthMm = moduleData.dimensions.width;
+            const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
+            
+            const moduleWidth = mmToThreeUnits(moduleWidthMm);
+            const leftX = module.position.x - moduleWidth / 2;
+            
+            // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산
+        const panelDepthMm = 1500;
+        const furnitureDepthMm = 600;
+        const doorThicknessMm = 20;
+            
+        const panelDepth = mmToThreeUnits(panelDepthMm);
+        const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+        const doorThickness = mmToThreeUnits(doorThicknessMm);
+            
+            let furnitureBackZ, furnitureFrontZ;
+            
+            if (isStylerModule) {
+              // 스타일러장: 우측이 660mm로 더 깊음 (DualType5.tsx와 동일한 계산)
+              const rightDepthMm = 660; // 우측: 스타일러장 고정 깊이
+              const rightDepth = mmToThreeUnits(rightDepthMm);
+              
+              // 기본 가구 Z 오프셋 (600mm 기준)
+              const zOffset = -panelDepth / 2;
+              const baseFurnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+              
+              // 스타일러장 우측 부분 위치 계산 (DualType5 컴포넌트와 동일)
+              // furnitureZOffset에서 시작해서 스타일러장 깊이만큼 조정
+              const stylerZOffset = baseFurnitureZOffset + (furnitureDepth - rightDepth) / 2;
+              const stylerZ = stylerZOffset + rightDepth/2 - doorThickness - rightDepth/2;
+              furnitureBackZ = stylerZ - rightDepth/2;
+              furnitureFrontZ = stylerZ + rightDepth/2;
+            } else {
+              // 일반 가구: 동일한 깊이
+              const depth = mmToThreeUnits(actualDepthMm);
+              const zOffset = -panelDepth / 2;
+              const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+              const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
+              furnitureBackZ = furnitureZ - depth/2;
+              furnitureFrontZ = furnitureZ + depth/2;
+            }
+            
+            hasRightFurniture = true; // 우측에 가구가 있음을 표시
+            
+            // 가장 뒤쪽과 앞쪽 가구 찾기
+            if (furnitureBackZ < deepestBackZ) {
+              deepestBackZ = furnitureBackZ;
+              deepestFurnitureLeftX = leftX;
+            }
+            if (furnitureFrontZ > deepestFrontZ) {
+              deepestFrontZ = furnitureFrontZ;
+            }
+          });
+          
+          // 우측에 가구가 없거나 유효한 치수가 없으면 표시하지 않음
+          if (!hasRightFurniture || deepestBackZ === Infinity || deepestFrontZ === -Infinity) {
+            return null;
+          }
+          
+          // 실제 캐비넷 깊이 계산 (mm 단위)
+          const cabinetDepthMm = Math.round((deepestFrontZ - deepestBackZ) / 0.01);
+          const rightDimensionX = spaceXOffset + spaceWidth + mmToThreeUnits(200);
+        
+        return (
+            <group key="right-cabinet-depth-dimension">
+            {/* 치수선 */}
+            <Line
+                points={[[rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 화살표들 */}
+            <Line
+                points={createArrowHead([rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ + 0.02], 0.01)}
+              color="#666666"
+              lineWidth={1}
+            />
+            <Line
+                points={createArrowHead([rightDimensionX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+              {/* 캐비넷 깊이 텍스트 */}
+            <Text
+                position={[rightDimensionX + mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
+              fontSize={baseFontSize}
+              color="#666666"
+              anchorX="center"
+              anchorY="middle"
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+                {cabinetDepthMm}
+            </Text>
+
+              {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
+            <Line
+                points={[[deepestFurnitureLeftX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            <Line
+                points={[[deepestFurnitureLeftX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
               color="#666666"
               lineWidth={1}
             />
@@ -2263,8 +2202,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           );
         })}
 
-        {/* 우측 치수선 - 우측 프레임 앞면부터 가구 가장 뒷면까지 거리 */}
-        {placedModules.length > 0 && (() => {
+        {/* 우측 치수선 - 우측 프레임 앞면부터 가구 가장 뒷면까지 거리 (비활성화) */}
+        {false && placedModules.length > 0 && (() => {
           // 우측에 배치된 가구들의 가장 뒷면과 X 위치 찾기
           let rightmostBackZ = Infinity;
           let rightFurnitureX = spaceXOffset + mmToThreeUnits(spaceInfo.width); // 기본값: 공간 오른쪽 끝
@@ -2416,6 +2355,283 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             </group>
           );
         })()}
+
+        {/* 도어 치수 표시 - 도어가 실제로 설치된 캐비넷에만 표시 */}
+        {placedModules.length > 0 && placedModules.filter(module => {
+          const moduleData = getModuleById(
+            module.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
+          // moduleData.hasDoor: 도어 가능 여부, module.hasDoor: 실제 설치 여부
+          return moduleData && moduleData.hasDoor && module.hasDoor;
+        }).map((module, index) => {
+          const moduleData = getModuleById(
+            module.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
+          
+          // 도어가 없으면 표시하지 않음
+          if (!moduleData || !moduleData.hasDoor) return null;
+          
+          const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+          const moduleWidth = mmToThreeUnits(moduleData.dimensions.width);
+          const leftX = module.position.x - moduleWidth / 2;
+          const rightX = module.position.x + moduleWidth / 2;
+          
+          // 스타일러장인지 확인 (듀얼 서랍+스타일러 타입)
+          const isStylerType = moduleData.id.includes('dual-2drawer-styler');
+          
+          // 도어 위치 계산 (FurnitureItem.tsx와 동일)
+          const panelDepthMm = 1500;
+          const furnitureDepthMm = 600;
+          const stylerDepthMm = 660; // 스타일러장 깊이
+          const doorThicknessMm = 18;
+          
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+          const stylerDepth = mmToThreeUnits(stylerDepthMm);
+          const doorThickness = mmToThreeUnits(doorThicknessMm);
+          
+          // 스타일러장의 경우 우측 부분의 깊이와 위치가 다름 (DualType5.tsx와 동일한 로직)
+          let leftDoorFrontZ, rightDoorFrontZ, leftDoorBackZ, rightDoorBackZ;
+          
+          if (isStylerType) {
+            // DualType5.tsx 로직 참고: 좌우 비대칭 깊이 처리
+            const leftDepthMm = actualDepthMm; // 좌측: 600mm (또는 customDepth)
+            const rightDepthMm = 660; // 우측: 스타일러장 고정 깊이
+            
+            const leftDepth = mmToThreeUnits(leftDepthMm);
+            const rightDepth = mmToThreeUnits(rightDepthMm);
+            
+            // 기본 가구 Z 오프셋 (600mm 기준)
+            const baseFurnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
+            
+            // 좌측 도어 위치 (기본 위치)
+            leftDoorFrontZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - leftDepth/2 + leftDepth/2;
+            leftDoorBackZ = leftDoorFrontZ - doorThickness;
+            
+            // 우측 도어 위치 수정: 좌측 도어와 동일한 Z 라인에 정렬
+            // 스타일러장 우측 도어도 같은 라인에 있도록 leftDoorFrontZ와 동일하게 설정
+            rightDoorFrontZ = leftDoorFrontZ;
+            rightDoorBackZ = leftDoorBackZ;
+          } else {
+            // 일반 가구: 동일한 깊이
+            const depth = mmToThreeUnits(actualDepthMm);
+            const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
+            const doorFrontZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + depth/2;
+            const doorBackZ = doorFrontZ - doorThickness;
+            
+            leftDoorFrontZ = rightDoorFrontZ = doorFrontZ;
+            leftDoorBackZ = rightDoorBackZ = doorBackZ;
+          }
+          
+          // 하위 호환성을 위한 기본값 설정
+          const doorFrontZ = leftDoorFrontZ;
+          const doorBackZ = leftDoorBackZ;
+          
+          // 듀얼 도어인지 확인 (id에 'dual'이 포함되어 있으면 듀얼 도어로 간주)
+          const isDualDoor = moduleData.id?.includes('dual');
+          
+          // 실제 도어의 x축 위치 계산
+          let leftDoorLeftX, leftDoorRightX, rightDoorLeftX, rightDoorRightX;
+          
+          if (isDualDoor) {
+            // 듀얼 도어: 좌우 각각의 도어 경계
+            const centerX = module.position.x;
+            leftDoorLeftX = leftX;
+            leftDoorRightX = centerX;
+            rightDoorLeftX = centerX;
+            rightDoorRightX = rightX;
+          } else {
+            // 싱글 도어: 전체 영역
+            leftDoorLeftX = leftX;
+            leftDoorRightX = rightX;
+            rightDoorLeftX = leftX;
+            rightDoorRightX = rightX;
+          }
+          
+          return (
+            <group key={`door-dimension-${index}`}>
+              {/* 하단 도어 치수 - 듀얼인 경우 각각 따로, 싱글인 경우 전체 */}
+              {/* 모든 도어의 치수는 leftDoorFrontZ를 사용하여 동일한 Z 라인에 배치 */}
+              {isDualDoor ? (
+                // 듀얼 도어: 좌우 각각 치수 표시
+                <>
+                  {/* 좌측 도어 치수 */}
+                  <group>
+                    <Line
+                      points={[[leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorLeftX + 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorRightX - 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Text
+                      position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      fontSize={baseFontSize}
+                      color="#666666"
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[-Math.PI / 2, 0, 0]}
+                    >
+                      {Math.round((moduleData.dimensions.width - 6) / 2)}
+                    </Text>
+                    <Line
+                      points={[[leftDoorLeftX, spaceHeight, leftDoorFrontZ], [leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={[[leftDoorRightX, spaceHeight, leftDoorFrontZ], [leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                  </group>
+                  
+                  {/* 우측 도어 치수 - 모든 도어와 동일한 Z 라인 사용 */}
+                  <group>
+                    <Line
+                      points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorLeftX + 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX - 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Text
+                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      fontSize={baseFontSize}
+                      color="#666666"
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[-Math.PI / 2, 0, 0]}
+                    >
+                      {Math.round((moduleData.dimensions.width - 6) / 2)}
+                    </Text>
+                    <Line
+                      points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ], [rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={[[rightDoorRightX, spaceHeight, leftDoorFrontZ], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                  </group>
+                  
+                  {/* 중간 세로 가이드선 - 듀얼 도어를 나누는 중간선이 가로 치수선까지 확장 */}
+                  <group>
+                    <Line
+                      points={[[module.position.x, spaceHeight, leftDoorFrontZ], [module.position.x, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
+                      color="#666666"
+                      lineWidth={1}
+                    />
+                  </group>
+                </>
+              ) : (
+                // 싱글 도어: 전체 치수 표시
+                <group>
+                  <Line
+                    points={[[leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorLeftX + 0.02, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX - 0.02, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Text
+                    position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                    fontSize={baseFontSize}
+                    color="#666666"
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {moduleData.dimensions.width - 3}
+                  </Text>
+                  <Line
+                    points={[[leftDoorLeftX, spaceHeight, doorFrontZ], [leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={[[rightDoorRightX, spaceHeight, doorFrontZ], [rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
+                    color="#666666"
+                    lineWidth={1}
+                  />
+                </group>
+              )}
+              
+              {/* 도어 두께 치수 - 좌측에 표시, z축 위로 10mm 이동 */}
+              <group>
+                {/* 도어 두께 치수선 (좌측, z축을 위로 10mm 이동하여 실제 도어 위치에 맞춤) */}
+                <Line
+                  points={[[spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12)]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                {/* 도어 두께 화살표 */}
+                <Line
+                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30) + 0.02], 0.01)}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12) - 0.02], 0.01)}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                {/* 도어 두께 텍스트 (중앙 위치) */}
+                <Text
+                  position={[spaceXOffset - mmToThreeUnits(240), spaceHeight + 0.1, -mmToThreeUnits(21)]}
+                  fontSize={baseFontSize}
+                  color="#666666"
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[-Math.PI / 2, 0, 0]}
+                >
+                  {doorThicknessMm}
+                </Text>
+                {/* 도어 두께 연결선 - 실제 도어 위치에 맞춤 */}
+                <Line
+                  points={[[leftDoorLeftX, spaceHeight, -mmToThreeUnits(18)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(18)]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
+                <Line
+                  points={[[leftDoorLeftX, spaceHeight, -mmToThreeUnits(0)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(0)]]}
+                  color="#666666"
+                  lineWidth={1}
+                />
+              </group>
+            </group>
+          );
+        })}
           </>
         )}
       </group>

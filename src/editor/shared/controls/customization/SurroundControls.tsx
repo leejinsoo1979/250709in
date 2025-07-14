@@ -80,9 +80,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       }
       
       if (needsUpdate) {
-        setTimeout(() => {
-          onUpdate({ frameSize: updates });
-        }, 0);
+        onUpdate({ frameSize: updates });
       }
     }
   }, [isSurround, hasLeftWall, hasRightWall, spaceInfo.frameSize, onUpdate]);
@@ -125,10 +123,33 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       return;
     }
     
-    // 숫자만 입력 가능하도록
-    if (value === '' || /^\d+$/.test(value)) {
-      const newFrameSize = { ...frameSize, [dimension]: value === '' ? '' : parseInt(value) };
+    // 빈 문자열이거나 숫자인 경우에만 업데이트
+    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
+      const numValue = value === '' ? 0 : parseInt(value);
+      const newFrameSize = { ...frameSize, [dimension]: numValue };
       setFrameSize(newFrameSize);
+      
+      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
+      if (value && !isNaN(Number(value)) && spaceInfo.frameSize) {
+        let validatedValue = numValue;
+        
+        // 범위 검증
+        if (dimension === 'left' || dimension === 'right') {
+          if (validatedValue < 40) validatedValue = 40;
+          if (validatedValue > 100) validatedValue = 100;
+        } else {
+          if (validatedValue < 10) validatedValue = 10;
+          if (validatedValue > 200) validatedValue = 200;
+        }
+        
+        // 즉시 store 업데이트
+        onUpdate({
+          frameSize: {
+            ...spaceInfo.frameSize,
+            [dimension]: validatedValue,
+          },
+        });
+      }
     }
   };
 
@@ -143,12 +164,17 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     
     let value = frameSize[dimension];
     
-    // 문자열이면 숫자로 변환
+    // 숫자로 변환
     if (typeof value === 'string') {
       value = value === '' ? 10 : parseInt(value);
     }
+    
+    // 유효하지 않은 숫자라면 기본값 사용
+    if (isNaN(value)) {
+      value = dimension === 'top' ? 10 : 50;
+    }
 
-    // 좌우 프레임은 40~100mm 범위, 상단 프레임은 10~200mm 범위
+    // 좌우 프레임은 40~100 범위, 상단 프레임은 10~200 범위
     if (dimension === 'left' || dimension === 'right') {
       if (value < 40) value = 40;
       if (value > 100) value = 100;

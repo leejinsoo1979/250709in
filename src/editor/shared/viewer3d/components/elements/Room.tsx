@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import { 
   calculateRoomDimensions, 
   calculateFloorFinishHeight,
@@ -58,9 +59,11 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 모서리 라인 렌더링 */}
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color="#666666" linewidth={1} />
-      </lineSegments>
+      {viewMode !== '3D' && (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial color="#666666" linewidth={1} />
+        </lineSegments>
+      )}
     </group>
   );
 };
@@ -72,6 +75,7 @@ const Room: React.FC<RoomProps> = ({
   materialConfig
 }) => {
   const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const { highlightedFrame } = useUIStore(); // 강조된 프레임 상태 가져오기
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
@@ -111,7 +115,7 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize]);
   
   const { 
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
@@ -122,28 +126,30 @@ const Room: React.FC<RoomProps> = ({
 
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
-  const createFrameMaterial = useCallback(() => {
+  const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
     const frameColor = materialConfig?.doorColor || '#FFFFFF';
+    const isHighlighted = frameType && highlightedFrame === frameType;
+    
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(frameColor),
+      color: new THREE.Color(isHighlighted ? '#FF0000' : frameColor), // 강조 시 레드색으로 변경
       metalness: 0.0,        // 완전 비금속 (도어와 동일)
       roughness: 0.6,        // 도어와 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid'),  // 와이어프레임 모드 또는 2D 솔리드 모드에서 투명
-      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0,  // 투명도 조정
+      emissive: new THREE.Color(isHighlighted ? 0x220000 : 0x000000),  // 강조 시 레드 자체발광 추가
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted,  // 강조 시에도 투명하게
+      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isHighlighted ? 0.6 : 1.0,  // 강조 시 60% 투명도
     });
-  }, [materialConfig?.doorColor, renderMode, viewMode]);
+  }, [materialConfig?.doorColor, renderMode, viewMode, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
 
   // 각 프레임별 재질 생성
-  const baseFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
-  const leftFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
-  const leftSubFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]); // 왼쪽 서브프레임 전용 머터리얼
-  const rightFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
-  const rightSubFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]); // 오른쪽 서브프레임 전용 머터리얼
-  const topFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
-  const topSubFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]);
-  const baseSubFrameMaterial = useMemo(() => createFrameMaterial(), [createFrameMaterial]); // 하단 서브프레임 전용 머터리얼
+  const baseFrameMaterial = useMemo(() => createFrameMaterial('base'), [createFrameMaterial]);
+  const leftFrameMaterial = useMemo(() => createFrameMaterial('left'), [createFrameMaterial]);
+  const leftSubFrameMaterial = useMemo(() => createFrameMaterial('left'), [createFrameMaterial]); // 왼쪽 서브프레임 전용 머터리얼
+  const rightFrameMaterial = useMemo(() => createFrameMaterial('right'), [createFrameMaterial]);
+  const rightSubFrameMaterial = useMemo(() => createFrameMaterial('right'), [createFrameMaterial]); // 오른쪽 서브프레임 전용 머터리얼
+  const topFrameMaterial = useMemo(() => createFrameMaterial('top'), [createFrameMaterial]);
+  const topSubFrameMaterial = useMemo(() => createFrameMaterial('top'), [createFrameMaterial]);
+  const baseSubFrameMaterial = useMemo(() => createFrameMaterial('base'), [createFrameMaterial]); // 하단 서브프레임 전용 머터리얼
   
   // MaterialFactory를 사용한 재질 생성 (자동 캐싱으로 성능 최적화)
   const frontToBackGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
@@ -198,6 +204,14 @@ const Room: React.FC<RoomProps> = ({
 
   // 벽 여부 확인
   const { wallConfig } = spaceInfo;
+  
+  // 내부 공간 계산 (세로 가이드 선 위치 확인용)
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const backZ = -mmToThreeUnits(internalSpace.depth / 2); // 세로 가이드 선 위치
+  
+  // 바닥 슬롯 메쉬와 동일한 깊이 계산
+  const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
+  const slotFloorDepth = frameEndZ - backZ; // 바닥 슬롯 메쉬 깊이
 
   return (
     <group position={[0, 0, groupZOffset]}>
@@ -205,22 +219,30 @@ const Room: React.FC<RoomProps> = ({
       {viewMode === '3D' && (
         <>
           {/* 왼쪽 외부 벽면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) */}
-          <mesh
-            position={[-width/2 - 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <planeGeometry args={[extendedPanelDepth, height]} />
-            <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
-          </mesh>
+          {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
+          {(spaceInfo.installType === 'built-in' || 
+            (spaceInfo.installType === 'semi-standing' && wallConfig?.left)) && (
+            <mesh
+              position={[-width/2 - 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
+              rotation={[0, Math.PI / 2, 0]}
+            >
+              <planeGeometry args={[extendedPanelDepth, height]} />
+              <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+            </mesh>
+          )}
           
           {/* 오른쪽 외부 벽면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 반대 방향 */}
-          <mesh
-            position={[width/2 + 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
-            rotation={[0, -Math.PI / 2, 0]}
-          >
-            <planeGeometry args={[extendedPanelDepth, height]} />
-            <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
-          </mesh>
+          {/* 프리스탠딩이 아니고 (세미스탠딩에서 오른쪽 벽이 있거나 빌트인)일 때만 표시 */}
+          {(spaceInfo.installType === 'built-in' || 
+            (spaceInfo.installType === 'semi-standing' && wallConfig?.right)) && (
+            <mesh
+              position={[width/2 + 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
+              rotation={[0, -Math.PI / 2, 0]}
+            >
+              <planeGeometry args={[extendedPanelDepth, height]} />
+              <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
+            </mesh>
+          )}
           
           {/* 상단 외부 벽면 (천장) - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 세로 반대 방향 */}
           <mesh
@@ -393,7 +415,13 @@ const Room: React.FC<RoomProps> = ({
           <mesh
             position={[
               xOffset + width/2, 
-              panelStartY + (spaceInfo.baseConfig?.type === 'floor' ? baseFrameHeight : 0), 
+              panelStartY + (
+                spaceInfo.baseConfig?.type === 'floor' 
+                  ? baseFrameHeight 
+                  : spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+                    ? floatHeight
+                    : 0
+              ), 
               backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
             ]}
             rotation={[-Math.PI / 2, 0, 0]}
@@ -413,7 +441,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'built-in' || 
-        spaceInfo.installType === 'semi-standing' || 
+        (spaceInfo.installType === 'semi-standing' && wallConfig?.left) ||
+        (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) ||
         spaceInfo.installType === 'free-standing') && (
         <BoxWithEdges
           args={[
@@ -422,24 +451,29 @@ const Room: React.FC<RoomProps> = ({
             // 설치 타입과 벽 여부에 따라 깊이 결정
             (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) || 
             spaceInfo.installType === 'free-standing' 
-              ? furnitureDepth - mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 없는 경우 엔드패널 (가구 깊이 - 프레임 두께)
+              ? slotFloorDepth  // 엔드패널: 바닥 슬롯 메쉬와 동일한 깊이
               : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
           ]}
           position={[
             xOffset + frameThickness.left/2, 
             sideFrameCenterY, 
-            // 캐비넷 앞면 위치로 통일
-            furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+            // 엔드패널일 때는 바닥 슬롯 메쉬와 동일한 범위로 배치
+            (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) || 
+            spaceInfo.installType === 'free-standing'
+              ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
+              : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
           material={leftFrameMaterial}
           renderMode={renderMode}
         />
       )}
       
+      
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'built-in' || 
-        spaceInfo.installType === 'semi-standing' || 
+        (spaceInfo.installType === 'semi-standing' && wallConfig?.right) ||
+        (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) ||
         spaceInfo.installType === 'free-standing') && (
         <BoxWithEdges
           args={[
@@ -448,19 +482,23 @@ const Room: React.FC<RoomProps> = ({
             // 설치 타입과 벽 여부에 따라 깊이 결정
             (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) || 
             spaceInfo.installType === 'free-standing' 
-              ? furnitureDepth - mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 없는 경우 엔드패널 (가구 깊이 - 프레임 두께)
+              ? slotFloorDepth  // 엔드패널: 바닥 슬롯 메쉬와 동일한 깊이
               : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
           ]}
           position={[
             xOffset + width - frameThickness.right/2, 
             sideFrameCenterY, 
-            // 캐비넷 앞면 위치로 통일
-            furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+            // 엔드패널일 때는 바닥 슬롯 메쉬와 동일한 범위로 배치
+            (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) || 
+            spaceInfo.installType === 'free-standing'
+              ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
+              : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
           material={rightFrameMaterial}
           renderMode={renderMode}
         />
       )}
+      
       
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
@@ -478,8 +516,8 @@ const Room: React.FC<RoomProps> = ({
             position={[
               topBottomPanelX, // 중앙 정렬
               topElementsY, 
-              // 캐비넷 앞면에서 30mm 뒤로 이동
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
             ]}
             material={topFrameMaterial}
             renderMode={renderMode}
@@ -581,8 +619,8 @@ const Room: React.FC<RoomProps> = ({
             position={[
               topBottomPanelX, // 중앙 정렬
               panelStartY + baseFrameHeight/2, 
-              // 캐비넷 앞면에서 30mm 뒤로 이동
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
             ]}
             material={baseFrameMaterial}
             renderMode={renderMode}

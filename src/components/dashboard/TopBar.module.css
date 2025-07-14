@@ -1,0 +1,129 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 24px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.breadcrumbText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.chevron {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.searchSection {
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchBar {
+  position: relative;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #9ca3af;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f9fafb;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.exportBtn,
+.sortBtn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.exportBtn:hover,
+.sortBtn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.viewToggle {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewBtn {
+  padding: 8px 12px;
+  border: none;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-right: 1px solid #d1d5db;
+}
+
+.viewBtn:last-child {
+  border-right: none;
+}
+
+.viewBtn:hover {
+  background: #f9fafb;
+}
+
+.activeView {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+.btnIcon {
+  font-size: 16px;
+}

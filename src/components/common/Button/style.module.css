@@ -1,82 +1,77 @@
 .button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--radius-md);
-  font-weight: var(--font-medium);
-  transition: all 0.2s;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s;
+  display: inline-block;
 }
 
-/* Variants */
 .primary {
-  background-color: var(--color-primary);
-  color: white;
+  background: #1abc9c;
+  color: #fff;
 }
-
-.primary:hover {
-  background-color: var(--color-primary-dark);
-}
-
 .primary:disabled {
-  background-color: var(--color-primary-light);
+  background: #b2dfdb;
+  color: #fff;
   cursor: not-allowed;
 }
-
-.secondary {
-  background-color: var(--color-secondary);
-  color: var(--color-text-primary);
-}
-
-.secondary:hover {
-  background-color: var(--color-secondary-dark);
-}
-
-.secondary:disabled {
-  color: var(--color-text-tertiary);
-  cursor: not-allowed;
-}
-
-/* Sizes */
-.small {
-  padding: var(--spacing-1) var(--spacing-2);
-  font-size: var(--text-sm);
-}
-
-.medium {
-  padding: var(--spacing-2) var(--spacing-4);
-  font-size: var(--text-base);
+.primary:hover:not(:disabled) {
+  background: #159c86;
 }
 
 .large {
-  padding: var(--spacing-3) var(--spacing-6);
-  font-size: var(--text-lg);
+  font-size: 16px;
+  padding: 14px 32px;
 }
 
-/* Icon Button */
+.medium {
+  font-size: 15px;
+  padding: 10px 24px;
+}
+
+.small {
+  font-size: 14px;
+  padding: 6px 16px;
+}
+
 .iconButton {
-  padding: var(--spacing-2);
-  border-radius: var(--radius-md);
+  padding: 8px;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
 }
 
-/* Toggle Button */
+.secondary {
+  background: #f1f3f4;
+  color: #1abc9c;
+}
+.secondary:hover:not(:disabled) {
+  background: #e0f7f4;
+}
+
 .toggle {
-  background-color: var(--color-secondary);
-  color: var(--color-text-secondary);
-  padding: var(--spacing-1) var(--spacing-3);
-  border: 1px solid var(--color-border);
+  background: #fff;
+  color: #1abc9c;
+  border: 2px solid #1abc9c;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  padding: 14px 32px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  margin-right: 8px;
 }
-
-.toggle.active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+.toggle:last-child {
+  margin-right: 0;
 }
-
+.toggle:hover:not(:disabled) {
+  background: #e0f7f4;
+  color: #159c86;
+  border-color: #159c86;
+}
+.toggle.active,
 .toggle.active:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  color: var(--color-text-secondary);
+  background: #1abc9c;
+  color: #fff;
+  border-color: #1abc9c;
 } 

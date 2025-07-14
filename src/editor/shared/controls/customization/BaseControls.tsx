@@ -63,6 +63,23 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
       setBaseHeight(value);
+      
+      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
+      if (value && !isNaN(Number(value)) && spaceInfo.baseConfig) {
+        let validatedValue = parseInt(value);
+        
+        // 범위 검증
+        if (validatedValue < 50) validatedValue = 50;
+        if (validatedValue > 100) validatedValue = 100;
+        
+        // 즉시 store 업데이트
+        onUpdate({
+          baseConfig: {
+            ...spaceInfo.baseConfig,
+            height: validatedValue,
+          },
+        });
+      }
     }
   };
 
@@ -71,6 +88,23 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
       setFloatHeight(value);
+      
+      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
+      if (value && !isNaN(Number(value)) && spaceInfo.baseConfig) {
+        let validatedValue = parseInt(value);
+        
+        // 범위 검증
+        if (validatedValue < 0) validatedValue = 0;
+        if (validatedValue > 200) validatedValue = 200;
+        
+        // 즉시 store 업데이트
+        onUpdate({
+          baseConfig: {
+            ...spaceInfo.baseConfig,
+            floatHeight: validatedValue,
+          },
+        });
+      }
     }
   };
 

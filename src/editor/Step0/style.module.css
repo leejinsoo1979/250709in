@@ -49,6 +49,9 @@
 }
 
 .content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 0;
 }
 
@@ -57,6 +60,8 @@
   background-color: white;
   border-radius: 0 0 12px 12px;
   overflow: hidden;
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 .uploadArea {
@@ -189,14 +194,19 @@
   font-style: italic;
 }
 
-/* 벽장 제작 시작하기 버튼 컨테이너 - 간격 축소로 스크롤 문제 해결 */
+/* 벽장 제작 시작하기 버튼 컨테이너 - 항상 보이도록 고정 */
 .startButtonContainer {
   display: flex;
   justify-content: center;
-  margin-top: 20px; /* 32px → 20px로 축소 */
-  padding: 0px 0 20px 0; /* 24px 0 32px 0 → 16px 0 20px 0으로 축소 */
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  padding: 20px 0 16px 0;
   border-radius: 0 0 12px 12px;
   background-color: white;
+  border-top: 1px solid #f0f0f0;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.03);
+  position: static;
 }
 
 /* 로딩 스크린 스타일 */
@@ -279,4 +289,23 @@
     margin-top: 12px; /* 20px → 12px로 축소 */
     padding: 8px 0 12px 0; /* 12px 0 20px 0 → 8px 0 12px 0으로 축소 */
   }
+} 
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.closeButton:hover {
+  color: #1abc9c;
 } 

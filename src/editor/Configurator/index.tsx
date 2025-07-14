@@ -15,6 +15,7 @@ import Header from './components/Header';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
 import RightPanel, { RightPanelTab } from './components/RightPanel';
+import FileTree from '@/components/FileTree/FileTree';
 
 // 기존 작동하는 컴포넌트들
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
@@ -54,6 +55,7 @@ const Configurator: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
@@ -396,6 +398,35 @@ const Configurator: React.FC = () => {
     console.log('프로필');
   };
 
+  // 파일 트리 핸들러들
+  const handleFileSelect = (file: any) => {
+    console.log('파일 선택:', file);
+    
+    // 파일 타입에 따라 적절한 UI 탭으로 이동
+    if (file.nodeType === 'material') {
+      // 재질 설정 탭 활성화
+      setActiveSidebarTab('material');
+    } else if (file.nodeType === 'space') {
+      // 배치 속성 탭 활성화 (우측 패널)
+      setActiveRightPanelTab('placement');
+      setIsRightPanelOpen(true);
+    } else if (file.nodeType === 'module') {
+      // 가구 모듈 탭 활성화
+      setActiveSidebarTab('module');
+    } else if (file.nodeType === 'furniture') {
+      // 가구 갤러리 탭 활성화
+      setActiveSidebarTab('module');
+    }
+  };
+
+  const handleCreateNew = () => {
+    console.log('새 프로젝트 생성');
+  };
+
+  const handleToggleFileTree = () => {
+    setIsFileTreeOpen(!isFileTreeOpen);
+  };
+
   // 사이드바 컨텐츠 렌더링
   const renderSidebarContent = () => {
     if (!activeSidebarTab) return null;
@@ -475,19 +506,6 @@ const Configurator: React.FC = () => {
                   onUpdate={handleSpaceInfoUpdate}
                 />
               </div>
-            </div>
-
-            {/* 단내림 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>단내림</h3>
-              </div>
-              <SurroundControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
-              />
             </div>
 
             {/* 레이아웃 */}
@@ -619,15 +637,16 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
-            {/* 바닥 마감재 */}
+            {/* 단내림 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>바닥 마감재</h3>
+                <h3 className={styles.sectionTitle}>단내림</h3>
               </div>
-              <FloorFinishControls 
+              <SurroundControls 
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
+                disabled={hasSpecialDualFurniture}
               />
             </div>
 
@@ -641,6 +660,18 @@ const Configurator: React.FC = () => {
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
                 disabled={hasSpecialDualFurniture}
+              />
+            </div>
+
+            {/* 바닥 마감재 */}
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>바닥 마감재</h3>
+              </div>
+              <FloorFinishControls 
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
               />
             </div>
           </div>
@@ -684,11 +715,22 @@ const Configurator: React.FC = () => {
       />
 
       <div className={styles.mainContent}>
+        {/* 파일 트리 */}
+        {isFileTreeOpen && (
+          <div className={styles.fileTreePanel}>
+            <FileTree 
+              onFileSelect={handleFileSelect}
+              onCreateNew={handleCreateNew}
+            />
+          </div>
+        )}
+
         {/* 사이드바 */}
         <Sidebar
           activeTab={activeSidebarTab}
           onTabClick={handleSidebarTabClick}
           isOpen={!!activeSidebarTab}
+          onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
         />
 
         {/* 사이드바 컨텐츠 패널 */}
@@ -699,7 +741,20 @@ const Configurator: React.FC = () => {
         )}
 
         {/* 중앙 뷰어 영역 */}
-        <div className={styles.viewerArea}>
+        <div className={
+          isRightPanelOpen
+            ? styles.viewerArea
+            : styles.viewerArea + ' ' + styles['viewerArea--rightPanelClosed']
+        } style={{position: 'relative'}}>
+          {/* 파일 트리 토글 버튼 */}
+          <button 
+            className={styles.fileTreeToggle}
+            onClick={handleToggleFileTree}
+            title="파일 트리 토글"
+          >
+            📁
+          </button>
+
           {/* 뷰어 컨트롤 */}
           <ViewerControls
             viewMode={viewMode as ViewMode}
@@ -737,7 +792,6 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
             )}
-            
             <Space3DView 
               spaceInfo={spaceInfo}
               viewMode={viewMode}
@@ -746,11 +800,30 @@ const Configurator: React.FC = () => {
               svgSize={{ width: 800, height: 600 }}
             />
           </div>
+
+          {/* 우측바가 접힌 상태일 때 펼치기 버튼 - viewerArea 기준으로 오른쪽 끝 중앙에 */}
+          {!isRightPanelOpen && (
+            <button
+              className={styles.rightUnfoldButton}
+              onClick={() => setIsRightPanelOpen(true)}
+              title="우측 패널 펼치기"
+              style={{ right: 0, top: '50%', transform: 'translateY(-50%)', position: 'absolute', zIndex: 200 }}
+            >
+              {'<'}
+            </button>
+          )}
         </div>
 
         {/* 우측 패널 */}
         {isRightPanelOpen && (
           <div className={styles.rightPanel}>
+            <button
+              className={styles.foldToggleButton}
+              onClick={() => setIsRightPanelOpen(false)}
+              title="우측 패널 접기"
+            >
+              <span className={styles.foldToggleIcon}>▶</span>
+            </button>
             {/* 탭 헤더 */}
             <div className={styles.rightPanelHeader}>
               <div className={styles.rightPanelTabs}>
@@ -768,12 +841,22 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
             </div>
-
             {/* 패널 컨텐츠 */}
             <div className={styles.rightPanelContent}>
               {renderRightPanelContent()}
             </div>
           </div>
+        )}
+        {/* 우측바가 접힌 상태일 때 펼치기 버튼 */}
+        {!isRightPanelOpen && (
+          <button
+            className={styles.foldToggleButton}
+            onClick={() => setIsRightPanelOpen(true)}
+            title="우측 패널 펼치기"
+            style={{ left: -16, top: '50%', transform: 'translateY(-50%)', position: 'absolute', zIndex: 100 }}
+          >
+            <span className={styles.foldToggleIcon}>◀</span>
+          </button>
         )}
       </div>
 

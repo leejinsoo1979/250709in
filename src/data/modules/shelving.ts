@@ -631,7 +631,13 @@ export const generateShelvingModules = (
   internalSpace: { width: number; height: number; depth: number }, 
   spaceInfo?: SpaceInfo
 ): ModuleData[] => {
-  const { height: maxHeight } = internalSpace;
+  let { height: maxHeight } = internalSpace;
+  
+  // 띄워서 배치인 경우 가용 높이에서 띄움 높이를 차감
+  if (spaceInfo?.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+    const floatHeight = spaceInfo.baseConfig.floatHeight || 0;
+    maxHeight = maxHeight - floatHeight;
+  }
   
   // SpaceInfo가 제공되면 그대로 사용, 아니면 필요한 속성만 갖는 객체 생성
   let indexingSpaceInfo: SpaceInfo;

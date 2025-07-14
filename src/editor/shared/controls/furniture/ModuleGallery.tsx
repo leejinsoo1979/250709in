@@ -5,6 +5,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './ModuleGallery.module.css';
+import Button from '@/components/common/Button';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -197,24 +198,29 @@ const ModuleGallery: React.FC = () => {
            module.dimensions.depth <= internalSpace.depth;
   };
 
+  // cn 유틸 함수 추가
+  const cn = (...classes: (string | undefined | null | false)[]) => {
+    return classes.filter(Boolean).join(' ');
+  };
+
   return (
     <div className={styles.container}>
       {/* 탭 메뉴 */}
       <div className={styles.tabMenu}>
         <button
-          className={`${styles.tabButton} ${selectedType === 'all' ? styles.activeTab : ''}`}
+          className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
           onClick={() => setSelectedType('all')}
         >
           전체 ({singleModules.length + dualModules.length})
         </button>
         <button
-          className={`${styles.tabButton} ${selectedType === 'single' ? styles.activeTab : ''}`}
+          className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
           onClick={() => setSelectedType('single')}
         >
           싱글 ({singleModules.length})
         </button>
         <button
-          className={`${styles.tabButton} ${selectedType === 'dual' ? styles.activeTab : ''}`}
+          className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
           onClick={() => setSelectedType('dual')}
         >
           듀얼 ({dualModules.length})

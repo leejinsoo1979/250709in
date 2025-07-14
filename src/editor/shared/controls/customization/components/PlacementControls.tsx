@@ -1,5 +1,6 @@
 import React from 'react';
 import { BaseConfig } from '@/store/core/spaceConfigStore';
+import { useUIStore, HighlightedFrame } from '@/store/uiStore';
 import styles from '../../styles/common.module.css';
 
 interface PlacementControlsProps {
@@ -27,10 +28,28 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
   onKeyDown,
   onFloatKeyDown
 }) => {
+  const { setHighlightedFrame } = useUIStore();
   const isFloor = baseConfig?.type === 'floor' || !baseConfig;
   const isStand = baseConfig?.type === 'stand';
   const isGround = baseConfig?.placementType === 'ground';
   const isFloat = baseConfig?.placementType === 'float';
+
+  // 입력 필드 포커스 핸들러
+  const handleInputFocus = () => {
+    setHighlightedFrame('base');
+  };
+
+  // 입력 필드 블러 핸들러
+  const handleInputBlur = () => {
+    setHighlightedFrame(null);
+    onHeightBlur();
+  };
+
+  // 띄움 높이 블러 핸들러
+  const handleFloatInputBlur = () => {
+    setHighlightedFrame(null);
+    onFloatHeightBlur();
+  };
 
   return (
     <>
@@ -47,7 +66,8 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
                 type="text"
                 value={baseHeight}
                 onChange={(e) => onHeightChange(e.target.value)}
-                onBlur={onHeightBlur}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 onKeyDown={onKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
                 placeholder="65"
@@ -92,7 +112,8 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
                 type="text"
                 value={floatHeight}
                 onChange={(e) => onFloatHeightChange(e.target.value)}
-                onBlur={onFloatHeightBlur}
+                onFocus={handleInputFocus}
+                onBlur={handleFloatInputBlur}
                 onKeyDown={onFloatKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
                 placeholder="60"

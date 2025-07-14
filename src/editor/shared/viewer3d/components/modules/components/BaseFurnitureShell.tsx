@@ -57,7 +57,7 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+      {(viewMode !== '3D' && ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe')) && (
         <lineSegments geometry={edgesGeometry}>
           <lineBasicMaterial 
             color={renderMode === 'wireframe' ? "#333333" : "#888888"} 

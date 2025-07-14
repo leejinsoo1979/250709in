@@ -4,7 +4,7 @@ import { AuthProvider } from '@/auth/AuthProvider';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import Step0 from '@/editor/Step0';
 import Configurator from '@/editor/Configurator';
-import HomePage from '@/pages/HomePage';
+import SimpleDashboard from '@/pages/SimpleDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 // WebGL 메모리 누수를 방지하기 위한 간단한 함수
@@ -45,11 +45,11 @@ function AppContent() {
       <RouteChangeHandler />
       <Routes>
         {/* 메인 페이지 */}
-        <Route path="/" element={<HomePage />} />
-        
+        <Route path="/" element={<SimpleDashboard />} />
+        {/* 대시보드 페이지 */}
+        <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/auth" element={<LoginForm />} />
-        
         {/* 에디터 라우트 */}
         <Route path="/step0" element={<Step0 />} />
         <Route path="/configurator" element={<Configurator />} />

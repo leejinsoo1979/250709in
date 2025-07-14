@@ -19,7 +19,12 @@ import { generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture
 // 개발 환경 체크
 const isDevelopment = import.meta.env.DEV;
 
-const Step0: React.FC = () => {
+// onClose prop 타입 추가
+interface Step0Props {
+  onClose?: () => void;
+}
+
+const Step0: React.FC<Step0Props> = ({ onClose }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -89,6 +94,20 @@ const Step0: React.FC = () => {
       resetSpaceConfig();
       clearAllModules();
       setCurrentProjectId(null);
+      
+      // 대시보드에서 설정한 디자인 이름 불러오기
+      const designName = localStorage.getItem('newDesignName');
+      const selectedProject = localStorage.getItem('selectedProject');
+      
+      if (designName) {
+        setBasicInfo({ title: designName });
+        localStorage.removeItem('newDesignName'); // 사용 후 제거
+      }
+      
+      if (selectedProject) {
+        console.log('선택된 프로젝트:', selectedProject);
+        localStorage.removeItem('selectedProject'); // 사용 후 제거
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -104,7 +123,7 @@ const Step0: React.FC = () => {
   };
 
   const handleNext = async () => {
-    if (basicInfo.title && basicInfo.location) {
+    if (basicInfo.title && basicInfo.location && spaceInfo.width > 0 && spaceInfo.height > 0) {
       // 현재 프로젝트가 있으면 저장 후 이동
       if (currentProjectId) {
         setSaving(true);
@@ -159,7 +178,16 @@ const Step0: React.FC = () => {
     }
   };
 
-  const canProceed = basicInfo.title && basicInfo.location;
+  const canProceed = basicInfo.title && basicInfo.location && spaceInfo.width > 0 && spaceInfo.height > 0;
+  
+  // Debug validation
+  console.log('🔍 Step0 Validation:', {
+    title: basicInfo.title,
+    location: basicInfo.location, 
+    width: spaceInfo.width,
+    height: spaceInfo.height,
+    canProceed
+  });
 
   // 로딩 중일 때 표시할 UI
   if (loading) {
@@ -175,6 +203,12 @@ const Step0: React.FC = () => {
     );
   }
 
+  // X 버튼 핸들러
+  const handleClose = () => {
+    if (onClose) onClose();
+    else navigate('/dashboard');
+  };
+
   return (
     <div 
       className={styles.container}
@@ -189,7 +223,14 @@ const Step0: React.FC = () => {
           className={styles.header}
           data-debug-element="header"
         >
-          
+          {/* X(닫기) 버튼 */}
+          <button
+            className={styles.closeButton}
+            aria-label="닫기"
+            onClick={handleClose}
+          >
+            ×
+          </button>
           <div>
             <h1>벽장 제작</h1>
             <p>기본 정보와 공간 크기를 설정해주세요.</p>
@@ -204,8 +245,6 @@ const Step0: React.FC = () => {
             className={styles.formSection}
             data-debug-element="formSection"
           >
-            
-
             <div 
               className={styles.form}
               data-debug-element="form"
@@ -214,23 +253,19 @@ const Step0: React.FC = () => {
                 basicInfo={basicInfo} 
                 onUpdate={handleBasicInfoUpdate}
               />
-              
               <div 
                 className={styles.spaceSettings}
                 data-debug-element="spaceSettings"
               >
                 <h3 className={styles.sectionTitle}>공간 정보</h3>
-                
                 <div className={styles.spaceSizeSection}>
                   <span className={styles.label}>공간 크기</span>
-                  
                   {/* 전체 크기 요약 표시 */}
                   <div className={styles.dimensionsSummary}>
                     <span className={styles.summaryText}>
                       {spaceInfo.width} × {spaceInfo.height} mm (깊이: {spaceInfo.depth}mm 고정)
                     </span>
                   </div>
-                  
                   <div className={styles.inputGroupTwoColumns}>
                     <WidthControl 
                       spaceInfo={spaceInfo}
@@ -240,21 +275,16 @@ const Step0: React.FC = () => {
                       spaceInfo={spaceInfo}
                       onUpdate={handleSpaceInfoUpdate}
                     />
-                    {/* DepthControl - 공간 깊이는 780mm로 고정, 개별 가구에서만 조정 가능 */}
                   </div>
                 </div>
-                
                 <InstallTypeControls 
                   spaceInfo={spaceInfo}
                   onUpdate={handleSpaceInfoUpdate}
                 />
               </div>
             </div>
-
-            <div 
-              className={styles.startButtonContainer}
-              data-debug-element="startButtonContainer"
-            >
+            {/* 모달 내부 하단에 버튼 */}
+            <div className={styles.startButtonContainer}>
               <Button
                 variant="primary"
                 size="large"
@@ -262,7 +292,7 @@ const Step0: React.FC = () => {
                 disabled={!canProceed || saving}
                 data-debug-element="startButton"
               >
-                {saving ? '저장 중...' : '벽장 제작 시작하기'}
+                {saving ? '저장 중...' : '에디터로 이동하기'}
               </Button>
             </div>
           </div>

@@ -1,0 +1,324 @@
+.projectCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  position: relative;
+  cursor: pointer;
+}
+
+.projectCard:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.projectCard.grid {
+  width: 190px;
+  height: 220px;
+  margin: 8px;
+}
+
+.projectCard.list {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 16px;
+}
+
+.cardContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.list .cardContent {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 155px;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list .thumbnail {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderThumbnail {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.projectInfo {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list .projectInfo {
+  padding: 0;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.projectTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.projectIcon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.moreButton {
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-normal);
+}
+
+.projectCard:hover .moreButton {
+  opacity: 1;
+}
+
+.moreButton:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.projectDescription {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.projectStats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+}
+
+.statIcon {
+  color: var(--text-secondary);
+}
+
+.statLabel {
+  color: var(--text-secondary);
+}
+
+.statValue {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.projectMeta {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.metaIcon {
+  color: var(--text-secondary);
+}
+
+.hoverOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.projectCard:hover .hoverOverlay {
+  opacity: 1;
+}
+
+.hoverActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+}
+
+.hoverButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.hoverButton:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+}
+
+.cardActions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  transform: translateY(100%);
+  transition: transform var(--transition-normal);
+}
+
+.projectCard:hover .cardActions {
+  transform: translateY(0);
+}
+
+.primaryButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--primary-color);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.primaryButton:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .projectCard.grid {
+    width: 100%;
+    height: 180px;
+    margin: 4px 0;
+  }
+  
+  .thumbnail {
+    height: 120px;
+  }
+  
+  .projectStats {
+    gap: 8px;
+  }
+  
+  .projectMeta {
+    gap: 8px;
+  }
+  
+  .hoverActions {
+    flex-direction: row;
+    padding: 16px;
+  }
+  
+  .hoverButton {
+    font-size: var(--font-size-xs);
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .projectCard.grid {
+    height: 160px;
+  }
+  
+  .thumbnail {
+    height: 100px;
+  }
+  
+  .projectInfo {
+    padding: 8px;
+  }
+  
+  .projectStats {
+    display: none;
+  }
+  
+  .projectMeta {
+    gap: 6px;
+  }
+  
+  .metaItem {
+    font-size: 10px;
+  }
+} 

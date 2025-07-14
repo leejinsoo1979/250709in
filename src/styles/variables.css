@@ -1,62 +1,135 @@
 :root {
-  /* Colors */
-  --color-primary: #2ECC71;
-  --color-primary-dark: #26C165;
-  --color-primary-light: #A7F3D0;
+  /* 기본 색상 시스템 */
+  --primary-color: #21b691;
+  --primary-hover: #1da57a;
+  --primary-light: #dcf8e5;
+  --primary-dark: #1a7c3a;
   
-  --color-secondary: #F5F6F7;
-  --color-secondary-dark: #E5E7EB;
+  /* 보조 색상 */
+  --secondary-color: #0969da;
+  --secondary-hover: #0861ca;
+  --secondary-light: #ddf4ff;
   
-  --color-background: #FFFFFF;
-  --color-surface: #F9FAFB;
+  /* 기본 텍스트 색상 */
+  --text-primary: #24292f;
+  --text-secondary: #656d76;
+  --text-muted: #8c959f;
+  --text-inverse: #ffffff;
   
-  --color-text-primary: #333333;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
+  /* 배경 색상 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f1f3f4;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
   
-  --color-border: #E5E7EB;
-  --color-divider: #F3F4F6;
-
-  /* Spacing */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-5: 20px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
+  /* 표면 색상 */
+  --surface-color: #f6f8fa;
+  --surface-hover: #e6f3ff;
+  --surface-active: #ddf4ff;
   
-  /* Border Radius */
-  --radius-sm: 4px;
+  /* 경계선 색상 */
+  --border-color: #d1d9e0;
+  --border-muted: #e6e8ea;
+  --border-strong: #bdc3c7;
+  
+  /* 상태 색상 */
+  --success-color: #2da44e;
+  --success-bg: #dcf8e5;
+  --warning-color: #f59e0b;
+  --warning-bg: #fef3c7;
+  --error-color: #da3633;
+  --error-bg: #ffeaea;
+  --info-color: #0969da;
+  --info-bg: #ddf4ff;
+  
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  /* 반지름 */
+  --radius-sm: 3px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
   
-  /* Shadow */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  /* 간격 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
   
-  /* Font Size */
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
+  /* 폰트 크기 */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
   
-  /* Line Height */
-  --leading-none: 1;
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.75;
+  /* 폰트 두께 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
   
-  /* Font Weight */
-  --font-normal: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
+  /* 라인 높이 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
   
-  /* Z-index */
-  --z-dropdown: 1000;
-  --z-modal: 2000;
+  /* 전환 효과 */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  
+  /* z-index 레벨 */
+  --z-dropdown: 100;
+  --z-modal: 1000;
+  --z-toast: 2000;
   --z-tooltip: 3000;
+  
+  /* 컨테이너 크기 */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  
+  /* 사이드바 크기 */
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 64px;
+  
+  /* 헤더 크기 */
+  --header-height: 64px;
+  --header-mobile-height: 56px;
+  
+  /* 그리드 설정 */
+  --grid-gap: 24px;
+  --grid-gap-sm: 16px;
+  --grid-gap-xs: 12px;
+  
+  /* 카드 설정 */
+  --card-padding: 16px;
+  --card-padding-lg: 24px;
+  
+  /* 입력 필드 */
+  --input-height: 40px;
+  --input-height-sm: 36px;
+  --input-height-lg: 44px;
+  --input-padding: 0 12px;
+  
+  /* 버튼 */
+  --button-height: 40px;
+  --button-height-sm: 36px;
+  --button-height-lg: 44px;
+  --button-padding: 0 16px;
+  --button-padding-sm: 0 12px;
+  --button-padding-lg: 0 20px;
 } 

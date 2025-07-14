@@ -10,6 +10,7 @@ interface FurniturePlacementPlaneProps {
 
 const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ spaceInfo }) => {
   const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
+  const placedModules = useFurnitureStore(state => state.placedModules);
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -55,23 +56,27 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   // 기준면을 내경 공간 중앙에 정확히 배치 (Z=0이 공간 앞면, -depth가 뒷면)
   const planeZ = mmToThreeUnits(0);
   
+  // placedModules 중 도어가 장착된 모듈이 하나라도 있으면 바닥 슬롯 매쉬를 숨김
+  const hasAnyDoor = placedModules.some(module => module.hasDoor);
+  
   return (
     <group position={[internalCenterXThreeUnits, planeY - 0.1, planeZ]}>
-      {/* 가구 배치 기준면 - 초록색 반투명 (Z-fighting 방지를 위해 0.1 단위 아래로, 내경 중심에 배치) */}
-      <Plane
-        args={[planeWidth, planeDepth]}
-        rotation={[-Math.PI / 2, 0, 0]} // 수평으로 회전
-      >
-        <meshBasicMaterial 
-          color={isFurniturePlacementMode ? "#10B981" : "#10B981"} 
-          transparent 
-          opacity={0.3}
-          side={2} // DoubleSide
-        />
-        
-        {/* R3F 방식의 테두리 선 */}
-        <Edges color={isFurniturePlacementMode ? "#10B981" : "#10B981"} />
-      </Plane>
+      {/* 도어가 하나라도 장착되어 있으면 바닥 슬롯 매쉬를 렌더링하지 않음 */}
+      {!hasAnyDoor && (
+        <Plane
+          args={[planeWidth, planeDepth]}
+          rotation={[-Math.PI / 2, 0, 0]} // 수평으로 회전
+        >
+          <meshBasicMaterial 
+            color={isFurniturePlacementMode ? "#10B981" : "#10B981"} 
+            transparent 
+            opacity={0.3}
+            side={2} // DoubleSide
+          />
+          {/* R3F 방식의 테두리 선 */}
+          <Edges color={isFurniturePlacementMode ? "#10B981" : "#10B981"} />
+        </Plane>
+      )}
     </group>
   );
 };

@@ -7,10 +7,10 @@
 /* 탭 메뉴 */
 .tabMenu {
   display: flex;
-  gap: 2px;
+  gap: 0;
   margin-bottom: 16px;
   background-color: #f8f9fa;
-  padding: 2px;  /* 탭 메뉴 전체 패딩도 4px에서 2px로 줄임 */
+  padding: 2px;
   border-radius: 8px;
 }
 
@@ -31,11 +31,45 @@
   background-color: #e9ecef;
 }
 
-.activeTab {
-  background-color: white;
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  border: 1px solid #1abc9c;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
   color: #1abc9c;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 0;
+  white-space: nowrap;
+}
+
+.tab:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-right: none;
+}
+
+.tab:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-left: none;
+}
+
+.tab:hover:not(.activeTab) {
+  background-color: #f0f9ff;
+}
+
+.activeTab {
+  background-color: #1abc9c;
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 /* 썸네일 그리드 (4열로 변경해서 크기 대폭 축소) */
@@ -193,7 +227,8 @@
   
   .tabButton {
     padding: 5px 12px;
-    font-size: 13px;
+    font-size: 12px;
+    white-space: nowrap;
   }
   
   .thumbnailImage img {
@@ -216,6 +251,7 @@
   .tabButton {
     padding: 4px 10px;
     font-size: 12px;
+    white-space: nowrap;
   }
   
   .tabMenu {
@@ -238,6 +274,7 @@
   .tabButton {
     padding: 4px 8px;
     font-size: 12px;
+    white-space: nowrap;
   }
   
   .tabMenu {
@@ -261,6 +298,7 @@
   .tabButton {
     padding: 6px 10px;
     font-size: 12px;
+    white-space: nowrap;
   }
   
   .tabMenu {
@@ -292,7 +330,8 @@
   
   .tabButton {
     padding: 3px 8px;
-    font-size: 11px;
+    font-size: 12px;
+    white-space: nowrap;
   }
   
   .tabMenu {

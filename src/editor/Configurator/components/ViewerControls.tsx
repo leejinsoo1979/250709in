@@ -167,7 +167,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </button>
           ))}
         </div>
-      </div>
+        </div>
 
       {/* 우측 뷰 컨트롤들 */}
       <div className={styles.rightControls}>

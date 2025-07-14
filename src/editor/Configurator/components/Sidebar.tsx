@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
+import { Settings, User } from 'lucide-react';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -7,12 +8,14 @@ interface SidebarProps {
   activeTab: SidebarTab | null;
   onTabClick: (tab: SidebarTab) => void;
   isOpen: boolean;
+  onToggle: () => void; // 폴딩 버튼 핸들러 추가
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabClick,
-  isOpen
+  isOpen,
+  onToggle
 }) => {
   const tabs = [
     {
@@ -53,18 +56,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'etc' as SidebarTab,
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V6a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-      ),
+      icon: (<Settings width="20" height="20" />),
       label: '기타'
     }
   ];
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      {/* 폴딩 버튼 - 우측 중앙 */}
+      <button 
+        className={styles.foldButton}
+        onClick={onToggle}
+        title={isOpen ? '사이드바 접기' : '사이드바 열기'}
+      >
+        {isOpen ? '<' : '>'}
+      </button>
+      {/* 탭 리스트 */}
       <div className={styles.tabList}>
         {tabs.map((tab) => (
           <button
@@ -85,10 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className={styles.userSection}>
         <div className={styles.userAvatar}>
           <div className={styles.avatar}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
-              <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-            </svg>
+            <User size={24} />
           </div>
           <div className={styles.onlineIndicator}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">

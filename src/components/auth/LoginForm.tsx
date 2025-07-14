@@ -19,12 +19,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // 로그인 상태 확인 후 자동 리다이렉트
   useEffect(() => {
     if (user && !authLoading) {
       console.log('✅ 로그인된 상태 감지, 홈페이지로 이동합니다.');
-      // 짧은 지연 후 이동 (로그인 성공 메시지를 볼 시간 제공)
       const timeoutId = setTimeout(() => {
         navigate('/');
       }, 1000);
@@ -43,10 +44,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       let result;
       
       if (isSignUp) {
-        // 회원가입
         result = await signUpWithEmail(email, password, displayName);
       } else {
-        // 로그인
         result = await signInWithEmail(email, password);
       }
 
@@ -78,7 +77,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setLoading(true);
     setError(null);
 
-    // Firebase가 설정되지 않은 경우 안내 메시지
     if (!isFirebaseConfigured()) {
       setError('데모 환경에서는 구글 로그인을 사용할 수 없습니다. "데모 체험하기" 버튼을 이용해주세요.');
       setLoading(false);
@@ -108,66 +106,83 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     navigate('/configurator');
   };
 
+  // 카카오 로그인 처리 (데모용)
+  const handleKakaoLogin = () => {
+    console.log('카카오 로그인 (데모)');
+    handleDemoAccess();
+  };
+
+  // 네이버 로그인 처리 (데모용)
+  const handleNaverLogin = () => {
+    console.log('네이버 로그인 (데모)');
+    handleDemoAccess();
+  };
+
   return (
     <div className={styles.loginForm}>
       <div className={styles.container}>
-        <h2>{isSignUp ? '회원가입' : '로그인'}</h2>
-        
-        {/* Firebase 설정 여부에 따른 버튼 표시 */}
-        {isFirebaseConfigured() ? (
-          <Button 
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className={styles.googleButton}
-          >
-            <span className={styles.googleIcon}>🔍</span>
-            Google로 {isSignUp ? '회원가입' : '로그인'}
-          </Button>
-        ) : (
-          <Button 
-            onClick={handleDemoAccess}
-            disabled={loading}
-            className={styles.demoButton}
-          >
-            <span className={styles.demoIcon}>🎨</span>
-            데모 체험하기 (로그인 없이 사용)
-          </Button>
-        )}
-        
-        {/* 구분선 */}
-        <div className={styles.divider}>
-          <span>또는</span>
+        {/* 로고 영역 */}
+        <div className={styles.logoSection}>
+          <div className={styles.logo}>
+            <span className={styles.logoIcon}>m</span>
+            <span className={styles.logoText}>LOGO</span>
+          </div>
         </div>
+
+        {/* 제목 */}
+        <h2 className={styles.title}>로그인</h2>
         
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* 회원가입 시 이름 입력 */}
-          {isSignUp && (
-            <Input
-              type="text"
-              placeholder="이름"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              required={isSignUp}
-            />
-          )}
-          
           {/* 이메일 입력 */}
-          <Input
-            type="email"
-            placeholder="이메일"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>아이디/주소 (ID)</label>
+            <Input
+              type="email"
+              placeholder="아이디 입력"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className={styles.input}
+            />
+          </div>
           
           {/* 비밀번호 입력 */}
-          <Input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>비밀번호</label>
+            <div className={styles.passwordWrapper}>
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="비밀번호 입력"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className={styles.input}
+              />
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+          
+          {/* 로그인 유지 & 비밀번호 찾기 */}
+          <div className={styles.optionsRow}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxText}>로그인 유지</span>
+            </label>
+            <button type="button" className={styles.forgotPassword}>
+              비밀번호 찾기 &gt;
+            </button>
+          </div>
           
           {/* 에러 메시지 */}
           {error && (
@@ -176,27 +191,59 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             </div>
           )}
           
-          {/* 제출 버튼 */}
+          {/* 로그인 버튼 */}
           <Button 
             type="submit" 
             disabled={loading}
-            className={styles.submitButton}
+            className={styles.loginButton}
           >
-            {loading ? '처리 중...' : (isSignUp ? '회원가입' : '로그인')}
+            {loading ? '처리 중...' : '로그인'}
           </Button>
         </form>
         
-        {/* 로그인/회원가입 전환 */}
-        <div className={styles.switchMode}>
-          {isSignUp ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}
-          <button 
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className={styles.switchButton}
-          >
-            {isSignUp ? '로그인' : '회원가입'}
-          </button>
+        {/* 구분선 */}
+        <div className={styles.divider}>
+          <span>또는</span>
         </div>
+        
+        {/* SNS 로그인 */}
+        <div className={styles.snsSection}>
+          <p className={styles.snsTitle}>SNS 계정으로 3초만에 가입하기</p>
+          <div className={styles.snsButtons}>
+            <button
+              type="button"
+              className={styles.snsButton}
+              onClick={handleKakaoLogin}
+              style={{ backgroundColor: '#fee500' }}
+            >
+              <span className={styles.snsIcon}>💬</span>
+            </button>
+            <button
+              type="button"
+              className={styles.snsButton}
+              onClick={handleGoogleLogin}
+              style={{ backgroundColor: '#4285f4' }}
+            >
+              <span className={styles.snsIcon}>G</span>
+            </button>
+            <button
+              type="button"
+              className={styles.snsButton}
+              onClick={handleNaverLogin}
+              style={{ backgroundColor: '#03c75a' }}
+            >
+              <span className={styles.snsIcon}>N</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* 아이디 없이 가입하기 */}
+        <Button 
+          onClick={handleDemoAccess}
+          className={styles.demoButton}
+        >
+          아이디없로 가입하기
+        </Button>
       </div>
     </div>
   );

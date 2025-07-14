@@ -1,0 +1,207 @@
+.topBar {
+  height: var(--header-height);
+  padding: 0 var(--spacing-xl);
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-dropdown);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  gap: var(--spacing-sm);
+}
+
+.breadcrumbItem {
+  color: var(--text-primary);
+}
+
+.breadcrumbCount {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-normal);
+}
+
+.chevron {
+  color: var(--text-secondary);
+  margin: 0 var(--spacing-xs);
+}
+
+.searchBar {
+  flex: 1;
+  max-width: 480px;
+  position: relative;
+}
+
+.searchInputWrapper {
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  height: var(--input-height-sm);
+  padding: var(--input-padding);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-color);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: all var(--transition-normal);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background-color: var(--bg-primary);
+  box-shadow: 0 0 0 2px rgba(45, 164, 78, 0.1);
+}
+
+.searchInput::placeholder {
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.createButton {
+  height: var(--button-height-sm);
+  padding: var(--button-padding-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.createButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.createButton:active {
+  transform: translateY(0);
+}
+
+.viewControls {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface-color);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.viewButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.viewButton:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.viewButton.active {
+  background-color: var(--bg-primary);
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.sortButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.sortButton:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+}
+
+.sortButton:active {
+  transform: translateY(1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .topBar {
+    padding: 0 var(--spacing-lg);
+    height: var(--header-mobile-height);
+    gap: var(--spacing-lg);
+  }
+
+  .breadcrumb {
+    display: none;
+  }
+
+  .searchBar {
+    max-width: none;
+  }
+
+  .createButton span {
+    display: none;
+  }
+
+  .createButton {
+    padding: 0 var(--spacing-md);
+    width: 44px;
+    justify-content: center;
+  }
+
+  .actions {
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .topBar {
+    padding: 0 var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .searchBar {
+    margin-left: var(--spacing-md);
+    margin-right: var(--spacing-md);
+  }
+
+  .sortButton {
+    width: 32px;
+    height: 32px;
+  }
+} 
