@@ -113,7 +113,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 박스형 가구 렌더링
         <BoxModule 
           moduleData={moduleData}
-          isDragging={isDragMode || isDraggingThis || isEditMode}
+          isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
           color={furnitureColor}
           internalHeight={furnitureHeightMm}
           hasDoor={placedModule.hasDoor ?? false} // 기본값: 도어 없음
@@ -134,8 +134,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               metalness={0.0}
               roughness={0.7}
               reflectivity={0.2}
-              transparent={isDragMode || isDraggingThis || isEditMode}
-              opacity={isDragMode || isDraggingThis || isEditMode ? 0.8 : 1.0}
+              transparent={isDraggingThis || isEditMode}
+              opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
             />
           </Box>
           <Edges 
