@@ -14,6 +14,7 @@ import {
   calculateFurniturePosition
 } from '../../utils/slotRaycast';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
+import { useSpace3DView } from '../../context/useSpace3DView';
 
 interface SlotDropZonesProps {
   spaceInfo: SpaceInfo;
@@ -33,7 +34,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   
   // Three.js 컨텍스트 접근
-  const { camera, scene } = useThree();
+  const { camera, scene, gl } = useThree();
+  const { viewMode } = useSpace3DView();
   
   // 마우스가 hover 중인 슬롯 인덱스 상태
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
@@ -150,6 +152,22 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     };
     
     addModule(newModule);
+    
+    // 가구 배치 완료 후 그림자 즉시 업데이트
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      // 그림자 맵 강제 업데이트
+      gl.shadowMap.needsUpdate = true;
+      
+      // 다음 몇 프레임에서도 계속 업데이트 (확실한 반영을 위해)
+      requestAnimationFrame(() => {
+        gl.shadowMap.needsUpdate = true;
+        requestAnimationFrame(() => {
+          gl.shadowMap.needsUpdate = true;
+        });
+      });
+      
+      console.log('🌟 SlotDropZones - 가구 배치 후 그림자 강제 업데이트 완료');
+    }
     
     // 드래그 상태 초기화
     setCurrentDragData(null);

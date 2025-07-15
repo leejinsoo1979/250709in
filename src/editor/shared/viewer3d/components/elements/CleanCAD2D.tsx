@@ -2589,26 +2589,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
               
               {/* 도어 두께 치수 - 좌측에 표시, z축 위로 10mm 이동 */}
               <group>
-                {/* 도어 두께 치수선 (좌측, z축을 위로 10mm 이동하여 실제 도어 위치에 맞춤) */}
+                {/* 도어 두께 치수선 (좌측, z축을 위로 22mm 이동하여 실제 도어 위치에 맞춤) */}
                 <Line
-                  points={[[spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12)]]}
+                  points={[[spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(18)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, mmToThreeUnits(0)]]}
                   color="#666666"
                   lineWidth={1}
                 />
                 {/* 도어 두께 화살표 */}
                 <Line
-                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(30) + 0.02], 0.01)}
+                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(18)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(18) + 0.02], 0.01)}
                   color="#666666"
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(12) - 0.02], 0.01)}
+                  points={createArrowHead([spaceXOffset - mmToThreeUnits(200), spaceHeight, mmToThreeUnits(0)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, mmToThreeUnits(0) - 0.02], 0.01)}
                   color="#666666"
                   lineWidth={1}
                 />
                 {/* 도어 두께 텍스트 (중앙 위치) */}
                 <Text
-                  position={[spaceXOffset - mmToThreeUnits(240), spaceHeight + 0.1, -mmToThreeUnits(21)]}
+                  position={[spaceXOffset - mmToThreeUnits(240), spaceHeight + 0.1, -mmToThreeUnits(9)]}
                   fontSize={baseFontSize}
                   color="#666666"
                   anchorX="center"
@@ -2619,12 +2619,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 </Text>
                 {/* 도어 두께 연결선 - 실제 도어 위치에 맞춤 */}
                 <Line
-                  points={[[leftDoorLeftX, spaceHeight, -mmToThreeUnits(18)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(18)]]}
+                  points={[[leftDoorLeftX, spaceHeight, -mmToThreeUnits(18)], [spaceXOffset - mmToThreeUnits(180), spaceHeight, -mmToThreeUnits(18)]]}
                   color="#666666"
                   lineWidth={1}
                 />
                 <Line
-                  points={[[leftDoorLeftX, spaceHeight, -mmToThreeUnits(0)], [spaceXOffset - mmToThreeUnits(200), spaceHeight, -mmToThreeUnits(0)]]}
+                  points={[[leftDoorLeftX, spaceHeight, mmToThreeUnits(0)], [spaceXOffset - mmToThreeUnits(180), spaceHeight, mmToThreeUnits(0)]]}
                   color="#666666"
                   lineWidth={1}
                 />

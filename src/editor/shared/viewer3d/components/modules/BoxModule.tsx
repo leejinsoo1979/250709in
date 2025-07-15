@@ -198,7 +198,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           moduleDepth={baseFurniture.actualDepthMm}
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
-          color={isDragging ? baseFurniture.doorColor : undefined}
+          color={baseFurniture.doorColor}
         />
       )}
     </BaseFurnitureShell>

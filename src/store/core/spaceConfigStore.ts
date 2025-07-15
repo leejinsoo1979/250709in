@@ -25,6 +25,8 @@ export interface BaseConfig {
 export interface MaterialConfig {
   interiorColor: string;
   doorColor: string;
+  interiorTexture?: string;  // 내부 재질 텍스처 이미지 경로
+  doorTexture?: string;      // 도어 재질 텍스처 이미지 경로
 }
 
 // 공간 정보 타입

@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useThree } from '@react-three/fiber';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -17,30 +18,27 @@ const BoxWithEdges: React.FC<{
   
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (내부 표면도 동일)
   const processedMaterial = useMemo(() => {
+    console.log('🔧 BaseFurnitureShell - isInternalSurface:', isInternalSurface, 'material.map:', material instanceof THREE.MeshStandardMaterial ? material.map : 'N/A');
+    
     if (isInternalSurface && material instanceof THREE.MeshStandardMaterial) {
-      const innerMaterial = material.clone();
-      
-      // 색상 조작 없이 원래 색상 유지 - 물리적 그림자만 의존
-      // innerMaterial.color는 원래 색상 그대로 유지
-      
-      // 자체발광 완전 제거 (순수 그림자 의존)
-      innerMaterial.emissive = new THREE.Color(0x000000);
-      
-      // 그림자 수신 최적화 - 바닥판은 특히 그림자를 잘 받아야 함
-      innerMaterial.roughness = 0.8;  // 더 거칠게 하여 그림자 수신 강화
-      
-      // 환경맵 완전 제거
-      innerMaterial.envMapIntensity = 0.0;
-      
-      return innerMaterial;
+      console.log('🎯 내부 표면 재질 처리 - 원본 텍스처:', material.map);
+      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
+      return material;
     }
     
     // 2D 모드에서 솔리드 렌더링 시 투명도 적용
     if (material instanceof THREE.MeshStandardMaterial) {
       if (viewMode === '2D' && renderMode === 'solid') {
         const transparentMaterial = material.clone();
+        // 텍스처와 모든 속성 복사
+        transparentMaterial.map = material.map;
+        transparentMaterial.color = material.color.clone();
+        transparentMaterial.normalMap = material.normalMap;
+        transparentMaterial.roughnessMap = material.roughnessMap;
+        transparentMaterial.metalnessMap = material.metalnessMap;
         transparentMaterial.transparent = true;
         transparentMaterial.opacity = 0.5;
+        transparentMaterial.needsUpdate = true;
         return transparentMaterial;
       }
     }
@@ -57,7 +55,7 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {(viewMode !== '3D' && ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe')) && (
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
         <lineSegments geometry={edgesGeometry}>
           <lineBasicMaterial 
             color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
@@ -118,7 +116,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   mmToThreeUnits,
   children
 }) => {
-  const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
+  const { gl } = useThree(); // Three.js renderer 가져오기
+  
+  // 가구 배치 시 그림자 즉시 업데이트
+  useEffect(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      // 그림자 맵 강제 업데이트
+      gl.shadowMap.needsUpdate = true;
+      
+      // 다음 프레임에서 렌더링 강제 업데이트
+      requestAnimationFrame(() => {
+        gl.shadowMap.needsUpdate = true;
+      });
+      
+      console.log('🌟 BaseFurnitureShell - 그림자 강제 업데이트 완료');
+    }
+  }, [viewMode, gl, material]); // material 변경 시에도 그림자 업데이트
   
   return (
     <group>

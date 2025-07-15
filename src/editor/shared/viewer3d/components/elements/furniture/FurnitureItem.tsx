@@ -80,11 +80,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구를 가구 공간의 뒷쪽에 배치 (프레임 앞면에서 도어 두께만큼 뒤)
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
 
-  // 색상 설정: 특별한 상태일 때만 색상 전달, 평상시에는 undefined로 MaterialPanel 색상 사용
-  const isSpecialState = isDraggingThis || isEditMode || isDragMode;
-  const furnitureColor = isSpecialState 
-    ? (isDraggingThis ? '#66ff66' : isEditMode ? '#ffaa00' : isDragMode ? '#ff6666' : undefined)
-    : undefined; // 평상시에는 색상을 전달하지 않음
+  // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
+  const furnitureColor = isDraggingThis ? '#66ff66' : undefined; // 드래그 중일 때만 녹색, 나머지는 MaterialPanel 색상 사용
 
   return (
     <group

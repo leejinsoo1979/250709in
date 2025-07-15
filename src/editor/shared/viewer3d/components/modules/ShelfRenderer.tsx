@@ -14,22 +14,9 @@ const BoxWithEdges: React.FC<{
     const { viewMode } = useSpace3DView();
     
     if (originalMaterial instanceof THREE.MeshStandardMaterial) {
-      const innerMaterial = originalMaterial.clone();
-      
-      // 색상 조작 없이 원래 색상 유지 - 물리적 그림자만 의존
-      // innerMaterial.color는 원래 색상 그대로 유지
-      
-      innerMaterial.roughness = 0.6;  // 적당한 거칠기로 그림자 수신 최적화
-      innerMaterial.envMapIntensity = 0.0;  // 환경맵 완전 제거
-      innerMaterial.emissive = new THREE.Color(0x000000);  // 자체발광 완전 제거 (순수 그림자 의존)
-      
-      // 2D 모드에서 솔리드 렌더링 시 투명도 적용
-      if (viewMode === '2D' && renderMode === 'solid') {
-        innerMaterial.transparent = true;
-        innerMaterial.opacity = 0.5;
-      }
-      
-      return innerMaterial;
+      console.log('📚 ShelfRenderer - 원본 텍스처:', originalMaterial.map);
+      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
+      return originalMaterial;
     }
     return material;
   };
@@ -47,7 +34,7 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {(viewMode !== '3D' && ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe')) && (
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 

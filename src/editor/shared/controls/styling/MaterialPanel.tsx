@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './MaterialPanel.module.css';
 
 type MaterialTab = 'interior' | 'door';
@@ -36,7 +38,7 @@ const materialSwatches = [
   { id: "i5", name: "Natural Oak", color: "#c7ae7f", position: 5, isInner: true, texture: "wood" },
   { id: "i6", name: "Light Oak", color: "#d4bd94", position: 6, isInner: true, texture: "wood" },
   { id: "i7", name: "Cherry", color: "#6e4239", position: 7, isInner: true, texture: "wood" },
-  { id: "i8", name: "Ebony", color: "#3b3b3b", position: 8, isInner: true, texture: "wood" },
+  { id: "i8", name: "Cabinet Texture1", color: "#FFFFFF", position: 8, isInner: true, texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
 ];
 
 const MaterialPanel: React.FC = () => {
@@ -61,6 +63,13 @@ const MaterialPanel: React.FC = () => {
   // Store에서 재질 설정과 업데이트 함수 가져오기
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' };
+  
+  // UI Store에서 도어 상태 가져오기
+  const { doorsOpen, toggleDoors } = useUIStore();
+  
+  // 가구 스토어에서 도어가 있는 가구 확인
+  const placedModules = useFurnitureStore(state => state.placedModules);
+  const hasAnyDoor = placedModules.some(module => module.hasDoor);
 
   // 현재 스토어의 색상
   const currentStoreColor = materialTab === 'interior' 
@@ -275,9 +284,34 @@ const MaterialPanel: React.FC = () => {
     }
   };
 
-  const handleSelectMaterial = (name: string, color: string) => {
+  const handleSelectMaterial = (name: string, color: string, material?: any) => {
     setSelectedMaterial(name);
-    updateStoreColor(color);
+    
+    // 이미지 텍스처인 경우 텍스처 경로도 함께 저장
+    if (material?.texture === 'image' && material?.image) {
+      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : 'doorTexture';
+      const newMaterialConfig = {
+        ...materialConfig,
+        [materialTab === 'interior' ? 'interiorColor' : 'doorColor']: color,
+        [textureProperty]: material.image
+      };
+      
+      setSpaceInfo({
+        materialConfig: newMaterialConfig
+      });
+    } else {
+      // 일반 색상 재질인 경우 텍스처 제거
+      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : 'doorTexture';
+      const newMaterialConfig = {
+        ...materialConfig,
+        [materialTab === 'interior' ? 'interiorColor' : 'doorColor']: color,
+        [textureProperty]: undefined
+      };
+      
+      setSpaceInfo({
+        materialConfig: newMaterialConfig
+      });
+    }
   };
 
   const handleSaveColor = () => {
@@ -388,13 +422,25 @@ const MaterialPanel: React.FC = () => {
       <div className={styles.tabNavigation}>
         <button
           className={cn(styles.tab, materialTab === 'interior' && styles.activeTab)}
-          onClick={() => setMaterialTab('interior')}
+          onClick={() => {
+            setMaterialTab('interior');
+            // 도어가 있는 가구가 있고, 내부 탭을 선택하면 도어 열기
+            if (hasAnyDoor && !doorsOpen) {
+              toggleDoors();
+            }
+          }}
         >
           <span className={styles.tabLabel}>내부</span>
         </button>
         <button
           className={cn(styles.tab, materialTab === 'door' && styles.activeTab)}
-          onClick={() => setMaterialTab('door')}
+          onClick={() => {
+            setMaterialTab('door');
+            // 도어가 있는 가구가 있고, 도어 탭을 선택하면 도어 닫기
+            if (hasAnyDoor && doorsOpen) {
+              toggleDoors();
+            }
+          }}
         >
           <span className={styles.tabLabel}>도어</span>
         </button>
@@ -435,7 +481,16 @@ const MaterialPanel: React.FC = () => {
                       width="10" height="10"
                       patternTransform="rotate(45)"
                     >
-                      <rect width="10" height="10" fill={material.color} />
+                      {material.texture === 'image' && material.image ? (
+                        <image 
+                          href={material.image} 
+                          width="10" 
+                          height="10" 
+                          preserveAspectRatio="xMidYMid slice"
+                        />
+                      ) : (
+                        <rect width="10" height="10" fill={material.color} />
+                      )}
                       {material.texture === 'wood' && (
                         <>
                           <line x1="0" y1="5" x2="10" y2="5" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
@@ -478,7 +533,7 @@ const MaterialPanel: React.FC = () => {
                       className={styles.materialSegment}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleSelectMaterial(material.name, material.color);
+                        handleSelectMaterial(material.name, material.color, material);
                       }}
                     />
                   );
@@ -507,14 +562,14 @@ const MaterialPanel: React.FC = () => {
                     <path
                       key={material.id}
                       d={`M ${x1},${y1} A 30,30 0 ${largeArcFlag},1 ${x2},${y2} L ${x3},${y3} Z`}
-                      fill={material.color}
+                      fill={material.texture === 'image' ? `url(#pattern-${material.id})` : material.color}
                       stroke={isMaterialSelected(material.name) ? "#1abc9c" : "white"}
                       strokeWidth={isMaterialSelected(material.name) ? "2" : "0.5"}
                       style={{ cursor: 'pointer' }}
                       className={styles.materialSegment}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleSelectMaterial(material.name, material.color);
+                        handleSelectMaterial(material.name, material.color, material);
                       }}
                     />
                   );

@@ -6,6 +6,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import { useThree } from '@react-three/fiber';
 
 // BoxWithEdges 컴포넌트 정의
 const BoxWithEdges: React.FC<{
@@ -58,7 +59,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen } = useUIStore();
-  const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
+  const { gl } = useThree(); // Three.js renderer 가져오기
   
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
@@ -87,11 +89,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 강제: 솔리드 모드에서는 무조건 고스트 아님
   const isGhost = renderMode !== 'solid' && !!color;
   
-  // 도어 재질 생성 (프레임과 동일한 재질로 통일)
+  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성)
   const createDoorMaterial = () => {
     const { viewMode } = useSpace3DView();
     
-    return new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(doorColor),
       metalness: 0.0,        // 완전 비금속 (프레임과 동일)
       roughness: 0.6,        // 프레임과 동일한 거칠기
@@ -100,7 +102,104 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isGhost,  // 프레임과 동일한 투명도 조건
       opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isGhost ? 0.4 : 1.0,  // 프레임과 동일한 투명도 처리
     });
+
+    return material;
   };
+
+  // 싱글 가구용 도어 재질
+  const doorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+
+  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스)
+  const leftDoorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+
+  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스)
+  const rightDoorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+
+  // 도어 배치 시 그림자 즉시 업데이트
+  useEffect(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      // 그림자 맵 강제 업데이트
+      gl.shadowMap.needsUpdate = true;
+      
+      // 다음 프레임에서 렌더링 강제 업데이트
+      requestAnimationFrame(() => {
+        gl.shadowMap.needsUpdate = true;
+      });
+      
+      console.log('🌟 DoorModule - 그림자 강제 업데이트 완료');
+    }
+  }, [viewMode, gl, doorMaterial, leftDoorMaterial, rightDoorMaterial]); // 도어 재질 변경 시에도 그림자 업데이트
+
+  // 텍스처 적용 함수
+  const applyTextureToMaterial = (material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
+    if (textureUrl && material) {
+      // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
+      if (textureUrl.toLowerCase().includes('cabinet texture1')) {
+        console.log(`🚪 ${doorSide} Cabinet Texture1 즉시 어둡게 적용 중...`);
+        material.color.setRGB(0.15, 0.15, 0.15); // 실제 재질에 맞는 다크 그레이 (조금 밝게)
+        material.toneMapped = false; // 톤 매핑 비활성화
+        material.envMapIntensity = 0.0; // 환경맵 완전 제거
+        material.emissive.setHex(0x000000); // 자체발광 완전 차단
+        material.roughness = 0.8; // 거칠기 증가로 더 어둡게
+        material.needsUpdate = true;
+        console.log(`✅ ${doorSide} Cabinet Texture1 즉시 색상 적용 완료`);
+      }
+      
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(
+        textureUrl, 
+        (texture) => {
+          console.log(`✅ ${doorSide} 도어 텍스처 로딩 성공:`, textureUrl);
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(1, 1);
+          material.map = texture;
+          
+          // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
+          if (!textureUrl.toLowerCase().includes('cabinet texture1')) {
+            material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
+            material.toneMapped = true; // 기본 톤 매핑 활성화
+            material.roughness = 0.6; // 기본 거칠기
+          }
+          
+          material.needsUpdate = true;
+        },
+        undefined,
+        (error) => {
+          console.error(`❌ ${doorSide} 도어 텍스처 로딩 실패:`, textureUrl, error);
+        }
+      );
+    } else if (material) {
+      console.log(`🧹 ${doorSide} 도어 텍스처 제거, 색상만 사용`);
+      // 텍스처가 없으면 맵 제거하고 기본 색상으로 복원
+      material.map = null;
+      material.color.set(doorColor);
+      material.toneMapped = true; // 기본 톤 매핑 복원
+      material.roughness = 0.6; // 기본 거칠기 복원
+      material.needsUpdate = true;
+    }
+  };
+
+  // 싱글 가구 도어 텍스처 적용
+  useEffect(() => {
+    const textureUrl = materialConfig.doorTexture;
+    console.log('🚪 Single Door Texture URL:', textureUrl, 'Material:', doorMaterial);
+    applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
+  }, [materialConfig.doorTexture, doorMaterial]);
+
+  // 듀얼 가구 왼쪽 도어 텍스처 적용
+  useEffect(() => {
+    const textureUrl = materialConfig.doorTexture;
+    console.log('🚪 Left Door Texture URL:', textureUrl, 'Material:', leftDoorMaterial);
+    applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
+  }, [materialConfig.doorTexture, leftDoorMaterial]);
+
+  // 듀얼 가구 오른쪽 도어 텍스처 적용
+  useEffect(() => {
+    const textureUrl = materialConfig.doorTexture;
+    console.log('🚪 Right Door Texture URL:', textureUrl, 'Material:', rightDoorMaterial);
+    applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
+  }, [materialConfig.doorTexture, rightDoorMaterial]);
   
   // 디버깅 로그
   console.log('🚪 DoorModule 렌더링:', {
@@ -212,7 +311,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <BoxWithEdges
               position={[doorWidthUnits/2 - hingeOffsetUnits, 0.1, 0]}
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={createDoorMaterial()}
+              material={leftDoorMaterial}
               renderMode={renderMode}
             />
           </animated.group>
@@ -224,7 +323,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <BoxWithEdges
               position={[-doorWidthUnits/2 + hingeOffsetUnits, 0.1, 0]}
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={createDoorMaterial()}
+              material={rightDoorMaterial}
               renderMode={renderMode}
             />
           </animated.group>
@@ -246,7 +345,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <BoxWithEdges
               position={[doorWidthUnits/2 - hingeOffsetUnits, 0.1, 0]}
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={createDoorMaterial()}
+              material={doorMaterial}
               renderMode={renderMode}
             />
           </animated.group>
@@ -261,7 +360,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <BoxWithEdges
               position={[-doorWidthUnits/2 + hingeOffsetUnits, 0.1, 0]}
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={createDoorMaterial()}
+              material={doorMaterial}
               renderMode={renderMode}
             />
           </animated.group>

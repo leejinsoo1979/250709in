@@ -214,10 +214,10 @@ export class MaterialFactory {
   /**
    * 자연스러운 가구 재질 (레퍼런스 이미지 스타일)
    */
-  static createSolidFrameMaterial(color: string = '#d0d0d0'): THREE.MeshStandardMaterial {
+  static createSolidFrameMaterial(color: string = '#d0d0d0', textureUrl?: string): THREE.MeshStandardMaterial {
     const baseColor = new THREE.Color(color);
     
-    return new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshStandardMaterial({
       color: baseColor,
       transparent: false,
       
@@ -231,6 +231,20 @@ export class MaterialFactory {
       // 미세한 자체발광으로 자연스러운 톤
       emissive: baseColor.clone().multiplyScalar(0.015)
     });
+
+    // 텍스처가 있는 경우 적용
+    if (textureUrl) {
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(textureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        material.map = texture;
+        material.needsUpdate = true;
+      });
+    }
+
+    return material;
   }
 
   /**

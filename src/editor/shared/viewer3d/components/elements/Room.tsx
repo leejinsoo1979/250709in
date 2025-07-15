@@ -59,9 +59,9 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 모서리 라인 렌더링 */}
-      {viewMode !== '3D' && (
+      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
         <lineSegments geometry={edgesGeometry}>
-          <lineBasicMaterial color="#666666" linewidth={1} />
+          <lineBasicMaterial color={renderMode === 'wireframe' ? "#333333" : "#666666"} linewidth={1} />
         </lineSegments>
       )}
     </group>
@@ -130,7 +130,7 @@ const Room: React.FC<RoomProps> = ({
     const frameColor = materialConfig?.doorColor || '#FFFFFF';
     const isHighlighted = frameType && highlightedFrame === frameType;
     
-    return new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(isHighlighted ? '#FF0000' : frameColor), // 강조 시 레드색으로 변경
       metalness: 0.0,        // 완전 비금속 (도어와 동일)
       roughness: 0.6,        // 도어와 동일한 거칠기
@@ -139,7 +139,49 @@ const Room: React.FC<RoomProps> = ({
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted,  // 강조 시에도 투명하게
       opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isHighlighted ? 0.6 : 1.0,  // 강조 시 60% 투명도
     });
-  }, [materialConfig?.doorColor, renderMode, viewMode, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
+
+    // 프레임 텍스처 적용 (강조되지 않은 경우에만)
+    if (!isHighlighted && materialConfig?.doorTexture) {
+      // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
+      if (materialConfig.doorTexture.toLowerCase().includes('cabinet texture1')) {
+        console.log('🔧 프레임 Cabinet Texture1 즉시 어둡게 적용 중...');
+        material.color.setRGB(0.12, 0.12, 0.12); // 실제 재질에 맞는 다크 그레이 (조금 밝게)
+        material.toneMapped = false; // 톤 매핑 비활성화
+        material.envMapIntensity = 0.0; // 환경맵 완전 제거
+        material.emissive.setHex(0x000000); // 자체발광 완전 차단
+        material.roughness = 0.8; // 거칠기 증가로 더 어둡게
+        material.needsUpdate = true;
+        console.log('✅ 프레임 Cabinet Texture1 즉시 색상 적용 완료');
+      }
+      
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(
+        materialConfig.doorTexture,
+        (texture) => {
+          console.log('🔧 프레임 텍스처 로딩 성공:', materialConfig.doorTexture);
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(1, 1);
+          material.map = texture;
+          
+          // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
+          if (!materialConfig.doorTexture.toLowerCase().includes('cabinet texture1')) {
+            material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
+            material.toneMapped = true; // 기본 톤 매핑 활성화
+            material.roughness = 0.6; // 기본 거칠기
+          }
+          
+          material.needsUpdate = true;
+        },
+        undefined,
+        (error) => {
+          console.error('❌ 프레임 텍스처 로딩 실패:', materialConfig.doorTexture, error);
+        }
+      );
+    }
+    
+    return material;
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
 
   // 각 프레임별 재질 생성
   const baseFrameMaterial = useMemo(() => createFrameMaterial('base'), [createFrameMaterial]);
