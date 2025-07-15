@@ -325,8 +325,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         renderMode={useSpace3DView().renderMode}
       />
       
-      {/* 비대칭 섹션 렌더링 */}
-      {renderAsymmetricSections()}
+      {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
+      {!isDragging && renderAsymmetricSections()}
       
       {/* 도어 렌더링 */}
       {hasDoor && spaceInfo && (

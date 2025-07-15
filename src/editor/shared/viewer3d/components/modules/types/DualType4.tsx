@@ -30,21 +30,23 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
   return (
     <BaseFurnitureShell {...baseFurniture}>
-      {/* sections 기반 내부 구조 렌더링 */}
-      <SectionsRenderer
-        modelConfig={baseFurniture.modelConfig}
-        height={baseFurniture.height}
-        innerWidth={baseFurniture.innerWidth}
-        depth={baseFurniture.depth}
-        adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-        basicThickness={baseFurniture.basicThickness}
-        shelfZOffset={baseFurniture.shelfZOffset}
-        material={baseFurniture.material}
-        calculateSectionHeight={baseFurniture.calculateSectionHeight}
-        renderMode={useSpace3DView().renderMode}
-      />
+      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+      {!isDragging && (
+        <SectionsRenderer
+          modelConfig={baseFurniture.modelConfig}
+          height={baseFurniture.height}
+          innerWidth={baseFurniture.innerWidth}
+          depth={baseFurniture.depth}
+          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+          basicThickness={baseFurniture.basicThickness}
+          shelfZOffset={baseFurniture.shelfZOffset}
+          material={baseFurniture.material}
+          calculateSectionHeight={baseFurniture.calculateSectionHeight}
+          renderMode={useSpace3DView().renderMode}
+        />
+      )}
       
-      {/* 도어 렌더링 */}
+      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={moduleData.dimensions.width}
