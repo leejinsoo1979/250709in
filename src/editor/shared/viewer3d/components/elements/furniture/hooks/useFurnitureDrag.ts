@@ -161,8 +161,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         z: currentModule.position.z
       });
 
-      // 위치 변경 후 렌더링 업데이트
+      // 위치 변경 후 렌더링 업데이트 및 그림자 업데이트
       invalidate();
+      
+      // 3D 모드에서 그림자 강제 업데이트
+      if (gl && gl.shadowMap) {
+        gl.shadowMap.needsUpdate = true;
+      }
     } else {
       if (import.meta.env.DEV) {
         console.log('❌ 슬롯 감지 실패');
@@ -181,8 +186,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
       
-      // 드래그 종료 후 렌더링 업데이트
+      // 드래그 종료 시 그림자 업데이트
       invalidate();
+      
+      // 3D 모드에서 그림자 강제 업데이트
+      if (gl && gl.shadowMap) {
+        gl.shadowMap.needsUpdate = true;
+      }
       
       document.body.style.cursor = 'default';
     }

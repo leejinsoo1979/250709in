@@ -10,15 +10,38 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
   isInternalSurface?: boolean; // 내부 표면 여부
-}> = ({ args, position, material, renderMode, isInternalSurface = false }) => {
+  isDragging?: boolean; // 드래그 상태
+}> = ({ args, position, material, renderMode, isInternalSurface = false, isDragging = false }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
   const { viewMode } = useSpace3DView();
+  const { gl } = useThree();
   
-  // 진짜 물리적 그림자를 위한 원래 재질 사용 (내부 표면도 동일)
+  // BoxWithEdges 컴포넌트의 그림자 업데이트
+  useEffect(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      requestAnimationFrame(() => {
+        if (gl.shadowMap) {
+          gl.shadowMap.needsUpdate = true;
+        }
+      });
+    }
+  }, [viewMode, gl, args, position, material]);
+  
+  // 재질 처리 - 드래그 중일 때 고스트 효과 적용
   const processedMaterial = useMemo(() => {
-    console.log('🔧 BaseFurnitureShell - isInternalSurface:', isInternalSurface, 'material.map:', material instanceof THREE.MeshStandardMaterial ? material.map : 'N/A');
+    console.log('🔧 BaseFurnitureShell - isDragging:', isDragging, 'isInternalSurface:', isInternalSurface, 'material.map:', material instanceof THREE.MeshStandardMaterial ? material.map : 'N/A');
+    
+    // 드래그 중일 때 연두색 투명 고스트 효과
+    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
+      const ghostMaterial = material.clone();
+      ghostMaterial.transparent = true;
+      ghostMaterial.opacity = 0.6;
+      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      ghostMaterial.needsUpdate = true;
+      return ghostMaterial;
+    }
     
     if (isInternalSurface && material instanceof THREE.MeshStandardMaterial) {
       console.log('🎯 내부 표면 재질 처리 - 원본 텍스처:', material.map);
@@ -44,7 +67,7 @@ const BoxWithEdges: React.FC<{
     }
     
     return material;
-  }, [material, isInternalSurface, renderMode, viewMode]);
+  }, [material, isInternalSurface, renderMode, viewMode, isDragging]);
 
   return (
     <group position={position}>
@@ -90,6 +113,9 @@ interface BaseFurnitureShellProps {
   getSectionHeights: () => number[];
   mmToThreeUnits: (mm: number) => number;
   
+  // 드래그 상태
+  isDragging?: boolean;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -114,27 +140,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isMultiSectionFurniture,
   getSectionHeights,
   mmToThreeUnits,
+  isDragging = false,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
-  // 가구 배치 시 그림자 즉시 업데이트
+  // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트
   useEffect(() => {
     if (viewMode === '3D' && gl && gl.shadowMap) {
-      // 그림자 맵 강제 업데이트
-      gl.shadowMap.needsUpdate = true;
-      
-      // 다음 프레임에서 렌더링 강제 업데이트
+      // 2프레임 지연으로 React 렌더링 완료 후 그림자 업데이트
       requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
+        requestAnimationFrame(() => {
+          if (gl.shadowMap) {
+            gl.shadowMap.needsUpdate = true;
+          }
+        });
       });
-      
-              if (import.meta.env.DEV) {
-          console.log('🌟 BaseFurnitureShell - 그림자 강제 업데이트 완료');
-        }
     }
-  }, [viewMode, gl, material]); // material 변경 시에도 그림자 업데이트
+  }, [viewMode, gl, material, width, height, depth]);
   
   return (
     <group>
@@ -160,6 +184,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
+                  isDragging={isDragging}
                 />
                 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
@@ -168,6 +193,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   position={[width/2 - basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
+                  isDragging={isDragging}
                 />
                 
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
@@ -177,6 +203,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
                     material={material}
                     renderMode={renderMode}
+                    isDragging={isDragging}
                   />
                 )}
               </React.Fragment>
@@ -192,6 +219,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             position={[-width/2 + basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
+            isDragging={isDragging}
           />
           
           {/* 오른쪽 측면 판재 */}
@@ -200,6 +228,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             position={[width/2 - basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
+            isDragging={isDragging}
           />
         </>
       )}
@@ -211,6 +240,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isInternalSurface={true}
+        isDragging={isDragging}
       />
       
       {/* 하단 판재 - 내부 표면으로 처리 */}
@@ -220,6 +250,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isInternalSurface={true}
+        isDragging={isDragging}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) - 내부 표면으로 처리 */}
@@ -229,6 +260,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isInternalSurface={true}
+        isDragging={isDragging}
       />
       
       {/* 내부 구조 (타입별로 다른 내용) */}

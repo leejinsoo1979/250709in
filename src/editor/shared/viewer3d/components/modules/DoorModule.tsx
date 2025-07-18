@@ -9,24 +9,49 @@ import { useUIStore } from '@/store/uiStore';
 import { useThree } from '@react-three/fiber';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 
-// BoxWithEdges 컴포넌트 정의
+// BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
   args: [number, number, number];
   position: [number, number, number];
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
-}> = ({ args, position, material, renderMode }) => {
+  isDragging?: boolean;
+}> = ({ args, position, material, renderMode, isDragging = false }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
   const { viewMode } = useSpace3DView();
+  const { gl } = useThree();
+  
+  // 독립적인 그림자 업데이트 (다른 가구들과 동일)
+  useEffect(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+      requestAnimationFrame(() => {
+        gl.shadowMap.needsUpdate = true;
+      });
+    }
+  }, [viewMode, gl, args, position, material]);
+
+  // 드래그 중일 때 고스트 효과 적용
+  const processedMaterial = useMemo(() => {
+    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
+      const ghostMaterial = material.clone();
+      ghostMaterial.transparent = true;
+      ghostMaterial.opacity = 0.6;
+      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      ghostMaterial.needsUpdate = true;
+      return ghostMaterial;
+    }
+    return material;
+  }, [material, isDragging]);
   
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <primitive object={material} />
+          <primitive object={processedMaterial} />
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
@@ -52,6 +77,7 @@ interface DoorModuleProps {
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm) - 도어 크기는 이 값 사용
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위) - 도어 위치는 이 값 사용
   moduleData?: any; // 실제 듀얼캐비넷 분할 정보를 위한 모듈 데이터
+  isDragging?: boolean; // 드래그 상태
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -63,7 +89,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   doorXOffset = 0, // 사용하지 않음
   originalSlotWidth,
   slotCenterX,
-  moduleData
+  moduleData,
+  isDragging = false
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -95,32 +122,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
-  // 강제: 솔리드 모드에서는 무조건 고스트 아님
-  const isGhost = renderMode !== 'solid' && !!color;
-  
-  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성)
-  const createDoorMaterial = useCallback(() => {
-    const material = new THREE.MeshStandardMaterial({
+  // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
+  const baseDoorMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
       color: new THREE.Color(doorColor),
       metalness: 0.0,        // 완전 비금속 (프레임과 동일)
       roughness: 0.6,        // 프레임과 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isGhost,  // 프레임과 동일한 투명도 조건
-      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isGhost ? 0.4 : 1.0,  // 프레임과 동일한 투명도 처리
+      transparent: false,    // BoxWithEdges에서 처리
+      opacity: 1.0,          // BoxWithEdges에서 처리
     });
-
-    return material;
-  }, [doorColor, renderMode, viewMode, isGhost]);
+  }, [doorColor]);
 
   // 싱글 가구용 도어 재질
-  const doorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
+  const doorMaterial = baseDoorMaterial;
 
   // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스)
-  const leftDoorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
+  const leftDoorMaterial = useMemo(() => baseDoorMaterial.clone(), [baseDoorMaterial]);
 
   // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스)
-  const rightDoorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
+  const rightDoorMaterial = useMemo(() => baseDoorMaterial.clone(), [baseDoorMaterial]);
 
   // 도어 배치 시 그림자 즉시 업데이트
   useEffect(() => {
@@ -318,6 +340,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
               material={leftDoorMaterial}
               renderMode={renderMode}
+              isDragging={isDragging}
             />
           </animated.group>
         </group>
@@ -330,6 +353,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
               material={rightDoorMaterial}
               renderMode={renderMode}
+              isDragging={isDragging}
             />
           </animated.group>
         </group>
@@ -357,6 +381,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
             material={doorMaterial}
             renderMode={renderMode}
+            isDragging={isDragging}
           />
         </animated.group>
       </group>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useThree } from '@react-three/fiber';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store';
@@ -13,6 +14,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { checkSlotOccupancy } = useSlotOccupancy(spaceInfo);
   const { calculateDropPosition, findAvailableSlot } = useDropPositioning(spaceInfo);
+  
+  // Three.js 컨텍스트 접근 (그림자 업데이트용)
+  const { gl, invalidate } = useThree();
 
   // 기본 가구 깊이 계산 (가구별 defaultDepth 우선, 없으면 fallback)
   const getDefaultDepth = (moduleData?: ModuleData) => {
@@ -93,6 +97,60 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         };
         
         addModule(newModule);
+        
+        // 가구 배치 후 그림자 업데이트 (강화된 접근)
+        invalidate();
+        
+        // 3D 모드에서 그림자 강제 업데이트
+        if (gl && gl.shadowMap) {
+          gl.shadowMap.needsUpdate = true;
+          
+          // 여러 프레임에 걸쳐 강제 업데이트 (React 렌더링 완료 보장)
+          requestAnimationFrame(() => {
+            if (gl && gl.shadowMap) {
+              gl.shadowMap.needsUpdate = true;
+              invalidate();
+              
+              requestAnimationFrame(() => {
+                if (gl && gl.shadowMap) {
+                  gl.shadowMap.needsUpdate = true;
+                  invalidate();
+                  
+                  // 추가 3번째 프레임에서도 업데이트 (완전한 렌더링 보장)
+                  requestAnimationFrame(() => {
+                    if (gl && gl.shadowMap) {
+                      gl.shadowMap.needsUpdate = true;
+                      invalidate();
+                    }
+                  });
+                }
+              });
+            }
+          });
+          
+          // 추가 타이머 기반 업데이트 (완전한 렌더링 보장)
+          setTimeout(() => {
+            if (gl && gl.shadowMap) {
+              gl.shadowMap.needsUpdate = true;
+              invalidate();
+            }
+          }, 100);
+          
+          setTimeout(() => {
+            if (gl && gl.shadowMap) {
+              gl.shadowMap.needsUpdate = true;
+              invalidate();
+            }
+          }, 300);
+          
+          // 추가 지연 업데이트 (완전한 보장)
+          setTimeout(() => {
+            if (gl && gl.shadowMap) {
+              gl.shadowMap.needsUpdate = true;
+              invalidate();
+            }
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('Error handling drop:', error);

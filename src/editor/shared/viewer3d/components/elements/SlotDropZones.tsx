@@ -35,7 +35,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   
   // Three.js 컨텍스트 접근
-  const { camera, scene, gl } = useThree();
+  const { camera, scene, gl, invalidate } = useThree();
   const { viewMode } = useSpace3DView();
   
   // 마우스가 hover 중인 슬롯 인덱스 상태
@@ -275,15 +275,35 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         // 분할된 가구들을 한 번에 배치
         placedModules.forEach(module => addModule(module));
         
-        // 그림자 업데이트
+        // 그림자 업데이트 (듀얼 분할 시에도 적극적인 업데이트)
         if (viewMode === '3D' && gl && gl.shadowMap) {
+          // 즉시 업데이트
           gl.shadowMap.needsUpdate = true;
-          requestAnimationFrame(() => {
-            gl.shadowMap.needsUpdate = true;
-            requestAnimationFrame(() => {
+          
+          // 여러 프레임에 걸쳐 지속적으로 업데이트
+          const forceUpdateFrames = () => {
+            let frameCount = 0;
+            const maxFrames = 5;
+            
+            const updateLoop = () => {
+              if (frameCount < maxFrames && gl.shadowMap) {
+                gl.shadowMap.needsUpdate = true;
+                frameCount++;
+                requestAnimationFrame(updateLoop);
+              }
+            };
+            
+            requestAnimationFrame(updateLoop);
+          };
+          
+          forceUpdateFrames();
+          
+          // 추가로 100ms 후에도 한 번 더 업데이트
+          setTimeout(() => {
+            if (gl.shadowMap) {
               gl.shadowMap.needsUpdate = true;
-            });
-          });
+            }
+          }, 100);
         }
         
         // 드래그 상태 초기화
@@ -393,22 +413,33 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     
     addModule(newModule);
     
-    // 가구 배치 완료 후 그림자 즉시 업데이트
+    // 가구 배치 완료 후 마우스 클릭 효과 시뮬레이션
     if (viewMode === '3D' && gl && gl.shadowMap) {
-      // 그림자 맵 강제 업데이트
-      gl.shadowMap.needsUpdate = true;
-      
-      // 다음 몇 프레임에서도 계속 업데이트 (확실한 반영을 위해)
-      requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
-        requestAnimationFrame(() => {
-          gl.shadowMap.needsUpdate = true;
-        });
-      });
-      
-              if (import.meta.env.DEV) {
-          console.log('🌟 SlotDropZones - 가구 배치 후 그림자 강제 업데이트 완료');
+      // 가구 배치 직후 가상 마우스 클릭 이벤트 시뮬레이션
+      setTimeout(() => {
+        const canvas = gl.domElement;
+        if (canvas) {
+          // 캔버스 중앙에 가상 클릭 이벤트 생성
+          const rect = canvas.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          // 마우스 클릭 이벤트 시뮬레이션
+          const clickEvent = new MouseEvent('click', {
+            clientX: centerX,
+            clientY: centerY,
+            button: 0,
+            bubbles: true,
+            cancelable: true
+          });
+          
+          canvas.dispatchEvent(clickEvent);
+          
+          if (import.meta.env.DEV) {
+            console.log('🌟 SlotDropZones - 가상 마우스 클릭 이벤트 시뮬레이션 완료');
+          }
         }
+      }, 200); // 200ms 후 클릭 시뮬레이션
     }
     
     // 드래그 상태 초기화

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import DrawerRenderer from '../DrawerRenderer';
@@ -11,8 +12,33 @@ const BoxWithEdges: React.FC<{
   position: [number, number, number];
   material: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
-}> = ({ args, position, material, renderMode = 'solid' }) => {
+  isDragging?: boolean;
+}> = ({ args, position, material, renderMode = 'solid', isDragging = false }) => {
   const { viewMode } = useSpace3DView();
+  const { gl } = useThree();
+  
+  // 바지걸이장은 독립적인 BoxWithEdges를 사용하므로 개별 그림자 업데이트 필요
+  useEffect(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+      requestAnimationFrame(() => {
+        gl.shadowMap.needsUpdate = true;
+      });
+    }
+  }, [viewMode, gl, args, position, material]);
+
+  // 드래그 중일 때 고스트 효과 적용
+  const processedMaterial = React.useMemo(() => {
+    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
+      const ghostMaterial = material.clone();
+      ghostMaterial.transparent = true;
+      ghostMaterial.opacity = 0.6;
+      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      ghostMaterial.needsUpdate = true;
+      return ghostMaterial;
+    }
+    return material;
+  }, [material, isDragging]);
 
   return (
     <group position={position}>
@@ -20,7 +46,7 @@ const BoxWithEdges: React.FC<{
       {renderMode === 'solid' && (
         <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <boxGeometry args={args} />
-          <primitive object={material} attach="material" />
+          <primitive object={processedMaterial} attach="material" />
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
@@ -249,6 +275,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             position={[(leftWidth - rightWidth) / 2, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9)/2 - mmToThreeUnits(18), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
+            isDragging={isDragging}
           />
         )}
         
@@ -259,6 +286,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
+            isDragging={isDragging}
           />
         )}
         
@@ -269,6 +297,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             position={[0, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
+            isDragging={isDragging}
           />
         )}
       </>
@@ -283,6 +312,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[-width/2 + basicThickness/2, 0, 0]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        isDragging={isDragging}
       />
       
       {/* 우측 측면 판재 - 통짜 (측면판 분할 안됨) */}
@@ -291,6 +321,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[width/2 - basicThickness/2, 0, 0]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        isDragging={isDragging}
       />
       
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음) */}
@@ -299,6 +330,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[0, height/2 - basicThickness/2, 0]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        isDragging={isDragging}
       />
       
       {/* 하단 판재 - 좌/우 분리 */}
@@ -309,6 +341,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           position={[leftXOffset, -height/2 + basicThickness/2, 0]}
           material={material}
           renderMode={useSpace3DView().renderMode}
+          isDragging={isDragging}
         />
         
         {/* 우측 하단판 */}
@@ -317,6 +350,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           position={[rightXOffset, -height/2 + basicThickness/2, 0]}
           material={material}
           renderMode={useSpace3DView().renderMode}
+          isDragging={isDragging}
         />
       </>
       
@@ -326,6 +360,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
         material={material}
         renderMode={useSpace3DView().renderMode}
+        isDragging={isDragging}
       />
       
       {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
@@ -342,6 +377,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
           slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
+          isDragging={isDragging}
         />
       )}
     </group>

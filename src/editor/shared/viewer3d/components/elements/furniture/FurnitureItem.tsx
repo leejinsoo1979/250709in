@@ -49,10 +49,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
 
-  // 가구 위치 변경 시 렌더링 업데이트
+  // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
   useEffect(() => {
     invalidate();
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate]);
+    
+    // 3D 모드에서 그림자 강제 업데이트
+    if (gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+      
+      // 메쉬 렌더링 완료 보장을 위한 지연 업데이트
+      setTimeout(() => {
+        gl.shadowMap.needsUpdate = true;
+        invalidate();
+      }, 100);
+      
+      // 추가로 300ms 후에도 한 번 더 (완전한 렌더링 보장)
+      setTimeout(() => {
+        gl.shadowMap.needsUpdate = true;
+        invalidate();
+      }, 300);
+    }
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate, gl]);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
