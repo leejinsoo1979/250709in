@@ -27,47 +27,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
 
-  // 강제 렌더링 함수
+  // 간단한 렌더링 업데이트
   const triggerRender = useCallback(() => {
-    console.log('🔄 강제 렌더링 트리거');
-    
-    // React 리렌더링
-    setForceRender(prev => prev + 1);
-    
-    // Three.js 렌더링
-    invalidate();
-    
-    // 그림자 맵 업데이트
-    if (gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
+    if (import.meta.env.DEV) {
+      console.log('🔄 렌더링 업데이트');
     }
-    
-    // 씬 전체 업데이트
-    scene.traverse((object) => {
-      if (object.type === 'Mesh') {
-        object.frustumCulled = false;
-      }
-    });
-    
-    // 다음 프레임에서도 렌더링
-    requestAnimationFrame(() => {
-      invalidate();
-      setTimeout(() => {
-        invalidate();
-        console.log('✅ 강제 렌더링 완료');
-      }, 50);
-    });
-  }, [invalidate, gl, scene, setForceRender]);
+    invalidate();
+    setForceRender(prev => prev + 1);
+  }, [invalidate, setForceRender]);
 
 
 
   // 드래그 시작
   const handlePointerDown = (e: ThreeEvent<PointerEvent>, placedModuleId: string) => {
-    console.log('🖱️ 드래그 시작:', placedModuleId, 'button:', e.button);
+    if (import.meta.env.DEV) {
+      console.log('🖱️ 드래그 시작:', placedModuleId, 'button:', e.button);
+    }
     
     // 왼쪽 버튼이 아니면 드래그 시작하지 않음 (오른쪽 버튼은 OrbitControls 회전용)
     if (e.button !== 0) {
-      console.log('❌ 왼쪽 버튼이 아님, 드래그 취소');
+      if (import.meta.env.DEV) {
+        console.log('❌ 왼쪽 버튼이 아님, 드래그 취소');
+      }
       return;
     }
     
@@ -76,7 +57,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     setDraggingModuleId(placedModuleId);
     isDragging.current = true;
     
-    console.log('✅ 드래그 상태 설정 완료:', { draggingModuleId: placedModuleId, isDragging: isDragging.current });
+    if (import.meta.env.DEV) {
+      console.log('✅ 드래그 상태 설정 완료:', { draggingModuleId: placedModuleId, isDragging: isDragging.current });
+    }
     
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
@@ -85,7 +68,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const target = e.target as Element & { setPointerCapture?: (pointerId: number) => void };
     if (target && target.setPointerCapture) {
       target.setPointerCapture(e.pointerId);
-      console.log('📌 포인터 캡처 설정');
+      if (import.meta.env.DEV) {
+        console.log('📌 포인터 캡처 설정');
+      }
     }
     
     document.body.style.cursor = 'grabbing';
@@ -106,14 +91,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       spaceInfo
     );
     
-    console.log('🎯 드래그 중 레이캐스팅:', { 
-      mouseX: event.nativeEvent.clientX, 
-      mouseY: event.nativeEvent.clientY, 
-      detectedSlot: slotIndex 
-    });
+    if (import.meta.env.DEV) {
+      console.log('🎯 드래그 중 레이캐스팅:', { 
+        mouseX: event.nativeEvent.clientX, 
+        mouseY: event.nativeEvent.clientY, 
+        detectedSlot: slotIndex 
+      });
+    }
     
     if (slotIndex !== null) {
-      console.log('✅ 슬롯 감지됨:', slotIndex);
+      if (import.meta.env.DEV) {
+        console.log('✅ 슬롯 감지됨:', slotIndex);
+      }
       
       // 현재 드래그 중인 모듈 정보 가져오기
       const currentModule = placedModules.find(m => m.id === draggingModuleId);
@@ -156,12 +145,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         finalX = indexing.threeUnitPositions[slotIndex];
       }
 
-      console.log('📍 가구 이동:', { 
-        slotIndex, 
-        finalX, 
-        currentX: currentModule.position.x,
-        isDualFurniture 
-      });
+      if (import.meta.env.DEV) {
+        console.log('📍 가구 이동:', { 
+          slotIndex, 
+          finalX, 
+          currentX: currentModule.position.x,
+          isDualFurniture 
+        });
+      }
 
       // 모듈 위치 업데이트
       moveModule(draggingModuleId, {
@@ -170,29 +161,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         z: currentModule.position.z
       });
 
-      // 즉시 렌더링 강제 업데이트
-      triggerRender();
+      // 위치 변경 후 렌더링 업데이트
+      invalidate();
     } else {
-      console.log('❌ 슬롯 감지 실패');
+      if (import.meta.env.DEV) {
+        console.log('❌ 슬롯 감지 실패');
+      }
     }
   };
 
   // 드래그 종료
   const handlePointerUp = () => {
     if (isDragging.current) {
-      console.log('🏁 드래그 종료 - 렌더링 강제 업데이트');
+      if (import.meta.env.DEV) {
+        console.log('🏁 드래그 종료');
+      }
       
       isDragging.current = false;
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
       
-      // 그림자 맵 업데이트
-      if (gl && gl.shadowMap) {
-        gl.shadowMap.needsUpdate = true;
-      }
-      
-      // 즉시 렌더링 강제 업데이트
-      triggerRender();
+      // 드래그 종료 후 렌더링 업데이트
+      invalidate();
       
       document.body.style.cursor = 'default';
     }

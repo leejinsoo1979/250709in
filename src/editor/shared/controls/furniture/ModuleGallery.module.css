@@ -94,6 +94,7 @@
   align-items: center;
   justify-content: center;
   padding: 2px; /* 패딩 최소화 */
+  user-select: none;
 }
 
 .thumbnailItem:hover {
@@ -107,6 +108,25 @@
   transform: translateY(0);
 }
 
+/* 더블클릭 시 시각적 피드백 */
+.thumbnailItem::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(26, 188, 156, 0.1);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.thumbnailItem:active::after {
+  opacity: 1;
+}
+
 /* 비활성화 상태 */
 .thumbnailItem.disabled {
   opacity: 0.5;
@@ -118,6 +138,10 @@
   border-color: #d1d5db;
   box-shadow: none;
   transform: none;
+}
+
+.thumbnailItem.disabled:active::after {
+  opacity: 0;
 }
 
 /* 썸네일 이미지 */
@@ -208,12 +232,16 @@
   }
   
   .tabButton {
-    padding: 6px 14px;
-    font-size: 13px;
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+  
+  .thumbnailImage img {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
   }
 }
 
-/* 맥북 에어/프로 13인치 (1024-1199px) */
+/* 작은 데스크톱 - 맥북 에어 13인치 (1024-1199px) */
 @media (max-width: 1199px) and (min-width: 1024px) {
   .thumbnailGrid {
     grid-template-columns: 1fr 1fr;
@@ -226,9 +254,8 @@
   }
   
   .tabButton {
-    padding: 5px 12px;
-    font-size: 12px;
-    white-space: nowrap;
+    padding: 2px 4px;
+    font-size: 8px;
   }
   
   .thumbnailImage img {
@@ -236,7 +263,7 @@
   }
 }
 
-/* 태블릿 가로 (768-1023px) */
+/* 태블릿 (768-1023px) */
 @media (max-width: 1023px) and (min-width: 768px) {
   .thumbnailGrid {
     grid-template-columns: 1fr 1fr;
@@ -244,22 +271,22 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 4 / 3;
-    padding: 6px;
+    aspect-ratio: 1 / 1;
+    padding: 4px;
   }
   
   .tabButton {
-    padding: 4px 10px;
-    font-size: 12px;
-    white-space: nowrap;
+    padding: 1px 3px;
+    font-size: 7px;
   }
   
   .tabMenu {
+    padding: 1px;
     margin-bottom: 12px;
   }
 }
 
-/* 태블릿 세로 및 모바일 가로 (481-767px) */
+/* 큰 모바일 (481-767px) */
 @media (max-width: 767px) and (min-width: 481px) {
   .thumbnailGrid {
     grid-template-columns: 1fr 1fr;
@@ -267,81 +294,81 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 4 / 3;
-    padding: 4px;
+    aspect-ratio: 1 / 1;
+    padding: 3px;
   }
   
   .tabButton {
-    padding: 4px 8px;
-    font-size: 12px;
-    white-space: nowrap;
+    padding: 1px 2px;
+    font-size: 6px;
   }
   
   .tabMenu {
-    margin-bottom: 10px;
     padding: 1px;
+    margin-bottom: 8px;
   }
 }
 
 /* 작은 모바일 (480px 이하) */
 @media (max-width: 480px) {
   .thumbnailGrid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
   }
   
   .thumbnailItem {
-    aspect-ratio: 5 / 3;
-    padding: 8px;
+    aspect-ratio: 1 / 1;
+    padding: 2px;
   }
   
   .tabButton {
-    padding: 6px 10px;
-    font-size: 12px;
-    white-space: nowrap;
+    padding: 1px 1px;
+    font-size: 5px;
   }
   
   .tabMenu {
-    margin-bottom: 12px;
+    padding: 1px;
+    margin-bottom: 6px;
   }
 }
 
-/* 세로 방향 최적화 */
+/* 세로 모드 모바일 */
 @media (orientation: portrait) and (max-width: 768px) {
   .thumbnailGrid {
     grid-template-columns: 1fr 1fr;
   }
   
   .thumbnailItem {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 1 / 1;
+    padding: 2px;
   }
 }
 
-/* 가로 방향 최적화 (높이가 작은 경우) */
+/* 가로 모드 모바일 (높이가 낮은 경우) */
 @media (orientation: landscape) and (max-height: 600px) {
   .thumbnailGrid {
-    gap: 6px;
+    gap: 4px;
   }
   
   .thumbnailItem {
-    aspect-ratio: 4 / 3;
-    padding: 4px;
+    aspect-ratio: 1 / 1;
+    padding: 1px;
   }
   
   .tabButton {
-    padding: 3px 8px;
-    font-size: 12px;
-    white-space: nowrap;
+    padding: 1px 2px;
+    font-size: 6px;
   }
   
   .tabMenu {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 }
 
-/* 고해상도 디스플레이 (Retina) 최적화 */
+/* 고해상도 디스플레이 */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .thumbnailImage img {
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 } 

@@ -26,7 +26,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #eee;
 }
 
 .modalHeader h2 {
@@ -64,7 +63,6 @@
   margin: 0 0 15px 0;
   color: #333;
   font-size: 16px;
-  border-bottom: 1px solid #eee;
   padding-bottom: 5px;
 }
 
@@ -195,7 +193,6 @@
   display: flex;
   justify-content: space-between;
   padding: 20px;
-  border-top: 1px solid #eee;
 }
 
 .deleteButton {

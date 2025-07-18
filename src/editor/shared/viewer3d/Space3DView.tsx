@@ -13,7 +13,7 @@ import CleanCAD2D from './components/elements/CleanCAD2D';
 
 // import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import SlotDropZones from './components/elements/SlotDropZones';
-import KeyboardShortcuts from './components/ui/KeyboardShortcuts';
+
 
 import { useLocation } from 'react-router-dom';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -313,8 +313,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <SlotDropZones spaceInfo={spaceInfo} />
           </React.Suspense>
         </ThreeCanvas>
-        {/* 2D/3D 토글 버튼과 단축키 안내 */}
-        <KeyboardShortcuts />
+
       </div>
     </Space3DViewProvider>
   );

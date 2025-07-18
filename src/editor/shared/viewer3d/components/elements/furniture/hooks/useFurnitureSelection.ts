@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { useFurnitureStore } from '@/store';
+import { useUIStore } from '@/store/uiStore';
 
 export const useFurnitureSelection = () => {
   const editMode = useFurnitureStore(state => state.editMode);
@@ -8,6 +9,7 @@ export const useFurnitureSelection = () => {
   const setEditMode = useFurnitureStore(state => state.setEditMode);
   const setEditingModuleId = useFurnitureStore(state => state.setEditingModuleId);
   const removeModule = useFurnitureStore(state => state.removeModule);
+  const { openFurnitureEditPopup } = useUIStore();
   const [dragMode, setDragMode] = useState(false);
   const isDragging = useRef(false);
 
@@ -23,9 +25,8 @@ export const useFurnitureSelection = () => {
       removeModule(placedModuleId);
       setDragMode(false);
     } else {
-      // 가구 클릭하면 바로 편집모드 진입 (이미 편집 중이어도 해당 가구로 편집모드 전환)
-      setEditMode(true);
-      setEditingModuleId(placedModuleId);
+      // 가구 클릭하면 가구 편집 팝업 열기
+      openFurnitureEditPopup(placedModuleId);
     }
   };
 

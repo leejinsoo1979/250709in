@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Header.module.css';
 import { Settings } from 'lucide-react';
+import HelpModal from './HelpModal';
 
 interface HeaderProps {
   title: string;
@@ -32,6 +33,16 @@ const Header: React.FC<HeaderProps> = ({
   hasDoorsInstalled = false,
   onDoorInstallationToggle
 }) => {
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+
+  const handleHelpClick = () => {
+    setIsHelpModalOpen(true);
+  };
+
+  const handleHelpClose = () => {
+    setIsHelpModalOpen(false);
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -103,6 +114,16 @@ const Header: React.FC<HeaderProps> = ({
               도움말
             </button>
           )}
+
+          {/* 조작법 버튼 */}
+          <button className={styles.actionButton} onClick={handleHelpClick}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2"/>
+              <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
+              <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+            조작법
+          </button>
         </div>
 
         {/* 우측 액션 버튼들 */}
@@ -146,6 +167,9 @@ const Header: React.FC<HeaderProps> = ({
           ✕ 저장에 실패했습니다
         </div>
       )}
+      
+      {/* 조작법 모달 */}
+      <HelpModal isOpen={isHelpModalOpen} onClose={handleHelpClose} />
     </header>
   );
 };

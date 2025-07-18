@@ -1,19 +1,21 @@
 .columnThumbnail {
   position: relative;
-  background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
+  aspect-ratio: 1 / 1; /* 정사각형으로 변경해서 더 작게 */
+  background-color: #d9d8d4; /* 여백 색상 변경 */
+  border: 1px solid #e5e7eb; /* 테두리 얇게 */
+  border-radius: 4px;
   cursor: grab;
   transition: all 0.2s ease;
-  user-select: none;
-  min-width: 120px;
-  max-width: 160px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px; /* 패딩 최소화 */
 }
 
 .columnThumbnail:hover {
-  border-color: #4CAF50;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  border-color: #1abc9c;
+  box-shadow: 0 4px 12px rgba(26, 188, 156, 0.15);
   transform: translateY(-2px);
 }
 
@@ -22,167 +24,103 @@
   transform: translateY(0);
 }
 
-.thumbnailContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.columnView {
-  position: relative;
-  width: 60px;
-  height: 80px;
-  margin-bottom: 8px;
-}
-
-/* 3D 기둥 표현 */
-.columnTop {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%) skewY(-30deg);
-  width: 40px;
-  height: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  z-index: 3;
-}
-
-.columnFront {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 60px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  z-index: 2;
-}
-
-.columnRight {
-  position: absolute;
-  top: 10px;
-  right: 0;
-  width: 20px;
-  height: 60px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  transform: skewY(-30deg);
-  z-index: 1;
-}
-
-.columnInfo {
-  text-align: center;
+/* 기둥 이미지 */
+.columnImage {
   width: 100%;
-}
-
-.columnName {
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.columnDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.material {
-  font-size: 11px;
-  color: #666;
-  background: rgba(76, 175, 80, 0.1);
-  padding: 2px 6px;
-  border-radius: 10px;
-  display: inline-block;
-}
-
-.size {
-  font-size: 10px;
-  color: #888;
-  font-family: monospace;
-}
-
-.dragHint {
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(76, 175, 80, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.columnThumbnail:hover .dragHint {
-  opacity: 1;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover; /* 섬네일을 꽉 채우도록 변경 */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 /* 드래그 중 상태 */
 .columnThumbnail.dragging {
   opacity: 0.5;
-  transform: rotate(5deg) scale(0.95);
+  transform: rotate(5deg);
 }
 
-/* 재질별 색상 표현 */
-.material.concrete {
-  background: rgba(136, 136, 136, 0.1);
-}
+/* 반응형 디자인 - 가구 모듈과 동일한 반응형 적용 */
 
-.material.steel {
-  background: rgba(176, 176, 176, 0.1);
-}
-
-.material.wood {
-  background: rgba(210, 105, 30, 0.1);
-}
-
-/* 반응형 */
-@media (max-width: 768px) {
+/* 큰 데스크톱 (1920px 이상) */
+@media (min-width: 1920px) {
   .columnThumbnail {
-    min-width: 100px;
-    max-width: 120px;
+    aspect-ratio: 3 / 4;
+    padding: 12px;
+  }
+}
+
+/* 일반 데스크톱 (1400-1919px) */
+@media (max-width: 1919px) and (min-width: 1400px) {
+  .columnThumbnail {
+    aspect-ratio: 3 / 4;
+    padding: 10px;
+  }
+}
+
+/* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .columnThumbnail {
+    aspect-ratio: 3 / 4;
     padding: 8px;
   }
-  
-  .columnView {
-    width: 50px;
-    height: 65px;
+}
+
+/* 맥북 에어/프로 13인치 (1024-1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .columnThumbnail {
+    aspect-ratio: 3 / 4;
+    padding: 6px;
   }
   
-  .columnTop {
-    width: 32px;
-    height: 16px;
+  .columnImage {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
   }
-  
-  .columnFront {
-    width: 32px;
-    height: 48px;
+}
+
+/* 태블릿 가로 (768-1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .columnThumbnail {
+    aspect-ratio: 4 / 3;
+    padding: 6px;
   }
-  
-  .columnRight {
-    width: 16px;
-    height: 48px;
+}
+
+/* 모바일 가로 (481-767px) */
+@media (max-width: 767px) and (min-width: 481px) {
+  .columnThumbnail {
+    aspect-ratio: 4 / 3;
+    padding: 4px;
   }
-  
-  .columnName {
-    font-size: 12px;
+}
+
+/* 모바일 세로 (480px 이하) */
+@media (max-width: 480px) {
+  .columnThumbnail {
+    aspect-ratio: 1 / 1;
+    padding: 3px;
   }
-  
-  .material {
-    font-size: 10px;
+}
+
+/* 세로 모드 태블릿 */
+@media (orientation: portrait) and (max-width: 768px) {
+  .columnThumbnail {
+    aspect-ratio: 1 / 1;
+    padding: 4px;
   }
-  
-  .size {
-    font-size: 9px;
+}
+
+/* 가로 모드 낮은 높이 */
+@media (orientation: landscape) and (max-height: 600px) {
+  .columnThumbnail {
+    aspect-ratio: 1 / 1;
+    padding: 3px;
+  }
+}
+
+/* 고해상도 디스플레이 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .columnImage {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
   }
 }

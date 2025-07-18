@@ -1,7 +1,54 @@
 import React, { useState } from 'react';
 import styles from './RightPanel.module.css';
+import { useUIStore } from '@/store/uiStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 
 export type RightPanelTab = 'placement' | 'module';
+
+export const ModuleContent: React.FC = () => {
+  const { activePopup } = useUIStore();
+  const { spaceInfo } = useSpaceConfigStore();
+  
+  console.log('🔍 ModuleContent 렌더링:', { 
+    activePopup,
+    columnsCount: spaceInfo.columns?.length || 0,
+    columns: spaceInfo.columns,
+    hasSelectedColumn: activePopup.type === 'column' && !!activePopup.id
+  });
+  
+  // column 팝업이 활성화되었으면 기둥 속성 표시
+  if (activePopup.type === 'column' && activePopup.id) {
+    const column = spaceInfo.columns?.find((col: any) => col.id === activePopup.id);
+    console.log('✅ 기둥 속성 표시:', { 
+      columnId: activePopup.id,
+      foundColumn: !!column,
+      column,
+      allColumns: spaceInfo.columns
+    });
+    
+    if (column) {
+      console.log('✅ ColumnProperties 컴포넌트 렌더링:', column);
+      return <ColumnProperties columnId={activePopup.id} />;
+    } else {
+      console.error('❌ 기둥을 찾을 수 없음:', activePopup.id);
+      return (
+        <div className={styles.placeholder}>
+          <p>기둥을 찾을 수 없습니다.</p>
+          <p>기둥 ID: {activePopup.id}</p>
+        </div>
+      );
+    }
+  }
+  
+  // selectedColumnForProperties가 없으면 기본 메시지 표시
+  console.log('🔍 ModuleContent - selectedColumnForProperties가 없음');
+  return (
+    <div className={styles.placeholder}>
+      <p>기둥을 더블클릭하여 속성을 편집하세요.</p>
+    </div>
+  );
+};
 
 interface FormControlProps {
   label: string;
@@ -676,7 +723,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
         {activeTab === 'module' && (
           <div className={styles.moduleSettings}>
-            <div className={styles.placeholder}>모듈 속성 설정이 여기에 표시됩니다</div>
+            <ModuleContent />
           </div>
         )}
       </div>

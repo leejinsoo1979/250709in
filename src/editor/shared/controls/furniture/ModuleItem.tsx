@@ -14,7 +14,7 @@ interface ModuleItemProps {
 const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
-  const { setSelectedModuleForProperties } = useUIStore();
+  const { openFurniturePopup } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
   
   // 도어 상태 관리 (기본값: false - 도어 없음)
@@ -95,7 +95,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     }
     
     // 속성 패널 열기
-    setSelectedModuleForProperties(module.id);
+    openFurniturePopup(module.id);
   };
 
   return (

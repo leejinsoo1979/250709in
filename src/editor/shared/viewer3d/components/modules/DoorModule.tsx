@@ -133,7 +133,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         gl.shadowMap.needsUpdate = true;
       });
       
-      console.log('🌟 DoorModule - 그림자 강제 업데이트 완료');
+              if (import.meta.env.DEV) {
+          console.log('🌟 DoorModule - 그림자 강제 업데이트 완료');
+        }
     }
   }, [viewMode, gl]); // 뷰모드와 GL 컨텍스트 변경 시에만 그림자 업데이트
 

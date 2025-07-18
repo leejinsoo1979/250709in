@@ -15,6 +15,7 @@ import Header from './components/Header';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
 import RightPanel, { RightPanelTab } from './components/RightPanel';
+import { ModuleContent } from './components/RightPanel';
 import FileTree from '@/components/FileTree/FileTree';
 
 // 기존 작동하는 컴포넌트들
@@ -25,6 +26,8 @@ import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/Plac
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
+import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
+
 import { 
   WidthControl,
   HeightControl,
@@ -50,13 +53,12 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, setHighlightedFrame } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
-  const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
@@ -65,6 +67,30 @@ const Configurator: React.FC = () => {
 
   // 기존 공간 변경 로직 복구
   const [previousSpaceInfo, setPreviousSpaceInfo] = useState(spaceInfo);
+
+  // 키보드 단축키 이벤트 리스너
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl+E 또는 Cmd+E로 선택된 기둥 편집 모달 열기
+      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        event.preventDefault();
+        if (selectedColumnId) {
+          console.log('⌨️ 키보드 단축키로 기둥 편집 모달 열기:', selectedColumnId);
+          openColumnEditModal(selectedColumnId);
+        } else {
+          console.log('⚠️ 선택된 기둥이 없습니다.');
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedColumnId, openColumnEditModal]);
+
+
 
   // 현재 컬럼 수를 안전하게 가져오는 함수
   // FrameSize 업데이트 도우미 함수
@@ -314,6 +340,8 @@ const Configurator: React.FC = () => {
     }
   }, [spaceInfo, derivedSpaceStore]);
 
+
+
   // 사이드바 탭 클릭 핸들러
   const handleSidebarTabClick = (tab: SidebarTab) => {
     if (activeSidebarTab === tab) {
@@ -410,34 +438,9 @@ const Configurator: React.FC = () => {
     console.log('프로필');
   };
 
-  // 파일 트리 핸들러들
-  const handleFileSelect = (file: any) => {
-    console.log('파일 선택:', file);
-    
-    // 파일 타입에 따라 적절한 UI 탭으로 이동
-    if (file.nodeType === 'material') {
-      // 재질 설정 탭 활성화
-      setActiveSidebarTab('material');
-    } else if (file.nodeType === 'space') {
-      // 배치 속성 탭 활성화 (우측 패널)
-      setActiveRightPanelTab('placement');
-      setIsRightPanelOpen(true);
-    } else if (file.nodeType === 'module') {
-      // 가구 모듈 탭 활성화
-      setActiveSidebarTab('module');
-    } else if (file.nodeType === 'furniture') {
-      // 가구 갤러리 탭 활성화
-      setActiveSidebarTab('module');
-    }
-  };
 
-  const handleCreateNew = () => {
-    console.log('새 프로젝트 생성');
-  };
 
-  const handleToggleFileTree = () => {
-    setIsFileTreeOpen(!isFileTreeOpen);
-  };
+
 
   // 사이드바 컨텐츠 렌더링
   const renderSidebarContent = () => {
@@ -996,7 +999,7 @@ const Configurator: React.FC = () => {
       case 'module':
         return (
           <div className={styles.moduleSettings}>
-            <div className={styles.placeholder}>모듈 속성 설정이 여기에 표시됩니다</div>
+            <ModuleContent />
           </div>
         );
       default:
@@ -1032,15 +1035,6 @@ const Configurator: React.FC = () => {
       />
 
       <div className={styles.mainContent}>
-        {/* 파일 트리 */}
-        {isFileTreeOpen && (
-          <div className={styles.fileTreePanel}>
-            <FileTree 
-              onFileSelect={handleFileSelect}
-              onCreateNew={handleCreateNew}
-            />
-          </div>
-        )}
 
         {/* 사이드바 */}
         <Sidebar
@@ -1063,14 +1057,6 @@ const Configurator: React.FC = () => {
             ? styles.viewerArea
             : styles.viewerArea + ' ' + styles['viewerArea--rightPanelClosed']
         } style={{position: 'relative'}}>
-          {/* 파일 트리 토글 버튼 */}
-          <button 
-            className={styles.fileTreeToggle}
-            onClick={handleToggleFileTree}
-            title="파일 트리 토글"
-          >
-            📁
-          </button>
 
           {/* 뷰어 컨트롤 */}
           <ViewerControls
@@ -1180,6 +1166,14 @@ const Configurator: React.FC = () => {
       {/* 가구 편집 창들 - 기존 기능 유지 */}
       <ModulePropertiesPanel />
       <PlacedModulePropertiesPanel />
+      
+      {/* 기둥 편집 모달 */}
+      <ColumnEditModal
+        columnId={activePopup.type === 'columnEdit' ? activePopup.id : null}
+        isOpen={activePopup.type === 'columnEdit'}
+        onClose={closeAllPopups}
+      />
+
     </div>
   );
 };

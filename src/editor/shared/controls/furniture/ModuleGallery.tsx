@@ -4,6 +4,8 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
+import { getModuleById } from '@/data/modules';
 import styles from './ModuleGallery.module.css';
 import Button from '@/components/common/Button';
 
@@ -37,6 +39,9 @@ interface ThumbnailItemProps {
 }
 
 const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid }) => {
+  const { spaceInfo } = useSpaceConfigStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
+  const addModule = useFurnitureStore(state => state.addModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
 
@@ -80,7 +85,95 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setCurrentDragData(null);
   };
 
-
+  // 더블클릭 시 자동 배치 핸들러
+  const handleDoubleClick = () => {
+    if (!isValid) return;
+    
+    try {
+      // 공간 인덱싱 계산
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      
+      // 듀얼/싱글 가구 판별
+      const isDualFurniture = module.id.startsWith('dual-');
+      
+      // 첫 번째 빈 슬롯 찾기
+      let availableSlotIndex = -1;
+      
+      // 모든 슬롯을 순회하며 빈 슬롯 찾기
+      for (let i = 0; i < indexing.columnCount; i++) {
+        if (isSlotAvailable(i, isDualFurniture, placedModules, spaceInfo, module.id)) {
+          availableSlotIndex = i;
+          break;
+        }
+      }
+      
+      // 첫 번째 슬롯에서 찾지 못하면 다음 사용 가능한 슬롯 찾기
+      if (availableSlotIndex === -1) {
+        availableSlotIndex = findNextAvailableSlot(0, 'right', isDualFurniture, placedModules, spaceInfo, module.id) || -1;
+      }
+      
+      if (availableSlotIndex === -1) {
+        console.warn('사용 가능한 슬롯이 없습니다.');
+        return;
+      }
+      
+      // 가구 위치 계산
+      let positionX: number;
+      if (isDualFurniture && indexing.threeUnitDualPositions) {
+        positionX = indexing.threeUnitDualPositions[availableSlotIndex];
+      } else {
+        positionX = indexing.threeUnitPositions[availableSlotIndex];
+      }
+      
+      // 기본 깊이 계산
+      const getDefaultDepth = (moduleData: ModuleData) => {
+        if (moduleData?.defaultDepth) {
+          return Math.min(moduleData.defaultDepth, spaceInfo.depth);
+        }
+        const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
+        return Math.min(spaceBasedDepth, 580);
+      };
+      
+      // 고유 ID 생성
+      const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 새 모듈 생성
+      const newModule = {
+        id: placedId,
+        moduleId: module.id,
+        position: {
+          x: positionX,
+          y: 0,
+          z: 0
+        },
+        rotation: 0,
+        hasDoor: false,
+        customDepth: getDefaultDepth(module),
+        slotIndex: availableSlotIndex,
+        isDualSlot: isDualFurniture,
+        isValidInCurrentSpace: true
+      };
+      
+      // 가구 배치
+      addModule(newModule);
+      
+      // 배치된 가구를 자동으로 선택
+      const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
+      setSelectedPlacedModuleId(placedId);
+      
+      console.log(`✅ 가구 "${module.name}"을 슬롯 ${availableSlotIndex + 1}에 자동 배치했습니다.`, {
+        moduleId: module.id,
+        slotIndex: availableSlotIndex,
+        position: newModule.position,
+        isDual: isDualFurniture,
+        selectedId: placedId
+      });
+      
+    } catch (error) {
+      console.error('가구 자동 배치 중 오류 발생:', error);
+    }
+  };
 
   return (
     <div 
@@ -88,7 +181,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       draggable={isValid}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      title={isValid ? `드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
+      onDoubleClick={handleDoubleClick}
+      title={isValid ? `드래그하여 배치 또는 더블클릭으로 자동 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
     >
       <div className={styles.thumbnailImage}>
         <img 

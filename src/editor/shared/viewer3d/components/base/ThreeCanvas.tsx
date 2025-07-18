@@ -61,6 +61,19 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const eventHandlers = useCanvasEventHandlers();
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
+  // viewMode 변경 감지 및 그림자 강제 업데이트
+  useEffect(() => {
+    if (viewMode === '3D') {
+              if (import.meta.env.DEV) {
+          console.log('🔄 3D 모드 전환 - 그림자 강제 업데이트');
+        }
+      // 약간의 지연 후 그림자 업데이트
+      setTimeout(() => {
+        setForceRender(prev => prev + 1);
+      }, 150);
+    }
+  }, [viewMode]);
+  
   // 강력한 WebGL 컨텍스트 정리 함수
   const forceCleanupWebGL = useCallback(() => {
     console.log('Force cleaning up WebGL context...');
@@ -251,6 +264,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             gl.shadowMap.type = THREE.VSMShadowMap;  // 최고품질 그림자
             gl.shadowMap.autoUpdate = true;
             gl.shadowMap.needsUpdate = true;
+            
+            // 그림자 강제 업데이트를 위한 지연 실행
+            setTimeout(() => {
+              gl.shadowMap.needsUpdate = true;
+            }, 100);
           }
           
           // 그림자 품질 강화

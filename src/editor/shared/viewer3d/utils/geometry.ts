@@ -99,10 +99,10 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
     startX = frameThickness.left;
   }
   
-  // 노서라운드 모드에서 디버깅 로그
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    console.log(`📐 [내경계산] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
-  }
+  // 노서라운드 모드에서 디버깅 로그 (개발 모드에서만 출력)
+  // if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && import.meta.env.DEV) {
+  //   console.log(`📐 [내경계산] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
+  // }
   
   return {
     width: internalWidth,
@@ -239,8 +239,10 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
     // 노서라운드: 이격거리를 고려한 너비 계산
     baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
     
-    // 디버깅 로그 추가
-    console.log(`🔧 [프레임폭] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 프레임폭=${baseWidthMm}mm`);
+    // 디버깅 로그 추가 (개발 모드에서만 출력)
+    // if (import.meta.env.DEV) {
+    //   console.log(`🔧 [프레임폭] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 프레임폭=${baseWidthMm}mm`);
+    // }
   } else {
     // 서라운드: 프레임 두께를 고려한 너비 계산
     const frameThickness = calculateFrameThickness(spaceInfo);

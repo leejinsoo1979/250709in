@@ -406,7 +406,9 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         });
       });
       
-      console.log('🌟 SlotDropZones - 가구 배치 후 그림자 강제 업데이트 완료');
+              if (import.meta.env.DEV) {
+          console.log('🌟 SlotDropZones - 가구 배치 후 그림자 강제 업데이트 완료');
+        }
     }
     
     // 드래그 상태 초기화

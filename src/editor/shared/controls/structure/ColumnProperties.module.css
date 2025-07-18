@@ -1,0 +1,111 @@
+.columnProperties {
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.columnId {
+  font-size: 14px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 40px 0;
+}
+
+.propertySection {
+  margin-bottom: 24px;
+}
+
+.propertySection h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.propertyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.propertyItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.propertyItem label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.propertyItem input,
+.propertyItem select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.propertyItem input:focus,
+.propertyItem select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.propertyItem input[type="color"] {
+  width: 50px;
+  height: 40px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.actions {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.deleteButton {
+  width: 100%;
+  padding: 10px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deleteButton:hover {
+  background: #c82333;
+}
+
+.deleteButton:active {
+  transform: translateY(1px);
+}

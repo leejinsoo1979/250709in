@@ -449,23 +449,123 @@ const Room: React.FC<RoomProps> = ({
         // 바닥면의 시작점(뒤쪽)과 끝점(프레임 앞쪽) 사이의 거리
         const floorDepth = frameEndZ - backZ;
         
-        return (
+        const columns = spaceInfo.columns || [];
+        const floorY = panelStartY + (
+          spaceInfo.baseConfig?.type === 'floor' 
+            ? baseFrameHeight 
+            : spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+              ? floatHeight
+              : 0
+        );
+        
+        // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
+        const hasDeepColumns = columns.some(column => column.depth >= 730);
+        
+        if (columns.length === 0 || !hasDeepColumns) {
+          // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 바닥면으로 렌더링
+          return (
+            <mesh
+              position={[
+                xOffset + width/2, 
+                floorY, 
+                backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
+              ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+            >
+              <planeGeometry args={[width, floorDepth]} />
+              <meshStandardMaterial 
+                color="#2ECC71" 
+                transparent={true} 
+                opacity={0.4}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          );
+        }
+        
+        // 기둥이 있는 경우 분절된 바닥면들 렌더링
+        const floorSegments: Array<{
+          width: number;
+          x: number;
+        }> = [];
+        
+        // 전체 바닥면 범위 계산
+        const floorStartX = xOffset;
+        const floorEndX = xOffset + width;
+        const floorCenterX = xOffset + width/2;
+        
+        // 기둥들을 X 위치 기준으로 정렬
+        const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
+        
+        let currentX = floorStartX;
+        
+        // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
+        sortedColumns.forEach((column, index) => {
+          const columnWidthM = mmToThreeUnits(column.width);
+          const columnLeftX = column.position[0] - columnWidthM / 2;
+          const columnRightX = column.position[0] + columnWidthM / 2;
+          
+          // 기둥이 바닥면 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+          if (columnLeftX < floorEndX && columnRightX > floorStartX && column.depth >= 730) {
+            // 기둥 왼쪽 바닥면 세그먼트
+            const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+            if (leftSegmentWidth > 0) {
+              floorSegments.push({
+                width: leftSegmentWidth,
+                x: currentX + leftSegmentWidth / 2
+              });
+            }
+            
+            // 다음 세그먼트 시작점을 기둥 오른쪽으로 설정
+            currentX = columnRightX;
+          }
+        });
+        
+        // 마지막 세그먼트 (마지막 기둥 오른쪽)
+        const lastSegmentWidth = Math.max(0, floorEndX - currentX);
+        if (lastSegmentWidth > 0) {
+          floorSegments.push({
+            width: lastSegmentWidth,
+            x: currentX + lastSegmentWidth / 2
+          });
+        }
+        
+        // 분절된 바닥면들 렌더링 (분절이 없으면 기본 바닥면 렌더링)
+        if (floorSegments.length === 0) {
+          return (
+            <mesh
+              position={[
+                floorCenterX, 
+                floorY, 
+                backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
+              ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+            >
+              <planeGeometry args={[width, floorDepth]} />
+              <meshStandardMaterial 
+                color="#2ECC71" 
+                transparent={true} 
+                opacity={0.4}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          );
+        }
+        
+        return floorSegments.map((segment, index) => (
           <mesh
+            key={`floor-segment-${index}`}
             position={[
-              xOffset + width/2, 
-              panelStartY + (
-                spaceInfo.baseConfig?.type === 'floor' 
-                  ? baseFrameHeight 
-                  : spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-                    ? floatHeight
-                    : 0
-              ), 
+              segment.x, // 분절된 위치
+              floorY, 
               backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
             ]}
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow
           >
-            <planeGeometry args={[width, floorDepth]} />
+            <planeGeometry args={[segment.width, floorDepth]} />
             <meshStandardMaterial 
               color="#2ECC71" 
               transparent={true} 
@@ -473,7 +573,7 @@ const Room: React.FC<RoomProps> = ({
               side={THREE.DoubleSide}
             />
           </mesh>
-        );
+        ));
       })()}
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
@@ -546,21 +646,122 @@ const Room: React.FC<RoomProps> = ({
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`)}
           
-          <BoxWithEdges
-            args={[
-              spaceInfo.surroundType === 'no-surround' ? width : finalPanelWidth, // 노서라운드 모드에서는 전체 너비 사용
-              topBottomFrameHeight, 
-              mmToThreeUnits(END_PANEL_THICKNESS)
-            ]}
-            position={[
-              spaceInfo.surroundType === 'no-surround' ? 0 : topBottomPanelX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
-              topElementsY, 
-              // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
-            ]}
-            material={topFrameMaterial}
-            renderMode={renderMode}
-          />
+          {/* 기둥이 있는 경우 상단 프레임을 분절하여 렌더링 */}
+          {(() => {
+            const columns = spaceInfo.columns || [];
+            const frameWidth = spaceInfo.surroundType === 'no-surround' ? width : finalPanelWidth;
+            const frameX = spaceInfo.surroundType === 'no-surround' ? 0 : topBottomPanelX;
+            
+            // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
+            const hasDeepColumns = columns.some(column => column.depth >= 730);
+            
+            if (columns.length === 0 || !hasDeepColumns) {
+              // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
+              return (
+                <BoxWithEdges
+                  args={[
+                    frameWidth, // 노서라운드 모드에서는 전체 너비 사용
+                    topBottomFrameHeight, 
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[
+                    frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
+                    topElementsY, 
+                    // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                  ]}
+                  material={topFrameMaterial}
+                  renderMode={renderMode}
+                />
+              );
+            }
+            
+            // 기둥이 있는 경우 분절된 프레임들 렌더링
+            const frameSegments: Array<{
+              width: number;
+              x: number;
+            }> = [];
+            
+            // 전체 프레임 범위 계산
+            const frameStartX = frameX - frameWidth / 2;
+            const frameEndX = frameX + frameWidth / 2;
+            
+            // 기둥들을 X 위치 기준으로 정렬
+            const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
+            
+            let currentX = frameStartX;
+            
+            // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
+            sortedColumns.forEach((column, index) => {
+              const columnWidthM = mmToThreeUnits(column.width);
+              const columnLeftX = column.position[0] - columnWidthM / 2;
+              const columnRightX = column.position[0] + columnWidthM / 2;
+              
+              // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+                // 기둥 왼쪽 프레임 세그먼트
+                const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                if (leftSegmentWidth > 0) {
+                  frameSegments.push({
+                    width: leftSegmentWidth,
+                    x: currentX + leftSegmentWidth / 2
+                  });
+                }
+                
+                // 다음 세그먼트 시작점을 기둥 오른쪽으로 설정
+                currentX = columnRightX;
+              }
+            });
+            
+            // 마지막 세그먼트 (마지막 기둥 오른쪽)
+            const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+            if (lastSegmentWidth > 0) {
+              frameSegments.push({
+                width: lastSegmentWidth,
+                x: currentX + lastSegmentWidth / 2
+              });
+            }
+            
+            // 분절된 프레임들 렌더링 (분절이 없으면 기본 프레임 렌더링)
+            if (frameSegments.length === 0) {
+              return (
+                <BoxWithEdges
+                  args={[
+                    frameWidth, // 노서라운드 모드에서는 전체 너비 사용
+                    topBottomFrameHeight, 
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[
+                    frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
+                    topElementsY, 
+                    // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                  ]}
+                  material={topFrameMaterial}
+                  renderMode={renderMode}
+                />
+              );
+            }
+            
+            return frameSegments.map((segment, index) => (
+              <BoxWithEdges
+                key={`top-frame-segment-${index}`}
+                args={[
+                  segment.width, 
+                  topBottomFrameHeight, 
+                  mmToThreeUnits(END_PANEL_THICKNESS)
+                ]}
+                position={[
+                  segment.x, // 분절된 위치
+                  topElementsY, 
+                  // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                ]}
+                material={topFrameMaterial}
+                renderMode={renderMode}
+              />
+            ));
+          })()}
         </>
       )}
       
@@ -568,25 +769,134 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 프레임 높이가 18mm보다 클 때만 렌더링 (서브프레임 높이 18mm와 비교) */}
       {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
       {topBottomFrameHeightMm > 18 && (spaceInfo.surroundType || 'surround') !== 'no-surround' && (
-        <group 
-          position={[
-            topBottomPanelX, 
-            topElementsY - topBottomFrameHeight/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2, // 상단 프레임 하단에 정확히 맞물림 (패널 두께의 절반만큼 위로)
-            furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 캐비넷 앞면 위치로 통일
-          ]}
-          rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
-        >
-          <BoxWithEdges
-            args={[
-              finalPanelWidth, 
-              mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
-              mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
-            ]}
-            position={[0, 0, 0]} // group 내에서 원점에 배치
-            material={topSubFrameMaterial}
-            renderMode={renderMode}
-          />
-        </group>
+        <>
+          {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
+          {(() => {
+            const columns = spaceInfo.columns || [];
+            
+            // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
+            const hasDeepColumns = columns.some(column => column.depth >= 730);
+            
+            if (columns.length === 0 || !hasDeepColumns) {
+              // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 서브프레임으로 렌더링
+              return (
+                <group 
+                  position={[
+                    topBottomPanelX, 
+                    topElementsY - topBottomFrameHeight/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2, // 상단 프레임 하단에 정확히 맞물림 (패널 두께의 절반만큼 위로)
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 캐비넷 앞면 위치로 통일
+                  ]}
+                  rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
+                >
+                  <BoxWithEdges
+                    args={[
+                      finalPanelWidth, 
+                      mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
+                      mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+                    ]}
+                    position={[0, 0, 0]} // group 내에서 원점에 배치
+                    material={topSubFrameMaterial}
+                    renderMode={renderMode}
+                  />
+                </group>
+              );
+            }
+            
+            // 기둥이 있는 경우 분절된 서브프레임들 렌더링
+            const frameSegments: Array<{
+              width: number;
+              x: number;
+            }> = [];
+            
+            // 전체 프레임 범위 계산
+            const frameStartX = topBottomPanelX - finalPanelWidth / 2;
+            const frameEndX = topBottomPanelX + finalPanelWidth / 2;
+            
+            // 기둥들을 X 위치 기준으로 정렬
+            const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
+            
+            let currentX = frameStartX;
+            
+            // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
+            sortedColumns.forEach((column, index) => {
+              const columnWidthM = mmToThreeUnits(column.width);
+              const columnLeftX = column.position[0] - columnWidthM / 2;
+              const columnRightX = column.position[0] + columnWidthM / 2;
+              
+              // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+                // 기둥 왼쪽 프레임 세그먼트
+                const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                if (leftSegmentWidth > 0) {
+                  frameSegments.push({
+                    width: leftSegmentWidth,
+                    x: currentX + leftSegmentWidth / 2
+                  });
+                }
+                
+                // 다음 세그먼트 시작점을 기둥 오른쪽으로 설정
+                currentX = columnRightX;
+              }
+            });
+            
+            // 마지막 세그먼트 (마지막 기둥 오른쪽)
+            const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+            if (lastSegmentWidth > 0) {
+              frameSegments.push({
+                width: lastSegmentWidth,
+                x: currentX + lastSegmentWidth / 2
+              });
+            }
+            
+            // 분절된 서브프레임들 렌더링 (분절이 없으면 기본 서브프레임 렌더링)
+            if (frameSegments.length === 0) {
+              return (
+                <group 
+                  position={[
+                    topBottomPanelX, 
+                    topElementsY - topBottomFrameHeight/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2, // 상단 프레임 하단에 정확히 맞물림 (패널 두께의 절반만큼 위로)
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 캐비넷 앞면 위치로 통일
+                  ]}
+                  rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
+                >
+                  <BoxWithEdges
+                    args={[
+                      finalPanelWidth, 
+                      mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
+                      mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+                    ]}
+                    position={[0, 0, 0]} // group 내에서 원점에 배치
+                    material={topSubFrameMaterial}
+                    renderMode={renderMode}
+                  />
+                </group>
+              );
+            }
+            
+            return frameSegments.map((segment, index) => (
+              <group 
+                key={`top-subframe-segment-${index}`}
+                position={[
+                  segment.x, // 분절된 위치
+                  topElementsY - topBottomFrameHeight/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2, // 상단 프레임 하단에 정확히 맞물림 (패널 두께의 절반만큼 위로)
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 캐비넷 앞면 위치로 통일
+                ]}
+                rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
+              >
+                <BoxWithEdges
+                  args={[
+                    segment.width, 
+                    mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
+                    mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+                  ]}
+                  position={[0, 0, 0]} // group 내에서 원점에 배치
+                  material={topSubFrameMaterial}
+                  renderMode={renderMode}
+                />
+              </group>
+            ));
+          })()}
+        </>
       )}
       
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
@@ -654,8 +964,17 @@ const Room: React.FC<RoomProps> = ({
           {(() => {
             const columns = spaceInfo.columns || [];
             
-            if (columns.length === 0) {
-              // 기둥이 없으면 기존처럼 하나의 프레임으로 렌더링
+            // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
+            const hasDeepColumns = columns.some(column => column.depth >= 730);
+            
+            console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
+              columnsCount: columns.length,
+              hasDeepColumns,
+              columnDepths: columns.map(c => c.depth)
+            });
+            
+            if (columns.length === 0 || !hasDeepColumns) {
+              // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
               return (
                 <BoxWithEdges
                   args={[
@@ -690,14 +1009,14 @@ const Room: React.FC<RoomProps> = ({
             
             let currentX = frameStartX;
             
-            // 각 기둥에 대해 분절 계산
+            // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
               const columnWidthM = mmToThreeUnits(column.width);
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
-              // 기둥이 프레임 범위 내에 있는지 확인
-              if (columnLeftX < frameEndX && columnRightX > frameStartX) {
+              // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
                 // 기둥 왼쪽 프레임 세그먼트
                 const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                 if (leftSegmentWidth > 0) {
@@ -721,7 +1040,27 @@ const Room: React.FC<RoomProps> = ({
               });
             }
             
-            // 분절된 프레임들 렌더링
+            // 분절된 프레임들 렌더링 (분절이 없으면 기본 프레임 렌더링)
+            if (frameSegments.length === 0) {
+              return (
+                <BoxWithEdges
+                  args={[
+                    finalPanelWidth, 
+                    baseFrameHeight, 
+                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
+                  ]}
+                  position={[
+                    topBottomPanelX, // 중앙 정렬
+                    panelStartY + baseFrameHeight/2, 
+                    // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                  ]}
+                  material={baseFrameMaterial}
+                  renderMode={renderMode}
+                />
+              );
+            }
+            
             return frameSegments.map((segment, index) => (
               <BoxWithEdges
                 key={`base-frame-segment-${index}`}
@@ -752,8 +1091,17 @@ const Room: React.FC<RoomProps> = ({
           {(() => {
             const columns = spaceInfo.columns || [];
             
-            if (columns.length === 0) {
-              // 기둥이 없으면 기존처럼 하나의 서브프레임으로 렌더링
+            // 기둥이 없거나 모든 기둥이 730mm 이하인 경우 분절하지 않음
+            const hasDeepColumns = columns.some(column => column.depth >= 730);
+            
+            console.log('🔧 [하부프레임 앞면] 기둥 분절 확인:', {
+              columnsCount: columns.length,
+              hasDeepColumns,
+              columnDepths: columns.map(c => c.depth)
+            });
+            
+            if (columns.length === 0 || !hasDeepColumns) {
+              // 기둥이 없거나 모든 기둥이 730mm 이하면 기존처럼 하나의 서브프레임으로 렌더링
               return (
                 <group 
                   position={[
@@ -792,14 +1140,14 @@ const Room: React.FC<RoomProps> = ({
             
             let currentX = frameStartX;
             
-            // 각 기둥에 대해 분절 계산
+            // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
               const columnWidthM = mmToThreeUnits(column.width);
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
-              // 기둥이 프레임 범위 내에 있는지 확인
-              if (columnLeftX < frameEndX && columnRightX > frameStartX) {
+              // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
                 // 기둥 왼쪽 프레임 세그먼트
                 const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                 if (leftSegmentWidth > 0) {
@@ -823,7 +1171,31 @@ const Room: React.FC<RoomProps> = ({
               });
             }
             
-            // 분절된 서브프레임들 렌더링
+            // 분절된 서브프레임들 렌더링 (분절이 없으면 기본 서브프레임 렌더링)
+            if (frameSegments.length === 0) {
+              return (
+                <group 
+                  position={[
+                    topBottomPanelX, // 중앙 정렬 (하단 프레임과 동일)
+                    panelStartY + baseFrameHeight - mmToThreeUnits(END_PANEL_THICKNESS)/2, // 하단 프레임 상단에서 ㄱ모양으로 맞물림 (서브프레임 아랫면이 프레임 윗면과 맞춤)
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30) // 상부 서브 프레임과 동일한 Z축 위치 (30mm 뒤로)
+                  ]}
+                  rotation={[-Math.PI / 2, 0, 0]} // X축 기준 -90도 회전 (상단과 반대 방향)
+                >
+                  <BoxWithEdges
+                    args={[
+                      finalPanelWidth, 
+                      mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
+                      mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+                    ]}
+                    position={[0, 0, 0]} // group 내에서 원점에 배치
+                    material={baseSubFrameMaterial}
+                    renderMode={renderMode}
+                  />
+                </group>
+              );
+            }
+            
             return frameSegments.map((segment, index) => (
               <group 
                 key={`base-subframe-segment-${index}`}

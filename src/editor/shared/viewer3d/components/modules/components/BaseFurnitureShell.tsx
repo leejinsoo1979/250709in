@@ -130,7 +130,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         gl.shadowMap.needsUpdate = true;
       });
       
-      console.log('🌟 BaseFurnitureShell - 그림자 강제 업데이트 완료');
+              if (import.meta.env.DEV) {
+          console.log('🌟 BaseFurnitureShell - 그림자 강제 업데이트 완료');
+        }
     }
   }, [viewMode, gl, material]); // material 변경 시에도 그림자 업데이트
   

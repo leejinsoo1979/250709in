@@ -31,8 +31,8 @@
 
 .thumbnailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr 1fr; /* 2열로 변경 */
+  gap: 8px;
   margin-bottom: 16px;
 }
 

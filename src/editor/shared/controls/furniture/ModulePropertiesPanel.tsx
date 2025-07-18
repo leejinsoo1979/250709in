@@ -7,21 +7,22 @@ import styles from './ModulePropertiesPanel.module.css';
 
 const ModulePropertiesPanel: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedModuleForProperties, setSelectedModuleForProperties } = useUIStore();
+  const { activePopup, closeAllPopups } = useUIStore();
   
-  if (!selectedModuleForProperties) {
+  // 가구 팝업이 활성화되지 않았으면 렌더링하지 않음
+  if (activePopup.type !== 'furniture' || !activePopup.id) {
     return null;
   }
   
   const internalSpace = calculateInternalSpace(spaceInfo);
-  const moduleData = getModuleById(selectedModuleForProperties, internalSpace, spaceInfo);
+  const moduleData = getModuleById(activePopup.id, internalSpace, spaceInfo);
   
   if (!moduleData) {
     return null;
   }
   
   const handleClose = () => {
-    setSelectedModuleForProperties(null);
+    closeAllPopups();
   };
   
   const handleOverlayClick = (e: React.MouseEvent) => {

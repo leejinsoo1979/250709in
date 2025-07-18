@@ -133,21 +133,29 @@ export const useBaseFurniture = (
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
     const textureUrl = materialConfig.interiorTexture;
-    console.log('🎨 Texture URL:', textureUrl, 'Material:', material);
+    if (import.meta.env.DEV) {
+      console.log('🎨 Texture URL:', textureUrl, 'Material:', material);
+    }
     
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(textureUrl)) {
-        console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
+        if (import.meta.env.DEV) {
+          console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
+        }
         applyCabinetTexture1Settings(material);
-        console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
+        if (import.meta.env.DEV) {
+          console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
+        }
       }
       
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(
         textureUrl, 
         (texture) => {
-          console.log('✅ 텍스처 로딩 성공:', textureUrl);
+          if (import.meta.env.DEV) {
+            console.log('✅ 텍스처 로딩 성공:', textureUrl);
+          }
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
@@ -165,7 +173,9 @@ export const useBaseFurniture = (
           // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
           requestAnimationFrame(() => {
             material.needsUpdate = true;
-            console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료');
+            if (import.meta.env.DEV) {
+              console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료');
+            }
           });
         },
         undefined,
@@ -174,7 +184,9 @@ export const useBaseFurniture = (
         }
       );
     } else if (material) {
-      console.log('🧹 텍스처 제거, 색상만 사용');
+      if (import.meta.env.DEV) {
+        console.log('🧹 텍스처 제거, 색상만 사용');
+      }
       // 텍스처가 없으면 맵 제거하고 기본 색상으로 복원
       material.map = null;
       material.color.set(furnitureColor);

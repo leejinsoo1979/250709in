@@ -92,10 +92,10 @@ export class ColumnIndexer {
     const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
     const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
     
-    // 노서라운드 모드에서 디버깅 로그
-    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-      console.log(`🎯 [가구위치] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경시작X=${internalStartX}, 첫번째컬럼=${threeUnitPositions[0]?.toFixed(3)}`);
-    }
+    // 노서라운드 모드에서 디버깅 로그 (개발 모드에서만 출력)
+    // if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && import.meta.env.DEV) {
+    //   console.log(`🎯 [가구위치] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경시작X=${internalStartX}, 첫번째컬럼=${threeUnitPositions[0]?.toFixed(3)}`);
+    // }
     
     // 듀얼가구용 두 컬럼 경계 중심 위치 계산 추가
     const dualColumnPositions = [];
@@ -136,12 +136,16 @@ export class ColumnIndexer {
     const rightmostBoundary = threeUnitBoundaries[columnCount];
     
     if (position.x < leftmostBoundary) {
-      console.log(`위치 (${position.x.toFixed(2)})가 왼쪽 경계 (${leftmostBoundary.toFixed(2)}) 밖에 있습니다. 첫 번째 컬럼 선택.`);
+      if (import.meta.env.DEV) {
+        console.log(`위치 (${position.x.toFixed(2)})가 왼쪽 경계 (${leftmostBoundary.toFixed(2)}) 밖에 있습니다. 첫 번째 컬럼 선택.`);
+      }
       return 0;
     }
     
     if (position.x > rightmostBoundary) {
-      console.log(`위치 (${position.x.toFixed(2)})가 오른쪽 경계 (${rightmostBoundary.toFixed(2)}) 밖에 있습니다. 마지막 컬럼 선택.`);
+      if (import.meta.env.DEV) {
+        console.log(`위치 (${position.x.toFixed(2)})가 오른쪽 경계 (${rightmostBoundary.toFixed(2)}) 밖에 있습니다. 마지막 컬럼 선택.`);
+      }
       return columnCount - 1;
     }
     
@@ -151,7 +155,9 @@ export class ColumnIndexer {
       const rightBoundary = threeUnitBoundaries[i + 1];
       
       if (position.x >= leftBoundary && position.x <= rightBoundary) {
-        console.log(`위치 (${position.x.toFixed(2)})가 컬럼 ${i + 1} 내부에 있습니다. 경계: [${leftBoundary.toFixed(2)}, ${rightBoundary.toFixed(2)}]`);
+        if (import.meta.env.DEV) {
+          console.log(`위치 (${position.x.toFixed(2)})가 컬럼 ${i + 1} 내부에 있습니다. 경계: [${leftBoundary.toFixed(2)}, ${rightBoundary.toFixed(2)}]`);
+        }
         return i;
       }
     }
@@ -166,10 +172,12 @@ export class ColumnIndexer {
       return { index, columnX, distance };
     });
     
-    // 거리 정보 로깅
-    console.log('컬럼 거리 계산:', 
-      distances.map(d => `컬럼 ${d.index + 1}: ${d.distance.toFixed(4)} (위치: ${d.columnX.toFixed(2)})`).join(', ')
-    );
+    // 거리 정보 로깅 (개발 모드에서만)
+    if (import.meta.env.DEV) {
+      console.log('컬럼 거리 계산:', 
+        distances.map(d => `컬럼 ${d.index + 1}: ${d.distance.toFixed(4)} (위치: ${d.columnX.toFixed(2)})`).join(', ')
+      );
+    }
     
     // 가장 가까운 컬럼 찾기
     distances.forEach(({ index, distance }) => {
@@ -179,7 +187,9 @@ export class ColumnIndexer {
       }
     });
     
-    console.log(`가장 가까운 컬럼: ${closestIndex + 1} (거리: ${minDistance.toFixed(4)})`);
+    if (import.meta.env.DEV) {
+      console.log(`가장 가까운 컬럼: ${closestIndex + 1} (거리: ${minDistance.toFixed(4)})`);
+    }
     return closestIndex;
   }
 

@@ -37,7 +37,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onDoubleClick
 }) => {
   // Three.js 컨텍스트 접근
-  const { gl, invalidate } = useThree();
+  const { gl, invalidate, scene, camera } = useThree();
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -49,31 +49,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
 
-  // 가구 위치 변경 시 즉시 렌더링 업데이트
+  // 가구 위치 변경 시 렌더링 업데이트
   useEffect(() => {
-    console.log('🔄 FurnitureItem 위치 변경 감지:', {
-      id: placedModule.id,
-      position: placedModule.position,
-      isDraggingThis
-    });
-    
-    // 그림자 맵 업데이트
-    if (gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-    }
-    
-    // 즉시 렌더링 강제 업데이트
     invalidate();
-    
-    // 추가 렌더링 업데이트
-    requestAnimationFrame(() => {
-      invalidate();
-      setTimeout(() => {
-        invalidate();
-        console.log('✅ FurnitureItem 렌더링 완료:', placedModule.id);
-      }, 100);
-    });
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, gl, invalidate]);
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate]);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -234,6 +213,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       optimalHinge: optimalHingePosition
          });
    }
+
+  // 위치 변경 로깅 (adjustedPosition 계산 후)
+  useEffect(() => {
+    console.log('📍 FurnitureItem 위치 변경:', {
+      id: placedModule.id,
+      placedModulePosition: placedModule.position,
+      adjustedPosition: adjustedPosition,
+      positionDifference: {
+        x: adjustedPosition.x - placedModule.position.x,
+        y: adjustedPosition.y - placedModule.position.y,
+        z: adjustedPosition.z - placedModule.position.z
+      }
+    });
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id]);
 
   return (
     <group>
