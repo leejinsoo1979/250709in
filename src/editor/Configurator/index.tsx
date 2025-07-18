@@ -1020,7 +1020,7 @@ const Configurator: React.FC = () => {
     <div className={styles.configurator}>
       {/* 헤더 */}
       <Header
-        title={basicInfo.title || "가구 설계"}
+        title={basicInfo.title || ""}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onNext={handleNext}

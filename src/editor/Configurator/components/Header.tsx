@@ -49,9 +49,8 @@ const Header: React.FC<HeaderProps> = ({
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
           <div className={styles.logo}>
-            <img src="/inshow.svg" alt="Logo" />
+            <img src="/logo.png" alt="Logo" />
           </div>
-          <h1 className={styles.title}>{title}</h1>
         </div>
 
         {/* 중앙 액션 버튼들 */}
