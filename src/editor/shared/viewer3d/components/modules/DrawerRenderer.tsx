@@ -15,23 +15,7 @@ const BoxWithEdges: React.FC<{
     
     if (originalMaterial instanceof THREE.MeshStandardMaterial) {
       console.log('🗃️ DrawerRenderer - 원본 텍스처:', originalMaterial.map);
-      
-      // 2D 모드에서 솔리드 렌더링 시 투명도 적용이 필요한 경우에만 복제
-      if (viewMode === '2D' && renderMode === 'solid') {
-        const transparentMaterial = originalMaterial.clone();
-        // 텍스처와 모든 속성 복사
-        transparentMaterial.map = originalMaterial.map;
-        transparentMaterial.color = originalMaterial.color.clone();
-        transparentMaterial.normalMap = originalMaterial.normalMap;
-        transparentMaterial.roughnessMap = originalMaterial.roughnessMap;
-        transparentMaterial.metalnessMap = originalMaterial.metalnessMap;
-        transparentMaterial.transparent = true;
-        transparentMaterial.opacity = 0.5;
-        transparentMaterial.needsUpdate = true;
-        return transparentMaterial;
-      }
-      
-      // 다른 경우에는 원본 재질을 그대로 사용 (텍스처 유지)
+      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
       return originalMaterial;
     }
     return material;
@@ -46,7 +30,7 @@ const BoxWithEdges: React.FC<{
       {renderMode === 'solid' && (
         <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <boxGeometry args={args} />
-          <primitive object={innerMaterial} />
+          <primitive object={innerMaterial} attach="material" />
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}

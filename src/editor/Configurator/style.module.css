@@ -469,40 +469,7 @@
   font-weight: 500;
 }
 
-.sliderInfo {
-  margin-top: 12px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-.sliderInfo p {
-  margin: 4px 0;
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.sliderInfo p:first-child {
-  color: #334155;
-  font-weight: 600;
-}
-
-/* 슬롯 정보 박스 */
-.slotInfoBox {
-  background: #fffbeb;
-  border-radius: 2px;
-  padding: 8px 12px;
-  margin-top: 8px;
-}
-
-.slotInfoText {
-  font-size: 12px;
-  color: #d97706;
-  line-height: 1.33;
-  margin: 0;
-}
+/* 슬라이더 정보 - 더 이상 사용하지 않음 */
 
 .spaceSizeSection {
   display: flex;
@@ -958,5 +925,169 @@
 .rightPanel .foldToggleButton {
   left: -16px;
   border-radius: 8px 0 0 8px;
+}
+
+/* 토글 버튼 그룹 스타일 */
+.toggleButtonGroup {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.toggleButton:not(:last-child) {
+  border-right: 1px solid #e5e7eb;
+}
+
+.toggleButton:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.toggleButton.active {
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.toggleButton.active:hover {
+  background: #059669;
+}
+
+/* 간단한 슬롯 정보 */
+.slotInfoSimple {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.slotInfoText {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 서브 설정 */
+.subSetting {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.subLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* 프레임 그리드 */
+.frameGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.frameItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.frameItemLabel {
+  font-size: 10px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.frameItemInput {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 80px;
+}
+
+.frameButton {
+  background: #ffffff;
+  border: none;
+  width: 20px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.frameButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.frameButton:active {
+  background: #e5e7eb;
+}
+
+.frameNumberInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  padding: 0;
+  width: 100%;
+  height: 24px;
+  outline: none;
+  /* 스피너(위/아래 화살표) 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* Chrome, Safari, Edge, Opera 스피너 제거 */
+.frameNumberInput::-webkit-outer-spin-button,
+.frameNumberInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.frameNumberInput:focus {
+  background: #ffffff;
+}
+
+.frameUnit {
+  font-size: 10px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 4px;
 }
 

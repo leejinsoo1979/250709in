@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
 import { useFurnitureStore } from '@/store';
@@ -18,6 +18,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const moveModule = useFurnitureStore(state => state.moveModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
+  const [forceRender, setForceRender] = useState(0);
   const isDragging = useRef(false);
   
   // Three.js 컨텍스트 접근
@@ -25,6 +26,38 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
+
+  // 강제 렌더링 함수
+  const triggerRender = useCallback(() => {
+    console.log('🔄 강제 렌더링 트리거');
+    
+    // React 리렌더링
+    setForceRender(prev => prev + 1);
+    
+    // Three.js 렌더링
+    invalidate();
+    
+    // 그림자 맵 업데이트
+    if (gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+    }
+    
+    // 씬 전체 업데이트
+    scene.traverse((object) => {
+      if (object.type === 'Mesh') {
+        object.frustumCulled = false;
+      }
+    });
+    
+    // 다음 프레임에서도 렌더링
+    requestAnimationFrame(() => {
+      invalidate();
+      setTimeout(() => {
+        invalidate();
+        console.log('✅ 강제 렌더링 완료');
+      }, 50);
+    });
+  }, [invalidate, gl, scene, setForceRender]);
 
 
 
@@ -138,7 +171,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       });
 
       // 즉시 렌더링 강제 업데이트
-      invalidate();
+      triggerRender();
     } else {
       console.log('❌ 슬롯 감지 실패');
     }
@@ -159,13 +192,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
       
       // 즉시 렌더링 강제 업데이트
-      invalidate();
-      
-      // 다음 프레임에서도 한 번 더 업데이트
-      requestAnimationFrame(() => {
-        invalidate();
-        console.log('✅ 드래그 완료 후 렌더링 업데이트 완료');
-      });
+      triggerRender();
       
       document.body.style.cursor = 'default';
     }
@@ -176,6 +203,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     isDragging: isDragging.current,
     handlePointerDown,
     handlePointerMove,
-    handlePointerUp
+    handlePointerUp,
+    forceRender // React 리렌더링 강제를 위한 state
   };
 }; 

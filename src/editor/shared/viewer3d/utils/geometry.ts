@@ -72,7 +72,7 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
     // 노서라운드: 내경 너비 = 전체 너비 - (좌우 이격거리)
-    internalWidth = spaceInfo.width - (spaceInfo.gapConfig.size * 2);
+    internalWidth = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
   } else {
     // 서라운드: 내경 너비 = 전체 너비 - 좌측 프레임 - 우측 프레임
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
@@ -92,8 +92,8 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   // 시작 위치 계산 (X 좌표)
   let startX;
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 시작 위치 = 이격거리
-    startX = spaceInfo.gapConfig.size;
+    // 노서라운드: 시작 위치 = 좌측 이격거리
+    startX = spaceInfo.gapConfig.left;
   } else {
     // 서라운드: 시작 위치 = 좌측 프레임 두께
     startX = frameThickness.left;
@@ -101,7 +101,7 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   // 노서라운드 모드에서 디버깅 로그
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    console.log(`📐 [내경계산] 이격거리${spaceInfo.gapConfig.size}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
+    console.log(`📐 [내경계산] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
   }
   
   return {
@@ -237,10 +237,10 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
   
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
     // 노서라운드: 이격거리를 고려한 너비 계산
-    baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.size * 2);
+    baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
     
     // 디버깅 로그 추가
-    console.log(`🔧 [프레임폭] 이격거리${spaceInfo.gapConfig.size}mm: 프레임폭=${baseWidthMm}mm`);
+    console.log(`🔧 [프레임폭] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 프레임폭=${baseWidthMm}mm`);
   } else {
     // 서라운드: 프레임 두께를 고려한 너비 계산
     const frameThickness = calculateFrameThickness(spaceInfo);

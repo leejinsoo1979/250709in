@@ -153,8 +153,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     });
   };
 
-
-
   // 클릭 핸들러 - 즉시 편집 모드 활성화
   const handleClick = (direction: 'left' | 'right' | 'width', event?: any) => {
     if (event) {
@@ -219,7 +217,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         {/* 왼쪽 화살표 - 벽 쪽 */}
         <mesh position={[
           -spaceWidthM / 2, 
-          currentColumn.position[1], 
+          columnHeightM / 2, 
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
@@ -229,7 +227,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         {/* 왼쪽 화살표 - 기둥 쪽 */}
         <mesh position={[
           currentColumn.position[0] - columnWidthM / 2, 
-          currentColumn.position[1], 
+          columnHeightM / 2, 
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]} rotation={[0, 0, Math.PI]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
@@ -243,8 +241,17 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           {editingDistance === 'left' ? (
-            <Html transform occlude>
-              <div style={containerStyle}>
+            <Html
+              transform
+              distanceFactor={10}
+              position={[0, 0, 0.1]}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <div 
+                style={containerStyle}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <div style={labelStyle}>
                   왼쪽 간격 (mm)
                 </div>
@@ -254,6 +261,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {
+                    e.stopPropagation();
                     if (e.key === 'Enter') {
                       handleEditComplete();
                     }
@@ -261,6 +269,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                       handleEditCancel();
                     }
                   }}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
                   style={inputStyle}
                   onBlur={() => handleEditComplete()}
                   autoFocus
@@ -271,7 +282,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             </Html>
           ) : (
             <>
-              {/* 클릭 가능한 배경 */}
               <mesh 
                 position={[0, 0, -0.01]} 
                 onClick={(e) => {
@@ -335,7 +345,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         {/* 오른쪽 가이드 라인 */}
         <mesh position={[
           (spaceWidthM / 2 + currentColumn.position[0] + columnWidthM / 2) / 2, 
-          currentColumn.position[1], 
+          columnHeightM / 2, 
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <boxGeometry args={[Math.abs(spaceWidthM / 2 - (currentColumn.position[0] + columnWidthM / 2)), 0.02, 0.02]} />
@@ -345,7 +355,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         {/* 오른쪽 화살표 - 벽 쪽 */}
         <mesh position={[
           spaceWidthM / 2, 
-          currentColumn.position[1], 
+          columnHeightM / 2, 
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]} rotation={[0, 0, Math.PI]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
@@ -355,7 +365,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         {/* 오른쪽 화살표 - 기둥 쪽 */}
         <mesh position={[
           currentColumn.position[0] + columnWidthM / 2, 
-          currentColumn.position[1], 
+          columnHeightM / 2, 
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
@@ -369,8 +379,17 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           {editingDistance === 'right' ? (
-            <Html transform occlude>
-              <div style={containerStyle}>
+            <Html
+              transform
+              distanceFactor={10}
+              position={[0, 0, 0.1]}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <div 
+                style={containerStyle}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <div style={labelStyle}>
                   오른쪽 간격 (mm)
                 </div>
@@ -380,6 +399,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {
+                    e.stopPropagation();
                     if (e.key === 'Enter') {
                       handleEditComplete();
                     }
@@ -387,6 +407,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                       handleEditCancel();
                     }
                   }}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
                   style={inputStyle}
                   onBlur={() => handleEditComplete()}
                   autoFocus
@@ -397,7 +420,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             </Html>
           ) : (
             <>
-              {/* 클릭 가능한 배경 */}
               <mesh 
                 position={[0, 0, -0.01]} 
                 onClick={(e) => {
@@ -464,8 +486,17 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2]
         ]}>
           {editingDistance === 'width' ? (
-            <Html transform occlude>
-              <div style={containerStyle}>
+            <Html
+              transform
+              distanceFactor={10}
+              position={[0, 0, 0.1]}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <div 
+                style={containerStyle}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <div style={labelStyle}>
                   기둥 폭 (mm)
                 </div>
@@ -475,6 +506,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {
+                    e.stopPropagation();
                     if (e.key === 'Enter') {
                       handleEditComplete();
                     }
@@ -482,6 +514,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                       handleEditCancel();
                     }
                   }}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
                   style={inputStyle}
                   onBlur={() => handleEditComplete()}
                   autoFocus
@@ -493,7 +528,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             </Html>
           ) : (
             <>
-              {/* 클릭 가능한 배경 */}
               <mesh 
                 position={[0, 0, -0.01]} 
                 onClick={(e) => {
@@ -552,8 +586,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         </group>
       )}
 
-
-
       {/* 기둥 정면 중앙에 깊이 표시 */}
       <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
         <Text
@@ -565,21 +597,18 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         >
           D {currentColumn.depth}
         </Text>
-        {/* 배경 */}
         <mesh position={[0, 0, -0.01]}>
           <planeGeometry args={[3.0, 1.0]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
         </mesh>
-        {/* 테두리 */}
         <mesh position={[0, 0, -0.005]}>
           <planeGeometry args={[3.2, 1.2]} />
           <meshBasicMaterial color="#cccccc" transparent opacity={0.8} />
         </mesh>
       </group>
 
-      {/* 정면뷰(2D)에서는 기둥 상단에 가로폭 표시, 3D에서는 뒷벽 거리 표시 */}
+      {/* 정면뷰(2D)에서는 기둥 상단에 가로폭 표시 */}
       {viewMode === '2D' ? (
-        // 정면뷰: 기둥 상단 위쪽에 가로폭 표시
         <group position={[currentColumn.position[0], columnHeightM + 0.8, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}
@@ -590,12 +619,10 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           >
             {currentColumn.width}
           </Text>
-          {/* 배경 */}
           <mesh position={[0, 0, -0.01]}>
             <planeGeometry args={[2.6, 0.9]} />
             <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
           </mesh>
-          {/* 테두리 */}
           <mesh position={[0, 0, -0.005]}>
             <planeGeometry args={[2.8, 1.1]} />
             <meshBasicMaterial color="#FF5722" transparent opacity={0.3} />
@@ -603,29 +630,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         </group>
       ) : null}
 
-      {/* 연결선 - 왼쪽 벽 */}
-      <mesh position={[currentColumn.position[0] - columnWidthM / 4, columnHeightM + 0.5, currentColumn.position[2]]}>
-        <boxGeometry args={[columnWidthM / 2, 0.02, 0.02]} />
-        <meshBasicMaterial color="#FF5722" transparent opacity={0.7} />
-      </mesh>
-
-      {/* 연결선 - 오른쪽 벽 */}
-      <mesh position={[currentColumn.position[0] + columnWidthM / 4, columnHeightM + 0.5, currentColumn.position[2]]}>
-        <boxGeometry args={[columnWidthM / 2, 0.02, 0.02]} />
-        <meshBasicMaterial color="#FF5722" transparent opacity={0.7} />
-      </mesh>
-
-      {/* 연결선 - 앞벽 */}
-      <mesh position={[currentColumn.position[0], columnHeightM + 0.5, currentColumn.position[2] + columnDepthM / 4]}>
-        <boxGeometry args={[0.02, 0.02, columnDepthM / 2]} />
-        <meshBasicMaterial color="#2196F3" transparent opacity={0.7} />
-      </mesh>
-
-      {/* 연결선 - 뒷벽 */}
-      <mesh position={[currentColumn.position[0], columnHeightM + 0.5, currentColumn.position[2] - columnDepthM / 4]}>
-        <boxGeometry args={[0.02, 0.02, columnDepthM / 2]} />
-        <meshBasicMaterial color="#2196F3" transparent opacity={0.7} />
-      </mesh>
     </group>
   );
 };

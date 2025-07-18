@@ -18,7 +18,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   customDepth,
   hingePosition = 'right',
   spaceInfo,
-  isDragging = false
+  isDragging = false,
+  doorWidth,
+  doorXOffset = 0,
+  originalSlotWidth,
+  slotCenterX
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -49,11 +53,15 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
       {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
-          moduleWidth={moduleData.dimensions.width}
+          moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
+          doorXOffset={0} // 도어 위치 고정 (커버 방식)
+          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
         />
       )}
     </BaseFurnitureShell>

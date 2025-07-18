@@ -22,6 +22,10 @@ interface BoxModuleProps {
   customDepth?: number;
   hingePosition?: 'left' | 'right';
   spaceInfo?: SpaceInfo;
+  doorWidth?: number; // 도어 너비 (사용하지 않음 - 도어는 항상 원래 슬롯 크기)
+  doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
+  originalSlotWidth?: number; // 원래 슬롯 너비 (mm)
+  slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
 }
 
 /**
@@ -36,10 +40,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   color,
   isDragging = false,
   internalHeight,
-  hasDoor,
+  hasDoor = false,
   customDepth,
   hingePosition = 'right',
-  spaceInfo
+  spaceInfo,
+  doorWidth,
+  doorXOffset = 0,
+  originalSlotWidth,
+  slotCenterX
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
@@ -64,6 +72,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -79,6 +91,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -94,6 +110,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -109,6 +129,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -124,6 +148,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -139,6 +167,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -154,6 +186,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -169,6 +205,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0} // 도어 위치 고정 (커버 방식)
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
       />
     );
   }
@@ -196,11 +236,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
-          moduleWidth={moduleData.dimensions.width}
+          moduleWidth={doorWidth || moduleData.dimensions.width} // 무시됨
           moduleDepth={baseFurniture.actualDepthMm}
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
+          doorXOffset={0} // 사용하지 않음
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={slotCenterX}
+          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
         />
       )}
     </BaseFurnitureShell>

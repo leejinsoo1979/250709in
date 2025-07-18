@@ -61,10 +61,10 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     
     const newColumn: Column = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      position: [xPosition, 0, -(spaceInfo?.depth || 1500) * 0.001 / 2 - 4.0], // Y=0 바닥 기준, Z는 공간 메쉬 뒷벽에 적절히 붙도록
-      width: 6000, // 600cm (10배 더 큰 크기)
-      height: 24000, // 24m 높이
-      depth: 6000, // 600cm (10배 더 큰 크기)
+      position: [xPosition, 0, -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2], // Y=0 바닥 기준, Z는 뒷벽에 맞닿도록
+      width: 300, // 300mm
+      height: 2400, // 2400mm
+      depth: 730, // 730mm
       color: '#888888',
       material: 'concrete'
     };

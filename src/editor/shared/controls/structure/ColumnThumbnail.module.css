@@ -1,0 +1,188 @@
+.columnThumbnail {
+  position: relative;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  min-width: 120px;
+  max-width: 160px;
+}
+
+.columnThumbnail:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  transform: translateY(-2px);
+}
+
+.columnThumbnail:active {
+  cursor: grabbing;
+  transform: translateY(0);
+}
+
+.thumbnailContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.columnView {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin-bottom: 8px;
+}
+
+/* 3D 기둥 표현 */
+.columnTop {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) skewY(-30deg);
+  width: 40px;
+  height: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  z-index: 3;
+}
+
+.columnFront {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 60px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  z-index: 2;
+}
+
+.columnRight {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  width: 20px;
+  height: 60px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  transform: skewY(-30deg);
+  z-index: 1;
+}
+
+.columnInfo {
+  text-align: center;
+  width: 100%;
+}
+
+.columnName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.columnDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.material {
+  font-size: 11px;
+  color: #666;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.size {
+  font-size: 10px;
+  color: #888;
+  font-family: monospace;
+}
+
+.dragHint {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.columnThumbnail:hover .dragHint {
+  opacity: 1;
+}
+
+/* 드래그 중 상태 */
+.columnThumbnail.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg) scale(0.95);
+}
+
+/* 재질별 색상 표현 */
+.material.concrete {
+  background: rgba(136, 136, 136, 0.1);
+}
+
+.material.steel {
+  background: rgba(176, 176, 176, 0.1);
+}
+
+.material.wood {
+  background: rgba(210, 105, 30, 0.1);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .columnThumbnail {
+    min-width: 100px;
+    max-width: 120px;
+    padding: 8px;
+  }
+  
+  .columnView {
+    width: 50px;
+    height: 65px;
+  }
+  
+  .columnTop {
+    width: 32px;
+    height: 16px;
+  }
+  
+  .columnFront {
+    width: 32px;
+    height: 48px;
+  }
+  
+  .columnRight {
+    width: 16px;
+    height: 48px;
+  }
+  
+  .columnName {
+    font-size: 12px;
+  }
+  
+  .material {
+    font-size: 10px;
+  }
+  
+  .size {
+    font-size: 9px;
+  }
+}

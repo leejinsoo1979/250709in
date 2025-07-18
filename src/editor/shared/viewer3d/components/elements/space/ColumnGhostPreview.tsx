@@ -98,18 +98,18 @@ const ColumnGhostPreview: React.FC<ColumnGhostPreviewProps> = ({ spaceInfo }) =>
 
   // 슬롯 위치 가져오기
   const slotPositionX = indexing.threeUnitPositions[currentSlotIndex];
-  const spaceDepthM = (spaceInfo.depth || 1500) * 0.001;
+  const spaceDepthM = (spaceInfo.depth || 1500) * 0.01;
 
-  // 기둥 크기 (mm를 m로 변환)
-  const columnWidth = (dragData.width || 6000) * 0.001;
-  const columnHeight = (dragData.height || 24000) * 0.001;
-  const columnDepth = (dragData.depth || 6000) * 0.001;
+  // 기둥 크기 (mm를 Three.js 단위로 변환)
+  const columnWidth = (dragData.width || 300) * 0.01;
+  const columnHeight = (dragData.height || 2400) * 0.01;
+  const columnDepth = (dragData.depth || 730) * 0.01;
 
   // 기둥 위치 계산 (바닥 기준, 뒷벽 근처) - 유효한 슬롯이 있을 때만
   const calculatedGhostPosition: [number, number, number] = [
     slotPositionX,
     0, // 바닥 기준 Y=0
-    -(spaceDepthM / 2) + 0.5
+    -(spaceDepthM / 2) + (columnDepth / 2)
   ];
 
   // 재질별 색상 결정

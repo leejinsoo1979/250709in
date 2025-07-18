@@ -18,7 +18,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   customDepth,
   hingePosition = 'right',
   spaceInfo,
-  isDragging = false
+  isDragging = false,
+  doorWidth
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -49,7 +50,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
-          moduleWidth={moduleData.dimensions.width}
+          moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}

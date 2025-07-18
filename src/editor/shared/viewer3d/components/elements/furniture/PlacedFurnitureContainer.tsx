@@ -3,13 +3,16 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
-
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
+import { useColumnDualSplitter } from '../../../hooks/useColumnDualSplitter';
 import FurnitureItem from './FurnitureItem';
 
 const PlacedFurnitureContainer: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
+  
+  // 기둥 변화 감지하여 듀얼 가구 자동 분할
+  useColumnDualSplitter();
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -45,13 +48,16 @@ const PlacedFurnitureContainer: React.FC = () => {
     spaceInfo
   });
 
+  // 드래그 상태가 변경될 때마다 컴포넌트 리렌더링
+  const forceRenderKey = dragHandlers.forceRender;
+
   // 키보드 이벤트 훅 (스마트 건너뛰기 로직 사용)
   useFurnitureKeyboard({
     spaceInfo
   });
 
   return (
-    <group>
+    <group key={forceRenderKey}>
       {placedModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = selectionState.editMode && selectionState.editingModuleId === placedModule.id;

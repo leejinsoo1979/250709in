@@ -119,13 +119,13 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         
         // 충돌 검사 및 슬롯 재배치
-        if (!isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.id)) {
+        if (!isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
           // 오른쪽으로 빈 슬롯 찾기
-          let newSlot = findNextAvailableSlot(slotIndex, 'right', isDualModule, updatedModules, newSpaceInfo, module.id);
+          let newSlot = findNextAvailableSlot(slotIndex, 'right', isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id);
           
           // 오른쪽에 없으면 왼쪽으로 찾기
           if (newSlot === null) {
-            newSlot = findNextAvailableSlot(slotIndex, 'left', isDualModule, updatedModules, newSpaceInfo, module.id);
+            newSlot = findNextAvailableSlot(slotIndex, 'left', isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id);
           }
           
           if (newSlot !== null) {

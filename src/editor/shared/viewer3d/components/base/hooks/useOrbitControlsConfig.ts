@@ -115,7 +115,7 @@ export const useOrbitControlsConfig = (
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
       mouseButtons: {
-        LEFT: isOptionPressed ? THREE.MOUSE.PAN : undefined, // Option 누르면 팬, 아니면 가구 드래그용으로 비활성화
+        LEFT: isOptionPressed ? THREE.MOUSE.PAN : undefined, // Option 누르면 팬, 아니면 가구/라벨 클릭용으로 비활성화
         MIDDLE: THREE.MOUSE.PAN, // 중간 버튼(휠 클릭)으로 팬 기능
         RIGHT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 2D 모드에서는 오른쪽 버튼 비활성화, 3D 모드에서만 회전
       },

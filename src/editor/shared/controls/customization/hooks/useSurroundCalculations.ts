@@ -25,11 +25,10 @@ export const useSurroundCalculations = (
     const isNoSurround = spaceInfo.surroundType === 'no-surround';
     if (!isNoSurround || !spaceInfo.gapConfig) return null;
     
-    const gapSize = spaceInfo.gapConfig.size;
     const totalWidth = spaceInfo.width;
     
     // 좌우 각각 이격거리만큼 줄어든 값이 상하단 프레임의 너비가 됨
-    return totalWidth - (gapSize * 2);
+    return totalWidth - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
   }, [spaceInfo.surroundType, spaceInfo.gapConfig, spaceInfo.width]);
 
   // 서라운드 모드에서 프레임 너비 계산

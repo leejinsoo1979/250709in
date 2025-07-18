@@ -3,6 +3,7 @@ import { useMemo, useEffect } from 'react';
 import { ModuleData, SectionConfig } from '@/data/modules/shelving';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 
 // 백패널 두께 상수
 const BACK_PANEL_THICKNESS = 9;
@@ -136,15 +137,10 @@ export const useBaseFurniture = (
     
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
-      if (textureUrl.toLowerCase().includes('cabinet texture1')) {
+      if (isCabinetTexture1(textureUrl)) {
         console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
-        material.color.setRGB(0.12, 0.12, 0.12); // 실제 재질에 맞는 다크 그레이 (조금 밝게)
-        material.toneMapped = false; // 톤 매핑 비활성화
-        material.envMapIntensity = 0.0; // 환경맵 완전 제거
-        material.emissive.setHex(0x000000); // 자체발광 완전 차단
-        material.roughness = 0.8; // 거칠기 증가로 더 어둡게
-        material.needsUpdate = true;
-        console.log('✅ Cabinet Texture1 즉시 색상 적용 완료');
+        applyCabinetTexture1Settings(material);
+        console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
       }
       
       const textureLoader = new THREE.TextureLoader();
@@ -158,13 +154,19 @@ export const useBaseFurniture = (
           material.map = texture;
           
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          if (!textureUrl.toLowerCase().includes('cabinet texture1')) {
+          if (!isCabinetTexture1(textureUrl)) {
             material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
           }
           
           material.needsUpdate = true;
+          
+          // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
+          requestAnimationFrame(() => {
+            material.needsUpdate = true;
+            console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료');
+          });
         },
         undefined,
         (error) => {

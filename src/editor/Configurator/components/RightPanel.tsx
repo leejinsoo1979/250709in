@@ -361,6 +361,10 @@ interface RightPanelProps {
   baseDepth: number;
   onBaseHeightChange: (height: number) => void;
   onBaseDepthChange: (depth: number) => void;
+
+  // 프레임 속성
+  frameType: 'surround' | 'no-surround';
+  onFrameTypeChange: (type: 'surround' | 'no-surround') => void;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -385,7 +389,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
   baseHeight,
   baseDepth,
   onBaseHeightChange,
-  onBaseDepthChange
+  onBaseDepthChange,
+  frameType,
+  onFrameTypeChange
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['brand', 'price', 'material', 'space', 'layout', 'floor', 'frame'])
@@ -463,6 +469,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const floorOptions = [
     { id: 'yes', label: '있음' },
     { id: 'no', label: '없음' }
+  ];
+
+  const frameTypeOptions = [
+    { id: 'surround', label: '서라운드' },
+    { id: 'no-surround', label: '노서라운드' }
   ];
 
   return (
@@ -648,22 +659,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
               />
             </FormControl>
 
-            {/* 프레임 색상 */}
+            {/* 프레임 속성 */}
             <FormControl
-              label="프레임 색상"
+              label="프레임 속성"
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
             >
-              <div className={styles.frameColor}>
-                <div className={styles.frameColorOption}>
-                  <div className={styles.frameColorSwatch} style={{ backgroundColor: '#000000' }}></div>
-                  <span>블랙</span>
-                </div>
-                <div className={styles.frameColorOption}>
-                  <div className={styles.frameColorSwatch} style={{ backgroundColor: '#ffffff' }}></div>
-                  <span>화이트</span>
-                </div>
-              </div>
+              <ToggleGroup
+                options={frameTypeOptions}
+                selected={frameType}
+                onChange={(value) => onFrameTypeChange(value as 'surround' | 'no-surround')}
+              />
             </FormControl>
           </div>
         )}

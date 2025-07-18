@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
+import { Column } from '@/types/space';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -11,7 +12,9 @@ export interface FrameSize {
 }
 
 export interface GapConfig {
-  size: 2 | 3; // mm 단위
+  left: number;  // 좌측 이격거리 (mm 단위)
+  right: number; // 우측 이격거리 (mm 단위)
+  top?: number;  // 상부 이격거리 (mm 단위) - 선택적
 }
 
 export interface BaseConfig {
@@ -53,6 +56,9 @@ export interface SpaceInfo {
   
   // 재질 설정 추가
   materialConfig?: MaterialConfig;
+  
+  // 구조물 설정 추가
+  columns?: Column[];
 }
 
 // 공간 설정 상태 타입
@@ -67,6 +73,12 @@ interface SpaceConfigState {
   
   // 재질 설정 액션
   resetMaterialConfig: () => void;
+  
+  // 구조물 설정 액션
+  setColumns: (columns: Column[]) => void;
+  addColumn: (column: Column) => void;
+  removeColumn: (id: string) => void;
+  updateColumn: (id: string, updates: Partial<Column>) => void;
   
   // 전체 상태 관리
   resetAll: () => void;
@@ -137,11 +149,15 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     height: DEFAULT_BASE_VALUES.FLOOR_FINISH_HEIGHT
   },
   // Configurator 초기값 설정
-  surroundType: 'surround',
+  surroundType: 'no-surround',
   frameSize: {
     left: DEFAULT_FRAME_VALUES.LEFT,
     right: DEFAULT_FRAME_VALUES.RIGHT,
     top: DEFAULT_FRAME_VALUES.TOP
+  },
+  gapConfig: {
+    left: 2, // 기본 이격거리 2mm
+    right: 2, // 기본 이격거리 2mm
   },
   baseConfig: {
     type: 'floor',
@@ -156,7 +172,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
 };
 
 // 초기 상태
-const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'resetAll' | 'markAsSaved'> = {
   isDirty: false,
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
@@ -191,6 +207,45 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           ...state.spaceInfo.materialConfig!,
           doorColor: '#FFFFFF'  // 흰색으로 초기화 (테스트용)
         }
+      },
+      isDirty: true,
+    })),
+  
+  // 구조물 설정 액션들
+  setColumns: (columns) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns
+      },
+      isDirty: true,
+    })),
+  
+  addColumn: (column) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: [...(state.spaceInfo.columns || []), column]
+      },
+      isDirty: true,
+    })),
+  
+  removeColumn: (id) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: (state.spaceInfo.columns || []).filter(col => col.id !== id)
+      },
+      isDirty: true,
+    })),
+  
+  updateColumn: (id, updates) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: (state.spaceInfo.columns || []).map(col => 
+          col.id === id ? { ...col, ...updates } : col
+        )
       },
       isDirty: true,
     })),

@@ -51,19 +51,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구 위치 변경 시 즉시 렌더링 업데이트
   useEffect(() => {
-    // 드래그 중이 아닐 때만 렌더링 업데이트 (드래그 중에는 useFurnitureDrag에서 처리)
-    if (!isDraggingThis) {
-      console.log('🔄 FurnitureItem 렌더링 업데이트:', placedModule.id);
-      
-      // 그림자 맵 업데이트
-      if (gl && gl.shadowMap) {
-        gl.shadowMap.needsUpdate = true;
-      }
-      
-      // 즉시 렌더링 강제 업데이트
-      invalidate();
+    console.log('🔄 FurnitureItem 위치 변경 감지:', {
+      id: placedModule.id,
+      position: placedModule.position,
+      isDraggingThis
+    });
+    
+    // 그림자 맵 업데이트
+    if (gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
     }
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, isDraggingThis, gl, invalidate, placedModule.id]);
+    
+    // 즉시 렌더링 강제 업데이트
+    invalidate();
+    
+    // 추가 렌더링 업데이트
+    requestAnimationFrame(() => {
+      invalidate();
+      setTimeout(() => {
+        invalidate();
+        console.log('✅ FurnitureItem 렌더링 완료:', placedModule.id);
+      }, 100);
+    });
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, gl, invalidate]);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;

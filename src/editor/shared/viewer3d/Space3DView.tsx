@@ -3,6 +3,10 @@ import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
+import ColumnAsset from './components/elements/space/ColumnAsset';
+import ColumnDistanceLabels from './components/elements/space/ColumnDistanceLabels';
+import ColumnGhostPreview from './components/elements/space/ColumnGhostPreview';
+import ColumnCreationMarkers from './components/elements/space/ColumnCreationMarkers';
 
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
@@ -17,6 +21,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
 import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 /**
  * Space3DView 컴포넌트
@@ -26,9 +31,9 @@ import { calculateOptimalDistance, mmToThreeUnits } from './components/base/util
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe' } = props;
   const location = useLocation();
-  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection } = useUIStore();
+  const { view2DDirection, showDimensions } = useUIStore();
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
@@ -96,11 +101,64 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       return;
     }
 
-    // SlotDropZones에서 노출한 함수 호출
-    const handleSlotDrop = window.handleSlotDrop;
-    if (typeof handleSlotDrop === 'function') {
-      handleSlotDrop(e.nativeEvent, canvas);
+    // 드래그 데이터 확인
+    const dragData = e.dataTransfer.getData('application/json');
+    if (!dragData) {
+      return;
     }
+
+    try {
+      const parsedData = JSON.parse(dragData);
+      
+      // 기둥 드롭 처리
+      if (parsedData.type === 'column') {
+        handleColumnDrop(e, parsedData);
+        return;
+      }
+      
+      // 기존 가구 드롭 처리
+      const handleSlotDrop = window.handleSlotDrop;
+      if (typeof handleSlotDrop === 'function') {
+        handleSlotDrop(e.nativeEvent, canvas);
+      }
+    } catch (error) {
+      console.error('드롭 데이터 파싱 오류:', error);
+    }
+  };
+
+  // 기둥 드롭 핸들러
+  const handleColumnDrop = (e: React.DragEvent, columnData: any) => {
+    // 캔버스 중앙에 기둥 배치 (임시)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
+    
+    // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
+    const spaceDepthM = (spaceInfo.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
+    const columnDepthM = 730 * 0.01; // 730mm를 Three.js 단위로 변환
+    const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
+    
+    // 기둥 생성 (바닥 기준으로 위치 설정)
+    const newColumn = {
+      id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
+      width: 300, // 300mm 
+      height: spaceInfo.height || 2400, // 공간 높이와 동일 (2400mm)
+      depth: 730, // 730mm
+      color: columnData.color || '#888888',
+      material: columnData.material || 'concrete'
+    };
+
+    console.log('🏗️ 기둥 드롭 배치:', {
+      centerX,
+      zPosition,
+      spaceDepthM,
+      columnDepthM,
+      column: newColumn
+    });
+    
+    // 스토어에 기둥 추가
+    const { addColumn } = useSpaceConfigStore.getState();
+    addColumn(newColumn);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -200,6 +258,46 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 기본 요소들 */}
             <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} />
+            
+            {/* 기둥 에셋 렌더링 */}
+            {(spaceInfo.columns || []).map((column) => (
+              <React.Fragment key={column.id}>
+                <ColumnAsset
+                  id={column.id}
+                  position={column.position}
+                  width={column.width} // mm 단위 그대로 전달
+                  height={column.height}
+                  depth={column.depth}
+                  color={column.color}
+                  spaceInfo={spaceInfo}
+                  renderMode={renderMode}
+                  onPositionChange={(id, newPosition) => {
+                    updateColumn(id, { position: newPosition });
+                  }}
+                  onRemove={(id) => {
+                    removeColumn(id);
+                  }}
+                />
+                {/* 기둥 벽면 간격 라벨 (2D, 3D 모드 모두 표시) */}
+                <ColumnDistanceLabels
+                  column={column}
+                  spaceInfo={spaceInfo}
+                  onPositionChange={(columnId, newPosition) => {
+                    updateColumn(columnId, { position: newPosition });
+                  }}
+                  onColumnUpdate={(columnId, updates) => {
+                    updateColumn(columnId, updates);
+                  }}
+                  showLabels={showDimensions}
+                />
+              </React.Fragment>
+            ))}
+            
+            {/* 기둥 드래그 시 고스트 프리뷰 */}
+            <ColumnGhostPreview spaceInfo={spaceInfo} />
+            
+            
+            {/* 기둥 생성 마커는 드래그 앤 드롭 방식으로 대체됨 */}
             
             {/* Configurator에서 표시되는 요소들 */}
             {/* 3D 모드에서만 컬럼 가이드 표시 */}

@@ -24,6 +24,7 @@ import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModuleProp
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
+import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
 import { 
   WidthControl,
   HeightControl,
@@ -49,7 +50,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, setHighlightedFrame } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -66,6 +67,17 @@ const Configurator: React.FC = () => {
   const [previousSpaceInfo, setPreviousSpaceInfo] = useState(spaceInfo);
 
   // 현재 컬럼 수를 안전하게 가져오는 함수
+  // FrameSize 업데이트 도우미 함수
+  const updateFrameSize = (property: 'left' | 'right' | 'top', value: number) => {
+    const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    handleSpaceInfoUpdate({
+      frameSize: {
+        ...currentFrameSize,
+        [property]: value
+      }
+    });
+  };
+
   // 공간 넓이 기반 최소/최대 도어 개수 계산
   const calculateDoorRange = (spaceWidth: number) => {
     const FRAME_MARGIN = 100; // 양쪽 50mm씩
@@ -453,7 +465,10 @@ const Configurator: React.FC = () => {
       case 'structure':
         return (
           <div className={styles.sidebarPanel}>
-            <div className={styles.placeholder}>구조물 설정</div>
+            <ColumnControl 
+              columns={spaceInfo.columns || []}
+              onColumnsChange={(columns) => setSpaceInfo({ columns })}
+            />
           </div>
         );
       case 'etc':
@@ -584,8 +599,12 @@ const Configurator: React.FC = () => {
                       <div className={styles.sliderLabels}>
                         {(() => {
                           const labels = [];
-                          for (let i = range.min; i <= range.max; i++) {
+                          const step = Math.max(1, Math.floor((range.max - range.min) / 6)); // 최대 7개 라벨
+                          for (let i = range.min; i <= range.max; i += step) {
                             labels.push(i);
+                          }
+                          if (!labels.includes(range.max)) {
+                            labels.push(range.max);
                           }
                           return labels.map(num => (
                             <span 
@@ -597,18 +616,19 @@ const Configurator: React.FC = () => {
                           ));
                         })()}
                       </div>
-                      <div className={styles.sliderInfo}>
+                      
+                      {/* 간단한 슬롯 정보 */}
+                      <div className={styles.slotInfoSimple}>
                         {(() => {
                           const currentWidth = spaceInfo.width || 4800;
                           const range = calculateDoorRange(currentWidth);
                           const usableWidth = currentWidth - 100;
                           const currentSlotWidth = Math.round(usableWidth / getCurrentColumnCount());
                           return (
-                            <div>
-                              <p>슬롯 크기 제약: 400mm ~ 600mm</p>
-                              <p>현재 슬롯당 할당: {currentSlotWidth}mm</p>
-                              <p>공간 기준 범위: {range.min}개 ~ {range.max}개</p>
-                            </div>
+                            <span className={styles.slotInfoText}>
+                              현 사이즈 기준 슬롯 생성 범위: 최소 {range.min}개 ~ 최대 {range.max}개<br/>
+                              도어 1개 너비: {currentSlotWidth}mm
+                            </span>
                           );
                         })()}
                       </div>
@@ -616,38 +636,335 @@ const Configurator: React.FC = () => {
                   );
                 })()}
               </div>
-
-              {/* 슬롯 생성 범위 안내 */}
-              <div className={styles.slotInfoBox}>
-                {(() => {
-                  const currentWidth = spaceInfo.width || 4800;
-                  const range = calculateDoorRange(currentWidth);
-                  const usableWidth = currentWidth - 100; // 프레임 마진
-                  const currentSlotWidth = Math.round(usableWidth / getCurrentColumnCount());
-                  
-                  return (
-                    <p className={styles.slotInfoText}>
-                      현 사이즈 기준 슬롯 생성 범위: 최소 {range.min}개 ~ 최대 {range.max}개<br/>
-                      도어 1개 너비: {currentSlotWidth}mm
-                      {currentSlotWidth < 400 && <span style={{color: '#ef4444'}}> (⚠️ 최소 400mm 미만)</span>}
-                      {currentSlotWidth > 600 && <span style={{color: '#ef4444'}}> (⚠️ 최대 600mm 초과)</span>}
-                    </p>
-                  );
-                })()}
-              </div>
             </div>
 
-            {/* 단내림 */}
+            {/* 프레임 설정 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>단내림</h3>
+                <h3 className={styles.sectionTitle}>프레임 설정</h3>
               </div>
-              <SurroundControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
-              />
+              
+              {/* 프레임 타입 */}
+              <div className={styles.toggleButtonGroup}>
+                <button
+                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'no-surround') === 'surround' ? styles.active : ''}`}
+                  onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
+                >
+                  서라운드
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'no-surround') === 'no-surround' ? styles.active : ''}`}
+                  onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
+                >
+                  노서라운드
+                </button>
+              </div>
+
+              {/* 서라운드 선택 시 - 프레임 속성 설정 */}
+              {(spaceInfo.surroundType || 'no-surround') === 'surround' && (
+                <div className={styles.subSetting}>
+                  <label className={styles.subLabel}>프레임 폭 설정</label>
+                  
+                  <div className={styles.frameGrid}>
+                    {/* 좌측 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>좌측</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentLeft = spaceInfo.frameSize?.left || 50;
+                            const newLeft = Math.max(10, currentLeft - 1);
+                            updateFrameSize('left', newLeft);
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="10"
+                          max="100"
+                          value={spaceInfo.frameSize?.left || 50}
+                          onChange={(e) => {
+                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                            updateFrameSize('left', value);
+                          }}
+                          onFocus={() => setHighlightedFrame('left')}
+                          onBlur={() => setHighlightedFrame(null)}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentLeft = spaceInfo.frameSize?.left || 50;
+                            const newLeft = Math.min(100, currentLeft + 1);
+                            updateFrameSize('left', newLeft);
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 우측 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>우측</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentRight = spaceInfo.frameSize?.right || 50;
+                            const newRight = Math.max(10, currentRight - 1);
+                            updateFrameSize('right', newRight);
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="10"
+                          max="100"
+                          value={spaceInfo.frameSize?.right || 50}
+                          onChange={(e) => {
+                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                            updateFrameSize('right', value);
+                          }}
+                          onFocus={() => setHighlightedFrame('right')}
+                          onBlur={() => setHighlightedFrame(null)}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentRight = spaceInfo.frameSize?.right || 50;
+                            const newRight = Math.min(100, currentRight + 1);
+                            updateFrameSize('right', newRight);
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 상부 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>상부</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 50;
+                            const newTop = Math.max(10, currentTop - 1);
+                            updateFrameSize('top', newTop);
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="10"
+                          max="100"
+                          value={spaceInfo.frameSize?.top || 50}
+                          onChange={(e) => {
+                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                            updateFrameSize('top', value);
+                          }}
+                          onFocus={() => setHighlightedFrame('top')}
+                          onBlur={() => setHighlightedFrame(null)}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 50;
+                            const newTop = Math.min(100, currentTop + 1);
+                            updateFrameSize('top', newTop);
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.frameUnit}>단위: mm</div>
+                </div>
+              )}
+
+              {/* 이격거리 설정 - 노서라운드 선택 시에만 표시 */}
+              {(spaceInfo.surroundType || 'no-surround') === 'no-surround' && (
+                <div className={styles.subSetting}>
+                  <label className={styles.subLabel}>이격거리</label>
+                  
+                  <div className={styles.frameGrid}>
+                    {/* 좌측 이격거리 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>좌측</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentLeft = spaceInfo.gapConfig?.left || 2;
+                            const newLeft = Math.max(1, currentLeft - 1);
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: newLeft, 
+                                right: spaceInfo.gapConfig?.right || 2
+                              }
+                            });
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={spaceInfo.gapConfig?.left || 2}
+                          onChange={(e) => {
+                            const value = Math.min(10, Math.max(1, parseInt(e.target.value) || 2));
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: value, 
+                                right: spaceInfo.gapConfig?.right || 2
+                              }
+                            });
+                          }}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentLeft = spaceInfo.gapConfig?.left || 2;
+                            const newLeft = Math.min(10, currentLeft + 1);
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: newLeft, 
+                                right: spaceInfo.gapConfig?.right || 2
+                              }
+                            });
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 우측 이격거리 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>우측</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentRight = spaceInfo.gapConfig?.right || 2;
+                            const newRight = Math.max(1, currentRight - 1);
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: spaceInfo.gapConfig?.left || 2,
+                                right: newRight
+                              }
+                            });
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={spaceInfo.gapConfig?.right || 2}
+                          onChange={(e) => {
+                            const value = Math.min(10, Math.max(1, parseInt(e.target.value) || 2));
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: spaceInfo.gapConfig?.left || 2,
+                                right: value
+                              }
+                            });
+                          }}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentRight = spaceInfo.gapConfig?.right || 2;
+                            const newRight = Math.min(10, currentRight + 1);
+                            handleSpaceInfoUpdate({ 
+                              gapConfig: { 
+                                left: spaceInfo.gapConfig?.left || 2,
+                                right: newRight
+                              }
+                            });
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 상부 프레임 높이 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>상부</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 10;
+                            const newTop = Math.max(1, currentTop - 1);
+                            handleSpaceInfoUpdate({ 
+                              frameSize: { 
+                                left: spaceInfo.frameSize?.left || 50,
+                                right: spaceInfo.frameSize?.right || 50,
+                                top: newTop
+                              }
+                            });
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={spaceInfo.frameSize?.top || 10}
+                          onChange={(e) => {
+                            const value = Math.min(50, Math.max(1, parseInt(e.target.value) || 10));
+                            handleSpaceInfoUpdate({ 
+                              frameSize: { 
+                                left: spaceInfo.frameSize?.left || 50,
+                                right: spaceInfo.frameSize?.right || 50,
+                                top: value
+                              }
+                            });
+                          }}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 10;
+                            const newTop = Math.min(50, currentTop + 1);
+                            handleSpaceInfoUpdate({ 
+                              frameSize: { 
+                                left: spaceInfo.frameSize?.left || 50,
+                                right: spaceInfo.frameSize?.right || 50,
+                                top: newTop
+                              }
+                            });
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                  
+                  <div className={styles.frameUnit}>단위: mm</div>
+                </div>
+              )}
             </div>
 
             {/* 받침대 */}

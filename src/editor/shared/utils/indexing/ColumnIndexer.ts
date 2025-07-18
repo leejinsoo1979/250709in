@@ -64,8 +64,8 @@ export class ColumnIndexer {
     // 전체 공간이 중앙 정렬되므로 (-전체폭/2 + 좌측여백)가 내경 시작점
     let internalStartX;
     if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-      // 노서라운드: 이격거리 + 좌측 패딩 고려
-      internalStartX = -(totalWidth / 2) + spaceInfo.gapConfig.size + leftPadding;
+      // 노서라운드: 좌측 이격거리 + 좌측 패딩 고려
+      internalStartX = -(totalWidth / 2) + spaceInfo.gapConfig.left + leftPadding;
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
@@ -94,7 +94,7 @@ export class ColumnIndexer {
     
     // 노서라운드 모드에서 디버깅 로그
     if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-      console.log(`🎯 [가구위치] 이격거리${spaceInfo.gapConfig.size}mm: 내경시작X=${internalStartX}, 첫번째컬럼=${threeUnitPositions[0]?.toFixed(3)}`);
+      console.log(`🎯 [가구위치] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경시작X=${internalStartX}, 첫번째컬럼=${threeUnitPositions[0]?.toFixed(3)}`);
     }
     
     // 듀얼가구용 두 컬럼 경계 중심 위치 계산 추가

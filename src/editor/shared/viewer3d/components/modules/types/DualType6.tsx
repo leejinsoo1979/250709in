@@ -20,7 +20,7 @@ const BoxWithEdges: React.FC<{
       {renderMode === 'solid' && (
         <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
           <boxGeometry args={args} />
-          <primitive object={material} />
+          <primitive object={material} attach="material" />
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
@@ -51,7 +51,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   customDepth,
   hingePosition = 'right',
   spaceInfo,
-  isDragging = false
+  isDragging = false,
+  doorWidth,
+  originalSlotWidth,
+  slotCenterX
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -331,11 +334,14 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       {/* 도어 렌더링 */}
       {hasDoor && spaceInfo && (
         <DoorModule
-          moduleWidth={moduleData.dimensions.width}
+          moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
+          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
         />
       )}
     </group>

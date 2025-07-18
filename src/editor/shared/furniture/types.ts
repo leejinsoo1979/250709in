@@ -1,5 +1,19 @@
 import { ModuleData } from '@/data/modules';
 
+// 기둥 관련 슬롯 메타데이터
+export interface ColumnSlotMetadata {
+  hasColumn: boolean;
+  columnId?: string;
+  columnPosition?: 'edge' | 'middle';
+  availableWidth?: number;
+  needsMullion?: boolean;
+  mullionSide?: 'left' | 'right';
+  wasConvertedFromDual?: boolean; // 듀얼→싱글 변환 여부
+  originalDualSlots?: number[]; // 원래 점유 슬롯 (듀얼 변환 시)
+  actualSlots?: number[]; // 실제 점유 슬롯
+  doorWidth?: number; // 기둥 커버용 도어 너비 (mm)
+}
+
 // 배치된 모듈 타입
 export interface PlacedModule {
   id: string;
@@ -20,6 +34,9 @@ export interface PlacedModule {
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
   isValidInCurrentSpace?: boolean; // 현재 공간 설정에서 유효한지 여부
+  
+  // 기둥 포함 슬롯 관련 정보
+  columnSlotInfo?: ColumnSlotMetadata; // 기둥이 포함된 슬롯 정보
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입

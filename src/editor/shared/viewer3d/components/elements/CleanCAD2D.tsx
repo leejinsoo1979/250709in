@@ -1,12 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
+import * as THREE from 'three';
 import { Line, Text, Html } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
-import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -20,11 +19,308 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
   const { view2DDirection, showDimensions } = useUIStore();
+  const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
-  
+
+  // 편집 상태 관리
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [editingSide, setEditingSide] = useState<'left' | 'right' | 'width' | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 편집 모드가 활성화되면 입력 필드에 포커스
+  useEffect(() => {
+    if (editingColumnId && editingSide && inputRef.current) {
+      // 더 긴 지연시간과 더 안정적인 포커스 처리
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+          // 추가로 클릭 이벤트도 발생시켜 확실히 포커스
+          inputRef.current.click();
+        }
+      }, 200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [editingColumnId, editingSide]);
+
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
-  
+
+  // 기둥 간격 편집 핸들러
+  const handleColumnDistanceEdit = (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => {
+    console.log('🖱️ 기둥 간격 편집 시작:', { columnId, side, currentValue });
+    
+    // 기존 편집 모드 먼저 해제
+    if (editingColumnId) {
+      setEditingColumnId(null);
+      setEditingSide(null);
+      setEditingValue('');
+    }
+    
+    // 잠시 후 새로운 편집 모드 활성화
+    setTimeout(() => {
+      setEditingColumnId(columnId);
+      setEditingSide(side);
+      setEditingValue(currentValue.toString());
+    }, 50);
+  };
+
+  const handleEditComplete = () => {
+    if (!editingColumnId || !editingSide) return;
+    
+    const value = parseInt(editingValue) || 0;
+    const column = spaceInfo.columns?.find(col => col.id === editingColumnId);
+    
+    if (!column) return;
+
+    console.log('✅ 편집 완료:', { columnId: editingColumnId, side: editingSide, value });
+
+    const spaceWidthM = spaceInfo.width * 0.01;
+    const columnWidthM = column.width * 0.01;
+
+    if (editingSide === 'left') {
+      // 왼쪽 벽과 기둥 좌측면 사이의 간격
+      const newX = -(spaceWidthM / 2) + (value * 0.01) + (columnWidthM / 2);
+      updateColumn(editingColumnId, { position: [newX, column.position[1], column.position[2]] });
+    } else if (editingSide === 'right') {
+      // 오른쪽 벽과 기둥 우측면 사이의 간격
+      const newX = (spaceWidthM / 2) - (value * 0.01) - (columnWidthM / 2);
+      updateColumn(editingColumnId, { position: [newX, column.position[1], column.position[2]] });
+    } else if (editingSide === 'width') {
+      // 기둥 너비 변경
+      updateColumn(editingColumnId, { width: value });
+    }
+
+    setEditingColumnId(null);
+    setEditingSide(null);
+    setEditingValue('');
+  };
+
+  const handleEditCancel = () => {
+    console.log('❌ 편집 취소');
+    setEditingColumnId(null);
+    setEditingSide(null);
+    setEditingValue('');
+  };
+
+  // 편집 가능한 라벨 컴포넌트
+  const EditableLabel = ({ 
+    columnId, 
+    side, 
+    currentValue, 
+    position, 
+    color = '#4CAF50',
+    label 
+  }: {
+    columnId: string;
+    side: 'left' | 'right' | 'width';
+    currentValue: number;
+    position: [number, number, number];
+    color?: string;
+    label: string;
+  }) => {
+    const isEditing = editingColumnId === columnId && editingSide === side;
+    
+    if (isEditing) {
+      return (
+        <Html
+          position={position}
+          center
+          style={{ pointerEvents: 'auto' }}
+          occlude={false}
+          zIndexRange={[10000, 10001]}
+          transform={false}
+        >
+          <div 
+            style={{
+              position: 'relative',
+              zIndex: 10000,
+              background: `rgba(${color === '#4CAF50' ? '76, 175, 80' : '33, 150, 243'}, 0.95)`,
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: `2px solid ${color}`,
+              minWidth: '120px',
+              textAlign: 'center',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={editingValue}
+              onChange={(e) => {
+                console.log('📝 입력 변경:', e.target.value);
+                setEditingValue(e.target.value);
+              }}
+              onBlur={() => {
+                console.log('👋 포커스 잃음');
+                handleEditComplete();
+              }}
+              onKeyDown={(e) => {
+                console.log('⌨️ 키 입력:', e.key);
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEditComplete();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEditCancel();
+                }
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
+              style={{
+                border: 'none',
+                outline: 'none',
+                width: '80px',
+                fontSize: '16px',
+                textAlign: 'center',
+                background: 'white',
+                color: '#333',
+                borderRadius: '4px',
+                padding: '6px',
+                fontWeight: 'bold'
+              }}
+              autoFocus
+              placeholder="폭"
+            />
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>
+              {label}
+            </div>
+          </div>
+        </Html>
+      );
+    }
+
+    return (
+              <Html
+          position={position}
+          center
+          style={{ 
+            pointerEvents: 'auto',
+            position: 'relative',
+            zIndex: 99999
+          }}
+          occlude={false}
+          zIndexRange={[9999, 10000]}
+          prepend={false}
+          portal={undefined}
+          transform={false}
+          sprite={false}
+        >
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            color: color === '#4CAF50' ? '#2E7D32' : '#2196F3',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            border: `2px solid ${color}`,
+            cursor: 'pointer',
+            userSelect: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            position: 'relative',
+            zIndex: 100000,
+            pointerEvents: 'auto',
+            isolation: 'isolate'
+          }}
+          ref={(element) => {
+            if (element) {
+              // 전역 이벤트 리스너 추가
+                             const handleGlobalClick = (e: globalThis.MouseEvent) => {
+                 if (element.contains(e.target as Node)) {
+                   console.log('🎯 전역 클릭 감지됨:', { columnId, side, currentValue });
+                   e.preventDefault();
+                   e.stopPropagation();
+                   e.stopImmediatePropagation();
+                   handleColumnDistanceEdit(columnId, side, currentValue);
+                   return false;
+                 }
+               };
+               
+               const handleGlobalMouseDown = (e: globalThis.MouseEvent) => {
+                 if (element.contains(e.target as Node)) {
+                   console.log('🎯 전역 마우스다운 감지됨:', { columnId, side });
+                   e.preventDefault();
+                   e.stopPropagation();
+                   e.stopImmediatePropagation();
+                   return false;
+                 }
+               };
+              
+                             // 캡처 단계에서 이벤트 처리 - 우선순위 높게
+               document.addEventListener('mousedown', handleGlobalMouseDown, true);
+               document.addEventListener('click', handleGlobalClick, true);
+               
+               return () => {
+                 document.removeEventListener('mousedown', handleGlobalMouseDown, true);
+                 document.removeEventListener('click', handleGlobalClick, true);
+               };
+            }
+          }}
+                                  onClick={(e) => {
+              console.log('🖱️ 라벨 클릭됨:', { columnId, side, currentValue });
+              e.preventDefault();
+              e.stopPropagation();
+              e.nativeEvent?.preventDefault();
+              e.nativeEvent?.stopPropagation();
+              e.nativeEvent?.stopImmediatePropagation();
+              handleColumnDistanceEdit(columnId, side, currentValue);
+            }}
+            onMouseDown={(e) => {
+              console.log('🖱️ 마우스 다운:', { columnId, side, currentValue });
+              e.preventDefault();
+              e.stopPropagation();
+              e.nativeEvent?.preventDefault();
+              e.nativeEvent?.stopPropagation();
+              e.nativeEvent?.stopImmediatePropagation();
+            }}
+            onMouseUp={(e) => {
+              console.log('🖱️ 마우스 업:', { columnId, side, currentValue });
+              e.preventDefault();
+              e.stopPropagation();
+              e.nativeEvent?.preventDefault();
+              e.nativeEvent?.stopPropagation();
+              e.nativeEvent?.stopImmediatePropagation();
+            }}
+          onTouchStart={(e) => {
+            console.log('👆 터치 시작:', { columnId, side, currentValue });
+            e.preventDefault();
+            e.stopPropagation();
+            handleColumnDistanceEdit(columnId, side, currentValue);
+          }}
+          onPointerDown={(e) => {
+            console.log('👆 포인터 다운:', { columnId, side, currentValue });
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onPointerUp={(e) => {
+            console.log('👆 포인터 업:', { columnId, side, currentValue });
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+                 >
+          {currentValue}
+        </div>
+      </Html>
+    );
+  };
+
   // 모든 자식 요소의 renderOrder를 설정
   useEffect(() => {
     if (groupRef.current) {
@@ -45,10 +341,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
     }
   }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, position: m.position })))]); // placedModules 변경사항을 세밀하게 감지
   
-  // 치수 표시가 비활성화된 경우 아무것도 렌더링하지 않음 (hooks 호출 후에 체크)
-  if (!showDimensions) {
-    return null;
-  }
+  // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
+  // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
   
   
   // mm를 Three.js 단위로 변환
@@ -167,98 +461,202 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
         />
       </group>
       
-      {/* 좌측 프레임 치수선 */}
+      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리 치수선 */}
       <group>
-        {/* 치수선 */}
-        <Line
-          points={[[leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(60), 0.002]]}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 좌측 화살표 */}
-        <Line
-          points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 우측 화살표 */}
-        <Line
-          points={createArrowHead([leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(frameSize.left) - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 좌측 프레임 치수 텍스트 */}
-        <Text
-          position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
-          fontSize={baseFontSize}
-          color="black"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {frameSize.left}
-        </Text>
-        
-        {/* 연장선 */}
-        <Line
-          points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
-          color="#666666"
-          lineWidth={1}
-        />
-        <Line
-          points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(40), 0.001]]}
-          color="#666666"
-          lineWidth={1}
-        />
+        {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig ? (
+          /* 노서라운드 모드: 좌측 이격거리 치수선 */
+          <>
+            {/* 치수선 */}
+            <Line
+              points={[[leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(60), 0.002]]}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 좌측 화살표 */}
+            <Line
+              points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 우측 화살표 */}
+            <Line
+              points={createArrowHead([leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left) - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 좌측 이격거리 치수 텍스트 */}
+            <Text
+              position={[leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color="#ff6b35"
+              anchorX="center"
+              anchorY="middle"
+            >
+              이격 {spaceInfo.gapConfig.left}
+            </Text>
+            
+            {/* 연장선 */}
+            <Line
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#ff6b35"
+              lineWidth={1}
+            />
+            <Line
+              points={[[leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#ff6b35"
+              lineWidth={1}
+            />
+          </>
+        ) : (
+          /* 서라운드 모드: 기존 좌측 프레임 치수선 */
+          <>
+            {/* 치수선 */}
+            <Line
+              points={[[leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(60), 0.002]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 좌측 화살표 */}
+            <Line
+              points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 우측 화살표 */}
+            <Line
+              points={createArrowHead([leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(frameSize.left) - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 좌측 프레임 치수 텍스트 */}
+            <Text
+              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color="black"
+              anchorX="center"
+              anchorY="middle"
+            >
+              {frameSize.left}
+            </Text>
+            
+            {/* 연장선 */}
+            <Line
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            <Line
+              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#666666"
+              lineWidth={1}
+            />
+          </>
+        )}
       </group>
       
-      {/* 우측 프레임 치수선 */}
+      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리 치수선 */}
       <group>
-        {/* 치수선 */}
-        <Line
-          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002]]}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 좌측 화살표 */}
-        <Line
-          points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 우측 화살표 */}
-        <Line
-          points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-          color="#666666"
-          lineWidth={1}
-        />
-        
-        {/* 우측 프레임 치수 텍스트 */}
-        <Text
-          position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
-          fontSize={baseFontSize}
-          color="black"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {frameSize.right}
-        </Text>
-        
-        {/* 연장선 */}
-        <Line
-          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(40), 0.001]]}
-          color="#666666"
-          lineWidth={1}
-        />
-        <Line
-          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
-          color="#666666"
-          lineWidth={1}
-        />
+        {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig ? (
+          /* 노서라운드 모드: 우측 이격거리 치수선 */
+          <>
+            {/* 치수선 */}
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002]]}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 좌측 화살표 */}
+            <Line
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right) + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 우측 화살표 */}
+            <Line
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#ff6b35"
+              lineWidth={2}
+            />
+            
+            {/* 우측 이격거리 치수 텍스트 */}
+            <Text
+              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color="#ff6b35"
+              anchorX="center"
+              anchorY="middle"
+            >
+              이격 {spaceInfo.gapConfig.right}
+            </Text>
+            
+            {/* 연장선 */}
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#ff6b35"
+              lineWidth={1}
+            />
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#ff6b35"
+              lineWidth={1}
+            />
+          </>
+        ) : (
+          /* 서라운드 모드: 기존 우측 프레임 치수선 */
+          <>
+            {/* 치수선 */}
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 좌측 화살표 */}
+            <Line
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 우측 화살표 */}
+            <Line
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+              color="#666666"
+              lineWidth={1}
+            />
+            
+            {/* 우측 프레임 치수 텍스트 */}
+            <Text
+              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color="black"
+              anchorX="center"
+              anchorY="middle"
+            >
+              {frameSize.right}
+            </Text>
+            
+            {/* 연장선 */}
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#666666"
+              lineWidth={1}
+            />
+            <Line
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+              color="#666666"
+              lineWidth={1}
+            />
+          </>
+        )}
       </group>
       
       {/* 각 컬럼 너비 치수선 - 히든 처리 */}
@@ -512,27 +910,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 </Text>
               </group>
               
-              {/* 3. 상부 프레임 높이 */}
+              {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
               <group>
                 <Line
                   points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topY, 0.002]]}
-                  color="#666666"
-                  lineWidth={1}
+                  color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, cabinetAreaTopY + 0.03, 0.002])}
-                  color="#666666"
-                  lineWidth={1}
+                  color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, topY, 0.002], [rightDimensionX, topY - 0.03, 0.002])}
-                  color="#666666"
-                  lineWidth={1}
+                  color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                 />
                 <Text
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
-                  color="black"
+                  color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "black"}
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
@@ -909,22 +1307,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                   </Text>
                 </group>
                 
-                {/* 3. 상부 프레임 높이 */}
+                {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topY, rightDimensionZ]]}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Line
                     points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Line
                     points={createArrowHead([0, topY, rightDimensionZ], [0, topY - 0.03, rightDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Text
                     position={[0, cabinetAreaTopY + mmToThreeUnits(topFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
@@ -1277,22 +1675,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                   </Text>
                 </group>
                 
-                {/* 3. 상부 프레임 높이 */}
+                {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topY, leftDimensionZ]]}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.03, leftDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, topY, leftDimensionZ], [spaceWidth, topY - 0.03, leftDimensionZ])}
-                    color="#666666"
-                    lineWidth={1}
+                    color={spaceInfo.surroundType === 'no-surround' ? "#ff6b35" : "#666666"}
+                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Text
                     position={[spaceWidth, mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
@@ -1308,20 +1706,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 
                 {/* 연장선들 */}
                 <Line
-                  points={[[spaceWidth, bottomY, spaceZOffset + spaceDepth], [spaceWidth, bottomY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  points={[[spaceWidth, bottomY, spaceZOffset], [spaceWidth, bottomY, leftDimensionZ + mmToThreeUnits(20)]]}
                   color="#666666"
                   lineWidth={1}
                 />
                 {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
                 <Line
-                  points={[[spaceWidth, bottomFrameTopY, spaceZOffset + spaceDepth], [spaceWidth, bottomFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  points={[[spaceWidth, bottomFrameTopY, spaceZOffset], [spaceWidth, bottomFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
                   color="#666666"
                   lineWidth={1}
                 />
                 )}
                 <Line
-                  points={[[spaceWidth, cabinetAreaTopY, spaceZOffset + spaceDepth], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  points={[[spaceWidth, cabinetAreaTopY, spaceZOffset], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}
                   color="#666666"
                   lineWidth={1}
                 />
@@ -1405,11 +1803,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
     const spaceDepth = mmToThreeUnits(spaceInfo.depth);
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     const topDimensionZ = -mmToThreeUnits(hasPlacedModules ? 200 : 150);
-    
     // 상단뷰에서는 X축이 가로(폭), Z축이 세로(깊이)  
     // 공간은 중앙에서 -width/2 ~ +width/2, -depth/2 ~ +depth/2로 배치됨
     const spaceXOffset = -spaceWidth / 2;
     const spaceZOffset = -spaceDepth / 2;
+    const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+    const baseFrameThickness = mmToThreeUnits(18); // 하부 프레임 두께
+    const baseFrameY = 0; // 바닥 기준
+    const baseFrameZ = spaceZOffset + spaceDepth/2 - mmToThreeUnits(20); // 3D와 동일하게 앞쪽에서 20mm 뒤로
+    const baseFrameWidth = spaceWidth - (spaceInfo.surroundType === 'no-surround' ? 0 : (mmToThreeUnits(frameSize.left) + mmToThreeUnits(frameSize.right)));
+    const baseFrameX = spaceXOffset + spaceWidth/2;
     
     return (
       <group>
@@ -1497,10 +1900,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
+            // 노서라운드일 때는 이격거리 표시, 서라운드일 때는 프레임 폭 표시
+            const isNoSurround = spaceInfo.surroundType === 'no-surround';
+            const leftValue = isNoSurround ? (spaceInfo.gapConfig?.left || 2) : frameSize.left;
+            
             return (
               <>
                 <Line
-                  points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(frameSize.left), spaceHeight, frameDimZ]]}
+                  points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ]]}
                   color="#666666"
                   lineWidth={1}
                 />
@@ -1512,21 +1919,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                   lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([spaceXOffset + mmToThreeUnits(frameSize.left), spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(frameSize.left) - 0.02, spaceHeight, frameDimZ])}
+                  points={createArrowHead([spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue) - 0.02, spaceHeight, frameDimZ])}
                   color="#666666"
                   lineWidth={1}
                 />
                 
                 {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  position={[spaceXOffset + mmToThreeUnits(frameSize.left / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                  position={[spaceXOffset + mmToThreeUnits(leftValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                   fontSize={baseFontSize}
                   color="black"
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
-                  {frameSize.left}
+                  {leftValue}
                 </Text>
               </>
             );
@@ -1538,17 +1945,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
+            // 노서라운드일 때는 이격거리 표시, 서라운드일 때는 프레임 폭 표시
+            const isNoSurround = spaceInfo.surroundType === 'no-surround';
+            const rightValue = isNoSurround ? (spaceInfo.gapConfig?.right || 2) : frameSize.right;
+            
             return (
               <>
                 <Line
-                  points={[[spaceXOffset + spaceWidth - mmToThreeUnits(frameSize.right), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth, spaceHeight, frameDimZ]]}
+                  points={[[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth, spaceHeight, frameDimZ]]}
                   color="#666666"
                   lineWidth={1}
                 />
                 
                 {/* 우측 프레임 화살표들 */}
                 <Line
-                  points={createArrowHead([spaceXOffset + spaceWidth - mmToThreeUnits(frameSize.right), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - mmToThreeUnits(frameSize.right) + 0.02, spaceHeight, frameDimZ])}
+                  points={createArrowHead([spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - mmToThreeUnits(rightValue) + 0.02, spaceHeight, frameDimZ])}
                   color="#666666"
                   lineWidth={1}
                 />
@@ -1560,19 +1971,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
                 
                 {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  position={[spaceXOffset + spaceWidth - mmToThreeUnits(frameSize.right / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                  position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                   fontSize={baseFontSize}
                   color="black"
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
-                  {frameSize.right}
+                  {rightValue}
                 </Text>
               </>
             );
           })()}
         </group>
+        
+
         
         {/* 뒷벽과 좌우 벽 실선 표시 */}
         <group>
@@ -2632,15 +3045,140 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             </group>
           );
         })}
-          </>
-        )}
-      </group>
-    );
+                  </>
+      )}
+
+      
+    </group>
+  );
   };
+
+  // 기둥만 렌더링하는 함수
+  const renderColumns = () => {
+    console.log('🏗️ renderColumns 호출됨:', {
+      hasColumns: !!spaceInfo.columns,
+      columnCount: spaceInfo.columns?.length,
+      currentViewDirection,
+      columns: spaceInfo.columns
+    });
+    
+    if (!spaceInfo.columns || spaceInfo.columns.length === 0) {
+      console.log('❌ 기둥이 없어서 렌더링 안함');
+      return null;
+    }
+    
+          return spaceInfo.columns.map((column) => {
+        const columnWidthM = column.width * 0.01;
+        const spaceWidthM = spaceInfo.width * 0.01;
+        
+        // 벽면과의 거리 계산 (mm)
+        const distanceToLeft = Math.round((spaceWidthM / 2 + column.position[0] - columnWidthM / 2) * 100);
+        const distanceToRight = Math.round((spaceWidthM / 2 - column.position[0] - columnWidthM / 2) * 100);
+        
+        console.log(`🏗️ 기둥 ${column.id} 렌더링:`, {
+          position: column.position,
+          distanceToLeft,
+          distanceToRight,
+          width: column.width
+        });
+      
+      return (
+        <group key={`column-2d-${column.id}`}>
+
+          {/* 왼쪽 간격 라벨 */}
+          <EditableLabel
+            columnId={column.id}
+            side="left"
+            currentValue={Math.max(0, distanceToLeft)}
+            position={[
+              (-spaceWidthM / 2 + column.position[0] - columnWidthM / 2) / 2, 
+              spaceHeight / 2, 
+              0.002
+            ]}
+            color="#4CAF50"
+            label="왼쪽 간격"
+          />
+          {(() => {
+            console.log(`🏷️ 왼쪽 라벨 렌더링 - 기둥 ${column.id}:`, {
+              position: [(-spaceWidthM / 2 + column.position[0] - columnWidthM / 2) / 2, spaceHeight / 2, 0.002],
+              value: Math.max(0, distanceToLeft)
+            });
+            return null;
+          })()}
+
+          {/* 오른쪽 간격 라벨 */}
+          <EditableLabel
+            columnId={column.id}
+            side="right"
+            currentValue={Math.max(0, distanceToRight)}
+            position={[
+              (spaceWidthM / 2 + column.position[0] + columnWidthM / 2) / 2, 
+              spaceHeight / 2, 
+              0.002
+            ]}
+            color="#4CAF50"
+            label="오른쪽 간격"
+          />
+
+          {/* 기둥 너비 라벨 */}
+          <EditableLabel
+            columnId={column.id}
+            side="width"
+            currentValue={column.width}
+            position={[
+              column.position[0], 
+              spaceHeight + mmToThreeUnits(50), 
+              0.002
+            ]}
+            color="#2196F3"
+            label="폭"
+          />
+
+          {/* 왼쪽 간격 가이드라인 */}
+          <Line
+            points={[
+              [-spaceWidthM / 2, spaceHeight / 2, 0.001],
+              [column.position[0] - columnWidthM / 2, spaceHeight / 2, 0.001]
+            ]}
+            color="#4CAF50"
+            lineWidth={2}
+            dashed
+            dashSize={0.05}
+            gapSize={0.025}
+          />
+
+          {/* 오른쪽 간격 가이드라인 */}
+          <Line
+            points={[
+              [column.position[0] + columnWidthM / 2, spaceHeight / 2, 0.001],
+              [spaceWidthM / 2, spaceHeight / 2, 0.001]
+            ]}
+            color="#4CAF50"
+            lineWidth={2}
+            dashed
+            dashSize={0.05}
+            gapSize={0.025}
+          />
+        </group>
+      );
+    });
+  };
+
+  console.log('🎨 CleanCAD2D 최종 렌더링:', {
+    currentViewDirection,
+    showDimensions,
+    hasColumns: !!spaceInfo.columns,
+    columnCount: spaceInfo.columns?.length,
+    shouldRenderColumns: currentViewDirection === 'front'
+  });
 
   return (
     <group ref={groupRef} renderOrder={999999}>
-      {renderDimensions()}
+      {/* 치수선은 showDimensions가 true일 때만 렌더링 */}
+      {showDimensions && renderDimensions()}
+      
+      {/* 기둥은 showDimensions가 true일 때만 렌더링 (2D 정면 뷰에서만) */}
+      {showDimensions && currentViewDirection === 'front' && renderColumns()}
     </group>
   );
 };

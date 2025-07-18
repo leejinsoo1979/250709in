@@ -26,7 +26,7 @@ export class SpaceCalculator {
     // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
       // 노서라운드: 내경 = 전체 폭 - (좌우 이격거리)
-      return totalWidth - (spaceInfo.gapConfig.size * 2);
+      return totalWidth - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임
       return totalWidth - frameThickness.left - frameThickness.right;

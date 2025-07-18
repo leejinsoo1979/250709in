@@ -36,7 +36,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     };
   });
 
-  const [gapSize, setGapSize] = useState<2 | 3>(spaceInfo.gapConfig?.size || 2);
+  const [gapSize, setGapSize] = useState<2 | 3>((spaceInfo.gapConfig?.left as 2 | 3) || 2);
 
   // 계산 로직을 커스텀 훅으로 분리
   const { noSurroundFrameWidth, surroundFrameWidth, columnInfo } = useSurroundCalculations(
@@ -105,11 +105,12 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.frameSize = {
         left: 0, // 좌측 프레임 제거
         right: 0, // 우측 프레임 제거
-        top: 10, // 상단 프레임은 유지 (기본값: 10mm)
+        top: 10, // 상단 프레임은 기본값 10mm 유지
       };
       
       updates.gapConfig = {
-        size: gapSizeValue,
+        left: gapSizeValue,
+        right: gapSizeValue,
       };
     }
 
@@ -210,7 +211,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     setGapSize(size);
     onUpdate({
       gapConfig: {
-        size,
+        left: size,
+        right: size,
       },
     });
   };

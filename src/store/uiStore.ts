@@ -27,6 +27,12 @@ interface UIState {
   // 강조된 프레임
   highlightedFrame: HighlightedFrame;
   
+  // 기둥 생성 모드
+  isColumnCreationMode: boolean;
+  
+  // 선택된 기둥 ID
+  selectedColumnId: string | null;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setView2DDirection: (direction: View2DDirection) => void;
@@ -34,6 +40,8 @@ interface UIState {
   toggleDimensions: () => void;
   setSelectedModuleForProperties: (moduleId: string | null) => void;
   setHighlightedFrame: (frame: HighlightedFrame) => void;
+  setColumnCreationMode: (isEnabled: boolean) => void;
+  setSelectedColumnId: (columnId: string | null) => void;
   resetUI: () => void;
 }
 
@@ -45,6 +53,8 @@ const initialUIState = {
   showDimensions: true,  // 기본값: 치수 표시
   selectedModuleForProperties: null,
   highlightedFrame: null as HighlightedFrame,  // 기본값: 강조 없음
+  isColumnCreationMode: false,  // 기본값: 기둥 생성 모드 비활성화
+  selectedColumnId: null,  // 기본값: 기둥 선택 없음
 };
 
 export const useUIStore = create<UIState>()(
@@ -69,6 +79,12 @@ export const useUIStore = create<UIState>()(
       
       setHighlightedFrame: (frame) =>
         set({ highlightedFrame: frame }),
+      
+      setColumnCreationMode: (isEnabled) =>
+        set({ isColumnCreationMode: isEnabled }),
+      
+      setSelectedColumnId: (columnId) =>
+        set({ selectedColumnId: columnId }),
       
       resetUI: () =>
         set(initialUIState),
