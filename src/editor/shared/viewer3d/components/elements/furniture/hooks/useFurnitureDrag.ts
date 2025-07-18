@@ -21,7 +21,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const isDragging = useRef(false);
   
   // Three.js 컨텍스트 접근
-  const { camera, scene } = useThree();
+  const { camera, scene, gl, invalidate } = useThree();
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -95,13 +95,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
 
       // 슬롯 가용성 검사 (자기 자신 제외)
-      if (!isSlotAvailable(slotIndex, isDualFurniture, placedModules, spaceInfo, draggingModuleId)) {
+      if (!isSlotAvailable(slotIndex, isDualFurniture, placedModules, spaceInfo, currentModule.moduleId, draggingModuleId)) {
         // 오른쪽으로 빈 슬롯 찾기
-        let availableSlot = findNextAvailableSlot(slotIndex, 'right', isDualFurniture, placedModules, spaceInfo, draggingModuleId);
+        let availableSlot = findNextAvailableSlot(slotIndex, 'right', isDualFurniture, placedModules, spaceInfo, currentModule.moduleId, draggingModuleId);
         
         // 오른쪽에 없으면 왼쪽으로 찾기
         if (availableSlot === null) {
-          availableSlot = findNextAvailableSlot(slotIndex, 'left', isDualFurniture, placedModules, spaceInfo, draggingModuleId);
+          availableSlot = findNextAvailableSlot(slotIndex, 'left', isDualFurniture, placedModules, spaceInfo, currentModule.moduleId, draggingModuleId);
         }
         
         if (availableSlot !== null) {
@@ -136,6 +136,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         y: currentModule.position.y,
         z: currentModule.position.z
       });
+
+      // 즉시 렌더링 강제 업데이트
+      invalidate();
     } else {
       console.log('❌ 슬롯 감지 실패');
     }
@@ -144,9 +147,27 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 드래그 종료
   const handlePointerUp = () => {
     if (isDragging.current) {
+      console.log('🏁 드래그 종료 - 렌더링 강제 업데이트');
+      
       isDragging.current = false;
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
+      
+      // 그림자 맵 업데이트
+      if (gl && gl.shadowMap) {
+        gl.shadowMap.needsUpdate = true;
+      }
+      
+      // 즉시 렌더링 강제 업데이트
+      invalidate();
+      
+      // 다음 프레임에서도 한 번 더 업데이트
+      requestAnimationFrame(() => {
+        invalidate();
+        console.log('✅ 드래그 완료 후 렌더링 업데이트 완료');
+      });
+      
+      document.body.style.cursor = 'default';
     }
   };
 

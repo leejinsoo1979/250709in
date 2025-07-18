@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Edges } from '@react-three/drei';
-import { ThreeEvent } from '@react-three/fiber';
+import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
@@ -36,6 +36,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerUp,
   onDoubleClick
 }) => {
+  // Three.js 컨텍스트 접근
+  const { gl, invalidate } = useThree();
+  
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   
@@ -45,6 +48,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (!moduleData) {
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
+
+  // 가구 위치 변경 시 즉시 렌더링 업데이트
+  useEffect(() => {
+    // 드래그 중이 아닐 때만 렌더링 업데이트 (드래그 중에는 useFurnitureDrag에서 처리)
+    if (!isDraggingThis) {
+      console.log('🔄 FurnitureItem 렌더링 업데이트:', placedModule.id);
+      
+      // 그림자 맵 업데이트
+      if (gl && gl.shadowMap) {
+        gl.shadowMap.needsUpdate = true;
+      }
+      
+      // 즉시 렌더링 강제 업데이트
+      invalidate();
+    }
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, isDraggingThis, gl, invalidate, placedModule.id]);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
