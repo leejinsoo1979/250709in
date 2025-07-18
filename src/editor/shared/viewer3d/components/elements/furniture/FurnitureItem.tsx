@@ -229,7 +229,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
         {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && (() => {
-          console.log(`🪑 [가구위치] 이격거리${spaceInfo.gapConfig.size}mm: X=${placedModule.position.x.toFixed(3)}, 폭=${moduleData.dimensions.width}mm`);
+          console.log(`🪑 [가구위치] 이격거리${spaceInfo.gapConfig.left}mm: X=${placedModule.position.x.toFixed(3)}, 폭=${moduleData.dimensions.width}mm`);
           return null;
         })()}
 
