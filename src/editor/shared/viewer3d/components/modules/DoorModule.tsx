@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSpring, animated } from '@react-spring/three';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -7,6 +7,7 @@ import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree } from '@react-three/fiber';
+import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 
 // BoxWithEdges 컴포넌트 정의
 const BoxWithEdges: React.FC<{
@@ -42,11 +43,15 @@ const BoxWithEdges: React.FC<{
 };
 
 interface DoorModuleProps {
-  moduleWidth: number; // 가구 폭 (mm)
+  moduleWidth: number; // 가구 폭 (mm) - 무시됨, 도어는 항상 원래 슬롯 크기
   moduleDepth: number; // 가구 깊이 (mm)
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: right)
   spaceInfo: SpaceInfo;
   color?: string;
+  doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
+  originalSlotWidth?: number; // 원래 슬롯 너비 (mm) - 도어 크기는 이 값 사용
+  slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위) - 도어 위치는 이 값 사용
+  moduleData?: any; // 실제 듀얼캐비넷 분할 정보를 위한 모듈 데이터
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -54,7 +59,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   moduleDepth,
   hingePosition = 'right',
   spaceInfo,
-  color
+  color,
+  doorXOffset = 0, // 사용하지 않음
+  originalSlotWidth,
+  slotCenterX,
+  moduleData
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -90,9 +99,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isGhost = renderMode !== 'solid' && !!color;
   
   // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성)
-  const createDoorMaterial = () => {
-    const { viewMode } = useSpace3DView();
-    
+  const createDoorMaterial = useCallback(() => {
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(doorColor),
       metalness: 0.0,        // 완전 비금속 (프레임과 동일)
@@ -104,16 +111,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
 
     return material;
-  };
+  }, [doorColor, renderMode, viewMode, isGhost]);
 
   // 싱글 가구용 도어 재질
-  const doorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+  const doorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
 
   // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스)
-  const leftDoorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+  const leftDoorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
 
   // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스)
-  const rightDoorMaterial = useMemo(() => createDoorMaterial(), [doorColor, renderMode, isGhost]);
+  const rightDoorMaterial = useMemo(() => createDoorMaterial(), [createDoorMaterial]);
 
   // 도어 배치 시 그림자 즉시 업데이트
   useEffect(() => {
@@ -128,21 +135,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       console.log('🌟 DoorModule - 그림자 강제 업데이트 완료');
     }
-  }, [viewMode, gl, doorMaterial, leftDoorMaterial, rightDoorMaterial]); // 도어 재질 변경 시에도 그림자 업데이트
+  }, [viewMode, gl]); // 뷰모드와 GL 컨텍스트 변경 시에만 그림자 업데이트
 
   // 텍스처 적용 함수
-  const applyTextureToMaterial = (material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
+  const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
-      if (textureUrl.toLowerCase().includes('cabinet texture1')) {
+      if (isCabinetTexture1(textureUrl)) {
         console.log(`🚪 ${doorSide} Cabinet Texture1 즉시 어둡게 적용 중...`);
-        material.color.setRGB(0.15, 0.15, 0.15); // 실제 재질에 맞는 다크 그레이 (조금 밝게)
-        material.toneMapped = false; // 톤 매핑 비활성화
-        material.envMapIntensity = 0.0; // 환경맵 완전 제거
-        material.emissive.setHex(0x000000); // 자체발광 완전 차단
-        material.roughness = 0.8; // 거칠기 증가로 더 어둡게
-        material.needsUpdate = true;
-        console.log(`✅ ${doorSide} Cabinet Texture1 즉시 색상 적용 완료`);
+        applyCabinetTexture1Settings(material);
+        console.log(`✅ ${doorSide} Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)`);
       }
       
       const textureLoader = new THREE.TextureLoader();
@@ -156,7 +158,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           material.map = texture;
           
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          if (!textureUrl.toLowerCase().includes('cabinet texture1')) {
+          if (!isCabinetTexture1(textureUrl)) {
             material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
@@ -178,47 +180,31 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  };
+  }, [doorColor]);
 
-  // 싱글 가구 도어 텍스처 적용
+  // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
     const textureUrl = materialConfig.doorTexture;
-    console.log('🚪 Single Door Texture URL:', textureUrl, 'Material:', doorMaterial);
+    console.log('🚪 Door Texture URL:', textureUrl);
+    
+    // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
     applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
-  }, [materialConfig.doorTexture, doorMaterial]);
-
-  // 듀얼 가구 왼쪽 도어 텍스처 적용
-  useEffect(() => {
-    const textureUrl = materialConfig.doorTexture;
-    console.log('🚪 Left Door Texture URL:', textureUrl, 'Material:', leftDoorMaterial);
     applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
-  }, [materialConfig.doorTexture, leftDoorMaterial]);
-
-  // 듀얼 가구 오른쪽 도어 텍스처 적용
-  useEffect(() => {
-    const textureUrl = materialConfig.doorTexture;
-    console.log('🚪 Right Door Texture URL:', textureUrl, 'Material:', rightDoorMaterial);
     applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
-  }, [materialConfig.doorTexture, rightDoorMaterial]);
+  }, [materialConfig.doorTexture]); // material 객체는 의존성에서 제거
   
-  // 디버깅 로그
-  console.log('🚪 DoorModule 렌더링:', {
-    propColor: color,
-    propSpaceInfo: spaceInfo?.materialConfig,
-    storeSpaceInfo: storeSpaceInfo.materialConfig,
-    currentSpaceInfo: currentSpaceInfo.materialConfig,
-    materialConfig,
-    finalDoorColor: doorColor
-  });
-
   // 투명도 설정: renderMode에 따라 조정
   const opacity = renderMode === 'wireframe' ? 0.3 : 1.0;
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
   const columnWidth = indexing.columnWidth;
   
-  // 듀얼 가구인지 확인 (폭이 컬럼 너비의 2배에 가까우면 듀얼)
-  const isDualFurniture = Math.abs(moduleWidth - (columnWidth * 2)) < 50;
+  // 도어 크기는 항상 원래 슬롯 크기 사용 (기둥 침범과 무관)
+  // moduleWidth는 기둥 침범 시 줄어든 캐비넷 너비이므로 절대 사용하면 안됨
+  const actualDoorWidth = originalSlotWidth || indexing.columnWidth; // 원래 슬롯 너비만 사용
+  
+  // 듀얼 가구인지 확인 (원래 슬롯 크기 기준)
+  const isDualFurniture = Math.abs(actualDoorWidth - (columnWidth * 2)) < 50;
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -291,25 +277,42 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     config: { tension: 70, friction: 20 }
   });
 
+  // 도어 위치 계산: 원래 슬롯 중심 사용 (기존 방식)
+  const doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+
   if (isDualFurniture) {
-    // 듀얼 가구: 두 개의 문 (힌지 위치는 각 문의 바깥쪽)
-    // 각 문의 폭 = (전체 폭 - 양쪽 1.5mm - 가운데 3mm) / 2
-    const totalWidth = moduleWidth;
-    const doorWidth = (totalWidth - 1.5 - 1.5 - 3) / 2;
+    // 듀얼 가구: 도어 크기는 기존 방식 (슬롯사이즈 - 3mm), 위치만 실제 캐비넷과 맞춤
+    const totalWidth = actualDoorWidth; // 원래 슬롯 크기 사용
+    const doorWidth = (totalWidth - 3) / 2; // 기존 방식: (슬롯사이즈 - 3mm) / 2
     const doorWidthUnits = mmToThreeUnits(doorWidth);
     
-    // 첫 번째 문 위치 (왼쪽) - 바깥쪽 1.5mm 유격 확보 후 문 중앙 위치
-    const leftDoorX = mmToThreeUnits(-totalWidth / 2 + 1.5 + doorWidth / 2);
-    // 두 번째 문 위치 (오른쪽) - 바깥쪽 1.5mm 유격 확보 후 문 중앙 위치
-    const rightDoorX = mmToThreeUnits(totalWidth / 2 - 1.5 - doorWidth / 2);
+    // 도어는 항상 균등분할 (캐비넷이 비대칭이어도 도어는 대칭)
+    const innerWidth = mmToThreeUnits(totalWidth); // 전체 내경 너비
+    const leftXOffset = -innerWidth / 4;  // 전체 너비의 1/4 왼쪽
+    const rightXOffset = innerWidth / 4;  // 전체 너비의 1/4 오른쪽
+    
+    // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
+    const leftHingeX = leftXOffset + (-doorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
+    const rightHingeX = rightXOffset + (doorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
+
+    console.log('🚪 듀얼 도어 위치 (균등분할):', {
+      totalWidth,
+      doorWidth,
+      mode: '균등분할 (도어는 항상 대칭)',
+      leftXOffset: leftXOffset.toFixed(3),
+      rightXOffset: rightXOffset.toFixed(3),
+      leftHingeX: leftHingeX.toFixed(3),
+      rightHingeX: rightHingeX.toFixed(3),
+      doorGroupX: doorGroupX
+    });
 
     return (
-      <group>
-        {/* 왼쪽 문 - 회전축을 문의 왼쪽 가장자리에서 10mm 안쪽에 위치 */}
-        <group position={[leftDoorX - doorWidthUnits/2 + hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
+        {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
+        <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <BoxWithEdges
-              position={[doorWidthUnits/2 - hingeOffsetUnits, 0.1, 0]}
+              position={[doorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]} // 도어를 힌지 기준으로 오른쪽에 배치
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
               material={leftDoorMaterial}
               renderMode={renderMode}
@@ -317,11 +320,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           </animated.group>
         </group>
         
-        {/* 오른쪽 문 - 회전축을 문의 오른쪽 가장자리에서 10mm 안쪽에 위치 */}
-        <group position={[rightDoorX + doorWidthUnits/2 - hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
+        {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
+        <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <BoxWithEdges
-              position={[-doorWidthUnits/2 + hingeOffsetUnits, 0.1, 0]}
+              position={[-doorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]} // 도어를 힌지 기준으로 왼쪽에 배치
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
               material={rightDoorMaterial}
               renderMode={renderMode}
@@ -332,41 +335,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
-    // 문의 폭 = 전체 폭 - 양쪽 1.5mm
-    const doorWidth = moduleWidth - 1.5 - 1.5;
+    // 문의 폭 = 원래 슬롯 전체 폭 - 3mm (갭)
+    const doorWidth = actualDoorWidth - 3; // 슬롯사이즈 - 3mm
     const doorWidthUnits = mmToThreeUnits(doorWidth);
     
-    if (hingePosition === 'left') {
-      // 왼쪽 힌지: 회전축을 문의 왼쪽 가장자리에서 10mm 안쪽에 위치
-      // 문의 오른쪽 가장자리가 가구 오른쪽 끝에서 1.5mm 안쪽에 오도록 조정
-      return (
-        <group position={[-mmToThreeUnits(moduleWidth)/2 + mmToThreeUnits(1.5) + hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
-          <animated.group rotation-y={leftHingeDoorSpring.rotation}>
-            <BoxWithEdges
-              position={[doorWidthUnits/2 - hingeOffsetUnits, 0.1, 0]}
-              args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={doorMaterial}
-              renderMode={renderMode}
-            />
-          </animated.group>
-        </group>
-      );
-    } else {
-      // 오른쪽 힌지: 회전축을 문의 오른쪽 가장자리에서 10mm 안쪽에 위치
-      // 문의 왼쪽 가장자리가 가구 왼쪽 끝에서 1.5mm 안쪽에 오도록 조정
-      return (
-        <group position={[mmToThreeUnits(moduleWidth)/2 - mmToThreeUnits(1.5) - hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
-          <animated.group rotation-y={rightHingeDoorSpring.rotation}>
-            <BoxWithEdges
-              position={[-doorWidthUnits/2 + hingeOffsetUnits, 0.1, 0]}
-              args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={doorMaterial}
-              renderMode={renderMode}
-            />
-          </animated.group>
-        </group>
-      );
-    }
+    // 힌지 위치에 따른 회전축 오프셋 계산
+    const hingeAxisOffset = hingePosition === 'left' 
+      ? -doorWidthUnits / 2 + hingeOffsetUnits  // 왼쪽 힌지: 왼쪽 가장자리에서 9mm 안쪽
+      : doorWidthUnits / 2 - hingeOffsetUnits;  // 오른쪽 힌지: 오른쪽 가장자리에서 9mm 안쪽
+    
+    // 도어 위치: 회전축이 힌지 위치에 맞게 조정
+    const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
+    
+    return (
+      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+        <animated.group rotation-y={hingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
+          <BoxWithEdges
+            position={[doorPositionX, 0.1, 0]}
+            args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
+            material={doorMaterial}
+            renderMode={renderMode}
+          />
+        </animated.group>
+      </group>
+    );
   }
 };
 
