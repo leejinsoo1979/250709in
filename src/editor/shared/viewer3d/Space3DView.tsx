@@ -4,12 +4,14 @@ import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
 import ColumnAsset from './components/elements/space/ColumnAsset';
+import WallAsset from './components/elements/space/WallAsset';
 import ColumnDistanceLabels from './components/elements/space/ColumnDistanceLabels';
 import ColumnGhostPreview from './components/elements/space/ColumnGhostPreview';
 import ColumnCreationMarkers from './components/elements/space/ColumnCreationMarkers';
 
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
+import CADGrid from './components/elements/CADGrid';
 
 // import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import SlotDropZones from './components/elements/SlotDropZones';
@@ -31,9 +33,9 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe' } = props;
   const location = useLocation();
-  const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn } = useSpaceConfigStore();
+  const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides } = useUIStore();
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
@@ -116,6 +118,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return;
       }
       
+      // 가벽 드롭 처리
+      if (parsedData.type === 'wall') {
+        handleWallDrop(e, parsedData);
+        return;
+      }
+      
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       if (typeof handleSlotDrop === 'function') {
@@ -134,16 +142,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
     const spaceDepthM = (spaceInfo.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
-    const columnDepthM = 730 * 0.01; // 730mm를 Three.js 단위로 변환
+    const columnDepthM = (columnData.depth || 730) * 0.01; // columnData에서 깊이 가져오기
     const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
     
     // 기둥 생성 (바닥 기준으로 위치 설정)
     const newColumn = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
-      width: 300, // 300mm 
-      height: spaceInfo.height || 2400, // 공간 높이와 동일 (2400mm)
-      depth: 730, // 730mm
+      width: columnData.width || 300, // columnData에서 폭 가져오기
+      height: columnData.height || spaceInfo.height || 2400, // columnData에서 높이 가져오기
+      depth: columnData.depth || 730, // columnData에서 깊이 가져오기
       color: columnData.color || '#888888',
       material: columnData.material || 'concrete'
     };
@@ -159,6 +167,40 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     // 스토어에 기둥 추가
     const { addColumn } = useSpaceConfigStore.getState();
     addColumn(newColumn);
+  };
+
+  // 가벽 드롭 핸들러
+  const handleWallDrop = (e: React.DragEvent, wallData: any) => {
+    // 캔버스 중앙에 가벽 배치 (임시)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
+    
+    // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
+    const spaceDepthM = (spaceInfo.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
+    const wallDepthM = (wallData.depth || 730) * 0.01; // 730mm를 Three.js 단위로 변환
+    const zPosition = -(spaceDepthM / 2) + (wallDepthM / 2); // 뒷벽에 맞닿도록
+    
+    // 가벽 생성 (바닥 기준으로 위치 설정)
+    const newWall = {
+      id: `wall-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
+      width: wallData.width || 120, // 120mm 
+      height: wallData.height || spaceInfo.height || 2400, // 공간 높이와 동일 (2400mm)
+      depth: wallData.depth || 730, // 730mm
+      color: wallData.color || '#888888',
+      material: wallData.material || 'concrete'
+    };
+
+    console.log('🧱 가벽 드롭 배치:', {
+      centerX,
+      zPosition,
+      spaceDepthM,
+      wallDepthM,
+      wall: newWall
+    });
+    
+    // 스토어에 가벽 추가
+    addWall(newWall);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -218,6 +260,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           renderMode={renderMode}
         >
           <React.Suspense fallback={null}>
+            {/* 확실히 작동하는 CAD 그리드 */}
+            {viewMode === '2D' && (
+              <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showGuides} />
+            )}
+            
             {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
             
             {/* 메인 자연광 - 3D 모드에서만 그림자 생성 */}
@@ -291,6 +338,27 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   showLabels={showDimensions}
                 />
               </React.Fragment>
+            ))}
+            
+            {/* 가벽 에셋 렌더링 */}
+            {(spaceInfo.walls || []).map((wall) => (
+              <WallAsset
+                key={wall.id}
+                id={wall.id}
+                position={wall.position}
+                width={wall.width} // mm 단위 그대로 전달
+                height={wall.height}
+                depth={wall.depth}
+                color={wall.color}
+                spaceInfo={spaceInfo}
+                renderMode={renderMode}
+                onPositionChange={(id, newPosition) => {
+                  updateWall(id, { position: newPosition });
+                }}
+                onRemove={(id) => {
+                  removeWall(id);
+                }}
+              />
             ))}
             
             {/* 기둥 드래그 시 고스트 프리뷰 */}

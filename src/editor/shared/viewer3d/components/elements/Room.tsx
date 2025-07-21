@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
@@ -24,6 +24,7 @@ interface RoomProps {
   viewMode?: '2D' | '3D';
   materialConfig?: {
     doorColor: string;
+    doorTexture?: string;
   };
 }
 
@@ -179,15 +180,58 @@ const Room: React.FC<RoomProps> = ({
     return material;
   }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
 
-  // 각 프레임별 재질 생성
-  const baseFrameMaterial = useMemo(() => createFrameMaterial('base'), [createFrameMaterial]);
-  const leftFrameMaterial = useMemo(() => createFrameMaterial('left'), [createFrameMaterial]);
-  const leftSubFrameMaterial = useMemo(() => createFrameMaterial('left'), [createFrameMaterial]); // 왼쪽 서브프레임 전용 머터리얼
-  const rightFrameMaterial = useMemo(() => createFrameMaterial('right'), [createFrameMaterial]);
-  const rightSubFrameMaterial = useMemo(() => createFrameMaterial('right'), [createFrameMaterial]); // 오른쪽 서브프레임 전용 머터리얼
-  const topFrameMaterial = useMemo(() => createFrameMaterial('top'), [createFrameMaterial]);
-  const topSubFrameMaterial = useMemo(() => createFrameMaterial('top'), [createFrameMaterial]);
-  const baseSubFrameMaterial = useMemo(() => createFrameMaterial('base'), [createFrameMaterial]); // 하단 서브프레임 전용 머터리얼
+  const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
+
+  // useEffect+useState로 material을 관리
+  const [baseFrameMaterial, setBaseFrameMaterial] = useState<THREE.Material>();
+  const [leftFrameMaterial, setLeftFrameMaterial] = useState<THREE.Material>();
+  const [leftSubFrameMaterial, setLeftSubFrameMaterial] = useState<THREE.Material>();
+  const [rightFrameMaterial, setRightFrameMaterial] = useState<THREE.Material>();
+  const [rightSubFrameMaterial, setRightSubFrameMaterial] = useState<THREE.Material>();
+  const [topFrameMaterial, setTopFrameMaterial] = useState<THREE.Material>();
+  const [topSubFrameMaterial, setTopSubFrameMaterial] = useState<THREE.Material>();
+  const [baseSubFrameMaterial, setBaseSubFrameMaterial] = useState<THREE.Material>();
+
+  useEffect(() => {
+    const mat = createFrameMaterial('base');
+    setBaseFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('left');
+    setLeftFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('left');
+    setLeftSubFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('right');
+    setRightFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('right');
+    setRightSubFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('top');
+    setTopFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('top');
+    setTopSubFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
+  useEffect(() => {
+    const mat = createFrameMaterial('base');
+    setBaseSubFrameMaterial(mat);
+    return () => mat.dispose();
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture]);
   
   // MaterialFactory를 사용한 재질 생성 (자동 캐싱으로 성능 최적화)
   const frontToBackGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
@@ -601,7 +645,7 @@ const Room: React.FC<RoomProps> = ({
               ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
-          material={leftFrameMaterial}
+          material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
           renderMode={renderMode}
         />
       )}
@@ -632,7 +676,7 @@ const Room: React.FC<RoomProps> = ({
               ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
-          material={rightFrameMaterial}
+          material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
           renderMode={renderMode}
         />
       )}
@@ -670,7 +714,7 @@ const Room: React.FC<RoomProps> = ({
                     // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                   ]}
-                  material={topFrameMaterial}
+                  material={topFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               );
@@ -737,7 +781,7 @@ const Room: React.FC<RoomProps> = ({
                     // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                   ]}
-                  material={topFrameMaterial}
+                  material={topFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               );
@@ -757,7 +801,7 @@ const Room: React.FC<RoomProps> = ({
                   // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                 ]}
-                material={topFrameMaterial}
+                material={topFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
               />
             ));
@@ -795,7 +839,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={topSubFrameMaterial}
+                    material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                     renderMode={renderMode}
                   />
                 </group>
@@ -866,7 +910,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={topSubFrameMaterial}
+                    material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                     renderMode={renderMode}
                   />
                 </group>
@@ -890,7 +934,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}
                   position={[0, 0, 0]} // group 내에서 원점에 배치
-                  material={topSubFrameMaterial}
+                  material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               </group>
@@ -920,7 +964,7 @@ const Room: React.FC<RoomProps> = ({
               mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
             ]}
             position={[0, 0, 0]} // group 내에서 원점에 배치
-            material={leftSubFrameMaterial}
+            material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
           />
         </group>
@@ -947,7 +991,7 @@ const Room: React.FC<RoomProps> = ({
               mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
             ]}
             position={[0, 0, 0]} // group 내에서 원점에 배치
-            material={rightSubFrameMaterial}
+            material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
           />
         </group>
@@ -988,7 +1032,7 @@ const Room: React.FC<RoomProps> = ({
                     // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                   ]}
-                  material={baseFrameMaterial}
+                  material={baseFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               );
@@ -1055,7 +1099,7 @@ const Room: React.FC<RoomProps> = ({
                     // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                   ]}
-                  material={baseFrameMaterial}
+                  material={baseFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               );
@@ -1075,7 +1119,7 @@ const Room: React.FC<RoomProps> = ({
                   // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
                 ]}
-                material={baseFrameMaterial}
+                material={baseFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
               />
             ));
@@ -1118,7 +1162,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={baseSubFrameMaterial}
+                    material={baseSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                     renderMode={renderMode}
                   />
                 </group>
@@ -1189,7 +1233,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={baseSubFrameMaterial}
+                    material={baseSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                     renderMode={renderMode}
                   />
                 </group>
@@ -1213,7 +1257,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}
                   position={[0, 0, 0]} // group 내에서 원점에 배치
-                  material={baseSubFrameMaterial}
+                  material={baseSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
                 />
               </group>
