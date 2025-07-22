@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
-import { Column } from '@/types/space';
+import { Column, Wall } from '@/types/space';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -59,6 +59,7 @@ export interface SpaceInfo {
   
   // 구조물 설정 추가
   columns?: Column[];
+  walls?: Wall[];
 }
 
 // 공간 설정 상태 타입
@@ -79,6 +80,12 @@ interface SpaceConfigState {
   addColumn: (column: Column) => void;
   removeColumn: (id: string) => void;
   updateColumn: (id: string, updates: Partial<Column>) => void;
+  
+  // 가벽 설정 액션
+  setWalls: (walls: Wall[]) => void;
+  addWall: (wall: Wall) => void;
+  removeWall: (id: string) => void;
+  updateWall: (id: string, updates: Partial<Wall>) => void;
   
   // 전체 상태 관리
   resetAll: () => void;
@@ -245,6 +252,45 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         ...state.spaceInfo,
         columns: (state.spaceInfo.columns || []).map(col => 
           col.id === id ? { ...col, ...updates } : col
+        )
+      },
+      isDirty: true,
+    })),
+  
+  // 가벽 설정 액션들
+  setWalls: (walls) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        walls
+      },
+      isDirty: true,
+    })),
+  
+  addWall: (wall) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        walls: [...(state.spaceInfo.walls || []), wall]
+      },
+      isDirty: true,
+    })),
+  
+  removeWall: (id) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        walls: (state.spaceInfo.walls || []).filter(wall => wall.id !== id)
+      },
+      isDirty: true,
+    })),
+  
+  updateWall: (id, updates) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        walls: (state.spaceInfo.walls || []).map(wall => 
+          wall.id === id ? { ...wall, ...updates } : wall
         )
       },
       isDirty: true,

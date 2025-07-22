@@ -17,6 +17,20 @@ export interface ColumnSlotInfo {
   intrusionDirection?: 'from-left' | 'from-right' | 'center'; // 기둥이 어느 방향에서 침범하는지
   furniturePosition?: 'left-aligned' | 'right-aligned' | 'center'; // 가구가 배치될 위치
   adjustedWidth?: number; // 침범 후 조정된 가구 너비
+  // 기둥 깊이 기반 처리 정보 추가
+  columnType?: 'deep' | 'shallow'; // 깊은 기둥(>=500mm) vs 얕은 기둥(<500mm)
+  depthAdjustment?: {
+    canPlaceSingle: boolean;
+    canPlaceDual: boolean;
+    adjustedDepth: number; // 깊이 조정된 캐비넷 깊이 (730 - 기둥깊이)
+    minDepthMet: boolean; // 최소 깊이 조건 충족 여부
+  };
+  splitPlacement?: {
+    canSplit: boolean; // 분할 배치 가능 여부
+    leftWidth: number; // 좌측 공간 폭
+    rightWidth: number; // 우측 공간 폭
+    recommendedLayout: 'single' | 'split-weighted' | 'split-equal'; // 권장 배치 방식
+  };
 }
 
 // 기둥 커버 도어 타입
@@ -27,6 +41,105 @@ export interface PillarCoverDoor {
   width: number;
   height: number;
 }
+
+// 캐비넷 배치 옵션 타입
+export interface CabinetPlacementOption {
+  type: 'single' | 'split-weighted' | 'split-equal';
+  label: string;
+  description: string;
+  cabinets: {
+    id: string;
+    width: number;
+    depth: number;
+    position: [number, number, number];
+    moduleId: string;
+  }[];
+}
+
+/**
+ * 기둥 깊이 기반 캐비넷 배치 가능성 분석
+ */
+export const analyzeColumnDepthPlacement = (column: Column, slotWidthMm: number, slotStartX: number, slotEndX: number): {
+  columnType: 'deep' | 'shallow';
+  depthAdjustment: {
+    canPlaceSingle: boolean;
+    canPlaceDual: boolean;
+    adjustedDepth: number;
+    minDepthMet: boolean;
+  };
+  splitPlacement: {
+    canSplit: boolean;
+    leftWidth: number;
+    rightWidth: number;
+    recommendedLayout: 'single' | 'split-weighted' | 'split-equal';
+  };
+} => {
+  const DEPTH_THRESHOLD = 500; // 500mm 기준으로 깊은/얕은 기둥 구분
+  const STANDARD_CABINET_DEPTH = 730; // 표준 캐비넷 깊이
+  const MIN_SINGLE_DEPTH = 200; // 싱글캐비넷 최소 깊이
+  const MIN_DUAL_DEPTH = 580; // 듀얼캐비넷 최소 깊이
+  const MIN_DUAL_COLUMN_DEPTH = 150; // 듀얼 배치 가능한 최대 기둥 깊이
+  const MIN_SLOT_WIDTH = 150; // 캐비넷 배치 최소 폭
+  
+  const columnDepth = column.depth;
+  const columnType: 'deep' | 'shallow' = columnDepth >= DEPTH_THRESHOLD ? 'deep' : 'shallow';
+  
+  console.log('🔍 analyzeColumnDepthPlacement 상세:', {
+    columnId: column.id,
+    columnDepth,
+    DEPTH_THRESHOLD,
+    columnType,
+    isShallow: columnDepth < DEPTH_THRESHOLD
+  });
+  
+  // 기둥 위치 계산
+  const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
+  const columnRightX = column.position[0] + (column.width * 0.01) / 2;
+  const leftWidth = Math.max(0, (columnLeftX - slotStartX) * 100); // mm
+  const rightWidth = Math.max(0, (slotEndX - columnRightX) * 100); // mm
+  
+  // 깊이 조정 분석
+  const adjustedDepth = STANDARD_CABINET_DEPTH - columnDepth;
+  const canPlaceSingle = columnDepth < DEPTH_THRESHOLD && adjustedDepth >= MIN_SINGLE_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+  const canPlaceDual = columnDepth < MIN_DUAL_COLUMN_DEPTH && adjustedDepth >= MIN_DUAL_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+  
+  // 분할 배치 분석
+  const canSplit = leftWidth >= MIN_SLOT_WIDTH && rightWidth >= MIN_SLOT_WIDTH;
+  let recommendedLayout: 'single' | 'split-weighted' | 'split-equal' = 'single';
+  
+  if (canSplit) {
+    recommendedLayout = 'split-weighted'; // 기본적으로 가중치 분할 권장
+  }
+  
+  console.log('🏛️ 기둥 깊이 기반 배치 분석:', {
+    columnId: column.id,
+    columnDepth,
+    columnType,
+    adjustedDepth,
+    canPlaceSingle,
+    canPlaceDual,
+    canSplit,
+    leftWidth: leftWidth.toFixed(1) + 'mm',
+    rightWidth: rightWidth.toFixed(1) + 'mm',
+    recommendedLayout
+  });
+  
+  return {
+    columnType,
+    depthAdjustment: {
+      canPlaceSingle,
+      canPlaceDual,
+      adjustedDepth,
+      minDepthMet: adjustedDepth >= MIN_SINGLE_DEPTH
+    },
+    splitPlacement: {
+      canSplit,
+      leftWidth,
+      rightWidth,
+      recommendedLayout
+    }
+  };
+};
 
 /**
  * 기둥이 포함된 슬롯들을 분석하여 가구 배치 정보를 생성
@@ -188,6 +301,27 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       console.warn('⚠️ 실제 배치 크기 미리 계산 실패:', error);
     }
     
+    // 얕은 기둥인 경우 깊이 기반 배치 분석 추가
+    let columnType: 'deep' | 'shallow' | undefined;
+    let depthAdjustment: ColumnSlotInfo['depthAdjustment'];
+    let splitPlacement: ColumnSlotInfo['splitPlacement'];
+    
+    const DEPTH_THRESHOLD = 500; // 500mm 기준
+    if (columnInSlot.depth < DEPTH_THRESHOLD) {
+      const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
+      columnType = depthAnalysis.columnType;
+      depthAdjustment = depthAnalysis.depthAdjustment;
+      splitPlacement = depthAnalysis.splitPlacement;
+      
+      console.log('🔍 얕은 기둥 깊이 분석 결과:', {
+        slotIndex,
+        columnDepth: columnInSlot.depth,
+        columnType,
+        depthAdjustment,
+        splitPlacement
+      });
+    }
+
     console.log('🏛️ 슬롯 분석 완료:', {
       slotIndex,
       hasColumn: true,
@@ -198,7 +332,9 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       intrusionDirection: intrusionAnalysis.intrusionDirection,
       furniturePosition: intrusionAnalysis.furniturePosition,
       adjustedWidth: intrusionAnalysis.adjustedWidth,
-      doorWidth: indexing.columnWidth - 3
+      doorWidth: indexing.columnWidth - 3,
+      columnType,
+      hasDepthAnalysis: columnType !== undefined
     });
     
     slotInfos.push({
@@ -212,7 +348,10 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       mullionSide,
       intrusionDirection: intrusionAnalysis.intrusionDirection,
       furniturePosition: intrusionAnalysis.furniturePosition,
-      adjustedWidth: actualRenderWidth // 실제 렌더링 가능한 크기로 업데이트
+      adjustedWidth: actualRenderWidth, // 실제 렌더링 가능한 크기로 업데이트
+      columnType,
+      depthAdjustment,
+      splitPlacement
     });
   }
   
@@ -1006,4 +1145,280 @@ export const autoSplitDualFurnitureByColumns = (
 // getDefaultDepth 함수 정의
 const getDefaultDepth = (moduleData: any): number => {
   return moduleData.dimensions.depth || 600; // 기본값 600mm
+};
+
+/**
+ * 얕은 기둥에 대한 캐비넷 배치 옵션 생성
+ */
+export const generateCabinetPlacementOptions = (
+  slotInfo: ColumnSlotInfo,
+  moduleData: any,
+  spaceInfo: SpaceInfo,
+  slotIndex: number
+): CabinetPlacementOption[] => {
+  const options: CabinetPlacementOption[] = [];
+  
+  console.log('🏗️ generateCabinetPlacementOptions 호출:', {
+    hasColumn: slotInfo.hasColumn,
+    columnType: slotInfo.columnType,
+    columnDepth: slotInfo.column?.depth,
+    slotIndex,
+    moduleId: moduleData.id
+  });
+  
+  if (!slotInfo.hasColumn || !slotInfo.column || slotInfo.columnType !== 'shallow') {
+    console.log('❌ 얕은 기둥 조건 불충족:', {
+      hasColumn: slotInfo.hasColumn,
+      hasColumnObject: !!slotInfo.column,
+      columnType: slotInfo.columnType,
+      reason: !slotInfo.hasColumn ? '기둥 없음' :
+              !slotInfo.column ? '기둥 객체 없음' :
+              slotInfo.columnType !== 'shallow' ? '깊은 기둥' : '알 수 없음'
+    });
+    return options; // 얕은 기둥이 아니면 옵션 없음
+  }
+
+  const column = slotInfo.column;
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  const slotWidthMm = indexing.columnWidth;
+  const slotCenterX = indexing.threeUnitPositions[slotIndex];
+
+  // 1. 단일 배치 옵션 (깊이 조정) - 얕은 기둥은 항상 단일 배치 가능
+  const adjustedDepth = 730 - column.depth; // 730 - 기둥깊이
+  const canPlaceSingle = adjustedDepth >= 200; // 최소 200mm 깊이 필요
+  
+  console.log('📐 단일 배치 옵션 검토:', {
+    columnDepth: column.depth,
+    adjustedDepth,
+    canPlaceSingle,
+    availableWidth: slotInfo.availableWidth
+  });
+  
+  if (canPlaceSingle) {
+    const cabinetWidth = Math.max(slotInfo.availableWidth || slotWidthMm, 150); // 최소 150mm
+    
+    options.push({
+      type: 'single',
+      label: '단일 배치',
+      description: `깊이 조정된 캐비넷 (깊이: ${adjustedDepth}mm)`,
+      cabinets: [{
+        id: `single-${Date.now()}`,
+        width: cabinetWidth,
+        depth: adjustedDepth,
+        position: [slotCenterX, 0, 0],
+        moduleId: moduleData.id.replace('dual-', 'single-')
+      }]
+    });
+    
+    console.log('✅ 단일 배치 옵션 추가됨');
+  } else {
+    console.log('❌ 단일 배치 불가 - 깊이 부족:', adjustedDepth);
+  }
+
+  // 2. 분할 배치 옵션들 - 기둥 위치 기반 직접 계산
+  const columnCenterX = column.position[0]; // Three.js units (meters)
+  const columnLeftX = columnCenterX - (column.width * 0.01) / 2;
+  const columnRightX = columnCenterX + (column.width * 0.01) / 2;
+  
+  const slotLeftX = slotCenterX - (slotWidthMm * 0.01) / 2;
+  const slotRightX = slotCenterX + (slotWidthMm * 0.01) / 2;
+  
+  const leftSpaceMm = Math.max(0, (columnLeftX - slotLeftX) * 100);
+  const rightSpaceMm = Math.max(0, (slotRightX - columnRightX) * 100);
+  
+  console.log('📏 분할 공간 계산:', {
+    slotCenterX: slotCenterX.toFixed(3),
+    columnCenterX: columnCenterX.toFixed(3),
+    slotLeftX: slotLeftX.toFixed(3),
+    slotRightX: slotRightX.toFixed(3),
+    columnLeftX: columnLeftX.toFixed(3),
+    columnRightX: columnRightX.toFixed(3),
+    leftSpaceMm: leftSpaceMm.toFixed(1) + 'mm',
+    rightSpaceMm: rightSpaceMm.toFixed(1) + 'mm'
+  });
+
+  const canSplitDirect = leftSpaceMm >= 150 && rightSpaceMm >= 150;
+  
+  // 분할 배치 옵션들
+  if (canSplitDirect) {
+    const adjustedDepth = 730 - column.depth;
+
+    // 가중치 분할 (실제 공간에 맞춰서)
+    const leftCabinetWidth = Math.max(150, leftSpaceMm - 10); // 10mm 마진
+    const rightCabinetWidth = Math.max(150, rightSpaceMm - 10); // 10mm 마진
+    
+    // 캐비넷 중심 위치 계산 (각 공간의 중앙)
+    const leftCabinetCenterX = slotLeftX + (leftSpaceMm * 0.01) / 2;
+    const rightCabinetCenterX = columnRightX + (rightSpaceMm * 0.01) / 2;
+    
+    options.push({
+      type: 'split-weighted',
+      label: '가중치 분할',
+      description: `좌측 ${leftCabinetWidth.toFixed(0)}mm, 우측 ${rightCabinetWidth.toFixed(0)}mm`,
+      cabinets: [
+        {
+          id: `split-left-${Date.now()}`,
+          width: leftCabinetWidth,
+          depth: adjustedDepth,
+          position: [leftCabinetCenterX, 0, 0],
+          moduleId: moduleData.id.replace('dual-', 'single-left-')
+        },
+        {
+          id: `split-right-${Date.now()}`,
+          width: rightCabinetWidth,
+          depth: adjustedDepth,
+          position: [rightCabinetCenterX, 0, 0],
+          moduleId: moduleData.id.replace('dual-', 'single-right-')
+        }
+      ]
+    });
+    
+    console.log('✅ 가중치 분할 옵션 추가:', {
+      leftCabinet: { width: leftCabinetWidth, centerX: leftCabinetCenterX },
+      rightCabinet: { width: rightCabinetWidth, centerX: rightCabinetCenterX }
+    });
+
+    // 균등 분할
+    if (Math.min(leftSpaceMm, rightSpaceMm) >= 200) { // 양쪽 모두 최소 200mm 이상일 때만
+      const equalWidth = Math.min(leftSpaceMm, rightSpaceMm) - 10; // 10mm 마진
+      
+      options.push({
+        type: 'split-equal',
+        label: '균등 분할',
+        description: `양쪽 ${equalWidth.toFixed(0)}mm씩 균등 배치`,
+        cabinets: [
+          {
+            id: `equal-left-${Date.now()}`,
+            width: equalWidth,
+            depth: adjustedDepth,
+            position: [leftCabinetCenterX, 0, 0],
+            moduleId: moduleData.id.replace('dual-', 'single-left-')
+          },
+          {
+            id: `equal-right-${Date.now()}`,
+            width: equalWidth,
+            depth: adjustedDepth,
+            position: [rightCabinetCenterX, 0, 0],
+            moduleId: moduleData.id.replace('dual-', 'single-right-')
+          }
+        ]
+      });
+      
+      console.log('✅ 균등 분할 옵션 추가:', {
+        equalWidth,
+        leftPosition: leftCabinetCenterX,
+        rightPosition: rightCabinetCenterX
+      });
+    }
+  } else {
+    console.log('❌ 분할 배치 불가:', {
+      canSplitDirect,
+      leftSpaceMm,
+      rightSpaceMm,
+      minRequired: 150
+    });
+  }
+
+  // 기둥이 슬롯 중앙에 있고 분할 가능한 경우, 분할을 우선 추천
+  if (canSplitDirect && options.length > 1) {
+    // 가중치 분할을 첫 번째로 정렬 (기본 선택)
+    const weightedSplitIndex = options.findIndex(opt => opt.type === 'split-weighted');
+    if (weightedSplitIndex > 0) {
+      const weightedSplit = options.splice(weightedSplitIndex, 1)[0];
+      options.unshift(weightedSplit);
+    }
+  }
+
+  console.log('🏗️ 캐비넷 배치 옵션 생성:', {
+    slotIndex,
+    columnDepth: column.depth,
+    optionsCount: options.length,
+    options: options.map(opt => ({
+      type: opt.type,
+      label: opt.label,
+      cabinetCount: opt.cabinets.length
+    }))
+  });
+
+  return options;
+};
+
+/**
+ * 분할 배치를 위한 캐비넷 위치 계산 (가중치 기반)
+ */
+export const calculateSplitCabinetPositions = (
+  slotInfo: ColumnSlotInfo,
+  spaceInfo: SpaceInfo,
+  slotIndex: number,
+  splitType: 'weighted' | 'equal' = 'weighted'
+): {
+  leftCabinet: { width: number; position: [number, number, number] };
+  rightCabinet: { width: number; position: [number, number, number] };
+} | null => {
+  if (!slotInfo.splitPlacement?.canSplit || !slotInfo.column) {
+    return null;
+  }
+
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  const slotWidthMm = indexing.columnWidth;
+  const slotCenterX = indexing.threeUnitPositions[slotIndex];
+  const column = slotInfo.column;
+
+  // 기둥 위치 기반 좌우 공간 계산
+  const columnCenterX = column.position[0];
+  const columnLeftX = columnCenterX - (column.width * 0.01) / 2;
+  const columnRightX = columnCenterX + (column.width * 0.01) / 2;
+  
+  const slotLeftX = slotCenterX - (slotWidthMm * 0.01) / 2;
+  const slotRightX = slotCenterX + (slotWidthMm * 0.01) / 2;
+
+  let leftWidth: number, rightWidth: number;
+  let leftCenterX: number, rightCenterX: number;
+
+  if (splitType === 'weighted') {
+    // 가중치 분할: 실제 공간 비율에 따라
+    const leftSpace = Math.max(0, (columnLeftX - slotLeftX) * 100);
+    const rightSpace = Math.max(0, (slotRightX - columnRightX) * 100);
+    
+    leftWidth = Math.max(150, leftSpace - 10); // 최소 150mm, 10mm 마진
+    rightWidth = Math.max(150, rightSpace - 10);
+    
+    // 위치는 각 공간의 중앙
+    leftCenterX = slotLeftX + (leftSpace * 0.01) / 2;
+    rightCenterX = columnRightX + (rightSpace * 0.01) / 2;
+  } else {
+    // 균등 분할: 양쪽 동일한 크기
+    const availableSpace = Math.min(slotInfo.splitPlacement.leftWidth, slotInfo.splitPlacement.rightWidth);
+    leftWidth = rightWidth = Math.max(150, availableSpace - 10);
+    
+    // 기둥을 중심으로 대칭 배치
+    const cabinetOffset = (leftWidth * 0.01) / 2 + 0.005; // 5mm 추가 간격
+    leftCenterX = columnLeftX - cabinetOffset;
+    rightCenterX = columnRightX + cabinetOffset;
+  }
+
+  console.log('📐 분할 캐비넷 위치 계산:', {
+    splitType,
+    slotIndex,
+    columnPosition: columnCenterX.toFixed(3),
+    leftCabinet: {
+      width: leftWidth,
+      centerX: leftCenterX.toFixed(3)
+    },
+    rightCabinet: {
+      width: rightWidth,
+      centerX: rightCenterX.toFixed(3)
+    }
+  });
+
+  return {
+    leftCabinet: {
+      width: leftWidth,
+      position: [leftCenterX, 0, 0]
+    },
+    rightCabinet: {
+      width: rightWidth,
+      position: [rightCenterX, 0, 0]
+    }
+  };
 }; 

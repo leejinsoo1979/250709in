@@ -20,10 +20,13 @@ interface UIState {
   
   // 치수 표시 상태
   showDimensions: boolean;
+
+  // 그리드(가이드) 표시 상태
+  showGuides: boolean;
   
-  // 활성 팝업 상태 (가구, 가구 편집, 기둥, 기둥 편집 모달 중 하나만 활성화)
+  // 활성 팝업 상태 (가구, 가구 편집, 기둥, 기둥 편집, 가벽, 가벽 편집 모달 중 하나만 활성화)
   activePopup: {
-    type: 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | null;
+    type: 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null;
     id: string | null;
   };
   
@@ -36,22 +39,37 @@ interface UIState {
   // 선택된 기둥 ID (선택 상태만, 팝업과는 별개)
   selectedColumnId: string | null;
   
+  // 가벽 생성 모드
+  isWallCreationMode: boolean;
+  
+  // 선택된 가벽 ID (선택 상태만, 팝업과는 별개)
+  selectedWallId: string | null;
+  
+  // 가구 드래그 상태
+  isFurnitureDragging: boolean;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
   toggleDimensions: () => void;
+  toggleGuides: () => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
   openFurnitureEditPopup: (moduleId: string) => void;
   openColumnPopup: (columnId: string) => void;
   openColumnEditModal: (columnId: string) => void;
+  openWallPopup: (wallId: string) => void;
+  openWallEditModal: (wallId: string) => void;
   closeAllPopups: () => void;
   
   setHighlightedFrame: (frame: HighlightedFrame) => void;
   setColumnCreationMode: (isEnabled: boolean) => void;
   setSelectedColumnId: (columnId: string | null) => void;
+  setWallCreationMode: (isEnabled: boolean) => void;
+  setSelectedWallId: (wallId: string | null) => void;
+  setFurnitureDragging: (isDragging: boolean) => void;
   resetUI: () => void;
 }
 
@@ -61,13 +79,17 @@ const initialUIState = {
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   doorsOpen: true,  // 기본값: 문 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
+  showGuides: false, // 기본값: 그리드(가이드) 표시 안함
   activePopup: {
-    type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | null,
+    type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null,
     id: null
   },
   highlightedFrame: null as HighlightedFrame,  // 기본값: 강조 없음
   isColumnCreationMode: false,  // 기본값: 기둥 생성 모드 비활성화
   selectedColumnId: null,  // 기본값: 기둥 선택 없음
+  isWallCreationMode: false,  // 기본값: 가벽 생성 모드 비활성화
+  selectedWallId: null,  // 기본값: 가벽 선택 없음
+  isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
 };
 
 export const useUIStore = create<UIState>()(
@@ -86,6 +108,8 @@ export const useUIStore = create<UIState>()(
       
       toggleDimensions: () =>
         set((state) => ({ showDimensions: !state.showDimensions })),
+      toggleGuides: () =>
+        set((state) => ({ showGuides: !state.showGuides })),
       
       // 가구 팝업 열기 (다른 모든 팝업 닫기)
       openFurniturePopup: (moduleId) =>
@@ -112,6 +136,19 @@ export const useUIStore = create<UIState>()(
           selectedColumnId: columnId
         }),
       
+      // 가벽 팝업 열기 (다른 모든 팝업 닫기)
+      openWallPopup: (wallId) =>
+        set({ 
+          activePopup: { type: 'wall', id: wallId }
+        }),
+      
+      // 가벽 편집 모달 열기 (다른 모든 팝업 닫기)
+      openWallEditModal: (wallId) =>
+        set({ 
+          activePopup: { type: 'wallEdit', id: wallId },
+          selectedWallId: wallId
+        }),
+      
       // 모든 팝업 닫기
       closeAllPopups: () =>
         set({ 
@@ -126,6 +163,15 @@ export const useUIStore = create<UIState>()(
       
       setSelectedColumnId: (columnId) =>
         set({ selectedColumnId: columnId }),
+      
+      setWallCreationMode: (isEnabled) =>
+        set({ isWallCreationMode: isEnabled }),
+      
+      setSelectedWallId: (wallId) =>
+        set({ selectedWallId: wallId }),
+      
+      setFurnitureDragging: (isDragging) =>
+        set({ isFurnitureDragging: isDragging }),
       
       resetUI: () =>
         set(initialUIState),

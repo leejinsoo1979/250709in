@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Column } from '@/types/space';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
@@ -40,18 +40,113 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     }
   }, [column, isOpen]);
 
-  // columnEdit 팝업이 활성화되지 않았거나 다른 기둥이 편집 중이면 렌더링하지 않음
-  if (!isOpen || !column || activePopup.type !== 'columnEdit' || activePopup.id !== columnId) {
-    return null;
-  }
+  // 좌측갭/우측갭 계산을 위한 값들 (조건부 렌더링 전에 계산)
+  const spaceWidth = spaceInfo.width || 3000;
+  const columnX = column ? (editValues.position?.[0] || column.position[0]) * 100 : 0;
+  const columnWidth = column ? (editValues.width || column.width) : 0;
+  const minGap = 0;
+  const maxGap = Math.max(0, spaceWidth - columnWidth);
+  const leftGap = Math.max(minGap, Math.min(columnX + (spaceWidth / 2) - (columnWidth / 2), maxGap));
+  const rightGap = Math.max(minGap, Math.min((spaceWidth / 2) - columnX - (columnWidth / 2), maxGap));
 
-  // store에 실시간 반영
+  const handleLeftGapChange = (value: number) => {
+    if (!column) return;
+    const safeValue = Math.max(minGap, Math.min(value, maxGap));
+    const newX = safeValue + (columnWidth / 2) - (spaceWidth / 2);
+    const newPosition = [...(editValues.position || column.position)] as [number, number, number];
+    newPosition[0] = newX / 100;
+    setEditValues(prev => {
+      const newValues = { ...prev, position: newPosition };
+      updateColumnInStore({ ...column, ...newValues });
+      return newValues;
+    });
+  };
+  
+  const handleRightGapChange = (value: number) => {
+    if (!column) return;
+    const safeValue = Math.max(minGap, Math.min(value, maxGap));
+    const newX = (spaceWidth / 2) - safeValue - (columnWidth / 2);
+    const newPosition = [...(editValues.position || column.position)] as [number, number, number];
+    newPosition[0] = newX / 100;
+    setEditValues(prev => {
+      const newValues = { ...prev, position: newPosition };
+      updateColumnInStore({ ...column, ...newValues });
+      return newValues;
+    });
+  };
+
+  // 키보드 이벤트 핸들러 (갭 조정) - Hook 순서를 위해 조건부 렌더링 전에 배치
+  useEffect(() => {
+    if (!isOpen || !column || activePopup.type !== 'columnEdit' || activePopup.id !== columnId) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 입력 필드에 포커스가 있으면 키보드 이벤트 무시
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      const isShiftPressed = event.shiftKey;
+      
+      switch (event.key) {
+        case 'ArrowUp':
+        case 'ArrowDown': {
+          // 위아래: 좌측갭 조정 (1mm 단위, Shift로 10배)
+          event.preventDefault();
+          const step = isShiftPressed ? 10 : 1; // Shift: 10mm, 일반: 1mm
+          const direction = event.key === 'ArrowUp' ? step : -step;
+          const newLeftGap = Math.max(minGap, Math.min(leftGap + direction, maxGap));
+          handleLeftGapChange(newLeftGap);
+          console.log('⌨️ 좌측갭 키보드 조정:', { 
+            key: event.key, 
+            shift: isShiftPressed, 
+            step, 
+            oldValue: Math.round(leftGap), 
+            newValue: Math.round(newLeftGap) 
+          });
+          break;
+        }
+        case 'ArrowLeft':
+        case 'ArrowRight': {
+          // 좌우: 우측갭 조정 (10mm 단위, Shift로 10배)
+          event.preventDefault();
+          const step = isShiftPressed ? 100 : 10; // Shift: 100mm, 일반: 10mm
+          const direction = event.key === 'ArrowLeft' ? step : -step;
+          const newRightGap = Math.max(minGap, Math.min(rightGap + direction, maxGap));
+          handleRightGapChange(newRightGap);
+          console.log('⌨️ 우측갭 키보드 조정:', { 
+            key: event.key, 
+            shift: isShiftPressed, 
+            step, 
+            oldValue: Math.round(rightGap), 
+            newValue: Math.round(newRightGap) 
+          });
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, column, activePopup.type, activePopup.id, columnId, leftGap, rightGap, minGap, maxGap, handleLeftGapChange, handleRightGapChange]);
+
+  // store에 실시간 반영 - Hook 순서를 위해 조건부 렌더링 전에 배치
   const updateColumnInStore = (partial: Partial<Column>) => {
+    if (!column) return;
     const updatedColumns = columns.map(col =>
       col.id === column.id ? { ...col, ...partial } : col
     );
     setSpaceInfo({ columns: updatedColumns });
   };
+
+  // columnEdit 팝업이 활성화되지 않았거나 다른 기둥이 편집 중이면 렌더링하지 않음
+  if (!isOpen || !column || activePopup.type !== 'columnEdit' || activePopup.id !== columnId) {
+    return null;
+  }
 
   // 입력값 변경 핸들러 (실시간 반영)
   const handleInputChange = (field: keyof Column, value: any) => {
@@ -74,38 +169,6 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     });
   };
 
-  // 좌측갭/우측갭 계산 및 변경 핸들러 (실시간 반영)
-  const spaceWidth = spaceInfo.width || 3000;
-  const columnX = (editValues.position?.[0] || column.position[0]) * 100;
-  const columnWidth = editValues.width || column.width;
-  const minGap = 0;
-  const maxGap = Math.max(0, spaceWidth - columnWidth);
-  const leftGap = Math.max(minGap, Math.min(columnX + (spaceWidth / 2) - (columnWidth / 2), maxGap));
-  const rightGap = Math.max(minGap, Math.min((spaceWidth / 2) - columnX - (columnWidth / 2), maxGap));
-
-  const handleLeftGapChange = (value: number) => {
-    const safeValue = Math.max(minGap, Math.min(value, maxGap));
-    const newX = safeValue + (columnWidth / 2) - (spaceWidth / 2);
-    const newPosition = [...(editValues.position || column.position)] as [number, number, number];
-    newPosition[0] = newX / 100;
-    setEditValues(prev => {
-      const newValues = { ...prev, position: newPosition };
-      updateColumnInStore({ ...column, ...newValues });
-      return newValues;
-    });
-  };
-  
-  const handleRightGapChange = (value: number) => {
-    const safeValue = Math.max(minGap, Math.min(value, maxGap));
-    const newX = (spaceWidth / 2) - safeValue - (columnWidth / 2);
-    const newPosition = [...(editValues.position || column.position)] as [number, number, number];
-    newPosition[0] = newX / 100;
-    setEditValues(prev => {
-      const newValues = { ...prev, position: newPosition };
-      updateColumnInStore({ ...column, ...newValues });
-      return newValues;
-    });
-  };
 
   // 확인(저장) 버튼: 모달만 닫음
   const handleSave = () => {
@@ -123,6 +186,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     setEditValues({});
     onClose();
   };
+
 
   const handleDelete = () => {
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
@@ -196,6 +260,9 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
           {/* 위치 설정 - 좌측갭, 우측갭으로 표시 */}
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>위치</h4>
+            <div className={styles.keyboardHint}>
+              <small>💡 키보드 조작: ↑↓(좌측갭 1mm/Shift+10mm), ←→(우측갭 10mm/Shift+100mm)</small>
+            </div>
             <div className={styles.inputRow}>
               <div className={styles.inputItem}>
                 <label>좌측갭 (mm)</label>

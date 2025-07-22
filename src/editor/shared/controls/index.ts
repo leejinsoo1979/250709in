@@ -13,4 +13,8 @@ export { default as FloorFinishControls } from './space/FloorFinishControls';
 
 // 맞춤 설정 관련 컨트롤
 export { default as SurroundControls } from './customization/SurroundControls';
-export { default as BaseControls } from './customization/BaseControls'; 
+export { default as BaseControls } from './customization/BaseControls';
+
+// 구조물 관련 컨트롤
+export { default as ColumnControl } from './structure/ColumnControl';
+export { default as WallControl } from './structure/WallControl'; 

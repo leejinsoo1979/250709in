@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useFurnitureStore } from '@/store';
+import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
@@ -22,6 +23,9 @@ export const useFurnitureKeyboard = ({
   const setEditMode = useFurnitureStore(state => state.setEditMode);
   const setEditingModuleId = useFurnitureStore(state => state.setEditingModuleId);
   
+  // UI Store에서 활성 팝업 정보 가져오기
+  const { activePopup } = useUIStore();
+  
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -29,9 +33,11 @@ export const useFurnitureKeyboard = ({
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 편집 모드일 때의 처리
-      if (editMode && editingModuleId) {
-        const editingModule = placedModules.find(m => m.id === editingModuleId);
+      // 편집 모드이거나 가구 편집 팝업이 열린 상태일 때 처리
+      const targetModuleId = editingModuleId || (activePopup.type === 'furnitureEdit' ? activePopup.id : null);
+      
+      if ((editMode && editingModuleId) || (activePopup.type === 'furnitureEdit' && activePopup.id)) {
+        const editingModule = placedModules.find(m => m.id === targetModuleId);
         if (!editingModule) return;
         
         // 편집 중인 가구의 데이터 가져오기
@@ -65,9 +71,12 @@ export const useFurnitureKeyboard = ({
         switch (e.key) {
           case 'Delete':
           case 'Backspace':
-            removeModule(editingModuleId);
-            setEditMode(false);
-            setEditingModuleId(null);
+            // 팝업 모드에서는 삭제 비활성화 (편집 모드에서만 허용)
+            if (editMode && editingModuleId) {
+              removeModule(targetModuleId);
+              setEditMode(false);
+              setEditingModuleId(null);
+            }
             e.preventDefault();
             break;
             
@@ -79,7 +88,7 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              editingModuleId
+              targetModuleId
             );
             
             if (nextSlot !== null) {
@@ -89,7 +98,15 @@ export const useFurnitureKeyboard = ({
               } else {
                 newX = indexing.threeUnitPositions[nextSlot];
               }
-              moveModule(editingModuleId, { ...editingModule.position, x: newX });
+              console.log('⌨️ 키보드로 가구 이동:', { 
+                moduleId: targetModuleId, 
+                direction: 'left', 
+                oldX: editingModule.position.x, 
+                newX,
+                slotIndex: currentSlotIndex,
+                nextSlot
+              });
+              moveModule(targetModuleId, { ...editingModule.position, x: newX });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -104,7 +121,7 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              editingModuleId
+              targetModuleId
             );
             
             if (nextSlot !== null) {
@@ -114,7 +131,7 @@ export const useFurnitureKeyboard = ({
               } else {
                 newX = indexing.threeUnitPositions[nextSlot];
               }
-              moveModule(editingModuleId, { ...editingModule.position, x: newX });
+              moveModule(targetModuleId, { ...editingModule.position, x: newX });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();

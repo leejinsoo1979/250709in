@@ -48,9 +48,15 @@
 
 .modalHeader h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
+}
+
+.keyboardHint {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background-color: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 4px;
+  color: #0369a1;
 }
 
 .closeButton {

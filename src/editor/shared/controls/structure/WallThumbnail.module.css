@@ -1,11 +1,4 @@
-.columnThumbnailWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.columnThumbnail {
+.wallThumbnail {
   position: relative;
   aspect-ratio: 1 / 1; /* 정사각형으로 변경해서 더 작게 */
   background-color: #d9d8d4; /* 여백 색상 변경 */
@@ -20,47 +13,51 @@
   padding: 2px; /* 패딩 최소화 */
 }
 
-.columnThumbnail:hover {
+.wallThumbnail:hover {
   border-color: #1abc9c;
   box-shadow: 0 4px 12px rgba(26, 188, 156, 0.15);
   transform: translateY(-2px);
 }
 
-.columnThumbnail:active {
+.wallThumbnail:active {
   cursor: grabbing;
   transform: translateY(0);
 }
 
-/* 기둥 이미지 */
-.columnImage {
+/* 가벽 미리보기 */
+.wallPreview {
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover; /* 섬네일을 꽉 채우도록 변경 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallShape {
+  width: 80%;
+  height: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 /* 드래그 중 상태 */
-.columnThumbnail.dragging {
+.wallThumbnail.dragging {
   opacity: 0.5;
   transform: rotate(5deg);
 }
 
-/* 라벨 스타일 */
-.columnLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
-  margin-top: 4px;
-}
-
-/* 반응형 디자인 - 가구 모듈과 동일한 반응형 적용 */
+/* 반응형 디자인 - 기둥 모듈과 동일한 반응형 적용 */
 
 /* 큰 데스크톱 (1920px 이상) */
 @media (min-width: 1920px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 3 / 4;
     padding: 12px;
   }
@@ -68,7 +65,7 @@
 
 /* 일반 데스크톱 (1400-1919px) */
 @media (max-width: 1919px) and (min-width: 1400px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 3 / 4;
     padding: 10px;
   }
@@ -76,7 +73,7 @@
 
 /* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
 @media (max-width: 1399px) and (min-width: 1200px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 3 / 4;
     padding: 8px;
   }
@@ -84,19 +81,19 @@
 
 /* 맥북 에어/프로 13인치 (1024-1199px) */
 @media (max-width: 1199px) and (min-width: 1024px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 3 / 4;
     padding: 6px;
   }
   
-  .columnImage {
+  .wallShape {
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
   }
 }
 
 /* 태블릿 가로 (768-1023px) */
 @media (max-width: 1023px) and (min-width: 768px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 4 / 3;
     padding: 6px;
   }
@@ -104,7 +101,7 @@
 
 /* 모바일 가로 (481-767px) */
 @media (max-width: 767px) and (min-width: 481px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 4 / 3;
     padding: 4px;
   }
@@ -112,7 +109,7 @@
 
 /* 모바일 세로 (480px 이하) */
 @media (max-width: 480px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 1 / 1;
     padding: 3px;
   }
@@ -120,7 +117,7 @@
 
 /* 세로 모드 태블릿 */
 @media (orientation: portrait) and (max-width: 768px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 1 / 1;
     padding: 4px;
   }
@@ -128,7 +125,7 @@
 
 /* 가로 모드 낮은 높이 */
 @media (orientation: landscape) and (max-height: 600px) {
-  .columnThumbnail {
+  .wallThumbnail {
     aspect-ratio: 1 / 1;
     padding: 3px;
   }
@@ -136,7 +133,7 @@
 
 /* 고해상도 디스플레이 */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .columnImage {
+  .wallShape {
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
   }
 }

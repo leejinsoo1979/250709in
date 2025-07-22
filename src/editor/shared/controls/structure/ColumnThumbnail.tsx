@@ -8,6 +8,7 @@ interface ColumnThumbnailProps {
   color?: string;
   material?: 'concrete' | 'steel' | 'wood';
   onDragStart?: (e: React.DragEvent) => void;
+  title?: string;
 }
 
 const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
@@ -16,7 +17,8 @@ const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
   depth = 1200, // 1200mm
   color = '#888888',
   material = 'concrete',
-  onDragStart
+  onDragStart,
+  title = "기둥"
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
     // 기둥 정보를 드래그 데이터에 저장
@@ -42,28 +44,31 @@ const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
   };
 
   return (
-    <div 
-      className={styles.columnThumbnail}
-      draggable
-      onDragStart={handleDragStart}
-      title={`기둥 - ${material} (${width}×${depth}×${height}mm)`}
-    >
-      {/* 기둥 이미지만 표시 */}
-      <img 
-        src={getColumnImagePath()}
-        alt={`기둥 - ${material}`}
-        className={styles.columnImage}
-        onError={(e) => {
-          console.error('기둥 이미지 로드 실패:', e);
-          // 이미지 로드 실패 시 기본 텍스트 표시
-          const img = e.target as HTMLImageElement;
-          img.style.display = 'none';
-          const container = img.parentElement;
-          if (container) {
-            container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f0f0f0; color: #666; font-size: 12px; text-align: center;">기둥</div>';
-          }
-        }}
-      />
+    <div className={styles.columnThumbnailWrapper}>
+      <div 
+        className={styles.columnThumbnail}
+        draggable
+        onDragStart={handleDragStart}
+        title={`${title} - ${material} (${width}×${depth}×${height}mm)`}
+      >
+        {/* 기둥 이미지만 표시 */}
+        <img 
+          src={getColumnImagePath()}
+          alt={`${title} - ${material}`}
+          className={styles.columnImage}
+          onError={(e) => {
+            console.error('기둥 이미지 로드 실패:', e);
+            // 이미지 로드 실패 시 기본 텍스트 표시
+            const img = e.target as HTMLImageElement;
+            img.style.display = 'none';
+            const container = img.parentElement;
+            if (container) {
+              container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f0f0f0; color: #666; font-size: 12px; text-align: center;">${title}</div>`;
+            }
+          }}
+        />
+      </div>
+      <div className={styles.columnLabel}>{title}</div>
     </div>
   );
 };

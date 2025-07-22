@@ -14,8 +14,9 @@ import {
   calculateFurniturePosition
 } from '../../utils/slotRaycast';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
-import { analyzeColumnSlots, adjustFurniturePositionForColumn, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, splitDualToSinglesIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
+import { analyzeColumnSlots, adjustFurniturePositionForColumn, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, splitDualToSinglesIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition, generateCabinetPlacementOptions, CabinetPlacementOption } from '@/editor/shared/utils/columnSlotProcessor';
 import { useSpace3DView } from '../../context/useSpace3DView';
+import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopup';
 
 interface SlotDropZonesProps {
   spaceInfo: SpaceInfo;
@@ -41,6 +42,17 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   // 마우스가 hover 중인 슬롯 인덱스 상태
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
   
+  // 캐비넷 배치 선택 팝업 상태
+  const [showPlacementPopup, setShowPlacementPopup] = useState(false);
+  const [placementOptions, setPlacementOptions] = useState<CabinetPlacementOption[]>([]);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [pendingPlacementData, setPendingPlacementData] = useState<{
+    dragEvent: DragEvent;
+    dragData: any;
+    slotIndex: number;
+    moduleData: any;
+  } | null>(null);
+  
   // 내경 공간 및 인덱싱 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -58,7 +70,9 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   
   // 드롭 처리 함수
   const handleSlotDrop = React.useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    if (!currentDragData) return false;
+    if (!currentDragData) {
+      return false;
+    }
     
     // HTML5 드래그 데이터 가져오기
     let dragData;
@@ -99,43 +113,26 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
       return false; // 충돌하는 슬롯에는 배치 불가
     }
     
-    // 기둥 슬롯 정보 가져오기
-    const targetSlotInfo = columnSlots[slotIndex];
-    
     // 가구 데이터 조회
-    let moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+    const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
     if (!moduleData) {
       return false;
     }
     
+    // 기둥 슬롯 정보 가져오기
+    const targetSlotInfo = columnSlots[slotIndex];
+    
     // 기본 가구 깊이 계산 함수 (미리 정의)
     const getDefaultDepth = (moduleData: ModuleData | undefined) => {
-      console.log('⚙️ [SlotDropZones] getDefaultDepth 계산:', {
-        moduleId: moduleData?.id,
-        moduleName: moduleData?.name,
-        moduleDefaultDepth: moduleData?.defaultDepth,
-        spaceDepth: spaceInfo.depth
-      });
       
       if (moduleData?.defaultDepth) {
         const result = Math.min(moduleData.defaultDepth, spaceInfo.depth);
-        console.log('✅ [SlotDropZones] defaultDepth 사용:', {
-          moduleDefaultDepth: moduleData.defaultDepth,
-          spaceDepth: spaceInfo.depth,
-          finalResult: result
-        });
         return result;
       }
       
       // 기존 fallback 로직
       const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
       const result = Math.min(spaceBasedDepth, 580);
-      console.log('⚠️ [SlotDropZones] fallback 사용:', {
-        spaceBasedDepth: spaceBasedDepth,
-        fallbackLimit: 580,
-        finalResult: result,
-        reason: 'moduleData?.defaultDepth가 없음'
-      });
       return result;
     };
     
@@ -345,40 +342,114 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     // 고유 ID 생성
     const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    const customDepth = getDefaultDepth(actualModuleData);
+    // 기본 깊이 설정
+    let customDepth = getDefaultDepth(actualModuleData);
+    
+    // 기둥이 있는 슬롯인 경우만 깊이 조정
+    if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+      const columnDepth = targetSlotInfo.column.depth;
+      const adjustedDepth = 730 - columnDepth;
+      
+      console.log('🔧 기둥 있는 슬롯 - 깊이 조정:', {
+        slotIndex: slotIndex,
+        hasColumn: targetSlotInfo.hasColumn,
+        columnDepth: columnDepth,
+        originalDepth: getDefaultDepth(actualModuleData),
+        adjustedDepth: adjustedDepth,
+        계산식: `730 - ${columnDepth} = ${adjustedDepth}`
+      });
+      
+      if (adjustedDepth >= 200) {
+        customDepth = adjustedDepth;
+        console.log('✅ customDepth 설정:', customDepth);
+      }
+    } else {
+      console.log('🔧 기둥 없는 슬롯 - 기본 깊이:', {
+        slotIndex: slotIndex,
+        hasColumn: false,
+        customDepth: customDepth
+      });
+    }
     
     // 기둥이 있는 슬롯의 경우 위치와 크기 미리 조정
     let finalPosition = { x: finalX, y: 0, z: 0 };
     let adjustedFurnitureWidth = actualModuleData.dimensions.width;
     let doorWidthForColumn = actualModuleData.dimensions.width - 3; // 기본값: 가구 너비 - 3mm
     
-    if (targetSlotInfo && targetSlotInfo.hasColumn) {
-      // 슬롯의 원래 경계 계산
-      const slotWidthM = indexing.columnWidth * 0.01; // mm to meters
-      const originalSlotBounds = {
-        left: finalX - slotWidthM / 2,
-        right: finalX + slotWidthM / 2,
-        center: finalX
-      };
+    if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+      const columnDepth = targetSlotInfo.column.depth;
       
-      // 기둥 침범에 따른 새로운 가구 경계 계산
-      const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
-      
-      // 가구 위치와 크기를 미리 조정
-      finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
-      adjustedFurnitureWidth = furnitureBounds.renderWidth;
-      
-      console.log('🏛️ 기둥이 있는 슬롯에 가구 배치 - 미리 조정:', {
+      console.log('🔍 기둥 정보 확인:', {
         slotIndex,
-        originalX: finalX,
-        adjustedX: finalPosition.x,
-        originalWidth: actualModuleData.dimensions.width,
-        adjustedWidth: adjustedFurnitureWidth,
-        columnPosition: targetSlotInfo.columnPosition,
-        availableWidth: targetSlotInfo.availableWidth,
-        intrusionDirection: targetSlotInfo.intrusionDirection,
-        logic: '기둥 침범 방지: 배치 시점에 위치와 크기 미리 조정'
+        columnDepth,
+        columnWidth: targetSlotInfo.column.width,
+        columnId: targetSlotInfo.column.id
       });
+      
+      // 기둥C (300mm 깊이)의 특별 처리: 침범량이 150mm 미만이면 기둥A 방식 적용
+      const isColumnC = columnDepth === 300;
+      let shouldUseDeepColumnLogic = false;
+      
+      if (isColumnC) {
+        // 기둥C의 슬롯 침범량 계산
+        const slotWidthM = indexing.columnWidth * 0.01;
+        const slotLeftX = finalX - slotWidthM / 2;
+        const slotRightX = finalX + slotWidthM / 2;
+        
+        const columnWidthM = targetSlotInfo.column.width * 0.01;
+        const columnLeftX = targetSlotInfo.column.position[0] - columnWidthM / 2;
+        const columnRightX = targetSlotInfo.column.position[0] + columnWidthM / 2;
+        
+        // 기둥이 슬롯 끝에서 안쪽으로 얼마나 들어왔는지 계산 (mm 단위)
+        let intrusionFromEdge = 0;
+        
+        // 기둥이 왼쪽 끝에서 침범한 경우
+        if (columnLeftX < slotLeftX && columnRightX > slotLeftX) {
+          intrusionFromEdge = (columnRightX - slotLeftX) * 1000;
+        }
+        // 기둥이 오른쪽 끝에서 침범한 경우  
+        else if (columnLeftX < slotRightX && columnRightX > slotRightX) {
+          intrusionFromEdge = (slotRightX - columnLeftX) * 1000;
+        }
+        // 기둥이 슬롯을 완전히 덮는 경우
+        else if (columnLeftX <= slotLeftX && columnRightX >= slotRightX) {
+          intrusionFromEdge = (slotRightX - slotLeftX) * 1000; // 전체 슬롯 폭
+        }
+        
+        // 슬롯 끝에서 150mm 미만 침범이면 기둥A 방식 사용
+        shouldUseDeepColumnLogic = intrusionFromEdge < 150;
+        
+        console.log('🏛️ 배치 시 기둥C 침범량 분석:', {
+          slotIndex,
+          intrusionFromEdge: intrusionFromEdge.toFixed(1) + 'mm',
+          useDeepLogic: shouldUseDeepColumnLogic,
+          appliedMethod: shouldUseDeepColumnLogic ? '기둥A 방식 (폭 조정)' : '기둥C 방식 (깊이 조정)'
+        });
+      }
+      
+      if (shouldUseDeepColumnLogic || columnDepth >= 500) {
+        // 깊은 기둥 또는 기둥C 얕은 침범: 위치와 크기 조정
+        console.log('🏛️ 기둥A 방식 적용 - 위치 조정');
+        const slotWidthM = indexing.columnWidth * 0.01;
+        const originalSlotBounds = {
+          left: finalX - slotWidthM / 2,
+          right: finalX + slotWidthM / 2,
+          center: finalX
+        };
+        
+        const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+        finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
+        adjustedFurnitureWidth = furnitureBounds.renderWidth;
+      } else {
+        // 얕은 기둥 (기둥C 깊은 침범 포함): 위치 조정하지 않음
+        console.log('✅ 기둥C 방식 적용 - 중앙 배치, 위치 조정 안함:', {
+          slotIndex,
+          columnDepth,
+          originalPosition: finalPosition,
+          skipPositionAdjustment: true
+        });
+        // finalPosition과 adjustedFurnitureWidth 그대로 유지
+      }
     }
     
     // 새 모듈 배치
@@ -457,6 +528,272 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     setCurrentDragData,
     columnSlots
   ]);
+
+  // 직접 분할 배치 함수 (간단한 버전)
+  const attemptDirectSplitPlacement = (column: any, slotIndex: number, moduleData: any, spaceInfo: SpaceInfo) => {
+    try {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const slotWidthMm = indexing.columnWidth;
+      const slotCenterX = indexing.threeUnitPositions[slotIndex];
+      
+      // 기둥 정보
+      const columnCenterX = column.position[0]; // meters
+      const columnLeftX = columnCenterX - (column.width * 0.01) / 2;
+      const columnRightX = columnCenterX + (column.width * 0.01) / 2;
+      
+      // 슬롯 경계
+      const slotLeftX = slotCenterX - (slotWidthMm * 0.01) / 2;
+      const slotRightX = slotCenterX + (slotWidthMm * 0.01) / 2;
+      
+      // 기둥의 슬롯 침범 폭 계산 (mm)
+      const columnSlotOverlapWidth = Math.max(0, 
+        Math.min(columnRightX, slotRightX) - Math.max(columnLeftX, slotLeftX)
+      ) * 100; // meters to mm
+      
+      // 좌우 여유 공간 계산 (mm)
+      const leftSpaceMm = Math.max(0, (columnLeftX - slotLeftX) * 100);
+      const rightSpaceMm = Math.max(0, (slotRightX - columnRightX) * 100);
+      
+      console.log('📐 기둥 침범 분석:', {
+        columnWidth: column.width,
+        columnSlotOverlapWidth: columnSlotOverlapWidth.toFixed(1),
+        leftSpaceMm: leftSpaceMm.toFixed(1),
+        rightSpaceMm: rightSpaceMm.toFixed(1),
+        shouldSplit: columnSlotOverlapWidth >= 150,
+        minRequired: 150
+      });
+      
+      // 분할배치 조건: 기둥이 슬롯에 충분히 침범하고 기둥이 충분히 깊어야 함
+      // 기둥C(300mm)는 침범폭이 300mm이지만 깊이가 작아서 분할배치 안함
+      const shouldSplit = columnSlotOverlapWidth >= 400 && column.depth >= 500; // 더 엄격한 조건
+      
+      if (!shouldSplit) {
+        return { 
+          success: false, 
+          reason: `분할배치 조건 불충족 - 침범폭: ${columnSlotOverlapWidth.toFixed(0)}mm, 기둥깊이: ${column.depth}mm (침범폭≥400mm, 기둥깊이≥500mm 필요)` 
+        };
+      }
+      
+      // 분할 가능성 확인 - 최소 공간 요구사항 완화 (50mm)
+      if (leftSpaceMm < 50 && rightSpaceMm < 50) {
+        return { 
+          success: false, 
+          reason: `양쪽 모두 공간 부족 - 좌측: ${leftSpaceMm.toFixed(0)}mm, 우측: ${rightSpaceMm.toFixed(0)}mm` 
+        };
+      }
+      
+      // 깊이 조정
+      const adjustedDepth = 730 - column.depth;
+      if (adjustedDepth < 200) {
+        return { 
+          success: false, 
+          reason: `깊이 부족 - 조정된 깊이: ${adjustedDepth}mm` 
+        };
+      }
+      
+      // 캐비넷 크기와 위치 계산 (한쪽만 있어도 배치 가능)
+      const leftCabinetWidth = leftSpaceMm > 50 ? Math.max(50, leftSpaceMm - 5) : 0;
+      const rightCabinetWidth = rightSpaceMm > 50 ? Math.max(50, rightSpaceMm - 5) : 0;
+      
+      const leftCabinetCenterX = slotLeftX + (leftSpaceMm * 0.01) / 2;
+      const rightCabinetCenterX = columnRightX + (rightSpaceMm * 0.01) / 2;
+      
+      // 기둥 앞면에 배치할 캐비넷의 여유공간 계산
+      const frontSpaceMm = adjustedDepth; // 조정된 깊이가 기둥 앞쪽 여유공간
+      const canAddFrontCabinet = frontSpaceMm >= 150;
+      
+      console.log('🏗️ 기둥 앞면 캐비넷 배치 검토:', {
+        frontSpaceMm,
+        canAddFrontCabinet,
+        columnDepth: column.depth,
+        adjustedDepth
+      });
+      
+      // 모듈 생성
+      const modules = [];
+      const timestamp = Date.now();
+      
+      // 기본 싱글 모듈 ID 생성 (기존 모듈이 어떤 타입이든 싱글로 변환)
+      let baseModuleId = moduleData.id;
+      if (baseModuleId.includes('dual-')) {
+        baseModuleId = baseModuleId.replace('dual-', 'single-');
+      } else if (!baseModuleId.includes('single-')) {
+        // 기본 모듈이면 single- 접두사 추가
+        baseModuleId = `single-${baseModuleId}`;
+      }
+
+      // 왼쪽 캐비넷 (공간이 있을 때만)
+      if (leftCabinetWidth > 0) {
+        modules.push({
+          id: `split-left-${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+          moduleId: baseModuleId,
+          position: { x: leftCabinetCenterX, y: 0, z: 0 },
+          rotation: 0,
+          hasDoor: false,
+          customDepth: adjustedDepth,
+          slotIndex: slotIndex,
+          isDualSlot: false,
+          isValidInCurrentSpace: true,
+          adjustedWidth: leftCabinetWidth,
+          hingePosition: 'right' as 'left' | 'right'
+        });
+      }
+      
+      // 오른쪽 캐비넷 (공간이 있을 때만)
+      if (rightCabinetWidth > 0) {
+        modules.push({
+          id: `split-right-${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+          moduleId: baseModuleId,
+          position: { x: rightCabinetCenterX, y: 0, z: 0 },
+          rotation: 0,
+          hasDoor: false,
+          customDepth: adjustedDepth,
+          slotIndex: slotIndex,
+          isDualSlot: false,
+          isValidInCurrentSpace: true,
+          adjustedWidth: rightCabinetWidth,
+          hingePosition: 'left' as 'left' | 'right'
+        });
+      }
+      
+      // 기둥 앞면에 맞닿는 좁은 캐비넷 추가 (여유공간 150mm 이상일 때)
+      if (canAddFrontCabinet) {
+        const frontCabinetWidth = Math.min(column.width - 20, 200); // 기둥 너비보다 작게, 최대 200mm
+        const frontCabinetDepth = Math.min(frontSpaceMm - 10, 150); // 여유공간보다 작게, 최대 150mm
+        const frontCabinetCenterX = columnCenterX; // 기둥 중심에 배치
+        const frontCabinetZ = (column.depth * 0.01) / 2 + (frontCabinetDepth * 0.01) / 2; // 기둥 앞면에 맞닿게
+        
+        modules.push({
+          id: `split-front-${timestamp}-${Math.random().toString(36).substr(2, 9)}`,
+          moduleId: baseModuleId,
+          position: { x: frontCabinetCenterX, y: 0, z: frontCabinetZ },
+          rotation: 0,
+          hasDoor: false,
+          customDepth: frontCabinetDepth,
+          slotIndex: slotIndex,
+          isDualSlot: false,
+          isValidInCurrentSpace: true,
+          adjustedWidth: frontCabinetWidth,
+          hingePosition: 'right' as 'left' | 'right',
+          isFrontColumn: true // 기둥 앞면 캐비넷 표시
+        });
+        
+        console.log('✨ 기둥 앞면 캐비넷 추가:', {
+          width: frontCabinetWidth,
+          depth: frontCabinetDepth,
+          centerX: frontCabinetCenterX,
+          centerZ: frontCabinetZ
+        });
+      }
+      
+      // 최소 하나 이상의 모듈이 생성되었는지 확인
+      if (modules.length === 0) {
+        return { 
+          success: false, 
+          reason: '배치 가능한 캐비넷이 없음 - 모든 공간이 부족함' 
+        };
+      }
+
+      console.log('✨ 분할 배치 모듈 생성 완료:', {
+        leftModule: leftCabinetWidth > 0 ? { width: leftCabinetWidth, centerX: leftCabinetCenterX } : null,
+        rightModule: rightCabinetWidth > 0 ? { width: rightCabinetWidth, centerX: rightCabinetCenterX } : null,
+        frontModule: canAddFrontCabinet ? { 
+          width: Math.min(column.width - 20, 200), 
+          depth: Math.min(frontSpaceMm - 10, 150),
+          centerX: columnCenterX 
+        } : null,
+        totalModules: modules.length,
+        columnSlotOverlapWidth: columnSlotOverlapWidth.toFixed(1),
+        depth: adjustedDepth
+      });
+      
+      return { success: true, modules };
+      
+    } catch (error) {
+      console.error('❌ 직접 분할 배치 에러:', error);
+      return { success: false, reason: `에러 발생: ${error}` };
+    }
+  };
+
+  // 선택된 배치 옵션 처리
+  const handleSelectedPlacement = (
+    option: CabinetPlacementOption, 
+    placementData: { dragEvent: DragEvent; dragData: any; slotIndex: number; moduleData: any }
+  ): boolean => {
+    const { dragData, slotIndex, moduleData } = placementData;
+    
+    console.log('🏗️ 선택된 배치 옵션 처리:', {
+      optionType: option.type,
+      cabinetCount: option.cabinets.length,
+      slotIndex
+    });
+
+    // 각 캐비넷을 배치
+    option.cabinets.forEach((cabinet, index) => {
+      const placedId = `placed-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      const newModule = {
+        id: placedId,
+        moduleId: cabinet.moduleId,
+        position: { x: cabinet.position[0], y: cabinet.position[1], z: cabinet.position[2] },
+        rotation: 0,
+        hasDoor: false,
+        customDepth: cabinet.depth,
+        slotIndex: slotIndex, // 분할 배치도 같은 슬롯에 배치 (위치는 다름)
+        isDualSlot: false,
+        isValidInCurrentSpace: true,
+        adjustedWidth: cabinet.width,
+        hingePosition: 'right' as 'left' | 'right',
+        columnSlotInfo: {
+          hasColumn: true,
+          columnType: 'shallow',
+          placementType: option.type,
+          originalOption: option,
+          splitIndex: index // 분할에서의 순서 (0: 왼쪽, 1: 오른쪽)
+        }
+      };
+
+      addModule(newModule);
+      console.log('✅ 캐비넷 배치 완료:', {
+        id: placedId,
+        moduleId: cabinet.moduleId,
+        width: cabinet.width,
+        depth: cabinet.depth,
+        position: cabinet.position
+      });
+    });
+
+    // 그림자 업데이트
+    if (viewMode === '3D' && gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+      setTimeout(() => {
+        if (gl.shadowMap) gl.shadowMap.needsUpdate = true;
+      }, 100);
+    }
+
+    // 드래그 상태 초기화
+    setCurrentDragData(null);
+    
+    return true;
+  };
+
+  // 팝업에서 옵션 선택 시
+  const handlePopupSelect = (option: CabinetPlacementOption) => {
+    if (pendingPlacementData) {
+      handleSelectedPlacement(option, pendingPlacementData);
+    }
+    setShowPlacementPopup(false);
+    setPendingPlacementData(null);
+    setPlacementOptions([]);
+  };
+
+  // 팝업 취소 시
+  const handlePopupCancel = () => {
+    setShowPlacementPopup(false);
+    setPendingPlacementData(null);
+    setPlacementOptions([]);
+    setCurrentDragData(null);
+  };
   
   // window 객체에 함수 노출
   useEffect(() => {
@@ -526,50 +863,51 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   const slotStartY = calculateSlotStartY(spaceInfo);
   
   return (
-    <group>
-      {/* 레이캐스팅용 투명 콜라이더들 */}
-      {indexing.threeUnitPositions.map((slotX, slotIndex) => (
-        <mesh
-          key={`slot-collider-${slotIndex}`}
-          position={[slotX, slotStartY + slotDimensions.height / 2, 0]}
-          userData={{ 
-            slotIndex, 
-            isSlotCollider: true,
-            type: 'slot-collider'
-          }}
-          visible={false}
-        >
-          <boxGeometry args={[slotDimensions.width, slotDimensions.height, slotDimensions.depth]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
-      ))}
-      
-      {/* 가구 미리보기 */}
-      {indexing.threeUnitPositions.map((slotX, slotIndex) => {
+    <>
+      <group>
+        {/* 레이캐스팅용 투명 콜라이더들 */}
+        {indexing.threeUnitPositions.map((slotX, slotIndex) => (
+          <mesh
+            key={`slot-collider-${slotIndex}`}
+            position={[slotX, slotStartY + slotDimensions.height / 2, 0]}
+            userData={{ 
+              slotIndex, 
+              isSlotCollider: true,
+              type: 'slot-collider'
+            }}
+            visible={false}
+          >
+            <boxGeometry args={[slotDimensions.width, slotDimensions.height, slotDimensions.depth]} />
+            <meshBasicMaterial transparent opacity={0} />
+          </mesh>
+        ))}
         
-        // 현재 드래그 중인 가구가 듀얼인지 확인
-        let isDual = false;
-        if (currentDragData) {
-          isDual = isDualFurniture(currentDragData.moduleData.id, spaceInfo);
-        }
-        
-        // 하이라이트 여부 결정
-        let shouldHighlight = false;
-        if (hoveredSlotIndex !== null && currentDragData) {
-          if (isDual) {
-            // 듀얼 가구: 현재 슬롯과 다음 슬롯 모두 하이라이트
-            shouldHighlight = slotIndex === hoveredSlotIndex || slotIndex === hoveredSlotIndex + 1;
-          } else {
-            // 싱글 가구: 현재 슬롯만 하이라이트
-            shouldHighlight = slotIndex === hoveredSlotIndex;
+        {/* 가구 미리보기 */}
+        {indexing.threeUnitPositions.map((slotX, slotIndex) => {
+          
+          // 현재 드래그 중인 가구가 듀얼인지 확인
+          let isDual = false;
+          if (currentDragData) {
+            isDual = isDualFurniture(currentDragData.moduleData.id, spaceInfo);
           }
-        }
-        
-        if (!shouldHighlight || !currentDragData) return null;
-        
-        // 드래그 중인 가구의 모듈 데이터 가져오기
-        let moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
-        if (!moduleData) return null;
+          
+          // 하이라이트 여부 결정
+          let shouldHighlight = false;
+          if (hoveredSlotIndex !== null && currentDragData) {
+            if (isDual) {
+              // 듀얼 가구: 현재 슬롯과 다음 슬롯 모두 하이라이트
+              shouldHighlight = slotIndex === hoveredSlotIndex || slotIndex === hoveredSlotIndex + 1;
+            } else {
+              // 싱글 가구: 현재 슬롯만 하이라이트
+              shouldHighlight = slotIndex === hoveredSlotIndex;
+            }
+          }
+          
+          if (!shouldHighlight || !currentDragData) return null;
+          
+          // 드래그 중인 가구의 모듈 데이터 가져오기
+          let moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
+          if (!moduleData) return null;
         
         // 미리보기용 듀얼 분할 확인
         let previewModules: any[] = [];
@@ -667,6 +1005,18 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         );
       })}
     </group>
+      
+      {/* 캐비넷 배치 선택 팝업 */}
+      {showPlacementPopup && pendingPlacementData && (
+        <CabinetPlacementPopup
+          options={placementOptions}
+          onSelect={handlePopupSelect}
+          onCancel={handlePopupCancel}
+          position={popupPosition}
+          columnDepth={pendingPlacementData.slotIndex !== undefined && columnSlots[pendingPlacementData.slotIndex]?.column?.depth || 0}
+        />
+      )}
+    </>
   );
 };
 

@@ -133,7 +133,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            가이드
+            그리드
           </label>
         </div>
 

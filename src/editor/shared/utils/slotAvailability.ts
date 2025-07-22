@@ -39,25 +39,19 @@ export const isSlotAvailable = (
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
   
-  // 기둥이 있는 슬롯에서 가구 배치 가능 여부 확인
+  // 기둥이 있는 슬롯에서도 기본적으로 배치 허용 (단일배치 우선)
   for (const targetSlot of targetSlots) {
     const slotInfo = columnSlots[targetSlot];
     if (!slotInfo) continue;
     
     if (slotInfo.hasColumn) {
-      // 실제 가구 너비 가져오기
-      const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
-      const furnitureWidth = moduleData?.dimensions.width || (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth);
-      
-      if (!canPlaceFurnitureInColumnSlot(slotInfo, furnitureWidth, isDualFurniture)) {
-        console.log(`❌ 슬롯 ${targetSlot}에 기둥으로 인해 가구 배치 불가:`, {
-          availableWidth: slotInfo.availableWidth,
-          requiredWidth: furnitureWidth,
-          actualFurnitureWidth: moduleData?.dimensions.width,
-          columnPosition: slotInfo.columnPosition
-        });
-        return false;
-      }
+      console.log(`ℹ️ 슬롯 ${targetSlot}에 기둥 있음 - 단일배치 허용:`, {
+        columnDepth: slotInfo.column?.depth,
+        columnType: slotInfo.columnType,
+        columnWidth: slotInfo.column?.width
+      });
+      // 기둥이 있어도 일단 배치 허용 (SlotDropZones에서 분할 처리)
+      continue;
     }
   }
   

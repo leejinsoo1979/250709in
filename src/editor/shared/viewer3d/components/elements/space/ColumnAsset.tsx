@@ -43,7 +43,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -232,8 +232,142 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   return (
     <group position={position}>
-      {renderMode === 'wireframe' ? (
-        // 와이어프레임 모드: 윤곽선과 대각선 표시
+      {viewMode === '2D' ? (
+        // 2D 모드: 옅은 회색 면에 빗살무늬 표시
+        <group position={[0, (height * 0.01) / 2, 0]}>
+          {/* 투명한 클릭 영역 박스 */}
+          <mesh
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            onPointerDown={handlePointerDown}
+            onPointerEnter={() => setIsHovered(true)}
+            onPointerLeave={() => setIsHovered(false)}
+            onContextMenu={handleContextMenu}
+            userData={{ isColumn: true, columnId: id }}
+          >
+            <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
+            <meshBasicMaterial transparent opacity={0} />
+          </mesh>
+          
+          {/* 옅은 회색 배경 면 */}
+          <mesh>
+            <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
+            <meshBasicMaterial 
+              color={isSelected ? "#e8f5e8" : "#f0f0f0"} 
+              transparent 
+              opacity={0.6}
+            />
+          </mesh>
+          
+          {/* 윤곽선 */}
+          <lineSegments>
+            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, depth * 0.01)]} />
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : "#999999"} />
+          </lineSegments>
+          
+          {/* 빗살무늬 (뷰별 적절한 면에 표시) */}
+          {(() => {
+            const color = isSelected ? "#4CAF50" : "#cccccc";
+            const spacing = 0.25; // 덜 촘촘하게
+            const widthM = width * 0.01;
+            const heightM = height * 0.01;
+            const depthM = depth * 0.01;
+            
+            const lines = [];
+            
+            switch (view2DDirection) {
+              case 'front':
+                // 정면뷰: XY 평면에 대각선 빗살 (좌하→우상)
+                for (let i = -Math.ceil(widthM / spacing); i <= Math.ceil(heightM / spacing); i++) {
+                  const y1 = -heightM/2 + i * spacing;
+                  const y2 = y1 + widthM;
+                  
+                  // 기둥 영역 내에서 잘라내기
+                  const startY = Math.max(-heightM/2, Math.min(heightM/2, y1));
+                  const endY = Math.max(-heightM/2, Math.min(heightM/2, y2));
+                  
+                  if (startY < endY) {
+                    const startX = -widthM/2 + (startY - y1);
+                    const endX = -widthM/2 + (endY - y1);
+                    
+                    lines.push(
+                      <Line
+                        key={`front-diag-${i}`}
+                        points={[
+                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), startY, depthM/2 + 0.001],
+                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), endY, depthM/2 + 0.001]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
+                    );
+                  }
+                }
+                break;
+                
+              case 'top':
+                // 상부뷰: XZ 평면에 대각선 빗살
+                for (let i = -Math.ceil(widthM / spacing); i <= Math.ceil(depthM / spacing); i++) {
+                  const z1 = -depthM/2 + i * spacing;
+                  const z2 = z1 + widthM;
+                  
+                  const startZ = Math.max(-depthM/2, Math.min(depthM/2, z1));
+                  const endZ = Math.max(-depthM/2, Math.min(depthM/2, z2));
+                  
+                  if (startZ < endZ) {
+                    const startX = -widthM/2 + (startZ - z1);
+                    const endX = -widthM/2 + (endZ - z1);
+                    
+                    lines.push(
+                      <Line
+                        key={`top-diag-${i}`}
+                        points={[
+                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), 0.001, startZ],
+                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), 0.001, endZ]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
+                    );
+                  }
+                }
+                break;
+                
+              case 'left':
+              case 'right':
+                // 측면뷰: YZ 평면에 대각선 빗살
+                for (let i = -Math.ceil(heightM / spacing); i <= Math.ceil(depthM / spacing); i++) {
+                  const z1 = -depthM/2 + i * spacing;
+                  const z2 = z1 + heightM;
+                  
+                  const startZ = Math.max(-depthM/2, Math.min(depthM/2, z1));
+                  const endZ = Math.max(-depthM/2, Math.min(depthM/2, z2));
+                  
+                  if (startZ < endZ) {
+                    const startY = -heightM/2 + (startZ - z1);
+                    const endY = -heightM/2 + (endZ - z1);
+                    
+                    lines.push(
+                      <Line
+                        key={`side-diag-${i}`}
+                        points={[
+                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, startY)), startZ],
+                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, endY)), endZ]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
+                    );
+                  }
+                }
+                break;
+            }
+            
+            return lines;
+          })()}
+        </group>
+      ) : renderMode === 'wireframe' ? (
+        // 3D 와이어프레임 모드: 윤곽선과 대각선 표시
         <group position={[0, (height * 0.01) / 2, 0]}>
           {/* 투명한 클릭 영역 박스 (와이어프레임 모드에서 마우스 인식용) */}
           <mesh
@@ -255,33 +389,26 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             <primitive object={wireframeMaterial} />
           </lineSegments>
           
-          {/* 2D 모드일 때 정면에서 보이는 X자 대각선 추가 */}
-          {viewMode === '2D' && (
-            <>
-              {/* 대각선 1: 좌하단에서 우상단으로 */}
-              <Line
-                points={[
-                  [-(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],  // 좌하단 앞면
-                  [(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]     // 우상단 앞면
-                ]}
-                color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-                lineWidth={1}
-              />
-              
-              {/* 대각선 2: 우하단에서 좌상단으로 */}
-              <Line
-                points={[
-                  [(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],   // 우하단 앞면
-                  [-(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]    // 좌상단 앞면
-                ]}
-                color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-                lineWidth={1}
-              />
-            </>
-          )}
+          {/* X자 대각선 */}
+          <Line
+            points={[
+              [-(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
+              [(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
+            ]}
+            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
+            lineWidth={1}
+          />
+          <Line
+            points={[
+              [(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
+              [-(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
+            ]}
+            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
+            lineWidth={1}
+          />
         </group>
       ) : (
-        // 솔리드 모드: 일반 메시
+        // 3D 솔리드 모드: 일반 메시
         <mesh
           ref={meshRef}
           material={material}
@@ -299,11 +426,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
         </mesh>
       )}
-      
-
-      
-
-
     </group>
   );
 };

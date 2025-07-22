@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useCanvasEventHandlers } from './hooks/useCanvasEventHandlers'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
+import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
 
@@ -55,6 +56,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const controlsRef = useRef<any>(null);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection);
@@ -169,6 +171,52 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       regenerateCanvas();
     }
   }, [viewMode, mounted, regenerateCanvas]);
+
+  // OrbitControls 팬 범위 제한 (그리드 영역)
+  useEffect(() => {
+    if (!controlsRef.current || viewMode === '3D') return;
+
+    const controls = controlsRef.current;
+    const gridSize = 200; // 그리드 크기와 동일
+    
+    // 초기 카메라 거리 저장
+    const initialDistance = controls.object ? controls.object.position.distanceTo(controls.target) : 10;
+    
+    const onControlsChange = () => {
+      // 카메라 타겟 위치를 그리드 범위로 제한
+      const target = controls.target;
+      target.x = Math.max(-gridSize, Math.min(gridSize, target.x));
+      target.y = Math.max(-gridSize, Math.min(gridSize, target.y));
+      target.z = Math.max(-gridSize, Math.min(gridSize, target.z));
+      
+      // 카메라 위치도 그리드 범위 기준으로 제한
+      const camera = controls.object;
+      if (camera) {
+        const distance = camera.position.distanceTo(target);
+        const direction = camera.position.clone().sub(target).normalize();
+        
+        // 최대 줌아웃을 초기 거리의 2배로 제한
+        const maxZoomDistance = initialDistance * 2;
+        if (distance > maxZoomDistance) {
+          camera.position.copy(target.clone().add(direction.multiplyScalar(maxZoomDistance)));
+        }
+        
+        // 최소 줌인도 제한 (초기 거리의 10%)
+        const minZoomDistance = initialDistance * 0.1;
+        if (distance < minZoomDistance) {
+          camera.position.copy(target.clone().add(direction.multiplyScalar(minZoomDistance)));
+        }
+      }
+    };
+
+    controls.addEventListener('change', onControlsChange);
+    
+    return () => {
+      if (controls) {
+        controls.removeEventListener('change', onControlsChange);
+      }
+    };
+  }, [viewMode, mounted]);
   
   // WebGL 컨텍스트 관리
   useEffect(() => {
@@ -230,9 +278,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     >
       <Canvas
         key={`${canvasKey}-${forceRender}`}
+        ref={canvasRef}
         shadows={viewMode === '3D'}
         style={{ 
-          background: CANVAS_SETTINGS.BACKGROUND_COLOR,
+          background: viewMode === '2D' ? '#fff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: 'default',
           touchAction: 'none'
         }}
@@ -300,9 +349,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           gl.domElement.style.display = 'block';
           gl.domElement.setAttribute('data-canvas-key', canvasKey);
           
-          // 씬 배경색 설정
+          // 씬 배경색 설정 (2D는 흰색, 3D는 기본 색상)
           if (scene) {
-            scene.background = new THREE.Color(CANVAS_SETTINGS.BACKGROUND_COLOR);
+            scene.background = new THREE.Color(viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR);
             // 환경맵 자동 설정 허용 (Environment 컴포넌트에서 처리)
             // scene.environment = null; // 이 라인을 주석처리하여 환경맵 적용 허용
             scene.fog = null; // 포그 비활성화로 선명도 유지
@@ -331,6 +380,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* 자원 정리 컴포넌트 */}
         <SceneCleanup />
         
+        {/* 커스텀 줌 컨트롤러 - 2D 모드에서만 활성화 */}
+        {viewMode === '2D' && (
+          <CustomZoomController
+            minDistance={controlsConfig.minDistance}
+            maxDistance={controlsConfig.maxDistance}
+            viewMode={viewMode}
+            zoomSpeed={1.0}
+          />
+        )}
+        
         {/* Fog 효과 제거 - 멀다고 흐려질 필요 없음 */}
         {/* <fog attach="fog" args={[CANVAS_SETTINGS.FOG_COLOR, CANVAS_SETTINGS.FOG_NEAR, CANVAS_SETTINGS.FOG_FAR]} /> */}
         
@@ -355,6 +414,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         
         {/* OrbitControls */}
         <OrbitControls 
+          ref={controlsRef}
           enabled={controlsConfig.enabled}
           target={controlsConfig.target}
           minPolarAngle={controlsConfig.minPolarAngle}
@@ -362,7 +422,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           minAzimuthAngle={controlsConfig.minAzimuthAngle}
           maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
           enablePan={controlsConfig.enablePan}
-          enableZoom={controlsConfig.enableZoom}
+          enableZoom={viewMode === '3D'}
           enableRotate={controlsConfig.enableRotate}
           minDistance={controlsConfig.minDistance}
           maxDistance={controlsConfig.maxDistance}

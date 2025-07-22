@@ -26,6 +26,7 @@ import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/Plac
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
+import WallControl from '@/editor/shared/controls/structure/WallControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 
 import { 
@@ -49,11 +50,11 @@ const Configurator: React.FC = () => {
 
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
-  const { setSpaceInfo, spaceInfo } = useSpaceConfigStore();
+  const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -63,7 +64,6 @@ const Configurator: React.FC = () => {
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
   const [showAll, setShowAll] = useState(true);
-  const [showGuides, setShowGuides] = useState(false);
 
   // 기존 공간 변경 로직 복구
   const [previousSpaceInfo, setPreviousSpaceInfo] = useState(spaceInfo);
@@ -80,6 +80,41 @@ const Configurator: React.FC = () => {
         } else {
           console.log('⚠️ 선택된 기둥이 없습니다.');
         }
+        return;
+      }
+
+      // 컬럼 편집 팝업이 열린 상태에서 좌우 화살표로 컬럼 이동
+      if (activePopup.type === 'columnEdit' && activePopup.id) {
+        const targetColumn = spaceInfo.columns?.find(col => col.id === activePopup.id);
+        if (targetColumn && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+          event.preventDefault();
+          
+          const currentX = targetColumn.position[0]; // Three.js 단위 (meters)
+          const spaceWidthM = spaceInfo.width * 0.01; // mm to meters
+          const columnWidthM = targetColumn.width * 0.01; // mm to meters
+          
+          // Shift 키가 눌려있으면 빠른 이동 (50mm), 그렇지 않으면 정밀 이동 (5mm)
+          const moveStep = event.shiftKey ? 0.05 : 0.005; // Shift: 50mm, 일반: 5mm
+          
+          let newX = currentX;
+          if (event.key === 'ArrowLeft') {
+            newX = Math.max(-(spaceWidthM/2) + (columnWidthM/2), currentX - moveStep);
+          } else if (event.key === 'ArrowRight') {
+            newX = Math.min((spaceWidthM/2) - (columnWidthM/2), currentX + moveStep);
+          }
+          
+          // 컬럼 위치 업데이트
+          updateColumn(activePopup.id, { position: [newX, targetColumn.position[1], targetColumn.position[2]] });
+          
+          console.log('⌨️ 컬럼 키보드 이동:', { 
+            columnId: activePopup.id, 
+            direction: event.key, 
+            moveStep: moveStep,
+            stepSize: event.shiftKey ? '50mm (빠름)' : '5mm (정밀)',
+            oldX: currentX, 
+            newX 
+          });
+        }
       }
     };
 
@@ -88,7 +123,7 @@ const Configurator: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedColumnId, openColumnEditModal]);
+  }, [selectedColumnId, openColumnEditModal, activePopup, spaceInfo.columns, spaceInfo.width, updateColumn]);
 
 
 
@@ -1071,7 +1106,7 @@ const Configurator: React.FC = () => {
             showDimensions={showDimensions}
             onShowDimensionsToggle={toggleDimensions}
             showGuides={showGuides}
-            onShowGuidesToggle={() => setShowGuides(!showGuides)}
+            onShowGuidesToggle={toggleGuides}
             doorsOpen={doorsOpen}
             onDoorsToggle={toggleDoors}
           />

@@ -39,17 +39,48 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
   return (
     <div className={styles.columnControl}>
       <div className={styles.header}>
-        <h3>기둥 배치</h3>
+        <h3>구조물 배치</h3>
       </div>
 
       {/* 기둥 썸네일 드래그 앤 드롭 */}
       <div className={styles.thumbnailSection}>
-        <h4>기둥 종류</h4>
+        <h4>구조물 종류</h4>
         <div className={styles.thumbnailGrid}>
           <ColumnThumbnail 
+            width={300}
+            height={2400}
+            depth={730}
             material="concrete" 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
+            title="기둥A"
+          />
+          <ColumnThumbnail 
+            width={120}
+            height={2400}
+            depth={730}
+            material="concrete" 
+            color="#888888"
+            onDragStart={handleThumbnailDragStart}
+            title="기둥B"
+          />
+          <ColumnThumbnail 
+            width={300}
+            height={2400}
+            depth={300}
+            material="concrete" 
+            color="#888888"
+            onDragStart={handleThumbnailDragStart}
+            title="기둥C"
+          />
+          <ColumnThumbnail 
+            width={20}
+            height={2400}
+            depth={730}
+            material="concrete" 
+            color="#888888"
+            onDragStart={handleThumbnailDragStart}
+            title="패널A"
           />
         </div>
       </div>
