@@ -1,0 +1,222 @@
+/* 테마 CSS 변수 정의 */
+:root {
+  /* 기본 테마 색상 (라이트 모드 + 초록색) */
+  --theme-primary: #10b981;
+  --theme-primary-hover: #059669;
+  --theme-primary-light: #d1fae5;
+  --theme-primary-dark: #047857;
+  
+  --theme-background: #ffffff;
+  --theme-background-secondary: #f9fafb;
+  --theme-surface: #ffffff;
+  --theme-text: #111827;
+  --theme-text-secondary: #6b7280;
+  --theme-text-muted: #9ca3af;
+  --theme-border: #e5e7eb;
+  --theme-border-hover: #d1d5db;
+  --theme-shadow: rgba(0, 0, 0, 0.1);
+  --theme-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* 전역 테마 적용 */
+body {
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 테마 변수를 사용하는 공통 스타일 */
+.theme-primary {
+  color: var(--theme-primary) !important;
+}
+
+.theme-primary-bg {
+  background-color: var(--theme-primary) !important;
+}
+
+.theme-primary-border {
+  border-color: var(--theme-primary) !important;
+}
+
+.theme-surface {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+.theme-border {
+  border-color: var(--theme-border);
+}
+
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--theme-text-muted);
+}
+
+/* 버튼 테마 */
+.theme-button-primary {
+  background-color: var(--theme-primary);
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.theme-button-primary:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+.theme-button-secondary {
+  background-color: transparent;
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-border);
+  transition: all 0.2s ease;
+}
+
+.theme-button-secondary:hover {
+  background-color: var(--theme-background-secondary);
+  border-color: var(--theme-border-hover);
+}
+
+/* 카드 테마 */
+.theme-card {
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 1px 3px var(--theme-shadow);
+  transition: all 0.2s ease;
+}
+
+.theme-card:hover {
+  border-color: var(--theme-border-hover);
+  box-shadow: 0 4px 6px var(--theme-shadow);
+}
+
+/* 입력 필드 테마 */
+.theme-input {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  transition: all 0.2s ease;
+}
+
+.theme-input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
+}
+
+.theme-input::placeholder {
+  color: var(--theme-text-muted);
+}
+
+/* 모달 테마 */
+.theme-modal-overlay {
+  background-color: var(--theme-overlay);
+}
+
+.theme-modal {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+}
+
+/* 드롭다운 테마 */
+.theme-dropdown {
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 4px 6px var(--theme-shadow);
+}
+
+.theme-dropdown-item {
+  color: var(--theme-text);
+  transition: background-color 0.2s ease;
+}
+
+.theme-dropdown-item:hover {
+  background-color: var(--theme-background-secondary);
+}
+
+.theme-dropdown-item.active {
+  background-color: var(--theme-primary);
+  color: white;
+}
+
+/* 사이드바 테마 */
+.theme-sidebar {
+  background-color: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
+}
+
+/* 헤더 테마 */
+.theme-header {
+  background-color: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+}
+
+/* 네비게이션 테마 */
+.theme-nav-item {
+  color: var(--theme-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.theme-nav-item:hover {
+  color: var(--theme-text);
+  background-color: var(--theme-background-secondary);
+}
+
+.theme-nav-item.active {
+  color: var(--theme-primary);
+  background-color: var(--theme-primary-light);
+}
+
+/* 스크롤바 테마 (웹킷 기반 브라우저) */
+.theme-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.theme-scrollbar::-webkit-scrollbar-track {
+  background: var(--theme-background-secondary);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--theme-text-muted);
+  border-radius: 3px;
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-text-secondary);
+}
+
+/* 로딩 애니메이션 테마 */
+.theme-loading {
+  border: 2px solid var(--theme-border);
+  border-top: 2px solid var(--theme-primary);
+}
+
+/* 다크 모드 특별 조정 */
+body.theme-dark-green,
+body.theme-dark-blue,
+body.theme-dark-purple,
+body.theme-dark-orange {
+  /* 다크 모드에서 그림자 더 진하게 */
+  --theme-shadow: rgba(0, 0, 0, 0.3);
+  --theme-overlay: rgba(0, 0, 0, 0.7);
+}
+
+/* 애니메이션 */
+.theme-transition {
+  transition: all 0.3s ease;
+}
+
+.theme-transition-fast {
+  transition: all 0.15s ease;
+}
+
+.theme-transition-slow {
+  transition: all 0.5s ease;
+}

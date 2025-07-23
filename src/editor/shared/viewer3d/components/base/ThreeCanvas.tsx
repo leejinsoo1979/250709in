@@ -310,14 +310,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           // 최고품질 그림자 설정 - 3D 모드에서만 활성화
           gl.shadowMap.enabled = viewMode === '3D';
           if (viewMode === '3D') {
-            gl.shadowMap.type = THREE.VSMShadowMap;  // 최고품질 그림자
+            gl.shadowMap.type = THREE.PCFSoftShadowMap;  // PCF 소프트 그림자로 변경 (더 안정적)
             gl.shadowMap.autoUpdate = true;
             gl.shadowMap.needsUpdate = true;
-            
-            // 그림자 강제 업데이트를 위한 지연 실행
-            setTimeout(() => {
-              gl.shadowMap.needsUpdate = true;
-            }, 100);
           }
           
           // 그림자 품질 강화

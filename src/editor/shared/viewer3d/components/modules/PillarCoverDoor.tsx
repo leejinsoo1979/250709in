@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
 import { PillarCoverDoor as PillarCoverDoorType } from '@/editor/shared/utils/columnSlotProcessor';
+import { useSpace3DView } from '../../context/useSpace3DView';
 
 interface PillarCoverDoorProps {
   column: Column;
@@ -20,6 +22,8 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   doorConfig,
   slotWidth
 }) => {
+  const { viewMode } = useSpace3DView();
+  
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -36,13 +40,39 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   const doorColor = '#E8E8E8'; // 연한 회색
   const handleColor = '#C0C0C0'; // 손잡이 색상
   
+  // 윤곽선을 위한 geometry
+  const doorGeometry = useMemo(() => new THREE.BoxGeometry(doorWidth, doorHeight, doorThickness), [doorWidth, doorHeight, doorThickness]);
+  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(doorGeometry), [doorGeometry]);
+  
   return (
     <group position={[column.position[0], column.position[1], doorZ]}>
       {/* 도어 본체 */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[doorWidth, doorHeight, doorThickness]} />
+      <mesh castShadow receiveShadow geometry={doorGeometry}>
         <meshLambertMaterial color={doorColor} />
       </mesh>
+      
+      {/* 도어 윤곽선 */}
+      {viewMode === '3D' ? (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
+          />
+        </lineSegments>
+      ) : (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color="#666666" 
+            linewidth={1} 
+          />
+        </lineSegments>
+      )}
       
       {/* 도어 손잡이 */}
       <mesh 
@@ -51,12 +81,6 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
       >
         <boxGeometry args={[0.02, 0.15, 0.01]} />
         <meshLambertMaterial color={handleColor} />
-      </mesh>
-      
-      {/* 도어 프레임 (외곽선) */}
-      <mesh position={[0, 0, doorThickness / 2 + 0.001]}>
-        <ringGeometry args={[doorWidth / 2 - 0.005, doorWidth / 2]} />
-        <meshBasicMaterial color="#AAAAAA" transparent opacity={0.5} />
       </mesh>
       
       {/* 비수납 표시 (시각적 구별을 위한 작은 표시) */}

@@ -75,7 +75,7 @@ interface UIState {
 
 // 초기 상태
 const initialUIState = {
-  viewMode: '2D' as const,  // 기본값은 2D
+  viewMode: '3D' as const,  // 기본값은 3D
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   doorsOpen: true,  // 기본값: 문 열림 상태
   showDimensions: true,  // 기본값: 치수 표시

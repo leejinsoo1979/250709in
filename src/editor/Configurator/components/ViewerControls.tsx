@@ -31,6 +31,10 @@ interface ViewerControlsProps {
   
   doorsOpen: boolean;
   onDoorsToggle: () => void;
+  
+  // 도어 설치 관련
+  hasDoorsInstalled?: boolean;
+  onDoorInstallationToggle?: () => void;
 }
 
 const ViewerControls: React.FC<ViewerControlsProps> = ({
@@ -47,7 +51,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   showGuides,
   onShowGuidesToggle,
   doorsOpen,
-  onDoorsToggle
+  onDoorsToggle,
+  hasDoorsInstalled = false,
+  onDoorInstallationToggle
 }) => {
   // UIStore에서 2D 뷰 방향 상태 가져오기
   const { view2DDirection, setView2DDirection } = useUIStore();
@@ -86,12 +92,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.leftControls}>
         {/* 치수 표시 토글 */}
         <div className={styles.toggleGroup}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={styles.toggleIcon}>
-            <path d="M3 17h18M3 12h18M3 7h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="21" cy="7" r="1" fill="currentColor"/>
-            <circle cx="21" cy="12" r="1" fill="currentColor"/>
-            <circle cx="21" cy="17" r="1" fill="currentColor"/>
-          </svg>
           <span className={styles.toggleLabel}>{showDimensions ? 'ON' : 'OFF'}</span>
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
@@ -101,41 +101,43 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </button>
         </div>
 
-        {/* 체크박스 옵션들 */}
-        <div className={styles.checkboxGroup}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showAll}
-              onChange={onShowAllToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            모두
-          </label>
+        {/* 체크박스 옵션들 - showDimensions가 true일 때만 표시 */}
+        {showDimensions && (
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showAll}
+                onChange={onShowAllToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              가이드
+            </label>
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showDimensions}
-              onChange={onShowDimensionsToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            치수
-          </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showDimensions}
+                onChange={onShowDimensionsToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              치수
+            </label>
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showGuides}
-              onChange={onShowGuidesToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            그리드
-          </label>
-        </div>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showGuides}
+                onChange={onShowGuidesToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              그리드
+            </label>
+          </div>
+        )}
 
         {/* 두 번째 도어 토글 제거 (불필요) */}
       </div>
@@ -160,6 +162,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           {viewModes.map((mode) => (
             <button
               key={mode.id}
+              data-view-mode={mode.id}
               className={`${styles.viewModeButton} ${viewMode === mode.id ? styles.active : ''}`}
               onClick={() => onViewModeChange(mode.id)}
             >
@@ -167,6 +170,25 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </button>
           ))}
         </div>
+
+        {/* 도어 설치 버튼 */}
+        {onDoorInstallationToggle && (
+          <div className={styles.doorButtonGroup}>
+            <button 
+              className={`${styles.doorButton} ${hasDoorsInstalled ? styles.active : ''}`}
+              onClick={onDoorInstallationToggle}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                {hasDoorsInstalled && (
+                  <path d="M8 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                )}
+              </svg>
+              도어설치
+            </button>
+          </div>
+        )}
         </div>
 
       {/* 우측 뷰 컨트롤들 */}
@@ -176,6 +198,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           {viewDirections.map((direction) => (
             <button
               key={direction.id}
+              data-view-direction={direction.id}
               className={`${styles.viewDirectionButton} ${view2DDirection === direction.id ? styles.active : ''}`}
               onClick={() => handleViewDirectionChange(direction.id)}
             >

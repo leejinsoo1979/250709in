@@ -83,15 +83,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return false;
   }, [currentPlacedModule, moduleData, spaceInfo]);
 
-  // 초기값 설정 (조건부 렌더링 전에 미리 계산)
+  // 초기값 설정 - 의존성에서 getDefaultDepth 제거하여 불필요한 재실행 방지
   useEffect(() => {
     if (currentPlacedModule && moduleData) {
-      setCustomDepth(currentPlacedModule.customDepth || getDefaultDepth(moduleData));
-      setDepthInputValue((currentPlacedModule.customDepth || getDefaultDepth(moduleData)).toString());
+      const initialDepth = currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null
+        ? currentPlacedModule.customDepth 
+        : getDefaultDepth(moduleData);
+      
+      setCustomDepth(initialDepth);
+      setDepthInputValue(initialDepth.toString());
       setHingePosition(currentPlacedModule.hingePosition || 'right');
       setHasDoor(currentPlacedModule.hasDoor ?? false);
+      
+      console.log('🔧 팝업 초기값 설정:', {
+        moduleId: currentPlacedModule.moduleId,
+        hasCustomDepth: currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null,
+        customDepth: currentPlacedModule.customDepth,
+        defaultDepth: getDefaultDepth(moduleData),
+        finalDepth: initialDepth
+      });
     }
-  }, [currentPlacedModule, moduleData, getDefaultDepth]);
+  }, [currentPlacedModule?.id, moduleData?.id]); // id만 의존성으로 하여 모듈 변경 시에만 실행
 
   // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음 (조건부 렌더링은 훅 선언 이후에만)
   if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
@@ -240,7 +252,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               
               <div className={styles.property}>
-                <span className={styles.propertyLabel}>위치:</span>
+                <span className={styles.propertyLabel}></span>
                 <span className={styles.propertyValue}>
                   X: {Math.round(currentPlacedModule.position.x * 100)}mm, 
                   Z: {Math.round(currentPlacedModule.position.z * 100)}mm
@@ -251,7 +263,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           
           {/* 깊이 설정 */}
           <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>가구 깊이</h5>
+            <h5 className={styles.sectionTitle}></h5>
             <div className={styles.depthInputWrapper}>
               <div className={styles.inputWithUnit}>
                 <input
@@ -327,17 +339,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               className={styles.deleteButton}
               onClick={handleDeleteClick}
             >
-              삭제
             </button>
           </div>
 
-          {/* 편집 안내 */}
-          <div className={styles.editGuide}>
-            <p>• 가구를 더블클릭하여 편집모드에 진입할 수 있습니다</p>
-            <p>• 마우스 드래그로 가구를 이동할 수 있습니다</p>
-            <p>• 키보드 화살표로 가구를 이동할 수 있습니다</p>
-            <p>• Delete 키로 가구를 삭제할 수 있습니다</p>
-            <p>• Esc 키로 편집을 종료할 수 있습니다</p>
+          {/* 확인/취소 버튼 */}
+          <div className={styles.confirmButtons}>
+            <button 
+              className={styles.cancelButton}
+              onClick={handleClose}
+            >
+              취소
+            </button>
+            <button 
+              className={styles.confirmButton}
+              onClick={handleClose}
+            >
+              확인
+            </button>
           </div>
         </div>
       </div>

@@ -26,6 +26,7 @@ interface RoomProps {
     doorColor: string;
     doorTexture?: string;
   };
+  showAll?: boolean;
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -74,7 +75,8 @@ const Room: React.FC<RoomProps> = ({
   spaceInfo,
   floorColor = '#FF9966',
   viewMode = '3D',
-  materialConfig
+  materialConfig,
+  showAll = true
 }) => {
   const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const { highlightedFrame } = useUIStore(); // 강조된 프레임 상태 가져오기
@@ -479,8 +481,8 @@ const Room: React.FC<RoomProps> = ({
         />
       )}
       
-      {/* 슬롯 바닥면 - 그린색으로 표시 */}
-      {(() => {
+      {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true일 때만 */}
+      {showAll && (() => {
         // 내경 공간 계산 (ColumnGuides와 동일한 방식)
         const internalSpace = calculateInternalSpace(spaceInfo);
         const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -688,7 +690,7 @@ const Room: React.FC<RoomProps> = ({
       {topBottomFrameHeightMm > 0 && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
-          {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`)}
+          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
           
           {/* 기둥이 있는 경우 상단 프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1002,7 +1004,7 @@ const Room: React.FC<RoomProps> = ({
       {baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
         <>
           {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
-          {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`)}
+          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
           
           {/* 기둥이 있는 경우 하부 프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1011,11 +1013,11 @@ const Room: React.FC<RoomProps> = ({
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
             
-            console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
-              columnsCount: columns.length,
-              hasDeepColumns,
-              columnDepths: columns.map(c => c.depth)
-            });
+            // console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
+            //   columnsCount: columns.length,
+            //   hasDeepColumns,
+            //   columnDepths: columns.map(c => c.depth)
+            // });
             
             if (columns.length === 0 || !hasDeepColumns) {
               // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
@@ -1138,11 +1140,11 @@ const Room: React.FC<RoomProps> = ({
             // 기둥이 없거나 모든 기둥이 730mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
             
-            console.log('🔧 [하부프레임 앞면] 기둥 분절 확인:', {
-              columnsCount: columns.length,
-              hasDeepColumns,
-              columnDepths: columns.map(c => c.depth)
-            });
+            // console.log('🔧 [하부프레임 앞면] 기둥 분절 확인:', {
+            //   columnsCount: columns.length,
+            //   hasDeepColumns,
+            //   columnDepths: columns.map(c => c.depth)
+            // });
             
             if (columns.length === 0 || !hasDeepColumns) {
               // 기둥이 없거나 모든 기둥이 730mm 이하면 기존처럼 하나의 서브프레임으로 렌더링

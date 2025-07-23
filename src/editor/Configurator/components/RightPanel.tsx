@@ -34,8 +34,6 @@ export const ModuleContent: React.FC = () => {
       console.error('❌ 기둥을 찾을 수 없음:', activePopup.id);
       return (
         <div className={styles.placeholder}>
-          <p>기둥을 찾을 수 없습니다.</p>
-          <p>기둥 ID: {activePopup.id}</p>
         </div>
       );
     }
@@ -45,7 +43,6 @@ export const ModuleContent: React.FC = () => {
   console.log('🔍 ModuleContent - selectedColumnForProperties가 없음');
   return (
     <div className={styles.placeholder}>
-      <p>기둥을 더블클릭하여 속성을 편집하세요.</p>
     </div>
   );
 };
@@ -332,11 +329,6 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
           </span>
         ))}
       </div>
-      
-      {/* 디버그 정보 (개발용) */}
-      <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '4px' }}>
-        현재: {clampedValue}개, 범위: {minDoors}-{maxDoors}개 (슬롯 400-600mm 제약)
-      </div>
     </div>
   );
 };
@@ -595,7 +587,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               onToggle={() => toggleSection('space')}
             >
               <NumberInput
-                label="폭"
+                label=""
                 value={width}
                 onChange={(newWidth) => {
                   onWidthChange(newWidth);
@@ -606,7 +598,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 step={100}
               />
               <NumberInput
-                label="높이"
+                label=""
                 value={height}
                 onChange={onHeightChange}
                 min={2000}
@@ -617,17 +609,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 레이아웃 */}
             <FormControl
-              label="레이아웃"
+              label=""
               expanded={expandedSections.has('layout')}
               onToggle={() => toggleSection('layout')}
             >
               <NumberInput
-                label="도어 개수"
+                label=""
                 value={doorCount}
                 onChange={onDoorCountChange}
                 min={minDoors}
                 max={maxDoors}
-                unit="개"
+                unit=""
               />
               
               <DoorSlider
@@ -636,66 +628,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 width={width}
               />
 
-                              <div className={styles.infoBox}>
-                  <p>현재 배치된 슬롯: {doorCount}개</p>
-                  <p>슬롯 크기 제약: 400mm ~ 600mm</p>
-                  <p>공간 기준 조정 범위: {minDoors}개 ~ {maxDoors}개</p>
-                  <p>현재 공간 넓이: {width}mm (사용 가능: {width - 100}mm)</p>
-                </div>
 
-              {/* 슬롯 내경 정보 */}
-              <div className={styles.slotInnerDimensions}>
-                <div className={styles.slotLabel}>현재 슬롯 내경</div>
-                <div className={styles.slotValue}>
-                  {(() => {
-                    // 프레임 마진 (양쪽 50mm씩)
-                    const FRAME_MARGIN = 100;
-                    // 도어 프레임 두께 (각 도어당 양쪽 2mm씩)
-                    const DOOR_FRAME_THICKNESS = 4;
-                    
-                    // 실제 사용 가능한 너비 계산
-                    const usableWidth = width - FRAME_MARGIN;
-                    const slotWidth = usableWidth / doorCount;
-                    const innerWidth = slotWidth - DOOR_FRAME_THICKNESS;
-                    
-                    return Math.round(Math.max(0, innerWidth));
-                  })()}mm
-                </div>
-                <div className={styles.slotInfo}>
-                  (슬롯 {doorCount}개 기준 · 프레임 여백 제외)
-                </div>
-                <div className={`${styles.slotDetails} ${(() => {
-                  const usableWidth = width - 100;
-                  const slotWidth = usableWidth / doorCount;
-                  const innerWidth = slotWidth - 4;
-                  
-                  if (innerWidth < 400 || innerWidth > 600) {
-                    return styles.slotWarning;
-                  }
-                  return '';
-                })()}`}>
-                  <div>• 전체 공간: {width}mm</div>
-                  <div>• 사용 가능: {width - 100}mm</div>
-                  <div>• 슬롯당 할당: {Math.round((width - 100) / doorCount)}mm</div>
-                  {(() => {
-                    const usableWidth = width - 100;
-                    const slotWidth = usableWidth / doorCount;
-                    const innerWidth = slotWidth - 4;
-                    
-                    if (innerWidth < 400) {
-                      return <div className={styles.warningText}>⚠️ 슬롯이 너무 작습니다 (최소 400mm 필요)</div>;
-                    } else if (innerWidth > 600) {
-                      return <div className={styles.warningText}>⚠️ 슬롯이 너무 큽니다 (최대 600mm 권장)</div>;
-                    }
-                    return <div className={styles.successText}>✓ 슬롯 크기가 적절합니다</div>;
-                  })()}
-                </div>
-              </div>
             </FormControl>
 
             {/* 바닥 마감재 */}
             <FormControl
-              label="바닥 마감재"
+              label=""
               expanded={expandedSections.has('floor')}
               onToggle={() => toggleSection('floor')}
             >
@@ -708,7 +646,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 프레임 속성 */}
             <FormControl
-              label="프레임 속성"
+              label=""
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
             >

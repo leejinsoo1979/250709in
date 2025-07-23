@@ -14,7 +14,7 @@ const BoxWithEdges: React.FC<{
     const { viewMode } = useSpace3DView();
     
     if (originalMaterial instanceof THREE.MeshStandardMaterial) {
-      console.log('🗃️ DrawerRenderer - 원본 텍스처:', originalMaterial.map);
+      // console.log('🗃️ DrawerRenderer - 원본 텍스처:', originalMaterial.map);
       // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
       return originalMaterial;
     }
@@ -33,15 +33,32 @@ const BoxWithEdges: React.FC<{
           <primitive object={innerMaterial} attach="material" />
         </mesh>
       )}
-      {/* 윤곽선 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
+      {viewMode === '3D' ? (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+          <lineBasicMaterial 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
+          />
+        </lineSegments>
+      ) : (
+        <lineSegments>
+          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
             color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
-            linewidth={1} 
+            linewidth={1}
+            transparent={false}
+            opacity={1.0}
+            depthTest={false}
           />
-      </lineSegments>
+        </lineSegments>
       )}
     </group>
   );

@@ -101,8 +101,90 @@ export const captureCanvasThumbnail = (
 
 
 
+// 정면 뷰로 전환하여 썸네일 캡처
+export const captureFrontViewThumbnail = async (): Promise<string | null> => {
+  const canvas = findThreeCanvas();
+  
+  if (!canvas) {
+    console.warn('3D 캔버스를 찾을 수 없어 썸네일을 생성할 수 없습니다.');
+    return null;
+  }
+  
+  // 캔버스가 보이는 상태인지 확인
+  if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+    console.warn('캔버스가 보이지 않는 상태입니다.');
+    return null;
+  }
+  
+  console.log('📸 정면 뷰 썸네일 캡처 시작...');
+  
+  // 현재 뷰 상태 저장 (나중에 복원하기 위해)
+  const currentViewMode = document.querySelector('[data-view-mode]')?.getAttribute('data-view-mode');
+  const currentViewDirection = document.querySelector('[data-view-direction]')?.getAttribute('data-view-direction');
+  
+  try {
+    // 2D 정면 뷰로 전환
+    const viewModeButton = document.querySelector('[data-view-mode="2D"]') as HTMLElement;
+    const frontViewButton = document.querySelector('[data-view-direction="front"]') as HTMLElement;
+    
+    if (viewModeButton) {
+      viewModeButton.click();
+      console.log('🔄 2D 모드로 전환');
+    }
+    
+    if (frontViewButton) {
+      frontViewButton.click();
+      console.log('🔄 정면 뷰로 전환');
+    }
+    
+    // 뷰 전환 후 렌더링 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 썸네일 캡처
+    const thumbnail = captureCanvasThumbnail(canvas, {
+      width: 300,
+      height: 200,
+      quality: 0.8
+    });
+    
+    if (thumbnail && thumbnail.length > 1000) {
+      console.log('📸 정면 뷰 썸네일 캡처 성공');
+      return thumbnail;
+    }
+    
+  } catch (error) {
+    console.error('정면 뷰 썸네일 캡처 실패:', error);
+  } finally {
+    // 원래 뷰 상태로 복원
+    if (currentViewMode && currentViewMode !== '2D') {
+      const originalViewModeButton = document.querySelector(`[data-view-mode="${currentViewMode}"]`) as HTMLElement;
+      if (originalViewModeButton) {
+        originalViewModeButton.click();
+        console.log('🔄 원래 뷰 모드로 복원');
+      }
+    }
+    
+    if (currentViewDirection && currentViewDirection !== 'front') {
+      const originalViewDirectionButton = document.querySelector(`[data-view-direction="${currentViewDirection}"]`) as HTMLElement;
+      if (originalViewDirectionButton) {
+        originalViewDirectionButton.click();
+        console.log('🔄 원래 뷰 방향으로 복원');
+      }
+    }
+  }
+  
+  return null;
+};
+
 // 프로젝트 저장 시 자동 썸네일 캡처 (개선된 버전)
 export const captureProjectThumbnail = async (): Promise<string | null> => {
+  // 먼저 정면 뷰로 캡처 시도
+  const frontViewThumbnail = await captureFrontViewThumbnail();
+  if (frontViewThumbnail) {
+    return frontViewThumbnail;
+  }
+  
+  // 정면 뷰 캡처 실패 시 기존 방식 사용
   const canvas = findThreeCanvas();
   
   if (!canvas) {

@@ -20,6 +20,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   setViewMode?: (mode: '2D' | '3D') => void;
   /** 렌더링 모드 (solid 또는 wireframe) */
   renderMode?: 'solid' | 'wireframe';
+  /** 가이드 표시 여부 */
+  showAll?: boolean;
 }
 
 /**

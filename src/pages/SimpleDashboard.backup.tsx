@@ -6,7 +6,6 @@ import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
-import SettingsPanel from '@/components/common/SettingsPanel';
 import Step0 from '../editor/Step0';
 import styles from './SimpleDashboard.module.css';
 
@@ -24,8 +23,6 @@ const SimpleDashboard: React.FC = () => {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
-  const [sidebarImageError, setSidebarImageError] = useState(false);
-  const [headerImageError, setHeaderImageError] = useState(false);
   
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
@@ -101,9 +98,6 @@ const SimpleDashboard: React.FC = () => {
   // 로그아웃 모달 상태 추가
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  // 설정 패널 상태 추가
-  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
-
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async () => {
     if (!user) {
@@ -123,12 +117,6 @@ const SimpleDashboard: React.FC = () => {
       } else {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
-        // 첫 번째 프로젝트의 데이터 구조 확인을 위한 로그
-        if (projects.length > 0) {
-          console.log('📊 첫 번째 프로젝트 데이터 구조:', projects[0]);
-          console.log('📊 createdAt 필드 존재 여부:', 'createdAt' in projects[0]);
-          console.log('📊 updatedAt 필드 존재 여부:', 'updatedAt' in projects[0]);
-        }
       }
     } catch (err) {
       setError('프로젝트 목록을 가져오는 중 오류가 발생했습니다.');
@@ -326,13 +314,10 @@ const SimpleDashboard: React.FC = () => {
 
   const displayedItems = getDisplayedItems();
 
-  const handleDesignOpen = (id: string, designFileName?: string) => {
+  const handleDesignOpen = (id: string) => {
     // React Router로 네비게이션 (기본은 같은 탭에서 이동)
-    const url = designFileName 
-      ? `/configurator?projectId=${id}&designFileName=${encodeURIComponent(designFileName)}`
-      : `/configurator?projectId=${id}`;
-    navigate(url);
-    // 만약 새 탭에서 열고 싶다면: window.open(url, '_blank');
+    navigate(`/configurator?projectId=${id}`);
+    // 만약 새 탭에서 열고 싶다면: window.open(`/configurator?projectId=${id}`, '_blank');
   };
 
   // 로딩 상태 표시
@@ -504,60 +489,7 @@ const SimpleDashboard: React.FC = () => {
     if (!moreMenu) return;
     const newName = prompt('새 이름을 입력하세요:', moreMenu.itemName);
     if (newName && newName.trim()) {
-      if (moreMenu.itemType === 'project') {
-        // 프로젝트 이름 변경
-        try {
-          const { updateProject } = await import('@/firebase/projects');
-          const result = await updateProject(moreMenu.itemId, {
-            title: newName.trim()
-          });
-          
-          if (result.error) {
-            console.error('프로젝트 이름 변경 실패:', result.error);
-            alert('프로젝트 이름 변경에 실패했습니다: ' + result.error);
-            return;
-          }
-          
-          // 로컬 상태 업데이트
-          setFirebaseProjects(prev => prev.map(project => 
-            project.id === moreMenu.itemId 
-              ? { ...project, title: newName.trim() }
-              : project
-          ));
-          
-          // 현재 선택된 프로젝트인 경우 브레드크럼도 업데이트
-          if (selectedProjectId === moreMenu.itemId) {
-            setBreadcrumbPath(prev => {
-              const newPath = [...prev];
-              const projectIndex = newPath.findIndex(path => path !== '전체 프로젝트');
-              if (projectIndex !== -1) {
-                newPath[projectIndex] = newName.trim();
-              }
-              return newPath;
-            });
-          }
-          
-          console.log('프로젝트 이름 변경 성공:', moreMenu.itemId, '→', newName.trim());
-          
-          // BroadcastChannel로 다른 탭에 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_UPDATED', 
-              action: 'renamed',
-              projectId: moreMenu.itemId,
-              newName: newName.trim()
-            });
-            channel.close();
-          } catch (error) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-          }
-          
-        } catch (error) {
-          console.error('프로젝트 이름 변경 중 오류:', error);
-          alert('프로젝트 이름 변경 중 오류가 발생했습니다.');
-        }
-      } else if (moreMenu.itemType === 'folder') {
+      if (moreMenu.itemType === 'folder') {
         // 폴더 이름 변경
         const updatedFolders = folders[selectedProjectId!]?.map(folder => 
           folder.id === moreMenu.itemId 
@@ -574,83 +506,38 @@ const SimpleDashboard: React.FC = () => {
         await saveFolderDataToFirebase(selectedProjectId!, updatedFolders);
       } else if (moreMenu.itemType === 'design') {
         // 디자인 파일 이름 변경
-        try {
-          // TODO: Firebase에서 실제 디자인파일 데이터 업데이트 필요
-          // 현재는 로컬 상태만 업데이트
-          
-          // 폴더 내부 디자인 파일인지 확인
-          let isInFolder = false;
-          if (selectedProjectId) {
-            const projectFolders = folders[selectedProjectId] || [];
-            for (const folder of projectFolders) {
-              if (folder.children.some(child => child.id === moreMenu.itemId)) {
-                isInFolder = true;
-                break;
-              }
+        const rootDesignId = `${selectedProjectId}-design`;
+        if (moreMenu.itemId === rootDesignId) {
+          // 루트 레벨 디자인 파일인 경우 - 프로젝트 이름 변경
+          const projectIndex = allProjects.findIndex(p => p.id === selectedProjectId);
+          if (projectIndex !== -1) {
+            const updatedProjects = [...allProjects];
+            updatedProjects[projectIndex] = {
+              ...updatedProjects[projectIndex],
+              title: newName.trim()
+            };
+            setFirebaseProjects(updatedProjects);
+            
+            // 브레드크럼도 업데이트
+            if (breadcrumbPath.length >= 2) {
+              const newBreadcrumbPath = [...breadcrumbPath];
+              newBreadcrumbPath[1] = newName.trim();
+              setBreadcrumbPath(newBreadcrumbPath);
             }
           }
-          
-          if (isInFolder) {
-            // 폴더 내부 디자인 파일인 경우 - 폴더 데이터에서 이름 변경
-            setFolders(prev => ({
-              ...prev,
-              [selectedProjectId!]: prev[selectedProjectId!]?.map(folder => ({
-                ...folder,
-                children: folder.children.map(child => 
-                  child.id === moreMenu.itemId 
-                    ? { ...child, name: newName.trim() }
-                    : child
-                )
-              })) || []
-            }));
-            
-            // Firebase에 폴더 데이터 저장
-            const updatedFolders = folders[selectedProjectId!]?.map(folder => ({
+        } else {
+          // 폴더 내부 디자인 파일인 경우
+          setFolders(prev => ({
+            ...prev,
+            [selectedProjectId!]: prev[selectedProjectId!]?.map(folder => ({
               ...folder,
               children: folder.children.map(child => 
                 child.id === moreMenu.itemId 
                   ? { ...child, name: newName.trim() }
                   : child
               )
-            })) || [];
-            await saveFolderDataToFirebase(selectedProjectId!, updatedFolders);
-          } else {
-            // 루트 레벨 디자인 파일인 경우 - Firebase 디자인파일 업데이트
-            const { updateDesignFile } = await import('@/firebase/projects');
-            const result = await updateDesignFile(moreMenu.itemId, {
-              name: newName.trim()
-            });
-            
-            if (result.error) {
-              console.error('디자인파일 이름 변경 실패:', result.error);
-              alert('디자인파일 이름 변경에 실패했습니다: ' + result.error);
-              return;
-            }
-            
-            console.log('루트 레벨 디자인파일 이름 변경 성공:', moreMenu.itemId, '→', newName.trim());
-            
-            // 프로젝트 목록을 새로고침하여 변경사항 반영
-            await loadFirebaseProjects();
-            
-            // BroadcastChannel로 다른 탭에 알림
-            try {
-              const channel = new BroadcastChannel('project-updates');
-              channel.postMessage({ 
-                type: 'PROJECT_UPDATED', 
-                action: 'design_renamed',
-                projectId: selectedProjectId,
-                designFileId: moreMenu.itemId,
-                newName: newName.trim()
-              });
-              channel.close();
-            } catch (error) {
-              console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-            }
-          }
-          
-        } catch (error) {
-          console.error('디자인파일 이름 변경 중 오류:', error);
-          alert('디자인파일 이름 변경 중 오류가 발생했습니다.');
+            })) || []
+          }));
         }
       }
       console.log('이름 변경:', moreMenu.itemId, '→', newName);
@@ -660,59 +547,8 @@ const SimpleDashboard: React.FC = () => {
 
   const handleDeleteItem = async () => {
     if (!moreMenu) return;
-    
-    let confirmMessage = '';
-    if (moreMenu.itemType === 'project') {
-      confirmMessage = `정말로 프로젝트 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 프로젝트 내의 모든 디자인파일과 폴더도 함께 삭제됩니다.`;
-    } else if (moreMenu.itemType === 'folder') {
-      confirmMessage = `정말로 폴더 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?\n\n폴더 내의 모든 파일도 함께 삭제됩니다.`;
-    } else {
-      confirmMessage = `정말로 파일 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?`;
-    }
-    
-    if (window.confirm(confirmMessage)) {
-      if (moreMenu.itemType === 'project') {
-        // 프로젝트 삭제
-        try {
-          const { deleteProject } = await import('@/firebase/projects');
-          const result = await deleteProject(moreMenu.itemId);
-          
-          if (result.error) {
-            console.error('프로젝트 삭제 실패:', result.error);
-            alert('프로젝트 삭제에 실패했습니다: ' + result.error);
-            return;
-          }
-          
-          console.log('프로젝트 삭제 성공:', moreMenu.itemId);
-          alert('프로젝트가 삭제되었습니다.');
-          
-          // 삭제된 프로젝트가 현재 선택된 프로젝트인 경우 선택 해제
-          if (selectedProjectId === moreMenu.itemId) {
-            setSelectedProjectId(null);
-            setBreadcrumbPath(['전체 프로젝트']);
-          }
-          
-          // 프로젝트 목록 새로고침
-          await loadFirebaseProjects();
-          
-          // BroadcastChannel로 다른 탭에 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_UPDATED', 
-              action: 'deleted',
-              projectId: moreMenu.itemId 
-            });
-            channel.close();
-          } catch (error) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-          }
-          
-        } catch (error) {
-          console.error('프로젝트 삭제 중 오류:', error);
-          alert('프로젝트 삭제 중 오류가 발생했습니다.');
-        }
-      } else if (moreMenu.itemType === 'folder') {
+    if (window.confirm(`정말로 이 ${moreMenu.itemType === 'folder' ? '폴더' : '파일'}를 삭제하시겠습니까?`)) {
+      if (moreMenu.itemType === 'folder') {
         const updatedFolders = folders[selectedProjectId!]?.filter(folder => folder.id !== moreMenu.itemId) || [];
         setFolders(prev => ({
           ...prev,
@@ -730,76 +566,14 @@ const SimpleDashboard: React.FC = () => {
   const handleShareItem = () => {
     if (!moreMenu) return;
     console.log('공유하기:', moreMenu.itemId);
-    
-    if (moreMenu.itemType === 'project') {
-      // 프로젝트 공유 - 프로젝트 URL 생성
-      const projectUrl = `${window.location.origin}/configurator?projectId=${moreMenu.itemId}`;
-      
-      // 클립보드에 복사
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(projectUrl).then(() => {
-          alert('프로젝트 링크가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-          // 클립보드 복사 실패 시 직접 표시
-          prompt('프로젝트 링크를 복사하세요:', projectUrl);
-        });
-      } else {
-        // 클립보드 API 지원하지 않는 경우
-        prompt('프로젝트 링크를 복사하세요:', projectUrl);
-      }
-    } else {
-      // 폴더나 파일 공유
-      alert('폴더/파일 공유 기능은 준비 중입니다.');
-    }
-    
+    // 공유 기능 구현
+    alert('공유 기능은 준비 중입니다.');
     closeMoreMenu();
   };
 
   const handleDuplicateItem = async () => {
     if (!moreMenu) return;
-    if (moreMenu.itemType === 'project') {
-      // 프로젝트 복제
-      try {
-        const originalProject = allProjects.find(p => p.id === moreMenu.itemId);
-        if (!originalProject) return;
-        
-        const { createProject } = await import('@/firebase/projects');
-        const result = await createProject({
-          title: `${originalProject.title} 복사본`
-        });
-        
-        if (result.error) {
-          console.error('프로젝트 복제 실패:', result.error);
-          alert('프로젝트 복제에 실패했습니다: ' + result.error);
-          return;
-        }
-        
-        if (result.id) {
-          console.log('프로젝트 복제 성공:', result.id);
-          alert('프로젝트가 복제되었습니다.');
-          
-          // 프로젝트 목록 새로고침
-          await loadFirebaseProjects();
-          
-          // BroadcastChannel로 다른 탭에 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_CREATED', 
-              projectId: result.id,
-              timestamp: Date.now()
-            });
-            channel.close();
-          } catch (error) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-          }
-        }
-        
-      } catch (error) {
-        console.error('프로젝트 복제 중 오류:', error);
-        alert('프로젝트 복제 중 오류가 발생했습니다.');
-      }
-    } else if (moreMenu.itemType === 'folder') {
+    if (moreMenu.itemType === 'folder') {
       const originalFolder = folders[selectedProjectId!]?.find(f => f.id === moreMenu.itemId);
       if (originalFolder) {
         const newFolderId = `folder_${Date.now()}`;
@@ -1038,9 +812,9 @@ const SimpleDashboard: React.FC = () => {
       
       // React Router로 네비게이션
       if (projectId) {
-        navigate(`/configurator?projectId=${projectId}&mode=new-design&designFileName=${encodeURIComponent('새로운 디자인')}`);
+        navigate(`/configurator?projectId=${projectId}&mode=new-design`);
       } else {
-        navigate(`/configurator?designFileName=${encodeURIComponent('새로운 디자인')}`);
+        navigate('/configurator');
       }
     } else {
       setIsStep0ModalOpen(true);
@@ -1087,7 +861,8 @@ const SimpleDashboard: React.FC = () => {
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
           <div className={styles.logo}>
-            <img src="/logo.png" alt="Logo" />
+            <div className={styles.logoIcon}>L</div>
+            <span>LOGO</span>
           </div>
         </div>
 
@@ -1095,7 +870,7 @@ const SimpleDashboard: React.FC = () => {
         <div className={styles.profileSection}>
           <div className={styles.userInfo}>
             <div className={styles.userAvatar}>
-              {user?.photoURL && !sidebarImageError ? (
+              {user?.photoURL ? (
                 <img 
                   src={user.photoURL} 
                   alt="프로필" 
@@ -1105,8 +880,6 @@ const SimpleDashboard: React.FC = () => {
                     borderRadius: '50%',
                     objectFit: 'cover'
                   }}
-                  onError={() => setSidebarImageError(true)}
-                  onLoad={() => setSidebarImageError(false)}
                 />
               ) : (
                 <UserIcon size={16} />
@@ -1190,11 +963,7 @@ const SimpleDashboard: React.FC = () => {
 
         {/* 하단 설정 메뉴 */}
         <div className={styles.settingsSection}>
-          <div 
-            className={styles.settingsItem}
-            onClick={() => setIsSettingsPanelOpen(true)}
-            style={{ cursor: 'pointer' }}
-          >
+          <div className={styles.settingsItem}>
             <div className={styles.navItemIcon}>
               <SettingsIcon size={20} />
             </div>
@@ -1273,7 +1042,7 @@ const SimpleDashboard: React.FC = () => {
             {user && (
               <div className={styles.userProfile}>
                 <div className={styles.userProfileAvatar}>
-                  {user?.photoURL && !headerImageError ? (
+                  {user?.photoURL ? (
                     <img 
                       src={user.photoURL} 
                       alt="프로필" 
@@ -1283,8 +1052,6 @@ const SimpleDashboard: React.FC = () => {
                         borderRadius: '50%',
                         objectFit: 'cover'
                       }}
-                      onError={() => setHeaderImageError(true)}
-                      onLoad={() => setHeaderImageError(false)}
                     />
                   ) : (
                     <UserIcon size={14} />
@@ -1353,17 +1120,6 @@ const SimpleDashboard: React.FC = () => {
                           <ProjectIcon size={16} />
                         </div>
                         <span>{selectedProject.title}</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, selectedProject.id, selectedProject.title, 'project');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
                       </div>
                       
                       {/* 폴더 목록 */}
@@ -1424,7 +1180,7 @@ const SimpleDashboard: React.FC = () => {
                                   onClick={() => {
                                     // 디자인 파일 클릭 시 에디터로 이동
                                     if (child.type === 'design') {
-                                      handleDesignOpen(child.projectId, child.name);
+                                      handleDesignOpen(child.projectId);
                                     }
                                   }}
                                   style={{ cursor: 'pointer' }}
@@ -1462,7 +1218,7 @@ const SimpleDashboard: React.FC = () => {
                           return (
                             <div 
                               className={styles.treeItem}
-                              onClick={() => handleDesignOpen(selectedProject.id, selectedProject.title)}
+                              onClick={() => handleDesignOpen(selectedProject.id)}
                               onContextMenu={(e) => handleFileRightClick(e, rootDesignId, 'design.json', 'design')}
                             >
                               <div className={styles.treeItemIcon}>
@@ -1508,17 +1264,6 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                         <span>{project.title}</span>
                         <span className={styles.treeItemCount}>1</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, project.id, project.title, 'project');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
                       </div>
                     ))}
                   </>
@@ -1601,8 +1346,8 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       ) : item.type === 'folder' ? (
                         <div className={styles.cardThumbnailContent}>
-                          <div className={styles.cardThumbnailIcon} style={{ background: 'var(--theme-primary, #10b981)' }}>
-                            <FolderIcon size={32} />
+                          <div className={styles.cardThumbnailIcon} style={{ background: '#fbbf24' }}>
+                            <span style={{ fontSize: '32px' }}>📁</span>
                           </div>
                           <div className={styles.cardThumbnailText}>{item.name}</div>
                         </div>
@@ -1620,9 +1365,7 @@ const SimpleDashboard: React.FC = () => {
                                   />
                                 ) : (
                                   <div className={styles.designThumbnailPlaceholder}>
-                                    <div className={styles.designFileIcon}>
-                                      <span className={styles.designIcon}>D</span>
-                                    </div>
+                                    <span style={{ fontSize: '24px' }}>🎨</span>
                                     <span style={{ fontSize: '12px', marginTop: '8px' }}>디자인</span>
                                   </div>
                                 )}
@@ -1640,13 +1383,11 @@ const SimpleDashboard: React.FC = () => {
                                 <div key={projectItem.id} className={styles.thumbnailItem}>
                                   {projectItem.type === 'folder' ? (
                                     <div className={styles.thumbnailFolder}>
-                                      <FolderIcon size={14} />
+                                      <span style={{ fontSize: '12px' }}>📁</span>
                                     </div>
                                   ) : (
                                     <div className={styles.thumbnailFile}>
-                                      <div className={styles.fileIconWrapper}>
-                                        <span className={styles.fileIcon}>🎨</span>
-                                      </div>
+                                      <span style={{ fontSize: '12px' }}>📄</span>
                                     </div>
                                   )}
                                 </div>
@@ -1667,18 +1408,10 @@ const SimpleDashboard: React.FC = () => {
                       <div className={styles.cardMeta}>
                         <div className={styles.cardDate}>
                           {(() => {
-                            // createdAt이 있으면 사용하고, 없으면 updatedAt 사용
-                            const dateToUse = item.project.createdAt || item.project.updatedAt;
-                            if (dateToUse && dateToUse.seconds) {
-                              return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
-                                year: 'numeric',
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              });
-                            }
-                            return '날짜 정보 없음';
+                            const projectItems = getProjectItems(item.project.id);
+                            const folderCount = projectItems.filter(item => item.type === 'folder').length;
+                            const fileCount = projectItems.filter(item => item.type === 'design').length;
+                            return `${folderCount}개 폴더 • ${fileCount}개 파일`;
                           })()}
                         </div>
                         <div className={styles.cardActions}>
@@ -1965,12 +1698,6 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* 설정 패널 */}
-      <SettingsPanel 
-        isOpen={isSettingsPanelOpen}
-        onClose={() => setIsSettingsPanelOpen(false)}
-      />
     </div>
   );
 };

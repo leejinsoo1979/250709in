@@ -16,15 +16,7 @@ const BoxWithEdges: React.FC<{
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   
-  // 독립적인 그림자 업데이트 (스타일러장과 동일)
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-      requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
-      });
-    }
-  }, [viewMode, gl, args, position, material]);
+  // Shadow auto-update enabled - manual shadow updates removed
 
   // 드래그 중일 때 고스트 효과 적용
   const processedMaterial = React.useMemo(() => {
@@ -49,14 +41,30 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+      {viewMode === '3D' ? (
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
-            linewidth={2} 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
           />
         </lineSegments>
+      ) : (
+        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+          <lineSegments>
+            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+            <lineBasicMaterial 
+              color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+              linewidth={2} 
+            />
+          </lineSegments>
+        )
       )}
     </group>
   );
@@ -78,14 +86,16 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   hingePosition = 'right',
   spaceInfo,
   isDragging = false,
-  doorWidth
+  doorWidth,
+  adjustedWidth
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
     customDepth,
-    isDragging
+    isDragging,
+    adjustedWidth
   });
 
   const {

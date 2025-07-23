@@ -10,7 +10,6 @@ import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
-import { useUIStore } from '@/store/uiStore';
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -39,7 +38,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
-  const { isFurnitureDragging } = useUIStore();
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -88,9 +86,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   const slotInfo = placedModule.slotIndex !== undefined ? columnSlots[placedModule.slotIndex] : undefined;
   
-  // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만)
+  // 듀얼 → 싱글 변환 확인
   let actualModuleData = moduleData;
-  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
+  if (slotInfo && slotInfo.hasColumn) {
     const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
     if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
       actualModuleData = conversionResult.convertedModuleData;
@@ -98,9 +96,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
-  let furnitureWidthMm = placedModule.adjustedWidth || actualModuleData.dimensions.width;
+  let furnitureWidthMm = actualModuleData.dimensions.width;
   let adjustedPosition = placedModule.position;
-  let adjustedDepthMm = actualModuleData.dimensions.depth;
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -143,76 +140,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
   
-  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && slotInfo.column) {
-    // 얕은 기둥 판별 (깊이 500mm 미만)
-    const isShallowColumn = slotInfo.column.depth < 500;
-    
-    // 기둥C (300mm 깊이)의 특별 처리: 침범량이 150mm 미만이면 기둥A 방식 적용
-    const isColumnC = slotInfo.column.depth === 300;
-    let shouldUseDeepColumnLogic = false;
-    
-    if (isColumnC) {
-      // 기둥C의 슬롯 침범량 계산
-      const slotWidthM = indexing.columnWidth * 0.01;
-      const slotLeftX = originalSlotCenterX - slotWidthM / 2;
-      const slotRightX = originalSlotCenterX + slotWidthM / 2;
-      
-      const columnWidthM = slotInfo.column.width * 0.01;
-      const columnLeftX = slotInfo.column.position[0] - columnWidthM / 2;
-      const columnRightX = slotInfo.column.position[0] + columnWidthM / 2;
-      
-      // 기둥이 슬롯 끝에서 안쪽으로 얼마나 들어왔는지 계산 (mm 단위)
-      let intrusionFromEdge = 0;
-      
-      // 기둥과 슬롯이 겹치는 부분이 있는지 먼저 확인
-      const hasOverlap = columnLeftX < slotRightX && columnRightX > slotLeftX;
-      
-      if (hasOverlap) {
-        // 겹치는 부분의 폭 계산
-        const overlapStart = Math.max(columnLeftX, slotLeftX);
-        const overlapEnd = Math.min(columnRightX, slotRightX);
-        const overlapWidth = (overlapEnd - overlapStart) * 1000; // mm로 변환
-        
-        // 슬롯 경계에서의 침범 거리 계산
-        const leftIntrusion = columnLeftX < slotLeftX ? (slotLeftX - columnLeftX) * 1000 : 0;
-        const rightIntrusion = columnRightX > slotRightX ? (columnRightX - slotRightX) * 1000 : 0;
-        
-        // 실제 침범량은 겹치는 폭을 사용 (더 직관적)
-        intrusionFromEdge = overlapWidth;
-        
-        console.log('  - 겹침 세부 분석:');
-        console.log('    - 겹침 시작:', overlapStart.toFixed(3));
-        console.log('    - 겹침 끝:', overlapEnd.toFixed(3));
-        console.log('    - 겹침 폭:', overlapWidth.toFixed(1) + 'mm');
-        console.log('    - 왼쪽 침범:', leftIntrusion.toFixed(1) + 'mm');  
-        console.log('    - 오른쪽 침범:', rightIntrusion.toFixed(1) + 'mm');
-      }
-      
-      console.log('🏛️ 기둥C 침범량 분석:');
-      console.log('  - 기둥 깊이:', slotInfo.column.depth + 'mm');
-      console.log('  - 슬롯 중심:', originalSlotCenterX.toFixed(3));
-      console.log('  - 슬롯 왼쪽:', slotLeftX.toFixed(3));
-      console.log('  - 슬롯 오른쪽:', slotRightX.toFixed(3));
-      console.log('  - 기둥 왼쪽:', columnLeftX.toFixed(3));
-      console.log('  - 기둥 오른쪽:', columnRightX.toFixed(3));
-      console.log('  - 계산된 침범량:', intrusionFromEdge.toFixed(1) + 'mm');
-      console.log('  - 임계값:', '150mm');
-      
-      // 슬롯 끝에서 150mm 미만 침범이면 기둥A 방식 (폭 조정), 150mm 이상이면 기둥C 방식 (깊이 조정)
-      if (intrusionFromEdge < 150) {
-        shouldUseDeepColumnLogic = true;
-        console.log('✅ 기둥C 얕은 침범 감지 - 기둥A 방식 적용 (폭 조정):', {
-          intrusionFromEdge: intrusionFromEdge.toFixed(1) + 'mm',
-          appliedLogic: '기둥A 방식 (가구 폭 조정)'
-        });
-      } else {
-        console.log('✅ 기둥C 깊은 침범 감지 - 기둥C 방식 적용 (깊이 조정):', {
-          intrusionFromEdge: intrusionFromEdge.toFixed(1) + 'mm',
-          appliedLogic: '기둥C 방식 (가구 깊이 조정)'
-        });
-      }
-    }
-    
+  if (slotInfo && slotInfo.hasColumn) {
+    // 슬롯의 원래 경계 계산 (실제 슬롯 중심 위치 기준)
     const slotWidthM = indexing.columnWidth * 0.01; // mm to meters
     const originalSlotBounds = {
       left: originalSlotCenterX - slotWidthM / 2,
@@ -223,79 +152,40 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 침범에 따른 새로운 가구 경계 계산
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
     
-    if (!isShallowColumn || shouldUseDeepColumnLogic) {
-      // 깊은 기둥 또는 기둥C 얕은 침범: 기둥A 방식 적용
-      const standardCabinetDepth = 600;
-      const availableDepth = standardCabinetDepth - slotInfo.column.depth;
-      adjustedDepthMm = Math.max(200, availableDepth);
-      
-      furnitureWidthMm = furnitureBounds.renderWidth;
-      adjustedPosition = {
-        ...placedModule.position,
-        x: furnitureBounds.center
-      };
-      
-      const logicType = shouldUseDeepColumnLogic ? '기둥C 얕은 침범 (기둥A 방식 적용)' : '깊은 기둥 침범';
-      console.log(`🪑 ${logicType} - 가구 크기 및 위치 조정:`, {
-        originalWidth: actualModuleData.dimensions.width,
-        furnitureWidth: furnitureWidthMm,
-        originalDepth: actualModuleData.dimensions.depth,
-        adjustedDepth: adjustedDepthMm,
-        columnDepth: slotInfo.column.depth,
-        originalSlotWidth: originalSlotWidthMm,
-        originalSlotCenter: originalSlotCenterX,
-        originalFurniturePosition: placedModule.position.x,
-        newFurniturePosition: adjustedPosition.x,
-        slotIndex: placedModule.slotIndex,
-        calculatedSlotCenter: placedModule.slotIndex !== undefined ? indexing.threeUnitPositions[placedModule.slotIndex] : undefined,
-        bounds: {
-          left: furnitureBounds.left,
-          right: furnitureBounds.right
-        },
-        intrusionDirection: slotInfo.intrusionDirection,
-        logic: '가구는 이동, 도어는 원래 슬롯 위치 고정 (커버 방식)',
-        doorWillStayAt: originalSlotCenterX,
-        furnitureMovesTo: adjustedPosition.x
-      });
-    } else {
-      // 얕은 기둥 (기둥C 포함): 슬롯 깊이에서 기둥 깊이 빼기
-      const slotDepth = 730; // 슬롯 기본 깊이
-      const columnDepth = slotInfo.column.depth;
-      const remainingDepth = slotDepth - columnDepth;
-      
-      // 듀얼캐비닛인지 확인
-      const isDualFurniture = Math.abs(actualModuleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-      
-      if (isDualFurniture && remainingDepth <= 300) {
-        // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
-        console.log('❌ 듀얼캐비닛 배치 불가 - 남은 깊이 부족:', {
-          slotDepth: slotDepth,
-          columnDepth: columnDepth,
-          remainingDepth: remainingDepth,
-          minimumRequired: 300,
-          isDualFurniture: true
-        });
-        // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
-        adjustedDepthMm = actualModuleData.dimensions.depth;
-      } else {
-        // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로
-        adjustedDepthMm = remainingDepth;
-        // furnitureWidthMm = actualModuleData.dimensions.width (이미 초기화됨)
-        // adjustedPosition = placedModule.position (이미 초기화됨)
-        
-        console.log('✅ 얕은 기둥 - 깊이만 줄임, 폭과 위치 유지:', {
-          slotDepth: slotDepth,
-          columnDepth: columnDepth,
-          originalDepth: actualModuleData.dimensions.depth,
-          adjustedDepthMm: adjustedDepthMm,
-          originalWidth: actualModuleData.dimensions.width,
-          keepOriginalWidth: true,
-          keepOriginalPosition: true,
-          isDualFurniture: isDualFurniture,
-          계산식: `${slotDepth} - ${columnDepth} = ${adjustedDepthMm}`
-        });
-      }
-    }
+    // 가구 크기: 밀어내는 효과로 실제 렌더링 너비 조정
+    furnitureWidthMm = furnitureBounds.renderWidth;
+    
+    // 가구 위치 조정
+    adjustedPosition = {
+      ...placedModule.position,
+      x: furnitureBounds.center
+    };
+    
+    console.log('🪑 기둥 침범 - 가구 크기 및 위치 조정:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      columnId: slotInfo.column?.id,
+      columnDepth: slotInfo.column?.depth,
+      originalWidth: actualModuleData.dimensions.width,
+      furnitureWidth: furnitureWidthMm,
+      widthReduced: actualModuleData.dimensions.width > furnitureWidthMm,
+      reductionAmount: actualModuleData.dimensions.width - furnitureWidthMm,
+      originalSlotWidth: originalSlotWidthMm,
+      originalSlotCenter: originalSlotCenterX,
+      originalFurniturePosition: placedModule.position.x,
+      newFurniturePosition: adjustedPosition.x,
+      bounds: {
+        left: furnitureBounds.left,
+        right: furnitureBounds.right,
+        renderWidth: furnitureBounds.renderWidth
+      },
+      intrusionDirection: slotInfo.intrusionDirection,
+      furniturePosition: slotInfo.furniturePosition,
+      logic: '가구는 이동, 도어는 원래 슬롯 위치 고정 (커버 방식)',
+      doorWillStayAt: originalSlotCenterX,
+      furnitureMovesTo: adjustedPosition.x,
+      adjustmentWorking: furnitureWidthMm < actualModuleData.dimensions.width ? '✅ 폭 조정됨' : '❌ 폭 조정 안됨'
+    });
   }
   
   // 가구 치수를 Three.js 단위로 변환
@@ -311,10 +201,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   const height = mmToThreeUnits(furnitureHeightMm);
   
-  // 깊이 계산: customDepth 우선, 기둥 충돌로 조정된 깊이, 기본 깊이 순
-  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData.dimensions.depth ? adjustedDepthMm : actualModuleData.dimensions.depth);
+  // 깊이 계산: customDepth가 있으면 사용, 없으면 기본 깊이 사용
+  const actualDepthMm = placedModule.customDepth || actualModuleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
-  
 
   // 도어 두께 (20mm)
   const doorThicknessMm = 20;
@@ -330,15 +219,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const zOffset = -panelDepth / 2; // 공간 메쉬용 깊이 중앙
   const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2; // 뒷벽에서 600mm
   
-  // Z축 위치는 항상 기본 위치 사용 (사이즈만 확장)
+  // 가구를 가구 공간의 뒷쪽에 배치 (프레임 앞면에서 도어 두께만큼 뒤)
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
 
   // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
   const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
   
-  // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
+  // 기둥 침범 상황에 따른 최적 힌지 방향 계산
   let optimalHingePosition = placedModule.hingePosition || 'right';
-  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
+  if (slotInfo && slotInfo.hasColumn) {
     optimalHingePosition = calculateOptimalHingePosition(slotInfo);
     console.log('🚪 기둥 침범에 따른 힌지 방향 조정:', {
       slotIndex: slotInfo.slotIndex,
@@ -404,7 +293,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
             color={furnitureColor}
             internalHeight={furnitureHeightMm}
-            hasDoor={!isFurnitureDragging && slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false)} // 기둥 침범 시 도어는 별도 렌더링 (드래그 중이 아닐 때만)
+            hasDoor={slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false)} // 기둥 침범 시 도어는 별도 렌더링
             customDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
@@ -473,8 +362,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         )}
       </group>
 
-      {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) - 드래그 중이 아닐 때만 */}
-      {(placedModule.hasDoor ?? false) && !isFurnitureDragging && slotInfo && slotInfo.hasColumn && moduleData.type === 'box' && spaceInfo && (
+      {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
+      {(placedModule.hasDoor ?? false) && slotInfo && slotInfo.hasColumn && moduleData.type === 'box' && spaceInfo && (
         <group
           position={[
             originalSlotCenterX, // 항상 원래 슬롯 중심

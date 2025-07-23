@@ -80,7 +80,12 @@ export class MaterialFactory {
         
         // 색상 보정
         transparent: false,
-        opacity: 1.0
+        opacity: 1.0,
+        
+        // Z-fighting 방지를 위한 설정
+        polygonOffset: true,
+        polygonOffsetFactor: 2,
+        polygonOffsetUnits: 2
       });
     }) as THREE.MeshStandardMaterial;
   }
@@ -103,7 +108,12 @@ export class MaterialFactory {
         
         // 색상과 조명 반응 개선
         transparent: false,
-        opacity: 1.0
+        opacity: 1.0,
+        
+        // Z-fighting 방지를 위한 설정
+        polygonOffset: true,
+        polygonOffsetFactor: 3,
+        polygonOffsetUnits: 3
       });
     }) as THREE.MeshStandardMaterial;
   }
@@ -229,7 +239,12 @@ export class MaterialFactory {
       envMapIntensity: 0.6,
       
       // 미세한 자체발광으로 자연스러운 톤
-      emissive: baseColor.clone().multiplyScalar(0.015)
+      emissive: baseColor.clone().multiplyScalar(0.015),
+      
+      // Z-fighting 방지를 위한 설정
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
     });
 
     // 텍스처가 있는 경우 적용

@@ -18,16 +18,18 @@ const BoxWithEdges: React.FC<{
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   
-  // BoxWithEdges 컴포넌트의 그림자 업데이트
+  // BoxWithEdges 컴포넌트의 그림자 업데이트 - 빈도 제한
   useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      requestAnimationFrame(() => {
+    if (viewMode === '3D' && gl && gl.shadowMap && !gl.shadowMap.autoUpdate) {
+      const timeoutId = setTimeout(() => {
         if (gl.shadowMap) {
           gl.shadowMap.needsUpdate = true;
         }
-      });
+      }, 50); // 50ms 디바운스
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [viewMode, gl, args, position, material]);
+  }, [viewMode, gl]);
   
   // 재질 처리 - 드래그 중일 때 고스트 효과 적용
   const processedMaterial = useMemo(() => {
@@ -73,16 +75,43 @@ const BoxWithEdges: React.FC<{
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
+        <mesh 
+          geometry={geometry} 
+          receiveShadow={viewMode === '3D'} 
+          castShadow={viewMode === '3D'}
+          renderOrder={isInternalSurface ? 1 : 0}
+        >
           <primitive object={processedMaterial} />
         </mesh>
       )}
-      {/* 윤곽선 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-        <lineSegments geometry={edgesGeometry}>
+      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
+      {viewMode === '3D' ? (
+        <lineSegments 
+          geometry={edgesGeometry}
+          renderOrder={999}
+        >
+          <lineBasicMaterial 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
+          />
+        </lineSegments>
+      ) : (
+        <lineSegments 
+          geometry={edgesGeometry}
+          renderOrder={1000}
+        >
           <lineBasicMaterial 
             color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
-            linewidth={1} 
+            linewidth={1}
+            depthTest={false}
+            transparent={false}
+            opacity={1.0}
           />
         </lineSegments>
       )}
@@ -146,19 +175,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
-  // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      // 2프레임 지연으로 React 렌더링 완료 후 그림자 업데이트
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (gl.shadowMap) {
-            gl.shadowMap.needsUpdate = true;
-          }
-        });
-      });
-    }
-  }, [viewMode, gl, material, width, height, depth]);
+  // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
+  // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
   
   return (
     <group>

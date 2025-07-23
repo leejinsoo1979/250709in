@@ -17,6 +17,7 @@ interface BaseFurnitureOptions {
   internalHeight?: number;
   customDepth?: number;
   isDragging?: boolean;
+  adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
 }
 
 // 가구 기본 설정 반환 타입
@@ -64,7 +65,8 @@ export const useBaseFurniture = (
     color, 
     internalHeight, 
     customDepth, 
-    isDragging = false 
+    isDragging = false,
+    adjustedWidth
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -89,10 +91,20 @@ export const useBaseFurniture = (
   const backPanelThickness = mmToThreeUnits(BACK_PANEL_THICKNESS);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
-  const width = mmToThreeUnits(moduleData.dimensions.width);
+  // adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
+  const actualWidthMm = adjustedWidth !== undefined ? adjustedWidth : moduleData.dimensions.width;
+  const width = mmToThreeUnits(actualWidthMm);
   const height = mmToThreeUnits(internalHeight || moduleData.dimensions.height);
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
+  
+  // console.log('🔧 useBaseFurniture 폭 결정:', {
+  //   originalWidth: moduleData.dimensions.width + 'mm',
+  //   adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
+  //   actualWidthMm: actualWidthMm + 'mm',
+  //   finalWidth: width.toFixed(3) + ' (Three.js units)',
+  //   logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'
+  // });
   
   // 내경 치수 계산
   const innerWidth = width - basicThickness * 2;

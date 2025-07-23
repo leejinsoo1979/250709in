@@ -20,6 +20,7 @@ import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopu
 
 interface SlotDropZonesProps {
   spaceInfo: SpaceInfo;
+  showAll?: boolean;
 }
 
 // 전역 window 타입 확장
@@ -29,7 +30,7 @@ declare global {
   }
 }
 
-const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
+const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true }) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
@@ -272,36 +273,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         // 분할된 가구들을 한 번에 배치
         placedModules.forEach(module => addModule(module));
         
-        // 그림자 업데이트 (듀얼 분할 시에도 적극적인 업데이트)
-        if (viewMode === '3D' && gl && gl.shadowMap) {
-          // 즉시 업데이트
-          gl.shadowMap.needsUpdate = true;
-          
-          // 여러 프레임에 걸쳐 지속적으로 업데이트
-          const forceUpdateFrames = () => {
-            let frameCount = 0;
-            const maxFrames = 5;
-            
-            const updateLoop = () => {
-              if (frameCount < maxFrames && gl.shadowMap) {
-                gl.shadowMap.needsUpdate = true;
-                frameCount++;
-                requestAnimationFrame(updateLoop);
-              }
-            };
-            
-            requestAnimationFrame(updateLoop);
-          };
-          
-          forceUpdateFrames();
-          
-          // 추가로 100ms 후에도 한 번 더 업데이트
-          setTimeout(() => {
-            if (gl.shadowMap) {
-              gl.shadowMap.needsUpdate = true;
-            }
-          }, 100);
-        }
+        // Shadow auto-update enabled - manual shadow updates removed
         
         // 드래그 상태 초기화
         setCurrentDragData(null);
@@ -342,26 +314,55 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     // 고유 ID 생성
     const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // 기본 깊이 설정
-    let customDepth = getDefaultDepth(actualModuleData);
+    // 현재 가구의 사용자 설정 깊이 확인
+    const currentPlacedModule = placedModules.find(m => m.moduleId === actualModuleId);
+    const currentCustomDepth = currentPlacedModule?.customDepth;
     
-    // 기둥이 있는 슬롯인 경우만 깊이 조정
+    // 기본 깊이 설정 - 사용자 설정이 있으면 우선 사용
+    let customDepth = currentCustomDepth || getDefaultDepth(actualModuleData);
+    
+    // 기둥이 있는 슬롯인 경우 기둥 타입에 따라 처리
     if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
       const columnDepth = targetSlotInfo.column.depth;
-      const adjustedDepth = 730 - columnDepth;
+      const DEPTH_THRESHOLD = 500; // 깊은/얕은 기둥 구분 기준
+      const isDeepColumn = columnDepth >= DEPTH_THRESHOLD;
       
-      console.log('🔧 기둥 있는 슬롯 - 깊이 조정:', {
-        slotIndex: slotIndex,
-        hasColumn: targetSlotInfo.hasColumn,
-        columnDepth: columnDepth,
-        originalDepth: getDefaultDepth(actualModuleData),
-        adjustedDepth: adjustedDepth,
-        계산식: `730 - ${columnDepth} = ${adjustedDepth}`
-      });
-      
-      if (adjustedDepth >= 200) {
-        customDepth = adjustedDepth;
-        console.log('✅ customDepth 설정:', customDepth);
+      if (isDeepColumn) {
+        // 깊은 기둥(기둥A): 사용자 설정 깊이가 있으면 유지, 없으면 원래 깊이
+        if (!currentCustomDepth) {
+          customDepth = getDefaultDepth(actualModuleData); // 사용자 설정이 없을 때만 원래 깊이로
+        }
+        console.log('🔧 깊은 기둥(기둥A) - 깊이 유지, 폭만 조정:', {
+          slotIndex: slotIndex,
+          columnDepth: columnDepth,
+          hasUserCustomDepth: !!currentCustomDepth,
+          userCustomDepth: currentCustomDepth,
+          finalDepth: customDepth,
+          logic: '깊은 기둥은 폭만 조정, 사용자 설정 우선'
+        });
+      } else {
+        // 얕은 기둥(기둥C): 사용자 설정이 없을 때만 깊이 조정
+        if (!currentCustomDepth) {
+          const adjustedDepth = 730 - columnDepth;
+          console.log('🔧 얕은 기둥(기둥C) - 깊이 조정:', {
+            slotIndex: slotIndex,
+            columnDepth: columnDepth,
+            originalDepth: getDefaultDepth(actualModuleData),
+            adjustedDepth: adjustedDepth,
+            계산식: `730 - ${columnDepth} = ${adjustedDepth}`
+          });
+          
+          if (adjustedDepth >= 200) {
+            customDepth = adjustedDepth;
+            console.log('✅ customDepth 설정:', customDepth);
+          }
+        } else {
+          console.log('🔧 얕은 기둥(기둥C) - 사용자 설정 깊이 유지:', {
+            slotIndex: slotIndex,
+            userCustomDepth: currentCustomDepth,
+            logic: '사용자가 이미 깊이를 설정했으므로 유지'
+          });
+        }
       }
     } else {
       console.log('🔧 기둥 없는 슬롯 - 기본 깊이:', {
@@ -484,34 +485,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
     
     addModule(newModule);
     
-    // 가구 배치 완료 후 마우스 클릭 효과 시뮬레이션
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      // 가구 배치 직후 가상 마우스 클릭 이벤트 시뮬레이션
-      setTimeout(() => {
-        const canvas = gl.domElement;
-        if (canvas) {
-          // 캔버스 중앙에 가상 클릭 이벤트 생성
-          const rect = canvas.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          
-          // 마우스 클릭 이벤트 시뮬레이션
-          const clickEvent = new MouseEvent('click', {
-            clientX: centerX,
-            clientY: centerY,
-            button: 0,
-            bubbles: true,
-            cancelable: true
-          });
-          
-          canvas.dispatchEvent(clickEvent);
-          
-          if (import.meta.env.DEV) {
-            console.log('🌟 SlotDropZones - 가상 마우스 클릭 이벤트 시뮬레이션 완료');
-          }
-        }
-      }, 200); // 200ms 후 클릭 시뮬레이션
-    }
+    // Shadow auto-update enabled - manual shadow updates removed
     
     // 드래그 상태 초기화
     setCurrentDragData(null);
@@ -582,13 +556,23 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         };
       }
       
-      // 깊이 조정
-      const adjustedDepth = 730 - column.depth;
-      if (adjustedDepth < 200) {
-        return { 
-          success: false, 
-          reason: `깊이 부족 - 조정된 깊이: ${adjustedDepth}mm` 
-        };
+      // 깊이 조정 - 깊은 기둥은 깊이 조정 안함
+      const DEPTH_THRESHOLD = 500;
+      const isDeepColumn = column.depth >= DEPTH_THRESHOLD;
+      let adjustedDepth: number;
+      
+      if (isDeepColumn) {
+        // 깊은 기둥: 원래 깊이 유지
+        adjustedDepth = 730;
+      } else {
+        // 얕은 기둥: 깊이 조정
+        adjustedDepth = 730 - column.depth;
+        if (adjustedDepth < 200) {
+          return { 
+            success: false, 
+            reason: `깊이 부족 - 조정된 깊이: ${adjustedDepth}mm` 
+          };
+        }
       }
       
       // 캐비넷 크기와 위치 계산 (한쪽만 있어도 배치 가능)
@@ -763,13 +747,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
       });
     });
 
-    // 그림자 업데이트
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-      setTimeout(() => {
-        if (gl.shadowMap) gl.shadowMap.needsUpdate = true;
-      }, 100);
-    }
+    // Shadow auto-update enabled - manual shadow updates removed
 
     // 드래그 상태 초기화
     setCurrentDragData(null);
@@ -861,6 +839,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
   // 슬롯 크기 및 위치 계산
   const slotDimensions = calculateSlotDimensions(spaceInfo);
   const slotStartY = calculateSlotStartY(spaceInfo);
+  
   
   return (
     <>
@@ -955,9 +934,9 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
             position: indexing.threeUnitPositions[hoveredSlotIndex]
           });
         }
-        
+
         if (previewModules.length === 0) return null;
-        
+
         // 미리보기용 기본 깊이 계산 함수
         const getPreviewDepth = (moduleData: ModuleData) => {
           if (moduleData?.defaultDepth) {
@@ -966,7 +945,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
           const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
           return Math.min(spaceBasedDepth, 580);
         };
-        
+
         // Z축 위치 계산 상수
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const doorThicknessMm = 20;
@@ -977,19 +956,44 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo }) => {
         const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const zOffset = -panelDepth / 2;
         const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-        
+
         // 현재 슬롯에 해당하는 미리보기 모듈 찾기
         const currentPreviewModule = previewModules.find(pm => pm.slotIndex === slotIndex);
         if (!currentPreviewModule) return null;
-        
+
         const previewModuleData = currentPreviewModule.data;
         const previewCustomDepth = getPreviewDepth(previewModuleData);
         const furnitureHeight = previewModuleData.dimensions.height * 0.01;
         const furnitureY = slotStartY + furnitureHeight / 2;
-        const furnitureX = currentPreviewModule.position;
+        // 기존: const furnitureX = currentPreviewModule.position;
+        // 위치 조정 로직 추가
+        let furnitureX = currentPreviewModule.position;
+        // 아래 코드가 적용될 부분: 미리보기에서 드래그 중이거나 드래그 모드일 때는 원래 x를, 아니면 originalSlotCenterX를 사용
+        // 조건에 따라 조정
+        // isDraggingThis, isDragMode는 미리보기에서는 항상 true 취급(미리보기니까)
+        // 하지만 placedModule.position.x, originalSlotCenterX 패턴을 미리보기에도 적용
+        // 아래와 같이 가상 예시로 적용:
+        // adjustedPosition = {
+        //   ...placedModule.position,
+        //   x: (isDraggingThis || isDragMode)
+        //     ? placedModule.position.x
+        //     : originalSlotCenterX
+        // }
+        // 미리보기에서는 currentPreviewModule.position이 원래 x, indexing.threeUnitPositions[slotIndex]가 originalSlotCenterX
+        // isDraggingThis/isDragMode는 미리보기에서 항상 true로 간주
+        // 실제 적용 예시:
+        // furnitureX = (isDraggingThis || isDragMode) ? currentPreviewModule.position : indexing.threeUnitPositions[slotIndex];
+        // 아래처럼 적용하면 실제 코드와 동일한 패턴
+        const isDraggingThis = true; // 미리보기에서는 항상 true
+        const isDragMode = true;     // 미리보기에서는 항상 true
+        const originalSlotCenterX = indexing.threeUnitPositions[slotIndex];
+        furnitureX = (isDraggingThis || isDragMode)
+          ? currentPreviewModule.position
+          : originalSlotCenterX;
+
         const previewDepth = mmToThreeUnits(previewCustomDepth);
         const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
-        
+
         return (
           <group key={`furniture-preview-${slotIndex}`} position={[furnitureX, furnitureY, furnitureZ]}>
             <BoxModule 

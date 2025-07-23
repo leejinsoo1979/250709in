@@ -26,6 +26,7 @@ interface BoxModuleProps {
   doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm)
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
 }
 
 /**
@@ -47,7 +48,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   doorWidth,
   doorXOffset = 0,
   originalSlotWidth,
-  slotCenterX
+  slotCenterX,
+  adjustedWidth
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
@@ -57,7 +59,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     color,
     internalHeight,
     customDepth,
-    isDragging
+    isDragging,
+    adjustedWidth
   });
   
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
@@ -76,6 +79,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -95,6 +99,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -114,6 +119,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -133,6 +139,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -152,6 +159,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -171,6 +179,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -190,6 +199,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }
@@ -209,6 +219,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth} // 조정된 폭 전달
       />
     );
   }

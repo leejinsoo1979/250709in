@@ -13,7 +13,6 @@ import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import CADGrid from './components/elements/CADGrid';
 
-// import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import SlotDropZones from './components/elements/SlotDropZones';
 
 
@@ -31,7 +30,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe' } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true } = props;
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
@@ -44,6 +43,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     interiorColor: '#FFFFFF', 
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
+  
+  // 기둥 변경 감지하여 즉시 리렌더링
+  useEffect(() => {
+    console.log('🔄 Space3DView - 기둥 상태 변경 감지:', {
+      columnsCount: spaceInfo.columns?.length || 0,
+      columnsData: spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, depth: col.depth }))
+    });
+    // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
+  }, [spaceInfo.columns]);
   
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
@@ -280,9 +288,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               shadow-camera-right={25}
               shadow-camera-top={25}
               shadow-camera-bottom={-25}
-              shadow-bias={-0.0001}
-              shadow-radius={8}
-              shadow-normalBias={0.015}
+              shadow-bias={-0.0005}
+              shadow-radius={12}
+              shadow-normalBias={0.02}
             />
             
             {/* 부드러운 필 라이트 - 그림자 대비 조절 */}
@@ -304,7 +312,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
             {/* 기본 요소들 */}
-            <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} />
+            <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} showAll={showAll} />
             
             {/* 기둥 에셋 렌더링 */}
             {(spaceInfo.columns || []).map((column) => (
@@ -368,17 +376,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 기둥 생성 마커는 드래그 앤 드롭 방식으로 대체됨 */}
             
             {/* Configurator에서 표시되는 요소들 */}
-            {/* 3D 모드에서만 컬럼 가이드 표시 */}
-            {viewMode === '3D' && <ColumnGuides />}
+            {/* 3D 모드에서만 컬럼 가이드 표시 - showAll(가이드)이 true일 때만 */}
+            {viewMode === '3D' && showAll && <ColumnGuides />}
             
             {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
             <CleanCAD2D viewDirection={viewMode === '3D' ? '3D' : view2DDirection} />
             
-            {/* 초록색 바닥배치면 주석처리 */}
-            {/* <FurniturePlacementPlane spaceInfo={spaceInfo} /> */}
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZones spaceInfo={spaceInfo} />
+            <SlotDropZones spaceInfo={spaceInfo} showAll={showAll} />
           </React.Suspense>
         </ThreeCanvas>
 

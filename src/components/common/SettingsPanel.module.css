@@ -1,0 +1,254 @@
+/* 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--theme-overlay, rgba(0, 0, 0, 0.3));
+  z-index: 999;
+}
+
+/* 설정 패널 */
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 400px;
+  background: var(--theme-surface, white);
+  box-shadow: -4px 0 20px var(--theme-shadow, rgba(0, 0, 0, 0.15));
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  background: var(--theme-background-secondary, #f9fafb);
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text, #111827);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.closeButton:hover {
+  background: var(--theme-background-secondary, #e5e7eb);
+  color: var(--theme-text, #374151);
+}
+
+/* 콘텐츠 */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.section {
+  padding: 24px;
+  border-bottom: 1px solid var(--theme-border, #f3f4f6);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text, #111827);
+  margin: 0 0 16px 0;
+}
+
+/* 테마 컨테이너 */
+.themeContainer {
+  padding: 0;
+}
+
+/* 일반 설정 */
+.settingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settingLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text, #111827);
+}
+
+.settingDescription {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 스위치 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--theme-border, #d1d5db);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+input:checked + .slider {
+  background-color: var(--theme-primary, #10b981);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* 키보드 단축키 */
+.shortcutList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shortcutItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.shortcutAction {
+  font-size: 14px;
+  color: var(--theme-text, #374151);
+}
+
+.shortcutKey {
+  background: var(--theme-background-secondary, #f3f4f6);
+  border: 1px solid var(--theme-border, #d1d5db);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--theme-text, #374151);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* 정보 */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.infoLabel {
+  font-size: 14px;
+  color: var(--theme-text, #374151);
+}
+
+.infoValue {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .panel {
+    width: 100%;
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 16px 20px;
+  }
+  
+  .section {
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: 18px;
+  }
+}

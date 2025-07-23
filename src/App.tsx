@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import Step0 from '@/editor/Step0';
 import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
+import TestDashboard from '@/pages/TestDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 // WebGL 메모리 누수를 방지하기 위한 간단한 함수
@@ -44,8 +46,8 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <Routes>
-        {/* 메인 페이지 */}
-        <Route path="/" element={<SimpleDashboard />} />
+        {/* 메인 페이지 - 대시보드로 리다이렉트 */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
@@ -56,7 +58,7 @@ function AppContent() {
         <Route path="/step1" element={<Navigate to="/configurator" replace />} />
         <Route path="/step2" element={<Navigate to="/configurator" replace />} />
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
   );
@@ -80,11 +82,13 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

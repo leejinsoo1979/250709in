@@ -17,15 +17,7 @@ const BoxWithEdges: React.FC<{
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   
-  // 바지걸이장은 독립적인 BoxWithEdges를 사용하므로 개별 그림자 업데이트 필요
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-      requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
-      });
-    }
-  }, [viewMode, gl, args, position, material]);
+  // Shadow auto-update enabled - manual shadow updates removed
 
   // 드래그 중일 때 고스트 효과 적용
   const processedMaterial = React.useMemo(() => {
@@ -50,14 +42,30 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+      {viewMode === '3D' ? (
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
-            linewidth={2} 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
           />
         </lineSegments>
+      ) : (
+        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+          <lineSegments>
+            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+            <lineBasicMaterial 
+              color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+              linewidth={2} 
+            />
+          </lineSegments>
+        )
       )}
     </group>
   );

@@ -92,8 +92,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className={styles.projectInfo}>
           <div className={styles.projectHeader}>
             <h3 className={styles.projectTitle}>
-              <FolderIcon size={16} className={styles.projectIcon} />
-              {project.title}
+              <DocumentIcon size={16} className={styles.projectIcon} />
+              design.json
             </h3>
             <button 
               className={styles.moreButton}
@@ -104,7 +104,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
           
           <p className={styles.projectDescription}>
-            가구 설계 프로젝트 • React + Three.js
+            가구 디자인 파일 • {project.title}
           </p>
           
           <div className={styles.projectStats}>
@@ -153,7 +153,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               }}
             >
               <RocketIcon size={16} />
-              <span>열기</span>
+              <span>디자인 열기</span>
             </button>
             <button 
               className={styles.hoverButton}
@@ -188,7 +188,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           }}
         >
           <RocketIcon size={16} />
-          <span>프로젝트 열기</span>
+          <span>디자인 열기</span>
         </button>
       </div>
     </div>

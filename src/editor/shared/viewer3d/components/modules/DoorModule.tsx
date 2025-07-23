@@ -23,15 +23,7 @@ const BoxWithEdges: React.FC<{
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   
-  // 독립적인 그림자 업데이트 (다른 가구들과 동일)
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-      requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
-      });
-    }
-  }, [viewMode, gl, args, position, material]);
+  // Shadow auto-update enabled - manual shadow updates removed
 
   // 드래그 중일 때 고스트 효과 적용
   const processedMaterial = useMemo(() => {
@@ -54,14 +46,29 @@ const BoxWithEdges: React.FC<{
           <primitive object={processedMaterial} />
         </mesh>
       )}
-      {/* 윤곽선 렌더링 */}
-      {(viewMode !== '3D' && ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe')) && (
+      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
+      {viewMode === '3D' ? (
         <lineSegments geometry={edgesGeometry}>
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
-            linewidth={1} 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
           />
         </lineSegments>
+      ) : (
+        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+          <lineSegments geometry={edgesGeometry}>
+            <lineBasicMaterial 
+              color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+              linewidth={1} 
+            />
+          </lineSegments>
+        )
       )}
     </group>
   );
@@ -144,22 +151,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스)
   const rightDoorMaterial = useMemo(() => baseDoorMaterial.clone(), [baseDoorMaterial]);
 
-  // 도어 배치 시 그림자 즉시 업데이트
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap) {
-      // 그림자 맵 강제 업데이트
-      gl.shadowMap.needsUpdate = true;
-      
-      // 다음 프레임에서 렌더링 강제 업데이트
-      requestAnimationFrame(() => {
-        gl.shadowMap.needsUpdate = true;
-      });
-      
-              if (import.meta.env.DEV) {
-          console.log('🌟 DoorModule - 그림자 강제 업데이트 완료');
-        }
-    }
-  }, [viewMode, gl]); // 뷰모드와 GL 컨텍스트 변경 시에만 그림자 업데이트
+  // Shadow auto-update enabled - manual shadow updates removed
 
   // 텍스처 적용 함수
   const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {

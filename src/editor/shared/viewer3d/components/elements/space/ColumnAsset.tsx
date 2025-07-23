@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { ThreeEvent } from '@react-three/fiber';
+import React, { useRef, useState, useEffect } from 'react';
+import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
@@ -47,6 +47,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
+  
+  const { invalidate } = useThree();
+  
+  // 기둥 위치나 크기 변경 시 즉시 렌더링 업데이트
+  useEffect(() => {
+    invalidate();
+  }, [position, width, height, depth, invalidate]);
+  
+  // 드래그 상태 변경 시에도 즉시 업데이트
+  useEffect(() => {
+    invalidate();
+  }, [isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
@@ -83,62 +95,62 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 기둥 클릭 이벤트 발생:', id);
+    // console.log('🎯 기둥 클릭 이벤트 발생:', id);
     
     // 드래그 중이거나 움직임이 있었으면 클릭 무시
     if (isDragging || hasMoved) {
-      console.log('🎯 드래그 중이거나 움직임이 있었으므로 클릭 무시');
+      // console.log('🎯 드래그 중이거나 움직임이 있었으므로 클릭 무시');
       return;
     }
 
     // 클릭 시간이 너무 길면 드래그로 간주
     const clickDuration = Date.now() - pointerDownTime;
     if (clickDuration > 200) {
-      console.log('🎯 클릭 시간이 너무 길어서 무시:', clickDuration);
+      // console.log('🎯 클릭 시간이 너무 길어서 무시:', clickDuration);
       return;
     }
 
     // 클릭 - 기둥 선택 및 기둥 팝업 열기
-    console.log('🎯 기둥 클릭 - 기둥 선택 및 팝업 열기:', id);
-    console.log('🎯 현재 selectedColumnId:', selectedColumnId);
+    // console.log('🎯 기둥 클릭 - 기둥 선택 및 팝업 열기:', id);
+    // console.log('🎯 현재 selectedColumnId:', selectedColumnId);
     
     // 기둥 선택 및 기둥 팝업 열기
     setSelectedColumnId(id);
     openColumnPopup(id);
     
-    console.log('✅ setSelectedColumnId 및 openColumnPopup 호출됨:', id);
-    console.log('✅ 변경 후 selectedColumnId:', id);
+    // console.log('✅ setSelectedColumnId 및 openColumnPopup 호출됨:', id);
+    // console.log('✅ 변경 후 selectedColumnId:', id);
   };
 
   // 더블 클릭 처리 - 편집 모달 열기
   const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 기둥 더블클릭 이벤트 발생:', id);
+    // console.log('🎯 기둥 더블클릭 이벤트 발생:', id);
     
     // 드래그 중이거나 움직임이 있었으면 더블클릭 무시
     if (isDragging || hasMoved) {
-      console.log('🎯 드래그 중이거나 움직임이 있었으므로 더블클릭 무시');
+      // console.log('🎯 드래그 중이거나 움직임이 있었으므로 더블클릭 무시');
       return;
     }
 
     // 더블 클릭 - 기둥 선택 및 편집 모달 열기
-    console.log('🎯 기둥 더블 클릭 - 기둥 선택 및 편집 모달 열기:', id);
-    console.log('🎯 현재 selectedColumnId:', selectedColumnId);
+    // console.log('🎯 기둥 더블 클릭 - 기둥 선택 및 편집 모달 열기:', id);
+    // console.log('🎯 현재 selectedColumnId:', selectedColumnId);
     
     // 기둥 선택 및 편집 모달 열기
     setSelectedColumnId(id);
     openColumnEditModal(id);
     
-    console.log('✅ setSelectedColumnId 및 openColumnEditModal 호출됨:', id);
-    console.log('✅ 변경 후 selectedColumnId:', id);
+    // console.log('✅ setSelectedColumnId 및 openColumnEditModal 호출됨:', id);
+    // console.log('✅ 변경 후 selectedColumnId:', id);
   };
 
   // 포인터 다운 처리
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     
-    console.log('🎯 기둥 포인터 다운:', id);
+    // console.log('🎯 기둥 포인터 다운:', id);
     
     setPointerDownTime(Date.now());
     setHasMoved(false);
@@ -155,7 +167,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !hasMoved) {
-        console.log('🎯 드래그 시작 감지:', moveDistance);
+        // console.log('🎯 드래그 시작 감지:', moveDistance);
         setHasMoved(true);
         setIsDragging(true);
       }
@@ -183,22 +195,24 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         zPosition // Z는 뒷벽에 고정
       ];
       
-      console.log('🎯 기둥 드래그 위치 업데이트:', {
-        id,
-        oldPosition: position,
-        newPosition: boundedPosition,
-        spaceWidth,
-        worldX,
-        moveDistance
-      });
+      // console.log('🎯 기둥 드래그 위치 업데이트:', {
+      //   id,
+      //   oldPosition: position,
+      //   newPosition: boundedPosition,
+      //   spaceWidth,
+      //   worldX,
+      //   moveDistance
+      // });
       
       if (onPositionChange && !isNaN(boundedPosition[0]) && !isNaN(boundedPosition[1]) && !isNaN(boundedPosition[2])) {
         onPositionChange(id, boundedPosition);
+        // 즉시 렌더링 업데이트 - 가구 크기 변경 지연 방지
+        invalidate();
       }
     };
     
     const handleGlobalPointerUp = () => {
-      console.log('🎯 기둥 포인터 업:', id, 'hasMoved:', hasMoved);
+      // console.log('🎯 기둥 포인터 업:', id, 'hasMoved:', hasMoved);
       
       setIsDragging(false);
       setDragStart(null);
@@ -217,7 +231,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 우클릭으로 삭제
   const handleContextMenu = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    console.log('🎯 기둥 우클릭 - 삭제 확인');
+    // console.log('🎯 기둥 우클릭 - 삭제 확인');
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       onRemove?.(id);
     }

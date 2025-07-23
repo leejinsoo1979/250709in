@@ -2,22 +2,28 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-  width: 280px;
-  min-width: 250px;
-  max-width: 400px;
+  background: transparent;
+  width: 100%;
 }
 
 .header {
-  padding: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dropdown {
-  margin-bottom: 12px;
+  flex: 1;
 }
 
 .select {
@@ -32,6 +38,9 @@
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .select:focus {
@@ -40,20 +49,20 @@
 }
 
 .newButton {
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 8px 12px;
   background: #1abc9c;
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .newButton:hover {
@@ -64,6 +73,45 @@
 
 .newButton:active {
   transform: translateY(0);
+}
+
+.filePath {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-height: 24px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.pathSeparator {
+  margin: 0 4px;
+  color: #9ca3af;
+}
+
+.pathSegment {
+  color: #374151;
+  font-weight: 500;
+}
+
+.pathSegment:last-child {
+  color: #1abc9c;
+  font-weight: 600;
+}
+
+.itemCount {
+  background: #e5e5e5;
+  color: #0a0a0a;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: auto;
 }
 
 .treeContainer {
@@ -80,21 +128,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 16px;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  border-left: 3px solid transparent;
+  font-size: 14px;
+  color: #6b7280;
+  transition: background-color 0.2s;
   user-select: none;
 }
 
 .node:hover {
-  background: #f3f4f6;
+  background: #f9fafb;
 }
 
 .node.selected {
-  background: #ecfdf5;
-  border-left-color: #1abc9c;
-  color: #047857;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.node.currentWorkingFile {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
+  border-left: 3px solid #3b82f6;
+  font-weight: 600;
+  cursor: default;
+}
+
+.node.currentWorkingFile:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.node.currentWorkingFile .name {
+  font-weight: 700;
+}
+
+.node.currentWorkingFile .icon {
+  color: #3b82f6;
 }
 
 .node.selected .name {
@@ -147,20 +218,40 @@
   flex: 1;
 }
 
+.nameInput {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #1abc9c;
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  min-width: 0;
+}
+
+.nameInput:focus {
+  border-color: #1abc9c;
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2);
+}
+
 .moreButton {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: #6b7280;
   border-radius: 4px;
   transition: all 0.2s ease;
   opacity: 0;
   flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .node:hover .moreButton {
@@ -168,8 +259,7 @@
 }
 
 .moreButton:hover {
-  background: #e5e7eb;
-  color: #6b7280;
+  background: #f3f4f6;
 }
 
 .children {
@@ -246,6 +336,80 @@
 
 .treeContainer::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* 새 프로젝트 생성 모달 */
+.createProjectModal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 400px;
+  padding: 24px;
+  position: relative;
+}
+
+.createProjectModalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.createProjectModalInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  margin-bottom: 20px;
+  outline: none;
+}
+
+.createProjectModalInput:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.createProjectModalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.createProjectModalCancelBtn, .createProjectModalCreateBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.createProjectModalCancelBtn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.createProjectModalCancelBtn:hover {
+  background: #e5e7eb;
+}
+
+.createProjectModalCreateBtn {
+  background: #10b981;
+  color: white;
+}
+
+.createProjectModalCreateBtn:hover {
+  background: #059669;
+}
+
+.createProjectModalCreateBtn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
 }
 
 /* 반응형 디자인 */
@@ -332,5 +496,237 @@
   
   .contextMenuItem:hover {
     background: #4b5563;
+  }
+}
+
+/* 로딩 및 빈 상태 */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 14px;
+  gap: 16px;
+}
+
+.createFirstProject {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.createFirstProject:hover {
+  background: #059669;
+}
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.dropdownHeader {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdownList {
+  padding: 4px 0;
+}
+
+.dropdownItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+}
+
+.dropdownItem:hover {
+  background: #f3f4f6;
+}
+
+.dropdownItem.active {
+  background: #ecfdf5;
+  border-left-color: #1abc9c;
+}
+
+.projectInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projectTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.dropdownItem.active .projectTitle {
+  color: #047857;
+  font-weight: 600;
+}
+
+.projectDate {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 모달 스타일 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  max-width: 480px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modalContent {
+  padding: 20px 24px;
+}
+
+.modalContent p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.modalSubtext {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  margin: 0 !important;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px 24px;
+  justify-content: flex-end;
+}
+
+.cancelButton, .navigateButton, .saveButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+
+.cancelButton {
+  background: #ffffff;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.cancelButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.navigateButton {
+  background: #ffffff;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.navigateButton:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.saveButton {
+  background: #1abc9c;
+  color: #ffffff;
+  border-color: #1abc9c;
+}
+
+.saveButton:hover {
+  background: #16a085;
+  border-color: #16a085;
+}
+
+/* 반응형 모달 */
+@media (max-width: 768px) {
+  .modal {
+    max-width: 90%;
+    margin: 20px;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+  }
+  
+  .cancelButton, .navigateButton, .saveButton {
+    width: 100%;
+    justify-content: center;
   }
 }

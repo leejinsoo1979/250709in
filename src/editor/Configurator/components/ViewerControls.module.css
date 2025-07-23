@@ -228,6 +228,49 @@
   background: #f0f9ff;
 }
 
+/* 도어 설치 버튼 그룹 */
+.doorButtonGroup {
+  display: flex;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-left: 12px;
+}
+
+.doorButton {
+  background: #ffffff;
+  border: none;
+  padding: 5px 12px;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #10b981;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 18px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 70px;
+}
+
+.doorButton svg {
+  color: currentColor;
+  width: 14px;
+  height: 14px;
+}
+
+.doorButton.active {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.doorButton:hover:not(.active) {
+  background: #f0f9ff;
+}
+
 /* 뷰 방향 선택 */
 .viewDirectionGroup {
   display: flex;

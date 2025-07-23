@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
 import { Settings, User } from 'lucide-react';
+import { useAuth } from '@/auth/AuthProvider';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -17,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onToggle
 }) => {
+  const { user } = useAuth();
   const tabs = [
     {
       id: 'module' as SidebarTab,
@@ -30,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       ),
       label: '모듈'
     },
+
     {
       id: 'material' as SidebarTab,
       icon: (
@@ -88,18 +91,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* 하단 사용자 정보 */}
+      {/* 하단 설정 버튼 */}
       <div className={styles.userSection}>
-        <div className={styles.userAvatar}>
-          <div className={styles.avatar}>
-            <User size={24} />
-          </div>
-          <div className={styles.onlineIndicator}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </div>
+        <button className={styles.settingsButton} title="설정">
+          <Settings size={24} />
+        </button>
       </div>
     </aside>
   );

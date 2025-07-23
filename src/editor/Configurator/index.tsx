@@ -6,8 +6,9 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
-import { getProject, updateProject } from '@/firebase/projects';
+import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
+import { useAuth } from '@/auth/AuthProvider';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // 새로운 컴포넌트들 import
@@ -17,6 +18,7 @@ import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './component
 import RightPanel, { RightPanelTab } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
 import FileTree from '@/components/FileTree/FileTree';
+
 
 // 기존 작동하는 컴포넌트들
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
@@ -41,12 +43,15 @@ import {
 import styles from './style.module.css';
 
 const Configurator: React.FC = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
+  const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
@@ -60,6 +65,8 @@ const Configurator: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
+  const [moduleCategory, setModuleCategory] = useState<'tall' | 'lower'>('tall'); // 키큰장/하부장 토글
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
@@ -225,10 +232,18 @@ const Configurator: React.FC = () => {
       }
 
       if (project) {
-        setBasicInfo(project.projectData);
+        // 프로젝트 데이터를 설정하되, title은 Firebase의 title을 우선 사용
+        const projectTitle = project.title || project.projectData.title || '새 프로젝트';
+        setBasicInfo({
+          title: projectTitle,
+          location: project.projectData.location || ''
+        });
+        console.log('🔍 loadProject에서 설정한 title:', projectTitle);
         setSpaceInfo(project.spaceConfig);
         setPlacedModules(project.furniture.placedModules);
         setCurrentProjectId(projectId);
+        
+        // 디자인파일명 설정은 별도 useEffect에서 처리됨
         
         console.log('✅ 프로젝트 로드 성공:', project.title);
         console.log('🎨 로드된 materialConfig:', project.spaceConfig.materialConfig);
@@ -255,96 +270,624 @@ const Configurator: React.FC = () => {
     );
   };
 
+  // Firebase 호환을 위해 undefined 값 제거하는 헬퍼 함수
+  const removeUndefinedValues = (obj: any): any => {
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(removeUndefinedValues);
+    }
+    
+    if (typeof obj === 'object') {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value !== undefined) {
+          result[key] = removeUndefinedValues(value);
+        }
+      }
+      return result;
+    }
+    
+    return obj;
+  };
+
   // 프로젝트 저장 (Firebase 또는 로컬 저장)
   const saveProject = async () => {
+    console.log('💾 [DEBUG] saveProject 함수 시작');
+    console.log('💾 [DEBUG] 현재 프로젝트 ID:', currentProjectId);
+    console.log('💾 [DEBUG] Firebase 설정:', isFirebaseConfigured());
+    console.log('💾 [DEBUG] 사용자 상태:', !!user);
+    console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
+    
+    if (!currentProjectId) {
+      console.error('💾 [ERROR] 프로젝트 ID가 없습니다');
+      alert('저장할 프로젝트가 없습니다. 새 프로젝트를 먼저 생성해주세요.');
+      return;
+    }
+    
     setSaving(true);
     setSaveStatus('idle');
     
     try {
-      console.log('💾 저장할 spaceInfo:', spaceInfo);
-      console.log('🎨 저장할 materialConfig:', spaceInfo.materialConfig);
+      console.log('💾 [DEBUG] 저장할 basicInfo:', basicInfo);
+      console.log('💾 [DEBUG] 저장할 spaceInfo 요약:', {
+        width: spaceInfo.width,
+        height: spaceInfo.height,
+        materialConfig: spaceInfo.materialConfig
+      });
+      console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
       
-      let thumbnail = await captureProjectThumbnail();
-      
-      if (!thumbnail) {
-        console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
-        thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
+      // 썸네일 생성
+      let thumbnail;
+      try {
+        thumbnail = await captureProjectThumbnail();
+        if (!thumbnail) {
+          console.log('💾 [DEBUG] 3D 캔버스 캡처 실패, 기본 썸네일 생성');
+          thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
+        }
+        console.log('💾 [DEBUG] 썸네일 생성 완료');
+      } catch (thumbnailError) {
+        console.error('💾 [DEBUG] 썸네일 생성 실패:', thumbnailError);
+        thumbnail = null;
       }
 
-      if (isFirebaseConfigured() && currentProjectId) {
-        // Firebase 저장 모드
-        const { error } = await updateProject(currentProjectId, {
-          title: basicInfo.title,
-          projectData: basicInfo,
-          spaceConfig: spaceInfo,
-          furniture: {
-            placedModules: placedModules
-          }
-        }, thumbnail);
+      const firebaseConfigured = isFirebaseConfigured();
+      
+      if (firebaseConfigured && user) {
+        console.log('💾 [DEBUG] Firebase 저장 모드 진입');
+        
+        try {
+          const updateData = {
+            title: basicInfo.title,
+            projectData: removeUndefinedValues(basicInfo),
+            spaceConfig: removeUndefinedValues(spaceInfo),
+            furniture: {
+              placedModules: removeUndefinedValues(placedModules)
+            }
+          };
+          
+          console.log('💾 [DEBUG] updateProject 호출 시작, 정리된 데이터:', updateData);
+          const { error } = await updateProject(currentProjectId, updateData, thumbnail);
+          console.log('💾 [DEBUG] updateProject 결과 error:', error);
 
-        if (error) {
-          console.error('프로젝트 저장 에러:', error);
-          setSaveStatus('error');
-          alert('프로젝트 저장에 실패했습니다: ' + error);
-        } else {
-          setSaveStatus('success');
-          console.log('✅ 프로젝트 저장 성공 (썸네일 포함)');
-          
-          // 다른 창(대시보드)에 프로젝트 업데이트 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_SAVED', 
-              projectId: currentProjectId,
-              timestamp: Date.now()
-            });
-            console.log('📡 다른 창에 프로젝트 업데이트 알림 전송');
-          } catch (error) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+          if (error) {
+            console.error('💾 [ERROR] Firebase 프로젝트 저장 실패:', error);
+            setSaveStatus('error');
+            alert('프로젝트 저장에 실패했습니다: ' + error);
+          } else {
+            setSaveStatus('success');
+            console.log('✅ Firebase 프로젝트 저장 성공');
+            
+            // 다른 창(대시보드)에 프로젝트 업데이트 알림
+            try {
+              const channel = new BroadcastChannel('project-updates');
+              channel.postMessage({ 
+                type: 'PROJECT_SAVED', 
+                projectId: currentProjectId,
+                timestamp: Date.now()
+              });
+              console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
+              channel.close();
+            } catch (broadcastError) {
+              console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+            }
           }
-          
-          setTimeout(() => setSaveStatus('idle'), 3000);
+        } catch (firebaseError) {
+          console.error('💾 [ERROR] Firebase 저장 중 예외:', firebaseError);
+          setSaveStatus('error');
+          alert('Firebase 저장 중 오류가 발생했습니다: ' + firebaseError.message);
         }
+        
+        setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
-        // 데모 모드: 로컬 저장
-        const demoProject = {
-          id: currentProjectId || `demo-${Date.now()}`,
-          title: basicInfo.title || '데모 프로젝트',
-          projectData: basicInfo,
-          spaceConfig: spaceInfo,
-          furniture: {
-            placedModules: placedModules
-          },
-          thumbnail: thumbnail,
-          savedAt: new Date().toISOString(),
-          furnitureCount: placedModules.length
-        };
+        console.log('💾 [DEBUG] 데모 모드 저장 진입');
         
-        // 로컬 스토리지에 저장
-        localStorage.setItem('demoProject', JSON.stringify(demoProject));
-        
-        setSaveStatus('success');
-        console.log('✅ 데모 프로젝트 로컬 저장 성공 (썸네일 포함)');
-        alert('데모 프로젝트가 로컬에 저장되었습니다!\n\n썸네일과 함께 저장되어 나중에 확인할 수 있습니다.');
+        try {
+          const demoProject = {
+            id: currentProjectId,
+            title: basicInfo.title || '데모 프로젝트',
+            projectData: basicInfo,
+            spaceConfig: spaceInfo,
+            furniture: {
+              placedModules: placedModules
+            },
+            thumbnail: thumbnail,
+            savedAt: new Date().toISOString(),
+            furnitureCount: placedModules.length
+          };
+          
+          // 로컬 스토리지에 저장
+          const storageKey = `demoProject_${currentProjectId}`;
+          localStorage.setItem(storageKey, JSON.stringify(demoProject));
+          console.log('💾 [DEBUG] 데모 프로젝트 로컬 저장 완료, key:', storageKey);
+          
+          setSaveStatus('success');
+          console.log('✅ 데모 프로젝트 저장 성공');
+          alert('데모 프로젝트가 로컬에 저장되었습니다!');
+        } catch (demoError) {
+          console.error('💾 [ERROR] 데모 저장 중 예외:', demoError);
+          setSaveStatus('error');
+          alert('데모 프로젝트 저장 중 오류가 발생했습니다: ' + demoError.message);
+        }
         
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
-    } catch (error) {
-      console.error('프로젝트 저장 실패:', error);
+    } catch (outerError) {
+      console.error('💾 [ERROR] saveProject 최상위 예외:', outerError);
       setSaveStatus('error');
-      alert('프로젝트 저장 중 오류가 발생했습니다.');
+      alert('프로젝트 저장 중 예상치 못한 오류가 발생했습니다: ' + outerError.message);
     } finally {
+      console.log('💾 [DEBUG] saveProject 완료, 저장 상태 해제');
       setSaving(false);
     }
   };
 
+  // 새 디자인 생성 함수 (현재 프로젝트 내에)
+  const handleNewDesign = async () => {
+    console.log('🎨 [DEBUG] handleNewDesign 함수 시작');
+    
+    if (!currentProjectId) {
+      alert('프로젝트가 선택되지 않았습니다.');
+      return;
+    }
+    
+    try {
+      const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
+      console.log('🎨 [DEBUG] 사용자 확인 응답:', confirmed);
+      
+      if (!confirmed) {
+        console.log('🎨 [DEBUG] 사용자가 취소함');
+        return;
+      }
+
+      // 기본 설정으로 새 디자인 생성
+      const defaultSpaceConfig = {
+        width: 4000,
+        height: 2400,
+        depth: 3000,
+        frameThickness: 20,
+        frameColor: '#E5E5DC',
+        frameColorName: 'Beige',
+        subdivisionMode: 'none' as const,
+        columns: 0,
+        rows: 0,
+        showHorizontalLines: false,
+        enableSnapping: true,
+        snapDistance: 10,
+        gridVisible: true,
+        gridSize: 100,
+        selectedFinish: 'natural-wood' as const,
+        material: {
+          type: 'laminate' as const,
+          finish: 'natural-wood' as const,
+          colorName: 'Natural Wood',
+          colorCode: '#D2B48C'
+        }
+      };
+
+      if (isFirebaseConfigured() && user) {
+        // Firebase에 새 디자인파일 생성
+        const result = await createDesignFile({
+          name: `디자인 ${new Date().toLocaleTimeString()}`,
+          projectId: currentProjectId,
+          spaceConfig: defaultSpaceConfig,
+          furniture: { placedModules: [] }
+        });
+
+        if (result.error) {
+          console.error('🎨 [ERROR] 새 디자인 생성 실패:', result.error);
+          alert('새 디자인 생성에 실패했습니다: ' + result.error);
+          return;
+        }
+
+        if (result.id) {
+          console.log('🎨 [DEBUG] 새 디자인 생성 성공:', result.id);
+          
+          // 상태 업데이트 (프로젝트는 그대로, 디자인만 초기화)
+          setSpaceInfo(defaultSpaceConfig);
+          setPlacedModules([]);
+          setCurrentDesignFileId(result.id);
+          
+          // derivedSpaceStore 재계산
+          derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
+          
+          console.log('✅ 새 디자인파일 생성 완료:', result.id);
+          alert('새 디자인이 생성되었습니다!');
+        }
+      } else {
+        // 데모 모드에서는 단순히 상태만 초기화
+        setSpaceInfo(defaultSpaceConfig);
+        setPlacedModules([]);
+        derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
+        alert('새 디자인이 생성되었습니다!');
+      }
+    } catch (error) {
+      console.error('🎨 [ERROR] 새 디자인 생성 중 오류:', error);
+      alert('새 디자인 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 새 프로젝트 생성 함수
+  const handleNewProject = async () => {
+    console.log('🆕 [DEBUG] handleNewProject 함수 시작');
+    
+    try {
+      const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
+      console.log('🆕 [DEBUG] 사용자 확인 응답:', confirmed);
+      
+      if (!confirmed) {
+        console.log('🆕 [DEBUG] 사용자가 취소함');
+        return;
+      }
+
+      console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
+      setSaving(true);
+      
+      // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거)
+      const defaultSpaceConfig = {
+        width: 3600,
+        height: 2400,
+        depth: 1500,
+        installationType: 'builtin' as const,
+        hasFloorFinish: false,
+        surroundType: 'three-sided' as const,
+        frameSize: { top: 50, bottom: 50, left: 50, right: 50 },
+        baseConfig: { type: 'floor' as const, height: 65 },
+        materialConfig: { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' },
+        columns: []
+      };
+
+      console.log('🆕 [DEBUG] 기본 설정 준비됨:', defaultSpaceConfig);
+
+      // 썸네일 생성
+      let thumbnail;
+      try {
+        thumbnail = generateDefaultThumbnail(defaultSpaceConfig, 0);
+        console.log('🆕 [DEBUG] 썸네일 생성 성공');
+      } catch (thumbnailError) {
+        console.error('🆕 [DEBUG] 썸네일 생성 실패:', thumbnailError);
+        thumbnail = null;
+      }
+
+      const firebaseConfigured = isFirebaseConfigured();
+      console.log('🆕 [DEBUG] Firebase 설정 확인:', firebaseConfigured);
+      console.log('🆕 [DEBUG] 사용자 로그인 상태:', !!user);
+      console.log('🆕 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
+      
+      if (firebaseConfigured && user) {
+        console.log('🆕 [DEBUG] Firebase 모드로 진행');
+        
+        try {
+          const projectData = {
+            title: 'Untitled',
+            projectData: { title: 'Untitled', location: '' },
+            spaceConfig: removeUndefinedValues(defaultSpaceConfig),
+            furniture: {
+              placedModules: []
+            },
+            ...(thumbnail && { thumbnail })
+          };
+          
+          console.log('🆕 [DEBUG] createProject 호출 시작, 정리된 데이터:', projectData);
+          const result = await createProject(projectData);
+          console.log('🆕 [DEBUG] createProject 결과:', result);
+
+          if (result.error) {
+            console.error('🆕 [ERROR] Firebase 프로젝트 생성 실패:', result.error);
+            alert('새 프로젝트 생성에 실패했습니다: ' + result.error);
+            return;
+          }
+
+          if (result.id) {
+            console.log('🆕 [DEBUG] Firebase 프로젝트 생성 성공:', result.id);
+            
+            // 상태 업데이트
+            setBasicInfo({ title: 'Untitled', location: '' });
+            setSpaceInfo(defaultSpaceConfig);
+            setPlacedModules([]);
+            setCurrentProjectId(result.id);
+            
+            // derivedSpaceStore 재계산
+            derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
+            
+            // URL 업데이트
+            navigate(`/configurator?projectId=${result.id}`, { replace: true });
+            
+            console.log('✅ 새 Firebase 프로젝트 "Untitled" 생성 완료:', result.id);
+            alert('새 프로젝트가 생성되었습니다!');
+          } else {
+            console.error('🆕 [ERROR] projectId가 반환되지 않음');
+            alert('프로젝트 ID를 받지 못했습니다. 다시 시도해주세요.');
+          }
+        } catch (firebaseError) {
+          console.error('🆕 [ERROR] Firebase 작업 중 예외:', firebaseError);
+          alert('Firebase 연결 중 오류가 발생했습니다: ' + firebaseError.message);
+        }
+      } else {
+        console.log('🆕 [DEBUG] 데모 모드로 진행');
+        
+        try {
+          const newProjectId = `demo-${Date.now()}`;
+          console.log('🆕 [DEBUG] 새 데모 프로젝트 ID:', newProjectId);
+          
+          const demoProject = {
+            id: newProjectId,
+            title: 'Untitled',
+            projectData: { title: 'Untitled', location: '' },
+            spaceConfig: defaultSpaceConfig,
+            furniture: {
+              placedModules: []
+            },
+            thumbnail: thumbnail,
+            savedAt: new Date().toISOString(),
+            furnitureCount: 0
+          };
+          
+          // 로컬 스토리지에 저장
+          localStorage.setItem(`demoProject_${newProjectId}`, JSON.stringify(demoProject));
+          console.log('🆕 [DEBUG] 데모 프로젝트 로컬 저장 완료');
+          
+          // 상태 업데이트
+          setBasicInfo({ title: 'Untitled', location: '' });
+          setSpaceInfo(defaultSpaceConfig);
+          setPlacedModules([]);
+          setCurrentProjectId(newProjectId);
+          
+          // derivedSpaceStore 재계산
+          derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
+          
+          // URL 업데이트
+          navigate(`/configurator?projectId=${newProjectId}`, { replace: true });
+          
+          console.log('✅ 데모 프로젝트 "Untitled" 생성 완료:', newProjectId);
+          alert('새 데모 프로젝트가 생성되었습니다!');
+        } catch (demoError) {
+          console.error('🆕 [ERROR] 데모 프로젝트 생성 실패:', demoError);
+          alert('데모 프로젝트 생성 중 오류가 발생했습니다: ' + demoError.message);
+        }
+      }
+    } catch (outerError) {
+      console.error('🆕 [ERROR] handleNewProject 최상위 예외:', outerError);
+      alert('새 프로젝트 생성 중 예상치 못한 오류가 발생했습니다: ' + outerError.message);
+    } finally {
+      console.log('🆕 [DEBUG] handleNewProject 완료, 저장 상태 해제');
+      setSaving(false);
+    }
+  };
+
+  // 다른이름으로 저장 함수
+  const handleSaveAs = async () => {
+    const newTitle = prompt('새로운 프로젝트 이름을 입력하세요:', basicInfo.title + ' 사본');
+    if (newTitle && newTitle.trim()) {
+      setSaving(true);
+      setSaveStatus('idle');
+      
+      try {
+        let thumbnail = await captureProjectThumbnail();
+        
+        if (!thumbnail) {
+          console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
+          thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
+        }
+
+        if (isFirebaseConfigured() && user) {
+          // Firebase에 새 프로젝트로 저장
+          const { projectId, error } = await createProject({
+            title: newTitle.trim(),
+            projectData: removeUndefinedValues({ ...basicInfo, title: newTitle.trim() }),
+            spaceConfig: removeUndefinedValues(spaceInfo),
+            furniture: {
+              placedModules: removeUndefinedValues(placedModules)
+            },
+            thumbnail: thumbnail
+          });
+
+          if (error) {
+            console.error('프로젝트 복사 저장 실패:', error);
+            setSaveStatus('error');
+            alert('다른이름으로 저장에 실패했습니다: ' + error);
+            return;
+          }
+
+          if (projectId) {
+            setCurrentProjectId(projectId);
+            setBasicInfo({ ...basicInfo, title: newTitle.trim() });
+            setSaveStatus('success');
+            
+            // URL 업데이트
+            navigate(`/configurator?projectId=${projectId}`, { replace: true });
+            
+            console.log('✅ 다른이름으로 저장 성공:', newTitle);
+            alert(`"${newTitle}"로 저장되었습니다!`);
+          }
+        } else {
+          // 데모 모드: 로컬에 새 이름으로 저장
+          const newProjectId = `demo-${Date.now()}`;
+          const demoProject = {
+            id: newProjectId,
+            title: newTitle.trim(),
+            projectData: { ...basicInfo, title: newTitle.trim() },
+            spaceConfig: spaceInfo,
+            furniture: {
+              placedModules: placedModules
+            },
+            thumbnail: thumbnail,
+            savedAt: new Date().toISOString(),
+            furnitureCount: placedModules.length
+          };
+          
+          localStorage.setItem(`demoProject_${newProjectId}`, JSON.stringify(demoProject));
+          setCurrentProjectId(newProjectId);
+          setBasicInfo({ ...basicInfo, title: newTitle.trim() });
+          setSaveStatus('success');
+          
+          console.log('✅ 데모 프로젝트 다른이름으로 저장 성공:', newTitle);
+          alert(`"${newTitle}"로 로컬에 저장되었습니다!`);
+        }
+        
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } catch (error) {
+        console.error('다른이름으로 저장 실패:', error);
+        setSaveStatus('error');
+        alert('다른이름으로 저장 중 오류가 발생했습니다.');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  // 프로젝트 이름 변경 함수
+  const handleProjectNameChange = async (newName: string) => {
+    const oldName = basicInfo.title;
+    
+    // 즉시 UI 업데이트
+    setBasicInfo({ ...basicInfo, title: newName });
+    
+    // 프로젝트가 저장된 상태라면 자동 저장
+    if (currentProjectId) {
+      setSaving(true);
+      try {
+        if (isFirebaseConfigured() && user) {
+          const { error } = await updateProject(currentProjectId, {
+            title: newName,
+            projectData: removeUndefinedValues({ ...basicInfo, title: newName }),
+            spaceConfig: removeUndefinedValues(spaceInfo),
+            furniture: {
+              placedModules: removeUndefinedValues(placedModules)
+            }
+          });
+
+          if (error) {
+            console.error('프로젝트 이름 변경 저장 실패:', error);
+            // 실패 시 이전 이름으로 복원
+            setBasicInfo({ ...basicInfo, title: oldName });
+            alert('프로젝트 이름 변경에 실패했습니다: ' + error);
+            return;
+          }
+
+          console.log('✅ 프로젝트 이름 변경 성공:', newName);
+        } else {
+          // 데모 모드: 로컬 업데이트
+          const demoProject = {
+            id: currentProjectId,
+            title: newName,
+            projectData: { ...basicInfo, title: newName },
+            spaceConfig: spaceInfo,
+            furniture: {
+              placedModules: placedModules
+            },
+            thumbnail: generateDefaultThumbnail(spaceInfo, placedModules.length),
+            savedAt: new Date().toISOString(),
+            furnitureCount: placedModules.length
+          };
+          
+          localStorage.setItem(`demoProject_${currentProjectId}`, JSON.stringify(demoProject));
+          console.log('✅ 데모 프로젝트 이름 변경 성공:', newName);
+        }
+      } catch (error) {
+        console.error('프로젝트 이름 변경 실패:', error);
+        // 실패 시 이전 이름으로 복원
+        setBasicInfo({ ...basicInfo, title: oldName });
+        alert('프로젝트 이름 변경 중 오류가 발생했습니다.');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
+  useEffect(() => {
+    const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
+    
+    console.log('🔍 URL에서 가져온 designFileName:', designFileName);
+    console.log('🔍 현재 basicInfo.title:', basicInfo.title);
+    
+    if (designFileName) {
+      const decodedFileName = decodeURIComponent(designFileName);
+      setCurrentDesignFileName(decodedFileName);
+      console.log('📝 URL 파라미터로 디자인파일명 설정:', decodedFileName);
+    } else if (basicInfo.title) {
+      // URL에 디자인파일명이 없으면 현재 작업중인 프로젝트명을 사용
+      setCurrentDesignFileName(basicInfo.title);
+      console.log('📝 프로젝트명으로 디자인파일명 설정:', basicInfo.title);
+    } else {
+      // 둘 다 없으면 기본값
+      setCurrentDesignFileName('새로운 디자인');
+      console.log('📝 기본값으로 디자인파일명 설정: 새로운 디자인');
+    }
+  }, [searchParams, basicInfo.title]);
+
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
-    const projectId = searchParams.get('id');
+    const projectId = searchParams.get('projectId') || searchParams.get('id');
+    const mode = searchParams.get('mode');
+    
     if (projectId && projectId !== currentProjectId) {
-      loadProject(projectId);
+      if (mode === 'new-design') {
+        // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
+        setCurrentProjectId(projectId);
+        console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
+        
+        // 프로젝트명만 가져와서 헤더에 표시하기 위해
+        getProject(projectId).then(({ project, error }) => {
+          if (project && !error) {
+            console.log('🔍 setBasicInfo 호출 전 basicInfo:', basicInfo);
+            console.log('🔍 설정할 프로젝트명:', project.title);
+            
+            setBasicInfo({ title: project.title });
+            console.log('📝 프로젝트명 설정:', project.title);
+          }
+        });
+      } else {
+        // 기존 프로젝트 로드
+        loadProject(projectId);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, currentProjectId]);
+
+  // 폴더에서 실제 디자인파일명 찾기
+  useEffect(() => {
+    const loadActualDesignFileName = async () => {
+      if (!currentProjectId || !user) return;
+      
+      try {
+        // 폴더 데이터 로드
+        const { loadFolderData } = await import('@/firebase/projects');
+        const folderResult = await loadFolderData(currentProjectId);
+        
+        if (folderResult.folders && folderResult.folders.length > 0) {
+          // 폴더에서 첫 번째 디자인파일 찾기
+          for (const folder of folderResult.folders) {
+            if (folder.children && folder.children.length > 0) {
+              const firstDesignFile = folder.children[0];
+              if (firstDesignFile && firstDesignFile.name) {
+                console.log('📝 폴더에서 찾은 디자인파일명:', firstDesignFile.name);
+                setCurrentDesignFileName(firstDesignFile.name);
+                return;
+              }
+            }
+          }
+        }
+        
+        // 폴더에 디자인파일이 없으면 프로젝트명 사용
+        if (basicInfo.title && currentDesignFileName === '새로운 디자인') {
+          setCurrentDesignFileName(basicInfo.title);
+          console.log('📝 폴더에 디자인파일이 없어서 프로젝트명 사용:', basicInfo.title);
+        }
+        
+      } catch (error) {
+        console.error('폴더 데이터 로드 실패:', error);
+      }
+    };
+    
+    // URL에 디자인파일명이 없을 때만 폴더에서 찾기
+    const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
+    if (!urlDesignFileName && currentProjectId && user) {
+      loadActualDesignFileName();
+    }
+  }, [currentProjectId, user, basicInfo.title, currentDesignFileName, searchParams]);
 
   // 공간 변경 시 가구 재배치 로직 복구
   useEffect(() => {
@@ -473,6 +1016,11 @@ const Configurator: React.FC = () => {
     console.log('프로필');
   };
 
+  // FileTree 토글 핸들러
+  const handleFileTreeToggle = () => {
+    setIsFileTreeOpen(!isFileTreeOpen);
+  };
+
 
 
 
@@ -486,14 +1034,29 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              <h3 className={styles.modulePanelTitle}>가구 모듈</h3>
+              {/* 키큰장/하부장 토글 탭 */}
+              <div className={styles.moduleCategoryTabs}>
+                <button 
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('tall')}
+                >
+                  키큰장
+                </button>
+                <button 
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('lower')}
+                >
+                  하부장
+                </button>
+              </div>
               
               <div className={styles.moduleSection}>
-                <ModuleGallery />
+                <ModuleGallery moduleCategory={moduleCategory} />
               </div>
             </div>
           </div>
         );
+
       case 'material':
         return (
           <div className={styles.sidebarPanel}>
@@ -655,21 +1218,6 @@ const Configurator: React.FC = () => {
                         })()}
                       </div>
                       
-                      {/* 간단한 슬롯 정보 */}
-                      <div className={styles.slotInfoSimple}>
-                        {(() => {
-                          const currentWidth = spaceInfo.width || 4800;
-                          const range = calculateDoorRange(currentWidth);
-                          const usableWidth = currentWidth - 100;
-                          const currentSlotWidth = Math.round(usableWidth / getCurrentColumnCount());
-                          return (
-                            <span className={styles.slotInfoText}>
-                              현 사이즈 기준 슬롯 생성 범위: 최소 {range.min}개 ~ 최대 {range.max}개<br/>
-                              도어 1개 너비: {currentSlotWidth}mm
-                            </span>
-                          );
-                        })()}
-                      </div>
                     </>
                   );
                 })()}
@@ -1051,11 +1599,18 @@ const Configurator: React.FC = () => {
     );
   }
 
+  // 디버깅용 로그
+  console.log('🔍 Configurator basicInfo.title:', basicInfo.title);
+  console.log('🔍 currentProjectId:', currentProjectId);
+  console.log('🔍 currentDesignFileName:', currentDesignFileName);
+  console.log('🔍 basicInfo.title:', basicInfo.title);
+
   return (
     <div className={styles.configurator}>
       {/* 헤더 */}
       <Header
-        title={basicInfo.title || ""}
+        title={currentDesignFileName || basicInfo.title || "새로운 디자인"}
+        projectName={currentDesignFileName || basicInfo.title || "새로운 디자인"}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onNext={handleNext}
@@ -1066,10 +1621,43 @@ const Configurator: React.FC = () => {
         saving={saving}
         saveStatus={saveStatus}
         hasDoorsInstalled={hasDoorsInstalled}
-        onDoorInstallationToggle={handleDoorInstallation}
+        onNewProject={handleNewDesign}
+        onSaveAs={handleSaveAs}
+        onProjectNameChange={handleProjectNameChange}
+        onFileTreeToggle={handleFileTreeToggle}
+        isFileTreeOpen={isFileTreeOpen}
       />
 
       <div className={styles.mainContent}>
+        {/* 파일 트리 오버레이 */}
+        {isFileTreeOpen && (
+          <>
+            {/* 배경 오버레이 */}
+            <div 
+              className={styles.fileTreeOverlay}
+              onClick={() => setIsFileTreeOpen(false)}
+            />
+            {/* 파일 트리 패널 */}
+            <div className={styles.fileTreePanel}>
+              <FileTree 
+                onFileSelect={(file) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', file);
+                  if (file.nodeType === 'design') {
+                    // 디자인 파일 선택 시 해당 프로젝트 로드
+                    console.log('📂 프로젝트 로드 시작:', file.id);
+                    loadProject(file.id);
+                    setIsFileTreeOpen(false); // 파일트리 닫기
+                  }
+                }}
+                onCreateNew={() => {
+                  console.log('🆕 파일트리에서 새 파일 생성 요청');
+                  handleNewProject();
+                  setIsFileTreeOpen(false); // 파일트리 닫기
+                }}
+              />
+            </div>
+          </>
+        )}
 
         {/* 사이드바 */}
         <Sidebar
@@ -1109,6 +1697,8 @@ const Configurator: React.FC = () => {
             onShowGuidesToggle={toggleGuides}
             doorsOpen={doorsOpen}
             onDoorsToggle={toggleDoors}
+            hasDoorsInstalled={hasDoorsInstalled}
+            onDoorInstallationToggle={handleDoorInstallation}
           />
 
           {/* 3D 뷰어 */}
@@ -1135,19 +1725,19 @@ const Configurator: React.FC = () => {
               viewMode={viewMode}
               setViewMode={setViewMode}
               renderMode={renderMode}
+              showAll={showAll}
               svgSize={{ width: 800, height: 600 }}
             />
           </div>
 
           {/* 우측바가 접힌 상태일 때 펼치기 버튼 - viewerArea 기준으로 오른쪽 끝 중앙에 */}
-          {!isRightPanelOpen && (
+          {!isRightPanelOpen && !isFileTreeOpen && (
             <button
               className={styles.rightUnfoldButton}
               onClick={() => setIsRightPanelOpen(true)}
               title="우측 패널 펼치기"
-              style={{ right: 0, top: '50%', transform: 'translateY(-50%)', position: 'absolute', zIndex: 200 }}
             >
-              {'<'}
+              {'>'}
             </button>
           )}
         </div>
@@ -1160,7 +1750,7 @@ const Configurator: React.FC = () => {
               onClick={() => setIsRightPanelOpen(false)}
               title="우측 패널 접기"
             >
-              <span className={styles.foldToggleIcon}>▶</span>
+              <span className={styles.foldToggleIcon}>{'>'}</span>
             </button>
             {/* 탭 헤더 */}
             <div className={styles.rightPanelHeader}>

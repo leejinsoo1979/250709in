@@ -74,7 +74,7 @@ export const analyzeColumnDepthPlacement = (column: Column, slotWidthMm: number,
     recommendedLayout: 'single' | 'split-weighted' | 'split-equal';
   };
 } => {
-  const DEPTH_THRESHOLD = 500; // 500mm 기준으로 깊은/얕은 기둥 구분
+  const DEPTH_THRESHOLD = 400; // 400mm 기준으로 깊은/얕은 기둥 구분
   const STANDARD_CABINET_DEPTH = 730; // 표준 캐비넷 깊이
   const MIN_SINGLE_DEPTH = 200; // 싱글캐비넷 최소 깊이
   const MIN_DUAL_DEPTH = 580; // 듀얼캐비넷 최소 깊이
@@ -98,10 +98,22 @@ export const analyzeColumnDepthPlacement = (column: Column, slotWidthMm: number,
   const leftWidth = Math.max(0, (columnLeftX - slotStartX) * 100); // mm
   const rightWidth = Math.max(0, (slotEndX - columnRightX) * 100); // mm
   
-  // 깊이 조정 분석
-  const adjustedDepth = STANDARD_CABINET_DEPTH - columnDepth;
-  const canPlaceSingle = columnDepth < DEPTH_THRESHOLD && adjustedDepth >= MIN_SINGLE_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
-  const canPlaceDual = columnDepth < MIN_DUAL_COLUMN_DEPTH && adjustedDepth >= MIN_DUAL_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+  // 깊이 조정 분석 - 깊은 기둥은 깊이 조정하지 않음
+  let adjustedDepth: number;
+  let canPlaceSingle: boolean;
+  let canPlaceDual: boolean;
+  
+  if (columnType === 'deep') {
+    // 깊은 기둥(기둥A): 깊이 조정 안함, 폭만 조정
+    adjustedDepth = STANDARD_CABINET_DEPTH; // 원래 깊이 유지
+    canPlaceSingle = (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+    canPlaceDual = false; // 깊은 기둥에서는 듀얼 배치 불가
+  } else {
+    // 얕은 기둥(기둥C): 기존 로직 유지 (깊이 조정)
+    adjustedDepth = STANDARD_CABINET_DEPTH - columnDepth;
+    canPlaceSingle = adjustedDepth >= MIN_SINGLE_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+    canPlaceDual = columnDepth < MIN_DUAL_COLUMN_DEPTH && adjustedDepth >= MIN_DUAL_DEPTH && (leftWidth >= MIN_SLOT_WIDTH || rightWidth >= MIN_SLOT_WIDTH);
+  }
   
   // 분할 배치 분석
   const canSplit = leftWidth >= MIN_SLOT_WIDTH && rightWidth >= MIN_SLOT_WIDTH;
@@ -194,18 +206,32 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       const columnWidthMm = columnInSlot.width;
       const slotWidthMm = indexing.columnWidth;
       const margin = 2; // 최소 이격거리 2mm
+      const columnCenterX = columnInSlot.position[0];
+      const slotCenterX = indexing.threeUnitPositions[slotIndex];
       
-      console.log('🏛️ 기둥 침범 방향 분석:', {
+      console.log('🔍 침범 방향 분석 시작:', {
         slotIndex,
-        columnLeftX: columnLeftX.toFixed(3),
-        columnRightX: columnRightX.toFixed(3),
-        slotStartX: slotStartX.toFixed(3),
-        slotEndX: slotEndX.toFixed(3),
-        leftGap: leftGap.toFixed(1) + 'mm',
-        rightGap: rightGap.toFixed(1) + 'mm',
+        columnId: columnInSlot.id,
+        columnDepth: columnInSlot.depth,
         columnWidthMm,
-        slotWidthMm
+        slotWidthMm,
+        columnCenterX: columnCenterX.toFixed(3),
+        slotCenterX: slotCenterX.toFixed(3),
+        centerDistance: Math.abs(columnCenterX - slotCenterX).toFixed(3),
+        leftGap: leftGap.toFixed(1) + 'mm',
+        rightGap: rightGap.toFixed(1) + 'mm'
       });
+      
+      // 중심 침범(3mm 이내) 우선 분기
+      if (Math.abs(columnCenterX - slotCenterX) < 0.003) {
+        // 중심 침범
+        return {
+          availableWidth: slotWidthMm,
+          intrusionDirection: 'center' as const,
+          furniturePosition: 'center' as const,
+          adjustedWidth: slotWidthMm
+        };
+      }
       
       // 기둥이 슬롯을 완전히 차지하는 경우
       if (columnWidthMm >= slotWidthMm - margin) {
@@ -306,7 +332,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     let depthAdjustment: ColumnSlotInfo['depthAdjustment'];
     let splitPlacement: ColumnSlotInfo['splitPlacement'];
     
-    const DEPTH_THRESHOLD = 500; // 500mm 기준
+    const DEPTH_THRESHOLD = 400; // 400mm 기준
     if (columnInSlot.depth < DEPTH_THRESHOLD) {
       const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
       columnType = depthAnalysis.columnType;
@@ -776,208 +802,138 @@ export const calculateFurnitureBounds = (
   // 기둥 충돌 방지를 위한 안전 마진 (5mm)
   const safetyMargin = 0.005;
   
-  switch (slotInfo.intrusionDirection) {
-    case 'from-left':
-      // 기둥이 왼쪽에서 침범: 가구의 왼쪽 경계가 기둥에 의해 밀려남
-      furnitureLeft = Math.max(columnRightX + margin, originalSlotBounds.left);
-      furnitureRight = originalSlotBounds.right; // 오른쪽 경계는 슬롯 경계 그대로
-      
-      // 기둥과 절대 겹치지 않도록 추가 안전 마진
-      if (furnitureLeft <= columnRightX + safetyMargin) {
-        furnitureLeft = columnRightX + safetyMargin;
-        console.log('⚠️ 기둥 침범 방지를 위한 추가 마진 적용:', {
-          columnRightX: columnRightX.toFixed(3),
-          safetyMargin: safetyMargin.toFixed(3),
-          adjustedLeft: furnitureLeft.toFixed(3)
-        });
-      }
-      
-      // 슬롯 경계 내에서 최소 크기 보장 체크
-      if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-        console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
-          currentWidth: ((furnitureRight - furnitureLeft) * 100).toFixed(1) + 'mm',
-          minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
-        });
-        
-        // 최소 크기를 만족할 수 없으면 슬롯 경계에 맞춰 조정
-        furnitureLeft = furnitureRight - minFurnitureWidth;
-        if (furnitureLeft < originalSlotBounds.left) {
-          // 그래도 슬롯을 벗어나면 배치 불가 -> 최소 크기로 고정
-          furnitureLeft = originalSlotBounds.left;
-          furnitureRight = originalSlotBounds.left + minFurnitureWidth;
-          console.log('🚨 슬롯 경계 초과로 최소 크기 강제 적용');
-        }
-      }
-      
-      // 최종 기둥 충돌 재검사
-      if (furnitureLeft < columnRightX + margin) {
-        console.log('🚨 최종 기둥 충돌 감지! 강제 조정');
-        furnitureLeft = columnRightX + margin;
-        // 가구가 너무 작아지면 배치 불가능으로 처리
-        if (furnitureRight - furnitureLeft < 0.05) { // 50mm 미만
-          console.log('🚨 가구 크기가 너무 작아 배치 불가능');
-          furnitureLeft = originalSlotBounds.left;
-          furnitureRight = originalSlotBounds.left + 0.05; // 50mm 강제 설정
-        }
-      }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
-      console.log('🏗️ 왼쪽 침범 - 기둥 충돌 방지 적용:', {
-        columnPosition: columnRightX.toFixed(3),
-        finalLeft: furnitureLeft.toFixed(3),
-        finalRight: furnitureRight.toFixed(3),
-        gap: ((furnitureLeft - columnRightX) * 100).toFixed(1) + 'mm',
-        기둥충돌방지: furnitureLeft > columnRightX ? '✅ 안전' : '❌ 위험',
-        newWidth: renderWidth.toFixed(1) + 'mm',
-        slotIndex: slotInfo.slotIndex
-      });
-      break;
-      
-    case 'from-right':
-      // 기둥이 오른쪽에서 침범: 가구의 오른쪽 경계가 기둥에 의해 밀려남
-      furnitureLeft = originalSlotBounds.left; // 왼쪽 경계는 슬롯 경계 그대로
-      furnitureRight = Math.min(columnLeftX - margin, originalSlotBounds.right);
-      
-      // 기둥과 절대 겹치지 않도록 추가 안전 마진
-      if (furnitureRight >= columnLeftX - safetyMargin) {
-        furnitureRight = columnLeftX - safetyMargin;
-        console.log('⚠️ 기둥 침범 방지를 위한 추가 마진 적용:', {
-          columnLeftX: columnLeftX.toFixed(3),
-          safetyMargin: safetyMargin.toFixed(3),
-          adjustedRight: furnitureRight.toFixed(3)
-        });
-      }
-      
-      // 슬롯 경계 내에서 최소 크기 보장 체크
-      if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-        console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
-          currentWidth: ((furnitureRight - furnitureLeft) * 100).toFixed(1) + 'mm',
-          minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
-        });
-        
-        // 최소 크기를 만족할 수 없으면 슬롯 경계에 맞춰 조정
-        furnitureRight = furnitureLeft + minFurnitureWidth;
-        if (furnitureRight > originalSlotBounds.right) {
-          // 그래도 슬롯을 벗어나면 배치 불가 -> 최소 크기로 고정
-          furnitureRight = originalSlotBounds.right;
-          furnitureLeft = originalSlotBounds.right - minFurnitureWidth;
-          console.log('🚨 슬롯 경계 초과로 최소 크기 강제 적용');
-        }
-      }
-      
-      // 최종 기둥 충돌 재검사
-      if (furnitureRight > columnLeftX - margin) {
-        console.log('🚨 최종 기둥 충돌 감지! 강제 조정');
-        furnitureRight = columnLeftX - margin;
-        // 가구가 너무 작아지면 배치 불가능으로 처리
-        if (furnitureRight - furnitureLeft < 0.05) { // 50mm 미만
-          console.log('🚨 가구 크기가 너무 작아 배치 불가능');
-          furnitureRight = originalSlotBounds.right;
-          furnitureLeft = originalSlotBounds.right - 0.05; // 50mm 강제 설정
-        }
-      }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
-      console.log('🏗️ 오른쪽 침범 - 기둥 충돌 방지 적용:', {
-        columnPosition: columnLeftX.toFixed(3),
-        finalLeft: furnitureLeft.toFixed(3),
-        finalRight: furnitureRight.toFixed(3),
-        gap: ((columnLeftX - furnitureRight) * 100).toFixed(1) + 'mm',
-        기둥충돌방지: furnitureRight < columnLeftX ? '✅ 안전' : '❌ 위험',
-        newWidth: renderWidth.toFixed(1) + 'mm',
-        slotIndex: slotInfo.slotIndex
-      });
-      break;
-      
-    case 'center':
-      // 기둥이 중앙에 있는 경우: furniturePosition에 따라 한쪽에 배치
-      if (slotInfo.furniturePosition === 'left-aligned') {
-        furnitureLeft = originalSlotBounds.left;
-        furnitureRight = Math.min(columnLeftX - margin, originalSlotBounds.right);
-        
-        // 최소 크기 보장
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureRight = Math.min(furnitureLeft + minFurnitureWidth, originalSlotBounds.right);
-        }
-      } else if (slotInfo.furniturePosition === 'right-aligned') {
-        furnitureLeft = Math.max(columnRightX + margin, originalSlotBounds.left);
-        furnitureRight = originalSlotBounds.right;
-        
-        // 최소 크기 보장
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureLeft = Math.max(furnitureRight - minFurnitureWidth, originalSlotBounds.left);
-        }
-      } else {
-        // 기본값: 원래 슬롯 사용
-        furnitureLeft = originalSlotBounds.left;
-        furnitureRight = originalSlotBounds.right;
-      }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
-      console.log('🏗️ 중앙 침범 - 슬롯 경계 제한 적용:', {
-        position: slotInfo.furniturePosition,
-        finalLeft: furnitureLeft,
-        finalRight: furnitureRight,
-        slotBoundaryRespected: furnitureLeft >= originalSlotBounds.left && furnitureRight <= originalSlotBounds.right,
-        newWidth: renderWidth,
-        slotIndex: slotInfo.slotIndex
-      });
-      break;
-      
-    default:
-      renderWidth = (originalSlotBounds.right - originalSlotBounds.left) * 100;
-  }
+  // FurnitureItem.tsx와 동일한 침범량 계산 방식 사용
+  const slotCenterX = originalSlotBounds.center;
+  const columnCenterX = column.position[0];
   
-  // 침범 방향에 따른 선택적 슬롯 경계 검사 (한쪽 방향만 조정)
-  switch (slotInfo.intrusionDirection) {
-    case 'from-left':
-      // 왼쪽 침범: 오른쪽 경계는 원래 슬롯 경계 그대로, 왼쪽만 제한
-      furnitureRight = originalSlotBounds.right; // 오른쪽은 절대 변경하지 않음
-      furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left); // 왼쪽만 슬롯 내로 제한
-      break;
-      
-    case 'from-right':
-      // 오른쪽 침범: 왼쪽 경계는 원래 슬롯 경계 그대로, 오른쪽만 제한
-      furnitureLeft = originalSlotBounds.left; // 왼쪽은 절대 변경하지 않음
-      furnitureRight = Math.min(furnitureRight, originalSlotBounds.right); // 오른쪽만 슬롯 내로 제한
-      break;
-      
-    default:
-      // 일반적인 경우에만 양쪽 제한
-      furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
-      furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
-  }
+  // X축 침범량 계산 (좌우 침범) - FurnitureItem.tsx와 동일한 방식
+  const distanceFromCenterX = Math.abs(columnCenterX - slotCenterX) * 1000;
+  const slotHalfWidth = ((originalSlotBounds.right - originalSlotBounds.left) * 1000 / 2);
+  const columnHalfWidth = ((column.width || 0) / 2);
+  const maxAllowedDistanceX = slotHalfWidth - columnHalfWidth;
+  const xAxisIntrusion = Math.max(0, distanceFromCenterX - maxAllowedDistanceX);
   
-  // 가구 중심 계산 (침범 방향에 따라 자연스럽게 한쪽으로 치우쳐짐)
-  const newCenter = (furnitureLeft + furnitureRight) / 2;
-  
-  const totalWidth = (furnitureRight - furnitureLeft) * 100; // mm 단위
-  const finalRenderWidth = Math.max(totalWidth, 150); // 최소 150mm 보장
-  
-  console.log('🏗️ 최종 가구 경계 (방향성 유지):', {
-    intrusionDirection: slotInfo.intrusionDirection,
-    slotBounds: {
-      left: originalSlotBounds.left.toFixed(3),
-      right: originalSlotBounds.right.toFixed(3),
-      center: originalSlotBounds.center.toFixed(3)
-    },
-    furnitureBounds: {
-      left: furnitureLeft.toFixed(3),
-      right: furnitureRight.toFixed(3),
-      center: newCenter.toFixed(3)
-    },
-    width: finalRenderWidth,
-    logic: slotInfo.intrusionDirection === 'from-left' ? '왼쪽 침범 → 오른쪽 경계 고정, 왼쪽만 조정' :
-           slotInfo.intrusionDirection === 'from-right' ? '오른쪽 침범 → 왼쪽 경계 고정, 오른쪽만 조정' :
-           '일반 케이스 → 양쪽 조정'
+  // Z축 침범량 계산 (FurnitureItem.tsx와 동일)
+  const columnCenterZ = column.position[2] || 0;
+  const columnDepth = column.depth || 0;
+  const slotBackWallZ = -(730 * 0.001 / 2); // 슬롯 뒷벽 위치 (Three.js 좌표)
+  const columnFrontZ = columnCenterZ + (columnDepth * 0.001 / 2); // 기둥 앞면
+  const zAxisIntrusion = Math.max(0, (slotBackWallZ - columnFrontZ) * -1000); // Z축 침범량 (mm)
+
+  console.log('🔍 columnSlotProcessor 침범 계산:', {
+    distanceFromCenterX: distanceFromCenterX.toFixed(1) + 'mm',
+    slotHalfWidth: slotHalfWidth.toFixed(1) + 'mm',
+    columnHalfWidth: columnHalfWidth.toFixed(1) + 'mm',
+    maxAllowedDistanceX: maxAllowedDistanceX.toFixed(1) + 'mm',
+    xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+    zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm'
   });
+
+  // 개선된 침범 방향에 따른 처리 - X축과 Z축 동시 침범 고려
+  // X축 침범이 있고 기둥이 실제로 캐비넷과 겹치는 경우, 폭 조정 우선
+  if (xAxisIntrusion > 0) {
+    // X축 침범이 있으면 폭 조정 (Z축 침범 여부와 무관)
+    if (xAxisIntrusion <= 150) {
+      // X축 얕은 침범: 폭만 조정
+      if (slotInfo.intrusionDirection === 'from-left') {
+        // 왼쪽 침범: 오른쪽은 슬롯 경계 고정, 왼쪽만 줄임
+        const shrink = xAxisIntrusion / 1000; // mm -> m
+        furnitureRight = originalSlotBounds.right;
+        furnitureLeft = furnitureRight - (originalSlotBounds.right - originalSlotBounds.left - shrink);
+        renderWidth = (furnitureRight - furnitureLeft) * 100;
+        const newCenter = (furnitureLeft + furnitureRight) / 2;
+        console.log('🟢 왼쪽 X축 침범: 오른쪽 고정, 왼쪽만 줄임 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm 무시)', {
+          xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+          zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
+          shrink,
+          renderWidth,
+          logic: 'X축 침범 우선, 폭 조정'
+        });
+        return {
+          left: furnitureLeft,
+          right: furnitureRight,
+          center: newCenter,
+          width: renderWidth,
+          renderWidth: renderWidth
+        };
+      } else if (slotInfo.intrusionDirection === 'from-right') {
+        // 오른쪽 침범: 왼쪽은 슬롯 경계 고정, 오른쪽만 줄임
+        const shrink = xAxisIntrusion / 1000; // mm -> m
+        furnitureLeft = originalSlotBounds.left;
+        furnitureRight = furnitureLeft + (originalSlotBounds.right - originalSlotBounds.left - shrink);
+        renderWidth = (furnitureRight - furnitureLeft) * 100;
+        const newCenter = (furnitureLeft + furnitureRight) / 2;
+        console.log('🟢 오른쪽 X축 침범: 왼쪽 고정, 오른쪽만 줄임 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm 무시)', {
+          xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+          zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
+          shrink,
+          renderWidth,
+          logic: 'X축 침범 우선, 폭 조정'
+        });
+        return {
+          left: furnitureLeft,
+          right: furnitureRight,
+          center: newCenter,
+          width: renderWidth,
+          renderWidth: renderWidth
+        };
+      }
+    } else {
+      // X축 깊은 침범: 폭 원래대로, 깊이 조정
+      furnitureLeft = originalSlotBounds.left;
+      furnitureRight = originalSlotBounds.right;
+      renderWidth = (furnitureRight - furnitureLeft) * 100;
+      const newCenter = (furnitureLeft + furnitureRight) / 2;
+      console.log('🔵 X축 깊은 침범: 폭 원래대로, 중심 고정 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm)', {
+        xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+        zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
+        renderWidth,
+        logic: 'X축 150mm 초과 침범은 깊이 조정, 폭 유지'
+      });
+      return {
+        left: furnitureLeft,
+        right: furnitureRight,
+        center: newCenter,
+        width: renderWidth,
+        renderWidth: renderWidth
+      };
+    }
+  } else if (zAxisIntrusion > 10) {
+    // X축 침범이 없고 Z축 침범만 있는 경우: 폭 원래대로, 깊이 조정
+    furnitureLeft = originalSlotBounds.left;
+    furnitureRight = originalSlotBounds.right;
+    renderWidth = (furnitureRight - furnitureLeft) * 100;
+    const newCenter = (furnitureLeft + furnitureRight) / 2;
+    console.log('🔴 순수 Z축 침범: 폭 원래대로, 중심 고정', {
+      xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+      zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
+      renderWidth,
+      logic: 'Z축 침범만 있음, 깊이 조정, 폭 유지'
+    });
+    return {
+      left: furnitureLeft,
+      right: furnitureRight,
+      center: newCenter,
+      width: renderWidth,
+      renderWidth: renderWidth
+    };
+  }
   
+  // 침범 없음: 원래대로
+  furnitureLeft = originalSlotBounds.left;
+  furnitureRight = originalSlotBounds.right;
+  renderWidth = (furnitureRight - furnitureLeft) * 100;
+  const newCenter = (furnitureLeft + furnitureRight) / 2;
+  console.log('⚪️ 침범 없음: 폭 원래대로, 중심 고정', {
+    xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+    renderWidth
+  });
   return {
     left: furnitureLeft,
     right: furnitureRight,
     center: newCenter,
-    width: totalWidth,
-    renderWidth: finalRenderWidth
+    width: renderWidth,
+    renderWidth: renderWidth
   };
 }; 
 

@@ -17,6 +17,79 @@
   min-height: 0; /* flexbox 수축 허용 */
 }
 
+/* 파일 트리 오버레이 배경 */
+.fileTreeOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 파일 트리 패널 */
+.fileTreePanel {
+  position: fixed;
+  top: 56px; /* 헤더 높이만큼 아래에서 시작 */
+  left: 0;
+  bottom: 0;
+  width: 320px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+  z-index: 101;
+  overflow: hidden;
+  animation: slideInFromLeft 0.3s ease;
+}
+
+/* 우측바 펼치기 버튼 */
+.rightUnfoldButton {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 40px;
+  background: #f7fafc;
+  color: #94a3b8;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  z-index: 10 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rightUnfoldButton:hover {
+  background: #e5e7eb;
+  color: #0ea5e9;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 
 
 /* 사이드바 컨텐츠 패널 */
@@ -141,6 +214,52 @@
 
 .doorRemoveButton:hover {
   background: #dc2626;
+}
+
+/* 모듈 카테고리 탭 */
+.moduleCategoryTabs {
+  display: flex;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.moduleCategoryTab {
+  flex: 1;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moduleCategoryTab:not(:last-child) {
+  border-right: 1px solid #e5e7eb;
+}
+
+.moduleCategoryTab:hover {
+  background: #f9fafb;
+  color: #1f2937;
+}
+
+.moduleCategoryTab.active {
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.moduleCategoryTab.active:hover {
+  background: #059669;
 }
 
 .moduleSection {
@@ -625,6 +744,20 @@
   
   .numberInputGroup {
     align-self: flex-end;
+  }
+}
+
+/* 파일 트리 반응형 디자인 */
+@media (max-width: 768px) {
+  .fileTreePanel {
+    width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fileTreePanel {
+    width: 100%;
+    right: 0;
   }
 }
 

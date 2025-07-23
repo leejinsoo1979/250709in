@@ -437,7 +437,6 @@ const MaterialPanel: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>재질</h3>
       </div>
       
       {/* 탭 네비게이션 */}

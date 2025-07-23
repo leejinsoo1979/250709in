@@ -35,7 +35,7 @@ const ModulePropertiesPanel: React.FC = () => {
     <div className={styles.overlay} onClick={handleOverlayClick}>
       <div className={styles.panel}>
         <div className={styles.header}>
-          <h3 className={styles.title}>가구 속성</h3>
+          <h3 className={styles.title}></h3>
           <button className={styles.closeButton} onClick={handleClose}>
             ✕
           </button>
@@ -75,7 +75,7 @@ const ModulePropertiesPanel: React.FC = () => {
               
               {moduleData.description && (
                 <div className={styles.property}>
-                  <span className={styles.propertyLabel}>설명:</span>
+                  <span className={styles.propertyLabel}></span>
                   <span className={styles.propertyValue}>{moduleData.description}</span>
                 </div>
               )}

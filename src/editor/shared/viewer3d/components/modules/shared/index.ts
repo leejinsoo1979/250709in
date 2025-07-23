@@ -22,4 +22,5 @@ export interface FurnitureTypeProps {
   doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm)
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
 } 

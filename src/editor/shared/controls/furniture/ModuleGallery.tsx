@@ -203,7 +203,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   );
 };
 
-const ModuleGallery: React.FC = () => {
+interface ModuleGalleryProps {
+  moduleCategory?: 'tall' | 'lower';
+}
+
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
@@ -272,12 +276,20 @@ const ModuleGallery: React.FC = () => {
     }, { singleModules: [] as ModuleData[], dualModules: [] as ModuleData[] });
   }, [fullModules, columnWidth, indexing.columnCount]);
 
-  // 현재 선택된 탭에 따른 모듈 목록
-  const currentModules = selectedType === 'all' 
-    ? [...singleModules, ...dualModules]
-    : selectedType === 'single' 
-      ? singleModules 
-      : dualModules;
+  // 현재 선택된 탭에 따른 모듈 목록 (moduleCategory 필터링 추가)
+  const currentModules = useMemo(() => {
+    // 하부장이 선택된 경우 빈 배열 반환 (현재 하부장 모듈이 없음)
+    if (moduleCategory === 'lower') {
+      return [];
+    }
+    
+    // 키큰장인 경우 기존 로직 적용
+    return selectedType === 'all' 
+      ? [...singleModules, ...dualModules]
+      : selectedType === 'single' 
+        ? singleModules 
+        : dualModules;
+  }, [selectedType, singleModules, dualModules, moduleCategory]);
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
@@ -339,7 +351,9 @@ const ModuleGallery: React.FC = () => {
           })
         ) : (
           <div className={styles.emptyMessage}>
-            이 유형에 맞는 가구가 없습니다
+            {moduleCategory === 'lower' 
+              ? '하부장 모듈은 아직 준비 중입니다' 
+              : '이 유형에 맞는 가구가 없습니다'}
           </div>
         )}
       </div>

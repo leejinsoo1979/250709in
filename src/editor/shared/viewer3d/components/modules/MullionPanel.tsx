@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
+import { useSpace3DView } from '../../context/useSpace3DView';
 
 interface MullionPanelProps {
   column: Column;
@@ -21,6 +23,8 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   slotIndex,
   slotWidth
 }) => {
+  const { viewMode } = useSpace3DView();
+  
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -46,19 +50,39 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   const panelColor = '#F5F5F5'; // 연한 회색
   const edgeColor = '#DDDDDD'; // 테두리 색상
   
+  // 윤곽선을 위한 geometry
+  const panelGeometry = useMemo(() => new THREE.BoxGeometry(mullionWidth, mullionHeight, mullionDepth), [mullionWidth, mullionHeight, mullionDepth]);
+  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(panelGeometry), [panelGeometry]);
+  
   return (
     <group position={[mullionX, column.position[1], 0]}>
       {/* 멍장 패널 본체 */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[mullionWidth, mullionHeight, mullionDepth]} />
+      <mesh castShadow receiveShadow geometry={panelGeometry}>
         <meshLambertMaterial color={panelColor} />
       </mesh>
       
-      {/* 멍장 패널 테두리 (앞면) */}
-      <mesh position={[0, 0, mullionDepth / 2 + 0.001]}>
-        <planeGeometry args={[mullionWidth + 0.002, mullionHeight + 0.002]} />
-        <meshBasicMaterial color={edgeColor} transparent opacity={0.3} />
-      </mesh>
+      {/* 멍장 패널 윤곽선 */}
+      {viewMode === '3D' ? (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color="#505050"
+            transparent={true}
+            opacity={0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
+          />
+        </lineSegments>
+      ) : (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial 
+            color="#666666" 
+            linewidth={1} 
+          />
+        </lineSegments>
+      )}
       
       {/* 멍장 패널 식별 표시 (개발용) */}
       <mesh 
