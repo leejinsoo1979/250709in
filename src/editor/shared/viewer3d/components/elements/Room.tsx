@@ -633,7 +633,16 @@ const Room: React.FC<RoomProps> = ({
           >
             <planeGeometry args={[segment.width, floorDepth]} />
             <meshStandardMaterial 
-              color="#2ECC71" 
+              color={(() => {
+                if (typeof window !== 'undefined') {
+                  const computedStyle = getComputedStyle(document.documentElement);
+                  const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+                  if (primaryColor) {
+                    return primaryColor;
+                  }
+                }
+                return '#10b981'; // 기본값 (green)
+              })()} 
               transparent={true} 
               opacity={0.4}
               side={THREE.DoubleSide}
