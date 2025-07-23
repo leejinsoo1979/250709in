@@ -1,6 +1,6 @@
 .projectCard {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all var(--transition-normal);
@@ -9,8 +9,8 @@
 }
 
 .projectCard:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--theme-primary, #10b981);
+  box-shadow: var(--theme-shadow, 0 10px 25px rgba(0, 0, 0, 0.15));
   transform: translateY(-2px);
 }
 
@@ -127,8 +127,8 @@
 }
 
 .moreButton:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
+  background: none;
+  color: var(--theme-primary);
 }
 
 .projectDescription {

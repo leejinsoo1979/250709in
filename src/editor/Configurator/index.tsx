@@ -132,6 +132,11 @@ const Configurator: React.FC = () => {
     };
   }, [selectedColumnId, openColumnEditModal, activePopup, spaceInfo.columns, spaceInfo.width, updateColumn]);
 
+  // 파일 시작 시 3D 정면뷰로 초기화
+  useEffect(() => {
+    setViewMode('3D');
+    setView2DDirection('front');
+  }, [setViewMode, setView2DDirection]);
 
 
   // 현재 컬럼 수를 안전하게 가져오는 함수

@@ -94,10 +94,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, viewMode, view2DDirection, placedModules.length]);
   
   // 각 위치별 고유한 키를 생성하여 2D 방향 변경 시 ThreeCanvas 재생성 (OrbitControls 리셋)
-  // 공간 크기 변경 시에도 강제 재렌더링하도록 spaceInfo 포함
+  // 공간 크기는 키에서 제외하여 크기 변경 시 캔버스 재생성 방지 (깜박거림 해결)
   const viewerKey = useMemo(() => 
-    `${location.pathname}-${viewMode}-${view2DDirection}-${spaceInfo.width}x${spaceInfo.height}x${spaceInfo.depth}`, 
-    [location.pathname, viewMode, view2DDirection, spaceInfo.width, spaceInfo.height, spaceInfo.depth]
+    `${location.pathname}-${viewMode}-${view2DDirection}`, 
+    [location.pathname, viewMode, view2DDirection]
   );
   
   // 드롭 이벤트 핸들러
@@ -393,4 +393,4 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   );
 };
 
-export default Space3DView; 
+export default React.memo(Space3DView); 

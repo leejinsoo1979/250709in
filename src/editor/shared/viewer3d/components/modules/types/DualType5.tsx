@@ -5,6 +5,7 @@ import { useBaseFurniture, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
+import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 // import { SectionConfig } from '@/data/modules/shelving'; // 사용되지 않음
 
@@ -18,6 +19,7 @@ const BoxWithEdges: React.FC<{
 }> = ({ args, position, material, renderMode = 'solid', isDragging = false }) => {
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
+  const { theme } = useTheme();
   
   // Shadow auto-update enabled - manual shadow updates removed
 
@@ -27,7 +29,19 @@ const BoxWithEdges: React.FC<{
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
-      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      // 테마 색상 가져오기
+      const getThemeColor = () => {
+        if (typeof window !== "undefined") {
+          const computedStyle = getComputedStyle(document.documentElement);
+          const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
+          if (primaryColor) {
+            return primaryColor;
+          }
+        }
+        return "#10b981"; // 기본값 (green)
+      };
+      
+      ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
@@ -63,7 +77,7 @@ const BoxWithEdges: React.FC<{
           <lineSegments>
             <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
             <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
               linewidth={2} 
             />
           </lineSegments>

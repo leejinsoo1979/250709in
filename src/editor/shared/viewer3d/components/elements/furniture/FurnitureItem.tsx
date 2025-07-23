@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, Edges } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById } from '@/data/modules';
@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -18,6 +19,8 @@ interface FurnitureItemProps {
   isDragMode: boolean;
   isEditMode: boolean;
   isDraggingThis: boolean;
+  viewMode: '2D' | '3D';
+  renderMode: 'solid' | 'wireframe';
   onPointerDown: (e: ThreeEvent<PointerEvent>, id: string) => void;
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
   onPointerUp: () => void;
@@ -31,6 +34,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   isDragMode,
   isEditMode,
   isDraggingThis,
+  viewMode,
+  renderMode,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -38,6 +43,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
+  
+  // 테마 컨텍스트에서 색상 가져오기
+  const { theme } = useTheme();
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -223,7 +231,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
 
   // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
-  const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
+  const furnitureColor = useMemo(() => isDraggingThis ? new THREE.Color(theme.color) : undefined, [isDraggingThis, theme.color]);
   
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산
   let optimalHingePosition = placedModule.hingePosition || 'right';
@@ -279,10 +287,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           return null;
         })()}
 
+
         {/* 가구 타입에 따라 다른 컴포넌트 렌더링 */}
         {moduleData.type === 'box' ? (
           // 박스형 가구 렌더링 (도어 제외)
           <BoxModule 
+            viewMode={viewMode}
+            renderMode={renderMode}
             moduleData={{
               ...actualModuleData, // 변환된 모듈 데이터 사용
               dimensions: {
@@ -303,22 +314,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         ) : (
           // 기본 가구 (단순 Box) 렌더링
           <>
-            <Box 
-              args={[width, height, depth]}
-            >
-              <meshPhysicalMaterial 
-                color={furnitureColor}
-                clearcoat={0.1}
-                clearcoatRoughness={0.8}
-                metalness={0.0}
-                roughness={0.7}
-                reflectivity={0.2}
-                transparent={isDraggingThis || isEditMode}
-                opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
-              />
-            </Box>
+            {/* 항상 메시 렌더링 - 와이어프레임 모드에서는 투명하게 */}
+            <mesh key={`furniture-${placedModule.id}-${isDraggingThis ? theme.color : 'default'}`}>
+              <boxGeometry args={[width, height, depth]} />
+              {viewMode === '2D' && renderMode === 'wireframe' ? (
+                <meshBasicMaterial transparent opacity={0.0} />
+              ) : (
+                <meshPhysicalMaterial 
+                  color={isDraggingThis ? theme.color : '#cccccc'}
+                  clearcoat={0.1}
+                  clearcoatRoughness={0.8}
+                  metalness={0.0}
+                  roughness={0.7}
+                  reflectivity={0.2}
+                  transparent={isDraggingThis || isEditMode}
+                  opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
+                />
+              )}
+            </mesh>
             <Edges 
-              color={isDraggingThis ? '#00ff00' : isEditMode ? '#ff8800' : isDragMode ? '#ff0000' : '#cccccc'} 
+              color={isDraggingThis ? theme.color : isEditMode ? '#ff8800' : isDragMode ? '#ff0000' : (theme?.mode === 'dark' ? '#ffffff' : '#cccccc')} 
               threshold={1} 
               scale={1.001}
             />

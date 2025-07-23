@@ -41,14 +41,14 @@
 
 /* 라벨 */
 .label {
-  color: #333;
+  color: var(--theme-text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .inputLabel {
   font-size: 11px;
-  color: #666;
+  color: var(--theme-text-secondary);
   line-height: 1.2;
 }
 
@@ -93,15 +93,15 @@
 /* 크기 요약 표시 (컨피규레이터용) */
 .dimensionsSummary {
   padding: 8px 12px;
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background-color: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   margin-bottom: 8px;
 }
 
 .summaryText {
   font-size: 14px;
-  color: #495057;
+  color: var(--theme-text);
   font-weight: 500;
 }
 
@@ -120,16 +120,18 @@
 .input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   font-size: 14px;
-  background-color: #f8f9fa;
+  background-color: var(--theme-background-secondary);
+  color: var(--theme-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.1s ease, background-color 0.1s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #1abc9c;
-  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.1);
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
 }
 
 .inputWithUnitField {
@@ -139,20 +141,20 @@
 .unit {
   position: absolute;
   right: 12px;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 14px;
   pointer-events: none;
 }
 
 /* 에러 상태 */
 .inputError {
-  border-color: #e74c3c;
-  background-color: #fdf2f2;
+  border-color: var(--theme-danger);
+  background-color: var(--theme-danger-light);
 }
 
 .errorMessage {
   font-size: 12px;
-  color: #e74c3c;
+  color: var(--theme-danger);
   margin-top: 4px;
 }
 
@@ -174,21 +176,21 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .radioOption:hover {
-  border-color: #1abc9c;
-  background-color: #f0fffe;
+  border-color: var(--theme-primary);
+  background-color: var(--theme-primary-light);
 }
 
 .radioOptionSelected {
-  border-color: #1abc9c;
-  background-color: #e8f8f5;
-  color: #1abc9c;
+  border-color: var(--theme-primary);
+  background-color: var(--theme-primary-light);
+  color: var(--theme-primary);
 }
 
 .radioInput {
@@ -204,24 +206,24 @@
 /* 토글 버튼 그룹 (피그마 디자인) */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid #10b981;
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--theme-surface);
 }
 
 .toggleButton {
   flex: 1;
   padding: 8px 16px;
   border: none;
-  background: #ffffff;
-  color: #10b981;
+  background: var(--theme-surface);
+  color: var(--theme-primary);
   font-size: 14px;
   font-weight: 500;
   font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-right: 1px solid #10b981;
+  border-right: 1px solid var(--theme-primary);
   min-height: 36px;
   display: flex;
   align-items: center;
@@ -235,51 +237,51 @@
 }
 
 .toggleButton:hover {
-  background: #f0fdf9;
+  background: var(--theme-primary-light);
 }
 
 .toggleButtonActive {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 .toggleButtonActive:hover {
-  background: #059669;
+  background: var(--theme-primary-hover);
 }
 
 /* 버튼 */
 .button {
   padding: 6px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--theme-surface);
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
 }
 
 .button:hover {
-  border-color: #1abc9c;
-  background-color: #f0fffe;
+  border-color: var(--theme-primary);
+  background-color: var(--theme-primary-light);
 }
 
 .buttonActive {
-  border-color: #1abc9c;
-  background-color: #1abc9c;
-  color: white;
+  border-color: var(--theme-primary);
+  background-color: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 /* 설명 텍스트 */
 .description {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-secondary);
   margin-top: 2px;
 }
 
 /* 알림 박스 스타일 */
 .infoBox {
-  background-color: #f0f8ff;
-  border: 1px solid #cce5ff;
+  background-color: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   padding: 8px 12px;
   margin: 8px 0;
@@ -290,7 +292,7 @@
 
 .infoDetail {
   font-size: 0.85em;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 /* 슬라이더 스타일 */
@@ -299,14 +301,14 @@
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
-  background: #ddd;
+  background: var(--theme-border);
   border-radius: 2px;
   outline: none;
   transition: background 0.2s;
 }
 
 .slider:hover {
-  background: #ccc;
+  background: var(--theme-border);
 }
 
 .slider::-webkit-slider-thumb {
@@ -314,20 +316,20 @@
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #1abc9c;
+  background: var(--theme-primary);
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .slider::-webkit-slider-thumb:hover {
-  background: #16a085;
+  background: var(--theme-primary-hover);
 }
 
 .slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #1abc9c;
+  background: var(--theme-primary);
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -335,51 +337,51 @@
 }
 
 .slider::-moz-range-thumb:hover {
-  background: #16a085;
+  background: var(--theme-primary-hover);
 }
 
 /* 비활성화 스타일 */
 .disabledLabel {
-  color: #999 !important;
+  color: var(--theme-text-muted) !important;
   opacity: 0.6;
 }
 
 .disabledText {
   font-size: 11px;
-  color: #047857;
+  color: var(--theme-primary);
   font-weight: normal;
 }
 
 .input:disabled {
-  background-color: #f5f5f5 !important;
-  color: #999 !important;
+  background-color: var(--theme-background-secondary) !important;
+  color: var(--theme-text-muted) !important;
   cursor: not-allowed;
-  border-color: #ddd !important;
+  border-color: var(--theme-border) !important;
 }
 
 .button:disabled {
-  background-color: #f5f5f5 !important;
-  color: #999 !important;
+  background-color: var(--theme-background-secondary) !important;
+  color: var(--theme-text-muted) !important;
   cursor: not-allowed;
-  border-color: #ddd !important;
+  border-color: var(--theme-border) !important;
 }
 
 .button:disabled:hover {
-  background-color: #f5f5f5 !important;
-  border-color: #ddd !important;
+  background-color: var(--theme-background-secondary) !important;
+  border-color: var(--theme-border) !important;
 }
 
 .slider:disabled {
-  background: #f5f5f5 !important;
+  background: var(--theme-background-secondary) !important;
   cursor: not-allowed;
 }
 
 .slider:disabled::-webkit-slider-thumb {
-  background: #ccc !important;
+  background: var(--theme-border) !important;
   cursor: not-allowed;
 }
 
 .slider:disabled::-moz-range-thumb {
-  background: #ccc !important;
+  background: var(--theme-border) !important;
   cursor: not-allowed;
 } 

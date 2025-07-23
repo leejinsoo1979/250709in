@@ -1,6 +1,6 @@
 .viewerControls {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
   padding: 8px 16px;
   display: flex;
   align-items: center;
@@ -30,14 +30,14 @@
 }
 
 .toggleIcon {
-  color: #6b7280;
+  color: var(--theme-text-secondary);
 }
 
 .toggleLabel {
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   min-width: 22px;
   text-align: center;
   line-height: 16px;
@@ -55,17 +55,17 @@
 }
 
 .switch.on {
-  background: #2ECC71 !important;
+  background: var(--theme-success) !important;
 }
 
 .switch.off {
-  background: #e0f7ea !important;
+  background: var(--theme-success-light) !important;
 }
 
 .switchHandle {
   width: 14px;
   height: 14px;
-  background: #ffffff;
+  background: var(--theme-surface);
   border-radius: 50%;
   position: absolute;
   top: 2px;
@@ -95,7 +95,7 @@
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: #374151;
+  color: var(--theme-text);
   line-height: 16px;
 }
 
@@ -106,16 +106,16 @@
 .checkmark {
   width: 12px;
   height: 12px;
-  border: 1px solid #767676;
+  border: 1px solid var(--theme-border-hover);
   border-radius: 50%;
   position: relative;
   transition: all 0.2s ease;
-  background: #ffffff;
+  background: var(--theme-surface);
 }
 
 .checkbox:checked + .checkmark {
-  background: #10b981;
-  border-color: #10b981;
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 .checkbox:checked + .checkmark::after {
@@ -124,7 +124,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--theme-surface);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -153,22 +153,22 @@
 /* 보기 옵션 (Solid/Wireframe) */
 .renderModeGroup {
   display: flex;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   overflow: hidden;
-  background: white;
+  background: var(--theme-surface);
 }
 
 .renderModeButton {
   padding: 6px 10px;
   border: none;
-  background: white;
-  color: #6b7280;
+  background: var(--theme-surface);
+  color: var(--theme-text);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--theme-border);
   min-width: 50px;
 }
 
@@ -177,34 +177,34 @@
 }
 
 .renderModeButton:hover {
-  background: #f9fafb;
+  background: var(--theme-background-secondary);
 }
 
 .renderModeButton.active {
-  background: #10b981;
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 .renderModeButton.active:hover {
-  background: #059669;
+  background: var(--theme-primary-hover);
 }
 
 /* 3D/2D 모드 토글 */
 .viewModeGroup {
   display: flex;
-  border: 1px solid #10b981;
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .viewModeButton {
-  background: #ffffff;
+  background: var(--theme-surface);
   border: none;
   padding: 5px 12px;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: #10b981;
+  color: var(--theme-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 18px;
@@ -216,35 +216,35 @@
 }
 
 .viewModeButton:not(:last-child) {
-  border-right: 1px solid #10b981;
+  border-right: 1px solid var(--theme-primary);
 }
 
 .viewModeButton.active {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: white;
 }
 
 .viewModeButton:hover:not(.active) {
-  background: #f0f9ff;
+  background: var(--theme-primary-light);
 }
 
 /* 도어 설치 버튼 그룹 */
 .doorButtonGroup {
   display: flex;
-  border: 1px solid #10b981;
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
   margin-left: 12px;
 }
 
 .doorButton {
-  background: #ffffff;
+  background: var(--theme-surface);
   border: none;
   padding: 5px 12px;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: #10b981;
+  color: var(--theme-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 18px;
@@ -263,30 +263,30 @@
 }
 
 .doorButton.active {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: white;
 }
 
 .doorButton:hover:not(.active) {
-  background: #f0f9ff;
+  background: var(--theme-primary-light);
 }
 
 /* 뷰 방향 선택 */
 .viewDirectionGroup {
   display: flex;
-  border: 1px solid #10b981;
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .viewDirectionButton {
-  background: #ffffff;
+  background: var(--theme-surface);
   border: none;
   padding: 6px 10px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: #10b981;
+  color: var(--theme-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 20px;
@@ -298,16 +298,16 @@
 }
 
 .viewDirectionButton:not(:last-child) {
-  border-right: 1px solid #10b981;
+  border-right: 1px solid var(--theme-primary);
 }
 
 .viewDirectionButton.active {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--theme-primary);
+  color: white;
 }
 
 .viewDirectionButton:hover:not(.active) {
-  background: #f0f9ff;
+  background: var(--theme-primary-light);
 }
 
 /* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */

@@ -158,7 +158,7 @@ export const useColumnDualSplitter = () => {
     if (previousColumnsRef.current !== currentColumnsStr) {
       console.log('🏛️ 기둥 변화 감지 - 듀얼 가구 자동 분할 검사 시작');
       
-      // 500ms 지연 후 실행 (기둥 추가/이동 완료 후)
+      // 100ms 지연 후 실행 (기둥 추가/이동 완료 후)
       const timer = setTimeout(() => {
         try {
           // 1. 먼저 기둥이 없어진 슬롯의 가구들을 복원
@@ -174,7 +174,7 @@ export const useColumnDualSplitter = () => {
         } catch (error) {
           console.error('❌ 기둥 변화 처리 중 오류:', error);
         }
-      }, 500);
+      }, 100);
       
       previousColumnsRef.current = currentColumnsStr;
       

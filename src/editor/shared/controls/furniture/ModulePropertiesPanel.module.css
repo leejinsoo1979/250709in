@@ -12,9 +12,9 @@
 }
 
 .panel {
-  background: white;
+  background: var(--theme-surface);
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--theme-shadow);
   max-width: 360px;
   width: 90%;
   max-height: 80vh;
@@ -28,14 +28,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #eee;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--theme-border);
+  background-color: var(--theme-background-secondary);
 }
 
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: #1abc9c;
+  color: var(--theme-primary);
   margin: 0;
 }
 
@@ -50,13 +50,13 @@
   justify-content: center;
   cursor: pointer;
   font-size: 18px;
-  color: #666;
+  color: var(--theme-text-secondary);
   transition: all 0.2s ease;
 }
 
 .closeButton:hover {
-  background-color: #e9ecef;
-  color: #333;
+  background-color: var(--theme-border-hover);
+  color: var(--theme-text);
 }
 
 .content {
@@ -78,16 +78,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8f9fa;
+  background-color: var(--theme-background-secondary);
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--theme-border);
 }
 
 .moduleBox {
   width: 60px;
   height: 60px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--theme-border);
 }
 
 .moduleDetails {
@@ -97,7 +97,7 @@
 .moduleName {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0 0 16px 0;
 }
 
@@ -116,27 +116,27 @@
   width: 80px;
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .propertyValue {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: var(--theme-text);
   word-break: break-word;
 }
 
 .placeholder {
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: var(--theme-background-secondary);
   border-radius: 8px;
   text-align: center;
-  border: 1px dashed #ddd;
+  border: 1px dashed var(--theme-border);
 }
 
 .placeholder p {
   margin: 0;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 14px;
   font-style: italic;
 }

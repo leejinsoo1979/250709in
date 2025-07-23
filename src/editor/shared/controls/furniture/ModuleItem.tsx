@@ -23,6 +23,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
   const isValid = validation.isValid;
+  const needsWarning = validation.needsWarning || false;
   const isDynamic = module.isDynamic;
 
   // 도어 버튼 클릭 핸들러
@@ -34,7 +35,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   // 간단한 드래그 아이콘 생성
   const createDragIcon = (): HTMLElement => {
     const icon = document.createElement('div');
-    icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? '#10b981' : '#3b82f6'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;`;
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
+    icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;`;
     icon.textContent = hasDoor ? '🚪' : '📦'; // 도어 없음: 박스 아이콘으로 변경
     document.body.appendChild(icon);
     return icon;
@@ -44,7 +46,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
-    if (!isValid) {
+    if (!isValid && !needsWarning) {
       e.preventDefault();
       return;
     }
@@ -61,7 +63,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         dimensions: module.dimensions,
         type: module.type || 'default',
         color: module.color,
-        hasDoor: hasDoor // 현재 도어 상태 포함
+        hasDoor: hasDoor, // 현재 도어 상태 포함
+        needsWarning: needsWarning // 경고 필요 여부 추가
       }
     };
     
@@ -89,8 +92,13 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 클릭 핸들러 - 속성 패널 열기로 변경
   const handleClick = () => {
-    if (!isValid) {
+    if (!isValid && !needsWarning) {
       alert(`이 모듈은 현재 내경 공간에 맞지 않습니다.\n내경 공간: ${internalSpace.width}×${internalSpace.height}×${internalSpace.depth}mm\n모듈 크기: ${module.dimensions.width}×${module.dimensions.height}×${module.defaultDepth || module.dimensions.depth}mm`);
+      return;
+    }
+    
+    if (needsWarning) {
+      alert('배치슬롯의 사이즈를 늘려주세요');
       return;
     }
     
@@ -102,25 +110,26 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     <div
       ref={itemRef}
       key={module.id}
-      className={`${styles.moduleItem} ${!isValid ? styles.moduleItemDisabled : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
+      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
       onClick={handleClick}
-      draggable={isValid}
+      draggable={isValid || needsWarning}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      title={!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '드래그하여 배치하세요'}
+      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '드래그하여 배치하세요')}
       style={{ 
-        cursor: isValid ? 'grab' : 'not-allowed'
+        cursor: (isValid || needsWarning) ? 'grab' : 'not-allowed'
       }}
     >
       <div className={styles.modulePreview}>
         <div 
           className={styles.moduleBox}
           style={{ 
-            backgroundColor: isValid ? module.color : '#ccc',
+            backgroundColor: (isValid || needsWarning) ? module.color : '#ccc',
             aspectRatio: `${module.dimensions.width} / ${module.dimensions.height}`
           }}
         />
-        {!isValid && <div className={styles.invalidIcon}>✕</div>}
+        {!isValid && !needsWarning && <div className={styles.invalidIcon}>✕</div>}
+        {needsWarning && <div className={styles.warningIcon}>⚠️</div>}
         {isDynamic && <div className={styles.dynamicIcon}>⚡</div>}
       </div>
       
@@ -134,9 +143,14 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         {module.description && (
           <div className={styles.moduleDescription}>{module.description}</div>
         )}
-        {!isValid && (
+        {!isValid && !needsWarning && (
           <div className={styles.validationError}>
             내경 공간 초과
+          </div>
+        )}
+        {needsWarning && (
+          <div className={styles.validationWarning}>
+            슬롯 사이즈 부족
           </div>
         )}
       </div>

@@ -37,8 +37,8 @@
 }
 
 .moduleItem:hover {
-  border-color: #1abc9c;
-  box-shadow: 0 2px 4px rgba(26, 188, 156, 0.1);
+  border-color: var(--theme-primary);
+  box-shadow: 0 2px 4px var(--theme-primary-light);
 }
 
 .modulePreview {

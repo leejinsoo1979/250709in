@@ -1,6 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -9,6 +10,7 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
 }> = ({ args, position, material, renderMode }) => {
+  const { theme } = useTheme();
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍도 동일)
   const createInnerMaterial = (originalMaterial: THREE.Material) => {
     const { viewMode } = useSpace3DView();
@@ -52,7 +54,7 @@ const BoxWithEdges: React.FC<{
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
+            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
             linewidth={1}
             transparent={false}
             opacity={1.0}

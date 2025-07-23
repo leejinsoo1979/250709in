@@ -5,6 +5,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
+import { useTheme } from '@/contexts/ThemeContext';
 import * as THREE from 'three';
 
 interface CADDimensions2DProps {
@@ -19,6 +20,28 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
   const { view2DDirection } = useUIStore();
+  const { theme } = useTheme();
+  
+  // CSS 변수에서 실제 테마 색상 가져오기
+  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const computedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue(variableName).trim();
+      return computedColor || fallback;
+    }
+    return fallback;
+  };
+
+  // 테마 기반 치수 색상 설정
+  const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
+  const dimensionColors = {
+    primary: primaryColor,     // 기본 치수선 (테마 색상)
+    furniture: primaryColor,   // 가구 치수선 (테마 색상)
+    column: primaryColor,      // 컬럼 치수선 (테마 색상)
+    float: primaryColor,       // 띄움 높이 (테마 색상)
+    background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+    text: primaryColor         // 텍스트도 테마 색상
+  };
   
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
@@ -69,7 +92,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [0, dimensionOffsetY, 0.01],
             [spaceWidth, dimensionOffsetY, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -79,7 +102,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(0, dimensionOffsetY, 0.01),
             new THREE.Vector3(0.05, dimensionOffsetY, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -89,7 +112,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(spaceWidth, dimensionOffsetY, 0.01),
             new THREE.Vector3(spaceWidth - 0.05, dimensionOffsetY, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -103,13 +126,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
         >
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#1976d2',
+              background: dimensionColors.background,
+              color: dimensionColors.primary,
               padding: '4px 8px',
               borderRadius: '4px',
               fontSize: '15px',
               fontWeight: 'bold',
-              border: '1px solid #1976d2',
+              border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
               whiteSpace: 'nowrap',
               userSelect: 'none',
@@ -126,7 +149,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [0, floatHeight, 0.01],
             [0, dimensionOffsetY + mmToThreeUnits(20), 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -139,7 +162,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [spaceWidth, floatHeight, 0.01],
             [spaceWidth, dimensionOffsetY + mmToThreeUnits(20), 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -155,7 +178,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [dimensionOffsetX, floatHeight, 0.01],
             [dimensionOffsetX, floatHeight + actualFrameHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -165,7 +188,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(dimensionOffsetX, floatHeight, 0.01),
             new THREE.Vector3(dimensionOffsetX, floatHeight + 0.05, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -175,7 +198,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(dimensionOffsetX, floatHeight + actualFrameHeight, 0.01),
             new THREE.Vector3(dimensionOffsetX, floatHeight + actualFrameHeight - 0.05, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -189,13 +212,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
         >
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#1976d2',
+              background: dimensionColors.background,
+              color: dimensionColors.primary,
               padding: '4px 8px',
               borderRadius: '4px',
               fontSize: '15px',
               fontWeight: 'bold',
-              border: '1px solid #1976d2',
+              border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
               whiteSpace: 'nowrap',
               userSelect: 'none',
@@ -213,7 +236,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [0, floatHeight, 0.01],
             [dimensionOffsetX - mmToThreeUnits(20), floatHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -226,7 +249,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [0, floatHeight + actualFrameHeight, 0.01],
             [dimensionOffsetX - mmToThreeUnits(20), floatHeight + actualFrameHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -242,7 +265,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [rightDimensionOffsetX, floatHeight, 0.01],
             [rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -252,7 +275,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(rightDimensionOffsetX, floatHeight, 0.01),
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + 0.05, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -262,7 +285,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01),
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + actualFrameHeight - 0.05, 0.01)
           )}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={2}
         />
         
@@ -276,13 +299,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
         >
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#1976d2',
+              background: dimensionColors.background,
+              color: dimensionColors.primary,
               padding: '4px 8px',
               borderRadius: '4px',
               fontSize: '15px',
               fontWeight: 'bold',
-              border: '1px solid #1976d2',
+              border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
               whiteSpace: 'nowrap',
               userSelect: 'none',
@@ -300,7 +323,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [spaceWidth, floatHeight, 0.01],
             [rightDimensionOffsetX + mmToThreeUnits(20), floatHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -313,7 +336,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             [spaceWidth, floatHeight + actualFrameHeight, 0.01],
             [rightDimensionOffsetX + mmToThreeUnits(20), floatHeight + actualFrameHeight, 0.01]
           ]}
-          color="#1976d2"
+          color={dimensionColors.primary}
           lineWidth={1}
           dashed
           dashSize={0.02}
@@ -330,7 +353,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               [rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(100), floatHeight, 0.01]
             ]}
-            color="#ff6b35"
+            color={dimensionColors.float}
             lineWidth={2}
           />
           
@@ -340,7 +363,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0.05, 0.01)
             )}
-            color="#ff6b35"
+            color={dimensionColors.float}
             lineWidth={2}
           />
           
@@ -350,7 +373,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), floatHeight, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), floatHeight - 0.05, 0.01)
             )}
-            color="#ff6b35"
+            color={dimensionColors.float}
             lineWidth={2}
           />
           
@@ -364,13 +387,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
           >
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.9)',
-                color: '#ff6b35',
+                background: dimensionColors.background,
+                color: dimensionColors.float,
                 padding: '4px 8px',
                 borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 'bold',
-                border: '1px solid #ff6b35',
+                border: `1px solid ${dimensionColors.float}`,
                 fontFamily: 'monospace',
                 whiteSpace: 'nowrap',
                 userSelect: 'none',
@@ -388,7 +411,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               [spaceWidth, 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), 0, 0.01]
             ]}
-            color="#ff6b35"
+            color={dimensionColors.float}
             lineWidth={1}
             dashed
             dashSize={0.015}
@@ -401,7 +424,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               [spaceWidth, floatHeight, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), floatHeight, 0.01]
             ]}
-            color="#ff6b35"
+            color={dimensionColors.float}
             lineWidth={1}
             dashed
             dashSize={0.015}
@@ -433,7 +456,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                 [leftX, dimY, 0.01],
                 [rightX, dimY, 0.01]
               ]}
-              color="#ff9800"
+              color={dimensionColors.furniture}
               lineWidth={2}
             />
             
@@ -444,7 +467,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                 new THREE.Vector3(leftX + 0.03, dimY, 0.01),
                 0.015
               )}
-              color="#ff9800"
+              color={dimensionColors.furniture}
               lineWidth={2}
             />
             
@@ -455,7 +478,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                 new THREE.Vector3(rightX - 0.03, dimY, 0.01),
                 0.015
               )}
-              color="#ff9800"
+              color={dimensionColors.furniture}
               lineWidth={2}
             />
             
@@ -469,13 +492,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             >
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  color: '#ff9800',
+                  background: dimensionColors.background,
+                  color: dimensionColors.furniture,
                   padding: '3px 6px',
                   borderRadius: '3px',
                   fontSize: '15px',
                   fontWeight: 'bold',
-                  border: '1px solid #ff9800',
+                  border: `1px solid ${dimensionColors.furniture}`,
                   fontFamily: 'monospace',
                   whiteSpace: 'nowrap',
                   userSelect: 'none',
@@ -492,7 +515,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                 [leftX, 0, 0.01],
                 [leftX, dimY + mmToThreeUnits(20), 0.01]
               ]}
-              color="#ff9800"
+              color={dimensionColors.furniture}
               lineWidth={1}
               dashed
               dashSize={0.015}
@@ -503,7 +526,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                 [rightX, 0, 0.01],
                 [rightX, dimY + mmToThreeUnits(20), 0.01]
               ]}
-              color="#ff9800"
+              color={dimensionColors.furniture}
               lineWidth={1}
               dashed
               dashSize={0.015}
@@ -532,7 +555,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                   [leftX, dimY, 0.01],
                   [rightX, dimY, 0.01]
                 ]}
-                color="#4caf50"
+                color={dimensionColors.column}
                 lineWidth={1.5}
               />
               
@@ -543,7 +566,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                   new THREE.Vector3(leftX + 0.025, dimY, 0.01),
                   0.01
                 )}
-                color="#4caf50"
+                color={dimensionColors.column}
                 lineWidth={1.5}
               />
               <Line
@@ -552,7 +575,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                   new THREE.Vector3(rightX - 0.025, dimY, 0.01),
                   0.01
                 )}
-                color="#4caf50"
+                color={dimensionColors.column}
                 lineWidth={1.5}
               />
               
@@ -566,13 +589,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
               >
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    color: '#4caf50',
+                    background: dimensionColors.background,
+                    color: dimensionColors.column,
                     padding: '2px 5px',
                     borderRadius: '3px',
                     fontSize: '15px',
                     fontWeight: 'bold',
-                    border: '1px solid #4caf50',
+                    border: `1px solid ${dimensionColors.column}`,
                     fontFamily: 'monospace',
                     whiteSpace: 'nowrap',
                     userSelect: 'none',

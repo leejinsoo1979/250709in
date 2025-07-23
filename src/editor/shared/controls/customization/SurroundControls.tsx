@@ -199,10 +199,51 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
   };
 
-  // Enter 키 처리
+  // Enter 키 및 화살표 키 처리
   const handleKeyDown = (e: React.KeyboardEvent, dimension: 'left' | 'right' | 'top') => {
     if (e.key === 'Enter') {
       handleFrameSizeBlur(dimension);
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      
+      // 벽이 없는 쪽은 수정 불가능
+      if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
+        return;
+      }
+      
+      const currentValue = typeof frameSize[dimension] === 'string' 
+        ? parseInt(frameSize[dimension] as string) || 0 
+        : frameSize[dimension];
+      
+      let minValue, maxValue;
+      if (dimension === 'left' || dimension === 'right') {
+        minValue = 40;
+        maxValue = 100;
+      } else {
+        minValue = 10;
+        maxValue = 200;
+      }
+      
+      let newValue;
+      if (e.key === 'ArrowUp') {
+        newValue = Math.min(currentValue + 1, maxValue);
+      } else {
+        newValue = Math.max(currentValue - 1, minValue);
+      }
+      
+      if (newValue !== currentValue) {
+        const newFrameSize = { ...frameSize, [dimension]: newValue };
+        setFrameSize(newFrameSize);
+        
+        if (spaceInfo.frameSize) {
+          onUpdate({
+            frameSize: {
+              ...spaceInfo.frameSize,
+              [dimension]: newValue,
+            },
+          });
+        }
+      }
     }
   };
 

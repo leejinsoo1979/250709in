@@ -7,6 +7,7 @@ import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree } from '@react-three/fiber';
+import { useTheme } from '@/contexts/ThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
@@ -17,6 +18,7 @@ const BoxWithEdges: React.FC<{
   renderMode: 'solid' | 'wireframe';
   isDragging?: boolean;
 }> = ({ args, position, material, renderMode, isDragging = false }) => {
+  const { theme } = useTheme();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
@@ -31,7 +33,20 @@ const BoxWithEdges: React.FC<{
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
-      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      
+      // 테마 색상 가져오기
+      const getThemeColor = () => {
+        if (typeof window !== 'undefined') {
+          const computedStyle = getComputedStyle(document.documentElement);
+          const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+          if (primaryColor) {
+            return primaryColor;
+          }
+        }
+        return '#10b981'; // 기본값 (green)
+      };
+      
+      ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
@@ -64,7 +79,7 @@ const BoxWithEdges: React.FC<{
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
           <lineSegments geometry={edgesGeometry}>
             <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? "#333333" : "#666666"} 
+              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
               linewidth={1} 
             />
           </lineSegments>

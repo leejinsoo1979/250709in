@@ -1,6 +1,6 @@
 .sidebar {
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
   width: 64px;
   height: 100%;
   display: flex;
@@ -11,7 +11,7 @@
 }
 
 .sidebar.open {
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow);
 }
 
 .tabList {
@@ -38,11 +38,11 @@
 }
 
 .tabButton:hover {
-  background: #f9fafb;
+  background: var(--theme-background-secondary);
 }
 
 .tabButton.active {
-  background: #f0f9ff;
+  background: var(--theme-primary-light);
 }
 
 .tabButton.active::before {
@@ -53,7 +53,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 24px;
-  background: #10b981;
+  background: var(--theme-primary);
   border-radius: 0 2px 2px 0;
 }
 
@@ -61,40 +61,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   transition: color 0.2s ease;
 }
 
 .tabButton.active .tabIcon {
-  color: #10b981;
+  color: var(--theme-primary);
 }
 
 .tabButton:hover .tabIcon {
-  color: #374151;
+  color: var(--theme-text);
 }
 
 .tabLabel {
   font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   transition: color 0.2s ease;
   line-height: 16px;
   text-align: center;
 }
 
 .tabButton.active .tabLabel {
-  color: #10b981;
+  color: var(--theme-primary);
   font-weight: 500;
 }
 
 .tabButton:hover .tabLabel {
-  color: #374151;
+  color: var(--theme-text);
 }
 
 .userSection {
   padding: 16px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--theme-border);
 }
 
 .userAvatar {
@@ -108,12 +108,12 @@
   height: 40px;
   aspect-ratio: 1/1;
   border-radius: 50%;
-  background: #d1d5db;
+  background: var(--theme-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  border: 2px solid #ffffff;
+  color: var(--theme-text-secondary);
+  border: 2px solid var(--theme-surface);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
@@ -135,19 +135,19 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f3f4f6;
+  background: var(--theme-background-secondary);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .settingsButton:hover {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--theme-border);
+  color: var(--theme-text);
 }
 
 .onlineIndicator {
@@ -156,13 +156,13 @@
   right: 2px;
   width: 16px;
   height: 16px;
-  background: #10b981;
+  background: var(--theme-primary);
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--theme-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--theme-surface);
 }
 
 .foldButton {
@@ -176,19 +176,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7fafc;
+  background: var(--theme-background-secondary);
   border: none;
   border-radius: 0 8px 8px 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
   cursor: pointer;
   font-size: 20px;
-  color: #94a3b8;
+  color: var(--theme-text-muted);
   font-weight: 400;
   transition: background 0.2s, color 0.2s;
 }
 .foldButton:hover {
-  background: #e5e7eb;
-  color: #0ea5e9;
+  background: var(--theme-border);
+  color: var(--theme-info);
 }
 
 /* 반응형 디자인 */

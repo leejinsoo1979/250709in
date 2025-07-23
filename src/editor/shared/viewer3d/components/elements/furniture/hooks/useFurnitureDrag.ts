@@ -19,6 +19,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const moveModule = useFurnitureStore(state => state.moveModule);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
+  const removeModule = useFurnitureStore(state => state.removeModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { setFurnitureDragging } = useUIStore();
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
@@ -39,6 +40,74 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     invalidate();
     setForceRender(prev => prev + 1);
   }, [invalidate, setForceRender]);
+
+  // 가구 충돌 감지 함수
+  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number) => {
+    const movingModule = placedModules.find(m => m.id === movingModuleId);
+    if (!movingModule) return [];
+
+    const moduleData = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
+    if (!moduleData) return [];
+
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    const columnWidth = indexing.columnWidth;
+    const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+
+    // 이동하는 가구가 차지할 슬롯들 계산
+    let occupiedSlots: number[] = [];
+    if (isDualFurniture) {
+      // 듀얼 가구는 2개 슬롯 차지
+      occupiedSlots = [newSlotIndex, newSlotIndex + 1];
+    } else {
+      // 싱글 가구는 1개 슬롯 차지
+      occupiedSlots = [newSlotIndex];
+    }
+
+    // 충돌하는 다른 가구들 찾기
+    const collidingModules: string[] = [];
+    placedModules.forEach(module => {
+      if (module.id === movingModuleId) return; // 자기 자신 제외
+
+      const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      if (!moduleInfo) return;
+
+      const isModuleDual = Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
+      
+      // 기존 가구가 차지하는 슬롯들
+      let moduleSlots: number[] = [];
+      if (isModuleDual && module.slotIndex !== undefined) {
+        moduleSlots = [module.slotIndex, module.slotIndex + 1];
+      } else if (module.slotIndex !== undefined) {
+        moduleSlots = [module.slotIndex];
+      }
+
+      // 슬롯 겹침 확인
+      const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
+      if (hasOverlap) {
+        collidingModules.push(module.id);
+        if (import.meta.env.DEV) {
+          console.log('🚨 충돌 감지:', {
+            movingModule: movingModuleId,
+            collidingModule: module.id,
+            movingSlots: occupiedSlots,
+            existingSlots: moduleSlots
+          });
+        }
+      }
+    });
+
+    return collidingModules;
+  }, [placedModules, internalSpace, spaceInfo]);
+
+  // 충돌한 가구들 제거
+  const removeCollidingFurniture = useCallback((collidingModuleIds: string[]) => {
+    collidingModuleIds.forEach(moduleId => {
+      if (import.meta.env.DEV) {
+        console.log('🗑️ 충돌한 가구 제거:', moduleId);
+      }
+      removeModule(moduleId);
+    });
+  }, [removeModule]);
 
 
 
@@ -142,6 +211,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           currentX: currentModule.position.x,
           isDualFurniture 
         });
+      }
+
+      // 충돌 감지 및 충돌한 가구 제거
+      const collidingModules = detectFurnitureCollisions(draggingModuleId, slotIndex);
+      if (collidingModules.length > 0) {
+        removeCollidingFurniture(collidingModules);
+        if (import.meta.env.DEV) {
+          console.log('🗑️ 총 ' + collidingModules.length + '개 가구 제거됨');
+        }
       }
 
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth 계산

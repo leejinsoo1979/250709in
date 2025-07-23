@@ -13,6 +13,7 @@ import {
   HomeIcon,
   PackageIcon
 } from '@/components/common/Icons';
+import ProjectDropdown from '@/components/common/ProjectDropdown';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -62,7 +63,6 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
     nodeId: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{
     nodeId: string;
@@ -115,13 +115,13 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
             icon: <div style={{ 
               width: '16px', 
               height: '16px', 
-              border: '1px solid #10b981', 
+              border: '1px solid var(--theme-primary)', 
               borderRadius: '2px', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               fontSize: '10px', 
-              color: '#10b981', 
+              color: 'var(--theme-primary)', 
               fontWeight: 'bold' 
             }}>+</div>,
             parentId: folder.id
@@ -151,13 +151,13 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
         icon: <div style={{ 
           width: '16px', 
           height: '16px', 
-          border: '1px solid #10b981', 
+          border: '1px solid var(--theme-primary)', 
           borderRadius: '2px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
           fontSize: '10px', 
-          color: '#10b981', 
+          color: 'var(--theme-primary)', 
           fontWeight: 'bold' 
         }}>+</div>,
         parentId: currentProject.id
@@ -178,13 +178,13 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
         icon: <div style={{ 
           width: '16px', 
           height: '16px', 
-          border: '1px solid #10b981', 
+          border: '1px solid var(--theme-primary)', 
           borderRadius: '2px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
           fontSize: '10px', 
-          color: '#10b981', 
+          color: 'var(--theme-primary)', 
           fontWeight: 'bold' 
         }}>+</div>,
         parentId: currentProject.id
@@ -479,10 +479,6 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
     setContextMenu(null);
   };
 
-  // 프로젝트 드롭다운 토글
-  const toggleProjectDropdown = () => {
-    setShowProjectDropdown(!showProjectDropdown);
-  };
 
   // 프로젝트 선택
   const handleProjectSelect = (project: ProjectSummary) => {
@@ -490,7 +486,6 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
       // 다른 프로젝트 선택 시 저장 확인 팝업 표시
       showSaveConfirmation(project.id, 'project', project.id);
     }
-    setShowProjectDropdown(false);
   };
 
   const handleContextAction = (action: string, nodeId: string) => {
@@ -1059,13 +1054,13 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
                 <div style={{ 
                   width: '16px', 
                   height: '16px', 
-                  border: '1px solid #10b981', 
+                  border: '1px solid var(--theme-primary)', 
                   borderRadius: '2px', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center', 
                   fontSize: '10px', 
-                  color: '#10b981', 
+                  color: 'var(--theme-primary)', 
                   fontWeight: 'bold' 
                 }}>+</div>
               ))}
@@ -1122,14 +1117,7 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
   return (
     <div 
       className={styles.fileTree} 
-      onClick={(e) => {
-        closeContextMenu();
-        // 드롭다운 외부 클릭 시 닫기
-        const target = e.target as HTMLElement;
-        if (!target.closest('[data-dropdown]')) {
-          setShowProjectDropdown(false);
-        }
-      }}
+      onClick={closeContextMenu}
     >
       <div className={styles.header}>
         {/* 현재 작업중인 파일 경로 표시 */}
@@ -1158,50 +1146,12 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
         </div>
         
         <div className={styles.headerTop}>
-          <div className={styles.dropdown} data-dropdown>
-            <div 
-              className={styles.select}
-              onClick={toggleProjectDropdown}
-            >
-              {currentProject?.title || 'Untitled'}
-              <ChevronDownIcon size={16} />
-            </div>
-            
-            {/* 프로젝트 드롭다운 메뉴 */}
-            {showProjectDropdown && (
-              <div className={styles.dropdownMenu}>
-                <div className={styles.dropdownHeader}>
-                  프로젝트 선택
-                </div>
-                <div className={styles.dropdownList}>
-                  {allProjects.map(project => (
-                    <div
-                      key={project.id}
-                      className={`${styles.dropdownItem} ${
-                        project.id === currentProject?.id ? styles.active : ''
-                      }`}
-                      onClick={() => handleProjectSelect(project)}
-                    >
-                      <div className={styles.projectInfo}>
-                        <span className={styles.projectTitle}>{project.title}</span>
-                        <span className={styles.projectDate}>
-                          {new Date(project.updatedAt.seconds * 1000).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <button 
-            className={styles.newButton}
-            onClick={addNewProject}
-          >
-            <PlusIcon size={16} />
-            새로운 프로젝트
-          </button>
+          <ProjectDropdown
+            projects={allProjects}
+            currentProject={currentProject}
+            onProjectSelect={handleProjectSelect}
+            onCreateNew={addNewProject}
+          />
         </div>
       </div>
 
@@ -1273,7 +1223,7 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
                   <>
                     <hr className={styles.contextMenuDivider} />
                     <button
-                      className={styles.contextMenuItem}
+                      className={`${styles.contextMenuItem} ${styles.deleteMenuItem}`}
                       onClick={() => handleContextAction('delete', contextMenu.nodeId)}
                     >
                       <TrashIcon size={14} />

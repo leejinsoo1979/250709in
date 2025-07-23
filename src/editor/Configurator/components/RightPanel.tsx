@@ -121,6 +121,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
           min={min}
           max={max}
           step={step}
+          style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-surface)' }}
         />
         <span className={styles.inputUnit}>{unit}</span>
       </div>

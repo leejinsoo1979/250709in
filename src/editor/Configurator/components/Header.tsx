@@ -3,6 +3,7 @@ import styles from './Header.module.css';
 import { Settings, Menu, User } from 'lucide-react';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
+import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 
 interface HeaderProps {
@@ -109,7 +110,7 @@ const Header: React.FC<HeaderProps> = ({
           </button>
           
           <div className={styles.logo}>
-            <img src="/logo.png" alt="Logo" />
+            <Logo size="medium" />
           </div>
           {projectName && (
             <div 

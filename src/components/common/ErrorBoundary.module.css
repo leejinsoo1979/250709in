@@ -1,0 +1,80 @@
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
+  background: var(--theme-background);
+  color: var(--theme-text);
+}
+
+.errorCard {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  box-shadow: var(--theme-shadow);
+}
+
+.errorIcon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.errorTitle {
+  margin-bottom: 16px;
+  color: var(--theme-text);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.errorMessage {
+  margin-bottom: 24px;
+  opacity: 0.9;
+  color: var(--theme-text-secondary);
+  line-height: 1.5;
+}
+
+.reloadButton {
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.reloadButton:hover {
+  background: var(--theme-primary-hover);
+}
+
+.developerInfo {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.developerSummary {
+  cursor: pointer;
+  margin-bottom: 10px;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+}
+
+.errorDetails {
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  overflow: auto;
+  max-height: 200px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  color: var(--theme-text);
+}

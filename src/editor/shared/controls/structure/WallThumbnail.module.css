@@ -1,8 +1,8 @@
 .wallThumbnail {
   position: relative;
   aspect-ratio: 1 / 1; /* 정사각형으로 변경해서 더 작게 */
-  background-color: #d9d8d4; /* 여백 색상 변경 */
-  border: 1px solid #e5e7eb; /* 테두리 얇게 */
+  background-color: var(--theme-background-secondary, #d9d8d4); /* 여백 색상 변경 */
+  border: 1px solid var(--theme-border, #e5e7eb); /* 테두리 얇게 */
   border-radius: 4px;
   cursor: grab;
   transition: all 0.2s ease;
@@ -14,8 +14,8 @@
 }
 
 .wallThumbnail:hover {
-  border-color: #1abc9c;
-  box-shadow: 0 4px 12px rgba(26, 188, 156, 0.15);
+  border-color: var(--theme-primary);
+  box-shadow: 0 4px 12px var(--theme-primary-light);
   transform: translateY(-2px);
 }
 

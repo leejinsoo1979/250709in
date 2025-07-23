@@ -63,13 +63,21 @@ export const validateModuleForInternalSpace = (
 ) => {
   const { width, height, depth } = module.dimensions;
   
+  // 스타일러장이나 바지걸이장인지 확인
+  const isStylerOrPantshanger = module.id.includes('styler') || module.id.includes('pantshanger');
+  
+  // 스타일러장과 바지걸이장은 폭 체크를 하지 않고 항상 표시
+  const fitsWidth = isStylerOrPantshanger ? true : width <= internalSpace.width;
+  const actualFitsWidth = width <= internalSpace.width;
+  
   return {
-    fitsWidth: width <= internalSpace.width,
+    fitsWidth: actualFitsWidth, // 실제 맞는지 여부
     fitsHeight: height <= internalSpace.height,
     fitsDepth: depth <= internalSpace.depth,
-    isValid: width <= internalSpace.width && 
+    isValid: fitsWidth && // 표시용 (스타일러/바지걸이는 항상 true)
              height <= internalSpace.height && 
-             depth <= internalSpace.depth
+             depth <= internalSpace.depth,
+    needsWarning: isStylerOrPantshanger && !actualFitsWidth // 경고가 필요한 경우
   };
 };
 

@@ -339,6 +339,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               className={styles.deleteButton}
               onClick={handleDeleteClick}
             >
+              삭제
             </button>
           </div>
 

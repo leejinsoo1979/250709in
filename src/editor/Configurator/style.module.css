@@ -4,7 +4,7 @@
   flex-direction: column;
   height: 100vh;
   font-family: -apple-system, 'Apple SD Gothic Neo', Roboto, sans-serif;
-  background-color: #f8fafc;
+  background-color: var(--theme-background-secondary);
   overflow: hidden;
 }
 
@@ -24,7 +24,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--theme-overlay);
   z-index: 100;
   animation: fadeIn 0.3s ease;
 }
@@ -36,9 +36,9 @@
   left: 0;
   bottom: 0;
   width: 320px;
-  background: white;
-  border-right: 1px solid #e5e7eb;
-  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+  background: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
   z-index: 101;
   overflow: hidden;
   animation: slideInFromLeft 0.3s ease;
@@ -52,15 +52,15 @@
   transform: translateY(-50%);
   width: 32px;
   height: 40px;
-  background: #f7fafc;
-  color: #94a3b8;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-muted);
   border: none;
   border-radius: 8px 0 0 8px;
   font-size: 20px;
   font-weight: 400;
   cursor: pointer;
   z-index: 10 !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--theme-shadow);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -68,8 +68,8 @@
 }
 
 .rightUnfoldButton:hover {
-  background: #e5e7eb;
-  color: #0ea5e9;
+  background: var(--theme-border);
+  color: var(--theme-info);
 }
 
 @keyframes fadeIn {
@@ -97,9 +97,9 @@
   width: 240px; /* 더 좁게 */
   min-width: 220px;
   max-width: 260px;
-  background: white;
-  border-right: 1px solid #e5e7eb;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+  background: var(--theme-surface, white);
+  border-right: 1px solid var(--theme-border);
+  box-shadow: 2px 0 8px var(--theme-shadow, rgba(0, 0, 0, 0.08));
   z-index: 10;
   overflow: hidden;
   display: flex;
@@ -126,7 +126,7 @@
 .modulePanelTitle {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text, #1f2937);
   margin: 0 0 20px 0;
 }
 
@@ -134,15 +134,15 @@
 .doorManagementSection {
   margin-bottom: 24px;
   padding: 16px;
-  background: #f8fafc;
+  background: var(--theme-background-secondary, #f8fafc);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border, var(--theme-border));
 }
 
 .doorInstallButton {
   width: 100%;
   padding: 12px;
-  background: #10b981;
+  background: var(--theme-primary);
   color: white;
   border: none;
   border-radius: 6px;
@@ -153,7 +153,7 @@
 }
 
 .doorInstallButton:hover {
-  background: #059669;
+  background: var(--theme-primary-hover);
 }
 
 .doorManagementGroup {
@@ -181,13 +181,13 @@
 
 .doorStatusText {
   font-size: 14px;
-  color: #374151;
+  color: var(--theme-text, #374151);
   font-weight: 500;
 }
 
 .doorToggleButton {
   padding: 6px 12px;
-  background: #10b981;
+  background: var(--theme-primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -197,13 +197,13 @@
 }
 
 .doorToggleButton:hover {
-  background: #059669;
+  background: var(--theme-primary-hover);
 }
 
 .doorRemoveButton {
   width: 100%;
   padding: 10px;
-  background: #ef4444;
+  background: var(--theme-danger);
   color: white;
   border: none;
   border-radius: 6px;
@@ -213,27 +213,27 @@
 }
 
 .doorRemoveButton:hover {
-  background: #dc2626;
+  background: var(--theme-danger-hover);
 }
 
 /* 모듈 카테고리 탭 */
 .moduleCategoryTabs {
   display: flex;
   margin-bottom: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border, var(--theme-border));
   border-radius: 8px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--theme-surface, #ffffff);
 }
 
 .moduleCategoryTab {
   flex: 1;
   padding: 12px 16px;
-  background: #ffffff;
+  background: var(--theme-surface, #ffffff);
   border: none;
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text, #374151);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -244,22 +244,22 @@
 }
 
 .moduleCategoryTab:not(:last-child) {
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--theme-border);
 }
 
 .moduleCategoryTab:hover {
-  background: #f9fafb;
-  color: #1f2937;
+  background: var(--theme-background-secondary, #f9fafb);
+  color: var(--theme-text, #1f2937);
 }
 
 .moduleCategoryTab.active {
-  background: #10b981;
+  background: var(--theme-primary, var(--theme-primary));
   color: #ffffff;
   font-weight: 600;
 }
 
 .moduleCategoryTab.active:hover {
-  background: #059669;
+  background: var(--theme-primary-hover, var(--theme-primary-hover));
 }
 
 .moduleSection {
@@ -275,7 +275,7 @@
   display: flex;
   flex-direction: column;
   min-width: 400px;
-  background: white;
+  background: var(--theme-surface);
   overflow: hidden;
   position: relative;
 }
@@ -289,7 +289,7 @@
 .viewer {
   flex: 1;
   position: relative;
-  background: #f8fafc;
+  background: var(--theme-background-secondary, #f8fafc);
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -307,12 +307,13 @@
 }
 
 .viewerDoorButton {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #e1e5e9;
+  background: var(--theme-surface, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--theme-primary);
   border-radius: 20px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
+  color: var(--theme-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
@@ -320,19 +321,19 @@
 }
 
 .viewerDoorButton:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: #c1c8cd;
+  background: var(--theme-surface, rgba(255, 255, 255, 1));
+  border-color: var(--theme-primary);
 }
 
 .viewerDoorButton.active {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border-color: var(--theme-primary);
 }
 
 .viewerDoorButton.active:hover {
-  background: #059669;
-  border-color: #059669;
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
 }
 
 /* 우측 패널 */
@@ -340,8 +341,8 @@
   width: 260px; /* 더 좁게 */
   min-width: 240px;
   max-width: 280px;
-  background: white;
-  border-left: 1px solid #e5e7eb;
+  background: var(--theme-surface, white);
+  border-left: 1px solid var(--theme-border, var(--theme-border));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -349,8 +350,8 @@
 }
 
 .rightPanelHeader {
-  border-bottom: 1px solid #e5e7eb;
-  background: white;
+  border-bottom: 1px solid var(--theme-border, var(--theme-border));
+  background: var(--theme-surface, white);
 }
 
 .rightPanelTabs {
@@ -364,21 +365,21 @@
   border: none;
   font-size: 11px; /* 폰트 크기 축소 */
   font-weight: 500;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 2px solid transparent;
 }
 
 .rightPanelTab:hover {
-  color: #374151;
-  background: #f9fafb;
+  color: var(--theme-text, #374151);
+  background: var(--theme-background-secondary, #f9fafb);
 }
 
 .rightPanelTab.active {
-  color: #10b981;
-  border-bottom-color: #10b981;
-  background: #f0fdf4;
+  color: var(--theme-primary);
+  border-bottom-color: var(--theme-primary);
+  background: var(--theme-primary-light);
 }
 
 .rightPanelContent {
@@ -398,7 +399,7 @@
 
 /* 설정 섹션 */
 .configSection {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--theme-border);
   padding: 10px 0; /* 패딩 축소 */
 }
 
@@ -417,7 +418,7 @@
 .sectionDot {
   width: 6px; /* 크기 축소 */
   height: 6px; /* 크기 축소 */
-  background: #10b981;
+  background: var(--theme-primary);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -425,7 +426,7 @@
 .sectionTitle {
   font-size: 11px; /* 폰트 크기 축소 */
   font-weight: 500;
-  color: #00c092;
+  color: var(--theme-primary);
   margin: 0;
 }
 
@@ -448,7 +449,7 @@
 
 .inputLabel {
   font-size: 10px; /* 폰트 크기 축소 */
-  color: #4b5563;
+  color: var(--theme-text-secondary);
   font-weight: 400;
 }
 
@@ -457,9 +458,9 @@
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--theme-border);
   border-radius: 2px;
-  background: #f9fafb;
+  background: var(--theme-background-secondary, #f9fafb);
   overflow: hidden;
 }
 
@@ -475,13 +476,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   transition: background-color 0.2s;
 }
 
 .decrementButton:hover,
 .incrementButton:hover {
-  background: #e5e7eb;
+  background: var(--theme-border);
 }
 
 .numberInput {
@@ -492,7 +493,7 @@
   text-align: right;
   padding-right: 4px; /* 패딩 축소 */
   font-size: 10px; /* 폰트 크기 축소 */
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   outline: none;
 }
 
@@ -504,7 +505,7 @@
 .doorSlider {
   width: 100%;
   height: 4px;
-  background: #e5e7eb;
+  background: var(--theme-border);
   border-radius: 8px;
   outline: none;
   appearance: none;
@@ -516,8 +517,8 @@
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #10b981;
-  border: 2px solid #ffffff;
+  background: var(--theme-primary);
+  border: 2px solid var(--theme-surface, #ffffff);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -526,8 +527,8 @@
 .doorSlider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #10b981;
-  border: 2px solid #ffffff;
+  background: var(--theme-primary);
+  border: 2px solid var(--theme-surface, #ffffff);
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -541,13 +542,13 @@
 
 .sliderLabel {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   font-weight: 400;
   transition: color 0.2s;
 }
 
 .sliderLabel.active {
-  color: #059669;
+  color: var(--theme-primary-hover);
   font-weight: 500;
 }
 
@@ -562,19 +563,19 @@
 .sectionLabel {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--theme-text, #374151);
 }
 
 .dimensionsSummary {
   padding: 12px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary, #f8fafc);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
 }
 
 .summaryText {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
@@ -593,11 +594,11 @@
 .placeholder {
   padding: 40px 20px;
   text-align: center;
-  color: #9ca3af;
+  color: var(--theme-text-muted, #9ca3af);
   font-size: 14px;
   font-style: italic;
-  background: #f9fafb;
-  border: 2px dashed #d1d5db;
+  background: var(--theme-background-secondary, #f9fafb);
+  border: 2px dashed var(--theme-border);
   border-radius: 8px;
 }
 
@@ -609,11 +610,11 @@
   justify-content: center;
   height: 100vh;
   gap: 16px;
-  background: #f8fafc;
+  background: var(--theme-background-secondary, #f8fafc);
 }
 
 .loadingContainer p {
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   font-size: 16px;
 }
 
@@ -778,7 +779,7 @@
     height: 200px;
     min-height: 200px;
     border-right: none;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--theme-border);
     overflow-y: auto;
   }
   
@@ -792,7 +793,7 @@
     height: 180px;
     min-height: 180px;
     border-left: none;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--theme-border);
     overflow-y: auto;
   }
   
@@ -890,54 +891,33 @@
   }
 }
 
-/* 강제 라이트 모드 (다크모드 오버라이드) */
+/* 테마 기반 색상 적용 */
 .configurator {
-  background-color: #f8fafc !important;
+  background-color: var(--theme-background-secondary);
 }
 
 .sidebarContent,
 .rightPanel {
-  background: white !important;
-  border-color: #e5e7eb !important;
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
 }
 
 .viewerArea {
-  background: white !important;
+  background: var(--theme-surface);
 }
 
 .viewer {
-  background: #f8fafc !important;
+  background: var(--theme-background-secondary);
 }
 
-/* 다크모드 강제 비활성화 */
-@media (prefers-color-scheme: dark) {
-  .configurator {
-    background-color: #f8fafc !important;
-  }
-  
-  .sidebarContent,
-  .rightPanel {
-    background: white !important;
-    border-color: #e5e7eb !important;
-  }
-  
-  .viewerArea {
-    background: white !important;
-  }
-  
-  .viewer {
-    background: #f8fafc !important;
-  }
-  
-  .modulePanelContent {
-    background: white !important;
-    color: #1f2937 !important;
-  }
-  
-  .rightPanelContent {
-    background: white !important;
-    color: #1f2937 !important;
-  }
+.modulePanelContent {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+.rightPanelContent {
+  background: var(--theme-surface);
+  color: var(--theme-text);
 }
 
 /* 세로 방향 최적화 */
@@ -986,31 +966,31 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 100;
+  z-index: 10;
   width: 32px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7fafc;
+  background: var(--theme-background-secondary);
   border: none;
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 .foldToggleButton:hover {
-  background: #e5e7eb;
+  background: var(--theme-border);
 }
 .foldToggleIcon {
   font-size: 20px;
-  color: #94a3b8;
+  color: var(--theme-text-muted);
   font-weight: 400;
   line-height: 1;
   transition: color 0.2s;
 }
 .foldToggleButton:hover .foldToggleIcon {
-  color: #0ea5e9;
+  color: var(--theme-info);
 }
 
 /* 위치만 다르게 */
@@ -1026,56 +1006,56 @@
 /* 토글 버튼 그룹 스타일 */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--theme-surface);
 }
 
 .toggleButton {
   flex: 1;
   padding: 8px 12px;
-  background: #ffffff;
+  background: var(--theme-surface);
   border: none;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
 }
 
 .toggleButton:not(:last-child) {
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--theme-border);
 }
 
 .toggleButton:hover {
-  background: #f9fafb;
-  color: #374151;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 .toggleButton.active {
-  background: #10b981;
+  background: var(--theme-primary);
   color: #ffffff;
   font-weight: 600;
 }
 
 .toggleButton.active:hover {
-  background: #059669;
+  background: var(--theme-primary-hover);
 }
 
 /* 간단한 슬롯 정보 */
 .slotInfoSimple {
   margin-top: 8px;
   padding: 8px;
-  background: #f9fafb;
+  background: var(--theme-background-secondary, #f9fafb);
   border-radius: 4px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--theme-border);
 }
 
 .slotInfoText {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   line-height: 1.4;
   margin: 0;
 }
@@ -1084,14 +1064,14 @@
 .subSetting {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--theme-border-light);
 }
 
 .subLabel {
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text, #374151);
   margin-bottom: 6px;
 }
 
@@ -1111,7 +1091,7 @@
 
 .frameItemLabel {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--theme-text-muted, #6b7280);
   margin-bottom: 4px;
   font-weight: 500;
   text-align: center;
@@ -1120,8 +1100,8 @@
 .frameItemInput {
   display: flex;
   align-items: center;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-background-secondary, #f9fafb);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   overflow: hidden;
   width: 100%;
@@ -1129,7 +1109,7 @@
 }
 
 .frameButton {
-  background: #ffffff;
+  background: var(--theme-surface);
   border: none;
   width: 20px;
   height: 24px;
@@ -1137,19 +1117,19 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 600;
 }
 
 .frameButton:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 .frameButton:active {
-  background: #e5e7eb;
+  background: var(--theme-border);
 }
 
 .frameNumberInput {
@@ -1159,7 +1139,7 @@
   text-align: center;
   font-size: 11px;
   font-weight: 600;
-  color: #374151;
+  color: var(--theme-text, #374151);
   padding: 0;
   width: 100%;
   height: 24px;
@@ -1177,12 +1157,12 @@
 }
 
 .frameNumberInput:focus {
-  background: #ffffff;
+  background: var(--theme-surface);
 }
 
 .frameUnit {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--theme-text-muted, #9ca3af);
   text-align: center;
   margin-top: 4px;
 }

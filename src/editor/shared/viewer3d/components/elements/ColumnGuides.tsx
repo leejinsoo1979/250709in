@@ -2,6 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
@@ -12,6 +13,7 @@ import ColumnDropTarget from './ColumnDropTarget';
  */
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
+  const { theme } = useTheme();
   
   // 인덱싱 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -28,6 +30,19 @@ const ColumnGuides: React.FC = () => {
   
   // 띄워서 배치인지 확인
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  
+  // CSS 변수에서 실제 테마 색상 가져오기
+  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const computedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue(variableName).trim();
+      return computedColor || fallback;
+    }
+    return fallback;
+  };
+
+  // 테마 기반 가이드 라인 색상
+  const guideColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
   // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
@@ -51,7 +66,7 @@ const ColumnGuides: React.FC = () => {
           new THREE.Vector3(threeUnitBoundaries[0], floorY, backZ),
           new THREE.Vector3(threeUnitBoundaries[threeUnitBoundaries.length - 1], floorY, backZ)
         ]}
-        color="#2ECC71"
+        color={guideColor}
         lineWidth={1}
         dashed
         dashSize={0.2}
@@ -64,7 +79,7 @@ const ColumnGuides: React.FC = () => {
           new THREE.Vector3(threeUnitBoundaries[0], ceilingY, backZ),
           new THREE.Vector3(threeUnitBoundaries[threeUnitBoundaries.length - 1], ceilingY, backZ)
         ]}
-        color="#2ECC71"
+        color={guideColor}
         lineWidth={1}
         dashed
         dashSize={0.2}
@@ -81,7 +96,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, floorY, backZ),
               new THREE.Vector3(xPos, ceilingY, backZ)
             ]}
-            color="#2ECC71"
+            color={guideColor}
             lineWidth={1}
             dashed
             dashSize={0.2}
@@ -94,7 +109,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, floorY, backZ),
               new THREE.Vector3(xPos, floorY, backZ + mmToThreeUnits(700))
             ]}
-            color="#2ECC71"
+            color={guideColor}
             lineWidth={1}
             dashed
             dashSize={0.2}
@@ -107,7 +122,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, ceilingY, backZ),
               new THREE.Vector3(xPos, ceilingY, backZ + mmToThreeUnits(700))
             ]}
-            color="#2ECC71"
+            color={guideColor}
             lineWidth={1}
             dashed
             dashSize={0.2}

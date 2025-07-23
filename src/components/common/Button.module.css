@@ -15,36 +15,36 @@
 
 .button:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 /* Variants */
 .primary {
-  background-color: #3b82f6;
+  background-color: var(--theme-primary);
   color: white;
 }
 
 .primary:hover:not(.disabled) {
-  background-color: #2563eb;
+  background-color: var(--theme-primary-hover);
 }
 
 .secondary {
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background-color: var(--theme-background-secondary);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
 }
 
 .secondary:hover:not(.disabled) {
-  background-color: #e5e7eb;
+  background-color: var(--theme-border-hover);
 }
 
 .danger {
-  background-color: #ef4444;
+  background-color: var(--theme-danger);
   color: white;
 }
 
 .danger:hover:not(.disabled) {
-  background-color: #dc2626;
+  background-color: var(--theme-danger-hover);
 }
 
 /* Sizes */

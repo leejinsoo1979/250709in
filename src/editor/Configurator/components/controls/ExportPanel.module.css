@@ -59,19 +59,19 @@
 }
 
 .drawingTypeItem:hover {
-  border-color: #3b82f6;
+  border-color: var(--theme-primary);
   background: #f8fafc;
 }
 
 .drawingTypeItem:has(input:checked) {
-  border-color: #3b82f6;
+  border-color: var(--theme-primary);
   background: #eff6ff;
 }
 
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #3b82f6;
+  accent-color: var(--theme-primary);
   cursor: pointer;
 }
 
@@ -141,7 +141,7 @@
 
 .exportButton {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -329,12 +329,12 @@
   }
 
   .drawingTypeItem:hover {
-    border-color: #3b82f6;
+    border-color: var(--theme-primary);
     background: #4b5563;
   }
 
   .drawingTypeItem:has(input:checked) {
-    border-color: #3b82f6;
+    border-color: var(--theme-primary);
     background: #1e3a8a;
   }
 

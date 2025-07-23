@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -47,6 +48,78 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   view2DDirection = 'front',
   renderMode = 'wireframe'
 }) => {
+  // 테마 컨텍스트
+  const { theme } = useTheme();
+  
+  // 테마에 따른 배경색 결정
+  const getBackgroundColor = useCallback(() => {
+    console.log('=== 2D 배경색 계산 시작 ===');
+    console.log('theme:', theme);
+    console.log('theme?.mode:', theme?.mode);
+    console.log('viewMode:', viewMode);
+    console.log('renderMode:', renderMode);
+    
+    if (viewMode === '2D') {
+      // 여러 방법으로 다크모드 확인
+      let isDark = false;
+      let debugInfo = [];
+      
+      if (typeof window !== 'undefined') {
+        // 1. theme prop 확인 (객체 구조 고려)
+        const themeCheck = theme?.mode === 'dark';
+        isDark = themeCheck;
+        debugInfo.push(`theme?.mode === 'dark': ${themeCheck}`);
+        
+        // 2. CSS 변수에서 테마 확인
+        const rootStyles = window.getComputedStyle(document.documentElement);
+        const themeMode = rootStyles.getPropertyValue('--theme-mode').trim();
+        const backgroundColor = rootStyles.getPropertyValue('--theme-background').trim();
+        const surfaceColor = rootStyles.getPropertyValue('--theme-surface').trim();
+        
+        debugInfo.push(`CSS --theme-mode: "${themeMode}"`);
+        debugInfo.push(`CSS --theme-background: "${backgroundColor}"`);
+        debugInfo.push(`CSS --theme-surface: "${surfaceColor}"`);
+        
+        if (!isDark) {
+          const cssCheck = themeMode === 'dark' ||
+                   backgroundColor === '#1f2937' || 
+                   backgroundColor === '#111827' ||
+                   surfaceColor === '#1f2937' ||
+                   surfaceColor === '#111827';
+          isDark = cssCheck;
+          debugInfo.push(`CSS 변수 체크: ${cssCheck}`);
+        }
+        
+        // 3. body class 확인
+        if (!isDark) {
+          const bodyClasses = document.body.className;
+          const htmlClasses = document.documentElement.className;
+          const classCheck = bodyClasses.includes('theme-dark-') || 
+                   document.body.classList.contains('dark') || 
+                   document.documentElement.classList.contains('dark');
+          isDark = classCheck;
+          debugInfo.push(`body classes: "${bodyClasses}"`);
+          debugInfo.push(`html classes: "${htmlClasses}"`);
+          debugInfo.push(`class 체크: ${classCheck}`);
+        }
+      }
+      
+      console.log('디버그 정보:', debugInfo);
+      console.log('최종 isDark:', isDark);
+      
+      if (isDark) {
+        // 다크모드에서 와이어프레임과 솔리드 모두 검정색
+        const color = '#000000';
+        console.log('✅ 다크모드 2D 배경색 반환:', color);
+        return color;
+      }
+      console.log('❌ 라이트모드 2D 배경색 반환: #ffffff');
+      return '#ffffff';
+    }
+    console.log('3D 모드 배경색:', CANVAS_SETTINGS.BACKGROUND_COLOR);
+    return CANVAS_SETTINGS.BACKGROUND_COLOR;
+  }, [theme, viewMode, renderMode]);
+  
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
@@ -57,6 +130,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
+  
+  // 테마나 뷰모드 변경 시 캔버스 재생성
+  useEffect(() => {
+    setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  }, [theme, viewMode, view2DDirection, renderMode]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection);
@@ -172,6 +250,51 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     }
   }, [viewMode, mounted, regenerateCanvas]);
 
+  // 2D 모드에서 트랙패드 줌 속도 조절
+  useEffect(() => {
+    if (!containerRef.current || viewMode !== '2D') return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // 줌 이벤트인 경우 (Ctrl 키 또는 핀치 제스처)
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        
+        // 줌 속도를 더 많이 줄임 (기존 0.3에서 0.2로)
+        const scaledDeltaY = e.deltaY * 0.2;
+        
+        // 새로운 휠 이벤트 생성
+        const newEvent = new WheelEvent('wheel', {
+          deltaY: scaledDeltaY,
+          deltaX: e.deltaX,
+          deltaMode: e.deltaMode,
+          ctrlKey: e.ctrlKey,
+          shiftKey: e.shiftKey,
+          altKey: e.altKey,
+          metaKey: e.metaKey,
+          bubbles: true,
+          cancelable: true
+        });
+        
+        // OrbitControls가 받을 수 있도록 이벤트 재발송
+        if (canvasRef.current) {
+          const canvas = canvasRef.current.querySelector('canvas');
+          if (canvas) {
+            canvas.dispatchEvent(newEvent);
+          }
+        }
+        
+        return false;
+      }
+    };
+
+    const container = containerRef.current;
+    container.addEventListener('wheel', handleWheel, { passive: false, capture: true });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel, { capture: true });
+    };
+  }, [viewMode]);
+
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
     if (!controlsRef.current || viewMode === '3D') return;
@@ -252,7 +375,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        background: CANVAS_SETTINGS.BACKGROUND_COLOR 
+        background: getBackgroundColor() 
       }}>
         <p>Loading 3D viewer...</p>
       </div>
@@ -281,7 +404,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         ref={canvasRef}
         shadows={viewMode === '3D'}
         style={{ 
-          background: viewMode === '2D' ? '#fff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
+          background: getBackgroundColor(),
           cursor: 'default',
           touchAction: 'none'
         }}
@@ -329,8 +452,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           // 정확한 색상 공간 설정
           gl.outputColorSpace = THREE.SRGBColorSpace;
           
-          // 렌더링 최적화
-          gl.setClearColor(new THREE.Color(CANVAS_SETTINGS.BACKGROUND_COLOR), 1.0);
+          // 렌더링 최적화 - 동적 배경색 사용
+          const dynamicBgColor = getBackgroundColor();
+          console.log('Setting canvas clear color to:', dynamicBgColor);
+          gl.setClearColor(new THREE.Color(dynamicBgColor), 1.0);
           gl.autoClear = true;
           gl.autoClearColor = true;
           gl.autoClearDepth = true;
@@ -344,9 +469,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           gl.domElement.style.display = 'block';
           gl.domElement.setAttribute('data-canvas-key', canvasKey);
           
-          // 씬 배경색 설정 (2D는 흰색, 3D는 기본 색상)
+          // 씬 배경색 설정 (동적 배경색 사용)
           if (scene) {
-            scene.background = new THREE.Color(viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR);
+            scene.background = new THREE.Color(dynamicBgColor);
             // 환경맵 자동 설정 허용 (Environment 컴포넌트에서 처리)
             // scene.environment = null; // 이 라인을 주석처리하여 환경맵 적용 허용
             scene.fog = null; // 포그 비활성화로 선명도 유지
@@ -417,12 +542,17 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           minAzimuthAngle={controlsConfig.minAzimuthAngle}
           maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
           enablePan={controlsConfig.enablePan}
-          enableZoom={viewMode === '3D'}
+          enableZoom={controlsConfig.enableZoom}
           enableRotate={controlsConfig.enableRotate}
           minDistance={controlsConfig.minDistance}
           maxDistance={controlsConfig.maxDistance}
           mouseButtons={controlsConfig.mouseButtons}
           touches={controlsConfig.touches}
+          panSpeed={1.0}
+          zoomSpeed={viewMode === '2D' ? 0.3 : 1.2}
+          enableDamping={true}
+          dampingFactor={viewMode === '2D' ? 0.1 : 0.05}
+          screenSpacePanning={true}
           makeDefault
         />
         

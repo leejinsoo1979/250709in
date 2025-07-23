@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--theme-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +16,7 @@
 
 /* 모달 콘텐츠 박스 - !important 제거하고 특이성 높이기 */
 .modalContent.modalContent {
-  background-color: white;
+  background-color: var(--theme-surface);
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   max-width: 800px;
@@ -31,20 +31,20 @@
   display: flex;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #eee;
-  background-color: white;
+  border-bottom: 1px solid var(--theme-border);
+  background-color: var(--theme-surface);
   border-radius: 12px 12px 0 0;
 }
 
 .header h1 {
-  color: #1abc9c;
+  color: var(--theme-primary);
   font-size: 20px;
   font-weight: 700;
   margin-right: 12px;
 }
 
 .header p {
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 16px;
 }
 
@@ -57,7 +57,7 @@
 
 .formSection {
   width: 100%;
-  background-color: white;
+  background-color: var(--theme-surface);
   border-radius: 0 0 12px 12px;
   overflow: hidden;
   flex: 1 1 auto;
@@ -67,31 +67,31 @@
 .uploadArea {
   padding: 48px;
   text-align: center;
-  background-color: white;
-  border-bottom: 1px solid #eee;
+  background-color: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .uploadIcon {
   width: 80px;
   height: 80px;
   margin: 0 auto 24px;
-  background-color: #f0f8f6;
+  background-color: var(--theme-primary-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1abc9c;
+  color: var(--theme-primary);
 }
 
 .uploadArea h2 {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin-bottom: 8px;
 }
 
 .uploadArea p {
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .form {
@@ -111,7 +111,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin-bottom: 8px;
 }
 
@@ -128,24 +128,24 @@
 .current {
   font-size: 18px;
   font-weight: 700;
-  color: #1abc9c;
+  color: var(--theme-primary);
 }
 
 .total {
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 /* 공간 설정 섹션 스타일 추가 */
 .spaceSettings {
   margin-top: 32px;
   padding-top: 32px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--theme-border);
 }
 
 .sectionTitle {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin-bottom: 24px;
 }
 
@@ -156,7 +156,7 @@
 
 .spaceSizeSection .label {
   display: block;
-  color: #333;
+  color: var(--theme-text);
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -179,8 +179,8 @@
 
 .spaceSizeSection .dimensionsSummary {
   padding: 8px 12px;
-  background-color: #f1f3f4;
-  border: 1px dashed #d0d7de;
+  background-color: var(--theme-background-secondary);
+  border: 1px dashed var(--theme-border);
   border-radius: 4px;
   margin-bottom: 8px;
   cursor: default;
@@ -189,7 +189,7 @@
 
 .spaceSizeSection .summaryText {
   font-size: 14px;
-  color: #6c757d;
+  color: var(--theme-text-muted);
   font-weight: 400;
   font-style: italic;
 }
@@ -203,8 +203,8 @@
   width: 100%;
   padding: 20px 0 16px 0;
   border-radius: 0 0 12px 12px;
-  background-color: white;
-  border-top: 1px solid #f0f0f0;
+  background-color: var(--theme-surface);
+  border-top: 1px solid var(--theme-border);
   box-shadow: 0 -2px 16px rgba(0,0,0,0.03);
   position: static;
 }
@@ -220,13 +220,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--theme-background-secondary);
   z-index: 1000;
 }
 
 .loadingSubtext {
   margin: 16px 0 0 0;
-  color: #64748b;
+  color: var(--theme-text-muted);
   font-size: 14px;
   text-align: center;
 }
@@ -299,7 +299,7 @@
   height: 36px;
   background: none;
   border: none;
-  color: #888;
+  color: var(--theme-text-muted);
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
@@ -307,5 +307,5 @@
   transition: color 0.2s;
 }
 .closeButton:hover {
-  color: #1abc9c;
+  color: var(--theme-primary);
 } 

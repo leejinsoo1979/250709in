@@ -1,6 +1,6 @@
 .columnControl {
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   border-radius: 8px;
   height: 100%;
   overflow-y: auto;
@@ -16,7 +16,7 @@
 .header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .thumbnailSection {
@@ -25,7 +25,7 @@
 
 .thumbnailSection h4 {
   margin: 0 0 12px 0;
-  color: #333;
+  color: var(--theme-text);
   font-size: 14px;
 }
 
@@ -39,15 +39,15 @@
 .info {
   margin-bottom: 20px;
   padding: 12px;
-  background: #e3f2fd;
+  background: var(--theme-info-light);
   border-radius: 4px;
-  border-left: 4px solid #2196F3;
+  border-left: 4px solid var(--theme-info);
 }
 
 .info p {
   margin: 4px 0;
   font-size: 13px;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .columnList {
@@ -57,12 +57,12 @@
 .columnList h4 {
   margin: 0 0 12px 0;
   font-size: 16px;
-  color: #333;
+  color: var(--theme-text, #333);
 }
 
 .emptyState {
   text-align: center;
-  color: #999;
+  color: var(--theme-text-muted, #999);
   font-style: italic;
   padding: 20px;
 }
@@ -78,21 +78,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--theme-surface, white);
+  border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .columnItem:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
+  background: var(--theme-background-secondary, #f5f5f5);
+  border-color: var(--theme-text-muted, #ccc);
 }
 
 .columnItem.selected {
-  background: #e8f5e8;
-  border-color: #4CAF50;
+  background: var(--theme-primary-light, #e8f5e8);
+  border-color: var(--theme-primary, #4CAF50);
 }
 
 .columnInfo {
@@ -103,12 +103,12 @@
 
 .columnName {
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text, #333);
 }
 
 .columnSize {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-muted, #666);
 }
 
 .removeButton {
@@ -131,16 +131,16 @@
 }
 
 .columnSettings {
-  background: white;
+  background: var(--theme-surface, white);
   padding: 16px;
   border-radius: 4px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
 }
 
 .columnSettings h4 {
   margin: 0 0 16px 0;
   font-size: 16px;
-  color: #333;
+  color: var(--theme-text, #333);
 }
 
 .settingGroup {
@@ -151,7 +151,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: var(--theme-text, #333);
   font-size: 14px;
 }
 
@@ -172,13 +172,13 @@
 .inputGroup label {
   margin-bottom: 4px;
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-muted, #666);
 }
 
 .inputGroup input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
   font-size: 14px;
 }
@@ -191,7 +191,7 @@
 .settingGroup input[type="color"] {
   width: 100%;
   height: 40px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
   cursor: pointer;
 }
@@ -199,10 +199,10 @@
 .settingGroup select {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
   font-size: 14px;
-  background: white;
+  background: var(--theme-surface, white);
 }
 
 .settingGroup select:focus {

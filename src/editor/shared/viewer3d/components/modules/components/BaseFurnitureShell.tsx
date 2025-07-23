@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -12,6 +13,7 @@ const BoxWithEdges: React.FC<{
   isInternalSurface?: boolean; // 내부 표면 여부
   isDragging?: boolean; // 드래그 상태
 }> = ({ args, position, material, renderMode, isInternalSurface = false, isDragging = false }) => {
+  const { theme } = useTheme();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
@@ -35,12 +37,25 @@ const BoxWithEdges: React.FC<{
   const processedMaterial = useMemo(() => {
     console.log('🔧 BaseFurnitureShell - isDragging:', isDragging, 'isInternalSurface:', isInternalSurface, 'material.map:', material instanceof THREE.MeshStandardMaterial ? material.map : 'N/A');
     
-    // 드래그 중일 때 연두색 투명 고스트 효과
+    // 드래그 중일 때 테마색 투명 고스트 효과
     if (isDragging && material instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
-      ghostMaterial.color = new THREE.Color(0x90EE90); // 연두색
+      
+      // 테마 색상 가져오기
+      const getThemeColor = () => {
+        if (typeof window !== 'undefined') {
+          const computedStyle = getComputedStyle(document.documentElement);
+          const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+          if (primaryColor) {
+            return primaryColor;
+          }
+        }
+        return '#10b981'; // 기본값 (green)
+      };
+      
+      ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
@@ -84,6 +99,14 @@ const BoxWithEdges: React.FC<{
           <primitive object={processedMaterial} />
         </mesh>
       )}
+      {/* 와이어프레임 모드에서도 레이캐스팅을 위한 메시 필요 */}
+      {renderMode === 'wireframe' && (
+        <mesh 
+          geometry={geometry}
+        >
+          <meshBasicMaterial transparent opacity={0.0} />
+        </mesh>
+      )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (
         <lineSegments 
@@ -107,7 +130,7 @@ const BoxWithEdges: React.FC<{
           renderOrder={1000}
         >
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? "#333333" : "#888888"} 
+            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
             linewidth={1}
             depthTest={false}
             transparent={false}

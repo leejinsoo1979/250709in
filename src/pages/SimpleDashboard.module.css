@@ -23,7 +23,7 @@
   border-bottom: 1px solid var(--theme-border, #e5e5e5);
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 24px;
   gap: 12px;
 }
 
@@ -53,7 +53,7 @@
 
 /* 사용자 프로필 영역 */
 .profileSection {
-  padding: 24px 16px;
+  padding: 24px;
   border-bottom: 1px solid var(--theme-border, #e5e5e5);
 }
 
@@ -93,6 +93,11 @@
   color: var(--theme-text-secondary, #6b7280);
 }
 
+/* 프로젝트 생성 섹션 */
+.createProjectSection {
+  padding: 0 24px 16px;
+}
+
 .createProjectBtn {
   width: 100%;
   padding: 12px 16px;
@@ -126,7 +131,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
-  margin: 0 8px 4px 8px;
+  margin: 0 16px 4px 16px;
   border-radius: 8px;
   cursor: pointer;
   color: var(--theme-text-secondary, #6b7280);
@@ -166,7 +171,7 @@
 /* 하단 설정 메뉴 */
 .settingsSection {
   margin-top: auto;
-  padding: 16px 8px;
+  padding: 16px;
   border-top: 1px solid var(--theme-border, #e5e5e5);
 }
 
@@ -174,7 +179,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
+  padding: 8px;
   border-radius: 8px;
   cursor: pointer;
   color: var(--theme-text-secondary, #6b7280);
@@ -253,8 +258,8 @@
 
 .searchContainer {
   position: relative;
-  flex: 1;
-  max-width: 285px;
+  min-width: 300px;
+  max-width: 400px;
 }
 
 .searchInput {
@@ -363,6 +368,14 @@
   border-right: 1px solid var(--theme-border, #e5e5e5);
   display: flex;
   flex-direction: column;
+  transition: width 0.3s ease, margin-left 0.3s ease;
+  position: relative;
+}
+
+.projectTree.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
 }
 
 .treeHeader {
@@ -372,11 +385,68 @@
   display: flex;
   align-items: center;
   padding: 0 16px;
+  gap: 8px;
+}
+
+.treeToggleButton {
+  position: fixed;
+  left: 545px; /* 255px (sidebar) + 290px (tree) */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 40px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e5e5);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+.treeToggleButton:hover {
+  background: var(--theme-background-secondary, #f3f4f6);
+}
+
+.toggleIcon {
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.toggleIcon.collapsed {
+  transform: rotate(180deg);
+}
+
+.projectTree.collapsed .treeToggleButton {
+  left: 255px;
+  width: 30px;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  border-color: var(--theme-primary, #10b981);
+  border-radius: 0 8px 8px 0;
+}
+
+.projectTree.collapsed .toggleIcon {
+  color: white;
+}
+
+.projectTree.collapsed .projectSelectorContainer,
+.projectTree.collapsed .treeContent,
+.projectTree.collapsed .treeHeader > *:not(.treeToggleButton) {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .projectSelectorContainer {
   position: relative;
   width: 100%;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .projectSelector {
@@ -423,6 +493,7 @@
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .treeItem {
@@ -457,7 +528,7 @@
 
 .treeItemCount {
   background: var(--theme-border, #e5e5e5);
-  color: #0a0a0a;
+  color: var(--theme-text);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -469,8 +540,8 @@
 .createFolderBtn {
   width: 100%;
   padding: 12px 16px;
-  background: var(--theme-background-secondary, #f9fafb);
-  border: 1px solid #e5e5e5;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -479,13 +550,13 @@
   margin-bottom: 16px;
   transition: all 0.2s;
   font-size: 14px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
 }
 
 .createFolderBtn:hover {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  border-color: var(--theme-primary, #10b981);
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
 }
 
 .createFolderIcon {
@@ -531,12 +602,14 @@
   align-items: center;
   justify-content: center;
   color: var(--theme-text-secondary, #6b7280);
-  font-size: 12px;
-  transition: background-color 0.2s;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
 }
 
 .treeItemActionBtn:hover {
   background: var(--theme-background-secondary, #f3f4f6);
+  color: var(--theme-text, #374151);
 }
 
 /* 디자인 아이콘 */
@@ -612,26 +685,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--theme-text, #374151);
+  color: var(--theme-text);
   position: relative;
 }
 
 .moreMenuItem:hover {
-  background: var(--theme-background-secondary, linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%));
+  background: var(--theme-background-secondary);
   transform: translateX(2px);
-  box-shadow: 0 2px 8px var(--theme-shadow, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .moreMenuItem.deleteItem {
-  color: #dc2626;
+  color: var(--theme-danger);
   margin-top: 4px;
-  border-top: 1px solid var(--theme-border, #f3f4f6);
+  border-top: 1px solid var(--theme-border);
   padding-top: 12px;
 }
 
 .moreMenuItem.deleteItem:hover {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  color: #b91c1c;
+  background: var(--theme-danger-light);
+  color: var(--theme-danger-hover);
 }
 
 /* 디자인 영역 */
@@ -640,6 +713,7 @@
   background: var(--theme-background-secondary, #fafafa);
   overflow-y: auto;
   padding: 24px;
+  transition: margin-left 0.3s ease;
 }
 
 .designGrid {
@@ -657,7 +731,7 @@
 /* 프로젝트 카드 */
 .designCard {
   background: var(--theme-surface, #ffffff);
-  border: 1px solid #d8caca;
+  border: 1px solid var(--theme-border-hover);
   border-radius: 24px;
   overflow: hidden;
   cursor: pointer;
@@ -666,8 +740,9 @@
 }
 
 .designCard:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--theme-shadow);
   transform: translateY(-2px);
+  border: 2px solid var(--theme-primary, #10b981);
 }
 
 .designCard.newDesign {
@@ -692,8 +767,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   color: var(--theme-primary, #10b981);
+  width: 100%;
+  height: 100%;
 }
 
 .cardThumbnailIcon {
@@ -712,6 +790,8 @@
   font-size: 16px;
   font-weight: 400;
   color: var(--theme-primary, #10b981);
+  text-align: center;
+  margin: 0;
 }
 
 .thumbnailGrid {
@@ -747,7 +827,7 @@
 .thumbnailFile {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -761,7 +841,7 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--theme-overlay);
   border-radius: 2px;
 }
 
@@ -797,7 +877,7 @@
 .designThumbnailPlaceholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -812,7 +892,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--theme-overlay);
   border-radius: 6px;
   margin-bottom: 8px;
 }
@@ -826,13 +906,13 @@
 .cardInfo {
   padding: 16px 20px;
   background: var(--theme-surface, #ffffff);
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border);
 }
 
 .cardTitle {
   font-size: 14px;
   font-weight: 400;
-  color: #313234;
+  color: var(--theme-text);
   margin-bottom: 4px;
   line-height: 21px;
 }
@@ -846,7 +926,7 @@
 
 .cardDate {
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.56);
+  color: var(--theme-text-secondary);
   font-weight: 500;
   line-height: 13.75px;
 }
@@ -858,22 +938,32 @@
 }
 
 .cardActionButton {
-  width: 18px;
-  height: 18px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: #ececec;
+  background: var(--theme-surface, rgba(255, 255, 255, 0.95));
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #737373;
-  font-size: 12px;
-  transition: background-color 0.2s;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .cardActionButton:hover {
-  background: #d1d5db;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text, #374151);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cardFooter {
@@ -897,19 +987,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #737373;
+  color: var(--theme-text-muted);
   font-size: 12px;
 }
 
 .cardUserName {
   font-size: 12px;
-  color: #737373;
+  color: var(--theme-text-muted);
   font-weight: 400;
 }
 
 .cardBadge {
   background: var(--theme-border, #e5e5e5);
-  color: #0a0a0a;
+  color: var(--theme-text);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -963,7 +1053,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -971,9 +1061,10 @@
 }
 
 .modal {
-  background: var(--theme-surface, #ffffff);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   width: 90%;
   max-width: 400px;
   padding: 24px;
@@ -982,7 +1073,7 @@
 .modalTitle {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text);
   margin: 0 0 20px 0;
   text-align: center;
 }
@@ -990,17 +1081,19 @@
 .modalInput {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background-color 0.2s;
   margin-bottom: 20px;
 }
 
 .modalInput:focus {
-  border-color: var(--theme-primary, #10b981);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(16, 185, 129, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .modalActions {
@@ -1021,21 +1114,25 @@
 }
 
 .modalCancelBtn {
-  background: var(--theme-background-secondary, #f3f4f6);
-  color: var(--theme-text, #374151);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
 }
 
 .modalCancelBtn:hover:not(:disabled) {
-  background: var(--theme-border, #e5e7eb);
+  background: var(--theme-border);
+  border-color: var(--theme-primary);
 }
 
 .modalCreateBtn {
-  background: var(--theme-primary, #10b981);
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border: 1px solid var(--theme-primary);
 }
 
 .modalCreateBtn:hover:not(:disabled) {
-  background: var(--theme-primary-hover, var(--theme-primary-hover, #059669));
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
 }
 
 .modalCancelBtn:disabled,
@@ -1047,10 +1144,10 @@
 /* 컨텍스트 메뉴 */
 .contextMenu {
   position: fixed;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid #e5e7eb;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1100;
   padding: 4px;
   min-width: 120px;
@@ -1068,7 +1165,167 @@
 }
 
 .contextMenuItem:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
+}
+
+/* Profile Modal Styles */
+.profileModalContent {
+  padding: 20px 0;
+}
+
+.profileSection {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.profileAvatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.profileAvatar img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--theme-border);
+}
+
+.changeAvatarBtn {
+  padding: 6px 12px;
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.changeAvatarBtn:hover {
+  background: var(--theme-primary);
+  color: white;
+}
+
+.profileInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profileField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profileField label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profileInput {
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  transition: all 0.2s;
+}
+
+.profileInput:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
+}
+
+.profileInput:disabled {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-muted);
+  cursor: not-allowed;
+}
+
+.profileStats {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--theme-primary);
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Team Modal Styles */
+.teamModalContent {
+  padding: 20px 0;
+  min-height: 300px;
+}
+
+.teamList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.teamEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--theme-text-muted);
+}
+
+.teamEmpty p {
+  margin: 16px 0 24px;
+  font-size: 16px;
+}
+
+.createTeamBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.createTeamBtn:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Step0 모달 */
@@ -1144,4 +1401,195 @@
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
   }
+}
+
+/* 서브헤더 스타일 */
+.subHeader {
+  background: var(--theme-surface, #ffffff);
+  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  position: sticky;
+  top: 65px;
+  z-index: 100;
+}
+
+.subHeaderContent {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.subHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subHeaderTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--theme-text, #111827);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subHeaderDescription {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+  margin: 0;
+  font-weight: 400;
+}
+
+.subHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+/* 뷰 토글 그룹 */
+.viewToggleGroup {
+  display: flex;
+  background: var(--theme-background-secondary, #f3f4f6);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 0;
+}
+
+.viewToggleButton {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-secondary, #6b7280);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.viewToggleButton:hover {
+  color: var(--theme-text, #111827);
+}
+
+.viewToggleButton.active {
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-primary, #10b981);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.viewToggleButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 정렬 버튼 */
+.sortButton {
+  padding: 8px 16px;
+  border: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface, #ffffff);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--theme-text, #111827);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.sortButton:hover {
+  border-color: var(--theme-primary, #10b981);
+  background: var(--theme-background-secondary, #f9fafb);
+}
+
+.sortButton span {
+  margin: 0 4px;
+}
+
+.sortDropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e5e5);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 1001;
+  padding: 4px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sortOption {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--theme-text, #111827);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.sortOption:hover {
+  background: var(--theme-background-secondary, #f3f4f6);
+}
+
+.sortOption.active {
+  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.08));
+  font-weight: 500;
+}
+
+.sortOption svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Empty Trash Button */
+.emptyTrashBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--theme-danger, #ef4444);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 12px;
+}
+
+.emptyTrashBtn:hover {
+  background: var(--theme-danger-hover, #dc2626);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }

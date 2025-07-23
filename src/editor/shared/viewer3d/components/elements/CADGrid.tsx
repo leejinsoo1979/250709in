@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CADGridProps {
   viewMode: '2D' | '3D';
@@ -14,6 +15,7 @@ interface CADGridProps {
 const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', enabled = true }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+  const { theme } = useTheme();
   
   // 카메라 거리에 따른 동적 그리드 스케일 계산
   const gridParams = useMemo(() => {
@@ -242,7 +244,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </bufferGeometry>
             <lineBasicMaterial 
-              color="#dddddd" 
+              color={theme.mode === 'dark' ? '#444444' : '#dddddd'} 
               opacity={0.3}
               transparent
               depthTest={false}
@@ -261,7 +263,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </bufferGeometry>
             <lineBasicMaterial 
-              color="#bbbbbb" 
+              color={theme.mode === 'dark' ? '#555555' : '#bbbbbb'} 
               opacity={0.4}
               transparent
               depthTest={false}
@@ -312,7 +314,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           {/* 원점 표시 */}
           <mesh position={[0, 0, 0.01]} renderOrder={-995}>
             <sphereGeometry args={[0.05]} />
-            <meshBasicMaterial color="#0066ff" />
+            <meshBasicMaterial color={theme.mode === 'dark' ? '#888888' : '#666666'} />
           </mesh>
         </group>
       </>
@@ -334,7 +336,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           />
         </bufferGeometry>
         <lineBasicMaterial 
-          color="#dddddd" 
+          color={theme.mode === 'dark' ? '#444444' : '#dddddd'} 
           opacity={0.3}
           transparent
           depthTest={false}
@@ -353,7 +355,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           />
         </bufferGeometry>
         <lineBasicMaterial 
-          color="#bbbbbb" 
+          color={theme.mode === 'dark' ? '#555555' : '#bbbbbb'} 
           opacity={0.4}
           transparent
           depthTest={false}
@@ -401,7 +403,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       {/* 원점 표시 */}
       <mesh position={[0, 0, 0.01]} renderOrder={-995}>
         <sphereGeometry args={[0.05]} />
-        <meshBasicMaterial color="#0066ff" />
+        <meshBasicMaterial color={theme.mode === 'dark' ? '#888888' : '#666666'} />
       </mesh>
     </group>
   );

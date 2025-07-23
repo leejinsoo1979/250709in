@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Text, Html } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Column } from '@/types/space';
 
 interface ColumnDistanceLabelsProps {
@@ -14,38 +15,61 @@ interface ColumnDistanceLabelsProps {
 
 const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spaceInfo, onPositionChange, onColumnUpdate, showLabels = true }) => {
   const { viewMode } = useSpace3DView();
+  const { theme } = useTheme();
   const [editingDistance, setEditingDistance] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // CSS 변수에서 실제 테마 색상 가져오기
+  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const computedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue(variableName).trim();
+      return computedColor || fallback;
+    }
+    return fallback;
+  };
+
+  // 테마 기반 색상 설정
+  const themeColors = {
+    primary: getThemeColorFromCSS('--theme-primary', '#10b981'),          // 테마 메인 색상
+    background: getThemeColorFromCSS('--theme-surface', '#ffffff'),       // 테마 표면 색상
+    text: getThemeColorFromCSS('--theme-text', '#111827'),               // 테마 텍스트 색상
+    border: getThemeColorFromCSS('--theme-primary', '#10b981'),          // 테마 테두리 색상
+    hoverBg: getThemeColorFromCSS('--theme-primary-light', '#d1fae5'),   // 테마 호버 배경색
+    textSecondary: getThemeColorFromCSS('--theme-text-secondary', '#6b7280') // 보조 텍스트
+  };
   
   // 통일된 입력 필드 스타일
   const inputStyle = {
     width: '100%',
     padding: '8px 12px',
-    border: '2px solid #FF5722',
+    border: `2px solid ${themeColors.border}`,
     borderRadius: '6px',
     fontSize: '16px',
     textAlign: 'center' as const,
     fontFamily: 'system-ui, -apple-system, sans-serif',
     fontWeight: '600',
     outline: 'none',
-    backgroundColor: '#fff',
-    color: '#333'
+    backgroundColor: themeColors.background,
+    color: themeColors.text
   };
   
   const containerStyle = {
-    background: '#ffffff',
-    border: '2px solid #FF5722',
+    background: themeColors.background,
+    border: `2px solid ${themeColors.border}`,
     borderRadius: '8px',
     padding: '12px 16px',
     minWidth: '140px',
-    boxShadow: '0 4px 20px rgba(255,87,34,0.2)',
+    boxShadow: theme?.mode === 'dark' 
+      ? '0 4px 20px rgba(100,181,246,0.2)' 
+      : '0 4px 20px rgba(255,87,34,0.2)',
     fontSize: '14px',
     fontFamily: 'system-ui, -apple-system, sans-serif'
   };
   
   const labelStyle = {
-    color: '#FF5722',
+    color: themeColors.primary,
     fontSize: '12px',
     marginBottom: '8px',
     fontWeight: '600' as const
@@ -211,7 +235,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <boxGeometry args={[Math.abs(currentColumn.position[0] - columnWidthM / 2 - (-spaceWidthM / 2)), 0.02, 0.02]} />
-          <meshBasicMaterial color="#FF5722" transparent opacity={0.8} />
+          <meshBasicMaterial color={themeColors.primary} transparent opacity={0.8} />
         </mesh>
 
         {/* 왼쪽 화살표 - 벽 쪽 */}
@@ -221,7 +245,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
-          <meshBasicMaterial color="#FF5722" />
+          <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
         {/* 왼쪽 화살표 - 기둥 쪽 */}
@@ -231,7 +255,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]} rotation={[0, 0, Math.PI]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
-          <meshBasicMaterial color="#FF5722" />
+          <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
         {/* 왼쪽 거리 숫자 - 편집 가능한 라벨 */}
@@ -297,7 +321,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.8, 1.2]} />
                 <meshBasicMaterial 
-                  color="#FFE0DB" 
+                  color={themeColors.hoverBg} 
                   transparent 
                   opacity={0.9}
                 />
@@ -311,14 +335,14 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.6, 1.0]} />
                 <meshBasicMaterial 
-                  color="#ffffff" 
+                  color={themeColors.background} 
                   transparent 
                   opacity={0.95}
                 />
               </mesh>
               <Text
                 fontSize={0.5}
-                color="#FF5722"
+                color={themeColors.primary}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, 0]}
@@ -349,7 +373,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <boxGeometry args={[Math.abs(spaceWidthM / 2 - (currentColumn.position[0] + columnWidthM / 2)), 0.02, 0.02]} />
-          <meshBasicMaterial color="#FF5722" transparent opacity={0.8} />
+          <meshBasicMaterial color={themeColors.primary} transparent opacity={0.8} />
         </mesh>
 
         {/* 오른쪽 화살표 - 벽 쪽 */}
@@ -359,7 +383,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]} rotation={[0, 0, Math.PI]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
-          <meshBasicMaterial color="#FF5722" />
+          <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
         {/* 오른쪽 화살표 - 기둥 쪽 */}
@@ -369,7 +393,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
         ]}>
           <coneGeometry args={[0.05, 0.2, 3]} />
-          <meshBasicMaterial color="#FF5722" />
+          <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
         {/* 오른쪽 거리 숫자 - 편집 가능한 라벨 */}
@@ -435,7 +459,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.8, 1.2]} />
                 <meshBasicMaterial 
-                  color="#FFE0DB" 
+                  color={themeColors.hoverBg} 
                   transparent 
                   opacity={0.9}
                 />
@@ -449,14 +473,14 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.6, 1.0]} />
                 <meshBasicMaterial 
-                  color="#ffffff" 
+                  color={themeColors.background} 
                   transparent 
                   opacity={0.95}
                 />
               </mesh>
               <Text
                 fontSize={0.5}
-                color="#FF5722"
+                color={themeColors.primary}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, 0]}
@@ -543,7 +567,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.8, 1.2]} />
                 <meshBasicMaterial 
-                  color="#FFE0DB" 
+                  color={themeColors.hoverBg} 
                   transparent 
                   opacity={0.9}
                 />
@@ -557,14 +581,14 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               >
                 <planeGeometry args={[2.6, 1.0]} />
                 <meshBasicMaterial 
-                  color="#ffffff" 
+                  color={themeColors.background} 
                   transparent 
                   opacity={0.95}
                 />
               </mesh>
               <Text
                 fontSize={0.5}
-                color="#FF5722"
+                color={themeColors.primary}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, 0]}
@@ -590,7 +614,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
         <Text
           fontSize={0.4}
-          color="#333333"
+          color={themeColors.text}
           anchorX="center"
           anchorY="middle"
           rotation={[0, 0, 0]}
@@ -599,11 +623,11 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         </Text>
         <mesh position={[0, 0, -0.01]}>
           <planeGeometry args={[3.0, 1.0]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
+          <meshBasicMaterial color={themeColors.background} transparent opacity={0.95} />
         </mesh>
         <mesh position={[0, 0, -0.005]}>
           <planeGeometry args={[3.2, 1.2]} />
-          <meshBasicMaterial color="#cccccc" transparent opacity={0.8} />
+          <meshBasicMaterial color={theme?.mode === 'dark' ? '#555555' : '#cccccc'} transparent opacity={0.8} />
         </mesh>
       </group>
 
@@ -612,7 +636,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         <group position={[currentColumn.position[0], columnHeightM + 0.8, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}
-            color="#FF5722"
+            color={themeColors.primary}
             anchorX="center"
             anchorY="middle"
             rotation={[0, 0, 0]}
@@ -621,11 +645,11 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           </Text>
           <mesh position={[0, 0, -0.01]}>
             <planeGeometry args={[2.6, 0.9]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
+            <meshBasicMaterial color={themeColors.background} transparent opacity={0.95} />
           </mesh>
           <mesh position={[0, 0, -0.005]}>
             <planeGeometry args={[2.8, 1.1]} />
-            <meshBasicMaterial color="#FF5722" transparent opacity={0.3} />
+            <meshBasicMaterial color={themeColors.primary} transparent opacity={0.3} />
           </mesh>
         </group>
       ) : null}

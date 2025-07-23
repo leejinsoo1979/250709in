@@ -832,9 +832,8 @@ export const calculateFurnitureBounds = (
   // 개선된 침범 방향에 따른 처리 - X축과 Z축 동시 침범 고려
   // X축 침범이 있고 기둥이 실제로 캐비넷과 겹치는 경우, 폭 조정 우선
   if (xAxisIntrusion > 0) {
-    // X축 침범이 있으면 폭 조정 (Z축 침범 여부와 무관)
-    if (xAxisIntrusion <= 150) {
-      // X축 얕은 침범: 폭만 조정
+    // X축 침범이 있으면 항상 폭 조정 (150mm 임계값 제거)
+    // X축 침범: 폭만 조정
       if (slotInfo.intrusionDirection === 'from-left') {
         // 왼쪽 침범: 오른쪽은 슬롯 경계 고정, 왼쪽만 줄임
         const shrink = xAxisIntrusion / 1000; // mm -> m
@@ -878,26 +877,6 @@ export const calculateFurnitureBounds = (
           renderWidth: renderWidth
         };
       }
-    } else {
-      // X축 깊은 침범: 폭 원래대로, 깊이 조정
-      furnitureLeft = originalSlotBounds.left;
-      furnitureRight = originalSlotBounds.right;
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
-      const newCenter = (furnitureLeft + furnitureRight) / 2;
-      console.log('🔵 X축 깊은 침범: 폭 원래대로, 중심 고정 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm)', {
-        xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
-        zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
-        renderWidth,
-        logic: 'X축 150mm 초과 침범은 깊이 조정, 폭 유지'
-      });
-      return {
-        left: furnitureLeft,
-        right: furnitureRight,
-        center: newCenter,
-        width: renderWidth,
-        renderWidth: renderWidth
-      };
-    }
   } else if (zAxisIntrusion > 10) {
     // X축 침범이 없고 Z축 침범만 있는 경우: 폭 원래대로, 깊이 조정
     furnitureLeft = originalSlotBounds.left;

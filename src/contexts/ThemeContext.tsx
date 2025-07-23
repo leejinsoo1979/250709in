@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange';
+export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'red' | 'pink' | 'indigo' | 'teal' | 'yellow' | 'gray' | 'cyan' | 'lime' | 'black' | 'wine' | 'gold' | 'navy' | 'emerald' | 'violet' | 'mint' | 'neon' | 'rust';
 
 export interface ThemeConfig {
   mode: ThemeMode;
@@ -107,6 +107,108 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryLight: theme.mode === 'dark' ? 'rgba(249, 115, 22, 0.2)' : '#fed7aa',
       primaryDark: '#c2410c',
     },
+    red: {
+      primary: '#ef4444',
+      primaryHover: '#dc2626',
+      primaryLight: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fecaca',
+      primaryDark: '#b91c1c',
+    },
+    pink: {
+      primary: '#ec4899',
+      primaryHover: '#db2777',
+      primaryLight: theme.mode === 'dark' ? 'rgba(236, 72, 153, 0.2)' : '#fce7f3',
+      primaryDark: '#be185d',
+    },
+    indigo: {
+      primary: '#6366f1',
+      primaryHover: '#4f46e5',
+      primaryLight: theme.mode === 'dark' ? 'rgba(99, 102, 241, 0.2)' : '#e0e7ff',
+      primaryDark: '#3730a3',
+    },
+    teal: {
+      primary: '#14b8a6',
+      primaryHover: '#0d9488',
+      primaryLight: theme.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : '#ccfbf1',
+      primaryDark: '#0f766e',
+    },
+    yellow: {
+      primary: '#eab308',
+      primaryHover: '#ca8a04',
+      primaryLight: theme.mode === 'dark' ? 'rgba(234, 179, 8, 0.2)' : '#fef3c7',
+      primaryDark: '#a16207',
+    },
+    gray: {
+      primary: '#6b7280',
+      primaryHover: '#4b5563',
+      primaryLight: theme.mode === 'dark' ? 'rgba(107, 114, 128, 0.2)' : '#f3f4f6',
+      primaryDark: '#374151',
+    },
+    cyan: {
+      primary: '#06b6d4',
+      primaryHover: '#0891b2',
+      primaryLight: theme.mode === 'dark' ? 'rgba(6, 182, 212, 0.2)' : '#cffafe',
+      primaryDark: '#0e7490',
+    },
+    lime: {
+      primary: '#84cc16',
+      primaryHover: '#65a30d',
+      primaryLight: theme.mode === 'dark' ? 'rgba(132, 204, 22, 0.2)' : '#ecfccb',
+      primaryDark: '#4d7c0f',
+    },
+    black: {
+      primary: '#1a1a1a',
+      primaryHover: '#000000',
+      primaryLight: theme.mode === 'dark' ? 'rgba(26, 26, 26, 0.2)' : '#f5f5f5',
+      primaryDark: '#000000',
+    },
+    wine: {
+      primary: '#991b1b',
+      primaryHover: '#7f1d1d',
+      primaryLight: theme.mode === 'dark' ? 'rgba(153, 27, 27, 0.2)' : '#fef2f2',
+      primaryDark: '#450a0a',
+    },
+    gold: {
+      primary: '#d97706',
+      primaryHover: '#b45309',
+      primaryLight: theme.mode === 'dark' ? 'rgba(217, 119, 6, 0.2)' : '#fef3c7',
+      primaryDark: '#92400e',
+    },
+    navy: {
+      primary: '#1e3a8a',
+      primaryHover: '#1e40af',
+      primaryLight: theme.mode === 'dark' ? 'rgba(30, 58, 138, 0.2)' : '#dbeafe',
+      primaryDark: '#1e1b4b',
+    },
+    emerald: {
+      primary: '#059669',
+      primaryHover: '#047857',
+      primaryLight: theme.mode === 'dark' ? 'rgba(5, 150, 105, 0.2)' : '#d1fae5',
+      primaryDark: '#064e3b',
+    },
+    violet: {
+      primary: '#C128D7',
+      primaryHover: '#A020B8',
+      primaryLight: theme.mode === 'dark' ? 'rgba(193, 40, 215, 0.2)' : '#f3e8ff',
+      primaryDark: '#7B1FA2',
+    },
+    mint: {
+      primary: '#0CBA80',
+      primaryHover: '#0AA66B',
+      primaryLight: theme.mode === 'dark' ? 'rgba(12, 186, 128, 0.2)' : '#ecfdf5',
+      primaryDark: '#065F46',
+    },
+    neon: {
+      primary: '#18CF23',
+      primaryHover: '#15B820',
+      primaryLight: theme.mode === 'dark' ? 'rgba(24, 207, 35, 0.2)' : '#f0fdf4',
+      primaryDark: '#166534',
+    },
+    rust: {
+      primary: '#BE5028',
+      primaryHover: '#A8441F',
+      primaryLight: theme.mode === 'dark' ? 'rgba(190, 80, 40, 0.2)' : '#fef2f2',
+      primaryDark: '#7F2D14',
+    },
   };
 
   // 모드별 색상 설정
@@ -124,16 +226,16 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       overlay: 'rgba(0, 0, 0, 0.5)',
     },
     dark: {
-      background: '#1f2937',
-      backgroundSecondary: '#111827',
-      surface: '#374151',
-      text: '#f9fafb',
-      textSecondary: '#d1d5db',
-      textMuted: '#9ca3af',
-      border: '#4b5563',
-      borderHover: '#6b7280',
-      shadow: 'rgba(0, 0, 0, 0.3)',
-      overlay: 'rgba(0, 0, 0, 0.7)',
+      background: '#000000',
+      backgroundSecondary: '#000000',
+      surface: '#000000',
+      text: '#ffffff',
+      textSecondary: '#cccccc',
+      textMuted: '#999999',
+      border: '#333333',
+      borderHover: '#555555',
+      shadow: 'rgba(0, 0, 0, 0.5)',
+      overlay: 'rgba(0, 0, 0, 0.8)',
     },
   };
 
@@ -141,6 +243,8 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   const mode = modeColors[theme.mode];
 
   // CSS 변수 적용
+  root.style.setProperty('--theme-mode', theme.mode); // 모드 정보 추가
+  root.style.setProperty('--theme-color', theme.color); // 색상 정보 추가
   root.style.setProperty('--theme-primary', colors.primary);
   root.style.setProperty('--theme-primary-hover', colors.primaryHover);
   root.style.setProperty('--theme-primary-light', colors.primaryLight);
@@ -157,7 +261,79 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   root.style.setProperty('--theme-shadow', mode.shadow);
   root.style.setProperty('--theme-overlay', mode.overlay);
 
+  // 추가 시스템 색상 변수
+  root.style.setProperty('--theme-danger', '#ef4444');
+  root.style.setProperty('--theme-danger-hover', '#dc2626');
+  root.style.setProperty('--theme-danger-light', theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2');
+  
+  root.style.setProperty('--theme-info', '#3b82f6');
+  root.style.setProperty('--theme-info-hover', '#2563eb'); 
+  root.style.setProperty('--theme-info-light', theme.mode === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff');
+  
+  root.style.setProperty('--theme-warning', '#f59e0b');
+  root.style.setProperty('--theme-warning-hover', '#d97706');
+  root.style.setProperty('--theme-warning-light', theme.mode === 'dark' ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7');
+  
+  root.style.setProperty('--theme-success', colors.primary);
+  root.style.setProperty('--theme-success-hover', colors.primaryHover);
+  root.style.setProperty('--theme-success-light', colors.primaryLight);
+
   // body에 테마 클래스 추가
   document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '');
   document.body.classList.add(`theme-${theme.mode}-${theme.color}`);
+  
+  // 동적 파비콘 생성 및 적용
+  generateAndSetFavicon(colors.primary, theme.mode);
+};
+
+// 동적 파비콘 생성 함수
+const generateAndSetFavicon = (color: string, mode: ThemeMode) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  
+  if (!ctx) return;
+  
+  // 파비콘 디자인 (둥근 사각형 배경)
+  ctx.fillStyle = color;
+  const x = 2, y = 2, width = 28, height = 28, radius = 4;
+  
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+  ctx.fill();
+  
+  // 다크모드일 때 약간 밝은 테두리 추가
+  if (mode === 'dark') {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // 내부 텍스트 ('m' for 'module')
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 18px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('m', 16, 17);
+  
+  // 파비콘 설정
+  const existingLink = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+  const svgLink = document.querySelector("link[rel='icon'][type='image/svg+xml']") as HTMLLinkElement;
+  
+  // 기존 파비콘 제거
+  if (existingLink && existingLink.type === 'image/x-icon') existingLink.remove();
+  if (svgLink) svgLink.remove();
+  
+  // 새로운 파비콘 추가
+  const link = document.createElement('link');
+  link.type = 'image/x-icon';
+  link.rel = 'icon';
+  link.href = canvas.toDataURL();
+  document.head.appendChild(link);
 };

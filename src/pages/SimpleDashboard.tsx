@@ -7,6 +7,7 @@ import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderD
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import SettingsPanel from '@/components/common/SettingsPanel';
+import Logo from '@/components/common/Logo';
 import Step0 from '../editor/Step0';
 import styles from './SimpleDashboard.module.css';
 
@@ -24,6 +25,7 @@ const SimpleDashboard: React.FC = () => {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [sidebarImageError, setSidebarImageError] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
   
@@ -103,6 +105,17 @@ const SimpleDashboard: React.FC = () => {
 
   // 설정 패널 상태 추가
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+
+  // 메뉴 상태 추가
+  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>('all');
+  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+  const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
+  const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  
+  // 파일트리 폴딩 상태
+  const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
 
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async () => {
@@ -197,8 +210,123 @@ const SimpleDashboard: React.FC = () => {
     };
   }, [loadFirebaseProjects]);
 
+  // 북마크 및 휴지통 데이터 로드
+  useEffect(() => {
+    if (user) {
+      // 북마크 로드
+      const savedBookmarks = localStorage.getItem(`bookmarks_${user.uid}`);
+      if (savedBookmarks) {
+        setBookmarkedProjects(new Set(JSON.parse(savedBookmarks)));
+      }
+      
+      // 휴지통 프로젝트 로드
+      const savedTrash = localStorage.getItem(`trash_${user.uid}`);
+      if (savedTrash) {
+        setDeletedProjects(JSON.parse(savedTrash));
+      }
+    }
+  }, [user]);
+
   // 사용자별 프로젝트 목록 결정
   const allProjects = user ? firebaseProjects : [];
+
+  // 북마크 토글 함수
+  const toggleBookmark = (projectId: string) => {
+    const newBookmarks = new Set(bookmarkedProjects);
+    if (newBookmarks.has(projectId)) {
+      newBookmarks.delete(projectId);
+    } else {
+      newBookmarks.add(projectId);
+    }
+    setBookmarkedProjects(newBookmarks);
+    if (user) {
+      localStorage.setItem(`bookmarks_${user.uid}`, JSON.stringify(Array.from(newBookmarks)));
+    }
+  };
+
+  // 휴지통으로 이동 함수
+  const moveToTrash = (project: ProjectSummary) => {
+    const updatedTrash = [...deletedProjects, { ...project, deletedAt: new Date() }];
+    setDeletedProjects(updatedTrash);
+    setFirebaseProjects(prev => prev.filter(p => p.id !== project.id));
+    
+    // localStorage에 저장
+    if (user) {
+      localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
+    }
+    
+    // 북마크에서도 제거
+    if (bookmarkedProjects.has(project.id)) {
+      toggleBookmark(project.id);
+    }
+  };
+
+  // 휴지통에서 복원 함수
+  const restoreFromTrash = (projectId: string) => {
+    const project = deletedProjects.find(p => p.id === projectId);
+    if (project) {
+      const updatedTrash = deletedProjects.filter(p => p.id !== projectId);
+      setDeletedProjects(updatedTrash);
+      
+      // deletedAt 속성 제거하고 복원
+      const { deletedAt, ...restoredProject } = project as any;
+      setFirebaseProjects(prev => [...prev, restoredProject]);
+      
+      // localStorage 업데이트
+      if (user) {
+        localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
+      }
+    }
+  };
+  
+  // 휴지통 비우기 함수
+  const emptyTrash = () => {
+    if (window.confirm('휴지통을 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      setDeletedProjects([]);
+      if (user) {
+        localStorage.removeItem(`trash_${user.uid}`);
+      }
+    }
+  };
+  
+  // 공유 프로젝트 처리 함수
+  const shareProject = async (projectId: string) => {
+    try {
+      // 현재는 공유 링크만 생성
+      const shareUrl = `${window.location.origin}/configurator?projectId=${projectId}&shared=true`;
+      
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('공유 링크가 클립보드에 복사되었습니다!');
+      } else {
+        prompt('공유 링크를 복사하세요:', shareUrl);
+      }
+      
+      // 미래에는 Firebase에 공유 상태 업데이트
+      // await updateProject(projectId, { shared: true, sharedAt: new Date() });
+      
+    } catch (error) {
+      console.error('프로젝트 공유 중 오류:', error);
+      alert('프로젝트 공유 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 메뉴별 프로젝트 필터링
+  const getFilteredProjects = () => {
+    switch (activeMenu) {
+      case 'bookmarks':
+        return allProjects.filter(p => bookmarkedProjects.has(p.id));
+      case 'shared':
+        // 나중에 Firebase에서 실제 공유 프로젝트를 가져와야 함
+        // 지금은 임시로 빈 배열 반환
+        return sharedProjects;
+      case 'trash':
+        return deletedProjects;
+      case 'all':
+      default:
+        return allProjects;
+    }
+  };
   
   // 프로젝트의 모든 파일과 폴더를 가져오는 함수
   const getProjectItems = (projectId: string) => {
@@ -315,7 +443,9 @@ const SimpleDashboard: React.FC = () => {
         return items;
       }
     }
-    return allProjects.map(project => ({ 
+    // 메뉴별 프로젝트 필터링 적용
+    const filteredProjects = getFilteredProjects();
+    return filteredProjects.map(project => ({ 
       id: project.id, 
       type: 'project', 
       name: project.title, 
@@ -335,29 +465,6 @@ const SimpleDashboard: React.FC = () => {
     // 만약 새 탭에서 열고 싶다면: window.open(url, '_blank');
   };
 
-  // 로딩 상태 표시
-  if (loading) {
-    return (
-      <div className={styles.dashboard}>
-        <div className={styles.emptyState}>
-          <div>프로젝트 목록을 불러오는 중...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // 에러 상태 표시
-  if (error) {
-    return (
-      <div className={styles.dashboard}>
-        <div className={styles.emptyState}>
-          <div className={styles.emptyStateTitle}>오류: {error}</div>
-          <button onClick={loadFirebaseProjects} className={styles.emptyStateButton}>다시 시도</button>
-        </div>
-      </div>
-    );
-  }
-
   const handleViewModeToggle = (mode: 'grid' | 'list') => {
     setViewMode(mode);
   };
@@ -365,6 +472,21 @@ const SimpleDashboard: React.FC = () => {
   const handleSortChange = (sort: 'date' | 'name') => {
     setSortBy(sort);
   };
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(`.${styles.sortButton}`) && !target.closest(`.${styles.sortDropdownMenu}`)) {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    if (sortDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [sortDropdownOpen]);
 
   // 폴더 토글
   const toggleFolder = (folderId: string) => {
@@ -729,24 +851,9 @@ const SimpleDashboard: React.FC = () => {
 
   const handleShareItem = () => {
     if (!moreMenu) return;
-    console.log('공유하기:', moreMenu.itemId);
     
     if (moreMenu.itemType === 'project') {
-      // 프로젝트 공유 - 프로젝트 URL 생성
-      const projectUrl = `${window.location.origin}/configurator?projectId=${moreMenu.itemId}`;
-      
-      // 클립보드에 복사
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(projectUrl).then(() => {
-          alert('프로젝트 링크가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-          // 클립보드 복사 실패 시 직접 표시
-          prompt('프로젝트 링크를 복사하세요:', projectUrl);
-        });
-      } else {
-        // 클립보드 API 지원하지 않는 경우
-        prompt('프로젝트 링크를 복사하세요:', projectUrl);
-      }
+      shareProject(moreMenu.itemId);
     } else {
       // 폴더나 파일 공유
       alert('폴더/파일 공유 기능은 준비 중입니다.');
@@ -1080,6 +1187,29 @@ const SimpleDashboard: React.FC = () => {
     return `수정일: ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} 오후 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
+  // 로딩 상태 표시
+  if (loading) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.emptyState}>
+          <div>프로젝트 목록을 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 표시
+  if (error) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyStateTitle}>오류: {error}</div>
+          <button onClick={loadFirebaseProjects} className={styles.emptyStateButton}>다시 시도</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.dashboard}>
       {/* 좌측 사이드바 */}
@@ -1087,7 +1217,7 @@ const SimpleDashboard: React.FC = () => {
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
           <div className={styles.logo}>
-            <img src="/logo.png" alt="Logo" />
+            <Logo size="medium" />
           </div>
         </div>
 
@@ -1121,70 +1251,96 @@ const SimpleDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+        
+        {/* 프로젝트 생성 버튼 */}
+        <div className={styles.createProjectSection}>
           <button className={styles.createProjectBtn} onClick={handleCreateProject}>
             <PlusIcon size={16} />
-            Creat Project
+            Create Project
           </button>
         </div>
         
         {/* 네비게이션 메뉴 */}
         <nav className={styles.navSection}>
-          <div className={`${styles.navItem} ${!selectedProjectId ? styles.active : ''}`}>
-            <div className={styles.navItemIcon}>
-              <HomeIcon size={20} />
-            </div>
-            <span>Home</span>
-          </div>
-          
-          <div className={styles.navItem}>
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('all');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['모든 프로젝트']);
+            }}
+          >
             <div className={styles.navItemIcon}>
               <FolderIcon size={20} />
             </div>
-            <span>All project</span>
+            <span>모든 프로젝트</span>
             <span className={styles.navItemCount}>{allProjects.length}</span>
           </div>
           
-          <div className={styles.navItem}>
-            <div className={styles.navItemIcon}>
-              <FolderIcon size={20} />
-            </div>
-            <span>Files</span>
-          </div>
-          
-          <div className={styles.navItem}>
-            <div className={styles.navItemIcon}>
-              <FolderIcon size={20} />
-            </div>
-            <span>Projects</span>
-            <span className={styles.navItemCount}>{allProjects.length}</span>
-          </div>
-          
-          <div className={styles.navItem}>
-            <div className={styles.navItemIcon}>
-              <FolderIcon size={20} />
-            </div>
-            <span>Learn</span>
-          </div>
-          
-          <div className={styles.navItem}>
-            <div className={styles.navItemIcon}>
-              <UsersIcon size={20} />
-            </div>
-            <span>팀관리</span>
-          </div>
-          
-          <div className={styles.navItem}>
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('bookmarks');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['북마크']);
+            }}
+          >
             <div className={styles.navItemIcon}>
               <StarIcon size={20} />
             </div>
-            <span>즐겨찾기</span>
+            <span>북마크</span>
+            <span className={styles.navItemCount}>{allProjects.filter(p => bookmarkedProjects.has(p.id)).length}</span>
           </div>
           
-          <div className={styles.navItem}>
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'shared' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('shared');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['공유 프로젝트']);
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <ShareIcon size={20} />
+            </div>
+            <span>공유 프로젝트</span>
+            <span className={styles.navItemCount}>{sharedProjects.length}</span>
+          </div>
+          
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
+            onClick={() => setShowProfileModal(true)}
+          >
+            <div className={styles.navItemIcon}>
+              <UserIcon size={20} />
+            </div>
+            <span>내 정보 관리</span>
+          </div>
+          
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'team' ? styles.active : ''}`}
+            onClick={() => setShowTeamModal(true)}
+          >
+            <div className={styles.navItemIcon}>
+              <UsersIcon size={20} />
+            </div>
+            <span>팀 관리</span>
+          </div>
+          
+          <div 
+            className={`${styles.navItem} ${activeMenu === 'trash' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('trash');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['휴지통']);
+            }}
+          >
             <div className={styles.navItemIcon}>
               <TrashIcon size={20} />
             </div>
             <span>휴지통</span>
+            <span className={styles.navItemCount}>{deletedProjects.length}</span>
           </div>
         </nav>
 
@@ -1246,18 +1402,29 @@ const SimpleDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className={styles.searchContainer}>
-            <div className={styles.searchIcon}>
-              <SearchIcon size={16} />
-            </div>
-            <input
-              type="text"
-              placeholder="Search..."
-              className={styles.searchInput}
-            />
-          </div>
           
           <div className={styles.headerRight}>
+            {activeMenu === 'trash' && deletedProjects.length > 0 && (
+              <button 
+                onClick={emptyTrash}
+                className={styles.emptyTrashBtn}
+              >
+                <TrashIcon size={16} />
+                휴지통 비우기
+              </button>
+            )}
+            {/* 검색바 */}
+            <div className={styles.searchContainer}>
+              <div className={styles.searchIcon}>
+                <SearchIcon size={16} />
+              </div>
+              <input
+                type="text"
+                placeholder="프로젝트 검색..."
+                className={styles.searchInput}
+              />
+            </div>
+            
             <div className={styles.headerActions}>
               <button className={styles.actionButton}>
                 <CalendarIcon size={20} />
@@ -1298,10 +1465,107 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </header>
 
+        {/* 서브헤더 */}
+        <div className={styles.subHeader}>
+          <div className={styles.subHeaderContent}>
+            <div className={styles.subHeaderActions}>
+              {/* 뷰 모드 토글 */}
+              <div className={styles.viewToggleGroup}>
+                <button 
+                  className={`${styles.viewToggleButton} ${viewMode === 'grid' ? styles.active : ''}`}
+                  onClick={() => handleViewModeToggle('grid')}
+                  title="그리드 보기"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="1" width="6" height="6" rx="1"/>
+                    <rect x="9" y="1" width="6" height="6" rx="1"/>
+                    <rect x="1" y="9" width="6" height="6" rx="1"/>
+                    <rect x="9" y="9" width="6" height="6" rx="1"/>
+                  </svg>
+                </button>
+                <button 
+                  className={`${styles.viewToggleButton} ${viewMode === 'list' ? styles.active : ''}`}
+                  onClick={() => handleViewModeToggle('list')}
+                  title="리스트 보기"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="2" width="14" height="2" rx="1"/>
+                    <rect x="1" y="7" width="14" height="2" rx="1"/>
+                    <rect x="1" y="12" width="14" height="2" rx="1"/>
+                  </svg>
+                </button>
+              </div>
+              
+              {/* 정렬 드롭다운 */}
+              <button 
+                className={styles.sortButton}
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M3 6h10M5 10h6M7 14h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                </svg>
+                <span>{sortBy === 'date' ? '최신순' : '이름순'}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                </svg>
+              </button>
+              
+              {sortDropdownOpen && (
+                <div className={styles.sortDropdownMenu}>
+                  <button 
+                    className={`${styles.sortOption} ${sortBy === 'date' ? styles.active : ''}`}
+                    onClick={() => {
+                      handleSortChange('date');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 3v10M5 10l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    </svg>
+                    최신순
+                  </button>
+                  <button 
+                    className={`${styles.sortOption} ${sortBy === 'name' ? styles.active : ''}`}
+                    onClick={() => {
+                      handleSortChange('name');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4 6h8M4 10h5M4 14h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                    </svg>
+                    이름순
+                  </button>
+                </div>
+              )}
+              
+              {/* 휴지통 비우기 버튼 */}
+              {activeMenu === 'trash' && deletedProjects.length > 0 && (
+                <button 
+                  className={styles.emptyTrashBtn}
+                  onClick={emptyTrash}
+                >
+                  <TrashIcon size={16} />
+                  <span>휴지통 비우기</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className={styles.content}>
           {/* 프로젝트 트리 */}
-          <aside className={styles.projectTree}>
+          <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.treeHeader}>
+              <button 
+                className={styles.treeToggleButton}
+                onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
+                aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
+              >
+                <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
+                  ◀
+                </span>
+              </button>
               <div className={styles.projectSelectorContainer}>
                 <select 
                   value={selectedProjectId || 'all'}
@@ -1483,11 +1747,7 @@ const SimpleDashboard: React.FC = () => {
                             </div>
                           );
                         } else if (!hasDesignFiles || isRootDesignInFolder) {
-                          return (
-                            <div className={styles.treeItem} style={{ color: '#999', fontSize: '13px' }}>
-                              <span>디자인 파일이 없습니다</span>
-                            </div>
-                          );
+                          return null;
                         }
                         return null;
                       })()}
@@ -1578,6 +1838,23 @@ const SimpleDashboard: React.FC = () => {
                       }
                     }}
                   >
+                    {/* 더보기 버튼을 카드 우측 상단에 배치 */}
+                    {item.type !== 'new-design' && (
+                      <button 
+                        className={styles.cardActionButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.type === 'folder') {
+                            handleMoreMenuOpen(e, item.id, item.name, 'folder');
+                          } else if (item.type === 'design') {
+                            handleMoreMenuOpen(e, item.id, item.name, 'design');
+                          }
+                        }}
+                      >
+                        ⋯
+                      </button>
+                    )}
+                    
                     <div 
                       className={`${styles.cardThumbnail} ${item.type === 'new-design' ? styles.newDesign : ''} ${item.type === 'folder' ? styles.folderDropZone : ''} ${dragState.dragOverFolder === item.id ? styles.dragOver : ''}`}
                       onDragOver={(e) => {
@@ -1661,73 +1938,61 @@ const SimpleDashboard: React.FC = () => {
                       )}
                     </div>
                     
-                    <div className={styles.cardInfo}>
-                      <div className={styles.cardTitle}>{item.name}</div>
-                      
-                      <div className={styles.cardMeta}>
-                        <div className={styles.cardDate}>
-                          {(() => {
-                            // createdAt이 있으면 사용하고, 없으면 updatedAt 사용
-                            const dateToUse = item.project.createdAt || item.project.updatedAt;
-                            if (dateToUse && dateToUse.seconds) {
-                              return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
-                                year: 'numeric',
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              });
-                            }
-                            return '날짜 정보 없음';
-                          })()}
-                        </div>
-                        <div className={styles.cardActions}>
-                          <button 
-                            className={styles.cardActionButton}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (item.type === 'folder') {
-                                handleMoreMenuOpen(e, item.id, item.name, 'folder');
-                              } else if (item.type === 'design') {
-                                handleMoreMenuOpen(e, item.id, item.name, 'design');
+                    {/* 디자인 생성 카드가 아닌 경우에만 cardInfo 표시 */}
+                    {item.type !== 'new-design' && (
+                      <div className={styles.cardInfo}>
+                        <div className={styles.cardTitle}>{item.name}</div>
+                        
+                        <div className={styles.cardMeta}>
+                          <div className={styles.cardDate}>
+                            {(() => {
+                              // createdAt이 있으면 사용하고, 없으면 updatedAt 사용
+                              const dateToUse = item.project.createdAt || item.project.updatedAt;
+                              if (dateToUse && dateToUse.seconds) {
+                                return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
+                                  year: 'numeric',
+                                  month: 'long', 
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
                               }
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className={styles.cardFooter}>
-                        <div className={styles.cardUser}>
-                          <div className={styles.cardUserAvatar}>
-                            {user?.photoURL ? (
-                              <img 
-                                src={user.photoURL} 
-                                alt="프로필" 
-                                style={{ 
-                                  width: '100%', 
-                                  height: '100%', 
-                                  borderRadius: '50%',
-                                  objectFit: 'cover'
-                                }}
-                              />
-                            ) : (
-                              <UserIcon size={12} />
-                            )}
+                              return '날짜 정보 없음';
+                            })()}
                           </div>
-                          <span className={styles.cardUserName}>
-                            {user?.displayName || user?.email?.split('@')[0] || '이진수'}
-                          </span>
                         </div>
-                        <div className={styles.cardBadge}>
-                          {(() => {
-                            const projectItems = getProjectItems(item.project.id);
-                            return projectItems.length;
-                          })()}
+                        
+                        <div className={styles.cardFooter}>
+                          <div className={styles.cardUser}>
+                            <div className={styles.cardUserAvatar}>
+                              {user?.photoURL ? (
+                                <img 
+                                  src={user.photoURL} 
+                                  alt="프로필" 
+                                  style={{ 
+                                    width: '100%', 
+                                    height: '100%', 
+                                    borderRadius: '50%',
+                                    objectFit: 'cover'
+                                  }}
+                                />
+                              ) : (
+                                <UserIcon size={12} />
+                              )}
+                            </div>
+                            <span className={styles.cardUserName}>
+                              {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                            </span>
+                          </div>
+                          <div className={styles.cardBadge}>
+                            {(() => {
+                              const projectItems = getProjectItems(item.project.id);
+                              return projectItems.length;
+                            })()}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))
               ) : selectedProjectId ? (
@@ -1742,8 +2007,26 @@ const SimpleDashboard: React.FC = () => {
                 </div>
               ) : user ? (
                 <div className={styles.emptyState}>
-                  <div className={styles.emptyStateTitle}>아직 생성된 프로젝트가 없습니다</div>
-                  <div className={styles.emptyStateSubtitle}>새 프로젝트를 생성해보세요</div>
+                  <div className={styles.emptyStateTitle}>
+                    {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
+                    {activeMenu === 'shared' && '공유된 프로젝트가 없습니다'}
+                    {activeMenu === 'trash' && '휴지통이 비어있습니다'}
+                    {activeMenu === 'all' && '아직 생성된 프로젝트가 없습니다'}
+                  </div>
+                  <div className={styles.emptyStateSubtitle}>
+                    {activeMenu === 'bookmarks' && '프로젝트를 북마크하려면 ⋯ 메뉴를 사용하세요'}
+                    {activeMenu === 'shared' && '다른 사용자가 공유한 프로젝트가 여기에 표시됩니다'}
+                    {activeMenu === 'trash' && '삭제된 프로젝트가 여기에 표시됩니다'}
+                    {activeMenu === 'all' && '새 프로젝트를 생성해보세요'}
+                  </div>
+                  {activeMenu === 'trash' && deletedProjects.length > 0 && (
+                    <button 
+                      onClick={emptyTrash}
+                      className={styles.emptyStateButton}
+                    >
+                      휴지통 비우기
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className={styles.emptyState}>
@@ -1908,13 +2191,53 @@ const SimpleDashboard: React.FC = () => {
               <ShareIcon size={14} />
               공유하기
             </div>
+            {moreMenu.itemType === 'project' && (
+              <div 
+                className={styles.moreMenuItem}
+                onClick={() => {
+                  toggleBookmark(moreMenu.itemId);
+                  closeMoreMenu();
+                }}
+              >
+                <StarIcon size={14} />
+                {bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가'}
+              </div>
+            )}
             <div 
               className={`${styles.moreMenuItem} ${styles.deleteItem}`}
-              onClick={handleDeleteItem}
+              onClick={() => {
+                if (activeMenu === 'trash') {
+                  if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                    handleDeleteItem();
+                  }
+                } else {
+                  if (moreMenu.itemType === 'project') {
+                    const project = allProjects.find(p => p.id === moreMenu.itemId);
+                    if (project) {
+                      moveToTrash(project);
+                      closeMoreMenu();
+                    }
+                  } else {
+                    handleDeleteItem();
+                  }
+                }
+              }}
             >
               <TrashIcon size={14} />
-              삭제
+              {activeMenu === 'trash' ? '영구 삭제' : '휴지통으로 이동'}
             </div>
+            {activeMenu === 'trash' && moreMenu.itemType === 'project' && (
+              <div 
+                className={styles.moreMenuItem}
+                onClick={() => {
+                  restoreFromTrash(moreMenu.itemId);
+                  closeMoreMenu();
+                }}
+              >
+                <FolderIcon size={14} />
+                복원하기
+              </div>
+            )}
           </div>
         </>
       )}
@@ -1962,6 +2285,118 @@ const SimpleDashboard: React.FC = () => {
         <div className={styles.step0ModalOverlay}>
           <div className={styles.step0ModalContent}>
             <Step0 onClose={handleCloseStep0Modal} />
+          </div>
+        </div>
+      )}
+
+      {/* 프로필 관리 모달 */}
+      {showProfileModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2 className={styles.modalTitle}>내 정보 관리</h2>
+            <div className={styles.profileModalContent}>
+              <div className={styles.profileSection}>
+                <div className={styles.profileAvatar}>
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="프로필" />
+                  ) : (
+                    <UserIcon size={40} />
+                  )}
+                  <button className={styles.changeAvatarBtn}>사진 변경</button>
+                </div>
+                <div className={styles.profileInfo}>
+                  <div className={styles.profileField}>
+                    <label>이름</label>
+                    <input 
+                      type="text" 
+                      value={user?.displayName || ''} 
+                      placeholder="이름을 입력하세요"
+                      className={styles.profileInput}
+                    />
+                  </div>
+                  <div className={styles.profileField}>
+                    <label>이메일</label>
+                    <input 
+                      type="email" 
+                      value={user?.email || ''} 
+                      disabled
+                      className={styles.profileInput}
+                    />
+                  </div>
+                  <div className={styles.profileField}>
+                    <label>가입일</label>
+                    <input 
+                      type="text" 
+                      value={user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('ko-KR') : ''} 
+                      disabled
+                      className={styles.profileInput}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.profileStats}>
+                <div className={styles.statItem}>
+                  <div className={styles.statValue}>{allProjects.length}</div>
+                  <div className={styles.statLabel}>프로젝트</div>
+                </div>
+                <div className={styles.statItem}>
+                  <div className={styles.statValue}>{bookmarkedProjects.size}</div>
+                  <div className={styles.statLabel}>북마크</div>
+                </div>
+                <div className={styles.statItem}>
+                  <div className={styles.statValue}>{sharedProjects.length}</div>
+                  <div className={styles.statLabel}>공유됨</div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className={styles.modalCancelBtn}
+              >
+                닫기
+              </button>
+              <button
+                onClick={() => {
+                  alert('프로필 업데이트 기능은 준비 중입니다.');
+                }}
+                className={styles.modalCreateBtn}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 팀 관리 모달 */}
+      {showTeamModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2 className={styles.modalTitle}>팀 관리</h2>
+            <div className={styles.teamModalContent}>
+              <div className={styles.teamList}>
+                <div className={styles.teamEmpty}>
+                  <UsersIcon size={40} />
+                  <p>아직 팀이 없습니다</p>
+                  <button 
+                    className={styles.createTeamBtn}
+                    onClick={() => alert('팀 생성 기능은 준비 중입니다.')}
+                  >
+                    <PlusIcon size={16} />
+                    새 팀 만들기
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => setShowTeamModal(false)}
+                className={styles.modalCancelBtn}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}

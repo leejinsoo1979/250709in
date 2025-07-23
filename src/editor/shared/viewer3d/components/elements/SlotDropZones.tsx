@@ -17,6 +17,7 @@ import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, adjustFurniturePositionForColumn, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, splitDualToSinglesIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition, generateCabinetPlacementOptions, CabinetPlacementOption } from '@/editor/shared/utils/columnSlotProcessor';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopup';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SlotDropZonesProps {
   spaceInfo: SpaceInfo;
@@ -33,12 +34,16 @@ declare global {
 const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true }) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
+  const removeModule = useFurnitureStore(state => state.removeModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   
   // Three.js 컨텍스트 접근
   const { camera, scene, gl, invalidate } = useThree();
   const { viewMode } = useSpace3DView();
+  
+  // 테마 컨텍스트에서 색상 가져오기
+  const { theme } = useTheme();
   
   // 마우스가 hover 중인 슬롯 인덱스 상태
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
@@ -68,6 +73,61 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     });
     return analyzeColumnSlots(spaceInfo);
   }, [spaceInfo, spaceInfo.columns]);
+
+  // 가구 충돌 감지 함수 (새 가구 배치용)
+  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean) => {
+    // 새 가구가 차지할 슬롯들 계산
+    let occupiedSlots: number[] = [];
+    if (isDualFurniture) {
+      occupiedSlots = [newSlotIndex, newSlotIndex + 1];
+    } else {
+      occupiedSlots = [newSlotIndex];
+    }
+
+    // 충돌하는 기존 가구들 찾기
+    const collidingModules: string[] = [];
+    placedModules.forEach(module => {
+      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      if (!moduleData) return;
+
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const columnWidth = indexing.columnWidth;
+      const isModuleDual = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+      
+      // 기존 가구가 차지하는 슬롯들
+      let moduleSlots: number[] = [];
+      if (isModuleDual && module.slotIndex !== undefined) {
+        moduleSlots = [module.slotIndex, module.slotIndex + 1];
+      } else if (module.slotIndex !== undefined) {
+        moduleSlots = [module.slotIndex];
+      }
+
+      // 슬롯 겹침 확인
+      const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
+      if (hasOverlap) {
+        collidingModules.push(module.id);
+        if (import.meta.env.DEV) {
+          console.log('🚨 새 가구 배치로 인한 충돌 감지:', {
+            newSlots: occupiedSlots,
+            collidingModule: module.id,
+            existingSlots: moduleSlots
+          });
+        }
+      }
+    });
+
+    return collidingModules;
+  }, [placedModules, internalSpace, spaceInfo]);
+
+  // 충돌한 가구들 제거
+  const removeCollidingFurniture = React.useCallback((collidingModuleIds: string[]) => {
+    collidingModuleIds.forEach(moduleId => {
+      if (import.meta.env.DEV) {
+        console.log('🗑️ 새 가구 배치로 인한 기존 가구 제거:', moduleId);
+      }
+      removeModule(moduleId);
+    });
+  }, [removeModule]);
   
   // 드롭 처리 함수
   const handleSlotDrop = React.useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
@@ -89,6 +149,12 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     }
     
     if (!dragData || dragData.type !== 'furniture') {
+      return false;
+    }
+    
+    // needsWarning 확인 - 경고가 필요한 경우 즉시 경고 메시지 표시 후 중단
+    if (dragData.moduleData?.needsWarning) {
+      alert('배치슬롯의 사이즈를 늘려주세요');
       return false;
     }
     
@@ -270,8 +336,20 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           }
         }
         
-        // 분할된 가구들을 한 번에 배치
-        placedModules.forEach(module => addModule(module));
+        // 분할된 가구들을 한 번에 배치 (충돌 감지 포함)
+        placedModules.forEach(module => {
+          // 각 분할된 가구에 대해 충돌 감지
+          if (module.slotIndex !== undefined) {
+            const collidingModules = detectNewFurnitureCollisions(module.slotIndex, module.isDualSlot || false);
+            if (collidingModules.length > 0) {
+              removeCollidingFurniture(collidingModules);
+              if (import.meta.env.DEV) {
+                console.log('🗑️ 분할 배치로 인해 슬롯 ' + module.slotIndex + '에서 ' + collidingModules.length + '개 기존 가구 제거됨');
+              }
+            }
+          }
+          addModule(module);
+        });
         
         // Shadow auto-update enabled - manual shadow updates removed
         
@@ -482,6 +560,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         doorWidth: doorWidthForColumn // 기둥 커버용 도어 너비
       } : { hasColumn: false }
     };
+    
+    // 충돌 감지 및 충돌한 가구 제거
+    const collidingModules = detectNewFurnitureCollisions(slotIndex, actualIsDual);
+    if (collidingModules.length > 0) {
+      removeCollidingFurniture(collidingModules);
+      if (import.meta.env.DEV) {
+        console.log('🗑️ 새 가구 배치로 인해 ' + collidingModules.length + '개 기존 가구 제거됨');
+      }
+    }
     
     addModule(newModule);
     
@@ -736,6 +823,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           splitIndex: index // 분할에서의 순서 (0: 왼쪽, 1: 오른쪽)
         }
       };
+
+      // 캐비넷 배치 시 충돌 감지 및 제거
+      const collidingModules = detectNewFurnitureCollisions(cabinet.slotIndex, false); // 캐비넷은 단일 슬롯
+      if (collidingModules.length > 0) {
+        removeCollidingFurniture(collidingModules);
+        if (import.meta.env.DEV) {
+          console.log('🗑️ 캐비넷 배치로 인해 ' + collidingModules.length + '개 기존 가구 제거됨');
+        }
+      }
 
       addModule(newModule);
       console.log('✅ 캐비넷 배치 완료:', {
@@ -998,7 +1094,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           <group key={`furniture-preview-${slotIndex}`} position={[furnitureX, furnitureY, furnitureZ]}>
             <BoxModule 
               moduleData={previewModuleData}
-              color="#88ff88"
+              color={theme.color}
               isDragging={true}
               internalHeight={previewModuleData.dimensions.height}
               hasDoor={false}

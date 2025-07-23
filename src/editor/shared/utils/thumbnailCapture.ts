@@ -271,8 +271,8 @@ export const generateDefaultThumbnail = (
   ctx.font = '14px Arial';
   ctx.fillText(`가구 ${furnitureCount}개`, 150, 120);
   
-  // V5.0 뱃지
-  ctx.fillStyle = '#3B82F6';
+  // V5.0 뱃지 - 테마 색상 사용
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
   ctx.fillRect(10, 10, 40, 20);
   ctx.fillStyle = 'white';
   ctx.font = 'bold 12px Arial';

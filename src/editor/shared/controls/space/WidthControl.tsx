@@ -57,10 +57,32 @@ const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabl
     }
   };
 
-  // Enter 키 처리
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  // Enter 키 및 화살표 키 처리
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleInputBlur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      
+      const currentValue = parseInt(inputValue) || safeWidth;
+      const minValue = SPACE_LIMITS.WIDTH.MIN;
+      const maxValue = SPACE_LIMITS.WIDTH.MAX;
+      
+      let newValue;
+      if (e.key === 'ArrowUp') {
+        newValue = Math.min(currentValue + 1, maxValue);
+      } else {
+        newValue = Math.max(currentValue - 1, minValue);
+      }
+      
+      if (newValue !== currentValue) {
+        // 로컬 상태와 스토어를 동기적으로 업데이트
+        setInputValue(newValue.toString());
+        setError('');
+        onUpdate({
+          width: newValue
+        });
+      }
     }
   };
 

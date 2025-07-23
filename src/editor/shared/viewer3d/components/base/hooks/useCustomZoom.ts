@@ -53,11 +53,11 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       let newZoom;
       
       if (delta < 0) {
-        // 휠 위: 줌인(확대) - zoom 값 증가
-        newZoom = currentZoom * 1.2;
+        // 휠 위: 줌인(확대) - zoom 값 증가 (더 부드럽게 조정)
+        newZoom = currentZoom * 1.1;
       } else {
-        // 휠 아래: 줌아웃(축소) - zoom 값 감소  
-        newZoom = currentZoom * 0.85;
+        // 휠 아래: 줌아웃(축소) - zoom 값 감소 (더 부드럽게 조정)
+        newZoom = currentZoom * 0.9;
       }
       
       // 줌 범위 제한: 축소는 0.95에서 멈춤, 확대는 무제한

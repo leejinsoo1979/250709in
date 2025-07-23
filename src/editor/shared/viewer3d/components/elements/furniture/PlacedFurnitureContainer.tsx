@@ -7,7 +7,15 @@ import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import { useColumnDualSplitter } from '../../../hooks/useColumnDualSplitter';
 import FurnitureItem from './FurnitureItem';
 
-const PlacedFurnitureContainer: React.FC = () => {
+interface PlacedFurnitureContainerProps {
+  viewMode: '2D' | '3D';
+  renderMode: 'solid' | 'wireframe';
+}
+
+const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
+  viewMode,
+  renderMode
+}) => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
   
@@ -72,6 +80,8 @@ const PlacedFurnitureContainer: React.FC = () => {
             isDragMode={isDragMode}
             isEditMode={isEditMode}
             isDraggingThis={isDraggingThis}
+            viewMode={viewMode}
+            renderMode={renderMode}
             onPointerDown={dragHandlers.handlePointerDown}
             onPointerMove={dragHandlers.handlePointerMove}
             onPointerUp={dragHandlers.handlePointerUp}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Grid } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
@@ -17,6 +18,7 @@ interface CADGrid2DProps {
 const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { view2DDirection } = useUIStore();
+  const { theme } = useTheme();
   const indexing = calculateSpaceIndexing(spaceInfo);
   const { threeUnitBoundaries, columnCount } = indexing;
   
@@ -25,6 +27,24 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
 
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
+  
+  // CSS 변수에서 실제 테마 색상 가져오기
+  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const computedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue(variableName).trim();
+      return computedColor || fallback;
+    }
+    return fallback;
+  };
+
+  // 테마 기반 색상 설정
+  const gridColors = {
+    cellColor: getThemeColorFromCSS('--theme-border', '#e5e7eb'),           // 격자 세분선
+    sectionColor: getThemeColorFromCSS('--theme-text-secondary', '#6b7280'), // 격자 주요선
+    boundaryColor: getThemeColorFromCSS('--theme-primary', '#10b981'),       // 공간 경계선
+    columnColor: getThemeColorFromCSS('--theme-primary', '#10b981')          // 컬럼 경계선
+  };
   
   // 공간 크기 (Three.js 단위)
   const spaceWidth = mmToThreeUnits(spaceInfo.width);
@@ -82,10 +102,10 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
         args={gridConfig.args}
         cellSize={gridSpacing}
         cellThickness={0.5}
-        cellColor="#e8e8e8"
+        cellColor={gridColors.cellColor}
         sectionSize={majorGridSpacing}
         sectionThickness={1.5}
-        sectionColor="#c0c0c0"
+        sectionColor={gridColors.sectionColor}
         fadeDistance={30}
         fadeStrength={0.5}
         infiniteGrid={true}
@@ -102,7 +122,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
               [0, 0, 0.002], [spaceWidth, 0, 0.002],
               [spaceWidth, spaceHeight, 0.002], [0, spaceHeight, 0.002], [0, 0, 0.002]
             ]}
-            color="#1976d2"
+            color={gridColors.boundaryColor}
             lineWidth={3}
           />
           
@@ -111,7 +131,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
             <Line
               key={`column-boundary-${index}`}
               points={[[xPos, 0, 0.001], [xPos, spaceHeight, 0.001]]}
-              color="#2196f3"
+              color={gridColors.columnColor}
               lineWidth={1.5}
               dashed
               dashSize={0.05}
@@ -129,7 +149,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
               [0, 0, 0], [0, 0, spaceDepth],
               [0, spaceHeight, spaceDepth], [0, spaceHeight, 0], [0, 0, 0]
             ]}
-            color="#1976d2"
+            color={gridColors.boundaryColor}
             lineWidth={3}
           />
         </>
@@ -143,7 +163,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
               [spaceWidth, 0, 0], [spaceWidth, 0, spaceDepth],
               [spaceWidth, spaceHeight, spaceDepth], [spaceWidth, spaceHeight, 0], [spaceWidth, 0, 0]
             ]}
-            color="#1976d2"
+            color={gridColors.boundaryColor}
             lineWidth={3}
           />
         </>
@@ -157,7 +177,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
               [0, spaceHeight, 0], [spaceWidth, spaceHeight, 0],
               [spaceWidth, spaceHeight, spaceDepth], [0, spaceHeight, spaceDepth], [0, spaceHeight, 0]
             ]}
-            color="#1976d2"
+            color={gridColors.boundaryColor}
             lineWidth={3}
           />
           
@@ -166,7 +186,7 @@ const CADGrid2D: React.FC<CADGrid2DProps> = ({ viewDirection }) => {
             <Line
               key={`column-boundary-top-${index}`}
               points={[[xPos, spaceHeight, 0], [xPos, spaceHeight, spaceDepth]]}
-              color="#2196f3"
+              color={gridColors.columnColor}
               lineWidth={1.5}
               dashed
               dashSize={0.05}

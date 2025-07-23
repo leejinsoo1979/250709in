@@ -19,7 +19,7 @@ const DoorIcon: React.FC<DoorIconProps> = ({ isActive, onClick, disabled = false
         height: '28px',
         border: 'none',
         borderRadius: '4px',
-        backgroundColor: disabled ? '#9ca3af' : (isActive ? '#10b981' : '#d1d5db'),
+        backgroundColor: disabled ? 'var(--theme-text-muted)' : (isActive ? 'var(--theme-primary)' : 'var(--theme-border)'),
         cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -43,7 +43,7 @@ const DoorIcon: React.FC<DoorIconProps> = ({ isActive, onClick, disabled = false
           width="12"
           height="12"
           rx="1"
-          stroke={isActive ? "white" : "#9ca3af"}
+          stroke={isActive ? "white" : "var(--theme-text-muted)"}
           strokeWidth="1"
           fill="none"
         />
@@ -55,7 +55,7 @@ const DoorIcon: React.FC<DoorIconProps> = ({ isActive, onClick, disabled = false
           width="10"
           height="10"
           rx="0.5"
-          fill={isActive ? "white" : "#9ca3af"}
+          fill={isActive ? "white" : "var(--theme-text-muted)"}
           fillOpacity={isActive ? "0.3" : "0.2"}
         />
         
@@ -64,7 +64,7 @@ const DoorIcon: React.FC<DoorIconProps> = ({ isActive, onClick, disabled = false
           cx="10"
           cy="7"
           r="0.9"
-          fill={isActive ? "white" : "#9ca3af"}
+          fill={isActive ? "white" : "var(--theme-text-muted)"}
         />
       </svg>
     </button>

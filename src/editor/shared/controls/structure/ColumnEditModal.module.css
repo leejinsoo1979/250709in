@@ -42,7 +42,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
   color: white;
 }
 
@@ -146,7 +146,7 @@
 
 .inputItem input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--theme-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   background-color: white;
 }
@@ -203,7 +203,7 @@
 }
 
 .saveButton {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -216,7 +216,7 @@
 }
 
 .saveButton:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, var(--theme-primary-hover) 0%, #047857 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }

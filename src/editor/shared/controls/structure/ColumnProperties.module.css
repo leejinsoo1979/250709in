@@ -10,26 +10,26 @@
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .columnId {
   font-size: 14px;
-  color: #666;
-  background: #f5f5f5;
+  color: var(--theme-text-secondary);
+  background: var(--theme-background-secondary);
   padding: 4px 8px;
   border-radius: 4px;
 }
 
 .empty {
   text-align: center;
-  color: #999;
+  color: var(--theme-text-muted);
   padding: 40px 0;
 }
 
@@ -41,7 +41,7 @@
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .propertyGroup {
@@ -58,23 +58,25 @@
 
 .propertyItem label {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-weight: 500;
 }
 
 .propertyItem input,
 .propertyItem select {
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border);
   border-radius: 4px;
   font-size: 14px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
   transition: border-color 0.2s;
 }
 
 .propertyItem input:focus,
 .propertyItem select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--theme-primary);
 }
 
 .propertyItem input[type="color"] {
@@ -87,14 +89,14 @@
 .actions {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--theme-border);
 }
 
 .deleteButton {
   width: 100%;
   padding: 10px;
-  background: #dc3545;
-  color: white;
+  background: var(--theme-danger);
+  color: var(--theme-surface);
   border: none;
   border-radius: 4px;
   font-size: 14px;
@@ -103,7 +105,7 @@
 }
 
 .deleteButton:hover {
-  background: #c82333;
+  background: var(--theme-danger-hover);
 }
 
 .deleteButton:active {

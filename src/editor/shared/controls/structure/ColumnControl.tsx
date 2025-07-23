@@ -38,9 +38,6 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
 
   return (
     <div className={styles.columnControl}>
-      <div className={styles.header}>
-        <h3>구조물 배치</h3>
-      </div>
 
       {/* 기둥 썸네일 드래그 앤 드롭 */}
       <div className={styles.thumbnailSection}>

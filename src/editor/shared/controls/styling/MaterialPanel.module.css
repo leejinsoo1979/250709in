@@ -2,19 +2,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: white;
+  background-color: var(--theme-surface);
 }
 
 .header {
   padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
 }
 
 .title {
   font-size: 16px;
   font-weight: 600;
-  color: #1abc9c;
+  color: var(--theme-primary);
   margin: 0;
 }
 
@@ -22,7 +22,7 @@
 .tabNavigation {
   display: flex;
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
   justify-content: center;
 }
@@ -33,11 +33,11 @@
   align-items: center;
   justify-content: center;
   padding: 8px 16px;
-  border: 1px solid #1abc9c;
-  background: #ffffff;
+  border: 1px solid var(--theme-primary);
+  background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #1abc9c;
+  color: var(--theme-primary);
   font-size: 14px;
   font-weight: 500;
   gap: 6px;
@@ -57,12 +57,12 @@
 }
 
 .tab:hover:not(.activeTab) {
-  background-color: #f0f9ff;
+  background-color: var(--theme-primary-light);
 }
 
 .tab.activeTab {
-  background-color: #1abc9c;
-  color: #ffffff;
+  background-color: var(--theme-primary);
+  color: white;
   font-weight: 600;
 }
 
@@ -123,7 +123,7 @@
 }
 
 .colorSectionTitle {
-  color: #1abc9c;
+  color: var(--theme-primary);
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 8px;
@@ -210,14 +210,14 @@
 
 .opacityLabel {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-weight: 500;
 }
 
 .opacityValue {
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .opacitySliderContainer {
@@ -255,10 +255,10 @@
   display: block;
   width: 16px;
   height: 16px;
-  background: white;
+  background: var(--theme-surface);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border);
 }
 
 /* HEX 값 입력 */
@@ -273,8 +273,8 @@
   width: 48px;
   height: 40px;
   border-radius: 6px;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px #e9ecef, 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--theme-surface);
+  box-shadow: 0 0 0 1px var(--theme-border), 0 2px 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
@@ -288,7 +288,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #666;
+  color: var(--theme-text-secondary);
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-weight: 600;
   pointer-events: none;
@@ -298,21 +298,22 @@
 .hexInput {
   width: 100%;
   padding: 12px 12px 12px 28px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #f8f9fa;
+  color: var(--theme-text);
+  background: var(--theme-background-secondary);
   transition: all 0.2s ease;
 }
 
 .hexInput:focus {
   outline: none;
-  border-color: #1abc9c;
-  background: white;
+  border-color: var(--theme-primary);
+  background: var(--theme-surface);
   box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.1);
 }
 
@@ -330,13 +331,13 @@
 
 .savedColorsLabel {
   font-size: 13px;
-  color: #333;
+  color: var(--theme-text);
   font-weight: 500;
 }
 
 .savedColorsHint {
   font-size: 11px;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .savedColorsGrid {
@@ -344,9 +345,9 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 6px;
   padding: 12px;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--theme-border);
 }
 
 .savedColorButton {
@@ -354,7 +355,7 @@
   height: 30px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #ddd;
+  border: 2px solid var(--theme-border);
   transition: all 0.15s ease;
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -370,9 +371,9 @@
 }
 
 .selectedSavedColor {
-  border-color: #1abc9c;
+  border-color: var(--theme-primary);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.3), 0 4px 12px rgba(26, 188, 156, 0.2);
+  box-shadow: 0 0 0 2px var(--theme-primary-light), 0 4px 12px var(--theme-primary-light);
   transform: scale(1.1);
 }
 
@@ -383,7 +384,7 @@
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background: white;
+  background: var(--theme-surface);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.5);
   z-index: 1;
@@ -421,8 +422,8 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 2px dashed #ccc;
-  background: #ffffff;
+  border: 2px dashed var(--theme-border);
+  background: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -432,19 +433,19 @@
 }
 
 .addColorButton:hover {
-  border-color: #1abc9c;
-  background: #f0f9ff;
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
   transform: scale(1.1);
 }
 
 .addColorButtonText {
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 14px;
   font-weight: 600;
 }
 
 .addColorButton:hover .addColorButtonText {
-  color: #1abc9c;
+  color: var(--theme-primary);
 }
 
 /* 반응형 디자인 */

@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react'
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { 
   calculateRoomDimensions, 
@@ -22,6 +23,7 @@ interface RoomProps {
   spaceInfo: SpaceInfo;
   floorColor?: string;
   viewMode?: '2D' | '3D';
+  renderMode?: 'solid' | 'wireframe';
   materialConfig?: {
     doorColor: string;
     doorTexture?: string;
@@ -44,6 +46,7 @@ const BoxWithEdges: React.FC<{
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode } = useSpace3DView();
+  const { theme } = useTheme();
   
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
   useEffect(() => {
@@ -61,12 +64,10 @@ const BoxWithEdges: React.FC<{
           <primitive object={material} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 */}
-      {((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-        <lineSegments geometry={edgesGeometry}>
-          <lineBasicMaterial color={renderMode === 'wireframe' ? "#333333" : "#666666"} linewidth={1} />
-        </lineSegments>
-      )}
+      {/* 모서리 라인 렌더링 - 항상 표시 */}
+      <lineSegments geometry={edgesGeometry}>
+        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} linewidth={1} />
+      </lineSegments>
     </group>
   );
 };
@@ -78,6 +79,7 @@ const Room: React.FC<RoomProps> = ({
   materialConfig,
   showAll = true
 }) => {
+  const { theme } = useTheme();
   const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const { highlightedFrame } = useUIStore(); // 강조된 프레임 상태 가져오기
   
@@ -521,7 +523,16 @@ const Room: React.FC<RoomProps> = ({
             >
               <planeGeometry args={[width, floorDepth]} />
               <meshStandardMaterial 
-                color="#2ECC71" 
+                color={(() => {
+                  if (typeof window !== 'undefined') {
+                    const computedStyle = getComputedStyle(document.documentElement);
+                    const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+                    if (primaryColor) {
+                      return primaryColor;
+                    }
+                  }
+                  return '#10b981'; // 기본값 (green)
+                })()} 
                 transparent={true} 
                 opacity={0.4}
                 side={THREE.DoubleSide}
@@ -591,7 +602,16 @@ const Room: React.FC<RoomProps> = ({
             >
               <planeGeometry args={[width, floorDepth]} />
               <meshStandardMaterial 
-                color="#2ECC71" 
+                color={(() => {
+                  if (typeof window !== 'undefined') {
+                    const computedStyle = getComputedStyle(document.documentElement);
+                    const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+                    if (primaryColor) {
+                      return primaryColor;
+                    }
+                  }
+                  return '#10b981'; // 기본값 (green)
+                })()} 
                 transparent={true} 
                 opacity={0.4}
                 side={THREE.DoubleSide}
@@ -1269,7 +1289,7 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 배치된 가구들 */}
-      <PlacedFurnitureContainer />
+      <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} />
     </group>
   );
 };
