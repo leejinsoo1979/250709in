@@ -311,10 +311,11 @@ const Configurator: React.FC = () => {
     return obj;
   };
 
-  // 프로젝트 저장 (Firebase 또는 로컬 저장)
+  // 디자인 파일 저장 (프로젝트가 아닌 디자인 파일로 저장)
   const saveProject = async () => {
     console.log('💾 [DEBUG] saveProject 함수 시작');
     console.log('💾 [DEBUG] 현재 프로젝트 ID:', currentProjectId);
+    console.log('💾 [DEBUG] 현재 디자인파일 ID:', currentDesignFileId);
     console.log('💾 [DEBUG] Firebase 설정:', isFirebaseConfigured());
     console.log('💾 [DEBUG] 사용자 상태:', !!user);
     console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
@@ -357,26 +358,54 @@ const Configurator: React.FC = () => {
         console.log('💾 [DEBUG] Firebase 저장 모드 진입');
         
         try {
-          const updateData = {
-            title: basicInfo.title,
-            projectData: removeUndefinedValues(basicInfo),
-            spaceConfig: removeUndefinedValues(spaceInfo),
-            furniture: {
-              placedModules: removeUndefinedValues(placedModules)
+          // 디자인 파일이 있으면 디자인 파일 업데이트, 없으면 새로 생성
+          if (currentDesignFileId) {
+            console.log('💾 [DEBUG] 기존 디자인 파일 업데이트');
+            const { updateDesignFile } = await import('@/firebase/projects');
+            const { error } = await updateDesignFile(currentDesignFileId, {
+              name: currentDesignFileName || basicInfo.title,
+              spaceConfig: removeUndefinedValues(spaceInfo),
+              furniture: {
+                placedModules: removeUndefinedValues(placedModules)
+              },
+              thumbnail: thumbnail
+            });
+            
+            if (error) {
+              console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', error);
+              setSaveStatus('error');
+              alert('디자인 파일 저장에 실패했습니다: ' + error);
+            } else {
+              setSaveStatus('success');
+              console.log('✅ 디자인 파일 저장 성공');
             }
-          };
-          
-          console.log('💾 [DEBUG] updateProject 호출 시작, 정리된 데이터:', updateData);
-          const { error } = await updateProject(currentProjectId, updateData, thumbnail);
-          console.log('💾 [DEBUG] updateProject 결과 error:', error);
-
-          if (error) {
-            console.error('💾 [ERROR] Firebase 프로젝트 저장 실패:', error);
-            setSaveStatus('error');
-            alert('프로젝트 저장에 실패했습니다: ' + error);
           } else {
-            setSaveStatus('success');
-            console.log('✅ Firebase 프로젝트 저장 성공');
+            console.log('💾 [DEBUG] 새 디자인 파일 생성');
+            const { createDesignFile } = await import('@/firebase/projects');
+            const { id: designFileId, error } = await createDesignFile({
+              name: basicInfo.title || '새 디자인',
+              projectId: currentProjectId,
+              spaceConfig: removeUndefinedValues(spaceInfo),
+              furniture: {
+                placedModules: removeUndefinedValues(placedModules)
+              },
+              thumbnail: thumbnail
+            });
+            
+            if (error) {
+              console.error('💾 [ERROR] 디자인 파일 생성 실패:', error);
+              setSaveStatus('error');
+              alert('디자인 파일 생성에 실패했습니다: ' + error);
+            } else if (designFileId) {
+              setCurrentDesignFileId(designFileId);
+              setCurrentDesignFileName(basicInfo.title);
+              setSaveStatus('success');
+              console.log('✅ 새 디자인 파일 생성 및 저장 성공');
+              
+              // URL 업데이트
+              navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileId}`, { replace: true });
+            }
+          }
             
             // 다른 창(대시보드)에 프로젝트 업데이트 알림
             try {
@@ -395,7 +424,7 @@ const Configurator: React.FC = () => {
         } catch (firebaseError) {
           console.error('💾 [ERROR] Firebase 저장 중 예외:', firebaseError);
           setSaveStatus('error');
-          alert('Firebase 저장 중 오류가 발생했습니다: ' + firebaseError.message);
+          alert('디자인 파일 저장 중 오류가 발생했습니다: ' + firebaseError.message);
         }
         
         setTimeout(() => setSaveStatus('idle'), 3000);
