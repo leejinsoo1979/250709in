@@ -40,7 +40,7 @@
 .header {
   position: relative;
   padding: 24px 32px;
-  background: #f8fffe;
+  background: white;
   border-bottom: 1px solid #e5e5e5;
 }
 
@@ -86,14 +86,45 @@
   min-height: 400px;
 }
 
-/* 왼쪽 섹션 - 2D/3D 뷰어 */
+/* 왼쪽 셉션 - 2D/3D 뷰어 */
 .leftSection {
-  flex: 1;
+  flex: 1.2; /* 뷰어 영역을 더 크게 */
   padding: 20px;
   display: flex;
   flex-direction: column;
-  background: #f8fffe;
+  background: white;
   position: relative;
+  min-width: 600px;
+}
+
+/* 2D/3D 토글 버튼 */
+.viewToggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.toggleButton {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.toggleButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
 }
 
 /* 3D 에디터 뷰어 */
@@ -102,11 +133,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 60px); /* viewToggle 높이 빼기 */
   background: white;
   border-radius: 8px;
   overflow: hidden;
   min-height: 500px;
+  position: relative;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* 오른쪽 섹션 - 폼 */

@@ -31,6 +31,21 @@ export class ColumnIndexer {
    * - customColumnCount가 설정된 경우 해당 값 우선 사용
    */
   static calculateSpaceIndexing(spaceInfo: SpaceInfo): SpaceIndexingResult {
+    if (!spaceInfo) {
+      return {
+        columnCount: 0,
+        columnPositions: [],
+        threeUnitPositions: [],
+        columnBoundaries: [],
+        threeUnitBoundaries: [],
+        dualColumnPositions: [],
+        threeUnitDualPositions: [],
+        columnWidth: 0,
+        internalWidth: 0,
+        internalStartX: 0,
+        threeUnitColumnWidth: 0
+      };
+    }
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
     const frameThickness = calculateFrameThickness(spaceInfo);
     
@@ -63,9 +78,26 @@ export class ColumnIndexer {
     // 내경의 시작 X좌표 (Three.js 좌표계, 중앙이 0)
     // 전체 공간이 중앙 정렬되므로 (-전체폭/2 + 좌측여백)가 내경 시작점
     let internalStartX;
-    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-      // 노서라운드: 좌측 이격거리 + 좌측 패딩 고려
-      internalStartX = -(totalWidth / 2) + spaceInfo.gapConfig.left + leftPadding;
+    if (spaceInfo.surroundType === 'no-surround') {
+      let leftReduction = 0;
+      
+      // 노서라운드: 프레임 없음, 벽 유무에 따라 이격거리 또는 엔드패널
+      if (spaceInfo.installType === 'builtin') {
+        // 양쪽벽: 2mm 이격거리
+        leftReduction = 2;
+      } else if (spaceInfo.installType === 'semistanding') {
+        // 한쪽벽: 벽 있는 쪽 2mm, 벽 없는 쪽 20mm
+        if (spaceInfo.wallConfig?.left) {
+          leftReduction = 2;  // 좌측벽 있음: 2mm 이격거리
+        } else {
+          leftReduction = 20; // 좌측벽 없음: 20mm 엔드패널
+        }
+      } else {
+        // 벽없음(freestanding): 20mm 엔드패널
+        leftReduction = 20;
+      }
+      
+      internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;

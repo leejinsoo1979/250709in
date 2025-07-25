@@ -581,3 +581,12 @@ export const MinimizeIcon: React.FC<IconProps> = ({ size = 16, color = 'currentC
     <path d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+
+// 구조물 아이콘 (기둥/벽)
+export const StructureIcon: React.FC<IconProps> = ({ size = 16, color = 'currentColor', className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <rect x="7" y="3" width="4" height="18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="13" y="3" width="4" height="18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="3" y1="21" x2="21" y2="21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);

@@ -284,10 +284,22 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             >
               <style>
                 {`
-                  .column-distance-input > div > input[type="number"] {
+                  .column-distance-input > div > input[type="number"],
+                  .column-distance-input input[type="number"],
+                  .column-distance-input input {
                     color: #000000 !important;
                     background-color: #ffffff !important;
                     -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
+                  }
+                  /* 다크모드에서도 강제 적용 */
+                  .theme-dark .column-distance-input input,
+                  body.theme-dark .column-distance-input input,
+                  [data-theme="dark"] .column-distance-input input {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
                   }
                 `}
               </style>
@@ -463,10 +475,22 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             >
               <style>
                 {`
-                  .column-distance-input > div > input[type="number"] {
+                  .column-distance-input > div > input[type="number"],
+                  .column-distance-input input[type="number"],
+                  .column-distance-input input {
                     color: #000000 !important;
                     background-color: #ffffff !important;
                     -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
+                  }
+                  /* 다크모드에서도 강제 적용 */
+                  .theme-dark .column-distance-input input,
+                  body.theme-dark .column-distance-input input,
+                  [data-theme="dark"] .column-distance-input input {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
                   }
                 `}
               </style>
@@ -611,10 +635,22 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             >
               <style>
                 {`
-                  .column-distance-input > div > input[type="number"] {
+                  .column-distance-input > div > input[type="number"],
+                  .column-distance-input input[type="number"],
+                  .column-distance-input input {
                     color: #000000 !important;
                     background-color: #ffffff !important;
                     -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
+                  }
+                  /* 다크모드에서도 강제 적용 */
+                  .theme-dark .column-distance-input input,
+                  body.theme-dark .column-distance-input input,
+                  [data-theme="dark"] .column-distance-input input {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                    opacity: 1 !important;
                   }
                 `}
               </style>

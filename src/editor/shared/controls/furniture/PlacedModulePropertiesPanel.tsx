@@ -21,35 +21,63 @@ const getFurnitureImagePath = (moduleId: string) => {
 };
 
 const PlacedModulePropertiesPanel: React.FC = () => {
-  // 컴포넌트 마운트 시 스타일 강제 적용
+  // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
+      /* 모든 테마에서 input 필드는 항상 흰 배경에 검은 텍스트 */
       .furniture-depth-input,
       input.furniture-depth-input,
-      .${styles.depthInput} {
+      .${styles.depthInput},
+      .${styles.panel} input[type="text"],
+      .${styles.panel} input[type="number"],
+      .${styles.depthInputWrapper} input,
+      .${styles.inputWithUnit} input {
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
         background-color: #ffffff !important;
         opacity: 1 !important;
+        caret-color: #000000 !important;
       }
       .furniture-depth-input:focus,
       input.furniture-depth-input:focus,
-      .${styles.depthInput}:focus {
+      .${styles.depthInput}:focus,
+      .${styles.panel} input[type="text"]:focus,
+      .${styles.panel} input[type="number"]:focus,
+      .${styles.depthInputWrapper} input:focus,
+      .${styles.inputWithUnit} input:focus {
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
         background-color: #ffffff !important;
       }
-      /* 모든 가구 편집 패널 input */
-      .${styles.panel} input {
+      /* 모든 상태에서 적용 */
+      .${styles.depthInput}:hover,
+      .${styles.depthInput}:active,
+      .${styles.depthInput}:disabled,
+      .${styles.depthInput}::placeholder {
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
       }
+      /* 다크 테마 클래스가 있는 경우 */
+      .theme-dark .furniture-depth-input,
+      .theme-dark input.furniture-depth-input,
+      .theme-dark .${styles.depthInput},
+      .theme-dark .${styles.panel} input,
+      body.theme-dark .${styles.depthInput},
+      html.theme-dark .${styles.depthInput} {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background-color: #ffffff !important;
+      }
     `;
+    // 스타일을 가장 마지막에 추가하여 우선순위 보장
     document.head.appendChild(style);
+    style.setAttribute('data-furniture-panel-styles', 'true');
     
     return () => {
-      document.head.removeChild(style);
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
     };
   }, []);
   const { spaceInfo } = useSpaceConfigStore();

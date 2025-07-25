@@ -39,11 +39,30 @@ export const isSlotAvailable = (
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
   
+  console.log('🔍 isSlotAvailable 상세 체크:', {
+    slotIndex,
+    isDualFurniture,
+    moduleId,
+    excludeModuleId,
+    columnSlotsLength: columnSlots.length,
+    targetSlots
+  });
+  
   // 기둥이 있는 슬롯은 150mm 이상의 공간이 있으면 배치 가능
   // (가구 폭이 150mm까지 줄어들 수 있음)
   for (const targetSlot of targetSlots) {
     const slotInfo = columnSlots[targetSlot];
-    if (!slotInfo) continue;
+    if (!slotInfo) {
+      console.log(`⚠️ 슬롯 ${targetSlot}의 정보를 찾을 수 없음 (columnSlots 길이: ${columnSlots.length})`);
+      continue;
+    }
+    
+    console.log(`📊 슬롯 ${targetSlot} 정보:`, {
+      hasColumn: slotInfo.hasColumn,
+      availableWidth: slotInfo.availableWidth,
+      adjustedWidth: slotInfo.adjustedWidth,
+      column: slotInfo.column?.id
+    });
     
     if (slotInfo.hasColumn) {
       // 듀얼 가구는 기둥 슬롯에 배치 불가
@@ -52,48 +71,70 @@ export const isSlotAvailable = (
         return false;
       }
       
-      // 싱글 가구는 최소 150mm 공간이 있으면 배치 가능
-      const availableWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
-      if (availableWidth < 150) {
-        console.log(`❌ 슬롯 ${targetSlot}의 가용 공간(${availableWidth}mm)이 최소 요구 폭(150mm)보다 작음`);
-        return false;
-      }
+      // 싱글 가구는 기둥 침범 후에도 최소 150mm 공간이 있으면 배치 가능
+      // 여기서는 일단 배치 가능하다고 판단하고, 실제 크기 계산은 SlotDropZones에서 처리
+      // const availableWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+      // if (availableWidth < 150) {
+      //   console.log(`❌ 슬롯 ${targetSlot}의 가용 공간(${availableWidth}mm)이 최소 요구 폭(150mm)보다 작음`);
+      //   return false;
+      // }
       
-      console.log(`✅ 슬롯 ${targetSlot}에 가구 배치 가능 (폭 ${availableWidth}mm로 조정됨)`);
+      console.log(`✅ 슬롯 ${targetSlot}에 가구 배치 가능 (기둥 침범 후 크기는 SlotDropZones에서 계산)`);
     }
   }
   
-  // 기존 가구들과 충돌 검사
-  for (const placedModule of placedModules) {
-    // 제외할 모듈은 건너뛰기
-    if (excludeModuleId && placedModule.id === excludeModuleId) {
-      continue;
-    }
-    
-    const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
-    if (!moduleData) continue;
-    
-    // 기존 가구의 듀얼/싱글 여부 판별
-    const isModuleDual = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-    
-    // 기존 모듈의 슬롯 위치 찾기
-    let moduleSlot = -1;
-    if (isModuleDual && indexing.threeUnitDualPositions) {
-      moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
-        Math.abs(pos - placedModule.position.x) < 0.1
-      );
-    } else {
-      moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
-        Math.abs(pos - placedModule.position.x) < 0.1
-      );
-    }
-    
-    if (moduleSlot >= 0) {
-      const moduleSlots = isModuleDual ? [moduleSlot, moduleSlot + 1] : [moduleSlot];
-      const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
+  // 기둥이 있는 슬롯인 경우 실제 3D 공간 충돌 검사
+  if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
+    // 기둥이 있는 슬롯에서는 실제 위치와 크기 기반 충돌 검사
+    for (const placedModule of placedModules) {
+      // 제외할 모듈은 건너뛰기
+      if (excludeModuleId && placedModule.id === excludeModuleId) {
+        continue;
+      }
       
-      if (hasOverlap) {
-        return false; // 충돌 발견
+      // 같은 슬롯에 있는 가구들 확인
+      if (targetSlots.includes(placedModule.slotIndex || -1)) {
+        // 같은 슬롯에 이미 가구가 있어도 기둥이 있으면 공간이 남을 수 있음
+        console.log(`✅ 슬롯 ${placedModule.slotIndex}에 기둥이 있어 추가 배치 검토`);
+        
+        // 실제 3D 충돌 검사는 FurnitureItem에서 처리하도록 허용
+        // 여기서는 기본적으로 허용하고, 실제 배치 시 위치 조정
+        continue;
+      }
+    }
+  } else {
+    // 기둥이 없는 슬롯에서는 기존 로직 사용
+    for (const placedModule of placedModules) {
+      // 제외할 모듈은 건너뛰기
+      if (excludeModuleId && placedModule.id === excludeModuleId) {
+        continue;
+      }
+      
+      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+      if (!moduleData) continue;
+      
+      // 기존 가구의 듀얼/싱글 여부 판별
+      const isModuleDual = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+      
+      // 기존 모듈의 슬롯 위치 찾기
+      let moduleSlot = -1;
+      if (isModuleDual && indexing.threeUnitDualPositions) {
+        moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
+          Math.abs(pos - placedModule.position.x) < 0.1
+        );
+      } else {
+        moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
+          Math.abs(pos - placedModule.position.x) < 0.1
+        );
+      }
+      
+      if (moduleSlot >= 0) {
+        const moduleSlots = isModuleDual ? [moduleSlot, moduleSlot + 1] : [moduleSlot];
+        const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
+        
+        if (hasOverlap) {
+          return false; // 충돌 발견
+        }
       }
     }
   }

@@ -23,10 +23,32 @@ export class SpaceCalculator {
     // 전체 폭
     const totalWidth = spaceInfo.width;
     
-    // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
-    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-      // 노서라운드: 내경 = 전체 폭 - (좌우 이격거리)
-      return totalWidth - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
+    // 내경 계산: 노서라운드인 경우 이격거리/엔드패널 고려, 서라운드인 경우 프레임 두께 고려
+    if (spaceInfo.surroundType === 'no-surround') {
+      let leftReduction = 0;
+      let rightReduction = 0;
+      
+      // 노서라운드: 프레임 없음, 벽 유무에 따라 이격거리 또는 엔드패널
+      if (spaceInfo.installType === 'builtin') {
+        // 양쪽벽: 양쪽 모두 2mm 이격거리
+        leftReduction = 2;
+        rightReduction = 2;
+      } else if (spaceInfo.installType === 'semistanding') {
+        // 한쪽벽: 벽 있는 쪽 2mm, 벽 없는 쪽 20mm 엔드패널
+        if (spaceInfo.wallConfig?.left) {
+          leftReduction = 2;  // 좌측벽 있음: 2mm 이격거리
+          rightReduction = 20; // 우측벽 없음: 20mm 엔드패널
+        } else {
+          leftReduction = 20; // 좌측벽 없음: 20mm 엔드패널
+          rightReduction = 2;  // 우측벽 있음: 2mm 이격거리
+        }
+      } else {
+        // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
+        leftReduction = 20;
+        rightReduction = 20;
+      }
+      
+      return totalWidth - (leftReduction + rightReduction);
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임
       return totalWidth - frameThickness.left - frameThickness.right;

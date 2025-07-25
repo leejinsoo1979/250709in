@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
@@ -30,74 +30,42 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { 
-    spaceInfo, 
-    svgSize, 
-    viewMode = '3D', 
-    setViewMode, 
-    renderMode = 'wireframe', 
-    showAll = true,
-    isViewerOnly = false,
-    project,
-    projectId = ''
-  } = props;
-  
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2 } = props;
+  console.log('🌐 Space3DView - viewMode:', viewMode);
+  console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText, showGuides, selectedColumnId, activePopup } = useUIStore();
-  
-  // 드래그 중인 기둥 ID 추적
-  const [draggingColumnId, setDraggingColumnId] = useState<string | null>(null);
-
-  // 뷰어 전용 모드에서는 프로젝트 데이터 사용, 일반 모드에서는 스토어 데이터 사용
-  const currentSpaceInfo = isViewerOnly && project?.spaceInfo ? project.spaceInfo : (spaceInfo || storeSpaceInfo);
-  const currentSvgSize = svgSize || { width: 800, height: 600 };
-  
-  // 가구 데이터도 뷰어 모드에 따라 분기
-  const currentPlacedModules = isViewerOnly && project?.placedModules ? project.placedModules : placedModules;
-  
-  console.log('🔧 Space3DView 가구 데이터:', {
-    isViewerOnly,
-    projectPlacedModules: project?.placedModules?.length || 0,
-    storePlacedModules: placedModules.length,
-    currentPlacedModules: currentPlacedModules.length,
-    currentPlacedModulesData: currentPlacedModules
-  });
+  const { view2DDirection, showDimensions, showGuides } = useUIStore();
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
-  // 재질 설정 가져오기 - spaceInfo에서 직접 가져오기
-  const materialConfig = currentSpaceInfo?.materialConfig || { 
+  // 재질 설정 가져오기
+  const materialConfig = storeSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
-    doorColor: '#E0E0E0'  // 기본값 변경
+    doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
   
-  // 도어 텍스처도 포함된 완전한 materialConfig 생성
-  const fullMaterialConfig = {
-    ...materialConfig
-  };
-  
-  // 기둥 변경 감지하여 즉시 리렌더링 (뷰어 모드에서는 비활성화)
+  // 기둥 변경 감지하여 즉시 리렌더링
   useEffect(() => {
-    if (!isViewerOnly) {
+    if (spaceInfo) {
       console.log('🔄 Space3DView - 기둥 상태 변경 감지:', {
-        columnsCount: currentSpaceInfo.columns?.length || 0,
-        columnsData: currentSpaceInfo.columns?.map(col => ({ id: col.id, position: col.position, depth: col.depth }))
+        columnsCount: spaceInfo.columns?.length || 0,
+        columnsData: spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, depth: col.depth }))
       });
     }
     // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
-  }, [currentSpaceInfo.columns, isViewerOnly]);
+  }, [spaceInfo?.columns]);
   
-  // 가구 개수 계산
-  const furnitureCount = currentPlacedModules.length;
-
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
-    const { width, height, depth = 600 } = currentSpaceInfo; // 기본 깊이 600mm
+    if (!spaceInfo) {
+      return [0, 10, 20] as [number, number, number]; // 기본 카메라 위치
+    }
+    const { width, height, depth = 600 } = spaceInfo; // 기본 깊이 600mm
     
     // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
-    const distance = calculateOptimalDistance(width, height, depth, furnitureCount);
+    const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
     const centerZ = 0;
@@ -117,31 +85,30 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return [centerX, centerY, distance] as [number, number, number];
       case 'left':
         // 좌측: X축에서 너비를 고려한 최적 거리
-        const leftDistance = calculateOptimalDistance(depth, height, width, furnitureCount);
+        const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
         return [-leftDistance, centerY, centerZ] as [number, number, number];
       case 'right':
         // 우측: X축에서 너비를 고려한 최적 거리
-        const rightDistance = calculateOptimalDistance(depth, height, width, furnitureCount);
+        const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
         return [rightDistance, centerY, centerZ] as [number, number, number];
       case 'top':
         // 상단: Y축에서 너비와 깊이를 고려한 최적 거리 (비율 보정)
-        const topDistance = calculateOptimalDistance(width, depth, height, furnitureCount);
+        const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
         return [centerX, centerY + topDistance, centerZ] as [number, number, number];
       default:
         return frontPosition;
     }
-  }, [currentSpaceInfo.width, currentSpaceInfo.height, currentSpaceInfo.depth, viewMode, view2DDirection, furnitureCount]);
+  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
   
-  // 뷰어 모드에서는 간단한 키 사용
+  // 각 위치별 고유한 키를 생성하여 2D 방향 변경 시 ThreeCanvas 재생성 (OrbitControls 리셋)
+  // 공간 크기는 키에서 제외하여 크기 변경 시 캔버스 재생성 방지 (깜박거림 해결)
   const viewerKey = useMemo(() => 
-    isViewerOnly ? `viewer-${projectId}-${viewMode}` : `${location.pathname}-${viewMode}-${view2DDirection}`, 
-    [isViewerOnly, projectId, location.pathname, viewMode, view2DDirection]
+    `${location.pathname}-${viewMode}-${view2DDirection}`, 
+    [location.pathname, viewMode, view2DDirection]
   );
   
-  // 드롭 이벤트 핸들러 (뷰어 모드에서는 비활성화)
+  // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
-    if (isViewerOnly) return; // 뷰어 모드에서는 드롭 비활성화
-    
     e.preventDefault();
     e.stopPropagation();
     
@@ -189,7 +156,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
     
     // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
-    const spaceDepthM = (currentSpaceInfo.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
+    const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
     const columnDepthM = (columnData.depth || 730) * 0.01; // columnData에서 깊이 가져오기
     const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
     
@@ -198,7 +165,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
       width: columnData.width || 300, // columnData에서 폭 가져오기
-      height: columnData.height || currentSpaceInfo.height || 2400, // columnData에서 높이 가져오기
+      height: columnData.height || spaceInfo?.height || 2400, // columnData에서 높이 가져오기
       depth: columnData.depth || 730, // columnData에서 깊이 가져오기
       color: columnData.color || '#888888',
       material: columnData.material || 'concrete'
@@ -224,7 +191,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
     
     // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
-    const spaceDepthM = (spaceInfo.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
+    const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
     const wallDepthM = (wallData.depth || 730) * 0.01; // 730mm를 Three.js 단위로 변환
     const zPosition = -(spaceDepthM / 2) + (wallDepthM / 2); // 뒷벽에 맞닿도록
     
@@ -233,7 +200,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       id: `wall-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
       width: wallData.width || 120, // 120mm 
-      height: wallData.height || spaceInfo.height || 2400, // 공간 높이와 동일 (2400mm)
+      height: wallData.height || spaceInfo?.height || 2400, // 공간 높이와 동일 (2400mm)
       depth: wallData.depth || 730, // 730mm
       color: wallData.color || '#888888',
       material: wallData.material || 'concrete'
@@ -287,34 +254,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }, []);
   
 
-  // 필수 데이터 검증
-  if (!currentSpaceInfo) {
-    console.error('❌ Space3DView: spaceInfo가 없습니다');
-    return <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
-      공간 정보를 불러올 수 없습니다.
-    </div>;
-  }
-
-  console.log('✅ Space3DView 렌더링:', {
-    hasSpaceInfo: !!currentSpaceInfo,
-    spaceInfo: currentSpaceInfo,
-    isViewerOnly,
-    viewMode,
-    cameraPosition,
-    renderMode,
-    materialConfig: fullMaterialConfig
-  });
-
   return (
-    <Space3DViewProvider spaceInfo={currentSpaceInfo} svgSize={currentSvgSize} renderMode={renderMode} viewMode={viewMode}>
+    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
       <div 
         key={viewerKey}
         style={{ 
           width: '100%', 
           height: '100%', 
           minHeight: '400px',
-          position: 'relative',
-          background: '#f5f5f5'
+          position: 'relative'
         }}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -371,22 +319,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
             {/* 기본 요소들 */}
-            <Room 
-              spaceInfo={{
-                ...currentSpaceInfo,
-                // 드래그 중인 기둥은 제외하고 전달하여 프레임 분절 재계산 방지
-                columns: draggingColumnId 
-                  ? (currentSpaceInfo.columns || []).filter(col => col.id !== draggingColumnId)
-                  : currentSpaceInfo.columns
-              }} 
-              viewMode={viewMode} 
-              materialConfig={fullMaterialConfig} 
-              showAll={showAll} 
-              placedModules={currentPlacedModules} 
-            />
+            <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
             
             {/* 기둥 에셋 렌더링 */}
-            {(currentSpaceInfo.columns || []).map((column) => (
+            {(spaceInfo?.columns || []).map((column) => (
               <React.Fragment key={column.id}>
                 <ColumnAsset
                   id={column.id}
@@ -395,40 +331,32 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   height={column.height}
                   depth={column.depth}
                   color={column.color}
-                  spaceInfo={currentSpaceInfo}
+                  spaceInfo={spaceInfo}
                   renderMode={renderMode}
-                  onPositionChange={isViewerOnly ? undefined : (id, newPosition) => {
+                  onPositionChange={(id, newPosition) => {
                     updateColumn(id, { position: newPosition });
                   }}
-                  onRemove={isViewerOnly ? undefined : (id) => {
+                  onRemove={(id) => {
                     removeColumn(id);
                   }}
-                  onDragStart={isViewerOnly ? undefined : (id) => {
-                    setDraggingColumnId(id);
-                  }}
-                  onDragEnd={isViewerOnly ? undefined : (id) => {
-                    setDraggingColumnId(null);
-                  }}
                 />
-                {/* 기둥 벽면 간격 라벨 (기둥 팝업이 열렸을 때 표시, 드래그 중이 아닐 때만) */}
-                {!isViewerOnly && (activePopup.type === 'column' || activePopup.type === 'columnEdit') && activePopup.id === column.id && draggingColumnId !== column.id && (
-                  <ColumnDistanceLabels
-                    column={column}
-                    spaceInfo={currentSpaceInfo}
-                    onPositionChange={(columnId, newPosition) => {
-                      updateColumn(columnId, { position: newPosition });
-                    }}
-                    onColumnUpdate={(columnId, updates) => {
-                      updateColumn(columnId, updates);
-                    }}
-                    showLabels={true}
-                  />
-                )}
+                {/* 기둥 벽면 간격 라벨 (2D, 3D 모드 모두 표시) */}
+                <ColumnDistanceLabels
+                  column={column}
+                  spaceInfo={spaceInfo}
+                  onPositionChange={(columnId, newPosition) => {
+                    updateColumn(columnId, { position: newPosition });
+                  }}
+                  onColumnUpdate={(columnId, updates) => {
+                    updateColumn(columnId, updates);
+                  }}
+                  showLabels={showDimensions}
+                />
               </React.Fragment>
             ))}
             
             {/* 가벽 에셋 렌더링 */}
-            {(currentSpaceInfo.walls || []).map((wall) => (
+            {(spaceInfo?.walls || []).map((wall) => (
               <WallAsset
                 key={wall.id}
                 id={wall.id}
@@ -437,34 +365,37 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 height={wall.height}
                 depth={wall.depth}
                 color={wall.color}
-                spaceInfo={currentSpaceInfo}
+                spaceInfo={spaceInfo}
                 renderMode={renderMode}
-                onPositionChange={isViewerOnly ? undefined : (id, newPosition) => {
+                onPositionChange={(id, newPosition) => {
                   updateWall(id, { position: newPosition });
                 }}
-                onRemove={isViewerOnly ? undefined : (id) => {
+                onRemove={(id) => {
                   removeWall(id);
                 }}
               />
             ))}
             
-            {/* 기둥 드래그 시 고스트 프리뷰 (뷰어 모드에서는 비활성화) */}
-            {!isViewerOnly && <ColumnGhostPreview spaceInfo={currentSpaceInfo} />}
+            {/* 기둥 드래그 시 고스트 프리뷰 */}
+            <ColumnGhostPreview spaceInfo={spaceInfo} />
             
             
             {/* 기둥 생성 마커는 드래그 앤 드롭 방식으로 대체됨 */}
             
             {/* Configurator에서 표시되는 요소들 */}
-            {/* 컬럼 가이드 표시 - 2D/3D 모두에서 표시, showDimensions가 true이고 showAll(가이드)이 true일 때만, 뷰어 모드에서는 비활성화 */}
-            {!isViewerOnly && showDimensions && showAll && <ColumnGuides />}
+            {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showAll(가이드)이 true일 때만 */}
+            {showAll && <ColumnGuides />}
             
-            {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시, showDimensions가 true이고 showDimensionsText가 true일 때만, 뷰어 모드에서는 비활성화 */}
-            {!isViewerOnly && showDimensions && showDimensionsText && <CleanCAD2D viewDirection={viewMode === '3D' ? '3D' : view2DDirection} />}
+            {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
+            <CleanCAD2D 
+              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+              showDimensions={showDimensions}
+              isStep2={isStep2}
+            />
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            {/* 슬롯 드롭존 (뷰어 모드에서는 비활성화) */}
-            {!isViewerOnly && <SlotDropZones spaceInfo={currentSpaceInfo} showAll={showAll} />}
+            <SlotDropZones spaceInfo={spaceInfo} showAll={showAll} />
           </React.Suspense>
         </ThreeCanvas>
 

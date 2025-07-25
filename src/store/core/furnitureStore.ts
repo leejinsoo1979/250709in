@@ -1,8 +1,5 @@
 import { create } from 'zustand';
 import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
-import { useSpaceConfigStore } from './spaceConfigStore';
-import { calculateSpaceIndexing, calculateInternalSpace, findSlotIndexFromPosition } from '@/editor/shared/utils/indexing';
-import { getModuleById } from '@/data/modules';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -49,7 +46,7 @@ interface FurnitureDataState {
 }
 
 // 가구 데이터 Store 생성
-export const useFurnitureStore = create<FurnitureDataState>((set) => ({
+export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 가구 데이터 초기 상태
   placedModules: [],
 
@@ -81,38 +78,24 @@ export const useFurnitureStore = create<FurnitureDataState>((set) => ({
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)
   moveModule: (id: string, position: { x: number; y: number; z: number }) => {
-    set((state) => {
-      // spaceInfo와 indexing 가져오기
-      const { spaceInfo } = useSpaceConfigStore.getState();
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      
-      return {
-        placedModules: state.placedModules.map(module => {
-          if (module.id === id) {
-            // 새 위치에서 슬롯 인덱스 계산
-            const internalSpace = calculateInternalSpace(spaceInfo);
-            const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-            let slotIndex: number | undefined;
-            
-            if (moduleData) {
-              const isDualFurniture = module.isDualSlot || Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-              slotIndex = findSlotIndexFromPosition(position, indexing, isDualFurniture);
-            }
-            
-            return { 
-              ...module, 
-              position,
-              slotIndex: slotIndex !== undefined ? slotIndex : module.slotIndex 
-            };
-          }
-          return module;
-        })
-      };
-    });
+    set((state) => ({
+      placedModules: state.placedModules.map(module => 
+        module.id === id 
+          ? { ...module, position } 
+          : module
+      )
+    }));
   },
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
+    console.log('📦 updatePlacedModule 호출:', {
+      id,
+      updates,
+      hasPosition: !!updates.position,
+      position: updates.position
+    });
+    
     set((state) => ({
       placedModules: state.placedModules.map(module => 
         module.id === id 
@@ -181,11 +164,26 @@ export const useFurnitureStore = create<FurnitureDataState>((set) => ({
 
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {
-    set((state) => ({
-      placedModules: state.placedModules.map(module => ({
+    console.log('🚪 setAllDoors 호출:', {
+      hasDoor,
+      currentModulesCount: get().placedModules.length,
+      currentModules: get().placedModules.map(m => ({ id: m.id, hasDoor: m.hasDoor }))
+    });
+    
+    set((state) => {
+      const updatedModules = state.placedModules.map(module => ({
         ...module,
         hasDoor
-      }))
-    }));
+      }));
+      
+      console.log('🚪 setAllDoors 완료:', {
+        updatedModulesCount: updatedModules.length,
+        updatedModules: updatedModules.map(m => ({ id: m.id, hasDoor: m.hasDoor }))
+      });
+      
+      return {
+        placedModules: updatedModules
+      };
+    });
   }
 })); 

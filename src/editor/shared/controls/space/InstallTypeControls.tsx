@@ -9,6 +9,8 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
+  console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
+  console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
     // 설치 유형에 따른 벽 구성 설정
     let wallConfig = { ...spaceInfo.wallConfig };
@@ -25,6 +27,7 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         break;
     }
 
+    console.log('🏢 InstallTypeControls - updating with:', { installType: type, wallConfig });
     onUpdate({
       installType: type,
       wallConfig,

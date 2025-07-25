@@ -27,6 +27,14 @@ export interface Space3DViewProps extends ViewerBaseProps {
   isViewerOnly?: boolean;
   /** 프로젝트 데이터 (뷰어 모드용) */
   project?: ProjectSummary;
+  /** 프레임 표시 여부 (Step 2에서는 false) */
+  showFrame?: boolean;
+  /** 치수 표시 여부 */
+  showDimensions?: boolean;
+  /** 임베디드 모드 여부 */
+  isEmbedded?: boolean;
+  /** Step 2 모드 (공간 높이와 폭만 표시) */
+  isStep2?: boolean;
 }
 
 /**

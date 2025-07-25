@@ -7,6 +7,7 @@ import { useSlotOccupancy } from './useSlotOccupancy';
 import { useDropPositioning } from './useDropPositioning';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
+import { isSlotAvailable } from '../../utils/slotAvailability';
 
 export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const addModule = useFurnitureStore(state => state.addModule);
@@ -54,16 +55,27 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const indexing = calculateSpaceIndexing(spaceInfo);
         let finalX = dropPosition.x;
         
-        // 중복 배치 확인 - 슬롯 기반 충돌 검사 사용
-        const isBlocked = checkSlotOccupancy(dropPosition.column, dropPosition.isDualFurniture, indexing, placedModules);
+        // 슬롯 사용 가능 여부 확인 - 기둥이 있어도 150mm 이상 공간이 있으면 배치 가능
+        const isAvailable = isSlotAvailable(
+          dropPosition.column,
+          dropPosition.isDualFurniture,
+          placedModules,
+          spaceInfo,
+          currentDragData.moduleData.id
+        );
         
-        // 충돌이 감지되면 다음 사용 가능한 슬롯 찾기
-        if (isBlocked) {
+        // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
+        if (!isAvailable) {
+          // isSlotAvailable을 사용하는 래퍼 함수
+          const checkSlotWithColumn = (column: number, isDual: boolean) => {
+            return !isSlotAvailable(column, isDual, placedModules, spaceInfo, currentDragData.moduleData.id);
+          };
+          
           const availableSlot = findAvailableSlot(
             dropPosition.column,
             dropPosition.isDualFurniture,
             indexing,
-            checkSlotOccupancy,
+            checkSlotWithColumn,
             placedModules
           );
           

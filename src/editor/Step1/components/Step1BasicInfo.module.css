@@ -40,7 +40,7 @@
 .header {
   position: relative;
   padding: 24px 32px;
-  background: #f8fffe;
+  background: white;
   border-bottom: 1px solid #e5e5e5;
 }
 
@@ -94,7 +94,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f8fffe;
+  background: white;
 }
 
 .iconContainer {
@@ -176,6 +176,75 @@
   font-size: 14px;
 }
 
+/* 입력 필드 래퍼 */
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* 드롭다운 토글 버튼 */
+.dropdownToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.dropdownToggle:hover {
+  color: var(--theme-primary);
+}
+
+/* 드롭다운 메뉴 */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* 드롭다운 옵션 */
+.dropdownOption {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dropdownOption:hover {
+  background: #f3f4f6;
+  color: var(--theme-primary);
+}
+
+.dropdownOption:first-child {
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+
+.dropdownOption:last-child {
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+
 /* 푸터 */
 .footer {
   padding: 24px 32px;
@@ -235,4 +304,81 @@
   .footer {
     padding: 16px 24px;
   }
+}
+
+/* 바닥 마감재 토글 섹션 */
+.toggleSection {
+  margin-top: 8px;
+}
+
+.toggleButtons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-text);
+}
+
+.toggleButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
+}
+
+.subOption {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+}
+
+.subLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.heightInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.numberInput {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  text-align: center;
+}
+
+.numberInput:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+}
+
+.unit {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
 }

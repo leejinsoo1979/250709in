@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './Sidebar.module.css';
 import { Settings, User } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
+import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -35,31 +36,23 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     {
       id: 'material' as SidebarTab,
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" strokeWidth="2"/>
-          <polyline points="7.5,4.21 12,6.81 16.5,4.21" stroke="currentColor" strokeWidth="2"/>
-          <polyline points="7.5,19.79 7.5,14.6 3,12" stroke="currentColor" strokeWidth="2"/>
-          <polyline points="21,12 16.5,14.6 16.5,19.79" stroke="currentColor" strokeWidth="2"/>
-          <polyline points="3.27,6.96 12,12.01 20.73,6.96" stroke="currentColor" strokeWidth="2"/>
-          <line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-      ),
+      icon: <PaletteIcon size={20} />,
       label: '재질'
     },
     {
       id: 'structure' as SidebarTab,
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2"/>
-          <polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-      ),
+      icon: <StructureIcon size={20} />,
       label: '구조물'
     },
     {
       id: 'etc' as SidebarTab,
-      icon: (<Settings width="20" height="20" />),
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="5" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
+          <circle cx="12" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
+          <circle cx="19" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
+        </svg>
+      ),
       label: '기타'
     }
   ];
@@ -83,9 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => onTabClick(tab.id)}
             title={tab.label}
           >
-            <div className={styles.tabIcon}>
-              {tab.icon}
-            </div>
+                        {tab.icon && <div className={styles.tabIcon}>{tab.icon}</div>}
             <span className={styles.tabLabel}>{tab.label}</span>
           </button>
         ))}

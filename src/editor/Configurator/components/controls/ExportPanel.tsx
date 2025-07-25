@@ -8,13 +8,47 @@ interface DrawingTypeInfo {
   id: DrawingType;
   name: string;
   description: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const DRAWING_TYPES: DrawingTypeInfo[] = [
-  { id: 'front', name: '정면도', description: '정면에서 본 도면', icon: '📐' },
-  { id: 'plan', name: '평면도', description: '위에서 본 도면', icon: '🗺️' },
-  { id: 'side', name: '측면도', description: '측면에서 본 도면', icon: '📏' }
+  { 
+    id: 'front', 
+    name: '정면도', 
+    description: '정면에서 본 도면', 
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="6" width="16" height="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="4" y1="14" x2="20" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'plan', 
+    name: '평면도', 
+    description: '위에서 본 도면', 
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="4" width="16" height="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <rect x="8" y="8" width="8" height="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="4" y1="12" x2="8" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+        <line x1="16" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'side', 
+    name: '측면도', 
+    description: '측면에서 본 도면', 
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6L8 8V18L4 20V6Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="8" y="8" width="12" height="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="8" y1="13" x2="20" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+      </svg>
+    )
+  }
 ];
 
 /**
@@ -100,7 +134,7 @@ const ExportPanel: React.FC = () => {
   return (
     <div className={styles.exportPanel}>
       <div className={styles.header}>
-        <h3 className={styles.title}>📋 도면 내보내기</h3>
+        <h3 className={styles.title}>도면 내보내기</h3>
         <p className={styles.description}>
           현재 가구 배치를 CAD 도면(DXF)으로 내보냅니다
         </p>
@@ -119,7 +153,7 @@ const ExportPanel: React.FC = () => {
                 className={styles.checkbox}
               />
               <div className={styles.drawingTypeInfo}>
-                <span className={styles.drawingTypeIcon}>{drawingType.icon}</span>
+                <div className={styles.drawingTypeIcon}>{drawingType.icon}</div>
                 <div className={styles.drawingTypeText}>
                   <span className={styles.drawingTypeName}>{drawingType.name}</span>
                   <span className={styles.drawingTypeDescription}>{drawingType.description}</span>
@@ -160,7 +194,6 @@ const ExportPanel: React.FC = () => {
             </>
           ) : (
             <>
-              <span className={styles.icon}>📄</span>
               DXF 도면 다운로드 ({selectedDrawingTypes.length}개)
             </>
           )}
@@ -170,7 +203,7 @@ const ExportPanel: React.FC = () => {
       {lastExportResult && (
         <div className={`${styles.result} ${lastExportResult.success ? styles.success : styles.error}`}>
           <div className={styles.resultMessage}>
-            {lastExportResult.success ? '✅' : '❌'} {lastExportResult.message}
+            {lastExportResult.message}
           </div>
           {lastExportResult.filename && (
             <div className={styles.filename}>

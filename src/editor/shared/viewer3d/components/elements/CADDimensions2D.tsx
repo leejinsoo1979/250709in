@@ -3,10 +3,11 @@ import { Line, Html } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { useTheme } from '@/contexts/ThemeContext';
 import * as THREE from 'three';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -435,17 +436,62 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
       
       {/* 배치된 가구 치수 */}
       {placedModules.map((module, index) => {
+        const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(
           module.moduleId,
-          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+          internalSpace,
           spaceInfo
         );
         
         if (!moduleData) return null;
         
-        const moduleWidth = mmToThreeUnits(moduleData.dimensions.width);
-        const leftX = module.position.x - moduleWidth / 2;
-        const rightX = module.position.x + moduleWidth / 2;
+        // 기둥 슬롯 분석
+        const columnSlots = analyzeColumnSlots(spaceInfo);
+        const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        // 실제 렌더링될 가구 폭과 위치 계산 (FurnitureItem.tsx와 동일한 로직)
+        let furnitureWidthMm = moduleData.dimensions.width;
+        let furniturePositionX = module.position.x;
+        
+        if (slotInfo && slotInfo.hasColumn) {
+          // 듀얼 가구인지 확인
+          const isDualFurniture = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+          const originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
+          
+          // 슬롯 중심 위치 계산
+          let originalSlotCenterX: number;
+          if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+            originalSlotCenterX = indexing.threeUnitPositions[module.slotIndex];
+          } else {
+            originalSlotCenterX = module.position.x;
+          }
+          
+          // 슬롯 경계 계산
+          const slotWidthM = indexing.columnWidth * 0.01;
+          const originalSlotBounds = {
+            left: originalSlotCenterX - slotWidthM / 2,
+            right: originalSlotCenterX + slotWidthM / 2,
+            center: originalSlotCenterX
+          };
+          
+          // 가구 경계 계산
+          const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+          furnitureWidthMm = furnitureBounds.renderWidth;
+          furniturePositionX = furnitureBounds.center;
+        }
+        
+        // adjustedPosition이 있으면 우선 사용
+        if (module.adjustedPosition) {
+          furniturePositionX = module.adjustedPosition.x;
+        }
+        if (module.adjustedWidth) {
+          furnitureWidthMm = module.adjustedWidth;
+        }
+        
+        const moduleWidth = mmToThreeUnits(furnitureWidthMm);
+        const leftX = furniturePositionX - moduleWidth / 2;
+        const rightX = furniturePositionX + moduleWidth / 2;
         const dimY = -mmToThreeUnits(100); // 하단 치수선
         
         return (
@@ -484,7 +530,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
             
             {/* 치수 텍스트 */}
             <Html
-              position={[module.position.x, dimY - mmToThreeUnits(40), 0.01]}
+              position={[furniturePositionX, dimY - mmToThreeUnits(40), 0.01]}
               center
               transform={false}
               occlude={false}
@@ -505,7 +551,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
                   pointerEvents: 'none'
                 }}
               >
-                {moduleData.dimensions.width}mm
+                {furnitureWidthMm}mm
               </div>
             </Html>
             

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -20,8 +20,6 @@ interface ColumnAssetProps {
   onPositionChange?: (id: string, newPosition: [number, number, number]) => void;
   onRemove?: (id: string) => void;
   spaceInfo?: any;
-  onDragStart?: (id: string) => void;
-  onDragEnd?: (id: string) => void;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -34,9 +32,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   renderMode = 'solid',
   onPositionChange,
   onRemove,
-  spaceInfo,
-  onDragStart,
-  onDragEnd
+  spaceInfo
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -44,44 +40,25 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const [dragStart, setDragStart] = useState<THREE.Vector3 | null>(null);
   const [pointerDownTime, setPointerDownTime] = useState<number>(0);
   const [hasMoved, setHasMoved] = useState(false);
-  
-  // 드래그 중 임시 위치 상태 - 제거
-  
-  // Throttle을 위한 ref
-  const lastUpdateTime = useRef<number>(0);
-  const updateThrottle = 16; // 16ms throttle (60fps에 맞춤)
-  
-  // Debounce를 위한 ref
-  const finalUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const { viewMode } = useSpace3DView();
-  // 선택적 구독으로 불필요한 리렌더 방지
-  const columns = useSpaceConfigStore(state => state.spaceInfo.columns);
+  const spaceConfig = useSpaceConfigStore();
   const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
-  const currentColumn = columns?.find(col => col.id === id);
+  const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
   
-  const { invalidate, camera, raycaster, gl } = useThree();
+  const { invalidate } = useThree();
   
-  // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
-  // 성능 개선을 위해 주석 처리 - Three.js가 자동으로 업데이트됨
-  // useEffect(() => {
-  //   if (!isDragging) {
-  //     invalidate();
-  //   }
-  // }, [position, width, height, depth, isDragging, invalidate]);
-  
-  // 컴포넌트 언마운트 시 타임아웃 정리
+  // 기둥 위치나 크기 변경 시 즉시 렌더링 업데이트
   useEffect(() => {
-    return () => {
-      if (finalUpdateTimeout.current) {
-        clearTimeout(finalUpdateTimeout.current);
-      }
-    };
-  }, []);
-
-
+    invalidate();
+  }, [position, width, height, depth, invalidate]);
+  
+  // 드래그 상태 변경 시에도 즉시 업데이트
+  useEffect(() => {
+    invalidate();
+  }, [isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
@@ -193,53 +170,53 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         // console.log('🎯 드래그 시작 감지:', moveDistance);
         setHasMoved(true);
         setIsDragging(true);
-        onDragStart?.(id); // 드래그 시작 콜백
       }
       
-      // 마우스 움직임을 3D 공간 좌표로 변환 (raycaster 사용)
-      const canvas = gl.domElement;
+      // 마우스 움직임을 3D 공간 좌표로 변환
+      const canvas = document.querySelector('canvas');
       if (!canvas) return;
       
       const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const x = e.clientX - rect.left;
       
-      // raycaster 설정
-      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+      // 간단한 X축 이동만 허용 (Y, Z는 고정)
+      const normalizedX = (x / rect.width) * 2 - 1;
+      const spaceWidth = (spaceInfo?.width || 3000) * 0.01; // mm를 적절한 단위로 변환
+      const worldX = normalizedX * (spaceWidth / 2);
       
-      // 바닥 평면과의 교차점 계산
-      const planeY = position[1]; // 기둥의 Y 위치 (바닥 높이)
-      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
-      const intersectPoint = new THREE.Vector3();
-      raycaster.ray.intersectPlane(plane, intersectPoint);
+      // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정
+      const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01;
+      const columnDepthM = depth * 0.01; // mm를 Three.js 단위로 변환 
+      const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
       
-      if (intersectPoint) {
-        // 공간 크기 제한
-        const spaceWidth = (spaceInfo?.width || 3000) * 0.01;
-        const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01;
-        const columnDepthM = depth * 0.01;
-        const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 고정
-        
-        const boundedPosition: [number, number, number] = [
-          Math.max(-spaceWidth/2 + width*0.01/2, Math.min(spaceWidth/2 - width*0.01/2, intersectPoint.x)),
-          position[1], // Y 좌표는 고정
-          zPosition // Z는 뒷벽에 고정
-        ];
-        
-        // 드래그 중에 실시간으로 위치 업데이트
-        if (onPositionChange) {
-          onPositionChange(id, boundedPosition);
-        }
+      const boundedPosition: [number, number, number] = [
+        Math.max(-spaceWidth/2 + width*0.01/2, Math.min(spaceWidth/2 - width*0.01/2, worldX)),
+        position[1], // Y 좌표는 고정 (바닥 기준 높이의 절반)
+        zPosition // Z는 뒷벽에 고정
+      ];
+      
+      // console.log('🎯 기둥 드래그 위치 업데이트:', {
+      //   id,
+      //   oldPosition: position,
+      //   newPosition: boundedPosition,
+      //   spaceWidth,
+      //   worldX,
+      //   moveDistance
+      // });
+      
+      if (onPositionChange && !isNaN(boundedPosition[0]) && !isNaN(boundedPosition[1]) && !isNaN(boundedPosition[2])) {
+        onPositionChange(id, boundedPosition);
+        // 즉시 렌더링 업데이트 - 가구 크기 변경 지연 방지
+        invalidate();
       }
     };
     
-    const handleGlobalPointerUp = (e: PointerEvent) => {
+    const handleGlobalPointerUp = () => {
       // console.log('🎯 기둥 포인터 업:', id, 'hasMoved:', hasMoved);
       
       setIsDragging(false);
       setDragStart(null);
       setHasMoved(false);
-      onDragEnd?.(id); // 드래그 종료 콜백
       
       // 전역 이벤트 리스너 제거
       document.removeEventListener('pointermove', handleGlobalPointerMove);
@@ -267,9 +244,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   //   }
   // });
 
-
   return (
-    <group ref={viewMode === '3D' ? meshRef : null} position={position}>
+    <group position={position}>
       {viewMode === '2D' ? (
         // 2D 모드: 옅은 회색 면에 빗살무늬 표시
         <group position={[0, (height * 0.01) / 2, 0]}>
@@ -468,4 +444,4 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   );
 };
 
-export default React.memo(ColumnAsset);
+export default ColumnAsset;

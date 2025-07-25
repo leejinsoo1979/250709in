@@ -246,9 +246,10 @@ const Header: React.FC<HeaderProps> = ({
           {onNext && (
             <button className={styles.actionButton} onClick={onNext}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <polyline points="9,18 15,12 9,6" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" fill="none"/>
               </svg>
-              다음
+              완료
             </button>
           )}
 

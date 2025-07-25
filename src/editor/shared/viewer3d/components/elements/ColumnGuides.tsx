@@ -14,7 +14,7 @@ import ColumnDropTarget from './ColumnDropTarget';
  */
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode, showDimensions } = useUIStore();
+  const { viewMode, showDimensions, view2DDirection } = useUIStore();
   const { theme } = useTheme();
   
   // 인덱싱 계산
@@ -23,6 +23,11 @@ const ColumnGuides: React.FC = () => {
   
   // 1개 컬럼인 경우 가이드 표시 불필요
   if (columnCount <= 1) return null;
+  
+  // 2D 뷰에서는 정면 뷰와 상부 뷰에서만 표시
+  if (viewMode === '2D' && view2DDirection !== 'front' && view2DDirection !== 'top') {
+    return null;
+  }
   
   // 내경 공간 계산 (바닥, 천장 높이 등)
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -91,49 +96,75 @@ const ColumnGuides: React.FC = () => {
       />
       
       {/* 각 컬럼 경계에 수직 가이드 라인 */}
-      {threeUnitBoundaries.map((xPos: number, index: number) => (
-        <React.Fragment key={`vertical-guide-group-${index}`}>
-          {/* 기존 세로 가이드 */}
-          <Line
-            key={`vertical-guide-${index}`}
-            points={[
-              new THREE.Vector3(xPos, floorY, backZ),
-              new THREE.Vector3(xPos, ceilingY, backZ)
-            ]}
-            color={guideColor}
-            lineWidth={lineWidth}
-            dashed
-            dashSize={0.2}
-            gapSize={0.1}
-          />
-          {/* 바닥에서 z축 방향 점선 */}
-          <Line
-            key={`z-guide-floor-${index}`}
-            points={[
-              new THREE.Vector3(xPos, floorY, backZ),
-              new THREE.Vector3(xPos, floorY, backZ + mmToThreeUnits(700))
-            ]}
-            color={guideColor}
-            lineWidth={lineWidth}
-            dashed
-            dashSize={0.2}
-            gapSize={0.1}
-          />
-          {/* 천장에서 z축 방향 점선 */}
-          <Line
-            key={`z-guide-ceiling-${index}`}
-            points={[
-              new THREE.Vector3(xPos, ceilingY, backZ),
-              new THREE.Vector3(xPos, ceilingY, backZ + mmToThreeUnits(700))
-            ]}
-            color={guideColor}
-            lineWidth={lineWidth}
-            dashed
-            dashSize={0.2}
-            gapSize={0.1}
-          />
-        </React.Fragment>
-      ))}
+      {threeUnitBoundaries.map((xPos: number, index: number) => {
+        // 2D 상부뷰에서는 수직선 대신 수평선으로 표시
+        if (viewMode === '2D' && view2DDirection === 'top') {
+          // 3D와 동일한 700mm 길이
+          return (
+            <Line
+              key={`horizontal-guide-top-${index}`}
+              points={[
+                new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), backZ),
+                new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), backZ + mmToThreeUnits(700))
+              ]}
+              color={guideColor}
+              lineWidth={lineWidth}
+              dashed
+              dashSize={0.2}
+              gapSize={0.1}
+            />
+          );
+        }
+        
+        // 3D 및 2D 정면뷰
+        return (
+          <React.Fragment key={`vertical-guide-group-${index}`}>
+            {/* 기존 세로 가이드 */}
+            <Line
+              key={`vertical-guide-${index}`}
+              points={[
+                new THREE.Vector3(xPos, floorY, backZ),
+                new THREE.Vector3(xPos, ceilingY, backZ)
+              ]}
+              color={guideColor}
+              lineWidth={lineWidth}
+              dashed
+              dashSize={0.2}
+              gapSize={0.1}
+            />
+            {/* 바닥에서 z축 방향 점선 - 3D에서만 표시 */}
+            {viewMode === '3D' && (
+              <Line
+                key={`z-guide-floor-${index}`}
+                points={[
+                  new THREE.Vector3(xPos, floorY, backZ),
+                  new THREE.Vector3(xPos, floorY, backZ + mmToThreeUnits(700))
+                ]}
+                color={guideColor}
+                lineWidth={lineWidth}
+                dashed
+                dashSize={0.2}
+                gapSize={0.1}
+              />
+            )}
+            {/* 천장에서 z축 방향 점선 - 3D에서만 표시 */}
+            {viewMode === '3D' && (
+              <Line
+                key={`z-guide-ceiling-${index}`}
+                points={[
+                  new THREE.Vector3(xPos, ceilingY, backZ),
+                  new THREE.Vector3(xPos, ceilingY, backZ + mmToThreeUnits(700))
+                ]}
+                color={guideColor}
+                lineWidth={lineWidth}
+                dashed
+                dashSize={0.2}
+                gapSize={0.1}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
       
       {/* 컬럼 인덱스 드롭 타겟 - step0 이후로는 모든 step에서 표시 */}
       {indexing.threeUnitPositions.map((x, i) => (

@@ -33,6 +33,9 @@
   --theme-success: #10b981;
   --theme-success-hover: #059669;
   --theme-success-light: rgba(16, 185, 129, 0.2);
+  
+  /* 팝업 그림자 - 다크 모드 기본값 */
+  --popup-shadow: 0 10px 40px rgba(16, 185, 129, 0.2), 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
 /* 전역 테마 적용 */

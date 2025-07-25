@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -165,20 +166,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
   
+  // 선택된 도어인지 확인
+  const selectedPlacedModuleId = useFurnitureStore(state => state.selectedPlacedModuleId);
+  const isSelected = selectedPlacedModuleId === moduleData?.id;
+
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
+  const { theme } = useTheme();
+  // BoxWithEdges와 동일한 강조색 함수
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
   const baseDoorMaterial = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(doorColor),
+      color: isSelected ? new THREE.Color(getThemeColor()) : new THREE.Color(doorColor),
       metalness: 0.0,        // 완전 비금속 (프레임과 동일)
       roughness: 0.6,        // 프레임과 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid'),
-      opacity: 1.0,          // BoxWithEdges에서 처리
+      transparent: true,
+      opacity: isSelected ? 0.5 : 1.0, // 선택 시 투명하게
     });
-    console.log('🚪 기본 도어 재질 생성:', mat);
     return mat;
-  }, [doorColor, renderMode, viewMode]);
+  }, [doorColor, renderMode, viewMode, isSelected, theme]);
 
   // 싱글 가구용 도어 재질
   const doorMaterial = baseDoorMaterial;
@@ -381,16 +397,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <mesh 
                   castShadow={viewMode === '3D'}
                   receiveShadow={viewMode === '3D'}
+                  renderOrder={1}
+                  ref={mesh => { if (mesh) mesh.renderOrder = 1; }}
                 >
                   <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
-                  <primitive object={leftDoorMaterial} attach="material" />
+                  <meshStandardMaterial
+                    color={isSelected ? getThemeColor() : doorColor}
+                    metalness={0.0}
+                    roughness={0.6}
+                    envMapIntensity={0.0}
+                    emissive={0x000000}
+                    transparent={true}
+                    opacity={viewMode === '2D' ? 0.2 : (isSelected ? 0.5 : 1.0)}
+                    toneMapped={true}
+                    depthWrite={false}
+                    side={THREE.DoubleSide}
+                    attach="material"
+                  />
                 </mesh>
               )}
               {/* 윤곽선 */}
               <lineSegments>
                 <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
                 <lineBasicMaterial 
-                  color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                  color={
+                    viewMode === '2D' && renderMode === 'wireframe'
+                      ? getThemeColor()
+                      : (viewMode === '3D' ? "#505050" : "#666666")
+                  } 
                   transparent={viewMode === '3D'}
                   opacity={viewMode === '3D' ? 0.9 : 1}
                 />
@@ -408,16 +442,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <mesh 
                   castShadow={viewMode === '3D'}
                   receiveShadow={viewMode === '3D'}
+                  renderOrder={1}
+                  ref={mesh => { if (mesh) mesh.renderOrder = 1; }}
                 >
                   <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
-                  <primitive object={rightDoorMaterial} attach="material" />
+                  <meshStandardMaterial
+                    color={isSelected ? getThemeColor() : doorColor}
+                    metalness={0.0}
+                    roughness={0.6}
+                    envMapIntensity={0.0}
+                    emissive={0x000000}
+                    transparent={true}
+                    opacity={viewMode === '2D' ? 0.2 : (isSelected ? 0.5 : 1.0)}
+                    toneMapped={true}
+                    depthWrite={false}
+                    side={THREE.DoubleSide}
+                    attach="material"
+                  />
                 </mesh>
               )}
               {/* 윤곽선 */}
               <lineSegments>
                 <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
                 <lineBasicMaterial 
-                  color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                  color={
+                    viewMode === '2D' && renderMode === 'wireframe'
+                      ? getThemeColor()
+                      : (viewMode === '3D' ? "#505050" : "#666666")
+                  } 
                   transparent={viewMode === '3D'}
                   opacity={viewMode === '3D' ? 0.9 : 1}
                 />
@@ -460,16 +512,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               <mesh 
                 castShadow={viewMode === '3D'}
                 receiveShadow={viewMode === '3D'}
+                renderOrder={1}
+                ref={mesh => { if (mesh) mesh.renderOrder = 1; }}
               >
                 <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
-                <primitive object={doorMaterial} attach="material" />
+                <meshStandardMaterial
+                  color={
+                    viewMode === '2D' && renderMode === 'wireframe'
+                      ? getThemeColor()
+                      : (isSelected ? getThemeColor() : doorColor)
+                  }
+                  metalness={0.0}
+                  roughness={0.6}
+                  envMapIntensity={0.0}
+                  emissive={0x000000}
+                  transparent={true}
+                  opacity={viewMode === '2D' && renderMode === 'wireframe'
+                    ? 1.0
+                    : (viewMode === '2D' ? 0.2 : (isSelected ? 0.5 : 1.0))
+                  }
+                  toneMapped={true}
+                  depthWrite={false}
+                  side={THREE.DoubleSide}
+                  attach="material"
+                />
               </mesh>
             )}
             {/* 윤곽선 */}
             <lineSegments>
               <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
               <lineBasicMaterial 
-                color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                color={
+                  viewMode === '2D' && renderMode === 'wireframe'
+                    ? getThemeColor()
+                    : (viewMode === '3D' ? "#505050" : "#666666")
+                } 
                 transparent={viewMode === '3D'}
                 opacity={viewMode === '3D' ? 0.9 : 1}
               />

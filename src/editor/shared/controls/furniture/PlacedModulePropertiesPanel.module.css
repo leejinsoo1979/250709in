@@ -15,7 +15,7 @@
 .panel {
   background: var(--theme-surface);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--popup-shadow);
   width: 350px;
   max-height: calc(100vh - 120px);
   overflow: hidden;
@@ -707,4 +707,30 @@ input[type="number"] {
   color: #000000 !important;
   -webkit-text-fill-color: #000000 !important;
   background-color: #ffffff !important;
+}
+
+/* 다크모드에서도 input은 항상 흰 배경에 검은 텍스트 */
+:global([data-theme="dark"]) .depthInput,
+:global([data-theme="dark"]) .furniture-depth-input,
+:global([data-theme="dark"]) .panel input,
+:global(.theme-dark) .depthInput,
+:global(.theme-dark) .furniture-depth-input,
+:global(.theme-dark) .panel input,
+:global(body.theme-dark) .depthInput,
+:global(body.theme-dark) .panel input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* 모든 경우에 대해 깊이 입력 필드 강제 스타일 */
+.depthInputWrapper input[type="text"],
+.depthInputWrapper input[type="number"],
+.inputWithUnit input[type="text"],
+.inputWithUnit input[type="number"] {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
 } 

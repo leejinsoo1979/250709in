@@ -1,31 +1,30 @@
 .exportPanel {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--theme-surface);
+  padding: 32px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--theme-border);
+  padding-bottom: 16px;
 }
 
 .title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--theme-text);
   margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  letter-spacing: -0.02em;
 }
 
 .description {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* 도면 타입 선택 영역 */
@@ -36,8 +35,10 @@
 .selectionTitle {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--theme-text);
   margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .drawingTypes {
@@ -50,22 +51,24 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  padding: 16px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: #ffffff;
+  transition: all 0.15s ease;
+  background: var(--theme-surface);
 }
 
 .drawingTypeItem:hover {
   border-color: var(--theme-primary);
-  background: #f8fafc;
+  background: var(--theme-surface-hover);
+  transform: translateY(-1px);
 }
 
 .drawingTypeItem:has(input:checked) {
   border-color: var(--theme-primary);
-  background: #eff6ff;
+  background: var(--theme-primary-light);
+  box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.2);
 }
 
 .checkbox {
@@ -83,9 +86,14 @@
 }
 
 .drawingTypeIcon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-background);
+  border-radius: 4px;
 }
 
 .drawingTypeText {
@@ -97,26 +105,29 @@
 .drawingTypeName {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--theme-text);
 }
 
 .drawingTypeDescription {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
+  opacity: 0.8;
 }
 
 .status {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
+  background: var(--theme-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
 }
 
 .statusMessage {
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  color: var(--theme-text-secondary);
   margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .spaceInfo {
@@ -126,13 +137,15 @@
 }
 
 .spaceSize {
-  color: #059669;
-  font-weight: 500;
+  color: var(--theme-primary);
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .moduleCount {
-  color: #7c3aed;
-  font-weight: 500;
+  color: var(--theme-primary);
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .actions {
@@ -141,26 +154,28 @@
 
 .exportButton {
   width: 100%;
-  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
+  background: var(--theme-primary);
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 12px 16px;
+  border-radius: 4px;
+  padding: 14px 24px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
-  min-height: 44px;
+  transition: all 0.15s ease;
+  min-height: 48px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .exportButton:hover:not(.disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: var(--theme-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .exportButton:active:not(.disabled) {
@@ -168,11 +183,12 @@
 }
 
 .exportButton.disabled {
-  background: #d1d5db;
-  color: #9ca3af;
+  background: var(--theme-border);
+  color: var(--theme-text-disabled);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  opacity: 0.5;
 }
 
 .icon {
@@ -194,23 +210,24 @@
 }
 
 .result {
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 20px;
   font-size: 14px;
-  animation: slideIn 0.3s ease;
+  animation: slideIn 0.2s ease;
+  border: 1px solid;
 }
 
 .result.success {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--theme-text);
 }
 
 .result.error {
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--theme-text);
 }
 
 .resultMessage {
@@ -236,8 +253,9 @@
 }
 
 .info {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 16px;
+  border-top: 1px solid var(--theme-border);
+  padding-top: 20px;
+  margin-top: auto;
 }
 
 .infoItem {
@@ -253,13 +271,17 @@
 }
 
 .infoLabel {
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .infoValue {
-  color: #374151;
-  font-weight: 400;
+  color: var(--theme-text);
+  font-weight: 500;
+  font-size: 13px;
 }
 
 /* 반응형 디자인 */
@@ -287,66 +309,22 @@
   }
 }
 
-/* 다크 모드 지원 (필요시) */
-@media (prefers-color-scheme: dark) {
-  .exportPanel {
-    background: #1f2937;
-    border-color: #374151;
-  }
-  
-  .title {
-    color: #f9fafb;
-  }
-  
-  .description {
-    color: #d1d5db;
-  }
-  
-  .status {
-    background: #374151;
-    border-color: #4b5563;
-  }
-  
-  .statusMessage {
-    color: #e5e7eb;
-  }
-  
-  .info {
-    border-top-color: #374151;
-  }
-  
-  .infoLabel {
-    color: #d1d5db;
-  }
-  
-  .infoValue {
-    color: #f3f4f6;
-  }
+/* 아이콘 텍스트 스타일 */
+.drawingTypeIcon {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--theme-primary);
+  opacity: 0.8;
+  transition: all 0.15s ease;
+}
 
-  .drawingTypeItem {
-    background: #374151;
-    border-color: #4b5563;
-  }
+.drawingTypeItem:hover .drawingTypeIcon {
+  opacity: 1;
+  transform: scale(1.05);
+}
 
-  .drawingTypeItem:hover {
-    border-color: var(--theme-primary);
-    background: #4b5563;
-  }
-
-  .drawingTypeItem:has(input:checked) {
-    border-color: var(--theme-primary);
-    background: #1e3a8a;
-  }
-
-  .drawingTypeName {
-    color: #f3f4f6;
-  }
-
-  .drawingTypeDescription {
-    color: #d1d5db;
-  }
-
-  .selectionTitle {
-    color: #f3f4f6;
-  }
+.drawingTypeItem:has(input:checked) .drawingTypeIcon {
+  color: var(--theme-primary);
+  opacity: 1;
+  font-weight: 700;
 } 

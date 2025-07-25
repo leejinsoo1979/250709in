@@ -50,7 +50,8 @@ export const useCameraManager = (
     const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
     
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
-    const zoom = 1200 / distance; // 기본 1200을 거리로 나누어 조정
+    // 2D 모드에서는 더 작은 zoom 값을 사용하여 3D와 동일한 뷰를 보여줌
+    const zoom = is2DMode ? 400 / distance : 1200 / distance; // 2D 모드에서는 더 작은 zoom 사용하여 3D와 일치
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
     

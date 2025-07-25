@@ -34,15 +34,18 @@ export const INNER_DEPTH = 580;
 export const SURROUND_FRAME_THICKNESS = 10;
 
 /**
- * 엔드 패널 두께 (18mm)
+ * 엔드 패널 두께 (20mm)
  */
-export const END_PANEL_THICKNESS = 18;
+export const END_PANEL_THICKNESS = 20;
 
 /**
  * 실제 치수를 기반으로 3D 공간의 방 치수 계산 (mm 단위)
  * 바닥재가 있는 경우 실제 공간 높이는 전체 높이에서 바닥재 두께를 뺀 값
  */
 export const calculateRoomDimensions = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number' || typeof spaceInfo.depth !== 'number') {
+    return { width: 3600, height: 2400, depth: 1500 };
+  }
   const width = spaceInfo.width || 3600; // 기본값 3600mm
   // 바닥재가 있는 경우 실제 공간 높이 = 전체 높이 - 바닥재 두께
   const height = spaceInfo.hasFloorFinish 
@@ -62,6 +65,9 @@ export const calculateRoomDimensions = (spaceInfo: SpaceInfo) => {
  * 좌우 프레임 사이의 공간에서 모듈이 배치될 수 있는 실제 공간
  */
 export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo) {
+    return { width: 0, height: 0, depth: 0, startX: 0, startY: 0, startZ: 0 };
+  }
   const frameThickness = calculateFrameThickness(spaceInfo);
   const floorFinishHeight = calculateFloorFinishHeight(spaceInfo);
   const topFrameHeight = calculateTopBottomFrameHeight(spaceInfo);
@@ -191,15 +197,41 @@ export const calculateFloorFinishHeight = (spaceInfo: SpaceInfo) => {
  * frameSize 설정값을 우선 사용하고, 벽이 없는 쪽은 18mm 엔드패널 고정
  */
 export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo) {
+    return { left: 0, right: 0, leftMm: 0, rightMm: 0 };
+  }
   const { installType, wallConfig, frameSize, surroundType } = spaceInfo;
   
-  // 노서라운드 타입인 경우 좌우 프레임 두께는 0
+  // 노서라운드 타입인 경우 벽 유무에 따라 처리
   if (surroundType === 'no-surround') {
+    let leftThickness = 0;
+    let rightThickness = 0;
+    
+    // 노서라운드: 벽이 없는 쪽에만 20mm 엔드패널
+    if (installType === 'builtin' || installType === 'built-in') {
+      // 양쪽벽: 프레임 없음
+      leftThickness = 0;
+      rightThickness = 0;
+    } else if (installType === 'semistanding' || installType === 'semi-standing') {
+      // 한쪽벽: 벽 없는 쪽에만 20mm 엔드패널
+      if (wallConfig?.left) {
+        leftThickness = 0;  // 좌측벽 있음: 프레임 없음
+        rightThickness = 20; // 우측벽 없음: 20mm 엔드패널
+      } else {
+        leftThickness = 20; // 좌측벽 없음: 20mm 엔드패널
+        rightThickness = 0;  // 우측벽 있음: 프레임 없음
+      }
+    } else {
+      // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
+      leftThickness = 20;
+      rightThickness = 20;
+    }
+    
     return {
-      left: 0,
-      right: 0,
-      leftMm: 0,
-      rightMm: 0
+      left: leftThickness, // mm 단위 그대로 반환 (Room.tsx에서 필요에 따라 변환)
+      right: rightThickness,
+      leftMm: leftThickness,
+      rightMm: rightThickness
     };
   }
   
@@ -253,6 +285,9 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
  * 베이스 프레임(받침대) 너비 계산 (mm 단위)
  */
 export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo) {
+    return { width: 0, widthMm: 0 };
+  }
   let baseWidthMm;
   
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
@@ -280,6 +315,9 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
  * 기본값은 65mm이고, baseConfig.height 설정이 있으면 그 값을 사용
  */
 export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo) {
+    return 0;
+  }
   // 받침대가 있는 경우에만 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
     return spaceInfo.baseConfig.height || 65;
@@ -292,6 +330,9 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
  * 기본값은 10mm이고, frameSize 설정이 있으면 그 값을 사용
  */
 export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
+  if (!spaceInfo) {
+    return SURROUND_FRAME_THICKNESS;
+  }
   // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
   return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
 }; 

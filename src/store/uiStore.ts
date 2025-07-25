@@ -111,7 +111,10 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ doorsOpen: !state.doorsOpen })),
       
       toggleDimensions: () =>
-        set((state) => ({ showDimensions: !state.showDimensions })),
+        set((state) => {
+          console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', !state.showDimensions);
+          return { showDimensions: !state.showDimensions };
+        }),
       toggleDimensionsText: () =>
         set((state) => ({ showDimensionsText: !state.showDimensionsText })),
       toggleGuides: () =>

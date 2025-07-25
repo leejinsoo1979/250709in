@@ -20,16 +20,18 @@ interface Step3ConfirmationProps {
 const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClose }) => {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<'2D' | '3D'>('2D');
+  const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [viewerKey, setViewerKey] = useState(0);
   const [customOptions, setCustomOptions] = useState({
     wallType: 'nowall',  // 노서라운드(타이트)가 기본값 - 'nowall' maps to tight
     rackThickness: '2mm',
-    motorSettings: '50',
+    motorSettings: '10',  // 서라운드일 때 사용될 기본값
     ventilationSettings: 'yes',  // 받침대 있음이 기본값
     ventThickness: '300',
     placement: 'floor',  // 바닥에 배치가 기본값
-    baseHeight: '65'  // 받침대 높이 기본값 65mm
+    baseHeight: '65',  // 받침대 높이 기본값 65mm
+    leftFrameSize: '50',  // 좌측 프레임 크기
+    rightFrameSize: '50'  // 우측 프레임 크기
   });
   
   const { basicInfo } = useProjectStore();
@@ -40,6 +42,44 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
   console.log('🔍 Step3 - basicInfo 상태:', basicInfo);
   console.log('🔍 Step3 - spaceInfo 상태:', spaceInfo);
 
+  // 컴포넌트 마운트 시 초기 설정 적용
+  useEffect(() => {
+    // 노서라운드가 기본값이므로 초기 설정 적용
+    const initialUpdates: Partial<typeof spaceInfo> = {
+      surroundType: 'no-surround',
+      frameSize: { left: 0, right: 0, top: 0 },
+      gapConfig: {
+        left: spaceInfo.installType === 'builtin' ? 2 : 
+              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
+        right: spaceInfo.installType === 'builtin' ? 2 : 
+               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+      },
+      baseConfig: {
+        type: 'floor' as const,
+        height: 65,
+        placementType: 'floor' as const
+      }
+    };
+    
+    setSpaceInfo({ ...spaceInfo, ...initialUpdates });
+  }, []); // 마운트 시 한 번만 실행
+
+  // 설치 유형 변경 시 프레임 설정 자동 업데이트
+  useEffect(() => {
+    if (customOptions.wallType === 'nowall') {
+      // 노서라운드: 벽 유무에 따라 이격거리/엔드패널 설정
+      const updates: Partial<typeof spaceInfo> = {
+        gapConfig: {
+          left: spaceInfo.installType === 'builtin' ? 2 : 
+                (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
+          right: spaceInfo.installType === 'builtin' ? 2 : 
+                 (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+        }
+      };
+      setSpaceInfo({ ...spaceInfo, ...updates });
+    }
+  }, [spaceInfo.installType, spaceInfo.wallConfig]); // 설치 유형이나 벽 설정 변경 시
+
   const handleCustomOptionUpdate = (key: string, value: string) => {
     setCustomOptions(prev => ({ ...prev, [key]: value }));
     
@@ -48,23 +88,68 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
     
     switch (key) {
       case 'wallType':
-        updates.surroundType = value === 'tight' ? 'no-surround' : 'surround';
+        updates.surroundType = value === 'nowall' ? 'no-surround' : 'surround';
+        // 노서라운드/서라운드에 따라 frameSize 즉시 업데이트
+        if (value === 'nowall') {
+          // 노서라운드: 프레임 없음
+          updates.frameSize = { left: 0, right: 0, top: 0 };
+          // 벽 유무에 따라 이격거리/엔드패널 설정
+          updates.gapConfig = {
+            left: spaceInfo.installType === 'builtin' ? 2 : 
+                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
+            right: spaceInfo.installType === 'builtin' ? 2 : 
+                   (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+          };
+        } else {
+          // 서라운드: 설치 유형에 따라 프레임/엔드패널 설정
+          let leftSize = 50;
+          let rightSize = 50;
+          
+          if (spaceInfo.installType === 'semistanding') {
+            if (!spaceInfo.wallConfig?.left) leftSize = 20;  // 좌측벽 없음: 엔드패널
+            if (!spaceInfo.wallConfig?.right) rightSize = 20; // 우측벽 없음: 엔드패널
+          } else if (spaceInfo.installType === 'freestanding') {
+            leftSize = 20;  // 양쪽 모두 엔드패널
+            rightSize = 20;
+          }
+          
+          // customOptions도 업데이트
+          setCustomOptions(prev => ({
+            ...prev,
+            leftFrameSize: leftSize.toString(),
+            rightFrameSize: rightSize.toString()
+          }));
+          
+          updates.frameSize = {
+            left: leftSize,
+            right: rightSize,
+            top: parseInt(customOptions.motorSettings) || 10
+          };
+          updates.gapConfig = { left: 0, right: 0 };
+        }
         break;
       case 'rackThickness':
-        // 어기가대 두께 설정
-        updates.frameSize = {
-          ...spaceInfo.frameSize,
-          // 2mm나 3mm에 따른 설정
-        };
+        // 이격거리 설정 (노서라운드일 때만 의미있음)
+        if (customOptions.wallType === 'nowall') {
+          const gapDistance = parseInt(value) || 2;
+          updates.gapConfig = {
+            left: spaceInfo.installType === 'builtin' ? gapDistance : 
+                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? gapDistance : 20,
+            right: spaceInfo.installType === 'builtin' ? gapDistance : 
+                   (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? gapDistance : 20
+          };
+        }
         break;
       case 'motorSettings':
-        updates.frameSize = {
-          ...spaceInfo.frameSize,
-          top: parseInt(value) || 50
-        };
+        if (customOptions.wallType !== 'nowall') {
+          updates.frameSize = {
+            ...spaceInfo.frameSize,
+            top: parseInt(value) || 10
+          };
+        }
         break;
       case 'ventilationSettings':
-        // 방충대 설정
+        // 받침대 설정
         break;
       case 'baseHeight':
         // 받침대 높이 설정
@@ -78,6 +163,17 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
           ...spaceInfo.baseConfig,
           height: parseInt(value) || 300
         };
+        break;
+      case 'leftFrameSize':
+      case 'rightFrameSize':
+        if (customOptions.wallType !== 'nowall') {
+          updates.frameSize = {
+            ...spaceInfo.frameSize,
+            left: key === 'leftFrameSize' ? parseInt(value) || 50 : parseInt(customOptions.leftFrameSize) || 50,
+            right: key === 'rightFrameSize' ? parseInt(value) || 50 : parseInt(customOptions.rightFrameSize) || 50,
+            top: spaceInfo.frameSize?.top || 10
+          };
+        }
         break;
     }
     
@@ -244,11 +340,9 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
           hasFloorFinish: spaceInfo.hasFloorFinish || false,
           floorFinish: spaceInfo.floorFinish || null,
           surroundType: customOptions.wallType === 'nowall' ? 'no-surround' : 'surround',
-          frameSize: {
-            left: 50,
-            right: 50,
-            top: parseInt(customOptions.motorSettings) || 50
-          },
+          frameSize: customOptions.wallType === 'nowall' 
+            ? { left: 0, right: 0, top: 0 }  // 노서라운드일 때는 프레임 없음
+            : { left: 50, right: 50, top: parseInt(customOptions.motorSettings) || 10 },  // 서라운드일 때만 프레임
           baseConfig: {
             type: 'floor' as const,
             height: customOptions.ventilationSettings === 'yes' 
@@ -315,19 +409,18 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
       setSpaceInfo({
         ...spaceInfo,
         surroundType: customOptions.wallType === 'nowall' ? 'no-surround' : 'surround',
-        frameSize: {
-          // 서라운드일 때만 프레임 사이즈 적용
-          left: 50,
-          right: 50,
-          top: parseInt(customOptions.motorSettings) || 50
-        },
+        frameSize: customOptions.wallType === 'nowall' 
+          ? { left: 0, right: 0, top: 0 }  // 노서라운드일 때는 프레임 없음
+          : { left: 50, right: 50, top: parseInt(customOptions.motorSettings) || 10 },  // 서라운드일 때만 프레임
         gapConfig: customOptions.wallType === 'nowall' 
           ? {
-              // 노서라운드인 경우 이격거리
-              left: 2,
-              right: 2
+              // 노서라운드인 경우 벽 유무에 따라 이격거리/엔드패널 설정
+              left: spaceInfo.installType === 'builtin' ? 2 : 
+                    (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
+              right: spaceInfo.installType === 'builtin' ? 2 : 
+                     (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
             }
-          : undefined,
+          : { left: 0, right: 0 },
         baseConfig: {
           type: 'floor' as const,
           height: customOptions.ventilationSettings === 'yes' 
@@ -418,7 +511,7 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
             ×
           </button>
           <div>
-            <h1>STEP. 3 최종 확인</h1>
+            <h1>STEP. 3 프레임 설정</h1>
             <p>설정한 내용을 확인하고 디자인을 시작해보세요.</p>
           </div>
         </div>
@@ -445,16 +538,21 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
             <div className={styles.editorViewer}>
               <Space3DView 
                 key={viewerKey}
-                viewMode={viewMode === '3D' ? '3d' : '2d'}
+                spaceInfo={spaceInfo}
+                viewMode={viewMode}
+                renderMode="solid"
+                showAll={true}
+                showDimensions={true}
+                showFrame={true}
                 isEmbedded={true}
-                onViewModeChange={() => {}}
+                setViewMode={(mode) => setViewMode(mode)}
               />
             </div>
           </div>
 
           <div className={styles.rightSection}>
             <div className={styles.confirmationSection}>
-              <h2 className={styles.sectionTitle}>STEP 3 옷장 배치 설정</h2>
+              <h2 className={styles.sectionTitle}>옷장 배치 설정</h2>
               
               {/* 맞춤 옵션 */}
               <div className={styles.formGroup}>
@@ -481,31 +579,61 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
                   <label className={styles.formLabel}>프레임 설정</label>
                   <div className={styles.inputRow}>
                     <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel}>좌측 (mm)</label>
+                      <label className={styles.inputLabel}>
+                        {spaceInfo.installType === 'builtin' ? '좌측 프레임' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측 프레임' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측 엔드패널' :
+                         spaceInfo.installType === 'freestanding' ? '좌측 엔드패널' : '좌측'} (mm)
+                      </label>
                       <input 
                         type="number"
                         className={styles.numberInput}
-                        defaultValue="50"
+                        value={customOptions.leftFrameSize}
+                        onChange={(e) => {
+                          if ((spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) || 
+                              spaceInfo.installType === 'builtin') {
+                            handleCustomOptionUpdate('leftFrameSize', e.target.value);
+                          }
+                        }}
+                        disabled={
+                          (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+                          spaceInfo.installType === 'freestanding'
+                        }
                         placeholder="50"
                       />
                     </div>
                     <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel}>우측 (mm)</label>
+                      <label className={styles.inputLabel}>
+                        {spaceInfo.installType === 'builtin' ? '우측 프레임' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측 프레임' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측 엔드패널' :
+                         spaceInfo.installType === 'freestanding' ? '우측 엔드패널' : '우측'} (mm)
+                      </label>
                       <input 
                         type="number"
                         className={styles.numberInput}
-                        defaultValue="50"
+                        value={customOptions.rightFrameSize}
+                        onChange={(e) => {
+                          if ((spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) || 
+                              spaceInfo.installType === 'builtin') {
+                            handleCustomOptionUpdate('rightFrameSize', e.target.value);
+                          }
+                        }}
+                        disabled={
+                          (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+                          spaceInfo.installType === 'freestanding'
+                        }
                         placeholder="50"
                       />
                     </div>
                     <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel}>상단 (mm)</label>
+                      <label className={styles.inputLabel}>상단 프레임 (mm)</label>
                       <input 
                         type="number"
                         className={styles.numberInput}
                         value={customOptions.motorSettings}
                         onChange={(e) => handleCustomOptionUpdate('motorSettings', e.target.value)}
-                        placeholder="50"
+                        placeholder="10"
                       />
                     </div>
                   </div>
@@ -516,7 +644,13 @@ const Step3Confirmation: React.FC<Step3ConfirmationProps> = ({ onPrevious, onClo
               {customOptions.wallType === 'nowall' && (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>이격거리 설정</label>
-                  <p className={styles.description}>노서라운드 옵션 선택 시 이격거리를 선택해주세요:</p>
+                  <p className={styles.description}>
+                    노서라운드 옵션 선택 시 이격거리를 선택해주세요:
+                    {spaceInfo.installType === 'builtin' && ' (양쪽벽: 양쪽 모두 이격거리)'}
+                    {spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left && ' (좌측벽: 좌측 이격거리, 우측 20mm 엔드패널)'}
+                    {spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right && ' (우측벽: 우측 이격거리, 좌측 20mm 엔드패널)'}
+                    {spaceInfo.installType === 'freestanding' && ' (벽없음: 양쪽 모두 20mm 엔드패널)'}
+                  </p>
                   <div className={styles.buttonGroup}>
                     <button 
                       className={`${styles.typeButton} ${customOptions.rackThickness === '2mm' ? styles.active : ''}`}

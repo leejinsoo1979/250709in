@@ -50,7 +50,7 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
       height: spaceInfo.height || 2400,
       depth: spaceInfo.depth || 1500,
     },
-    installType: spaceInfo.installType || 'built-in',
+    installType: spaceInfo.installType || 'builtin',
     wallPosition: spaceInfo.wallPosition,
     damper: {
       agentPosition: spaceInfo.damperPosition || 'none',

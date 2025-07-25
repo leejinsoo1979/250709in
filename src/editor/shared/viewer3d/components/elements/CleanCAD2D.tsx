@@ -11,16 +11,28 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
+  showDimensions?: boolean;
+  isStep2?: boolean;
 }
 
 /**
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
  */
-const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
+const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText } = useUIStore();
+  
+  // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
+  const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
+  
+  console.log('🎯 CleanCAD2D showDimensions:', {
+    showDimensionsProp,
+    showDimensionsFromStore,
+    showDimensions,
+    viewDirection
+  });
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
   const { theme } = useTheme();
@@ -463,7 +475,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
         />
         
         {/* 전체 폭 (프레임 포함) 치수 텍스트 - Text 3D 사용 */}
-        {showDimensionsText && (
+        {(showDimensionsText || isStep2) && (
           <Text
             position={[mmToThreeUnits(spaceInfo.width) / 2 + leftOffset, topDimensionY + mmToThreeUnits(40), 0.01]}
             fontSize={largeFontSize}
@@ -490,57 +502,67 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
         />
       </group>
       
-      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리 치수선 */}
+      {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {!isStep2 && (
       <group>
-        {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig ? (
-          /* 노서라운드 모드: 좌측 이격거리 치수선 */
-          <>
-            {/* 치수선 */}
-            <Line
-              points={[[leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(60), 0.002]]}
-              color={dimensionColor}
-              lineWidth={2}
-            />
+        {spaceInfo.surroundType === 'no-surround' ? (
+          /* 노서라운드 모드: 좌측 이격거리/엔드패널 치수선 */
+          (() => {
+            // 벽 유무에 따라 값과 텍스트 결정
+            const hasLeftWall = spaceInfo.installType === 'builtin' || 
+                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left);
+            const leftValue = hasLeftWall ? 2 : 20;
+            const leftText = hasLeftWall ? '이격 2' : 'EP 20';
             
-            {/* 좌측 화살표 */}
-            <Line
-              points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-              color={dimensionColor}
-              lineWidth={2}
-            />
-            
-            {/* 우측 화살표 */}
-            <Line
-              points={createArrowHead([leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left) - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-              color={dimensionColor}
-              lineWidth={2}
-            />
-            
-            {/* 좌측 이격거리 치수 텍스트 */}
-            {showDimensionsText && (
-              <Text
-                position={[leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
-                fontSize={baseFontSize}
-                color={textColor}
-                anchorX="center"
-                anchorY="middle"
-              >
-                이격 {spaceInfo.gapConfig.left}
-              </Text>
-            )}
-            
-            {/* 연장선 */}
-            <Line
-              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
-              color={textColor}
-              lineWidth={0.5}
-            />
-            <Line
-              points={[[leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(spaceInfo.gapConfig.left), topDimensionY - mmToThreeUnits(40), 0.001]]}
-              color={textColor}
-              lineWidth={0.5}
-            />
-          </>
+            return (
+              <>
+                {/* 치수선 */}
+                <Line
+                  points={[[leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(60), 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={2}
+                />
+                
+                {/* 좌측 화살표 */}
+                <Line
+                  points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+                  color={dimensionColor}
+                  lineWidth={2}
+                />
+                
+                {/* 우측 화살표 */}
+                <Line
+                  points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(60), 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+                  color={dimensionColor}
+                  lineWidth={2}
+                />
+                
+                {/* 좌측 치수 텍스트 */}
+                {showDimensionsText && (
+                  <Text
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {leftText}
+                  </Text>
+                )}
+                {/* 연장선 */}
+                <Line
+                  points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+                  color={textColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(40), 0.001]]}
+                  color={textColor}
+                  lineWidth={0.5}
+                />
+              </>
+            );
+          })()
         ) : (
           /* 서라운드 모드: 기존 좌측 프레임 치수선 */
           <>
@@ -590,56 +612,68 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           </>
         )}
       </group>
+      )}
       
-      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리 치수선 */}
+      {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
+      {!isStep2 && (
       <group>
-        {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig ? (
-          /* 노서라운드 모드: 우측 이격거리 치수선 */
-          <>
-            {/* 치수선 */}
-            <Line
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002]]}
-              color={textColor}
-              lineWidth={2}
-            />
+        {spaceInfo.surroundType === 'no-surround' ? (
+          /* 노서라운드 모드: 우측 이격거리/엔드패널 치수선 */
+          (() => {
+            // 벽 유무에 따라 값과 텍스트 결정
+            const hasRightWall = spaceInfo.installType === 'builtin' || 
+                                (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right);
+            const rightValue = hasRightWall ? 2 : 20;
+            const rightText = hasRightWall ? '이격 2' : 'EP 20';
             
-            {/* 좌측 화살표 */}
-            <Line
-              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right) + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-              color={textColor}
-              lineWidth={2}
-            />
-            
-            {/* 우측 화살표 */}
-            <Line
-              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
-              color={textColor}
-              lineWidth={2}
-            />
-            
-            {/* 우측 이격거리 치수 텍스트 */}
-            <Text
-              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-            >
-              이격 {spaceInfo.gapConfig.right}
-            </Text>
-            
-            {/* 연장선 */}
-            <Line
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(spaceInfo.gapConfig.right), topDimensionY - mmToThreeUnits(40), 0.001]]}
-              color={textColor}
-              lineWidth={0.5}
-            />
-            <Line
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
-              color={textColor}
-              lineWidth={0.5}
-            />
-          </>
+            return (
+              <>
+                {/* 치수선 */}
+                <Line
+                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002]]}
+                  color={textColor}
+                  lineWidth={2}
+                />
+                
+                {/* 좌측 화살표 */}
+                <Line
+                  points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) + 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+                  color={textColor}
+                  lineWidth={2}
+                />
+                
+                {/* 우측 화살표 */}
+                <Line
+                  points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(60), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(60), 0.002])}
+                  color={textColor}
+                  lineWidth={2}
+                />
+                
+                {/* 우측 치수 텍스트 */}
+                <Text
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(30), 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                >
+                  {rightText}
+                </Text>
+                
+                {/* 연장선 */}
+                <Line
+                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(40), 0.001]]}
+                  color={textColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(40), 0.001]]}
+                  color={textColor}
+                  lineWidth={0.5}
+                />
+              </>
+            );
+          })()
         ) : (
           /* 서라운드 모드: 기존 우측 프레임 치수선 */
           <>
@@ -689,6 +723,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           </>
         )}
       </group>
+      )}
       
       {/* 각 컬럼 너비 치수선 - 히든 처리 */}
       {false && placedModules.length > 0 && columnCount > 1 && threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
@@ -761,8 +796,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
         );
       })}
       
-      {/* 좌측 전체 높이 치수선 - 가구 배치 시에만 표시 */}
-      {placedModules.length > 0 && (
+      {/* 좌측 전체 높이 치수선 - 가구 배치 시에만 표시 (Step 2는 예외) */}
+      {(placedModules.length > 0 || isStep2) && (
       <group>
         {/* 치수선 */}
         <Line
@@ -814,6 +849,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
       )}
       
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
+      {!isStep2 && (
       <group>
         {(() => {
           const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(is3DMode ? 120 : 200); // 우측 치수선 위치 (3D에서는 더 가까이)
@@ -998,6 +1034,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           );
         })()}
       </group>
+      )}
       
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시) */}
@@ -1121,6 +1158,68 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             />
             <Line
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              color={dimensionColor}
+              lineWidth={0.5}
+              renderOrder={999999}
+            />
+          </group>
+        );
+      })}
+      
+      {/* 기둥별 치수선 (가구와 동일한 스타일) */}
+      {spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
+        const columnWidthM = column.width * 0.01;
+        const leftX = column.position[0] - columnWidthM / 2;
+        const rightX = column.position[0] + columnWidthM / 2;
+        const dimY = topDimensionY - mmToThreeUnits(120); // 가구 치수와 동일한 레벨
+        
+        return (
+          <group key={`column-dim-${column.id}`}>
+            {/* 기둥 치수선 */}
+            <Line
+              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={0.5}
+              renderOrder={999999}
+            />
+            
+            {/* 좌측 화살표 */}
+            <Line
+              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={0.5}
+              renderOrder={999999}
+            />
+            
+            {/* 우측 화살표 */}
+            <Line
+              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={0.5}
+              renderOrder={999999}
+            />
+            
+            {/* 기둥 치수 텍스트 */}
+            <Text
+              position={[column.position[0], dimY - mmToThreeUnits(30), 0.01]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={999999}
+            >
+              {Math.round(column.width)}
+            </Text>
+            
+            {/* 연장선 */}
+            <Line
+              points={[[leftX, spaceHeight, 0.001], [leftX, dimY + mmToThreeUnits(15), 0.001]]}
+              color={dimensionColor}
+              lineWidth={0.5}
+              renderOrder={999999}
+            />
+            <Line
+              points={[[rightX, spaceHeight, 0.001], [rightX, dimY + mmToThreeUnits(15), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
               renderOrder={999999}
@@ -2656,6 +2755,63 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
           );
         })}
 
+        {/* 기둥별 치수선 - 상부뷰 (가구와 동일한 스타일) */}
+        {spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
+          const columnWidthM = column.width * 0.01;
+          const leftX = column.position[0] - columnWidthM / 2;
+          const rightX = column.position[0] + columnWidthM / 2;
+          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 120 : 80); // 가구 치수와 동일한 레벨
+          
+          return (
+            <group key={`top-column-dim-${column.id}`}>
+              {/* 기둥 치수선 */}
+              <Line
+                points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              
+              {/* 좌측 화살표 */}
+              <Line
+                points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              
+              {/* 우측 화살표 */}
+              <Line
+                points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              
+              {/* 기둥 치수 텍스트 - 상단뷰용 회전 적용 */}
+              <Text
+                position={[column.position[0], spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
+                fontSize={baseFontSize}
+                color={dimensionColor}
+                anchorX="center"
+                anchorY="middle"
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                {Math.round(column.width)}
+              </Text>
+              
+              {/* 연장선 */}
+              <Line
+                points={[[leftX, spaceHeight, spaceZOffset], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              <Line
+                points={[[rightX, spaceHeight, spaceZOffset], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+            </group>
+          );
+        })}
+
         {/* 우측 치수선 - 우측 프레임 앞면부터 가구 가장 뒷면까지 거리 (비활성화) */}
         {false && placedModules.length > 0 && (() => {
           // 우측에 배치된 가구들의 가장 뒷면과 X 위치 찾기
@@ -3161,19 +3317,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
             label="오른쪽 간격"
           />
 
-          {/* 기둥 너비 라벨 */}
-          <EditableLabel
-            columnId={column.id}
-            side="width"
-            currentValue={column.width}
-            position={[
-              column.position[0], 
-              spaceHeight + mmToThreeUnits(50), 
-              0.002
-            ]}
-            color={guideColor}
-            label="폭"
-          />
+          {/* 기둥 너비 라벨 - 3D 뷰에서는 제거 */}
 
           {/* 왼쪽 간격 가이드라인 */}
           <Line
@@ -3215,8 +3359,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection }) => {
 
   return (
     <group ref={groupRef} renderOrder={999999}>
-      {/* 치수선은 showDimensions가 true일 때만 렌더링 */}
-      {showDimensions && renderDimensions()}
+      {/* 치수선은 showDimensions가 true이고 showDimensionsText가 true일 때만 렌더링 */}
+      {showDimensions && showDimensionsText && renderDimensions()}
       
       {/* 기둥은 showDimensions가 true일 때만 렌더링 (2D 정면 뷰에서만) */}
       {showDimensions && currentViewDirection === 'front' && renderColumns()}

@@ -95,7 +95,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     targetColumn: number,
     isDualFurniture: boolean,
     indexing: ReturnType<typeof calculateSpaceIndexing>,
-    checkSlotOccupancy: (column: number, isDual: boolean, indexing: ReturnType<typeof calculateSpaceIndexing>, modules: PlacedModule[]) => boolean,
+    checkSlotOccupancy: (column: number, isDual: boolean) => boolean,
     placedModules: PlacedModule[]
   ): { column: number; x: number } | null => {
     const columnCount = indexing.columnCount;
@@ -106,7 +106,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       
       // 현재 위치부터 오른쪽으로 검색
       for (let i = targetColumn; i <= maxDualIndex; i++) {
-        if (!checkSlotOccupancy(i, true, indexing, placedModules)) {
+        if (!checkSlotOccupancy(i, true)) {
           const x = indexing.threeUnitDualPositions?.[i] ?? 
             indexing.threeUnitPositions[i] + 
             (indexing.threeUnitPositions[i + 1] - indexing.threeUnitPositions[i]) / 2;
@@ -117,7 +117,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       
       // 오른쪽에서 찾지 못하면 왼쪽으로 검색
       for (let i = targetColumn - 1; i >= 0; i--) {
-        if (!checkSlotOccupancy(i, true, indexing, placedModules)) {
+        if (!checkSlotOccupancy(i, true)) {
           const x = indexing.threeUnitDualPositions?.[i] ?? 
             indexing.threeUnitPositions[i] + 
             (indexing.threeUnitPositions[i + 1] - indexing.threeUnitPositions[i]) / 2;
@@ -131,7 +131,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       
       // 현재 위치부터 오른쪽으로 검색
       for (let i = targetColumn; i <= maxSingleIndex; i++) {
-        if (!checkSlotOccupancy(i, false, indexing, placedModules)) {
+        if (!checkSlotOccupancy(i, false)) {
           console.log('✅ Found available single slot at:', i);
           return { column: i, x: indexing.threeUnitPositions[i] };
         }
@@ -139,7 +139,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       
       // 오른쪽에서 찾지 못하면 왼쪽으로 검색
       for (let i = targetColumn - 1; i >= 0; i--) {
-        if (!checkSlotOccupancy(i, false, indexing, placedModules)) {
+        if (!checkSlotOccupancy(i, false)) {
           console.log('✅ Found available single slot at:', i);
           return { column: i, x: indexing.threeUnitPositions[i] };
         }

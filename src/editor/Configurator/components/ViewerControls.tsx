@@ -100,7 +100,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <span className={styles.toggleLabel}>{showDimensions ? 'ON' : 'OFF'}</span>
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
-            onClick={onShowDimensionsToggle}
+            onClick={() => {
+              console.log('🎯 치수 토글 클릭, 현재 상태:', showDimensions);
+              onShowDimensionsToggle();
+            }}
           >
             <div className={styles.switchHandle}></div>
           </button>

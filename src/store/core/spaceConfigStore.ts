@@ -158,9 +158,9 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   // Configurator 초기값 설정
   surroundType: 'no-surround',
   frameSize: {
-    left: DEFAULT_FRAME_VALUES.LEFT,
-    right: DEFAULT_FRAME_VALUES.RIGHT,
-    top: DEFAULT_FRAME_VALUES.TOP
+    left: 0,  // 노서라운드는 프레임 없음
+    right: 0,
+    top: 0
   },
   gapConfig: {
     left: 2, // 기본 이격거리 2mm
@@ -190,8 +190,14 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   // 공간 정보 설정
   setSpaceInfo: (info) => {
     set((state) => {
+      // installType 하이픈 문제 수정
+      const processedInfo = { ...info };
+      if (processedInfo.installType === 'built-in') {
+        processedInfo.installType = 'builtin';
+      }
+      
       const newState = {
-        spaceInfo: { ...state.spaceInfo, ...info },
+        spaceInfo: { ...state.spaceInfo, ...processedInfo },
         isDirty: true,
       };
       return newState;

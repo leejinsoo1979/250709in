@@ -245,7 +245,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       )}
       
       {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
-      {hasDoor && spaceInfo && (
+      {hasDoor && spaceInfo && (() => {
+        console.log('🚪 BoxModule 도어 렌더링:', {
+          moduleId: moduleData.id,
+          hasDoor,
+          spaceInfo: !!spaceInfo
+        });
+        return true;
+      })() && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width} // 무시됨
           moduleDepth={baseFurniture.actualDepthMm}
@@ -256,7 +263,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
-          isDragging={isDragging}
         />
       )}
     </BaseFurnitureShell>

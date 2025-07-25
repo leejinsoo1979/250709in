@@ -40,7 +40,7 @@
 .header {
   position: relative;
   padding: 24px 32px;
-  background: #f8fffe;
+  background: white;
   border-bottom: 1px solid #e5e5e5;
 }
 
@@ -92,7 +92,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  background: #f8fffe;
+  background: white;
   position: relative;
 }
 

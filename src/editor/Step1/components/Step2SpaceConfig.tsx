@@ -12,10 +12,17 @@ interface Step2SpaceConfigProps {
 
 const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious, onClose }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const [viewMode, setViewMode] = useState<'2D' | '3D'>('2D');
+  const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D'); // 기본값을 3D로 변경
   const [viewerKey, setViewerKey] = useState(0);
   const [hasAircon, setHasAircon] = useState(false);
-  const [hasFloorFinish, setHasFloorFinish] = useState(false);
+  const [hasFloorFinish, setHasFloorFinish] = useState(spaceInfo.hasFloorFinish || false);
+  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe'>('solid');
+  const [showAll, setShowAll] = useState(true);
+  const [showDimensions, setShowDimensions] = useState(true);
+  
+  // 임시 치수 상태 (입력 중인 값)
+  const [tempWidth, setTempWidth] = useState(spaceInfo.width?.toString() || '');
+  const [tempHeight, setTempHeight] = useState(spaceInfo.height?.toString() || '');
 
   const canProceed = spaceInfo.width > 0 && spaceInfo.height > 0;
 
@@ -29,6 +36,12 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
   useEffect(() => {
     setViewerKey(prev => prev + 1);
   }, [spaceInfo.width, spaceInfo.height, spaceInfo.installType, spaceInfo.wallPosition]);
+  
+  // spaceInfo 변경 시 임시 상태 업데이트 (외부에서 변경된 경우)
+  useEffect(() => {
+    setTempWidth(spaceInfo.width?.toString() || '');
+    setTempHeight(spaceInfo.height?.toString() || '');
+  }, [spaceInfo.width, spaceInfo.height]);
 
   return (
     <div className={styles.container}>
@@ -65,13 +78,19 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
               </button>
             </div>
             
-            {/* 3D 에디터 뷰어 */}
+            {/* 3D 에디터 뷰어 - Configurator와 동일한 설정 */}
             <div className={styles.editorViewer}>
               <Space3DView 
                 key={viewerKey}
-                viewMode={viewMode === '3D' ? '3d' : '2d'}
+                spaceInfo={spaceInfo}
+                viewMode={viewMode}
+                renderMode={renderMode}
+                showAll={false}
+                showDimensions={true}
+                showFrame={false}
                 isEmbedded={true}
-                onViewModeChange={() => {}}
+                isStep2={true}
+                setViewMode={(mode) => setViewMode(mode)}
               />
             </div>
           </div>
@@ -79,7 +98,6 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
           <div className={styles.rightSection}>
             <div className={styles.formSection}>
               <div className={styles.sectionHeader}>
-                <span className={styles.stepBadge}>STEP 2</span>
                 <h2>공간 정보 입력</h2>
               </div>
               
@@ -90,41 +108,54 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                   <div className={styles.buttonGroup}>
                     <button 
                       className={`${styles.typeButton} ${spaceInfo.installType === 'builtin' ? styles.active : ''}`}
-                      onClick={() => handleUpdate({ installType: 'builtin' })}
+                      onClick={() => handleUpdate({ 
+                        installType: 'builtin',
+                        wallConfig: { left: true, right: true }
+                      })}
                     >
-                      빌트인
+                      양쪽벽
                     </button>
                     <button 
-                      className={`${styles.typeButton} ${spaceInfo.installType === 'standalone' ? styles.active : ''}`}
-                      onClick={() => handleUpdate({ installType: 'standalone' })}
+                      className={`${styles.typeButton} ${spaceInfo.installType === 'semistanding' ? styles.active : ''}`}
+                      onClick={() => handleUpdate({ 
+                        installType: 'semistanding',
+                        wallConfig: { left: true, right: false }
+                      })}
                     >
-                      세미스탠딩
+                      한쪽벽
                     </button>
                     <button 
                       className={`${styles.typeButton} ${spaceInfo.installType === 'freestanding' ? styles.active : ''}`}
-                      onClick={() => handleUpdate({ installType: 'freestanding' })}
+                      onClick={() => handleUpdate({ 
+                        installType: 'freestanding',
+                        wallConfig: { left: false, right: false }
+                      })}
                     >
-                      프리스탠딩
+                      벽없음
                     </button>
                   </div>
                 </div>
 
                 {/* 벽 위치 - 세미스탠딩에서만 표시 */}
-                {spaceInfo.installType === 'standalone' && (
+                {spaceInfo.installType === 'semistanding' && (
                   <div className={styles.formGroup}>
                     <div className={styles.groupHeader}>
                       <label className={styles.formLabel}>벽 위치</label>
                     </div>
                     <div className={styles.buttonGroup}>
                       <button 
-                        className={`${styles.typeButton} ${spaceInfo.wallPosition === 'left' ? styles.active : ''}`}
-                        onClick={() => handleUpdate({ wallPosition: 'left' })}
+                        className={`${styles.typeButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
+                        onClick={() => handleUpdate({ 
+                          wallConfig: { left: true, right: false }
+                        })}
                       >
                         좌측
                       </button>
                       <button 
-                        className={`${styles.typeButton} ${spaceInfo.wallPosition === 'right' ? styles.active : ''}`}
-                        onClick={() => handleUpdate({ wallPosition: 'right' })}
+                        className={`${styles.typeButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
+                        onClick={() => handleUpdate({ 
+                          wallConfig: { left: false, right: true }
+                        })}
                       >
                         우측
                       </button>
@@ -142,8 +173,22 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                         <input 
                           type="number" 
                           className={styles.sizeInput}
-                          value={spaceInfo.width || ''}
-                          onChange={(e) => handleUpdate({ width: parseInt(e.target.value) || 0 })}
+                          value={tempWidth}
+                          onChange={(e) => setTempWidth(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseInt(e.target.value) || 0;
+                            if (value > 0) {
+                              handleUpdate({ width: value });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const value = parseInt(tempWidth) || 0;
+                              if (value > 0) {
+                                handleUpdate({ width: value });
+                              }
+                            }
+                          }}
                           placeholder="3600"
                         />
                         <span className={styles.unit}>mm</span>
@@ -155,8 +200,22 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                         <input 
                           type="number" 
                           className={styles.sizeInput}
-                          value={spaceInfo.height || ''}
-                          onChange={(e) => handleUpdate({ height: parseInt(e.target.value) || 0 })}
+                          value={tempHeight}
+                          onChange={(e) => setTempHeight(e.target.value)}
+                          onBlur={(e) => {
+                            const value = parseInt(e.target.value) || 0;
+                            if (value > 0) {
+                              handleUpdate({ height: value });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const value = parseInt(tempHeight) || 0;
+                              if (value > 0) {
+                                handleUpdate({ height: value });
+                              }
+                            }
+                          }}
                           placeholder="2400"
                         />
                         <span className={styles.unit}>mm</span>
@@ -230,13 +289,25 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                   <div className={styles.buttonGroup}>
                     <button 
                       className={`${styles.typeButton} ${hasFloorFinish ? styles.active : ''}`}
-                      onClick={() => setHasFloorFinish(true)}
+                      onClick={() => {
+                        setHasFloorFinish(true);
+                        handleUpdate({ 
+                          hasFloorFinish: true,
+                          floorFinish: { height: 10 }
+                        });
+                      }}
                     >
                       있음
                     </button>
                     <button 
                       className={`${styles.typeButton} ${!hasFloorFinish ? styles.active : ''}`}
-                      onClick={() => setHasFloorFinish(false)}
+                      onClick={() => {
+                        setHasFloorFinish(false);
+                        handleUpdate({ 
+                          hasFloorFinish: false,
+                          floorFinish: undefined
+                        });
+                      }}
                     >
                       없음
                     </button>
@@ -250,7 +321,10 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                           <input 
                             type="number" 
                             className={styles.sizeInput}
-                            defaultValue="10"
+                            value={spaceInfo.floorFinish?.height || 10}
+                            onChange={(e) => handleUpdate({ 
+                              floorFinish: { height: parseInt(e.target.value) || 10 }
+                            })}
                             placeholder="10"
                           />
                           <span className={styles.unit}>mm</span>
