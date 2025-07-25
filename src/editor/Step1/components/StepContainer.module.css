@@ -1,0 +1,34 @@
+/* Step 컨테이너 - 테마 적용하되 Input만 라이트 테마 고정 */
+.stepContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Step 모달 내부의 Input 컴포넌트들은 라이트 모드 고정, 테마 색상만 적용 */
+.stepContainer input,
+.stepContainer textarea,
+.stepContainer select {
+  background-color: white !important;
+  color: #374151 !important;
+  border-color: #e5e7eb !important;
+}
+
+.stepContainer input:hover,
+.stepContainer textarea:hover,
+.stepContainer select:hover {
+  border-color: var(--theme-primary) !important;
+}
+
+.stepContainer input:focus,
+.stepContainer textarea:focus,
+.stepContainer select:focus {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px var(--theme-primary-light) !important;
+}
+
+.stepContainer input::placeholder,
+.stepContainer textarea::placeholder {
+  color: #9ca3af !important;
+}

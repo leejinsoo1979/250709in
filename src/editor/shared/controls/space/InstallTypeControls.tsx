@@ -14,13 +14,13 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     let wallConfig = { ...spaceInfo.wallConfig };
     
     switch (type) {
-      case 'built-in':
+      case 'builtin':
         wallConfig = { left: true, right: true };
         break;
-      case 'semi-standing':
+      case 'semistanding':
         wallConfig = { left: true, right: false };
         break;
-      case 'free-standing':
+      case 'freestanding':
         wallConfig = { left: false, right: false };
         break;
     }
@@ -57,7 +57,7 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       </div>
 
       {/* 세미스탠딩일 때만 벽 위치 선택 UI 표시 */}
-      {spaceInfo.installType === 'semi-standing' && (
+      {spaceInfo.installType === 'semistanding' && (
         <div className={styles.section}>
           <span className={styles.label}>벽 위치</span>
           <div className={styles.toggleButtonGroup}>

@@ -26,6 +26,9 @@ interface ViewerControlsProps {
   showDimensions: boolean;
   onShowDimensionsToggle: () => void;
   
+  showDimensionsText: boolean;
+  onShowDimensionsTextToggle: () => void;
+  
   showGuides: boolean;
   onShowGuidesToggle: () => void;
   
@@ -48,6 +51,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onShowAllToggle,
   showDimensions,
   onShowDimensionsToggle,
+  showDimensionsText,
+  onShowDimensionsTextToggle,
   showGuides,
   onShowGuidesToggle,
   doorsOpen,
@@ -118,8 +123,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={showDimensions}
-                onChange={onShowDimensionsToggle}
+                checked={showDimensionsText}
+                onChange={onShowDimensionsTextToggle}
                 className={styles.checkbox}
               />
               <span className={styles.checkmark}></span>

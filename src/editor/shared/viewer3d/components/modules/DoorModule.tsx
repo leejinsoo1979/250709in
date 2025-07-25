@@ -27,39 +27,60 @@ const BoxWithEdges: React.FC<{
   
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 드래그 중일 때 고스트 효과 적용
+  // 드래그 중일 때 고스트 효과 적용 및 2D solid 모드에서 투명도 적용
   const processedMaterial = useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = material.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
+    if (material instanceof THREE.MeshStandardMaterial) {
+      const clonedMaterial = material.clone();
       
-      // 테마 색상 가져오기
-      const getThemeColor = () => {
-        if (typeof window !== 'undefined') {
-          const computedStyle = getComputedStyle(document.documentElement);
-          const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-          if (primaryColor) {
-            return primaryColor;
+      // 텍스처가 있으면 명시적으로 복사
+      if (material.map) {
+        clonedMaterial.map = material.map;
+        clonedMaterial.needsUpdate = true;
+      }
+      
+      if (isDragging) {
+        clonedMaterial.transparent = true;
+        clonedMaterial.opacity = 0.6;
+        
+        // 테마 색상 가져오기
+        const getThemeColor = () => {
+          if (typeof window !== 'undefined') {
+            const computedStyle = getComputedStyle(document.documentElement);
+            const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+            if (primaryColor) {
+              return primaryColor;
+            }
           }
-        }
-        return '#10b981'; // 기본값 (green)
-      };
+          return '#10b981'; // 기본값 (green)
+        };
+        
+        clonedMaterial.color = new THREE.Color(getThemeColor());
+      } else if (viewMode === '2D' && renderMode === 'solid') {
+        // 2D solid 모드에서 투명도 적용
+        clonedMaterial.transparent = true;
+        clonedMaterial.opacity = 0.2; // 더 투명하게 변경 (20%)
+      } else if (renderMode === 'wireframe') {
+        // 와이어프레임 모드에서 투명도 적용
+        clonedMaterial.transparent = true;
+        clonedMaterial.opacity = 0.3;
+      }
       
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.needsUpdate = true;
-      return ghostMaterial;
+      clonedMaterial.needsUpdate = true;
+      return clonedMaterial;
     }
     return material;
-  }, [material, isDragging]);
+  }, [material, isDragging, viewMode, renderMode]);
   
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <primitive object={processedMaterial} />
-        </mesh>
+        <mesh 
+          geometry={geometry} 
+          material={processedMaterial}
+          receiveShadow={viewMode === '3D'} 
+          castShadow={viewMode === '3D'}
+        />
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (
@@ -80,7 +101,7 @@ const BoxWithEdges: React.FC<{
           <lineSegments geometry={edgesGeometry}>
             <lineBasicMaterial 
               color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
-              linewidth={1} 
+              linewidth={0.5} 
             />
           </lineSegments>
         )
@@ -124,7 +145,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
   const materialConfig = currentSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
-    doorColor: '#FFFFFF' 
+    doorColor: '#E0E0E0'  // 기본값 변경
   };
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
@@ -146,16 +167,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 기본 도어 재질 생성 (BoxWithEdges에서 재처리됨)
   const baseDoorMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(doorColor),
       metalness: 0.0,        // 완전 비금속 (프레임과 동일)
       roughness: 0.6,        // 프레임과 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
-      transparent: false,    // BoxWithEdges에서 처리
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid'),
       opacity: 1.0,          // BoxWithEdges에서 처리
     });
-  }, [doorColor]);
+    console.log('🚪 기본 도어 재질 생성:', mat);
+    return mat;
+  }, [doorColor, renderMode, viewMode]);
 
   // 싱글 가구용 도어 재질
   const doorMaterial = baseDoorMaterial;
@@ -196,6 +219,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           }
           
           material.needsUpdate = true;
+          console.log(`✅ ${doorSide} 도어 재질 텍스처 적용 완료:`, { map: material.map, color: material.color });
         },
         undefined,
         (error) => {
@@ -217,15 +241,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   useEffect(() => {
     const textureUrl = materialConfig.doorTexture;
     console.log('🚪 Door Texture URL:', textureUrl);
+    console.log('🚪 Material Config:', materialConfig);
     
     // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
-    applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
-    applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
-    applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
-  }, [materialConfig.doorTexture]); // material 객체는 의존성에서 제거
+    if (doorMaterial) {
+      applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
+    }
+    if (leftDoorMaterial) {
+      applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
+    }
+    if (rightDoorMaterial) {
+      applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
+    }
+    
+    // Three.js가 자동으로 업데이트하도록 함
+  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial]); // 필요한 의존성 추가
   
-  // 투명도 설정: renderMode에 따라 조정
-  const opacity = renderMode === 'wireframe' ? 0.3 : 1.0;
+  // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
+  const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
   const columnWidth = indexing.columnWidth;
@@ -342,26 +375,54 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
-            <BoxWithEdges
-              position={[doorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]} // 도어를 힌지 기준으로 오른쪽에 배치
-              args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={leftDoorMaterial}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
+            <group position={[doorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
+              {/* Solid 모드일 때 도어 메쉬 직접 렌더링 */}
+              {renderMode === 'solid' && (
+                <mesh 
+                  castShadow={viewMode === '3D'}
+                  receiveShadow={viewMode === '3D'}
+                >
+                  <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
+                  <primitive object={leftDoorMaterial} attach="material" />
+                </mesh>
+              )}
+              {/* 윤곽선 */}
+              <lineSegments>
+                <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
+                <lineBasicMaterial 
+                  color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                  transparent={viewMode === '3D'}
+                  opacity={viewMode === '3D' ? 0.9 : 1}
+                />
+              </lineSegments>
+            </group>
           </animated.group>
         </group>
         
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
-            <BoxWithEdges
-              position={[-doorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]} // 도어를 힌지 기준으로 왼쪽에 배치
-              args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              material={rightDoorMaterial}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
+            <group position={[-doorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
+              {/* Solid 모드일 때 도어 메쉬 직접 렌더링 */}
+              {renderMode === 'solid' && (
+                <mesh 
+                  castShadow={viewMode === '3D'}
+                  receiveShadow={viewMode === '3D'}
+                >
+                  <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
+                  <primitive object={rightDoorMaterial} attach="material" />
+                </mesh>
+              )}
+              {/* 윤곽선 */}
+              <lineSegments>
+                <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
+                <lineBasicMaterial 
+                  color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                  transparent={viewMode === '3D'}
+                  opacity={viewMode === '3D' ? 0.9 : 1}
+                />
+              </lineSegments>
+            </group>
           </animated.group>
         </group>
       </group>
@@ -380,16 +441,40 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
     
+    // 도어 재질에 텍스처가 있는지 확인
+    useEffect(() => {
+      console.log('🚪 싱글 도어 재질 상태:', {
+        hasMaterial: !!doorMaterial,
+        hasMap: !!doorMaterial.map,
+        mapImage: doorMaterial.map?.image,
+        color: doorMaterial.color
+      });
+    }, [doorMaterial]);
+
     return (
       <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={hingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
-          <BoxWithEdges
-            position={[doorPositionX, 0.1, 0]}
-            args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-            material={doorMaterial}
-            renderMode={renderMode}
-            isDragging={isDragging}
-          />
+          <group position={[doorPositionX, 0.1, 0]}>
+            {/* Solid 모드일 때 도어 메쉬 직접 렌더링 */}
+            {renderMode === 'solid' && (
+              <mesh 
+                castShadow={viewMode === '3D'}
+                receiveShadow={viewMode === '3D'}
+              >
+                <boxGeometry args={[doorWidthUnits, doorHeight, doorThicknessUnits]} />
+                <primitive object={doorMaterial} attach="material" />
+              </mesh>
+            )}
+            {/* 윤곽선 */}
+            <lineSegments>
+              <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
+              <lineBasicMaterial 
+                color={viewMode === '3D' ? "#505050" : (renderMode === 'wireframe' ? "#333333" : "#666666")} 
+                transparent={viewMode === '3D'}
+                opacity={viewMode === '3D' ? 0.9 : 1}
+              />
+            </lineSegments>
+          </group>
         </animated.group>
       </group>
     );

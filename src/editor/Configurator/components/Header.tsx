@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './Header.module.css';
 import { Settings, Menu, User } from 'lucide-react';
 import HelpModal from './HelpModal';
@@ -9,6 +9,7 @@ import { useAuth } from '@/auth/AuthProvider';
 interface HeaderProps {
   title: string;
   projectName?: string; // 프로젝트명 추가
+  designFileName?: string; // 디자인 파일명 추가
   onSave: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
@@ -25,6 +26,7 @@ interface HeaderProps {
   onNewProject?: () => void;
   onSaveAs?: () => void;
   onProjectNameChange?: (newName: string) => void;
+  onDesignFileChange?: () => void; // 디자인 파일 선택/변경
   // 햄버거 메뉴 관련 props 추가
   onFileTreeToggle?: () => void;
   isFileTreeOpen?: boolean;
@@ -33,6 +35,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   title,
   projectName,
+  designFileName,
   onSave,
   onPrevious,
   onNext,
@@ -47,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
   onNewProject,
   onSaveAs,
   onProjectNameChange,
+  onDesignFileChange,
   onFileTreeToggle,
   isFileTreeOpen
 }) => {
@@ -55,10 +59,20 @@ const Header: React.FC<HeaderProps> = ({
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
   console.log('🔍 Header 컴포넌트 projectName:', projectName);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (fileMenuTimeoutRef.current) {
+        clearTimeout(fileMenuTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleHelpClick = () => {
     setIsHelpModalOpen(true);
@@ -70,7 +84,27 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleFileMenuToggle = () => {
     console.log('📁 파일 메뉴 토글:', !isFileMenuOpen);
+    // 타이머가 있으면 취소
+    if (fileMenuTimeoutRef.current) {
+      clearTimeout(fileMenuTimeoutRef.current);
+      fileMenuTimeoutRef.current = null;
+    }
     setIsFileMenuOpen(!isFileMenuOpen);
+  };
+
+  const handleFileMenuMouseEnter = () => {
+    // 마우스가 들어오면 타이머 취소
+    if (fileMenuTimeoutRef.current) {
+      clearTimeout(fileMenuTimeoutRef.current);
+      fileMenuTimeoutRef.current = null;
+    }
+  };
+
+  const handleFileMenuMouseLeave = () => {
+    // 마우스가 나가면 300ms 후에 메뉴 닫기
+    fileMenuTimeoutRef.current = setTimeout(() => {
+      setIsFileMenuOpen(false);
+    }, 300);
   };
 
   const handleNewProject = () => {
@@ -112,13 +146,11 @@ const Header: React.FC<HeaderProps> = ({
           <div className={styles.logo}>
             <Logo size="medium" />
           </div>
-          {projectName && (
-            <div 
-              className={`${styles.projectName} ${styles.clickableProjectName}`}
-              onClick={handleProjectNameClick}
-              title="클릭하여 프로젝트 이름 변경"
-            >
-              {projectName}
+          {designFileName && (
+            <div className={styles.projectInfo}>
+              <div className={styles.designFileName}>
+                {designFileName}
+              </div>
             </div>
           )}
         </div>
@@ -128,7 +160,8 @@ const Header: React.FC<HeaderProps> = ({
           {/* 파일 드롭다운 메뉴 */}
           <div 
             className={styles.fileMenuContainer}
-            onMouseLeave={() => setIsFileMenuOpen(false)}
+            onMouseEnter={handleFileMenuMouseEnter}
+            onMouseLeave={handleFileMenuMouseLeave}
           >
             <button 
               className={styles.actionButton}

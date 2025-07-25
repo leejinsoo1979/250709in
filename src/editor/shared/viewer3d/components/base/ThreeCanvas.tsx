@@ -53,72 +53,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 테마에 따른 배경색 결정
   const getBackgroundColor = useCallback(() => {
-    console.log('=== 2D 배경색 계산 시작 ===');
-    console.log('theme:', theme);
-    console.log('theme?.mode:', theme?.mode);
-    console.log('viewMode:', viewMode);
-    console.log('renderMode:', renderMode);
-    
     if (viewMode === '2D') {
-      // 여러 방법으로 다크모드 확인
-      let isDark = false;
-      let debugInfo = [];
-      
-      if (typeof window !== 'undefined') {
-        // 1. theme prop 확인 (객체 구조 고려)
-        const themeCheck = theme?.mode === 'dark';
-        isDark = themeCheck;
-        debugInfo.push(`theme?.mode === 'dark': ${themeCheck}`);
-        
-        // 2. CSS 변수에서 테마 확인
-        const rootStyles = window.getComputedStyle(document.documentElement);
-        const themeMode = rootStyles.getPropertyValue('--theme-mode').trim();
-        const backgroundColor = rootStyles.getPropertyValue('--theme-background').trim();
-        const surfaceColor = rootStyles.getPropertyValue('--theme-surface').trim();
-        
-        debugInfo.push(`CSS --theme-mode: "${themeMode}"`);
-        debugInfo.push(`CSS --theme-background: "${backgroundColor}"`);
-        debugInfo.push(`CSS --theme-surface: "${surfaceColor}"`);
-        
-        if (!isDark) {
-          const cssCheck = themeMode === 'dark' ||
-                   backgroundColor === '#1f2937' || 
-                   backgroundColor === '#111827' ||
-                   surfaceColor === '#1f2937' ||
-                   surfaceColor === '#111827';
-          isDark = cssCheck;
-          debugInfo.push(`CSS 변수 체크: ${cssCheck}`);
-        }
-        
-        // 3. body class 확인
-        if (!isDark) {
-          const bodyClasses = document.body.className;
-          const htmlClasses = document.documentElement.className;
-          const classCheck = bodyClasses.includes('theme-dark-') || 
-                   document.body.classList.contains('dark') || 
-                   document.documentElement.classList.contains('dark');
-          isDark = classCheck;
-          debugInfo.push(`body classes: "${bodyClasses}"`);
-          debugInfo.push(`html classes: "${htmlClasses}"`);
-          debugInfo.push(`class 체크: ${classCheck}`);
-        }
-      }
-      
-      console.log('디버그 정보:', debugInfo);
-      console.log('최종 isDark:', isDark);
-      
-      if (isDark) {
-        // 다크모드에서 와이어프레임과 솔리드 모두 검정색
-        const color = '#000000';
-        console.log('✅ 다크모드 2D 배경색 반환:', color);
-        return color;
-      }
-      console.log('❌ 라이트모드 2D 배경색 반환: #ffffff');
-      return '#ffffff';
+      // 2D 모드에서는 테마에 따른 배경색 사용
+      return theme.mode === 'dark' ? '#000000' : '#ffffff';
     }
-    console.log('3D 모드 배경색:', CANVAS_SETTINGS.BACKGROUND_COLOR);
     return CANVAS_SETTINGS.BACKGROUND_COLOR;
-  }, [theme, viewMode, renderMode]);
+  }, [viewMode, theme.mode]);
   
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);

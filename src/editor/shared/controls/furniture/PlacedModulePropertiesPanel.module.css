@@ -15,7 +15,7 @@
 .panel {
   background: var(--theme-surface);
   border-radius: 12px;
-  box-shadow: var(--theme-shadow);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
   width: 350px;
   max-height: calc(100vh - 120px);
   overflow: hidden;
@@ -49,6 +49,7 @@
   font-size: 16px;
   font-weight: 600;
   margin: 0;
+  color: white;
 }
 
 .headerButtons {
@@ -77,22 +78,13 @@
   transform: scale(1.1);
 }
 
-/* 새로운 삭제 섹션 스타일 */
-.deleteSection {
-  margin-bottom: 24px;
-  padding: 16px;
-  background-color: var(--theme-primary-light);
-  border: 1px solid var(--theme-primary);
-  border-radius: 8px;
-  text-align: center;
-}
-
-.deleteSection .deleteButton {
+/* 삭제 버튼 스타일 - content 섹션 내에서 직접 사용 */
+.content .deleteButton {
   width: 100%;
   height: 40px;
-  background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-hover));
-  color: var(--theme-surface);
-  border: none;
+  background: var(--theme-background-secondary);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
@@ -102,17 +94,25 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  margin-bottom: 24px;
 }
 
-.deleteSection .deleteButton:hover {
-  background: linear-gradient(135deg, var(--theme-primary-hover), var(--theme-primary-hover));
+.content .deleteButton:hover {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--theme-primary-light);
 }
 
-.deleteSection .deleteButton:active {
+.content .deleteButton:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px var(--theme-primary-light);
+}
+
+.content .deleteButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .closeButton {
@@ -246,23 +246,37 @@
 .depthInput {
   width: 100%;
   padding: 10px 40px 10px 12px;
-  border: 1px solid var(--theme-border);
+  border: 1px solid #e5e7eb !important;
   border-radius: 6px;
   font-size: 14px;
-  background-color: var(--theme-surface);
-  color: var(--theme-text);
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  caret-color: #000000 !important;
   transition: all 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* 포커스 상태에서도 색상 유지 */
+.depthInput:focus {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
 }
 
 .depthInput:focus {
   outline: none;
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 0 2px var(--theme-primary-light);
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
 }
 
 .depthInput.inputError {
-  border-color: var(--theme-danger);
-  background-color: var(--theme-danger-light);
+  border-color: #ef4444;
+  background-color: #fef2f2 !important;
 }
 
 .unit {
@@ -631,4 +645,66 @@
   .depthSelector {
     flex-direction: column;
   }
+}
+
+/* 가구 편집 팝업 내부의 모든 input 요소에 대한 스타일 강제 적용 */
+.overlay .panel input[type="text"],
+.overlay .panel input[type="number"],
+.depthInputWrapper input,
+.inputWithUnit input,
+.furniture-depth-input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+  background-color: #ffffff !important;
+  caret-color: #000000 !important;
+}
+
+/* 가구 편집 패널 내의 모든 input 요소 - 최우선 순위 */
+.panel input,
+.panel input:focus,
+.panel input:hover,
+.panel input:active {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* number 타입 input에 대한 추가 스타일 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 입력 필드 placeholder 스타일 */
+.depthInput::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* 가구 깊이 입력 필드 특별 스타일 - 최우선 순위 */
+.furniture-depth-input,
+.furniture-depth-input:focus,
+.furniture-depth-input:hover,
+.furniture-depth-input:active {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  -webkit-appearance: none !important;
+}
+
+/* 가구 편집 패널 내의 모든 텍스트 입력 필드 */
+.panel .depthInput,
+.panel .furniture-depth-input {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
 } 

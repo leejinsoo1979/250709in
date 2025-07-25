@@ -1,5 +1,5 @@
 // 설치 타입 관련
-export type InstallType = 'built-in' | 'semi-standing' | 'free-standing';
+export type InstallType = 'builtin' | 'semistanding' | 'freestanding';
 export type WallSide = 'left' | 'right';
 
 export interface InstallTypeConfig {
@@ -41,18 +41,18 @@ export interface BaseConfig {
 // 상수 정의
 export const INSTALL_TYPES: InstallTypeConfig[] = [
   { 
-    type: 'built-in',
-    label: '빌트인',
+    type: 'builtin',
+    label: '양쪽벽',
     description: '양쪽 벽이 막혀있는 기본형식'
   },
   { 
-    type: 'semi-standing',
-    label: '세미스탠딩',
+    type: 'semistanding',
+    label: '한쪽벽',
     description: '한쪽만 벽으로 막혀있고 한쪽은 오픈된 형식'
   },
   { 
-    type: 'free-standing',
-    label: '프리스탠딩',
+    type: 'freestanding',
+    label: '벽없음',
     description: '양쪽 벽이 없는 독립형 형식'
   }
 ];

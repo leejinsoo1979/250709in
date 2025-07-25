@@ -31,6 +31,11 @@ export const findClosestColumnIndex = ColumnIndexer.findClosestColumnIndex;
 export const calculateInternalWidth = SpaceCalculator.calculateInternalWidth;
 
 /**
+ * 내경 공간 계산 유틸리티 함수 (geometry에서 re-export)
+ */
+export { calculateInternalSpace } from '../../viewer3d/utils/geometry';
+
+/**
  * 내경 폭에 따른 최소/최대 컬럼 수 계산
  */
 export const getColumnCountLimits = SpaceCalculator.getColumnCountLimits;

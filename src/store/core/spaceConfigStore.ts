@@ -112,7 +112,7 @@ export const DEFAULT_BASE_VALUES = {
 
 export const DEFAULT_MATERIAL_VALUES = {
   INTERIOR_COLOR: '#FFFFFF',
-  DOOR_COLOR: '#FFFFFF',
+  DOOR_COLOR: '#E0E0E0',  // 기본값을 밝은 회색으로 변경 (흰색 강제 초기화 방지)
 } as const;
 
 // 공간 치수 범위 상수들 (controls에서 사용)
@@ -146,7 +146,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   width: DEFAULT_SPACE_VALUES.WIDTH,
   height: DEFAULT_SPACE_VALUES.HEIGHT,
   depth: DEFAULT_SPACE_VALUES.DEPTH,
-  installType: 'built-in',
+  installType: 'builtin' as const,
   wallConfig: {
     left: true,
     right: true,
@@ -179,7 +179,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
 };
 
 // 초기 상태
-const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'resetAll' | 'markAsSaved'> = {
   isDirty: false,
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
@@ -212,7 +212,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         ...state.spaceInfo,
         materialConfig: {
           ...state.spaceInfo.materialConfig!,
-          doorColor: '#FFFFFF'  // 흰색으로 초기화 (테스트용)
+          // doorColor는 기존 값을 유지하고, 변경하지 않음
         }
       },
       isDirty: true,

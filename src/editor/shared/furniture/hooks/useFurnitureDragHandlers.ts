@@ -92,6 +92,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             z: 0
           },
           rotation: 0,
+          slotIndex: dropPosition.column, // 슬롯 인덱스 저장
+          isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: customDepth // 가구별 기본 깊이 설정
         };

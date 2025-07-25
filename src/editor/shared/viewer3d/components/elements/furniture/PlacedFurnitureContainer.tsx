@@ -10,14 +10,19 @@ import FurnitureItem from './FurnitureItem';
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
   renderMode: 'solid' | 'wireframe';
+  placedModules?: any[]; // 뷰어 모드에서 사용할 가구 데이터
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   viewMode,
-  renderMode
+  renderMode,
+  placedModules: propsPlacedModules
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const placedModules = useFurnitureStore(state => state.placedModules);
+  const storePlacedModules = useFurnitureStore(state => state.placedModules);
+  
+  // props로 전달된 데이터가 있으면 사용하고, 없으면 스토어 데이터 사용
+  const placedModules = propsPlacedModules || storePlacedModules;
   
   // 기둥 변화 감지하여 듀얼 가구 자동 분할
   useColumnDualSplitter();
@@ -64,12 +69,23 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     spaceInfo
   });
 
+  console.log('🔧 PlacedFurnitureContainer 렌더링:', {
+    placedModulesCount: placedModules.length,
+    placedModules: placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, position: m.position }))
+  });
+
   return (
     <group key={forceRenderKey}>
       {placedModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = selectionState.editMode && selectionState.editingModuleId === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
+
+        console.log('🔧 가구 아이템 렌더링:', {
+          id: placedModule.id,
+          moduleId: placedModule.moduleId,
+          position: placedModule.position
+        });
 
         return (
           <FurnitureItem

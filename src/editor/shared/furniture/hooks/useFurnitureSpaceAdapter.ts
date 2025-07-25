@@ -32,12 +32,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
-        // 🔧 항상 현재 위치로부터 슬롯 인덱스를 다시 계산 (저장된 값 무시)
+        // 🔧 저장된 slotIndex를 우선 사용, 없을 경우에만 위치에서 계산
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
         
-        let slotIndex: number | undefined;
-        if (moduleData) {
+        let slotIndex: number | undefined = module.slotIndex;
+        
+        // slotIndex가 없는 경우에만 위치에서 계산 (하위 호환성)
+        if (slotIndex === undefined && moduleData) {
           const isDualFurniture = Math.abs(moduleData.dimensions.width - (oldIndexing.columnWidth * 2)) < 50;
           slotIndex = findSlotIndexFromPosition(module.position, oldIndexing, isDualFurniture);
         }

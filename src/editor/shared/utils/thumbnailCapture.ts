@@ -137,8 +137,8 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
       console.log('🔄 정면 뷰로 전환');
     }
     
-    // 뷰 전환 후 렌더링 완료 대기
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 뷰 전환 후 렌더링 완료 대기 (시간 단축)
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     // 썸네일 캡처
     const thumbnail = captureCanvasThumbnail(canvas, {
@@ -176,12 +176,12 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
   return null;
 };
 
-// 프로젝트 저장 시 자동 썸네일 캡처 (개선된 버전)
-export const captureProjectThumbnail = async (): Promise<string | null> => {
+// 프로젝트 저장 시 자동 썸네일 캡처 (Blob 반환)
+export const captureProjectThumbnail = async (): Promise<Blob | null> => {
   // 먼저 정면 뷰로 캡처 시도
   const frontViewThumbnail = await captureFrontViewThumbnail();
   if (frontViewThumbnail) {
-    return frontViewThumbnail;
+    return dataURLToBlob(frontViewThumbnail);
   }
   
   // 정면 뷰 캡처 실패 시 기존 방식 사용
@@ -217,7 +217,7 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
       
       if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
         console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도)`);
-        return thumbnail;
+        return dataURLToBlob(thumbnail);
       }
       
       // 실패 시 100ms 대기 후 재시도
@@ -231,6 +231,19 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
   
   console.warn('모든 썸네일 캡처 시도 실패');
   return null;
+};
+
+// Base64 데이터 URL을 Blob으로 변환하는 유틸리티 함수
+export const dataURLToBlob = (dataURL: string): Blob => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
 };
 
 // 기본 썸네일 생성 (3D 렌더링이 없을 때 사용)

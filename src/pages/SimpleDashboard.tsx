@@ -1,14 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
-import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon } from '../components/common/Icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { ProjectSummary } from '../firebase/types';
-import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData } from '@/firebase/projects';
+import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
-import Step0 from '../editor/Step0';
+import Step1 from '../editor/Step1';
+import SimpleProjectDropdown from '@/components/common/SimpleProjectDropdown';
+import BookmarksTab from '../components/collaboration/BookmarksTab';
+import SharedTab from '../components/collaboration/SharedTab';
+import TeamsTab from '../components/collaboration/TeamsTab';
+import ProfileTab from '../components/collaboration/ProfileTab';
+import NotificationBadge from '../components/common/NotificationBadge';
+import ProjectViewerModal from '../components/common/ProjectViewerModal';
+import ThumbnailImage from '../components/common/ThumbnailImage';
+import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
 // 커스텀 프로젝트 아이콘 (단색, 네모+선 형태)
@@ -33,6 +43,9 @@ const SimpleDashboard: React.FC = () => {
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 디자인 파일 로딩 상태
+  const [designFilesLoading, setDesignFilesLoading] = useState<{[projectId: string]: boolean}>({});
   
   // 파일 트리 접기/펼치기 상태 (폴더별로 관리)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -97,25 +110,47 @@ const SimpleDashboard: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   
-  // Step0 모달 상태
-  const [isStep0ModalOpen, setIsStep0ModalOpen] = useState(false);
+  // Step1 모달 상태
+  const [isStep1ModalOpen, setIsStep1ModalOpen] = useState(false);
+  
+  // 3D 뷰어 모달 상태
+  const [viewerModal, setViewerModal] = useState<{
+    isOpen: boolean;
+    projectId: string;
+  }>({
+    isOpen: false,
+    projectId: ''
+  });
 
   // 로그아웃 모달 상태 추가
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // 설정 패널 상태 추가
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  
+  // 팀 모달 상태
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   // 메뉴 상태 추가
   const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>('all');
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
   const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
   const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
   
   // 파일트리 폴딩 상태
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  
+  // 카드 선택 상태 (여러 선택 가능)
+  const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
+  
+  // 썸네일 캐시
+  const [thumbnailCache, setThumbnailCache] = useState<Map<string, string>>(new Map());
+  
+  // 디자인 파일 데이터 캐시
+  const [designFilesCache, setDesignFilesCache] = useState<Map<string, any[]>>(new Map());
+  
+  // 프로젝트별 디자인 파일들 (projectId -> DesignFileSummary[])
+  const [projectDesignFiles, setProjectDesignFiles] = useState<{[projectId: string]: any[]}>({});
 
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async () => {
@@ -136,12 +171,6 @@ const SimpleDashboard: React.FC = () => {
       } else {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
-        // 첫 번째 프로젝트의 데이터 구조 확인을 위한 로그
-        if (projects.length > 0) {
-          console.log('📊 첫 번째 프로젝트 데이터 구조:', projects[0]);
-          console.log('📊 createdAt 필드 존재 여부:', 'createdAt' in projects[0]);
-          console.log('📊 updatedAt 필드 존재 여부:', 'updatedAt' in projects[0]);
-        }
       }
     } catch (err) {
       setError('프로젝트 목록을 가져오는 중 오류가 발생했습니다.');
@@ -170,6 +199,39 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user]);
 
+  // Firebase에서 디자인 파일들 불러오기
+  const loadDesignFilesForProject = useCallback(async (projectId: string) => {
+    if (!user) return;
+
+    console.log('🚀 디자인 파일 로딩 시작:', { projectId, userId: user.uid });
+    
+    // 로딩 상태 설정
+    setDesignFilesLoading(prev => ({ ...prev, [projectId]: true }));
+
+    try {
+      const { designFiles, error } = await getDesignFiles(projectId);
+      if (error) {
+        console.error('❌ 디자인 파일 불러오기 에러:', error);
+      } else {
+        console.log('✅ 불러온 디자인 파일들:', {
+          projectId,
+          designFiles,
+          designFilesCount: designFiles?.length || 0,
+          timestamp: new Date().toISOString()
+        });
+        setProjectDesignFiles(prev => ({
+          ...prev,
+          [projectId]: designFiles
+        }));
+      }
+    } catch (err) {
+      console.error('❌ 디자인 파일 불러오기 중 오류:', err);
+    } finally {
+      // 로딩 상태 해제
+      setDesignFilesLoading(prev => ({ ...prev, [projectId]: false }));
+    }
+  }, [user]);
+
   // Firebase에 폴더 데이터 저장하기
   const saveFolderDataToFirebase = useCallback(async (projectId: string, folderData: FolderData[]) => {
     if (!user) return;
@@ -186,8 +248,61 @@ const SimpleDashboard: React.FC = () => {
 
   // 컴포넌트 마운트 시 Firebase 프로젝트 로드
   useEffect(() => {
-    loadFirebaseProjects();
-  }, [user, loadFirebaseProjects]);
+    if (user) {
+      loadFirebaseProjects();
+    }
+  }, [user]); // loadFirebaseProjects 의존성 제거로 무한 루프 방지
+  
+  // firebaseProjects가 업데이트될 때 대기 중인 프로젝트 선택 처리
+  useEffect(() => {
+    const pendingProjectId = sessionStorage.getItem('pendingProjectSelect');
+    if (pendingProjectId && firebaseProjects.length > 0) {
+      const projectExists = firebaseProjects.some(p => p.id === pendingProjectId);
+      if (projectExists) {
+        console.log('대기 중인 프로젝트 선택:', pendingProjectId);
+        handleProjectSelect(pendingProjectId);
+        sessionStorage.removeItem('pendingProjectSelect');
+      }
+    }
+  }, [firebaseProjects]);
+  
+  // selectedProjectId가 있을 때 프로젝트 정보가 로드되면 breadcrumb 업데이트 및 디자인 파일 로드
+  useEffect(() => {
+    if (selectedProjectId && firebaseProjects.length > 0) {
+      const selectedProject = firebaseProjects.find(p => p.id === selectedProjectId);
+      if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
+        setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+      }
+      
+      // handleProjectSelect에서 이미 로드하므로 여기서는 로드하지 않음
+    }
+  }, [selectedProjectId, firebaseProjects, breadcrumbPath, projectDesignFiles]); // projectDesignFiles 의존성 추가
+
+  // 윈도우 포커스 시 프로젝트 데이터 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        console.log('🔄 윈도우 포커스 - 프로젝트 데이터 새로고침');
+        loadFirebaseProjects();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]); // loadFirebaseProjects 의존성 제거
+
+  // 메뉴 변경 시 파일트리 자동 접기/펼치기
+  useEffect(() => {
+    if (activeMenu === 'all') {
+      // 모든 프로젝트 메뉴일 때는 파일트리 펼치기
+      setIsFileTreeCollapsed(false);
+    } else {
+      // 다른 메뉴일 때는 파일트리 접기
+      setIsFileTreeCollapsed(true);
+    }
+  }, [activeMenu]);
 
   // BroadcastChannel로 프로젝트 업데이트 감지
   useEffect(() => {
@@ -208,7 +323,8 @@ const SimpleDashboard: React.FC = () => {
       channel.removeEventListener('message', handleProjectUpdate);
       channel.close();
     };
-  }, [loadFirebaseProjects]);
+  }, []); // 의존성 배열 비움 - 한 번만 설정
+
 
   // 북마크 및 휴지통 데이터 로드
   useEffect(() => {
@@ -229,6 +345,33 @@ const SimpleDashboard: React.FC = () => {
 
   // 사용자별 프로젝트 목록 결정
   const allProjects = user ? firebaseProjects : [];
+  
+  // 선택된 프로젝트 정보를 메모이제이션
+  const selectedProject = useMemo(() => {
+    if (!selectedProjectId) return null;
+    const project = allProjects.find(p => p.id === selectedProjectId);
+    console.log('🔍 selectedProject 업데이트:', { selectedProjectId, found: !!project, allProjectsCount: allProjects.length });
+    return project || null;
+  }, [selectedProjectId, allProjects]);
+  
+  console.log('🔍 현재 상태 확인:', {
+    user: !!user,
+    userEmail: user?.email,
+    firebaseProjectsCount: firebaseProjects.length,
+    allProjectsCount: allProjects.length,
+    selectedProjectId,
+    selectedProject: selectedProject?.title,
+    activeMenu,
+    loading
+  });
+
+  // selectedProjectId가 있고 프로젝트 정보가 로드되면 breadcrumb 업데이트
+  useEffect(() => {
+    if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
+      console.log('📝 Breadcrumb 업데이트:', selectedProject.title);
+      setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+    }
+  }, [selectedProject, breadcrumbPath]);
 
   // 북마크 토글 함수
   const toggleBookmark = (projectId: string) => {
@@ -313,25 +456,32 @@ const SimpleDashboard: React.FC = () => {
 
   // 메뉴별 프로젝트 필터링
   const getFilteredProjects = () => {
+    // 삭제된 프로젝트 ID 목록
+    const deletedProjectIds = new Set(deletedProjects.map(p => p.id));
+    
     switch (activeMenu) {
       case 'bookmarks':
-        return allProjects.filter(p => bookmarkedProjects.has(p.id));
+        return allProjects.filter(p => 
+          bookmarkedProjects.has(p.id) && !deletedProjectIds.has(p.id)
+        );
       case 'shared':
-        // 나중에 Firebase에서 실제 공유 프로젝트를 가져와야 함
-        // 지금은 임시로 빈 배열 반환
-        return sharedProjects;
+        return sharedProjects.filter(p => !deletedProjectIds.has(p.id));
       case 'trash':
         return deletedProjects;
       case 'all':
       default:
-        return allProjects;
+        // 삭제된 프로젝트는 제외하고 반환
+        return allProjects.filter(p => !deletedProjectIds.has(p.id));
     }
   };
   
   // 프로젝트의 모든 파일과 폴더를 가져오는 함수
-  const getProjectItems = (projectId: string) => {
+  const getProjectItems = useCallback((projectId: string) => {
     const project = allProjects.find(p => p.id === projectId);
-    if (!project) return [];
+    if (!project) {
+      console.log('❌ getProjectItems: 프로젝트를 찾을 수 없습니다:', projectId, 'allProjects:', allProjects.length);
+      return [];
+    }
     
     const projectFolders = folders[projectId] || [];
     const items = [];
@@ -358,93 +508,154 @@ const SimpleDashboard: React.FC = () => {
       });
     });
     
-    // 루트 레벨 디자인 파일 추가
-    if (project.furnitureCount && project.furnitureCount > 0) {
-      const rootDesignId = `${project.id}-design`;
-      const allFolderChildren = projectFolders.flatMap(folder => folder.children);
-      const folderChildIds = new Set(allFolderChildren.map(child => child.id));
-      
-      if (!folderChildIds.has(rootDesignId)) {
-        items.push({
-          id: rootDesignId,
-          type: 'design',
-          name: project.title,
-          project: project
-        });
-      }
+    // 루트 레벨 디자인 파일 추가 (실제 Firebase 디자인 파일들 기반)
+    const allFolderChildren = projectFolders.flatMap(folder => folder.children);
+    const folderChildIds = new Set(allFolderChildren.map(child => child.id));
+    
+    // 실제 Firebase 디자인 파일들을 사용해서 표시
+    const isDesignFilesLoading = designFilesLoading[projectId] || false;
+    const actualDesignFiles = projectDesignFiles[projectId] || [];
+    console.log('🔥 getProjectItems - 디자인 파일 상태 확인:', {
+      projectId,
+      projectTitle: project.title,
+      isDesignFilesLoading,
+      projectDesignFilesKeys: Object.keys(projectDesignFiles),
+      hasDesignFilesForProject: !!projectDesignFiles[projectId],
+      actualDesignFiles,
+      actualDesignFilesCount: actualDesignFiles.length,
+      projectFurnitureCount: project.furnitureCount,
+      timestamp: new Date().toISOString()
+    });
+    
+    // 디자인 파일이 로딩 중이면 로딩 표시 추가
+    if (isDesignFilesLoading && actualDesignFiles.length === 0) {
+      items.push({
+        id: 'loading',
+        type: 'loading',
+        name: '디자인 파일 로딩 중...',
+        project: selectedProject
+      });
+    } else {
+      // 폴더에 속하지 않은 디자인 파일들을 루트 레벨에 표시
+      actualDesignFiles.forEach(designFile => {
+        if (!folderChildIds.has(designFile.id)) {
+          console.log('📁 루트 레벨 디자인 파일 추가:', designFile.name);
+          items.push({
+            id: designFile.id,
+            type: 'design',
+            name: designFile.name,
+            project: selectedProject,
+            designFile: designFile
+          });
+        }
+      });
     }
     
     return items;
-  };
+  }, [allProjects, folders, projectDesignFiles, designFilesLoading]);
 
   // 메인에 표시할 항목들 결정
   const getDisplayedItems = () => {
+    console.log('🔍 getDisplayedItems 호출:', {
+      selectedProjectId,
+      currentFolderId,
+      viewMode,
+      activeMenu,
+      allProjectsCount: allProjects.length,
+      allProjects: allProjects.map(p => ({id: p.id, title: p.title}))
+    });
+    
     if (selectedProjectId) {
-      const selectedProject = allProjects.find(p => p.id === selectedProjectId);
-      if (selectedProject) {
-        const projectFolders = folders[selectedProjectId] || [];
-        
-        // 현재 폴더 내부에 있는 경우
-        if (currentFolderId) {
-          const currentFolder = projectFolders.find(f => f.id === currentFolderId);
-          if (currentFolder) {
-            const items = [
-              { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
-            ];
-            
-            // 폴더 내부 파일들 추가
-            currentFolder.children.forEach(child => {
-              items.push({
-                id: child.id,
-                type: 'design',
-                name: child.name,
-                project: selectedProject,
-                icon: ''
-              });
-            });
-            
-            return items;
-          }
-        }
-        
-        // 프로젝트 루트 레벨
-        const items = [
-          { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
-        ];
-        
-        // 폴더들 추가
-        projectFolders.forEach(folder => {
-          items.push({
-            id: folder.id,
-            type: 'folder',
-            name: folder.name,
-            project: selectedProject,
-            icon: '📁'
-          });
-        });
-        
-        // 폴더에 속하지 않은 파일들만 추가
-        const allFolderChildren = projectFolders.flatMap(folder => folder.children);
-        const folderChildIds = new Set(allFolderChildren.map(child => child.id));
-        
-        if (selectedProject.furnitureCount && selectedProject.furnitureCount > 0) {
-          const rootDesignId = `${selectedProject.id}-design`;
-          if (!folderChildIds.has(rootDesignId)) {
+      if (!selectedProject) {
+        console.log('❌ 선택된 프로젝트를 찾을 수 없습니다:', selectedProjectId);
+        console.log('현재 allProjects:', allProjects.map(p => ({ id: p.id, title: p.title })));
+        console.log('firebaseProjects:', firebaseProjects.map(p => ({ id: p.id, title: p.title })));
+        return [];
+      }
+      
+      console.log('✅ 선택된 프로젝트 찾음:', selectedProject.title);
+      
+      const projectFolders = folders[selectedProjectId] || [];
+      
+      // 현재 폴더 내부에 있는 경우
+      if (currentFolderId) {
+        const currentFolder = projectFolders.find(f => f.id === currentFolderId);
+        if (currentFolder) {
+          const items = [
+            { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
+          ];
+          
+          // 폴더 내부 파일들 추가
+          currentFolder.children.forEach(child => {
             items.push({
-              id: rootDesignId, 
-              type: 'design', 
-              name: selectedProject.title, // 프로젝트 이름을 사용
-              project: selectedProject, 
+              id: child.id,
+              type: 'design',
+              name: child.name,
+              project: selectedProject,
               icon: ''
             });
-          }
+          });
+          
+          return items;
         }
-        
-        return items;
       }
+      
+      // 프로젝트 루트 레벨
+      console.log('📁 프로젝트 루트 레벨 아이템 생성:', {
+        currentFolderId,
+        activeMenu,
+        selectedProjectId,
+        '프로젝트 루트 레벨 조건': {
+          '선택된 프로젝트 있음': !!selectedProjectId,
+          '현재 폴더 없음': currentFolderId === null,
+          '프로젝트 메뉴': activeMenu === 'project'
+        }
+      });
+      const items = [
+        { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
+      ];
+      console.log('✅ 디자인 생성 카드 추가됨:', items[0]);
+      
+      // 폴더들 추가
+      projectFolders.forEach(folder => {
+        items.push({
+          id: folder.id,
+          type: 'folder',
+          name: folder.name,
+          project: selectedProject,
+          icon: '📁'
+        });
+      });
+      
+      // 폴더에 속하지 않은 파일들만 추가 (furnitureCount가 있는 경우에만)
+      const allFolderChildren = projectFolders.flatMap(folder => folder.children);
+      const folderChildIds = new Set(allFolderChildren.map(child => child.id));
+      
+      if (selectedProject.furnitureCount && selectedProject.furnitureCount > 0) {
+        const rootDesignId = `${selectedProject.id}-design`;
+        if (!folderChildIds.has(rootDesignId)) {
+          items.push({
+            id: rootDesignId, 
+            type: 'design', 
+            name: selectedProject.title, // 프로젝트 이름을 사용
+            project: selectedProject, 
+            icon: ''
+          });
+        }
+      }
+      
+      console.log('📊 최종 아이템 개수:', items.length);
+      return items;
     }
     // 메뉴별 프로젝트 필터링 적용
     const filteredProjects = getFilteredProjects();
+    console.log('📋 전체 프로젝트 뷰 - 필터링된 프로젝트들:', {
+      activeMenu,
+      allProjectsCount: allProjects.length,
+      filteredProjectsCount: filteredProjects.length,
+      filteredProjects: filteredProjects.map(p => ({id: p.id, title: p.title}))
+    });
+    
     return filteredProjects.map(project => ({ 
       id: project.id, 
       type: 'project', 
@@ -454,15 +665,92 @@ const SimpleDashboard: React.FC = () => {
     }));
   };
 
-  const displayedItems = getDisplayedItems();
+  const displayedItems = useMemo(() => {
+    const items = getDisplayedItems();
+    console.log('💡 displayedItems 계산 완료:', {
+      itemsCount: items.length,
+      selectedProjectId,
+      projectDesignFilesKeys: Object.keys(projectDesignFiles),
+      hasDesignFiles: projectDesignFiles[selectedProjectId]?.length > 0
+    });
+    return items;
+  }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles]);
+  
+  console.log('💡 displayedItems 최종 결과:', displayedItems);
+  
+  // 정렬 적용
+  const sortedItems = [...displayedItems].sort((a, b) => {
+    if (sortBy === 'date') {
+      // 최신순 정렬
+      const dateA = a.project?.lastModified || new Date(0);
+      const dateB = b.project?.lastModified || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    } else {
+      // 이름순 정렬
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      return nameA.localeCompare(nameB, 'ko');
+    }
+  });
 
   const handleDesignOpen = (id: string, designFileName?: string) => {
+    console.log('🚀 디자인 에디터 열기 시도:', {
+      projectId: id,
+      designFileName,
+      hasDesignFileName: !!designFileName
+    });
+    
     // React Router로 네비게이션 (기본은 같은 탭에서 이동)
     const url = designFileName 
       ? `/configurator?projectId=${id}&designFileName=${encodeURIComponent(designFileName)}`
       : `/configurator?projectId=${id}`;
-    navigate(url);
+    
+    console.log('🔗 네비게이션 URL:', url);
+    
+    try {
+      navigate(url);
+      console.log('✅ 네비게이션 성공');
+    } catch (error) {
+      console.error('❌ 네비게이션 실패:', error);
+    }
     // 만약 새 탭에서 열고 싶다면: window.open(url, '_blank');
+  };
+
+  // 3D 뷰어 모달 핸들러
+  const handleOpenViewer = (projectId: string) => {
+    setViewerModal({
+      isOpen: true,
+      projectId: projectId
+    });
+  };
+
+  const handleCloseViewer = () => {
+    setViewerModal({
+      isOpen: false,
+      projectId: ''
+    });
+  };
+
+  // 썸네일 생성 함수
+  const getThumbnail = async (project: ProjectSummary): Promise<string> => {
+    // 캐시에서 먼저 확인
+    if (thumbnailCache.has(project.id)) {
+      return thumbnailCache.get(project.id)!;
+    }
+
+    try {
+      // 3D 썸네일 생성
+      const thumbnailUrl = await generateProjectThumbnail(project);
+      
+      // 캐시에 저장
+      setThumbnailCache(prev => new Map(prev).set(project.id, thumbnailUrl));
+      
+      return thumbnailUrl;
+    } catch (error) {
+      console.error('썸네일 생성 실패:', error);
+      // 기본 썸네일 반환
+      return '';
+    }
   };
 
   const handleViewModeToggle = (mode: 'grid' | 'list') => {
@@ -471,6 +759,37 @@ const SimpleDashboard: React.FC = () => {
 
   const handleSortChange = (sort: 'date' | 'name') => {
     setSortBy(sort);
+  };
+
+  // 카드 체크박스 선택 핸들러
+  const handleCardSelect = (cardId: string, isSelected: boolean) => {
+    setSelectedCards(prev => {
+      const newSelected = new Set(prev);
+      if (isSelected) {
+        newSelected.add(cardId);
+      } else {
+        newSelected.delete(cardId);
+      }
+      return newSelected;
+    });
+  };
+
+  // 전체 선택/해제
+  const handleSelectAll = (items: any[]) => {
+    // new-design 타입은 체크박스가 없으므로 제외
+    const selectableCardIds = items
+      .filter(item => item.type !== 'new-design')
+      .map(item => item.id);
+    
+    const allSelected = selectableCardIds.every(id => selectedCards.has(id));
+    
+    if (allSelected) {
+      // 전체 해제
+      setSelectedCards(new Set());
+    } else {
+      // 전체 선택
+      setSelectedCards(new Set(selectableCardIds));
+    }
   };
 
   // 드롭다운 외부 클릭 시 닫기
@@ -507,12 +826,25 @@ const SimpleDashboard: React.FC = () => {
       setBreadcrumbPath(['전체 프로젝트']);
     } else {
       // 새 프로젝트 선택
-      const selectedProject = allProjects.find(p => p.id === projectId);
-      if (selectedProject) {
+      const targetProject = allProjects.find(p => p.id === projectId);
+      if (targetProject) {
         setSelectedProjectId(projectId);
-        setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+        setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
         // 프로젝트 선택 시 폴더 데이터 불러오기
         loadFolderDataForProject(projectId);
+        
+        // 디자인 파일은 항상 새로 로드 (최신 데이터 보장)
+        console.log('🔄 프로젝트 선택 시 디자인 파일 로드:', projectId);
+        loadDesignFilesForProject(projectId);
+      } else {
+        // 프로젝트를 찾을 수 없는 경우에도 일단 선택은 하되, 
+        // 나중에 프로젝트 목록이 업데이트되면 breadcrumb 업데이트
+        console.warn('프로젝트를 찾을 수 없습니다. 일단 선택만 진행합니다:', projectId);
+        setSelectedProjectId(projectId);
+        setBreadcrumbPath(['전체 프로젝트', '로딩 중...']);
+        // 프로젝트 선택 시 폴더 데이터와 디자인 파일들 불러오기
+        loadFolderDataForProject(projectId);
+        loadDesignFilesForProject(projectId);
       }
     }
   };
@@ -524,13 +856,10 @@ const SimpleDashboard: React.FC = () => {
       setSelectedProjectId(null);
       setCurrentFolderId(null);
       setBreadcrumbPath(['전체 프로젝트']);
-    } else if (index === 1 && selectedProjectId) {
+    } else if (index === 1 && selectedProjectId && selectedProject) {
       // 프로젝트 클릭 - 폴더에서 나가기
       setCurrentFolderId(null);
-      const selectedProject = allProjects.find(p => p.id === selectedProjectId);
-      if (selectedProject) {
-        setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
-      }
+      setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
     } else if (index === 2 && currentFolderId) {
       // 폴더 클릭 - 현재 상태 유지
       return;
@@ -796,40 +1125,39 @@ const SimpleDashboard: React.FC = () => {
       if (moreMenu.itemType === 'project') {
         // 프로젝트 삭제
         try {
-          const { deleteProject } = await import('@/firebase/projects');
-          const result = await deleteProject(moreMenu.itemId);
-          
-          if (result.error) {
-            console.error('프로젝트 삭제 실패:', result.error);
-            alert('프로젝트 삭제에 실패했습니다: ' + result.error);
-            return;
+          if (activeMenu === 'trash') {
+            // 휴지통에서 영구 삭제
+            const projectToDelete = deletedProjects.find(p => p.id === moreMenu.itemId);
+            if (projectToDelete) {
+              // Firebase에서 삭제
+              const { error } = await deleteProject(projectToDelete.id);
+              if (error) {
+                alert('프로젝트 삭제 실패: ' + error);
+              } else {
+                // 휴지통에서 제거
+                const updatedTrash = deletedProjects.filter(p => p.id !== moreMenu.itemId);
+                setDeletedProjects(updatedTrash);
+                
+                // localStorage 업데이트
+                if (user) {
+                  localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
+                }
+                
+                // BroadcastChannel로 다른 창에 삭제 알림
+                try {
+                  const channel = new BroadcastChannel('project-updates');
+                  channel.postMessage({
+                    type: 'PROJECT_UPDATED', 
+                    action: 'deleted',
+                    projectId: moreMenu.itemId 
+                  });
+                  channel.close();
+                } catch (broadcastError) {
+                  console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+                }
+              }
+            }
           }
-          
-          console.log('프로젝트 삭제 성공:', moreMenu.itemId);
-          alert('프로젝트가 삭제되었습니다.');
-          
-          // 삭제된 프로젝트가 현재 선택된 프로젝트인 경우 선택 해제
-          if (selectedProjectId === moreMenu.itemId) {
-            setSelectedProjectId(null);
-            setBreadcrumbPath(['전체 프로젝트']);
-          }
-          
-          // 프로젝트 목록 새로고침
-          await loadFirebaseProjects();
-          
-          // BroadcastChannel로 다른 탭에 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_UPDATED', 
-              action: 'deleted',
-              projectId: moreMenu.itemId 
-            });
-            channel.close();
-          } catch (error) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-          }
-          
         } catch (error) {
           console.error('프로젝트 삭제 중 오류:', error);
           alert('프로젝트 삭제 중 오류가 발생했습니다.');
@@ -1072,6 +1400,13 @@ const SimpleDashboard: React.FC = () => {
           console.log('✅ Firebase 프로젝트 생성 성공:', id);
           await loadFirebaseProjects();
           
+          // 모달 닫기
+          setIsCreateModalOpen(false);
+          setNewProjectName('');
+          
+          // 프로젝트 선택
+          handleProjectSelect(id);
+          
           try {
             const channel = new BroadcastChannel('project-updates');
             channel.postMessage({ 
@@ -1091,9 +1426,6 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
       
-      setIsCreateModalOpen(false);
-      setNewProjectName('');
-      
     } catch (error) {
       console.error('프로젝트 생성 실패:', error);
       alert('프로젝트 생성 중 오류가 발생했습니다.');
@@ -1111,52 +1443,16 @@ const SimpleDashboard: React.FC = () => {
   // 새로운 디자인 시작
   const handleCreateDesign = (projectId?: string) => {
     if (user) {
-      if (projectId) {
-        
-        // 현재 폴더 내부에서 디자인 생성하는 경우
-        if (currentFolderId) {
-          const newDesignId = `design_${Date.now()}`;
-          const newDesign = {
-            id: newDesignId,
-            name: '새 디자인',
-            type: 'design' as const,
-            projectId: projectId
-          };
-          
-          // 폴더에 새 디자인 추가
-          setFolders(prev => ({
-            ...prev,
-            [projectId]: prev[projectId]?.map(folder => 
-              folder.id === currentFolderId 
-                ? { ...folder, children: [...folder.children, newDesign] }
-                : folder
-            ) || []
-          }));
-          
-          console.log('폴더에 새 디자인 추가:', newDesignId);
-        }
-        
-        // 디자인 생성 시 브레드크럼에 '디자인' 추가
-        const selectedProject = allProjects.find(p => p.id === projectId);
-        if (selectedProject) {
-          setBreadcrumbPath(['전체 프로젝트', selectedProject.title, '디자인']);
-        }
-      }
-      
-      // React Router로 네비게이션
-      if (projectId) {
-        navigate(`/configurator?projectId=${projectId}&mode=new-design&designFileName=${encodeURIComponent('새로운 디자인')}`);
-      } else {
-        navigate(`/configurator?designFileName=${encodeURIComponent('새로운 디자인')}`);
-      }
+      // Step1 모달 열기
+      setIsStep1ModalOpen(true);
     } else {
-      setIsStep0ModalOpen(true);
+      alert('로그인이 필요합니다.');
     }
   };
 
-  // Step0 모달 닫기
-  const handleCloseStep0Modal = () => {
-    setIsStep0ModalOpen(false);
+  // Step1 모달 닫기
+  const handleCloseStep1Modal = () => {
+    setIsStep1ModalOpen(false);
   };
 
   // 로그아웃 핸들러
@@ -1211,7 +1507,7 @@ const SimpleDashboard: React.FC = () => {
   }
 
   return (
-    <div className={styles.dashboard}>
+    <div className={styles.dashboard} data-menu={activeMenu}>
       {/* 좌측 사이드바 */}
       <aside className={styles.sidebar}>
         {/* 로고 영역 */}
@@ -1283,7 +1579,7 @@ const SimpleDashboard: React.FC = () => {
             onClick={() => {
               setActiveMenu('bookmarks');
               setSelectedProjectId(null);
-              setBreadcrumbPath(['북마크']);
+              setBreadcrumbPath([]);
             }}
           >
             <div className={styles.navItemIcon}>
@@ -1298,7 +1594,7 @@ const SimpleDashboard: React.FC = () => {
             onClick={() => {
               setActiveMenu('shared');
               setSelectedProjectId(null);
-              setBreadcrumbPath(['공유 프로젝트']);
+              setBreadcrumbPath([]);
             }}
           >
             <div className={styles.navItemIcon}>
@@ -1310,7 +1606,10 @@ const SimpleDashboard: React.FC = () => {
           
           <div 
             className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
-            onClick={() => setShowProfileModal(true)}
+            onClick={() => {
+              setActiveMenu('profile');
+              setBreadcrumbPath([]);
+            }}
           >
             <div className={styles.navItemIcon}>
               <UserIcon size={20} />
@@ -1320,7 +1619,10 @@ const SimpleDashboard: React.FC = () => {
           
           <div 
             className={`${styles.navItem} ${activeMenu === 'team' ? styles.active : ''}`}
-            onClick={() => setShowTeamModal(true)}
+            onClick={() => {
+              setActiveMenu('team');
+              setBreadcrumbPath([]);
+            }}
           >
             <div className={styles.navItemIcon}>
               <UsersIcon size={20} />
@@ -1333,7 +1635,7 @@ const SimpleDashboard: React.FC = () => {
             onClick={() => {
               setActiveMenu('trash');
               setSelectedProjectId(null);
-              setBreadcrumbPath(['휴지통']);
+              setBreadcrumbPath([]);
             }}
           >
             <div className={styles.navItemIcon}>
@@ -1384,35 +1686,7 @@ const SimpleDashboard: React.FC = () => {
       <main className={styles.main}>
         {/* 상단 헤더 */}
         <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <div className={styles.breadcrumb}>
-              {breadcrumbPath.map((item, index) => (
-                <React.Fragment key={index}>
-                  <span 
-                    className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}
-                    onClick={() => handleBreadcrumbClick(index)}
-                  >
-                    {item}
-                  </span>
-                  {index < breadcrumbPath.length - 1 && (
-                    <span className={styles.breadcrumbSeparator}>/</span>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-          
-          
           <div className={styles.headerRight}>
-            {activeMenu === 'trash' && deletedProjects.length > 0 && (
-              <button 
-                onClick={emptyTrash}
-                className={styles.emptyTrashBtn}
-              >
-                <TrashIcon size={16} />
-                휴지통 비우기
-              </button>
-            )}
             {/* 검색바 */}
             <div className={styles.searchContainer}>
               <div className={styles.searchIcon}>
@@ -1427,14 +1701,13 @@ const SimpleDashboard: React.FC = () => {
             
             <div className={styles.headerActions}>
               <button className={styles.actionButton}>
-                <CalendarIcon size={20} />
-              </button>
-              <button className={styles.actionButton}>
                 <MessageIcon size={20} />
               </button>
-              <button className={styles.actionButton}>
-                <BellIcon size={20} />
-              </button>
+              <NotificationBadge>
+                <button className={styles.actionButton}>
+                  <BellIcon size={20} />
+                </button>
+              </NotificationBadge>
             </div>
             
             {user && (
@@ -1468,7 +1741,21 @@ const SimpleDashboard: React.FC = () => {
         {/* 서브헤더 */}
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
+            <div></div> {/* 빈 공간 */}
+            
             <div className={styles.subHeaderActions}>
+              {/* 선택된 아이템 개수 표시 */}
+              {selectedCards.size > 0 && (
+                <div className={styles.selectionInfo}>
+                  <span>{selectedCards.size}개의 항목이 선택됨</span>
+                  <button 
+                    className={styles.clearSelectionBtn}
+                    onClick={() => setSelectedCards(new Set())}
+                  >
+                    선택 해제
+                  </button>
+                </div>
+              )}
               {/* 뷰 모드 토글 */}
               <div className={styles.viewToggleGroup}>
                 <button 
@@ -1549,6 +1836,21 @@ const SimpleDashboard: React.FC = () => {
                   <span>휴지통 비우기</span>
                 </button>
               )}
+              
+              {/* 리스트 뷰에서 디자인 생성 버튼 */}
+              {viewMode === 'list' && currentFolderId && (
+                <button 
+                  className={styles.createDesignBtn}
+                  onClick={() => {
+                    if (selectedProjectId) {
+                      navigate(`/configurator?project=${selectedProjectId}&design=new`);
+                    }
+                  }}
+                >
+                  <PlusIcon size={16} />
+                  <span>새 디자인</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1567,26 +1869,21 @@ const SimpleDashboard: React.FC = () => {
                 </span>
               </button>
               <div className={styles.projectSelectorContainer}>
-                <select 
-                  value={selectedProjectId || 'all'}
-                  onChange={(e) => setSelectedProjectId(e.target.value === 'all' ? null : e.target.value)}
-                  className={styles.projectSelector}
-                >
-                  <option value="all">모든 프로젝트</option>
-                  {allProjects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.title}
-                    </option>
-                  ))}
-                </select>
-                <div className={styles.dropdownArrow}>▼</div>
+                <SimpleProjectDropdown
+                  projects={allProjects}
+                  currentProject={selectedProject}
+                  onProjectSelect={(project) => {
+                    setSelectedProjectId(project.id);
+                    setBreadcrumbPath(['전체 프로젝트', project.title]);
+                    loadFolderDataForProject(project.id);
+                  }}
+                />
               </div>
             </div>
             
             <div className={styles.treeContent}>
-              {selectedProjectId ? (
+              {selectedProjectId && selectedProject ? (
                 (() => {
-                  const selectedProject = allProjects.find(p => p.id === selectedProjectId);
                   if (!selectedProject) return null;
                   
                   const projectFolders = folders[selectedProjectId] || [];
@@ -1685,16 +1982,63 @@ const SimpleDashboard: React.FC = () => {
                                 <div 
                                   key={child.id} 
                                   className={`${styles.treeItem} ${styles.childItem}`}
-                                  onClick={() => {
-                                    // 디자인 파일 클릭 시 에디터로 이동
-                                    if (child.type === 'design') {
-                                      handleDesignOpen(child.projectId, child.name);
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log('디자인 파일 클릭됨:', child, '폴더 ID:', folder.id, '프로젝트 ID:', selectedProjectId);
+                                    
+                                    // 1. 해당 프로젝트로 이동 (이미 있다면 스킵)
+                                    if (selectedProjectId !== child.projectId && child.projectId) {
+                                      handleProjectSelect(child.projectId);
                                     }
+                                    
+                                    // 2. 해당 폴더로 이동
+                                    setCurrentFolderId(folder.id);
+                                    setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
+                                    
+                                    // 3. 잠시 대기 후 디자인 카드로 스크롤
+                                    setTimeout(() => {
+                                      // 디자인 카드 찾기
+                                      const designCards = document.querySelectorAll(`.${styles.designCard}`);
+                                      console.log('모든 디자인 카드:', designCards.length);
+                                      
+                                      // child.name으로 카드 찾기
+                                      const targetCard = Array.from(designCards).find(card => {
+                                        const cardElement = card as HTMLElement;
+                                        const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
+                                        console.log('카드 제목 확인:', cardTitle, '찾는 디자인:', child.name);
+                                        return cardTitle === child.name;
+                                      });
+                                      
+                                      if (targetCard) {
+                                        console.log('디자인 카드 찾음:', targetCard);
+                                        
+                                        // 카드로 스크롤
+                                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        
+                                        // 오버레이 강제 표시
+                                        (targetCard as HTMLElement).classList.add(styles.forceHover);
+                                        
+                                        // 3초 후 오버레이 제거
+                                        setTimeout(() => {
+                                          (targetCard as HTMLElement).classList.remove(styles.forceHover);
+                                        }, 3000);
+                                      } else {
+                                        console.log('디자인 카드를 찾을 수 없음:', child.name);
+                                      }
+                                    }, 300);
                                   }}
-                                  style={{ cursor: 'pointer' }}
+                                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                                  onMouseDown={(e) => e.preventDefault()}
                                 >
                                   <div className={styles.treeItemIcon}>
-                                    <div className={styles.designIcon}>+</div>
+                                    <div className={styles.designIcon}>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                        <path d="M2 2l7.586 7.586"/>
+                                        <circle cx="11" cy="11" r="2"/>
+                                      </svg>
+                                    </div>
                                   </div>
                                   <span>{child.name}</span>
                                   <div className={styles.treeItemActions}>
@@ -1726,11 +2070,53 @@ const SimpleDashboard: React.FC = () => {
                           return (
                             <div 
                               className={styles.treeItem}
-                              onClick={() => handleDesignOpen(selectedProject.id, selectedProject.title)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('루트 디자인 파일 클릭됨:', selectedProject.title);
+                                
+                                // 현재 위치에서 디자인 카드로 스크롤
+                                setTimeout(() => {
+                                  // 디자인 카드 찾기
+                                  const designCards = document.querySelectorAll(`.${styles.designCard}`);
+                                  console.log('모든 디자인 카드:', designCards.length);
+                                  
+                                  // 프로젝트 제목으로 카드 찾기
+                                  const targetCard = Array.from(designCards).find(card => {
+                                    const cardElement = card as HTMLElement;
+                                    const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
+                                    console.log('카드 제목 확인:', cardTitle, '찾는 디자인:', selectedProject.title);
+                                    return cardTitle === selectedProject.title;
+                                  });
+                                  
+                                  if (targetCard) {
+                                    console.log('디자인 카드 찾음:', targetCard);
+                                    
+                                    // 카드로 스크롤
+                                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    
+                                    // 오버레이 강제 표시
+                                    (targetCard as HTMLElement).classList.add(styles.forceHover);
+                                    
+                                    // 3초 후 오버레이 제거
+                                    setTimeout(() => {
+                                      (targetCard as HTMLElement).classList.remove(styles.forceHover);
+                                    }, 3000);
+                                  } else {
+                                    console.log('디자인 카드를 찾을 수 없음');
+                                  }
+                                }, 100);
+                              }}
                               onContextMenu={(e) => handleFileRightClick(e, rootDesignId, 'design.json', 'design')}
                             >
                               <div className={styles.treeItemIcon}>
-                                <div className={styles.designIcon}>+</div>
+                                <div className={styles.designIcon}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                    <path d="M2 2l7.586 7.586"/>
+                                    <circle cx="11" cy="11" r="2"/>
+                                  </svg>
+                                </div>
                               </div>
                               <span>{selectedProject.title}</span>
                               <div className={styles.treeItemActions}>
@@ -1801,13 +2187,104 @@ const SimpleDashboard: React.FC = () => {
 
           {/* 프로젝트 카드 영역 */}
           <section className={styles.designArea}>
-            <div className={`${styles.designGrid} ${viewMode === 'list' ? styles.listView : ''}`}>
+            {/* 파일 경로 (브레드크럼) */}
+            <div className={styles.breadcrumb}>
+              {breadcrumbPath.map((item, index) => (
+                <React.Fragment key={index}>
+                  <span 
+                    className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}
+                    onClick={() => handleBreadcrumbClick(index)}
+                  >
+                    {item}
+                  </span>
+                  {index < breadcrumbPath.length - 1 && (
+                    <span className={styles.breadcrumbSeparator}>/</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* 협업 탭들 */}
+            {activeMenu === 'bookmarks' && (
+              <BookmarksTab onProjectSelect={(projectId) => navigate(`/configurator?projectId=${projectId}`)} />
+            )}
+            {activeMenu === 'shared' && (
+              <SharedTab onProjectSelect={(projectId) => navigate(`/configurator?projectId=${projectId}`)} />
+            )}
+            {activeMenu === 'team' && (
+              <TeamsTab onTeamSelect={(teamId) => console.log('팀 선택:', teamId)} />
+            )}
+            {activeMenu === 'profile' && (
+              <ProfileTab />
+            )}
+            
+            {/* 기존 프로젝트 그리드 (all, trash 메뉴일 때만 표시) */}
+            {(activeMenu === 'all' || activeMenu === 'trash') && (
+              <>
+              {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
+                <div className={styles.listTableHeader}>
+                  <div className={styles.headerColumn}>
+                    <input
+                      type="checkbox"
+                      checked={(() => {
+                        const selectableItems = sortedItems.filter(item => item.type !== 'new-design');
+                        return selectableItems.length > 0 && selectableItems.every(item => selectedCards.has(item.id));
+                      })()}
+                      onChange={() => handleSelectAll(sortedItems)}
+                    />
+                  </div>
+                  <div className={styles.headerColumn}>제목</div>
+                  <div className={styles.headerColumn}>마지막 수정일</div>
+                  <div className={styles.headerColumn}>등록자</div>
+                  <div className={styles.headerColumn}></div>
+                </div>
+              )}
+              <div className={`${styles.designGrid} ${viewMode === 'list' ? styles.listView : ''} ${currentFolderId ? styles.folderView : ''}`}>
               
-              {displayedItems.length > 0 ? (
-                displayedItems.map(item => (
-                  <div 
-                    key={item.id} 
+              {console.log('🎨 렌더링 시작:', {
+                sortedItemsLength: sortedItems.length,
+                viewMode,
+                items: sortedItems.map(item => ({ type: item.type, name: item.name })),
+                filteredItems: sortedItems.filter(item => {
+                  if (viewMode === 'list' && item.type === 'new-design') {
+                    return false;
+                  }
+                  return true;
+                }).map(item => ({ type: item.type, name: item.name }))
+              })}
+              {(() => {
+                const filteredItems = sortedItems.filter(item => {
+                  // 리스트 뷰에서는 new-design 카드 제외
+                  if (viewMode === 'list' && item.type === 'new-design') {
+                    console.log('📝 리스트 뷰에서 new-design 카드 제외');
+                    return false;
+                  }
+                  return true;
+                });
+                
+                console.log('🔍 필터링 후 상태:', {
+                  viewMode,
+                  sortedItemsLength: sortedItems.length,
+                  filteredItemsLength: filteredItems.length,
+                  sortedItems: sortedItems.map(item => ({ type: item.type, name: item.name })),
+                  filteredItems: filteredItems.map(item => ({ type: item.type, name: item.name }))
+                });
+                
+                return filteredItems.length > 0 ? (
+                  filteredItems.map((item, index) => (
+                  <motion.div 
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      duration: 0.3, 
+                      delay: index * 0.05,
+                      ease: [0.4, 0, 0.2, 1]
+                    }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     className={`${styles.designCard} ${item.type === 'new-design' ? styles.newDesign : ''} ${item.type === 'folder' ? styles.folderCard : ''}`}
+                    data-design-id={item.type === 'design' ? item.id : undefined}
                     draggable={item.type === 'design'}
                     onDragStart={(e) => {
                       if (item.type === 'design') {
@@ -1820,26 +2297,60 @@ const SimpleDashboard: React.FC = () => {
                       }
                     }}
                     onDragEnd={handleDragEnd}
-                    onClick={() => {
-                      if (item.type === 'design') {
-                        handleDesignOpen(item.project.id);
-                      } else if (item.type === 'project') {
+                    onClick={(e) => {
+                      console.log('🖱️ 카드 클릭됨:', {
+                        itemType: item.type,
+                        itemName: item.name,
+                        itemId: item.id,
+                        projectId: item.project?.id,
+                        clickEvent: e.type
+                      });
+                      
+                      if (item.type === 'project') {
+                        console.log('📂 프로젝트 선택');
                         handleProjectSelect(item.project.id);
                       } else if (item.type === 'new-design') {
+                        console.log('➕ 새 디자인 생성');
                         handleCreateDesign(item.project.id);
+                      } else if (item.type === 'loading') {
+                        console.log('⏳ 로딩 중...');
+                        // 로딩 아이템은 클릭 무시
                       } else if (item.type === 'folder') {
+                        console.log('📁 폴더 이동');
                         // 폴더 클릭 시 폴더 내부로 이동
                         setCurrentFolderId(item.id);
                         const folder = folders[selectedProjectId!]?.find(f => f.id === item.id);
-                        const selectedProject = allProjects.find(p => p.id === selectedProjectId);
                         if (folder && selectedProject) {
                           setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
                         }
+                      } else if (item.type === 'design') {
+                        console.log('🎨 디자인 카드 클릭 - 에디터로 이동', {
+                          itemId: item.id,
+                          projectId: item.project.id,
+                          itemName: item.name
+                        });
+                        // 디자인 카드 클릭 시 에디터로 이동
+                        handleDesignOpen(item.project.id, item.name);
                       }
                     }}
                   >
+                    {/* 체크박스를 카드 좌측 상단에 배치 */}
+                    {item.type !== 'new-design' && item.type !== 'loading' && (
+                      <div className={styles.cardCheckbox}>
+                        <input
+                          type="checkbox"
+                          checked={selectedCards.has(item.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleCardSelect(item.id, e.target.checked);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+                    
                     {/* 더보기 버튼을 카드 우측 상단에 배치 */}
-                    {item.type !== 'new-design' && (
+                    {item.type !== 'new-design' && item.type !== 'loading' && (
                       <button 
                         className={styles.cardActionButton}
                         onClick={(e) => {
@@ -1848,6 +2359,8 @@ const SimpleDashboard: React.FC = () => {
                             handleMoreMenuOpen(e, item.id, item.name, 'folder');
                           } else if (item.type === 'design') {
                             handleMoreMenuOpen(e, item.id, item.name, 'design');
+                          } else if (item.type === 'project') {
+                            handleMoreMenuOpen(e, item.project.id, item.project.title, 'project');
                           }
                         }}
                       >
@@ -1876,39 +2389,134 @@ const SimpleDashboard: React.FC = () => {
                           </div>
                           <div className={styles.cardThumbnailText}>{item.name}</div>
                         </div>
-                      ) : item.type === 'folder' ? (
+                      ) : item.type === 'loading' ? (
                         <div className={styles.cardThumbnailContent}>
-                          <div className={styles.cardThumbnailIcon} style={{ background: 'var(--theme-primary, #10b981)' }}>
-                            <FolderIcon size={32} />
+                          <div className={styles.cardThumbnailIcon}>
+                            <div style={{ opacity: 0.5 }}>⏳</div>
                           </div>
                           <div className={styles.cardThumbnailText}>{item.name}</div>
                         </div>
+                      ) : item.type === 'folder' ? (
+                        <div className={styles.folderIcon}>
+                          <svg className={styles.folderIconSvg} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4h6l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="var(--theme-primary, #10b981)"/>
+                            <path d="M4 6h16v10H4V6z" fill="var(--theme-primary, #10b981)" fillOpacity="0.7"/>
+                          </svg>
+                        </div>
                       ) : (
                         (() => {
-                          // 디자인 파일인 경우 하나의 대표 썸네일만 표시
+                          // 디자인 파일인 경우 해당 디자인의 썸네일 표시
                           if (item.type === 'design') {
+                            // 해당 디자인 파일 찾기
+                            const designFiles = projectDesignFiles[item.project.id] || [];
+                            const designFile = designFiles.find(df => df.name === item.name);
+                            
+                            console.log('🔍 디자인 카드 썸네일 생성:', {
+                              itemName: item.name,
+                              itemId: item.id,
+                              projectId: item.project.id,
+                              designFilesCount: designFiles.length,
+                              designFilesData: designFiles.map(df => ({
+                                id: df.id,
+                                name: df.name,
+                                matchesName: df.name === item.name,
+                                matchesId: df.id === item.id
+                              })),
+                              foundDesignFile: !!designFile,
+                              designFileData: designFile ? {
+                                id: designFile.id,
+                                name: designFile.name,
+                                hasSpaceConfig: !!designFile.spaceConfig,
+                                hasFurniture: !!designFile.furniture,
+                                furnitureCount: designFile.furniture?.placedModules?.length || 0
+                              } : null
+                            });
+                            
                             return (
                               <div className={styles.designThumbnail}>
-                                {item.project.thumbnail ? (
-                                  <img 
-                                    src={item.project.thumbnail} 
-                                    alt={item.name}
-                                    className={styles.designThumbnailImage}
-                                  />
-                                ) : (
-                                  <div className={styles.designThumbnailPlaceholder}>
-                                    <div className={styles.designFileIcon}>
-                                      <span className={styles.designIcon}>D</span>
-                                    </div>
-                                    <span style={{ fontSize: '12px', marginTop: '8px' }}>디자인</span>
-                                  </div>
-                                )}
+                                <ThumbnailImage 
+                                  project={item.project}
+                                  designFile={designFile ? {
+                                    thumbnail: designFile.thumbnail,
+                                    updatedAt: designFile.updatedAt,
+                                    spaceConfig: designFile.spaceConfig,
+                                    furniture: designFile.furniture
+                                  } : undefined}
+                                  className={styles.designThumbnailImage}
+                                  alt={item.name}
+                                />
+                                
+                                {/* 디자인 카드 호버 오버레이 */}
+                                <div className={styles.designCardOverlay}>
+                                  <button 
+                                    className={styles.overlayButton}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenViewer(item.project.id);
+                                    }}
+                                  >
+                                    <EyeIcon size={16} />
+                                    디자인 미리보기
+                                  </button>
+                                  <button 
+                                    className={`${styles.overlayButton} ${styles.primary}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      console.log('🎨 오버레이 버튼 클릭 - 에디터로 이동', {
+                                        itemId: item.id,
+                                        projectId: item.project.id,
+                                        itemName: item.name
+                                      });
+                                      handleDesignOpen(item.project.id, item.name);
+                                    }}
+                                  >
+                                    <EditIcon size={16} />
+                                    에디터로 이동
+                                  </button>
+                                </div>
                               </div>
                             );
                           }
                           
                           // 프로젝트인 경우 모든 파일과 폴더를 가져와서 썸네일 그리드 생성
+                          console.log('🚀 getProjectItems 호출 전 상태:', {
+                            projectId: item.project.id,
+                            projectTitle: item.project.title,
+                            projectDesignFilesState: projectDesignFiles,
+                            hasDesignFiles: !!projectDesignFiles[item.project.id],
+                            designFilesCount: projectDesignFiles[item.project.id]?.length || 0
+                          });
+                          
                           const projectItems = getProjectItems(item.project.id);
+                          
+                          console.log('🎯 프로젝트 아이템 렌더링 확인:', {
+                            projectId: item.project.id,
+                            projectTitle: item.project.title,
+                            projectItemsCount: projectItems.length,
+                            projectItems: projectItems.map(i => ({ id: i.id, type: i.type, name: i.name })),
+                            timestamp: new Date().toISOString()
+                          });
+                          
+                          // 프로젝트에 아무것도 없는 경우 빈 상태 메시지 표시
+                          if (projectItems.length === 0) {
+                            return (
+                              <div className={styles.emptyThumbnailState}>
+                                <div className={styles.emptyThumbnailIcon}>
+                                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10,9 9,9 8,9"/>
+                                  </svg>
+                                </div>
+                                <div className={styles.emptyThumbnailText}>
+                                  생성된 파일이 없습니다
+                                </div>
+                              </div>
+                            );
+                          }
+                          
                           const displayItems = projectItems.slice(0, 4); // 최대 4개만 표시
                           
                           return (
@@ -1917,12 +2525,12 @@ const SimpleDashboard: React.FC = () => {
                                 <div key={projectItem.id} className={styles.thumbnailItem}>
                                   {projectItem.type === 'folder' ? (
                                     <div className={styles.thumbnailFolder}>
-                                      <FolderIcon size={14} />
+                                      <FolderIcon size={48} />
                                     </div>
                                   ) : (
                                     <div className={styles.thumbnailFile}>
                                       <div className={styles.fileIconWrapper}>
-                                        <span className={styles.fileIcon}>🎨</span>
+                                        <span className={styles.fileIcon}>D</span>
                                       </div>
                                     </div>
                                   )}
@@ -1936,76 +2544,178 @@ const SimpleDashboard: React.FC = () => {
                           );
                         })()
                       )}
+                      
                     </div>
                     
                     {/* 디자인 생성 카드가 아닌 경우에만 cardInfo 표시 */}
                     {item.type !== 'new-design' && (
-                      <div className={styles.cardInfo}>
-                        <div className={styles.cardTitle}>{item.name}</div>
-                        
-                        <div className={styles.cardMeta}>
-                          <div className={styles.cardDate}>
-                            {(() => {
-                              // createdAt이 있으면 사용하고, 없으면 updatedAt 사용
-                              const dateToUse = item.project.createdAt || item.project.updatedAt;
-                              if (dateToUse && dateToUse.seconds) {
-                                return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
-                                  year: 'numeric',
-                                  month: 'long', 
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                });
-                              }
-                              return '날짜 정보 없음';
-                            })()}
-                          </div>
-                        </div>
-                        
-                        <div className={styles.cardFooter}>
-                          <div className={styles.cardUser}>
-                            <div className={styles.cardUserAvatar}>
-                              {user?.photoURL ? (
-                                <img 
-                                  src={user.photoURL} 
-                                  alt="프로필" 
-                                  style={{ 
-                                    width: '100%', 
-                                    height: '100%', 
-                                    borderRadius: '50%',
-                                    objectFit: 'cover'
-                                  }}
-                                />
-                              ) : (
-                                <UserIcon size={12} />
-                              )}
+                      item.type === 'folder' ? (
+                        <div className={styles.cardInfo}>
+                          <div className={styles.cardTitle}>{item.name}</div>
+                          <div className={styles.cardMeta}>
+                            <div className={styles.cardDate}>
+                              {(() => {
+                                const dateToUse = item.project.createdAt || item.project.updatedAt;
+                                if (dateToUse && dateToUse.seconds) {
+                                  return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
+                                    year: 'numeric',
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  });
+                                }
+                                return '날짜 정보 없음';
+                              })()}
                             </div>
-                            <span className={styles.cardUserName}>
-                              {user?.displayName || user?.email?.split('@')[0] || '이진수'}
-                            </span>
                           </div>
-                          <div className={styles.cardBadge}>
-                            {(() => {
-                              const projectItems = getProjectItems(item.project.id);
-                              return projectItems.length;
-                            })()}
+                          <div className={styles.cardFooter}>
+                            <div className={styles.cardUser}>
+                              <div className={styles.cardUserAvatar}>
+                                {user?.photoURL ? (
+                                  <img 
+                                    src={user.photoURL} 
+                                    alt="프로필" 
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '100%', 
+                                      borderRadius: '50%',
+                                      objectFit: 'cover'
+                                    }}
+                                  />
+                                ) : (
+                                  <UserIcon size={12} />
+                                )}
+                              </div>
+                              <span className={styles.cardUserName}>
+                                {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                              </span>
+                            </div>
+                            <div className={styles.cardBadge}>
+                              {(() => {
+                                // 해당 폴더의 실제 디자인 파일 개수를 계산
+                                const projectFolders = folders[item.project.id] || [];
+                                const currentFolder = projectFolders.find(f => f.id === item.id);
+                                if (!currentFolder?.children) return 0;
+                                
+                                // children 중에서 type이 'design'인 것만 카운트
+                                const designCount = currentFolder.children.filter(child => 
+                                  child.type === 'design' || child.type === 'file' || !child.type
+                                ).length;
+                                
+                                console.log(`폴더 ${item.name}의 디자인 파일 개수:`, designCount, currentFolder.children);
+                                return designCount;
+                              })()}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ) : item.type === 'design' ? (
+                        // 디자인 카드 (폴더 내부에서)
+                        <div className={styles.cardInfo}>
+                          <div className={styles.cardTitle}>{item.name}</div>
+                          
+                          <div className={styles.cardMeta}>
+                            <div className={styles.cardDate}>
+                              {(() => {
+                                const dateToUse = item.project.updatedAt || item.project.createdAt;
+                                if (dateToUse && dateToUse.seconds) {
+                                  return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
+                                    year: 'numeric',
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  });
+                                }
+                                return '날짜 정보 없음';
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // 프로젝트 카드
+                        <div className={styles.cardInfo}>
+                          <div className={styles.cardTitle}>{item.name}</div>
+                          
+                          <div className={styles.cardMeta}>
+                            <div className={styles.cardDate}>
+                              {(() => {
+                                // createdAt이 있으면 사용하고, 없으면 updatedAt 사용
+                                const dateToUse = item.project.createdAt || item.project.updatedAt;
+                                if (dateToUse && dateToUse.seconds) {
+                                  return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
+                                    year: 'numeric',
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  });
+                                }
+                                return '날짜 정보 없음';
+                              })()}
+                            </div>
+                          </div>
+                          
+                          <div className={styles.cardFooter}>
+                            <div className={styles.cardUser}>
+                              <div className={styles.cardUserAvatar}>
+                                {user?.photoURL ? (
+                                  <img 
+                                    src={user.photoURL} 
+                                    alt="프로필" 
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '100%', 
+                                      borderRadius: '50%',
+                                      objectFit: 'cover'
+                                    }}
+                                  />
+                                ) : (
+                                  <UserIcon size={12} />
+                                )}
+                              </div>
+                              <span className={styles.cardUserName}>
+                                {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                              </span>
+                            </div>
+                            <div className={styles.cardBadge}>
+                              V5.0
+                            </div>
+                          </div>
+                        </div>
+                      )
                     )}
-                  </div>
+                  </motion.div>
                 ))
-              ) : selectedProjectId ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyStateTitle}>선택된 프로젝트를 찾을 수 없습니다</div>
-                  <button 
-                    onClick={() => setSelectedProjectId(null)}
-                    className={styles.emptyStateButton}
-                  >
-                    모든 프로젝트 보기
-                  </button>
-                </div>
-              ) : user ? (
+                ) : (
+                  // 빈 상태 표시
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyStateTitle}>표시할 항목이 없습니다</div>
+                  </div>
+                );
+              })()}
+              
+              {selectedProjectId && selectedProject ? (
+                (() => {
+                  if (!selectedProject) {
+                    // 실제로 프로젝트를 찾을 수 없는 경우
+                    return (
+                      <div className={styles.emptyState}>
+                        <div className={styles.emptyStateTitle}>선택된 프로젝트를 찾을 수 없습니다</div>
+                        <button 
+                          onClick={() => setSelectedProjectId(null)}
+                          className={styles.emptyStateButton}
+                        >
+                          모든 프로젝트 보기
+                        </button>
+                      </div>
+                    );
+                  } else {
+                    // 프로젝트는 있지만 표시할 항목이 없는 경우 - 아무것도 표시하지 않음
+                    return null;
+                  }
+                })()
+              ) : user && sortedItems.length === 0 ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
@@ -2019,27 +2729,11 @@ const SimpleDashboard: React.FC = () => {
                     {activeMenu === 'trash' && '삭제된 프로젝트가 여기에 표시됩니다'}
                     {activeMenu === 'all' && '새 프로젝트를 생성해보세요'}
                   </div>
-                  {activeMenu === 'trash' && deletedProjects.length > 0 && (
-                    <button 
-                      onClick={emptyTrash}
-                      className={styles.emptyStateButton}
-                    >
-                      휴지통 비우기
-                    </button>
-                  )}
                 </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyStateTitle}>로그인하여 프로젝트를 관리하세요</div>
-                  <button 
-                    onClick={() => navigate('/auth')}
-                    className={styles.emptyStateButton}
-                  >
-                    로그인하기
-                  </button>
-                </div>
-              )}
-            </div>
+              ) : null}
+              </div>
+              </>
+            )}
           </section>
         </div>
       </main>
@@ -2151,14 +2845,7 @@ const SimpleDashboard: React.FC = () => {
       {moreMenu && (
         <>
           <div 
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 999
-            }}
+            className={styles.moreMenuBackdrop}
             onClick={closeMoreMenu}
           />
           <div
@@ -2166,8 +2853,7 @@ const SimpleDashboard: React.FC = () => {
             style={{
               position: 'fixed',
               top: moreMenu.y,
-              left: moreMenu.x,
-              zIndex: 1000
+              left: moreMenu.x
             }}
           >
             <div 
@@ -2280,94 +2966,11 @@ const SimpleDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Step0 모달 */}
-      {isStep0ModalOpen && (
-        <div className={styles.step0ModalOverlay}>
-          <div className={styles.step0ModalContent}>
-            <Step0 onClose={handleCloseStep0Modal} />
-          </div>
-        </div>
+      {/* Step1 모달 */}
+      {isStep1ModalOpen && (
+        <Step1 onClose={handleCloseStep1Modal} />
       )}
 
-      {/* 프로필 관리 모달 */}
-      {showProfileModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h2 className={styles.modalTitle}>내 정보 관리</h2>
-            <div className={styles.profileModalContent}>
-              <div className={styles.profileSection}>
-                <div className={styles.profileAvatar}>
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt="프로필" />
-                  ) : (
-                    <UserIcon size={40} />
-                  )}
-                  <button className={styles.changeAvatarBtn}>사진 변경</button>
-                </div>
-                <div className={styles.profileInfo}>
-                  <div className={styles.profileField}>
-                    <label>이름</label>
-                    <input 
-                      type="text" 
-                      value={user?.displayName || ''} 
-                      placeholder="이름을 입력하세요"
-                      className={styles.profileInput}
-                    />
-                  </div>
-                  <div className={styles.profileField}>
-                    <label>이메일</label>
-                    <input 
-                      type="email" 
-                      value={user?.email || ''} 
-                      disabled
-                      className={styles.profileInput}
-                    />
-                  </div>
-                  <div className={styles.profileField}>
-                    <label>가입일</label>
-                    <input 
-                      type="text" 
-                      value={user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('ko-KR') : ''} 
-                      disabled
-                      className={styles.profileInput}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className={styles.profileStats}>
-                <div className={styles.statItem}>
-                  <div className={styles.statValue}>{allProjects.length}</div>
-                  <div className={styles.statLabel}>프로젝트</div>
-                </div>
-                <div className={styles.statItem}>
-                  <div className={styles.statValue}>{bookmarkedProjects.size}</div>
-                  <div className={styles.statLabel}>북마크</div>
-                </div>
-                <div className={styles.statItem}>
-                  <div className={styles.statValue}>{sharedProjects.length}</div>
-                  <div className={styles.statLabel}>공유됨</div>
-                </div>
-              </div>
-            </div>
-            <div className={styles.modalActions}>
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className={styles.modalCancelBtn}
-              >
-                닫기
-              </button>
-              <button
-                onClick={() => {
-                  alert('프로필 업데이트 기능은 준비 중입니다.');
-                }}
-                className={styles.modalCreateBtn}
-              >
-                저장
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 팀 관리 모달 */}
       {showTeamModal && (
@@ -2400,6 +3003,13 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 3D 뷰어 모달 */}
+      <ProjectViewerModal
+        isOpen={viewerModal.isOpen}
+        onClose={handleCloseViewer}
+        projectId={viewerModal.projectId}
+      />
 
       {/* 설정 패널 */}
       <SettingsPanel 

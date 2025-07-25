@@ -62,7 +62,7 @@ const MaterialPanel: React.FC = () => {
 
   // Store에서 재질 설정과 업데이트 함수 가져오기
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' };
+  const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' }; // Changed default doorColor from #FFFFFF to light gray
   
   // UI Store에서 도어 상태 가져오기
   const { doorsOpen, toggleDoors } = useUIStore();
@@ -74,7 +74,7 @@ const MaterialPanel: React.FC = () => {
   // 현재 스토어의 색상
   const currentStoreColor = materialTab === 'interior' 
     ? (materialConfig.interiorColor || '#FFFFFF')
-    : (materialConfig.doorColor || '#FFFFFF');
+    : (materialConfig.doorColor || '#E0E0E0'); // Changed default from #FFFFFF to light gray
 
   // 스토어 업데이트 함수
   const updateStoreColor = (color: string) => {
@@ -436,9 +436,6 @@ const MaterialPanel: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-      </div>
-      
       {/* 탭 네비게이션 */}
       <div className={styles.tabNavigation}>
         <button

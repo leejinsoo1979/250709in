@@ -37,6 +37,38 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
       stats: {
         designFileCount: 0,
         lastOpenedAt: serverTimestamp() as Timestamp,
+        furnitureCount: 0,
+      },
+      // spaceConfig은 사용자가 전달한 값 사용
+      spaceConfig: data.spaceConfig || {
+        width: 3600,
+        height: 2400,
+        depth: 1500,
+        installType: 'builtin',
+        surroundType: 'surround',
+        baseConfig: {
+          type: 'floor',
+          height: 65,
+          placementType: 'floor',
+        },
+        hasFloorFinish: false,
+        floorFinish: null,
+        wallConfig: {
+          left: true,
+          right: true,
+          top: true,
+        },
+        materialConfig: {
+          interiorColor: '#FFFFFF',
+          doorColor: '#E0E0E0',  // 기본값 변경
+        },
+        columns: [],
+        frameSize: { upper: 50, base: 50, left: 50, right: 50 },
+        gapConfig: { left: 2, right: 2 },
+      },
+      // 빈 furniture 객체 추가
+      furniture: {
+        placedModules: [],
       },
     };
 
@@ -51,30 +83,46 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
 // 디자인파일 생성
 export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id: string | null; error: string | null }> => {
   try {
+    console.log('💾 createDesignFile 함수 호출됨:', data);
+    
     const user = await getCurrentUserAsync();
     if (!user) {
+      console.error('🚫 사용자 인증 실패');
       return { id: null, error: '로그인이 필요합니다.' };
     }
 
-    const designFileData: Omit<DesignFile, 'id'> = {
+    console.log('👤 현재 사용자:', user.uid);
+
+    // folderId가 undefined일 때 필드 제외
+    const baseData = {
       name: data.name,
       projectId: data.projectId,
-      folderId: data.folderId,
       spaceConfig: data.spaceConfig,
       furniture: data.furniture,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
+    
+    const designFileData: any = data.folderId 
+      ? { ...baseData, folderId: data.folderId }
+      : baseData;
+      
+    console.log('📋 최종 Firestore 저장 데이터:', designFileData);
+
+    console.log('📝 Firestore에 저장할 데이터:', designFileData);
 
     const docRef = await addDoc(collection(db, 'designFiles'), designFileData);
+    
+    console.log('✅ Firestore 저장 성공, 문서 ID:', docRef.id);
     
     // 프로젝트 통계 업데이트
     await updateProjectStats(data.projectId);
     
     return { id: docRef.id, error: null };
   } catch (error) {
-    console.error('디자인파일 생성 에러:', error);
-    return { id: null, error: '디자인파일 생성 중 오류가 발생했습니다.' };
+    console.error('❌ 디자인파일 생성 에러:', error);
+    const errorMessage = error instanceof Error ? error.message : '디자인파일 생성 중 오류가 발생했습니다.';
+    return { id: null, error: errorMessage };
   }
 };
 
@@ -105,6 +153,9 @@ export const getDesignFiles = async (projectId: string): Promise<{ designFiles: 
         },
         furnitureCount: data.furniture?.placedModules?.length || 0,
         thumbnail: data.thumbnail,
+        // 썸네일 생성을 위한 전체 데이터 추가
+        spaceConfig: data.spaceConfig,
+        furniture: data.furniture,
       });
     });
 
@@ -163,6 +214,52 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
 
     // 마지막 열람 시간 업데이트 (임시로 비활성화 - Firebase 내부 에러 방지)
     // await updateLastOpenedAt(projectId);
+
+    return { project, error: null };
+  } catch (error) {
+    console.error('프로젝트 불러오기 에러:', error);
+    return { project: null, error: '프로젝트 불러오기 중 오류가 발생했습니다.' };
+  }
+};
+
+// 별칭 함수 (backward compatibility)
+// 프로젝트 상세 조회 (뷰어용 - 모든 데이터 포함)
+export const getProjectById = async (projectId: string): Promise<{ project: any | null; error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { project: null, error: '로그인이 필요합니다.' };
+    }
+
+    const docRef = doc(db, PROJECTS_COLLECTION, projectId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return { project: null, error: '프로젝트를 찾을 수 없습니다.' };
+    }
+
+    const data = docSnap.data();
+    
+    // 소유자 확인
+    if (data.userId !== user.uid) {
+      return { project: null, error: '프로젝트에 접근할 권한이 없습니다.' };
+    }
+
+    // 전체 데이터 반환 (뷰어에서 필요한 모든 데이터 포함)
+    const project = {
+      id: docSnap.id,
+      ...data,
+      // 명시적으로 필요한 데이터 확인
+      spaceConfig: data.spaceConfig || null,
+      furniture: data.furniture || { placedModules: [] },
+      stats: data.stats || { furnitureCount: 0 }
+    };
+
+    console.log('🔍 Firebase 프로젝트 조회:', {
+      id: project.id,
+      hasSpaceConfig: !!project.spaceConfig,
+      furnitureCount: project.furniture?.placedModules?.length || 0
+    });
 
     return { project, error: null };
   } catch (error) {
@@ -263,8 +360,16 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
   }
 };
 
-// 디자인파일 업데이트
-export const updateDesignFile = async (designFileId: string, updates: { name?: string }): Promise<{ error: string | null }> => {
+// 디자인파일 업데이트 (썸네일 포함)
+export const updateDesignFile = async (
+  designFileId: string, 
+  updates: { 
+    name?: string;
+    spaceConfig?: any;
+    furniture?: any;
+    thumbnail?: string;
+  }
+): Promise<{ error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
     if (!user) {
@@ -281,10 +386,32 @@ export const updateDesignFile = async (designFileId: string, updates: { name?: s
 
     const updateData = {
       updatedAt: serverTimestamp(),
-      ...(updates.name && { name: updates.name })
+      ...(updates.name && { name: updates.name }),
+      ...(updates.spaceConfig && { spaceConfig: updates.spaceConfig }),
+      ...(updates.furniture && { furniture: updates.furniture }),
+      ...(updates.thumbnail && { thumbnail: updates.thumbnail })
     };
 
     await updateDoc(docRef, updateData);
+    
+    // 디자인파일이 업데이트되면 해당 프로젝트의 썸네일도 업데이트
+    if (updates.thumbnail) {
+      const designFileData = docSnap.data();
+      const projectId = designFileData.projectId;
+      
+      if (projectId) {
+        try {
+          const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
+          await updateDoc(projectRef, {
+            thumbnail: updates.thumbnail,
+            updatedAt: serverTimestamp()
+          });
+          console.log(`프로젝트 썸네일도 업데이트됨: ${projectId}`);
+        } catch (projectUpdateError) {
+          console.warn('프로젝트 썸네일 업데이트 실패:', projectUpdateError);
+        }
+      }
+    }
     
     console.log(`디자인파일 업데이트 완료: ${designFileId}`);
     return { error: null };

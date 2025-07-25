@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { 
   calculateRoomDimensions, 
@@ -29,6 +30,7 @@ interface RoomProps {
     doorTexture?: string;
   };
   showAll?: boolean;
+  placedModules?: any[]; // 뷰어 모드용 가구 데이터
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -66,7 +68,7 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 모서리 라인 렌더링 - 항상 표시 */}
       <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} linewidth={1} />
+        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#888888" : "#666666")} linewidth={0.5} />
       </lineSegments>
     </group>
   );
@@ -77,9 +79,11 @@ const Room: React.FC<RoomProps> = ({
   floorColor = '#FF9966',
   viewMode = '3D',
   materialConfig,
-  showAll = true
+  showAll = true,
+  placedModules
 }) => {
   const { theme } = useTheme();
+  const { colors } = useThemeColors();
   const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const { highlightedFrame } = useUIStore(); // 강조된 프레임 상태 가져오기
   
@@ -88,7 +92,7 @@ const Room: React.FC<RoomProps> = ({
     const { width: widthMm, height: heightMm } = calculateRoomDimensions(spaceInfo);
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
-    const furnitureDepthMm = calculateFurnitureDepth(); // 가구/프레임용 (600mm)
+    const furnitureDepthMm = calculateFurnitureDepth(placedModules); // 가구/프레임용 (동적 계산)
     const frameThicknessMm = calculateFrameThickness(spaceInfo);
     const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
     const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
@@ -121,7 +125,7 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, placedModules]);
   
   const { 
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
@@ -133,7 +137,7 @@ const Room: React.FC<RoomProps> = ({
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
   const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
-    const frameColor = materialConfig?.doorColor || '#FFFFFF';
+    const frameColor = materialConfig?.doorColor || '#E0E0E0'; // Changed default from #FFFFFF to light gray
     const isHighlighted = frameType && highlightedFrame === frameType;
     
     const material = new THREE.MeshStandardMaterial({
@@ -306,8 +310,8 @@ const Room: React.FC<RoomProps> = ({
         <>
           {/* 왼쪽 외부 벽면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
-          {(spaceInfo.installType === 'built-in' || 
-            (spaceInfo.installType === 'semi-standing' && wallConfig?.left)) && (
+          {(spaceInfo.installType === 'builtin' || 
+            (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (
             <mesh
               position={[-width/2 - 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
               rotation={[0, Math.PI / 2, 0]}
@@ -319,8 +323,8 @@ const Room: React.FC<RoomProps> = ({
           
           {/* 오른쪽 외부 벽면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 반대 방향 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 오른쪽 벽이 있거나 빌트인)일 때만 표시 */}
-          {(spaceInfo.installType === 'built-in' || 
-            (spaceInfo.installType === 'semi-standing' && wallConfig?.right)) && (
+          {(spaceInfo.installType === 'builtin' || 
+            (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (
             <mesh
               position={[width/2 + 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
               rotation={[0, -Math.PI / 2, 0]}
@@ -523,16 +527,7 @@ const Room: React.FC<RoomProps> = ({
             >
               <planeGeometry args={[width, floorDepth]} />
               <meshStandardMaterial 
-                color={(() => {
-                  if (typeof window !== 'undefined') {
-                    const computedStyle = getComputedStyle(document.documentElement);
-                    const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-                    if (primaryColor) {
-                      return primaryColor;
-                    }
-                  }
-                  return '#10b981'; // 기본값 (green)
-                })()} 
+                color={colors.primary}
                 transparent={true} 
                 opacity={0.4}
                 side={THREE.DoubleSide}
@@ -559,7 +554,7 @@ const Room: React.FC<RoomProps> = ({
         
         // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
         sortedColumns.forEach((column, index) => {
-          const columnWidthM = mmToThreeUnits(column.width);
+          const columnWidthM = column.width * 0.01; // mm to Three.js units
           const columnLeftX = column.position[0] - columnWidthM / 2;
           const columnRightX = column.position[0] + columnWidthM / 2;
           
@@ -602,16 +597,7 @@ const Room: React.FC<RoomProps> = ({
             >
               <planeGeometry args={[width, floorDepth]} />
               <meshStandardMaterial 
-                color={(() => {
-                  if (typeof window !== 'undefined') {
-                    const computedStyle = getComputedStyle(document.documentElement);
-                    const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-                    if (primaryColor) {
-                      return primaryColor;
-                    }
-                  }
-                  return '#10b981'; // 기본값 (green)
-                })()} 
+                color={colors.primary}
                 transparent={true} 
                 opacity={0.4}
                 side={THREE.DoubleSide}
@@ -633,16 +619,7 @@ const Room: React.FC<RoomProps> = ({
           >
             <planeGeometry args={[segment.width, floorDepth]} />
             <meshStandardMaterial 
-              color={(() => {
-                if (typeof window !== 'undefined') {
-                  const computedStyle = getComputedStyle(document.documentElement);
-                  const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-                  if (primaryColor) {
-                    return primaryColor;
-                  }
-                }
-                return '#10b981'; // 기본값 (green)
-              })()} 
+              color={colors.primary}
               transparent={true} 
               opacity={0.4}
               side={THREE.DoubleSide}
@@ -653,17 +630,17 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semi-standing' && wallConfig?.left) ||
-        (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) ||
-        spaceInfo.installType === 'free-standing') && (
+        (spaceInfo.installType === 'builtin' || 
+        (spaceInfo.installType === 'semistanding' && wallConfig?.left) ||
+        (spaceInfo.installType === 'semistanding' && !wallConfig?.left) ||
+        spaceInfo.installType === 'freestanding') && (
         <BoxWithEdges
           args={[
             frameThickness.left, 
             adjustedPanelHeight, 
             // 설치 타입과 벽 여부에 따라 깊이 결정
-            (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) || 
-            spaceInfo.installType === 'free-standing' 
+            (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
+            spaceInfo.installType === 'freestanding' 
               ? slotFloorDepth  // 엔드패널: 바닥 슬롯 메쉬와 동일한 깊이
               : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
           ]}
@@ -671,8 +648,8 @@ const Room: React.FC<RoomProps> = ({
             xOffset + frameThickness.left/2, 
             sideFrameCenterY, 
             // 엔드패널일 때는 바닥 슬롯 메쉬와 동일한 범위로 배치
-            (spaceInfo.installType === 'semi-standing' && !wallConfig?.left) || 
-            spaceInfo.installType === 'free-standing'
+            (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
+            spaceInfo.installType === 'freestanding'
               ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
@@ -684,17 +661,17 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semi-standing' && wallConfig?.right) ||
-        (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) ||
-        spaceInfo.installType === 'free-standing') && (
+        (spaceInfo.installType === 'builtin' || 
+        (spaceInfo.installType === 'semistanding' && wallConfig?.right) ||
+        (spaceInfo.installType === 'semistanding' && !wallConfig?.right) ||
+        spaceInfo.installType === 'freestanding') && (
         <BoxWithEdges
           args={[
             frameThickness.right, 
             adjustedPanelHeight, 
             // 설치 타입과 벽 여부에 따라 깊이 결정
-            (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) || 
-            spaceInfo.installType === 'free-standing' 
+            (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
+            spaceInfo.installType === 'freestanding' 
               ? slotFloorDepth  // 엔드패널: 바닥 슬롯 메쉬와 동일한 깊이
               : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
           ]}
@@ -702,8 +679,8 @@ const Room: React.FC<RoomProps> = ({
             xOffset + width - frameThickness.right/2, 
             sideFrameCenterY, 
             // 엔드패널일 때는 바닥 슬롯 메쉬와 동일한 범위로 배치
-            (spaceInfo.installType === 'semi-standing' && !wallConfig?.right) || 
-            spaceInfo.installType === 'free-standing'
+            (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
+            spaceInfo.installType === 'freestanding'
               ? backZ + slotFloorDepth/2  // 엔드패널: backZ에서 시작해서 slotFloorDepth 길이의 중간에 위치
               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
           ]}
@@ -768,7 +745,7 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
-              const columnWidthM = mmToThreeUnits(column.width);
+              const columnWidthM = column.width * 0.01; // mm to Three.js units
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
@@ -894,7 +871,7 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
-              const columnWidthM = mmToThreeUnits(column.width);
+              const columnWidthM = column.width * 0.01; // mm to Three.js units
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
@@ -977,8 +954,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semi-standing' && wallConfig?.left)) && (
+        (spaceInfo.installType === 'builtin' || 
+        (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (
         <group 
           position={[
             xOffset + frameThickness.left + mmToThreeUnits(40)/2 - mmToThreeUnits(29), // 왼쪽 프레임과 L자 모양으로 맞물림 (38mm 왼쪽으로)
@@ -1004,8 +981,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semi-standing' && wallConfig?.right)) && (
+        (spaceInfo.installType === 'builtin' || 
+        (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (
         <group 
           position={[
             xOffset + width - frameThickness.right - mmToThreeUnits(40)/2 + mmToThreeUnits(29), // 오른쪽 프레임과 L자 모양으로 맞물림 (29mm 오른쪽으로)
@@ -1086,7 +1063,7 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
-              const columnWidthM = mmToThreeUnits(column.width);
+              const columnWidthM = column.width * 0.01; // mm to Three.js units
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
@@ -1217,7 +1194,7 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
-              const columnWidthM = mmToThreeUnits(column.width);
+              const columnWidthM = column.width * 0.01; // mm to Three.js units
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
@@ -1298,7 +1275,7 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 배치된 가구들 */}
-      <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} />
+      <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} placedModules={placedModules} />
     </group>
   );
 };

@@ -69,7 +69,7 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
         <lineSegments geometry={edgesGeometry}>
           <lineBasicMaterial 
             color="#666666" 
-            linewidth={1} 
+            linewidth={0.5} 
           />
         </lineSegments>
       )}

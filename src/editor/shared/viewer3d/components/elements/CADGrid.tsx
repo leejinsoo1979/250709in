@@ -81,13 +81,38 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
     }
   }, [view2DDirection, viewMode]);
 
+  // 테마 기반 색상
+  const gridColors = useMemo(() => ({
+    minor: theme.mode === 'dark' ? '#444444' : '#dddddd',
+    major: theme.mode === 'dark' ? '#555555' : '#bbbbbb', 
+    origin: theme.mode === 'dark' ? '#888888' : '#666666'
+  }), [theme.mode]);
+
   // 간단한 고정 그리드 생성
   const { majorLines, minorLines, axis1Lines, axis2Lines, axis1Color, axis2Color } = useMemo(() => {
     if (!enabled || viewMode === '3D') return { majorLines: null, minorLines: null, axis1Lines: null, axis2Lines: null, axis1Color: 0xff0000, axis2Color: 0x0000ff };
     
     const size = 200; // 고정 크기 200m
-    const major = 1.0; // 1m 간격
-    const minor = 0.1; // 10cm 간격
+    // 테마와 관계없이 완전히 고정된 그리드 간격 - 양쪽 동일하게 설정
+    const major = 1.0; // 1m 간격 (라이트/다크 동일)
+    const minor = 0.1; // 10cm 간격 (라이트/다크 동일)
+    
+    console.log('🔲 CADGrid 렌더링:', {
+      theme: theme.mode,
+      viewMode,
+      view2DDirection,
+      enabled,
+      major,
+      minor,
+      size,
+      gridColors: {
+        minor: gridColors.minor,
+        major: gridColors.major,
+        origin: gridColors.origin
+      },
+      majorPointsLength: 'generating...',
+      minorPointsLength: 'generating...'
+    });
     
     let majorPoints: number[] = [];
     let minorPoints: number[] = [];
@@ -97,13 +122,11 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       case 'front':
         // XY 평면 (z=0)
         for (let i = -size; i <= size; i += major) {
-          if (Math.abs(i) < 0.001) continue;
           majorPoints.push(i, -size, 0, i, size, 0); // 세로
           majorPoints.push(-size, i, 0, size, i, 0); // 가로
         }
         for (let i = -size; i <= size; i += minor) {
           if (Math.abs(i % major) < 0.001) continue;
-          if (Math.abs(i) < 0.001) continue;
           minorPoints.push(i, -size, 0, i, size, 0);
           minorPoints.push(-size, i, 0, size, i, 0);
         }
@@ -111,13 +134,11 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       case 'top':
         // XZ 평면 (y=0)
         for (let i = -size; i <= size; i += major) {
-          if (Math.abs(i) < 0.001) continue;
           majorPoints.push(i, 0, -size, i, 0, size); // 세로
           majorPoints.push(-size, 0, i, size, 0, i); // 가로
         }
         for (let i = -size; i <= size; i += minor) {
           if (Math.abs(i % major) < 0.001) continue;
-          if (Math.abs(i) < 0.001) continue;
           minorPoints.push(i, 0, -size, i, 0, size);
           minorPoints.push(-size, 0, i, size, 0, i);
         }
@@ -126,13 +147,11 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       case 'right':
         // YZ 평면 (x=0)
         for (let i = -size; i <= size; i += major) {
-          if (Math.abs(i) < 0.001) continue;
           majorPoints.push(0, i, -size, 0, i, size); // 세로
           majorPoints.push(0, -size, i, 0, size, i); // 가로
         }
         for (let i = -size; i <= size; i += minor) {
           if (Math.abs(i % major) < 0.001) continue;
-          if (Math.abs(i) < 0.001) continue;
           minorPoints.push(0, i, -size, 0, i, size);
           minorPoints.push(0, -size, i, 0, size, i);
         }
@@ -140,13 +159,11 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       default:
         // XY 평면 (z=0)
         for (let i = -size; i <= size; i += major) {
-          if (Math.abs(i) < 0.001) continue;
           majorPoints.push(i, -size, 0, i, size, 0);
           majorPoints.push(-size, i, 0, size, i, 0);
         }
         for (let i = -size; i <= size; i += minor) {
           if (Math.abs(i % major) < 0.001) continue;
-          if (Math.abs(i) < 0.001) continue;
           minorPoints.push(i, -size, 0, i, size, 0);
           minorPoints.push(-size, i, 0, size, i, 0);
         }
@@ -211,7 +228,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       axis1Color,
       axis2Color
     };
-  }, [enabled, viewMode, view2DDirection]);
+  }, [enabled, viewMode, view2DDirection, gridColors]);
   
   // 그리드 강제 표시
   useFrame(() => {
@@ -244,7 +261,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </bufferGeometry>
             <lineBasicMaterial 
-              color={theme.mode === 'dark' ? '#444444' : '#dddddd'} 
+              color={gridColors.minor} 
               opacity={0.3}
               transparent
               depthTest={false}
@@ -263,7 +280,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </bufferGeometry>
             <lineBasicMaterial 
-              color={theme.mode === 'dark' ? '#555555' : '#bbbbbb'} 
+              color={gridColors.major} 
               opacity={0.4}
               transparent
               depthTest={false}
@@ -314,7 +331,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           {/* 원점 표시 */}
           <mesh position={[0, 0, 0.01]} renderOrder={-995}>
             <sphereGeometry args={[0.05]} />
-            <meshBasicMaterial color={theme.mode === 'dark' ? '#888888' : '#666666'} />
+            <meshBasicMaterial color={gridColors.origin} />
           </mesh>
         </group>
       </>

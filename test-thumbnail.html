@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Thumbnail Update Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .step { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        pre { background: #fff; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📸 Thumbnail Update Test</h1>
+        
+        <div class="step">
+            <h3>Test Steps:</h3>
+            <ol>
+                <li>Open the editor at <code>/configurator</code></li>
+                <li>Make some changes to the 3D scene</li>
+                <li>Click "저장" (Save) button</li>
+                <li>Check browser console for thumbnail generation logs</li>
+                <li>Go back to dashboard and verify thumbnail is updated</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Expected Console Logs:</h3>
+            <pre>💾 [EditorSave] 저장 시작: {projectId, hasBasicInfo, hasSpaceInfo, furnitureCount}
+📸 정면 뷰 썸네일 캡처 시작...
+🔄 2D 모드로 전환
+🔄 정면 뷰로 전환
+📸 정면 뷰 썸네일 캡처 성공
+💾 [EditorSave] 3D 썸네일 캡처 성공: true
+💾 [EditorSave] 최종 썸네일 상태: {hasBlob: true, blobSize: 12345}
+💾 [EditorSave] 데이터 변환 완료
+✅ 프로젝트 업데이트 완료: {projectId, updatedFields}
+✅ [EditorSave] 프로젝트 업데이트 성공
+💾 [EditorSave] BroadcastChannel 알림 전송 완료</pre>
+        </div>
+
+        <div class="step">
+            <h3>Troubleshooting:</h3>
+            <ul>
+                <li><strong>No 3D canvas found:</strong> Make sure you're in the editor with a 3D scene loaded</li>
+                <li><strong>Thumbnail capture fails:</strong> Check if the 3D canvas is visible and has content</li>
+                <li><strong>BroadcastChannel not working:</strong> Both editor and dashboard must be open in same browser</li>
+                <li><strong>Firebase upload fails:</strong> Check network tab for storage errors</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>Manual Test Links:</h3>
+            <p><a href="/configurator" target="_blank">Open Editor</a> | <a href="/" target="_blank">Open Dashboard</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Listen for BroadcastChannel messages
+        const channel = new BroadcastChannel('project-updates');
+        channel.onmessage = (event) => {
+            console.log('🔔 BroadcastChannel message received:', event.data);
+            const logDiv = document.createElement('div');
+            logDiv.className = 'step success';
+            logDiv.innerHTML = `<h4>📡 Message Received:</h4><pre>${JSON.stringify(event.data, null, 2)}</pre>`;
+            document.querySelector('.test-container').appendChild(logDiv);
+        };
+        
+        console.log('📡 BroadcastChannel listener started');
+    </script>
+</body>
+</html>

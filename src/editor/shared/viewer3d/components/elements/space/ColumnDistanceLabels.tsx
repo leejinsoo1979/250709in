@@ -30,8 +30,15 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     return fallback;
   };
 
-  // 테마 기반 색상 설정
-  const themeColors = {
+  // 테마 기반 색상 설정 - 3D 모드에서는 항상 밝은 색상 사용
+  const themeColors = viewMode === '3D' ? {
+    primary: '#10b981',          // 항상 밝은 초록색
+    background: '#ffffff',       // 항상 흰색 배경
+    text: '#111827',            // 항상 어두운 텍스트
+    border: '#10b981',          // 항상 밝은 초록색 테두리
+    hoverBg: '#d1fae5',         // 항상 밝은 호버 배경
+    textSecondary: '#6b7280'    // 항상 회색 보조 텍스트
+  } : {
     primary: getThemeColorFromCSS('--theme-primary', '#10b981'),          // 테마 메인 색상
     background: getThemeColorFromCSS('--theme-surface', '#ffffff'),       // 테마 표면 색상
     text: getThemeColorFromCSS('--theme-text', '#111827'),               // 테마 텍스트 색상
@@ -51,34 +58,38 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     fontFamily: 'system-ui, -apple-system, sans-serif',
     fontWeight: '600',
     outline: 'none',
-    backgroundColor: themeColors.background,
-    color: themeColors.text
+    backgroundColor: '#ffffff',
+    color: '#000000'
   };
   
   const containerStyle = {
-    background: themeColors.background,
+    background: '#ffffff',
     border: `2px solid ${themeColors.border}`,
     borderRadius: '8px',
     padding: '12px 16px',
     minWidth: '140px',
-    boxShadow: theme?.mode === 'dark' 
-      ? '0 4px 20px rgba(100,181,246,0.2)' 
-      : '0 4px 20px rgba(255,87,34,0.2)',
+    boxShadow: viewMode === '3D' 
+      ? '0 4px 20px rgba(16,185,129,0.3)'  // 3D 모드에서는 항상 초록색 그림자
+      : theme?.mode === 'dark' 
+        ? '0 4px 20px rgba(100,181,246,0.2)' 
+        : '0 4px 20px rgba(255,87,34,0.2)',
     fontSize: '14px',
-    fontFamily: 'system-ui, -apple-system, sans-serif'
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    color: '#000000'
   };
   
   const labelStyle = {
-    color: themeColors.primary,
+    color: '#10b981',
     fontSize: '12px',
     marginBottom: '8px',
     fontWeight: '600' as const
   };
   
-  // 스토어에서 실시간으로 기둥 정보를 가져옵니다
-  const currentColumn = useSpaceConfigStore(state => 
+  // 스토어에서 실시간으로 기둥 정보를 가져옵니다 (선택적 구독)
+  const storeColumn = useSpaceConfigStore(state => 
     state.spaceInfo.columns?.find(col => col.id === column.id)
-  ) || column;
+  );
+  const currentColumn = storeColumn || column;
 
   // 편집 모드가 활성화되면 입력 필드에 포커스
   useEffect(() => {
@@ -90,13 +101,13 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     }
   }, [editingDistance]);
 
-  // 컴포넌트 렌더링 디버그 로그
-  console.log('🏛️ ColumnDistanceLabels 렌더링:', {
-    columnId: currentColumn.id,
-    showLabels,
-    editingDistance,
-    spaceInfo: {width: spaceInfo?.width, depth: spaceInfo?.depth}
-  });
+  // 컴포넌트 렌더링 디버그 로그 (개발 모드에서만)
+  // console.log('🏛️ ColumnDistanceLabels 렌더링:', {
+  //   columnId: currentColumn.id,
+  //   showLabels,
+  //   editingDistance,
+  //   spaceInfo: {width: spaceInfo?.width, depth: spaceInfo?.depth}
+  // });
 
   // 라벨을 숨기는 경우에만 null 반환
   if (!showLabels) {
@@ -120,16 +131,16 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
 
   // 거리 변경 핸들러 - 개선된 로직
   const handleDistanceChange = (direction: 'left' | 'right', newDistance: number) => {
-    console.log('📏 거리 변경 시도:', { direction, newDistance, columnId: currentColumn.id });
+    // console.log('📏 거리 변경 시도:', { direction, newDistance, columnId: currentColumn.id });
     
     if (!onPositionChange) {
-      console.error('❌ onPositionChange 함수가 없습니다');
+      // console.error('❌ onPositionChange 함수가 없습니다');
       return;
     }
     
     // 유효한 거리 범위 검증
     if (newDistance < 10 || newDistance > (spaceInfo?.width || 3600) / 2) {
-      console.warn('⚠️ 유효하지 않은 거리:', newDistance);
+      // console.warn('⚠️ 유효하지 않은 거리:', newDistance);
       return;
     }
     
@@ -147,27 +158,27 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     
     const newPosition: [number, number, number] = [newX, 0, currentColumn.position[2]];
     
-    console.log('📍 새로운 위치 계산:', {
-      이전위치: currentColumn.position,
-      새위치: newPosition,
-      간격: newDistance
-    });
+    // console.log('📍 새로운 위치 계산:', {
+    //   이전위치: currentColumn.position,
+    //   새위치: newPosition,
+    //   간격: newDistance
+    // });
     
     onPositionChange(currentColumn.id, newPosition);
   };
 
   // 기둥 너비 변경 핸들러 - 개선된 로직
   const handleWidthChange = (newWidth: number) => {
-    console.log('📐 너비 변경 시도:', { newWidth, columnId: currentColumn.id });
+    // console.log('📐 너비 변경 시도:', { newWidth, columnId: currentColumn.id });
     
     if (!onColumnUpdate) {
-      console.error('❌ onColumnUpdate 함수가 없습니다');
+      // console.error('❌ onColumnUpdate 함수가 없습니다');
       return;
     }
     
     // 유효한 너비 범위 검증 (800mm ~ 3000mm)
     if (newWidth < 800 || newWidth > 3000) {
-      console.warn('⚠️ 유효하지 않은 너비:', newWidth);
+      // console.warn('⚠️ 유효하지 않은 너비:', newWidth);
       return;
     }
     
@@ -183,7 +194,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       event.stopPropagation();
     }
     
-    console.log('🖱️ 편집 모드 활성화:', direction, '기둥 ID:', currentColumn.id);
+    // console.log('🖱️ 편집 모드 활성화:', direction, '기둥 ID:', currentColumn.id);
     
     setEditingDistance(direction);
     
@@ -203,7 +214,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   const handleEditComplete = () => {
     const value = parseInt(editingValue) || 0;
     
-    console.log('✅ 편집 완료:', { direction: editingDistance, value });
+    // console.log('✅ 편집 완료:', { direction: editingDistance, value });
     
     if (editingDistance === 'left') {
       handleDistanceChange('left', value);
@@ -219,7 +230,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
 
   // 편집 취소 핸들러
   const handleEditCancel = () => {
-    console.log('❌ 편집 취소');
+    // console.log('❌ 편집 취소');
     setEditingDistance(null);
     setEditingValue('');
   };
@@ -271,12 +282,37 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
+              <style>
+                {`
+                  .column-distance-input > div > input[type="number"] {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                  }
+                `}
+              </style>
               <div 
-                style={containerStyle}
+                className="column-distance-input"
+                style={{
+                  background: '#ffffff',
+                  border: '2px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  minWidth: '140px',
+                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  color: '#000000'
+                }}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div style={labelStyle}>
+                <div style={{
+                  color: '#10b981',
+                  fontSize: '12px',
+                  marginBottom: '8px',
+                  fontWeight: '600'
+                }}>
                   왼쪽 간격 (mm)
                 </div>
                 <input
@@ -296,7 +332,21 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   onClick={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  style={inputStyle}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '2px solid #10b981',
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontWeight: '600',
+                    outline: 'none',
+                    backgroundColor: '#ffffff !important',
+                    color: '#000000 !important',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'textfield'
+                  }}
                   onBlur={() => handleEditComplete()}
                   autoFocus
                   min="0"
@@ -341,19 +391,21 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 />
               </mesh>
               <Text
-                fontSize={0.5}
-                color={themeColors.primary}
+                position={[0, 0, 0.2]}
+                fontSize={0.8}
+                color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                rotation={[0, 0, 0]}
+                outlineWidth={0.1}
+                outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClick('left', e);
                 }}
-                onPointerOver={(e) => {
+                onPointerOver={() => {
                   document.body.style.cursor = 'pointer';
                 }}
-                onPointerOut={(e) => {
+                onPointerOut={() => {
                   document.body.style.cursor = 'default';
                 }}
               >
@@ -409,12 +461,37 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
+              <style>
+                {`
+                  .column-distance-input > div > input[type="number"] {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                  }
+                `}
+              </style>
               <div 
-                style={containerStyle}
+                className="column-distance-input"
+                style={{
+                  background: '#ffffff',
+                  border: '2px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  minWidth: '140px',
+                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  color: '#000000'
+                }}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div style={labelStyle}>
+                <div style={{
+                  color: '#10b981',
+                  fontSize: '12px',
+                  marginBottom: '8px',
+                  fontWeight: '600'
+                }}>
                   오른쪽 간격 (mm)
                 </div>
                 <input
@@ -434,7 +511,21 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   onClick={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  style={inputStyle}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '2px solid #10b981',
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontWeight: '600',
+                    outline: 'none',
+                    backgroundColor: '#ffffff !important',
+                    color: '#000000 !important',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'textfield'
+                  }}
                   onBlur={() => handleEditComplete()}
                   autoFocus
                   min="0"
@@ -479,19 +570,21 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 />
               </mesh>
               <Text
-                fontSize={0.5}
-                color={themeColors.primary}
+                position={[0, 0, 0.2]}
+                fontSize={0.8}
+                color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                rotation={[0, 0, 0]}
+                outlineWidth={0.1}
+                outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClick('right', e);
                 }}
-                onPointerOver={(e) => {
+                onPointerOver={() => {
                   document.body.style.cursor = 'pointer';
                 }}
-                onPointerOut={(e) => {
+                onPointerOut={() => {
                   document.body.style.cursor = 'default';
                 }}
               >
@@ -516,12 +609,37 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
+              <style>
+                {`
+                  .column-distance-input > div > input[type="number"] {
+                    color: #000000 !important;
+                    background-color: #ffffff !important;
+                    -webkit-text-fill-color: #000000 !important;
+                  }
+                `}
+              </style>
               <div 
-                style={containerStyle}
+                className="column-distance-input"
+                style={{
+                  background: '#ffffff',
+                  border: '2px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  minWidth: '140px',
+                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  color: '#000000'
+                }}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div style={labelStyle}>
+                <div style={{
+                  color: '#10b981',
+                  fontSize: '12px',
+                  marginBottom: '8px',
+                  fontWeight: '600'
+                }}>
                   기둥 폭 (mm)
                 </div>
                 <input
@@ -587,19 +705,21 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 />
               </mesh>
               <Text
-                fontSize={0.5}
-                color={themeColors.primary}
+                position={[0, 0, 0.2]}
+                fontSize={0.8}
+                color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                rotation={[0, 0, 0]}
+                outlineWidth={0.1}
+                outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClick('width', e);
                 }}
-                onPointerOver={(e) => {
+                onPointerOver={() => {
                   document.body.style.cursor = 'pointer';
                 }}
-                onPointerOut={(e) => {
+                onPointerOut={() => {
                   document.body.style.cursor = 'default';
                 }}
               >
@@ -614,7 +734,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
         <Text
           fontSize={0.4}
-          color={themeColors.text}
+          color="#000000"
           anchorX="center"
           anchorY="middle"
           rotation={[0, 0, 0]}
@@ -636,7 +756,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         <group position={[currentColumn.position[0], columnHeightM + 0.8, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}
-            color={themeColors.primary}
+            color="#000000"
             anchorX="center"
             anchorY="middle"
             rotation={[0, 0, 0]}
@@ -658,4 +778,4 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   );
 };
 
-export default ColumnDistanceLabels;
+export default React.memo(ColumnDistanceLabels);

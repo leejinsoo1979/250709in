@@ -55,7 +55,7 @@ const BoxWithEdges: React.FC<{
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
             color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
-            linewidth={1}
+            linewidth={0.5}
             transparent={false}
             opacity={1.0}
             depthTest={false}

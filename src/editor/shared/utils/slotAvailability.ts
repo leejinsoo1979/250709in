@@ -39,19 +39,27 @@ export const isSlotAvailable = (
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
   
-  // 기둥이 있는 슬롯에서도 기본적으로 배치 허용 (단일배치 우선)
+  // 기둥이 있는 슬롯은 150mm 이상의 공간이 있으면 배치 가능
+  // (가구 폭이 150mm까지 줄어들 수 있음)
   for (const targetSlot of targetSlots) {
     const slotInfo = columnSlots[targetSlot];
     if (!slotInfo) continue;
     
     if (slotInfo.hasColumn) {
-      console.log(`ℹ️ 슬롯 ${targetSlot}에 기둥 있음 - 단일배치 허용:`, {
-        columnDepth: slotInfo.column?.depth,
-        columnType: slotInfo.columnType,
-        columnWidth: slotInfo.column?.width
-      });
-      // 기둥이 있어도 일단 배치 허용 (SlotDropZones에서 분할 처리)
-      continue;
+      // 듀얼 가구는 기둥 슬롯에 배치 불가
+      if (isDualFurniture) {
+        console.log(`❌ 슬롯 ${targetSlot}에 기둥으로 인해 듀얼 가구 배치 불가`);
+        return false;
+      }
+      
+      // 싱글 가구는 최소 150mm 공간이 있으면 배치 가능
+      const availableWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+      if (availableWidth < 150) {
+        console.log(`❌ 슬롯 ${targetSlot}의 가용 공간(${availableWidth}mm)이 최소 요구 폭(150mm)보다 작음`);
+        return false;
+      }
+      
+      console.log(`✅ 슬롯 ${targetSlot}에 가구 배치 가능 (폭 ${availableWidth}mm로 조정됨)`);
     }
   }
   

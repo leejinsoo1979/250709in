@@ -1,0 +1,65 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB limit
+    }
+    
+    function isValidDesignFile() {
+      return (request.resource.contentType.matches('application/json') ||
+              request.resource.contentType.matches('text/.*')) &&
+             request.resource.size < 50 * 1024 * 1024; // 50MB limit
+    }
+    
+    function hasProjectAccess(projectId) {
+      return resource.name.matches('.*/projects/' + projectId + '/.*');
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImageFile();
+    }
+    
+    // Project thumbnails
+    match /projects/{projectId}/thumbnails/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImageFile();
+    }
+    
+    // Design files and assets
+    match /projects/{projectId}/designs/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidDesignFile();
+    }
+    
+    // Shared project assets
+    match /shared/{projectId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        (isValidImageFile() || isValidDesignFile());
+    }
+    
+    // Team logos and assets
+    match /teams/{teamId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImageFile();
+    }
+    
+    // Temporary uploads (24 hour expiry)
+    match /temp/{userId}/{fileName} {
+      allow read, write: if isOwner(userId) && 
+        request.time < resource.timeCreated + duration.value(86400, 's'); // 24 hours
+    }
+  }
+}

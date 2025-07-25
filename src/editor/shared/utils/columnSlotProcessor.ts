@@ -835,18 +835,20 @@ export const calculateFurnitureBounds = (
     // X축 침범이 있으면 항상 폭 조정 (150mm 임계값 제거)
     // X축 침범: 폭만 조정
       if (slotInfo.intrusionDirection === 'from-left') {
-        // 왼쪽 침범: 오른쪽은 슬롯 경계 고정, 왼쪽만 줄임
-        const shrink = xAxisIntrusion / 1000; // mm -> m
+        // 기둥이 왼쪽에서 침범: 가구는 오른쪽으로 밀림, 왼쪽 경계가 기둥 오른쪽으로 이동
+        const columnRightEdge = columnRightX + margin;
+        furnitureLeft = Math.max(columnRightEdge, originalSlotBounds.left);
         furnitureRight = originalSlotBounds.right;
-        furnitureLeft = furnitureRight - (originalSlotBounds.right - originalSlotBounds.left - shrink);
-        renderWidth = (furnitureRight - furnitureLeft) * 100;
+        renderWidth = Math.max(minFurnitureWidth * 100, (furnitureRight - furnitureLeft) * 100);
         const newCenter = (furnitureLeft + furnitureRight) / 2;
-        console.log('🟢 왼쪽 X축 침범: 오른쪽 고정, 왼쪽만 줄임 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm 무시)', {
+        console.log('🟢 왼쪽 X축 침범: 가구를 오른쪽으로 밀고 폭 조정', {
           xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
           zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
-          shrink,
+          columnRightX: columnRightX.toFixed(3),
+          newFurnitureLeft: furnitureLeft.toFixed(3),
+          originalFurnitureLeft: originalSlotBounds.left.toFixed(3),
           renderWidth,
-          logic: 'X축 침범 우선, 폭 조정'
+          logic: '기둥이 왼쪽에서 침범 -> 가구 왼쪽 경계를 기둥 오른쪽으로'
         });
         return {
           left: furnitureLeft,
@@ -856,18 +858,41 @@ export const calculateFurnitureBounds = (
           renderWidth: renderWidth
         };
       } else if (slotInfo.intrusionDirection === 'from-right') {
-        // 오른쪽 침범: 왼쪽은 슬롯 경계 고정, 오른쪽만 줄임
-        const shrink = xAxisIntrusion / 1000; // mm -> m
+        // 기둥이 오른쪽에서 침범: 가구는 왼쪽으로 밀림, 오른쪽 경계가 기둥 왼쪽으로 이동
+        const columnLeftEdge = columnLeftX - margin;
         furnitureLeft = originalSlotBounds.left;
-        furnitureRight = furnitureLeft + (originalSlotBounds.right - originalSlotBounds.left - shrink);
-        renderWidth = (furnitureRight - furnitureLeft) * 100;
+        furnitureRight = Math.min(columnLeftEdge, originalSlotBounds.right);
+        renderWidth = Math.max(minFurnitureWidth * 100, (furnitureRight - furnitureLeft) * 100);
         const newCenter = (furnitureLeft + furnitureRight) / 2;
-        console.log('🟢 오른쪽 X축 침범: 왼쪽 고정, 오른쪽만 줄임 (Z축침범=' + zAxisIntrusion.toFixed(1) + 'mm 무시)', {
+        console.log('🟢 오른쪽 X축 침범: 가구를 왼쪽으로 밀고 폭 조정', {
           xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
           zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
-          shrink,
+          columnLeftX: columnLeftX.toFixed(3),
+          newFurnitureRight: furnitureRight.toFixed(3),
+          originalFurnitureRight: originalSlotBounds.right.toFixed(3),
           renderWidth,
-          logic: 'X축 침범 우선, 폭 조정'
+          logic: '기둥이 오른쪽에서 침범 -> 가구 오른쪽 경계를 기둥 왼쪽으로'
+        });
+        return {
+          left: furnitureLeft,
+          right: furnitureRight,
+          center: newCenter,
+          width: renderWidth,
+          renderWidth: renderWidth
+        };
+      } else if (slotInfo.intrusionDirection === 'center') {
+        // 기둥이 중앙에서 침범: 양쪽 모두 줄임
+        const halfIntrusion = xAxisIntrusion / 2000; // 절반씩 나눔, mm -> m
+        furnitureLeft = originalSlotBounds.left + halfIntrusion;
+        furnitureRight = originalSlotBounds.right - halfIntrusion;
+        renderWidth = Math.max(minFurnitureWidth * 100, (furnitureRight - furnitureLeft) * 100);
+        const newCenter = (furnitureLeft + furnitureRight) / 2;
+        console.log('🟢 중앙 X축 침범: 양쪽 모두 조정', {
+          xAxisIntrusion: xAxisIntrusion.toFixed(1) + 'mm',
+          zAxisIntrusion: zAxisIntrusion.toFixed(1) + 'mm',
+          halfIntrusion: (halfIntrusion * 1000).toFixed(1) + 'mm',
+          renderWidth,
+          logic: '기둥이 중앙에서 침범 -> 양쪽 경계 모두 조정'
         });
         return {
           left: furnitureLeft,

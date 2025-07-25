@@ -221,23 +221,23 @@
   display: flex;
   margin-bottom: 16px;
   border: 1px solid var(--theme-border, var(--theme-border));
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--theme-surface, #ffffff);
 }
 
 .moduleCategoryTab {
   flex: 1;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: var(--theme-surface, #ffffff);
   border: none;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text, #374151);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  min-height: 44px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,16 +304,20 @@
   z-index: 100;
   display: flex;
   gap: 8px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .viewerDoorButton {
-  background: var(--theme-surface, rgba(255, 255, 255, 0.9));
-  border: 1px solid var(--theme-primary);
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
   border-radius: 20px;
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--theme-primary);
+  color: #374151;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
@@ -321,19 +325,64 @@
 }
 
 .viewerDoorButton:hover {
-  background: var(--theme-surface, rgba(255, 255, 255, 1));
+  background: #ffffff;
   border-color: var(--theme-primary);
+  color: var(--theme-primary);
 }
 
 .viewerDoorButton.active {
   background: var(--theme-primary);
-  color: var(--theme-surface);
+  color: #ffffff;
   border-color: var(--theme-primary);
 }
 
 .viewerDoorButton.active:hover {
   background: var(--theme-primary-hover);
   border-color: var(--theme-primary-hover);
+}
+
+/* 3D 모드 전용 도어 버튼 스타일 */
+.viewerDoorButton3D {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #cccccc !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #666666 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  min-width: 60px !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  isolation: isolate !important;
+}
+
+.viewerDoorButton3D:hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #007AFF !important;
+  color: #007AFF !important;
+}
+
+.viewerDoorButton3D.active {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 2px solid #007AFF !important;
+  color: #007AFF !important;
+  font-weight: 600 !important;
+}
+
+.viewerDoorButton3D.active:hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 }
 
 /* 우측 패널 */
@@ -1023,6 +1072,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .toggleButton:not(:last-child) {
@@ -1165,5 +1218,94 @@
   color: var(--theme-text-muted, #9ca3af);
   text-align: center;
   margin-top: 4px;
+}
+
+/* Modal overlay styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: var(--theme-surface, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.modalCloseButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+/* Coming soon styles for accessories */
+.comingSoon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.comingSoonTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin-bottom: 8px;
+}
+
+.comingSoonMessage {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 20px;
+}
+
+.comingSoonIcon {
+  font-size: 48px;
+  opacity: 0.5;
 }
 

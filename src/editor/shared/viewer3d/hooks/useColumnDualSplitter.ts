@@ -50,88 +50,16 @@ const restoreFurnitureFromColumnChanges = (placedModules: any[], spaceInfo: any,
     
     // 기둥이 있는 슬롯의 동적 반응 처리
     if (slotInfo.hasColumn && slotInfo.column) {
-      const columnDepth = slotInfo.column.depth;
-      const isColumnC = columnDepth === 300;
+      // 모든 기둥에 대해 FurnitureItem.tsx에서 자동으로 폭 조정 처리
+      console.log('🏛️ 기둥 변화 감지 - 가구 폭 자동 조정:', {
+        moduleId: module.id,
+        slotIndex: module.slotIndex,
+        columnDepth: slotInfo.column.depth,
+        message: 'FurnitureItem.tsx에서 자동으로 폭과 위치 조정됨'
+      });
       
-      if (isColumnC) {
-        // 기둥C의 침범량 계산
-        const slotWidthM = indexing.columnWidth * 0.01;
-        const slotCenterX = indexing.threeUnitPositions[module.slotIndex];
-        const slotLeftX = slotCenterX - slotWidthM / 2;
-        const slotRightX = slotCenterX + slotWidthM / 2;
-        
-        const columnWidthM = slotInfo.column.width * 0.01;
-        const columnLeftX = slotInfo.column.position[0] - columnWidthM / 2;
-        const columnRightX = slotInfo.column.position[0] + columnWidthM / 2;
-        
-        // 슬롯 끝에서의 침범량 계산
-        let intrusionFromEdge = 0;
-        if (columnLeftX < slotLeftX && columnRightX > slotLeftX) {
-          intrusionFromEdge = (columnRightX - slotLeftX) * 1000;
-        } else if (columnLeftX < slotRightX && columnRightX > slotRightX) {
-          intrusionFromEdge = (slotRightX - columnLeftX) * 1000;
-        } else if (columnLeftX <= slotLeftX && columnRightX >= slotRightX) {
-          intrusionFromEdge = (slotRightX - slotLeftX) * 1000;
-        }
-        
-        console.log('🏛️ 기둥C 이동 감지 - 가구 동적 반응:', {
-          moduleId: module.id,
-          slotIndex: module.slotIndex,
-          intrusionFromEdge: intrusionFromEdge.toFixed(1) + 'mm',
-          threshold: '150mm'
-        });
-        
-        if (intrusionFromEdge < 150) {
-          // 150mm 미만 침범: 가구 폭 조정 (밀어내기)
-          console.log('✅ 폭 조정 모드 - 가구를 밀어냄');
-          // FurnitureItem.tsx에서 자동으로 처리됨 (기둥A 방식)
-          updateModule(module.id, {
-            customDepth: undefined // 깊이 조정 해제
-          });
-        } else {
-          // 150mm 이상 침범: 깊이 조정 모드로 전환, 폭은 원래대로 복원
-          const slotDepth = 730;
-          const adjustedDepth = slotDepth - columnDepth;
-          
-          console.log('✅ 깊이 조정 모드로 전환 - 폭 복원, 깊이 조정:', {
-            originalDepth: moduleData.dimensions.depth,
-            adjustedDepth: adjustedDepth,
-            originalWidth: moduleData.dimensions.width,
-            widthRestored: true
-          });
-          
-          updateModule(module.id, {
-            customDepth: adjustedDepth,
-            adjustedWidth: undefined, // 폭을 원래대로 복원
-            position: {
-              ...module.position,
-              x: slotCenterX // 슬롯 중앙으로 복원
-            }
-          });
-        }
-      } else {
-        // 다른 기둥들의 기존 로직
-        const isShallowColumn = columnDepth < 500;
-        if (isShallowColumn) {
-          const slotDepth = 730;
-          const adjustedDepth = slotDepth - columnDepth;
-          
-          const isDualFurniture = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-          if (!(isDualFurniture && adjustedDepth <= 300)) {
-            if (!module.customDepth || Math.abs(module.customDepth - adjustedDepth) > 10) {
-              console.log('🔧 기존 기둥 로직 - 깊이 조정:', {
-                moduleId: module.id,
-                columnDepth: columnDepth,
-                adjustedDepth: adjustedDepth
-              });
-              
-              updateModule(module.id, {
-                customDepth: adjustedDepth
-              });
-            }
-          }
-        }
-      }
+      // adjustedWidth를 undefined로 설정하지 않음 - FurnitureItem이 계산하도록 둠
+      // customDepth도 변경하지 않음 - 필요시 FurnitureItem이 처리
     }
   });
 };

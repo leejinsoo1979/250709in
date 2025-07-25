@@ -1,33 +1,114 @@
 /* 테마 CSS 변수 정의 */
 :root {
-  /* 기본 테마 색상 (라이트 모드 + 초록색) */
+  /* 다크 모드를 기본값으로 설정 */
   --theme-primary: #10b981;
   --theme-primary-hover: #059669;
-  --theme-primary-light: #d1fae5;
+  --theme-primary-light: rgba(16, 185, 129, 0.2);
   --theme-primary-dark: #047857;
   
-  --theme-background: #ffffff;
-  --theme-background-secondary: #f9fafb;
-  --theme-surface: #ffffff;
-  --theme-text: #111827;
-  --theme-text-secondary: #6b7280;
-  --theme-text-muted: #9ca3af;
-  --theme-border: #e5e7eb;
-  --theme-border-hover: #d1d5db;
-  --theme-shadow: rgba(0, 0, 0, 0.1);
-  --theme-overlay: rgba(0, 0, 0, 0.5);
+  --theme-background: #000000;
+  --theme-background-secondary: #1a1a1a;
+  --theme-surface: #0f0f0f;
+  --theme-text: #ffffff;
+  --theme-text-secondary: #cccccc;
+  --theme-text-muted: #999999;
+  --theme-border: #333333;
+  --theme-border-hover: #555555;
+  --theme-shadow: rgba(0, 0, 0, 0.5);
+  --theme-overlay: rgba(0, 0, 0, 0.8);
+  
+  /* 시스템 색상 */
+  --theme-danger: #ef4444;
+  --theme-danger-hover: #dc2626;
+  --theme-danger-light: rgba(239, 68, 68, 0.2);
+  
+  --theme-info: #3b82f6;
+  --theme-info-hover: #2563eb;
+  --theme-info-light: rgba(59, 130, 246, 0.2);
+  
+  --theme-warning: #f59e0b;
+  --theme-warning-hover: #d97706;
+  --theme-warning-light: rgba(245, 158, 11, 0.2);
+  
+  --theme-success: #10b981;
+  --theme-success-hover: #059669;
+  --theme-success-light: rgba(16, 185, 129, 0.2);
 }
 
 /* 전역 테마 적용 */
+html {
+  background-color: var(--theme-background) !important;
+  color: var(--theme-text) !important;
+}
+
 body {
-  background-color: var(--theme-background);
-  color: var(--theme-text);
+  background-color: var(--theme-background) !important;
+  color: var(--theme-text) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 루트 엘리먼트에 강제 테마 적용 */
+#root {
+  background-color: var(--theme-background) !important;
+  color: var(--theme-text) !important;
+  min-height: 100vh;
+}
+
+/* 모든 div, section 등에 기본 테마 적용 */
+div, section, header, main, nav, aside, article, footer {
+  background-color: inherit;
+  color: inherit;
+}
+
+/* 모든 텍스트 요소에 테마 색상 적용 */
+h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select {
+  color: inherit;
 }
 
 /* 테마 변수를 사용하는 공통 스타일 */
 .theme-primary {
   color: var(--theme-primary) !important;
+}
+
+/* 모든 배경색에 테마 적용 */
+[class*="background"], [class*="bg-"] {
+  background-color: var(--theme-background);
+}
+
+[class*="surface"] {
+  background-color: var(--theme-surface);
+}
+
+/* 버튼 기본 스타일 */
+button {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+}
+
+button:hover {
+  background-color: var(--theme-background-secondary);
+  border-color: var(--theme-primary);
+}
+
+/* 입력 필드 기본 스타일 */
+input, textarea, select {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--theme-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .theme-primary-bg {
@@ -171,6 +252,39 @@ body {
 .theme-nav-item.active {
   color: var(--theme-primary);
   background-color: var(--theme-primary-light);
+}
+
+/* 네비게이션 메뉴 강제 테마 적용 */
+[class*="navItem"] {
+  color: var(--theme-text-secondary) !important;
+  background-color: transparent !important;
+}
+
+[class*="navItem"]:hover {
+  color: var(--theme-text) !important;
+  background-color: var(--theme-background-secondary) !important;
+}
+
+[class*="navItem"].active,
+[class*="navItem"][class*="active"] {
+  color: var(--theme-primary) !important;
+  background-color: var(--theme-primary-light) !important;
+}
+
+/* 사이드바 전체에 테마 강제 적용 */
+[class*="sidebar"] {
+  background-color: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+}
+
+[class*="sidebar"] * {
+  color: inherit;
+}
+
+/* 메인 콘텐츠 영역 테마 강제 적용 */
+[class*="main"] {
+  background-color: var(--theme-background-secondary) !important;
+  color: var(--theme-text) !important;
 }
 
 /* 스크롤바 테마 (웹킷 기반 브라우저) */

@@ -48,8 +48,9 @@
 }
 
 .projectName {
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 600;
   color: var(--theme-text);
   line-height: 40px; /* 햄버거 버튼 높이와 맞춤 */
   display: flex;
@@ -58,6 +59,10 @@
   padding: 0;
   background: none;
   border: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .clickableProjectName {
@@ -85,6 +90,39 @@
 .logo img {
   height: 100%;
   width: auto;
+}
+
+/* 프로젝트/디자인 파일 정보 스타일 */
+.projectInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.separator {
+  color: var(--theme-text-secondary);
+  font-size: 16px;
+  opacity: 0.5;
+}
+
+.designFileName {
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clickableDesignName:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 .title {
@@ -300,19 +338,36 @@
   position: relative;
 }
 
-.fileDropdown {
+/* 드롭다운과 버튼 사이의 연결 영역 */
+.fileMenuContainer::before {
+  content: '';
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 4px;
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
+  right: 0;
+  height: 8px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.fileMenuContainer:hover::before {
+  pointer-events: auto;
+}
+
+.fileDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e0e0e0);
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   z-index: 1000;
   min-width: 180px;
   overflow: hidden;
   animation: dropdownFadeIn 0.15s ease-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .dropdownItem {
@@ -321,20 +376,22 @@
   gap: 8px;
   width: 100%;
   padding: 12px 16px;
-  background: none;
+  background: transparent;
   border: none;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 400;
-  color: var(--theme-text);
+  color: var(--theme-text, #333333);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
+  opacity: 1;
 }
 
 .dropdownItem:hover {
-  background: var(--theme-background-secondary);
-  color: var(--theme-text);
+  background: var(--theme-background-secondary, rgba(0, 0, 0, 0.05));
+  color: var(--theme-text, #333333);
+  opacity: 1;
 }
 
 .dropdownItem:first-child {
@@ -359,6 +416,22 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 다크 모드 지원 */
+[data-theme="dark"] .fileDropdown {
+  background: var(--theme-surface, #2a2a2a);
+  border-color: var(--theme-border, #404040);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .dropdownItem {
+  color: var(--theme-text, #ffffff);
+}
+
+[data-theme="dark"] .dropdownItem:hover {
+  background: var(--theme-background-secondary, rgba(255, 255, 255, 0.1));
+  color: var(--theme-text, #ffffff);
 }
 
 /* 반응형 디자인 */

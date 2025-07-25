@@ -256,6 +256,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          isDragging={isDragging}
         />
       )}
     </BaseFurnitureShell>

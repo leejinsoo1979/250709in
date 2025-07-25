@@ -21,6 +21,37 @@ const getFurnitureImagePath = (moduleId: string) => {
 };
 
 const PlacedModulePropertiesPanel: React.FC = () => {
+  // 컴포넌트 마운트 시 스타일 강제 적용
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .furniture-depth-input,
+      input.furniture-depth-input,
+      .${styles.depthInput} {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background-color: #ffffff !important;
+        opacity: 1 !important;
+      }
+      .furniture-depth-input:focus,
+      input.furniture-depth-input:focus,
+      .${styles.depthInput}:focus {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background-color: #ffffff !important;
+      }
+      /* 모든 가구 편집 패널 input */
+      .${styles.panel} input {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
@@ -263,17 +294,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           
           {/* 깊이 설정 */}
           <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}></h5>
+            <h5 className={styles.sectionTitle}>깊이 설정</h5>
             <div className={styles.depthInputWrapper}>
               <div className={styles.inputWithUnit}>
                 <input
-                  type="text"
+                  type="number"
                   value={depthInputValue}
                   onChange={(e) => handleDepthInputChange(e.target.value)}
                   onBlur={handleDepthInputBlur}
                   onKeyDown={handleDepthKeyDown}
-                  className={`${styles.depthInput} ${depthError ? styles.inputError : ''}`}
+                  className={`${styles.depthInput} furniture-depth-input ${depthError ? styles.inputError : ''}`}
                   placeholder={`${FURNITURE_LIMITS.DEPTH.MIN}-${FURNITURE_LIMITS.DEPTH.MAX}`}
+                  style={{
+                    color: '#000000',
+                    backgroundColor: '#ffffff',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1
+                  }}
                 />
                 <span className={styles.unit}>mm</span>
               </div>
@@ -334,14 +371,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 삭제 버튼 */}
-          <div className={styles.deleteSection}>
-            <button 
-              className={styles.deleteButton}
-              onClick={handleDeleteClick}
-            >
-              삭제
-            </button>
-          </div>
+          <button 
+            className={styles.deleteButton}
+            onClick={handleDeleteClick}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            삭제
+          </button>
 
           {/* 확인/취소 버튼 */}
           <div className={styles.confirmButtons}>

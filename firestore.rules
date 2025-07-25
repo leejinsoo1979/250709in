@@ -1,26 +1,125 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 인증된 사용자만 자신의 프로젝트에 접근 가능
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isProjectOwner(projectId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid;
+    }
+    
+    function hasProjectAccess(projectId) {
+      return isAuthenticated() && (
+        isProjectOwner(projectId) ||
+        exists(/databases/$(database)/documents/projectShares/$(projectId + '_' + request.auth.uid))
+      );
+    }
+    
+    function isTeamMember(teamId) {
+      let membership = get(/databases/$(database)/documents/teams/$(teamId)).data.members;
+      return isAuthenticated() && 
+        request.auth.uid in membership.map(m => m.userId);
+    }
+    
+    function isTeamAdmin(teamId) {
+      let team = get(/databases/$(database)/documents/teams/$(teamId)).data;
+      let member = team.members[team.members.map(m => m.userId).indexOf(request.auth.uid)];
+      return isAuthenticated() && 
+        (team.ownerId == request.auth.uid || 
+         (member != null && member.role in ['owner', 'admin']));
+    }
+    
+    // Projects
     match /projects/{projectId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read: if isAuthenticated() && (
+        isOwner(resource.data.userId) || 
+        hasProjectAccess(projectId) ||
+        resource.data.isPublic == true
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if hasProjectAccess(projectId);
+      allow delete: if isOwner(resource.data.userId);
     }
     
-    // 사용자별 프로젝트 목록 접근
-    match /users/{userId}/projects/{projectId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Design Files (Rooms)
+    match /designFiles/{fileId} {
+      allow read: if hasProjectAccess(resource.data.projectId);
+      allow create: if hasProjectAccess(request.resource.data.projectId);
+      allow update, delete: if hasProjectAccess(resource.data.projectId);
     }
     
-    // 테스트용 문서 (개발 중에만 사용)
-    match /test/{document} {
-      allow read, write: if request.auth != null;
+    // Project Folders
+    match /projectFolders/{folderId} {
+      allow read: if hasProjectAccess(resource.data.projectId);
+      allow create: if hasProjectAccess(request.resource.data.projectId);
+      allow update, delete: if hasProjectAccess(resource.data.projectId);
     }
     
-    // 공개 테스트 문서
-    match /public/{document} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // Teams
+    match /teams/{teamId} {
+      allow read: if isTeamMember(teamId);
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid;
+      allow update: if isTeamAdmin(teamId);
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+    
+    // Team Invitations
+    match /teamInvitations/{invitationId} {
+      allow read: if isAuthenticated() && (
+        isTeamAdmin(resource.data.teamId) ||
+        resource.data.inviteeEmail == request.auth.email
+      );
+      allow create: if isTeamAdmin(request.resource.data.teamId);
+      allow update: if isAuthenticated() && 
+        resource.data.inviteeEmail == request.auth.email &&
+        request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if isTeamAdmin(resource.data.teamId);
+    }
+    
+    // Project Shares
+    match /projectShares/{shareId} {
+      allow read: if isAuthenticated() && (
+        isProjectOwner(resource.data.projectId) ||
+        resource.data.sharedWith == request.auth.uid
+      );
+      allow create: if isProjectOwner(request.resource.data.projectId);
+      allow update: if isProjectOwner(resource.data.projectId) ||
+        (resource.data.sharedWith == request.auth.uid && 
+         request.resource.data.isActive == false);
+      allow delete: if isProjectOwner(resource.data.projectId);
+    }
+    
+    // Project Bookmarks
+    match /projectBookmarks/{bookmarkId} {
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // User Profiles
+    match /userProfiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if false; // Prevent accidental deletion
+    }
+    
+    // Activity Logs (read-only for users)
+    match /activityLogs/{logId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        (resource.data.resourceType == 'project' && 
+         hasProjectAccess(resource.data.resourceId))
+      );
+      allow write: if false; // Only server-side writes
     }
   }
-} 
+}

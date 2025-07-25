@@ -1,13 +1,14 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { ProjectSummary } from '@/firebase/types';
 
 /**
  * 2D/3D 뷰어에서 사용되는 공통 props 인터페이스
  */
 export interface ViewerBaseProps {
   /** 공간 정보 */
-  spaceInfo: SpaceInfo;
+  spaceInfo?: SpaceInfo;
   /** SVG 크기 정보 */
-  svgSize: { width: number; height: number };
+  svgSize?: { width: number; height: number };
   /** 뷰 모드 (2D 또는 3D) */
   viewMode?: '2D' | '3D';
 }
@@ -22,6 +23,10 @@ export interface Space3DViewProps extends ViewerBaseProps {
   renderMode?: 'solid' | 'wireframe';
   /** 가이드 표시 여부 */
   showAll?: boolean;
+  /** 뷰어 전용 모드 여부 */
+  isViewerOnly?: boolean;
+  /** 프로젝트 데이터 (뷰어 모드용) */
+  project?: ProjectSummary;
 }
 
 /**

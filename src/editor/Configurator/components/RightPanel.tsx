@@ -495,9 +495,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
   ];
 
   const installTypes = [
-    { id: 'builtin', label: '빌트인' },
-    { id: 'semistanding', label: '세미스탠딩' },
-    { id: 'freestanding', label: '프리스탠딩' }
+    { id: 'builtin', label: '양쪽벽' },
+    { id: 'semistanding', label: '한쪽벽' },
+    { id: 'freestanding', label: '벽없음' }
   ];
 
   const materialOptions = [

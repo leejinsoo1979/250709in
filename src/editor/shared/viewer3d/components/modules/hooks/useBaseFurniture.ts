@@ -73,7 +73,7 @@ export const useBaseFurniture = (
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const materialConfig = storeSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
-    doorColor: '#FFFFFF' 
+    doorColor: '#E0E0E0' // Changed default from #FFFFFF to light gray
   };
   
   // 모듈 설정 데이터 가져오기

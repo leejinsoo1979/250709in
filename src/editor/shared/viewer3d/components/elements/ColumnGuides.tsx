@@ -2,6 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../utils/geometry';
@@ -13,6 +14,7 @@ import ColumnDropTarget from './ColumnDropTarget';
  */
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
+  const { viewMode, showDimensions } = useUIStore();
   const { theme } = useTheme();
   
   // 인덱싱 계산
@@ -41,8 +43,10 @@ const ColumnGuides: React.FC = () => {
     return fallback;
   };
 
-  // 테마 기반 가이드 라인 색상
-  const guideColor = getThemeColorFromCSS('--theme-primary', '#10b981');
+  // 테마 기반 가이드 라인 색상 - 2D/3D 모두 동일한 색상 사용
+  const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
+  const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
+  const lineWidth = viewMode === '2D' ? 0.5 : 1; // 2D 모드: 더 얇은 선
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
   // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
@@ -67,7 +71,7 @@ const ColumnGuides: React.FC = () => {
           new THREE.Vector3(threeUnitBoundaries[threeUnitBoundaries.length - 1], floorY, backZ)
         ]}
         color={guideColor}
-        lineWidth={1}
+        lineWidth={lineWidth}
         dashed
         dashSize={0.2}
         gapSize={0.1}
@@ -80,7 +84,7 @@ const ColumnGuides: React.FC = () => {
           new THREE.Vector3(threeUnitBoundaries[threeUnitBoundaries.length - 1], ceilingY, backZ)
         ]}
         color={guideColor}
-        lineWidth={1}
+        lineWidth={lineWidth}
         dashed
         dashSize={0.2}
         gapSize={0.1}
@@ -97,7 +101,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, ceilingY, backZ)
             ]}
             color={guideColor}
-            lineWidth={1}
+            lineWidth={lineWidth}
             dashed
             dashSize={0.2}
             gapSize={0.1}
@@ -110,7 +114,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, floorY, backZ + mmToThreeUnits(700))
             ]}
             color={guideColor}
-            lineWidth={1}
+            lineWidth={lineWidth}
             dashed
             dashSize={0.2}
             gapSize={0.1}
@@ -123,7 +127,7 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, ceilingY, backZ + mmToThreeUnits(700))
             ]}
             color={guideColor}
-            lineWidth={1}
+            lineWidth={lineWidth}
             dashed
             dashSize={0.2}
             gapSize={0.1}

@@ -1,5 +1,9 @@
 .projectCard {
-  background: var(--theme-surface, #ffffff);
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.05) 0%, 
+    rgba(16, 185, 129, 0.02) 50%, 
+    var(--theme-surface, #ffffff) 100%
+  );
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -52,6 +56,30 @@
   justify-content: center;
 }
 
+.thumbnail::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    var(--theme-primary, #10b981) 0%,
+    rgba(16, 185, 129, 0.6) 40%,
+    rgba(16, 185, 129, 0.3) 70%,
+    transparent 100%
+  );
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity var(--transition-normal);
+}
+
+.projectCard:hover .thumbnail::after {
+  opacity: 0.9;
+}
+
 .list .thumbnail {
   width: 68px;
   height: 68px;
@@ -59,10 +87,16 @@
   flex-shrink: 0;
 }
 
+.list .thumbnail::after {
+  border-radius: var(--radius-md);
+}
+
 .thumbnailImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: relative;
+  z-index: 0;
 }
 
 .placeholderThumbnail {
@@ -73,6 +107,8 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  position: relative;
+  z-index: 0;
 }
 
 .projectInfo {

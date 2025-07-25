@@ -43,12 +43,12 @@ export const END_PANEL_THICKNESS = 18;
  * 바닥재가 있는 경우 실제 공간 높이는 전체 높이에서 바닥재 두께를 뺀 값
  */
 export const calculateRoomDimensions = (spaceInfo: SpaceInfo) => {
-  const width = spaceInfo.width;
+  const width = spaceInfo.width || 3600; // 기본값 3600mm
   // 바닥재가 있는 경우 실제 공간 높이 = 전체 높이 - 바닥재 두께
   const height = spaceInfo.hasFloorFinish 
-    ? spaceInfo.height - (spaceInfo.floorFinish?.height || 0)
-    : spaceInfo.height;
-  const depth = spaceInfo.depth; // 설정된 깊이 그대로 사용 (백패널은 별도)
+    ? (spaceInfo.height || 2400) - (spaceInfo.floorFinish?.height || 0)
+    : (spaceInfo.height || 2400);
+  const depth = spaceInfo.depth || 1500; // 기본값 1500mm
   
   return {
     width,
@@ -87,7 +87,7 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   internalHeight -= baseFrameHeight;
   
   // 내경 깊이 = 설정된 공간 깊이 그대로 (백패널은 별도 구조물)
-  const internalDepth = spaceInfo.depth;
+  const internalDepth = spaceInfo.depth || 1500; // 기본값 1500mm
   
   // 시작 위치 계산 (X 좌표)
   let startX;
@@ -133,16 +133,36 @@ export const calculatePanelDepth = (spaceInfo?: SpaceInfo) => {
     return PANEL_DEPTH;
   }
   
-  // 사용자 설정 깊이를 그대로 사용 (최소값 제한 제거)
-  return spaceInfo.depth;
+  // 사용자 설정 깊이를 사용하되, undefined인 경우 기본값 1500 사용
+  return spaceInfo.depth || 1500;
 };
 
 /**
- * 가구/프레임 배치용 깊이 계산 (600mm 고정)
- * 가구와 프레임들은 600mm 공간 기준으로 배치
+ * 가구/프레임 배치용 깊이 계산
+ * 배치된 가구 중 가장 깊은 가구의 깊이를 반환
+ * 가구가 없으면 기본값 600mm 반환
  */
-export const calculateFurnitureDepth = () => {
-  return 600; // 가구 공간 깊이 고정값
+export const calculateFurnitureDepth = (placedModules?: any[]) => {
+  if (!placedModules || placedModules.length === 0) {
+    return 600; // 기본 가구 깊이
+  }
+  
+  // 동적 import를 피하기 위해 직접 깊이 확인
+  let maxDepth = 600;
+  
+  placedModules.forEach(module => {
+    // customDepth가 있으면 우선 사용
+    if (module.customDepth && module.customDepth > maxDepth) {
+      maxDepth = module.customDepth;
+    }
+    // 스타일러는 660mm 깊이
+    else if (module.moduleId && module.moduleId.includes('styler')) {
+      maxDepth = Math.max(maxDepth, 660);
+    }
+    // 기타 특수 가구 깊이 처리 가능
+  });
+  
+  return maxDepth;
 };
 
 /**

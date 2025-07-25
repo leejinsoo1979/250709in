@@ -495,8 +495,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           intrusionFromEdge = (slotRightX - slotLeftX) * 1000; // 전체 슬롯 폭
         }
         
-        // 슬롯 끝에서 150mm 미만 침범이면 기둥A 방식 사용
-        shouldUseDeepColumnLogic = intrusionFromEdge < 150;
+        // 항상 기둥A 방식 사용 (가구 폭 조정)
+        shouldUseDeepColumnLogic = true;
         
         console.log('🏛️ 배치 시 기둥C 침범량 분석:', {
           slotIndex,
@@ -506,29 +506,25 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         });
       }
       
-      if (shouldUseDeepColumnLogic || columnDepth >= 500) {
-        // 깊은 기둥 또는 기둥C 얕은 침범: 위치와 크기 조정
-        console.log('🏛️ 기둥A 방식 적용 - 위치 조정');
-        const slotWidthM = indexing.columnWidth * 0.01;
-        const originalSlotBounds = {
-          left: finalX - slotWidthM / 2,
-          right: finalX + slotWidthM / 2,
-          center: finalX
-        };
-        
-        const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
-        finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
-        adjustedFurnitureWidth = furnitureBounds.renderWidth;
-      } else {
-        // 얕은 기둥 (기둥C 깊은 침범 포함): 위치 조정하지 않음
-        console.log('✅ 기둥C 방식 적용 - 중앙 배치, 위치 조정 안함:', {
-          slotIndex,
-          columnDepth,
-          originalPosition: finalPosition,
-          skipPositionAdjustment: true
-        });
-        // finalPosition과 adjustedFurnitureWidth 그대로 유지
+      // 모든 기둥에 대해 위치와 크기 조정 적용
+      console.log('🏛️ 기둥 침범 시 위치와 폭 조정');
+      const slotWidthM = indexing.columnWidth * 0.01;
+      const originalSlotBounds = {
+        left: finalX - slotWidthM / 2,
+        right: finalX + slotWidthM / 2,
+        center: finalX
+      };
+      
+      const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+      
+      // 남은 공간이 150mm 미만이면 배치 불가
+      if (furnitureBounds.renderWidth < 150) {
+        console.error('❌ 기둥 침범으로 남은 공간이 150mm 미만:', furnitureBounds.renderWidth);
+        return;
       }
+      
+      finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
+      adjustedFurnitureWidth = furnitureBounds.renderWidth;
     }
     
     // 새 모듈 배치

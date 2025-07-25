@@ -205,9 +205,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
 interface ModuleGalleryProps {
   moduleCategory?: 'tall' | 'lower';
+  lowerSubCategory?: 'lower' | 'upper';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', lowerSubCategory = 'lower' }) => {
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
@@ -352,7 +353,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
         ) : (
           <div className={styles.emptyMessage}>
             {moduleCategory === 'lower' 
-              ? '하부장 모듈은 아직 준비 중입니다' 
+              ? `${lowerSubCategory === 'lower' ? '하부장' : '상부장'} 모듈은 아직 준비 중입니다` 
               : '이 유형에 맞는 가구가 없습니다'}
           </div>
         )}

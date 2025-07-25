@@ -7,11 +7,11 @@
 /* 탭 메뉴 */
 .tabMenu {
   display: flex;
-  gap: 0;
   margin-bottom: 16px;
-  background-color: var(--theme-background-secondary);
-  padding: 2px;
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
+  overflow: hidden;
+  background: var(--theme-surface, #ffffff);
 }
 
 .tabButton {
@@ -37,39 +37,37 @@
   align-items: center;
   justify-content: center;
   padding: 8px 0;
-  border: 1px solid var(--theme-primary);
-  background: var(--theme-surface);
+  background: var(--theme-surface, #ffffff);
+  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--theme-primary);
+  color: var(--theme-text, #374151);
   font-size: 12px;
   font-weight: 500;
   gap: 0;
   white-space: nowrap;
+  position: relative;
+  min-height: 32px;
 }
 
-.tab:first-child {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-  border-right: none;
+.tab:not(:last-child) {
+  border-right: 1px solid var(--theme-border);
 }
 
-.tab:last-child {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  border-left: none;
-}
-
-.tab:hover:not(.activeTab) {
-  background-color: #f0f9ff;
+.tab:hover {
+  background: var(--theme-background-secondary, #f9fafb);
+  color: var(--theme-text, #1f2937);
 }
 
 .activeTab {
-  background-color: var(--theme-primary);
-  color: var(--theme-surface);
+  background: var(--theme-primary, #10b981);
+  color: #ffffff !important;
   font-weight: 600;
-  font-size: 12px;
-  white-space: nowrap;
+}
+
+.activeTab:hover {
+  background: var(--theme-primary-hover, #059669);
+  color: #ffffff !important;
 }
 
 /* 썸네일 그리드 (4열로 변경해서 크기 대폭 축소) */

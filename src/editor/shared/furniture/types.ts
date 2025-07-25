@@ -29,6 +29,7 @@ export interface PlacedModule {
   // 사용자 정의 속성들
   customDepth?: number; // 사용자가 선택한 깊이 (mm)
   adjustedWidth?: number; // 기둥 침범으로 조정된 폭 (mm)
+  adjustedPosition?: { x: number; y: number; z: number }; // 기둥 침범으로 조정된 위치
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: 'right')
   
   // 공간 변경 시 가구 보존을 위한 추가 속성들

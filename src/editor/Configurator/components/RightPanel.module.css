@@ -423,7 +423,7 @@
 
 .toggleButton.active {
   background: var(--theme-primary);
-  color: var(--theme-surface);
+  color: white;
 }
 
 .toggleButton:hover:not(.active) {

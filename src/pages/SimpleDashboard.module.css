@@ -2,29 +2,82 @@
   display: flex;
   height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple SD Gothic Neo', sans-serif;
-  background: var(--theme-background-secondary, #f9fafb);
-  color: var(--theme-text, #111827);
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-text) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 배경 그라데이션 효과 */
+.dashboard::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 20% 50%,
+    var(--theme-primary-light) 0%,
+    transparent 30%
+  );
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(30px, -30px) rotate(120deg); }
+  66% { transform: translate(-20px, 20px) rotate(240deg); }
 }
 
 /* 좌측 사이드바 */
 .sidebar {
   width: 255px;
-  background: var(--theme-surface, #ffffff);
-  border-right: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface) !important;
+  border-right: 1px solid var(--theme-border) !important;
   display: flex;
   flex-direction: column;
   position: relative;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 /* 로고 영역 */
 .logoSection {
   height: 65px;
-  background: var(--theme-surface, #ffffff);
-  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface) !important;
+  border-bottom: 1px solid var(--theme-border) !important;
   display: flex;
   align-items: center;
   padding: 0 24px;
   gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.logoSection::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--theme-primary),
+    transparent
+  );
+  opacity: 0.3;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .logo {
@@ -41,7 +94,7 @@
 .logoIcon {
   width: 24px;
   height: 24px;
-  background: var(--theme-primary, #10b981);
+  background: var(--theme-primary) !important;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -53,26 +106,30 @@
 
 /* 사용자 프로필 영역 */
 .profileSection {
-  padding: 24px;
-  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  height: 65px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--theme-border) !important;
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .userInfo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  flex: 1;
 }
 
 .userAvatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary) !important;
   font-weight: 500;
   font-size: 16px;
 }
@@ -84,13 +141,13 @@
 .userName {
   font-size: 14px;
   font-weight: 500;
-  color: var(--theme-text, #111827);
+  color: var(--theme-text) !important;
   margin-bottom: 2px;
 }
 
 .userEmail {
   font-size: 12px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary) !important;
 }
 
 /* 프로젝트 생성 섹션 */
@@ -101,8 +158,8 @@
 .createProjectBtn {
   width: 100%;
   padding: 12px 16px;
-  background: var(--theme-primary, #10b981);
-  color: white;
+  background: var(--theme-primary) !important;
+  color: white !important;
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -116,7 +173,7 @@
 }
 
 .createProjectBtn:hover {
-  background: var(--theme-primary-hover, var(--theme-primary-hover, #059669));
+  background: var(--theme-primary-hover) !important;
 }
 
 /* 네비게이션 메뉴 */
@@ -130,24 +187,57 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
+  padding: 10px 18px;
   margin: 0 16px 4px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary) !important;
+  background: transparent !important;
   font-size: 14px;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
+}
+
+.navItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--theme-primary), transparent);
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: all 0.4s ease;
 }
 
 .navItem:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
-  color: var(--theme-text, #374151);
+  background: var(--theme-background-secondary) !important;
+  color: var(--theme-text) !important;
+  transform: translateX(4px);
+}
+
+.navItem:hover::before {
+  opacity: 0.08;
+  transform: translateX(0);
 }
 
 .navItem.active {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light) !important;
+  color: var(--theme-primary) !important;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1.5px var(--theme-primary-light);
+}
+
+.navItem.active::before {
+  opacity: 0.15;
+  transform: translateX(0);
+}
+
+.navItem.active .navItemIcon {
+  color: var(--theme-primary);
 }
 
 .navItemIcon {
@@ -159,20 +249,31 @@
 }
 
 .navItemCount {
-  background: var(--theme-border, #e5e5e5);
-  color: var(--theme-text-secondary, #6b7280);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 11px;
   font-weight: 700;
   margin-left: auto;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover .navItemCount {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+}
+
+.navItem.active .navItemCount {
+  background: var(--theme-primary);
+  color: white;
 }
 
 /* 하단 설정 메뉴 */
 .settingsSection {
   margin-top: auto;
   padding: 16px;
-  border-top: 1px solid var(--theme-border, #e5e5e5);
+  border-top: 1px solid var(--theme-border);
 }
 
 .settingsItem {
@@ -182,14 +283,14 @@
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 14px;
   transition: background-color 0.2s;
 }
 
 .settingsItem:hover {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, var(--theme-primary-light));
+  color: var(--theme-primary);
 }
 
 /* 메인 콘텐츠 */
@@ -197,7 +298,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--theme-background-secondary, #f9fafb);
+  background: var(--theme-background-secondary) !important;
 }
 
 /* 상단 헤더 */
@@ -205,7 +306,7 @@
   height: 65px;
   background: var(--theme-surface, rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  border-bottom: 1px solid var(--theme-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -221,7 +322,7 @@
 
 .breadcrumb {
   font-size: 14px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-weight: 400;
   display: flex;
   align-items: center;
@@ -233,16 +334,16 @@
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
 }
 
 .breadcrumbItem:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
-  color: var(--theme-text, #374151);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 .breadcrumbItem.active {
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary);
   font-weight: 500;
   cursor: default;
 }
@@ -265,18 +366,18 @@
 .searchInput {
   width: 100%;
   padding: 10px 16px 10px 40px;
-  border: 1px solid var(--theme-border, #e5e5e5);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: var(--theme-background-secondary, #f5f5f5);
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
 }
 
 .searchInput:focus {
-  border-color: var(--theme-primary, #10b981);
-  background: var(--theme-surface, #ffffff);
+  border-color: var(--theme-primary);
+  background: var(--theme-surface);
 }
 
 .searchIcon {
@@ -293,6 +394,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto;
 }
 
 .headerActions {
@@ -311,13 +413,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   transition: background-color 0.2s;
 }
 
 .actionButton:hover {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, var(--theme-primary-light));
+  color: var(--theme-primary);
 }
 
 .userProfile {
@@ -325,32 +427,32 @@
   align-items: center;
   gap: 8px;
   padding: 4px 8px;
-  border: 1px solid var(--theme-primary, #10b981);
+  border: 1px solid var(--theme-primary);
   border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .userProfile:hover {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
+  background: var(--theme-primary-light, var(--theme-primary-light));
 }
 
 .userProfileAvatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 14px;
   font-weight: 500;
 }
 
 .userProfileName {
   font-size: 14px;
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
   font-weight: 500;
 }
 
@@ -364,8 +466,8 @@
 /* 프로젝트 트리 */
 .projectTree {
   width: 290px;
-  background: var(--theme-surface, #ffffff);
-  border-right: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface);
+  border-right: 1px solid var(--theme-border);
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, margin-left 0.3s ease;
@@ -379,13 +481,13 @@
 }
 
 .treeHeader {
-  height: 60px;
-  background: var(--theme-surface, #ffffff);
-  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  height: 50px;
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 8px;
+  padding: 0 8px;
+  gap: 4px;
 }
 
 .treeToggleButton {
@@ -393,12 +495,12 @@
   left: 545px; /* 255px (sidebar) + 290px (tree) */
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 40px;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-border, #e5e5e5);
+  width: 16px;
+  height: 28px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-left: none;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 3px 3px 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -408,11 +510,11 @@
 }
 
 .treeToggleButton:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
 }
 
 .toggleIcon {
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 12px;
   transition: transform 0.3s ease;
   display: inline-block;
@@ -424,15 +526,25 @@
 
 .projectTree.collapsed .treeToggleButton {
   left: 255px;
-  width: 30px;
-  background: var(--theme-primary, #10b981);
+  width: 20px;
+  height: 28px;
+  background: var(--theme-primary);
   color: white;
-  border-color: var(--theme-primary, #10b981);
-  border-radius: 0 8px 8px 0;
+  border-color: var(--theme-primary);
+  border-radius: 0 5px 5px 0;
 }
 
 .projectTree.collapsed .toggleIcon {
   color: white;
+}
+
+/* 모든 프로젝트 외의 메뉴에서는 토글 버튼 숨김 */
+.dashboard[data-menu="bookmarks"] .treeToggleButton,
+.dashboard[data-menu="shared"] .treeToggleButton,
+.dashboard[data-menu="profile"] .treeToggleButton,
+.dashboard[data-menu="team"] .treeToggleButton,
+.dashboard[data-menu="trash"] .treeToggleButton {
+  display: none;
 }
 
 .projectTree.collapsed .projectSelectorContainer,
@@ -447,16 +559,17 @@
   position: relative;
   width: 100%;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  padding: 0 8px;
 }
 
 .projectSelector {
   width: 100%;
   padding: 8px 12px;
   padding-right: 30px;
-  border: 1px solid var(--theme-border, #e5e5e5);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
-  background: var(--theme-surface, #ffffff);
-  color: var(--theme-text, #111827);
+  background: var(--theme-surface);
+  color: var(--theme-text);
   font-size: 14px;
   outline: none;
   cursor: pointer;
@@ -468,7 +581,7 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 10px;
   pointer-events: none;
   transition: transform 0.2s;
@@ -492,7 +605,7 @@
 .treeContent {
   flex: 1;
   padding: 16px;
-  overflow-y: auto;
+  /* overflow-y: auto; 제거하여 중복 스크롤 방지 */
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
@@ -505,17 +618,17 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   transition: background-color 0.2s;
 }
 
 .treeItem:hover {
-  background: var(--theme-background-secondary, #f9fafb);
+  background: var(--theme-surface, #ffffff) !important;
 }
 
 .treeItem.active {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, var(--theme-primary-light));
+  color: var(--theme-primary);
 }
 
 .treeItemIcon {
@@ -527,7 +640,7 @@
 }
 
 .treeItemCount {
-  background: var(--theme-border, #e5e5e5);
+  background: var(--theme-border);
   color: var(--theme-text);
   padding: 2px 8px;
   border-radius: 12px;
@@ -567,14 +680,14 @@
 }
 
 .createFolderIcon svg:first-child {
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
 }
 
 .createFolderIcon svg:last-child {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: var(--theme-primary, #10b981);
+  background: var(--theme-primary);
   border-radius: 50%;
   padding: 1px;
   color: white;
@@ -583,12 +696,8 @@
 /* 트리 아이템 액션 버튼 */
 .treeItemActions {
   margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.treeItem:hover .treeItemActions {
   opacity: 1;
+  transition: opacity 0.2s;
 }
 
 .treeItemActionBtn {
@@ -601,35 +710,93 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 14px;
   font-weight: 700;
   transition: all 0.2s;
 }
 
 .treeItemActionBtn:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
-  color: var(--theme-text, #374151);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 /* 디자인 아이콘 */
 .designIcon {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--theme-primary, #10b981);
+  background: var(--theme-primary);
   border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-primary, #10b981);
+  color: white;
   font-size: 10px;
   font-weight: bold;
 }
 
-/* 폴더 카드 */
-.folderCard {
-  border: 2px solid var(--theme-primary, #10b981);
+.designIcon svg {
+  width: 12px;
+  height: 12px;
+  color: white;
 }
+
+/* 프로젝트 내부 뷰에서 폴더와 디자인 카드 통일 */
+.designGrid:not(.folderView):not(.listView) .designCard.folderCard,
+.designGrid.folderView:not(.listView) .designCard {
+  height: 320px !important;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.designGrid:not(.folderView):not(.listView) .designCard.folderCard:hover,
+.designGrid.folderView:not(.listView) .designCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: var(--theme-primary, #10b981);
+}
+
+/* 폴더 카드의 아이콘 영역 - 카드 상단 200px */
+.folderIcon {
+  width: 100%;
+  height: 200px;
+  background: var(--theme-background-secondary, #f8f9fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.folderIconSvg {
+  width: 120px;
+  height: 120px;
+  opacity: 0.9;
+}
+
+.folderContent {
+  padding: 0 20px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.folderTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+/* 모든 folder 관련 스타일 제거 - cardInfo로 통합 */
 
 .folderDropZone {
   position: relative;
@@ -637,14 +804,14 @@
 }
 
 .folderDropZone.dragOver {
-  background: var(--theme-primary-light, var(--theme-primary-light, rgba(16, 185, 129, 0.1)));
-  border: 2px dashed var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, var(--theme-primary-light));
+  border: 2px dashed var(--theme-primary);
 }
 
 /* 폴더 자식 아이템 */
 .folderChildren {
   margin-left: 20px;
-  border-left: 1px solid var(--theme-border, #e5e5e5);
+  border-left: 1px solid var(--theme-border);
   padding-left: 8px;
 }
 
@@ -652,6 +819,13 @@
   font-size: 13px;
   padding: 6px 12px;
   margin-bottom: 2px;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.childItem:hover {
+  background: var(--theme-background-secondary);
+  border-radius: 4px;
 }
 
 /* 드래그 중인 카드 */
@@ -663,16 +837,155 @@
   cursor: grabbing;
 }
 
+/* 디자인 카드 체크박스 */
+.cardCheckbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  background: transparent;
+  border-radius: 4px;
+  padding: 6px;
+  transition: all 0.2s ease;
+}
+
+.cardCheckbox:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cardCheckbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--theme-primary, #10b981);
+  border-radius: 3px;
+  background: transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.cardCheckbox input[type="checkbox"]:checked {
+  background: var(--theme-primary, #10b981);
+  border-color: var(--theme-primary, #10b981);
+}
+
+.cardCheckbox input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.cardCheckbox input[type="checkbox"]:hover {
+  border-color: var(--theme-primary-hover, #059669);
+}
+
+/* 리스트 뷰에서 체크박스 위치 조정 */
+.designGrid.listView .cardCheckbox {
+  position: static;
+  top: auto;
+  left: auto;
+  grid-column: 1;
+  grid-row: 1;
+  background: transparent;
+  padding: 0;
+  margin-right: 8px;
+  justify-self: start;
+  align-self: center;
+}
+
+.designGrid.listView .cardCheckbox:hover {
+  background: transparent;
+}
+
+/* 디자인 카드 호버 오버레이 */
+.designCardOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 10;
+  border-radius: 0;
+}
+
+/* 오버레이는 폴더 뷰의 디자인 카드에만 적용 */
+.designGrid.folderView .designCard:not(.folderCard):not(.newDesign):hover .designCardOverlay,
+.designCard.forceHover .designCardOverlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+.overlayButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text, #374151);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.overlayButton:hover {
+  background: var(--theme-background-secondary, #f3f4f6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.overlayButton.primary {
+  background: var(--theme-primary, #10b981);
+  color: white;
+}
+
+.overlayButton.primary:hover {
+  background: var(--theme-primary-hover, #059669);
+}
+
 /* 더보기 메뉴 */
 .moreMenu {
-  background: var(--theme-surface, #ffffff);
+  background: var(--theme-surface);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   box-shadow: 0 10px 25px var(--theme-shadow, rgba(0, 0, 0, 0.15)), 0 4px 6px rgba(0, 0, 0, 0.05);
-  z-index: 1100;
+  z-index: 1101;
   padding: 8px;
   min-width: 160px;
   backdrop-filter: blur(10px);
+}
+
+/* 더보기 메뉴 백드롭 */
+.moreMenuBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1100;
 }
 
 .moreMenuItem {
@@ -696,24 +1009,36 @@
 }
 
 .moreMenuItem.deleteItem {
-  color: var(--theme-danger);
+  color: var(--theme-text-secondary);
   margin-top: 4px;
   border-top: 1px solid var(--theme-border);
   padding-top: 12px;
 }
 
 .moreMenuItem.deleteItem:hover {
-  background: var(--theme-danger-light);
-  color: var(--theme-danger-hover);
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
 }
 
 /* 디자인 영역 */
 .designArea {
   flex: 1;
-  background: var(--theme-background-secondary, #fafafa);
+  background: var(--theme-surface, #ffffff) !important;
   overflow-y: auto;
-  padding: 24px;
+  padding: 4px 24px 24px 24px;
   transition: margin-left 0.3s ease;
+}
+
+/* 메인 영역의 브레드크럼 */
+.designArea > .breadcrumb {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0 4px;
 }
 
 .designGrid {
@@ -724,13 +1049,80 @@
 }
 
 .designGrid.listView {
-  grid-template-columns: 1fr;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 100%;
 }
 
-/* 프로젝트 카드 */
-.designCard {
+/* 리스트 타이틀 */
+.listTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.listTitle h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+}
+
+.listCount {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  background: var(--theme-background-secondary);
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+/* 리스트 테이블 헤더 */
+.listTableHeader {
+  display: grid;
+  grid-template-columns: 40px 1fr 160px 120px 80px;
+  gap: 16px;
+  padding: 12px 20px;
+  padding-left: 20px;
   background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
+}
+
+.headerColumn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.headerColumn:nth-child(1) {
+  justify-content: flex-start;
+}
+
+.headerColumn:nth-child(2) {
+  justify-content: flex-start;
+}
+
+.headerColumn:nth-child(3) {
+  justify-content: flex-start;
+}
+
+.headerColumn:nth-child(4) {
+  justify-content: center;
+}
+
+
+/* 모든 카드의 기본 스타일 (프로젝트, 폴더, 디자인) */
+.designCard {
+  background: var(--theme-surface);
   border: 1px solid var(--theme-border-hover);
   border-radius: 24px;
   overflow: hidden;
@@ -742,12 +1134,127 @@
 .designCard:hover {
   box-shadow: var(--theme-shadow);
   transform: translateY(-2px);
-  border: 2px solid var(--theme-primary, #10b981);
+  border: 2px solid var(--theme-primary);
 }
 
-.designCard.newDesign {
-  border: 2px solid var(--theme-primary, #10b981);
-  background: var(--theme-background-secondary, #f5f5f5);
+/* 리스트 뷰 카드 스타일 */
+.designGrid.listView .designCard {
+  display: grid;
+  grid-template-columns: 40px 1fr 160px 120px 80px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  min-height: 64px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  background: transparent;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+
+/* 리스트 뷰 정보 컨테이너 */
+.designGrid.listView .cardInfo {
+  padding: 0;
+  border-top: none;
+  display: contents;
+}
+
+/* 썸네일과 제목을 포함하는 두 번째 컬럼 */
+.designGrid.listView .cardThumbnail {
+  grid-column: 2;
+  grid-row: 1;
+  width: 56px;
+  height: 40px;
+  justify-self: start;
+  align-self: center;
+}
+
+.designGrid.listView .cardMeta {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  justify-self: start;
+  align-self: center;
+}
+
+.designGrid.listView .cardTitle {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding-left: 72px; /* 56px(썸네일) + 16px(gap) */
+  justify-self: start;
+  align-self: center;
+}
+
+/* 날짜 컬럼 */
+.designGrid.listView .cardDate {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+/* 사용자 정보 컬럼 */
+.designGrid.listView .cardFooter {
+  grid-column: 4;
+  grid-row: 1;
+  margin: 0;
+  justify-self: start;
+  align-self: center;
+}
+
+.designGrid.listView .cardUser {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--theme-text, #374151);
+}
+
+/* 액션 버튼 컬럼 */
+.designGrid.listView .cardActionButton {
+  grid-column: 5;
+  grid-row: 1;
+  width: 32px;
+  height: 32px;
+  position: static;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  justify-self: center;
+  align-self: center;
+}
+
+/* 새 디자인 카드 리스트 뷰 */
+.designGrid.listView .designCard.newDesign {
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.05));
+  border: none;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+}
+
+.designGrid.listView .designCard.newDesign:hover {
+  background: var(--theme-primary-light);
+}
+
+.designGrid.listView .designCard:hover {
+  background: var(--theme-background-secondary, rgba(16, 185, 129, 0.03)) !important;
+  transform: none;
+  box-shadow: none;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  cursor: pointer;
+}
+
+.designGrid.listView .designCard:last-child {
+  border-bottom: none;
 }
 
 .cardThumbnail {
@@ -757,6 +1264,172 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+
+.designGrid.folderView:not(.listView) .designCard.newDesign {
+  border: 2px solid var(--theme-primary) !important;
+  background: var(--theme-background-secondary, #f5f5f5) !important;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 폴더 뷰에서 디자인 생성 카드의 썸네일 */
+.designGrid.folderView:not(.listView) .designCard.newDesign .cardThumbnail {
+  position: relative !important;
+  height: 100% !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* 폴더 뷰에서 모든 카드의 썸네일 영역 - 폴더 카드와 동일하게 200px */
+.designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardThumbnail,
+.designGrid.folderView:not(.listView) .designCard .cardThumbnail {
+  height: 200px !important;
+  background: var(--theme-background-secondary, #f8f9fa);
+  margin-bottom: 16px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.designGrid.folderView:not(.listView) .designCard:not(.newDesign) .cardThumbnail {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.designGrid.folderView:not(.listView) .designCard .designThumbnail {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.designGrid.folderView:not(.listView) .designCard .designThumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.designGrid.folderView:not(.listView) .cardThumbnail.newDesign {
+  background: var(--theme-background-secondary, #f5f5f5) !important;
+}
+
+/* 프로젝트 내부 뷰와 폴더 뷰에서 카드 정보 영역 통일 */
+.designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardInfo,
+.designGrid.folderView:not(.listView) .designCard .cardInfo {
+  padding: 0 20px 20px 20px !important;
+  border-top: none !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 폴더 뷰에서 디자인 카드의 제목과 메타 정보 */
+.designGrid.folderView:not(.listView) .designCard .cardTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--theme-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.designGrid.folderView:not(.listView) .designCard .cardMeta {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+  margin: 0;
+}
+
+/* 폴더 뷰에서는 모든 카드의 cardFooter 표시 */
+.designGrid.folderView:not(.listView) .designCard .cardFooter {
+  display: flex !important;
+}
+
+/* 디자인 생성 카드 - 통합 스타일 */
+.designCard.newDesign {
+  border: 2px solid var(--theme-primary);
+  background: var(--theme-background-secondary, #f5f5f5);
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.designCard.newDesign .cardThumbnail {
+  height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--theme-background-secondary, #f5f5f5) !important;
+  margin: 0 !important;
+  border-radius: 16px !important;
+}
+
+.designCard.newDesign .cardThumbnailContent {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  color: var(--theme-primary) !important;
+}
+
+.designCard.newDesign .cardThumbnailIcon {
+  width: 60px !important;
+  height: 60px !important;
+  background: var(--theme-primary) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+}
+
+.designCard.newDesign .cardThumbnailText {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: var(--theme-primary) !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+/* 리스트 뷰 썸네일 스타일 */
+.designGrid.listView .cardThumbnail {
+  width: 56px;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  flex-shrink: 0;
+}
+
+.designGrid.listView .designThumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 리스트 뷰 새 디자인 썸네일 */
+.designGrid.listView .cardThumbnail.newDesign {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.designGrid.listView .cardThumbnailIcon {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  font-size: 14px;
+}
+
+.designGrid.listView .cardThumbnailText {
+  display: none;
 }
 
 .cardThumbnail.newDesign {
@@ -769,7 +1442,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary);
   width: 100%;
   height: 100%;
 }
@@ -777,7 +1450,7 @@
 .cardThumbnailIcon {
   width: 60px;
   height: 60px;
-  background: var(--theme-primary, #10b981);
+  background: var(--theme-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -789,7 +1462,7 @@
 .cardThumbnailText {
   font-size: 16px;
   font-weight: 400;
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary);
   text-align: center;
   margin: 0;
 }
@@ -802,6 +1475,8 @@
   width: 100%;
   height: 100%;
   padding: 8px;
+  background: var(--theme-background-secondary, #f8f9fa);
+  border-radius: 8px;
 }
 
 .thumbnailItem {
@@ -816,12 +1491,15 @@
 .thumbnailFolder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--theme-primary, #10b981), var(--theme-primary-hover, var(--theme-primary-hover, #059669)));
+  background: linear-gradient(135deg, var(--theme-primary, #10b981), var(--theme-primary-hover, #059669));
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
+  position: relative;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .thumbnailFile {
@@ -853,25 +1531,52 @@
 .thumbnailEmpty {
   width: 100%;
   height: 100%;
-  background: var(--theme-border, #e5e7eb);
-  border-radius: 6px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px dashed var(--theme-border, #e5e7eb);
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* 빈 썸네일 상태 */
+.emptyThumbnailState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.08)) !important;
+  border-radius: 8px;
+  padding: 20px;
+  gap: 12px;
+}
+
+.emptyThumbnailIcon {
+  color: var(--theme-text-secondary, #6b7280);
+  opacity: 0.6;
+  background: transparent;
+}
+
+.emptyThumbnailText {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+  background: transparent;
 }
 
 .designThumbnail {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   overflow: hidden;
-  border-radius: 8px;
 }
 
 .designThumbnailImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
 }
 
 .designThumbnailPlaceholder {
@@ -903,9 +1608,10 @@
   font-weight: bold;
 }
 
+/* 모든 카드의 기본 정보 영역 */
 .cardInfo {
   padding: 16px 20px;
-  background: var(--theme-surface, #ffffff);
+  background: var(--theme-surface);
   border-top: 1px solid var(--theme-border);
 }
 
@@ -917,6 +1623,14 @@
   line-height: 21px;
 }
 
+/* 리스트 뷰 제목 스타일 */
+.designGrid.listView .cardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+  margin-bottom: 0;
+}
+
 .cardMeta {
   display: flex;
   align-items: center;
@@ -924,11 +1638,24 @@
   margin-bottom: 8px;
 }
 
+/* 리스트 뷰 메타 정보 스타일 */
+.designGrid.listView .cardMeta {
+  margin-bottom: 0;
+  gap: 12px;
+}
+
 .cardDate {
   font-size: 11px;
   color: var(--theme-text-secondary);
   font-weight: 500;
   line-height: 13.75px;
+}
+
+/* 리스트 뷰 날짜 스타일 */
+.designGrid.listView .cardDate {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  width: 160px;
 }
 
 .cardActions {
@@ -950,20 +1677,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   font-size: 16px;
   font-weight: bold;
   transition: all 0.2s;
-  z-index: 2;
+  z-index: 100;
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
 }
 
 .cardActionButton:hover {
-  background: var(--theme-surface, #ffffff);
-  color: var(--theme-text, #374151);
+  background: var(--theme-surface);
+  color: var(--theme-text);
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 리스트 뷰 액션 버튼 스타일 */
+.designGrid.listView .cardActionButton {
+  position: static;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  z-index: 10;
+  border: 1px solid transparent;
+}
+
+.designGrid.listView .cardActionButton:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-border);
+  transform: none;
+  box-shadow: none;
+}
+
+/* 리스트 뷰에서 트리 아이템 카운트 숨기기 */
+.designGrid.listView .treeItemCount {
+  display: none;
 }
 
 .cardFooter {
@@ -971,6 +1723,18 @@
   align-items: center;
   justify-content: space-between;
   margin-top: 8px;
+}
+
+/* 리스트 뷰 사용자 정보 스타일 */
+.designGrid.listView .cardFooter {
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  width: 120px;
+}
+
+.designGrid.listView .cardUser {
+  width: 120px;
 }
 
 .cardUser {
@@ -983,7 +1747,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -998,7 +1762,7 @@
 }
 
 .cardBadge {
-  background: var(--theme-border, #e5e5e5);
+  background: var(--theme-border);
   color: var(--theme-text);
   padding: 2px 8px;
   border-radius: 12px;
@@ -1013,7 +1777,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   text-align: center;
   padding: 40px;
 }
@@ -1022,18 +1786,18 @@
   font-size: 20px;
   font-weight: 500;
   margin-bottom: 8px;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .emptyStateSubtitle {
   font-size: 14px;
-  color: #999;
+  color: var(--theme-text-muted);
   margin-bottom: 24px;
 }
 
 .emptyStateButton {
   padding: 8px 16px;
-  background: #1976d2;
+  background: var(--theme-primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -1043,7 +1807,7 @@
 }
 
 .emptyStateButton:hover {
-  background: #1565c0;
+  background: var(--theme-primary-hover);
 }
 
 /* 모달 스타일 */
@@ -1053,7 +1817,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--theme-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1335,7 +2099,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--theme-overlay);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -1343,7 +2107,7 @@
 }
 
 .step0ModalContent {
-  background: var(--theme-surface, #ffffff);
+  background: var(--theme-surface);
   border-radius: 12px;
   width: 100%;
   max-width: 800px;
@@ -1370,14 +2134,14 @@
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  color: #666;
+  color: var(--theme-text-secondary);
   z-index: 1210;
   transition: background-color 0.2s;
 }
 
 .step0CloseBtn:hover {
   background: rgba(255, 255, 255, 1);
-  color: #333;
+  color: var(--theme-text);
 }
 
 /* 반응형 디자인 */
@@ -1405,15 +2169,17 @@
 
 /* 서브헤더 스타일 */
 .subHeader {
-  background: var(--theme-surface, #ffffff);
-  border-bottom: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--theme-border);
   position: sticky;
   top: 65px;
   z-index: 100;
 }
 
 .subHeaderContent {
-  padding: 16px 24px;
+  height: 65px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1431,16 +2197,49 @@
 .subHeaderTitle {
   font-size: 24px;
   font-weight: 700;
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
   margin: 0;
   line-height: 1.2;
 }
 
 .subHeaderDescription {
   font-size: 14px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   margin: 0;
   font-weight: 400;
+}
+
+.selectionInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.1));
+  border: 1px solid var(--theme-primary, #10b981);
+  border-radius: 8px;
+}
+
+.selectionInfo span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-primary, #10b981);
+}
+
+.clearSelectionBtn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--theme-primary, #10b981);
+  border-radius: 4px;
+  color: var(--theme-primary, #10b981);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearSelectionBtn:hover {
+  background: var(--theme-primary, #10b981);
+  color: white;
 }
 
 .subHeaderActions {
@@ -1453,7 +2252,7 @@
 /* 뷰 토글 그룹 */
 .viewToggleGroup {
   display: flex;
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
   border-radius: 8px;
   padding: 2px;
   gap: 0;
@@ -1468,18 +2267,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary);
   transition: all 0.2s;
   position: relative;
 }
 
 .viewToggleButton:hover {
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
 }
 
 .viewToggleButton.active {
-  background: var(--theme-surface, #ffffff);
-  color: var(--theme-primary, #10b981);
+  background: var(--theme-surface);
+  color: var(--theme-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -1491,14 +2290,14 @@
 /* 정렬 버튼 */
 .sortButton {
   padding: 8px 16px;
-  border: 1px solid var(--theme-border, #e5e5e5);
-  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
@@ -1506,8 +2305,8 @@
 }
 
 .sortButton:hover {
-  border-color: var(--theme-primary, #10b981);
-  background: var(--theme-background-secondary, #f9fafb);
+  border-color: var(--theme-primary);
+  background: var(--theme-background-secondary) !important;
 }
 
 .sortButton span {
@@ -1518,8 +2317,8 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-border, #e5e5e5);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   min-width: 160px;
@@ -1547,7 +2346,7 @@
   cursor: pointer;
   border-radius: 6px;
   font-size: 14px;
-  color: var(--theme-text, #111827);
+  color: var(--theme-text);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1556,11 +2355,11 @@
 }
 
 .sortOption:hover {
-  background: var(--theme-background-secondary, #f3f4f6);
+  background: var(--theme-background-secondary);
 }
 
 .sortOption.active {
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary);
   background: var(--theme-primary-light, rgba(16, 185, 129, 0.08));
   font-weight: 500;
 }
@@ -1577,7 +2376,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--theme-danger, #ef4444);
+  background: var(--theme-primary, #10b981);
   color: white;
   border: none;
   border-radius: 6px;
@@ -1589,7 +2388,29 @@
 }
 
 .emptyTrashBtn:hover {
-  background: var(--theme-danger-hover, #dc2626);
+  background: var(--theme-primary-hover, #059669);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 2px 4px var(--theme-primary-light, rgba(16, 185, 129, 0.3));
+}
+
+/* Create Design Button */
+.createDesignBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.createDesignBtn:hover {
+  background: var(--theme-primary-hover, #059669);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--theme-primary-light, rgba(16, 185, 129, 0.3));
 }

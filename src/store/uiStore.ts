@@ -20,6 +20,9 @@ interface UIState {
   
   // 치수 표시 상태
   showDimensions: boolean;
+  
+  // 치수 텍스트 표시 상태 (치수 체크박스용)
+  showDimensionsText: boolean;
 
   // 그리드(가이드) 표시 상태
   showGuides: boolean;
@@ -79,6 +82,7 @@ const initialUIState = {
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   doorsOpen: true,  // 기본값: 문 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
+  showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: false, // 기본값: 그리드(가이드) 표시 안함
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null,
@@ -108,6 +112,8 @@ export const useUIStore = create<UIState>()(
       
       toggleDimensions: () =>
         set((state) => ({ showDimensions: !state.showDimensions })),
+      toggleDimensionsText: () =>
+        set((state) => ({ showDimensionsText: !state.showDimensionsText })),
       toggleGuides: () =>
         set((state) => ({ showGuides: !state.showGuides })),
       

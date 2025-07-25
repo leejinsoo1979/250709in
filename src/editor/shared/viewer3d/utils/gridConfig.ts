@@ -50,15 +50,15 @@ export const DEFAULT_GRID_CONFIG: GridConfig = {
   zoomLevels: [
     {
       cameraDistance: { min: 0, max: 2 },
-      majorGridSize: 10, // 10mm
-      minorGridSize: 1,  // 1mm
+      majorGridSize: 100, // 100mm (10배 크게)
+      minorGridSize: 10,  // 10mm (10배 크게)
       subdivisions: 10,
       opacity: { major: 0.8, minor: 0.3 }
     },
     {
       cameraDistance: { min: 2, max: 5 },
-      majorGridSize: 50, // 50mm
-      minorGridSize: 10, // 10mm
+      majorGridSize: 200, // 200mm
+      minorGridSize: 50, // 50mm
       subdivisions: 5,
       opacity: { major: 0.8, minor: 0.3 }
     },

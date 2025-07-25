@@ -25,20 +25,26 @@ const defaultTheme: ThemeConfig = {
 };
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeConfig>(defaultTheme);
-
-  // 로컬스토리지에서 테마 설정 불러오기
-  useEffect(() => {
+  // 초기 테마 설정 시 localStorage 확인
+  const getInitialTheme = (): ThemeConfig => {
     try {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme) {
-        const parsedTheme = JSON.parse(savedTheme) as ThemeConfig;
-        setTheme(parsedTheme);
+        return JSON.parse(savedTheme) as ThemeConfig;
       }
     } catch (error) {
       console.warn('테마 설정 로드 실패:', error);
     }
-  }, []);
+    return defaultTheme;
+  };
+
+  const [theme, setTheme] = useState<ThemeConfig>(() => {
+    const initialTheme = getInitialTheme();
+    // 초기 렌더링 시 즉시 테마 적용
+    // DOM이 준비된 후 테마 적용
+    setTimeout(() => applyThemeToDocument(initialTheme), 0);
+    return initialTheme;
+  });
 
   // 테마 변경 시 로컬스토리지에 저장 및 CSS 변수 업데이트
   useEffect(() => {
@@ -79,7 +85,11 @@ export const useTheme = (): ThemeContextType => {
 
 // CSS 변수를 문서에 적용하는 함수
 const applyThemeToDocument = (theme: ThemeConfig) => {
+  console.log('🎨 테마 적용 중:', theme);
   const root = document.documentElement;
+  
+  // 기존 테마 클래스 제거
+  document.body.classList.remove(...Array.from(document.body.classList).filter(c => c.startsWith('theme-')));
   
   // 테마별 색상 팔레트
   const colorPalettes = {
@@ -281,6 +291,71 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   // body에 테마 클래스 추가
   document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '');
   document.body.classList.add(`theme-${theme.mode}-${theme.color}`);
+  
+  // body 스타일 강제 적용
+  document.body.style.backgroundColor = mode.background;
+  document.body.style.color = mode.text;
+  
+  console.log('🎨 테마 적용 완료:', {
+    mode: theme.mode,
+    color: theme.color,
+    background: mode.background,
+    text: mode.text,
+    primary: colors.primary
+  });
+  
+  // CSS 변수 적용 확인 및 디버깅
+  setTimeout(() => {
+    const appliedBackground = getComputedStyle(root).getPropertyValue('--theme-background').trim();
+    const appliedText = getComputedStyle(root).getPropertyValue('--theme-text').trim();
+    const appliedPrimary = getComputedStyle(root).getPropertyValue('--theme-primary').trim();
+    
+    console.log('🔍 CSS 변수 적용 확인:', {
+      expected: {
+        background: mode.background,
+        text: mode.text,
+        primary: colors.primary
+      },
+      applied: {
+        background: appliedBackground,
+        text: appliedText,
+        primary: appliedPrimary
+      },
+      success: appliedBackground === mode.background && appliedText === mode.text
+    });
+    
+    if (appliedBackground !== mode.background) {
+      console.error('❌ 배경색 적용 실패!', { expected: mode.background, actual: appliedBackground });
+      // 강제로 다시 적용
+      root.style.setProperty('--theme-background', mode.background);
+      document.body.style.backgroundColor = mode.background;
+    }
+    if (appliedText !== mode.text) {
+      console.error('❌ 텍스트 색상 적용 실패!', { expected: mode.text, actual: appliedText });
+      // 강제로 다시 적용
+      root.style.setProperty('--theme-text', mode.text);
+      document.body.style.color = mode.text;
+    }
+  }, 100);
+  
+  // 네비게이션 메뉴 강제 테마 적용
+  setTimeout(() => {
+    const navItems = document.querySelectorAll('[class*="navItem"]');
+    console.log(`🔧 네비게이션 항목 ${navItems.length}개 발견, 테마 강제 적용 중...`);
+    
+    navItems.forEach((item: Element) => {
+      const element = item as HTMLElement;
+      if (!element.classList.contains('active')) {
+        element.style.setProperty('color', mode.textSecondary, 'important');
+        element.style.setProperty('background-color', 'transparent', 'important');
+      } else {
+        element.style.setProperty('color', colors.primary, 'important');
+        element.style.setProperty('background-color', colors.primaryLight, 'important');
+      }
+    });
+    
+    console.log('✅ 네비게이션 테마 적용 완료');
+  }, 200);
   
   // 동적 파비콘 생성 및 적용
   generateAndSetFavicon(colors.primary, theme.mode);
