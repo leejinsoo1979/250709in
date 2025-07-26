@@ -61,6 +61,7 @@ const ExportPanel: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front']);
   const [selectedPDFViews, setSelectedPDFViews] = useState<ViewType[]>(['3d-front', '2d-front']);
+  const [pdfRenderMode, setPDFRenderMode] = useState<'solid' | 'wireframe'>('solid');
   const [activeTab, setActiveTab] = useState<'dxf' | 'pdf'>('dxf');
   const [lastExportResult, setLastExportResult] = useState<{
     success: boolean;
@@ -143,7 +144,7 @@ const ExportPanel: React.FC = () => {
     }
 
     try {
-      const result = await exportToPDF(spaceInfo, placedModules, selectedPDFViews);
+      const result = await exportToPDF(spaceInfo, placedModules, selectedPDFViews, pdfRenderMode);
       setLastExportResult(result);
       
       if (result.success) {
@@ -249,6 +250,40 @@ const ExportPanel: React.FC = () => {
       {/* PDF 탭 내용 */}
       {activeTab === 'pdf' && (
         <>
+          <div className={styles.drawingTypeSelection}>
+            <h4 className={styles.selectionTitle}>렌더링 모드</h4>
+            <div className={styles.renderModeSelection}>
+              <label className={`${styles.renderModeOption} ${pdfRenderMode === 'solid' ? styles.active : ''}`}>
+                <input
+                  type="radio"
+                  name="pdfRenderMode"
+                  value="solid"
+                  checked={pdfRenderMode === 'solid'}
+                  onChange={() => setPDFRenderMode('solid')}
+                  className={styles.radio}
+                />
+                <div className={styles.renderModeInfo}>
+                  <span className={styles.renderModeName}>솔리드</span>
+                  <span className={styles.renderModeDescription}>재질과 색상이 표현됩니다</span>
+                </div>
+              </label>
+              <label className={`${styles.renderModeOption} ${pdfRenderMode === 'wireframe' ? styles.active : ''}`}>
+                <input
+                  type="radio"
+                  name="pdfRenderMode"
+                  value="wireframe"
+                  checked={pdfRenderMode === 'wireframe'}
+                  onChange={() => setPDFRenderMode('wireframe')}
+                  className={styles.radio}
+                />
+                <div className={styles.renderModeInfo}>
+                  <span className={styles.renderModeName}>와이어프레임</span>
+                  <span className={styles.renderModeDescription}>구조만 표현됩니다</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div className={styles.drawingTypeSelection}>
             <h4 className={styles.selectionTitle}>포함할 뷰 선택</h4>
             <div className={styles.pdfViews}>

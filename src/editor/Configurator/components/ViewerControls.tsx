@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
+import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 
 export type ViewMode = '2D' | '3D';
 export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
@@ -67,6 +68,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 }) => {
   // UIStore에서 2D 뷰 방향 상태 가져오기
   const { view2DDirection, setView2DDirection } = useUIStore();
+  
+  // QR 코드 생성기 표시 상태
+  const [showQRGenerator, setShowQRGenerator] = useState(false);
 
   const viewModes = [
     { id: '3D' as ViewMode, label: '3D' },
@@ -262,7 +266,35 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             ))}
           </div>
         )}
+        
+        {/* AR 버튼 - 3D 모드에서만 표시 */}
+        {viewMode === '3D' && (
+          <button
+            className={styles.arButton}
+            onClick={() => setShowQRGenerator(true)}
+            title="AR로 보기"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              {/* 스마트폰 프레임 */}
+              <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/>
+              {/* 스크린 */}
+              <rect x="7" y="4" width="10" height="14" strokeWidth="1" opacity="0.5"/>
+              {/* AR 큐브 */}
+              <path d="M9 10 L9 14 L12 16 L15 14 L15 10 L12 8 L9 10Z" strokeWidth="1.5" fill="none"/>
+              <path d="M9 10 L12 8 L15 10" strokeWidth="1.5" fill="none"/>
+              <path d="M12 16 L12 12" strokeWidth="1.5" fill="none"/>
+              {/* AR 포인터 */}
+              <circle cx="12" cy="12" r="1" fill="currentColor"/>
+            </svg>
+            <span>AR</span>
+          </button>
+        )}
       </div>
+      
+      {/* QR 코드 생성기 모달 */}
+      {showQRGenerator && (
+        <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
+      )}
     </div>
   );
 };

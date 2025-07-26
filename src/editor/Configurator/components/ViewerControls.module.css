@@ -238,6 +238,34 @@
   background: var(--theme-primary-light);
 }
 
+/* AR 버튼 스타일 */
+.arButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  margin-left: 12px;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.arButton:hover {
+  background: var(--theme-primary-dark, #059669);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.arButton svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* 도어 설치 버튼 그룹 */
 .doorButtonGroup {
   display: flex;

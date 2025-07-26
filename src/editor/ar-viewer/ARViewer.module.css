@@ -1,0 +1,203 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: #000;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  z-index: 100;
+}
+
+.header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.arButton {
+  position: absolute !important;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 12px 24px;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.arButton:hover {
+  background: var(--theme-primary-dark, #059669);
+}
+
+.controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 250px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.controls h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.scaleControl {
+  margin-bottom: 15px;
+}
+
+.scaleControl label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.scaleControl input[type="range"] {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.scaleControl span {
+  display: inline-block;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.instructions {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 15px;
+}
+
+.instructions p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.error,
+.notSupported,
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
+  background: #f5f5f5;
+}
+
+.error h2,
+.notSupported h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.error p,
+.notSupported p,
+.loading p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.notSupported ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notSupported li {
+  margin-bottom: 8px;
+  padding: 8px 16px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+  .controls {
+    top: auto;
+    bottom: 80px;
+    left: 10px;
+    right: 10px;
+    min-width: auto;
+  }
+
+  .arButton {
+    bottom: 20px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .controls {
+    background: rgba(30, 30, 30, 0.9);
+  }
+
+  .controls h3 {
+    color: #e0e0e0;
+  }
+
+  .scaleControl label,
+  .instructions p {
+    color: #aaa;
+  }
+
+  .scaleControl span {
+    color: #e0e0e0;
+  }
+
+  .instructions {
+    border-top-color: #444;
+  }
+
+  .error,
+  .notSupported,
+  .loading {
+    background: #1a1a1a;
+  }
+
+  .error h2,
+  .notSupported h2 {
+    color: #e0e0e0;
+  }
+
+  .error p,
+  .notSupported p,
+  .loading p {
+    color: #aaa;
+  }
+
+  .notSupported li {
+    background: #2a2a2a;
+    color: #e0e0e0;
+  }
+}

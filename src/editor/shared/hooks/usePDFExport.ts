@@ -6,6 +6,7 @@ import { useUIStore } from '@/store/uiStore';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getModuleById } from '@/data/modules';
+import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
 
 export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-right';
 
@@ -27,15 +28,16 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, setViewMode, setView2DDirection } = useUIStore();
+  const { viewMode, view2DDirection, renderMode, setViewMode, setView2DDirection, setRenderMode } = useUIStore();
   
-  const captureView = useCallback(async (viewType: ViewType): Promise<string> => {
+  const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
     if (!viewInfo) throw new Error('잘못된 뷰 타입입니다.');
     
     // 현재 뷰 설정 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
+    const originalRenderMode = renderMode;
     
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
@@ -46,6 +48,9 @@ export function usePDFExport() {
         setView2DDirection(viewInfo.viewDirection);
       }
     }
+    
+    // 렌더 모드 설정
+    setRenderMode(targetRenderMode);
     
     // 뷰 변경이 적용되길 기다림
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -70,17 +75,19 @@ export function usePDFExport() {
     if (originalViewMode === '2D') {
       setView2DDirection(originalView2DDirection);
     }
+    setRenderMode(originalRenderMode);
     
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return capturedCanvas.toDataURL('image/png');
-  }, [viewMode, view2DDirection, setViewMode, setView2DDirection]);
+  }, [viewMode, view2DDirection, renderMode, setViewMode, setView2DDirection, setRenderMode]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
     placedModules: PlacedModule[],
-    selectedViews: ViewType[]
+    selectedViews: ViewType[],
+    targetRenderMode: 'solid' | 'wireframe' = 'solid'
   ) => {
     setIsExporting(true);
     
@@ -131,31 +138,46 @@ export function usePDFExport() {
         pdf.text('MODULAR FURNITURE', margin, margin);
         
         // 프로젝트 정보
-        pdf.setFontSize(16);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(projectTitle, margin, margin + 10);
+        await addMixedText(pdf, projectTitle, margin, margin + 10, {
+          fontSize: 16,
+          color: '#000000'
+        });
         
-        pdf.setFontSize(12);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`날짜: ${currentDate}`, margin, margin + 18);
-        pdf.text(`뷰: ${viewInfo.name}`, margin, margin + 25);
+        await addMixedText(pdf, `날짜: ${currentDate}`, margin, margin + 18, {
+          fontSize: 12,
+          color: '#646464'
+        });
+        await addMixedText(pdf, `뷰: ${viewInfo.name}`, margin, margin + 25, {
+          fontSize: 12,
+          color: '#646464'
+        });
+        await addMixedText(pdf, `렌더링: ${targetRenderMode === 'solid' ? '솔리드' : '와이어프레임'}`, margin, margin + 32, {
+          fontSize: 12,
+          color: '#646464'
+        });
         
         // 공간 정보
         const spaceInfoText = `공간: ${spaceInfo.width}W × ${spaceInfo.height}H × ${spaceInfo.depth}D mm`;
         const furnitureInfoText = `가구: ${placedModules.length}개`;
-        pdf.text(spaceInfoText, pageWidth - margin - 80, margin + 10);
-        pdf.text(furnitureInfoText, pageWidth - margin - 80, margin + 18);
+        await addMixedText(pdf, spaceInfoText, pageWidth - margin - 80, margin + 10, {
+          fontSize: 12,
+          color: '#646464'
+        });
+        await addMixedText(pdf, furnitureInfoText, pageWidth - margin - 80, margin + 18, {
+          fontSize: 12,
+          color: '#646464'
+        });
         
         // 구분선
         pdf.setDrawColor(220, 220, 220);
-        pdf.line(margin, margin + 30, pageWidth - margin, margin + 30);
+        pdf.line(margin, margin + 38, pageWidth - margin, margin + 38);
         
         try {
           // 뷰 캡처
-          const imageData = await captureView(viewType);
+          const imageData = await captureView(viewType, targetRenderMode);
           
           // 이미지 크기 계산 (비율 유지)
-          const imageAreaHeight = contentHeight - 35;
+          const imageAreaHeight = contentHeight - 43;
           const imageAreaWidth = contentWidth;
           
           // 이미지를 PDF에 삽입
@@ -163,7 +185,7 @@ export function usePDFExport() {
             imageData,
             'PNG',
             margin,
-            margin + 35,
+            margin + 43,
             imageAreaWidth,
             imageAreaHeight,
             undefined,
@@ -173,22 +195,21 @@ export function usePDFExport() {
           console.error(`뷰 캡처 실패 (${viewType}):`, error);
           // 캡처 실패 시 플레이스홀더 표시
           pdf.setFillColor(245, 245, 245);
-          pdf.rect(margin, margin + 35, contentWidth, contentHeight - 35, 'F');
+          pdf.rect(margin, margin + 43, contentWidth, contentHeight - 43, 'F');
           
-          pdf.setFontSize(14);
-          pdf.setTextColor(150, 150, 150);
-          pdf.text(
-            '뷰 캡처에 실패했습니다',
-            pageWidth / 2,
-            pageHeight / 2,
-            { align: 'center' }
-          );
+          await addKoreanText(pdf, '뷰 캡처에 실패했습니다', pageWidth / 2, pageHeight / 2, {
+            fontSize: 14,
+            color: '#969696',
+            align: 'center'
+          });
         }
         
         // 하단 정보
-        pdf.setFontSize(10);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`페이지 ${i + 1} / ${selectedViews.length}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        await addMixedText(pdf, `페이지 ${i + 1} / ${selectedViews.length}`, pageWidth / 2, pageHeight - 10, {
+          fontSize: 10,
+          color: '#969696',
+          align: 'center'
+        });
         
         // 하단 구분선
         pdf.setDrawColor(220, 220, 220);
@@ -204,13 +225,15 @@ export function usePDFExport() {
         pdf.setTextColor(16, 185, 129);
         pdf.text('MODULAR FURNITURE', margin, margin);
         
-        pdf.setFontSize(16);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text('가구 목록', margin, margin + 10);
+        await addMixedText(pdf, '가구 목록', margin, margin + 10, {
+          fontSize: 16,
+          color: '#000000'
+        });
         
-        pdf.setFontSize(12);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`총 ${furnitureList.length}개 가구`, margin, margin + 18);
+        await addMixedText(pdf, `총 ${furnitureList.length}개 가구`, margin, margin + 18, {
+          fontSize: 12,
+          color: '#646464'
+        });
         
         // 구분선
         pdf.setDrawColor(220, 220, 220);
@@ -218,9 +241,6 @@ export function usePDFExport() {
         
         // 테이블 헤더
         let yPos = margin + 35;
-        pdf.setFontSize(11);
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFont(undefined, 'bold');
         
         const colWidths = [80, 30, 30, 30, 30];
         const headers = ['가구명', '폭(mm)', '높이(mm)', '깊이(mm)', '위치'];
@@ -230,18 +250,20 @@ export function usePDFExport() {
         pdf.setFillColor(245, 245, 245);
         pdf.rect(margin, yPos - 5, contentWidth, 15, 'F');
         
-        headers.forEach((header, index) => {
-          pdf.text(header, xPos + 2, yPos + 3);
+        for (let index = 0; index < headers.length; index++) {
+          await addKoreanText(pdf, headers[index], xPos + 2, yPos + 3, {
+            fontSize: 11,
+            color: '#000000'
+          });
           xPos += colWidths[index];
-        });
+        }
         
         yPos += 15;
         
         // 테이블 내용
-        pdf.setFont(undefined, 'normal');
-        pdf.setTextColor(60, 60, 60);
         
-        furnitureList.forEach((furniture, index) => {
+        for (let index = 0; index < furnitureList.length; index++) {
+          const furniture = furnitureList[index];
           if (yPos > pageHeight - 30) {
             // 페이지가 넘어가면 새 페이지 추가
             pdf.addPage();
@@ -265,23 +287,29 @@ export function usePDFExport() {
             furniture.position.toString()
           ];
           
-          rowData.forEach((data, colIndex) => {
+          for (let colIndex = 0; colIndex < rowData.length; colIndex++) {
+            const data = rowData[colIndex];
             const text = data.length > 20 ? data.substring(0, 18) + '...' : data;
-            pdf.text(text, xPos + 2, yPos + 3);
+            await addMixedText(pdf, text, xPos + 2, yPos + 3, {
+              fontSize: 11,
+              color: '#3c3c3c'
+            });
             xPos += colWidths[colIndex];
-          });
+          }
           
           // 행 구분선
           pdf.setDrawColor(240, 240, 240);
           pdf.line(margin, yPos + 7, pageWidth - margin, yPos + 7);
           
           yPos += 12;
-        });
+        }
         
         // 하단 정보
-        pdf.setFontSize(10);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(`페이지 ${selectedViews.length + 1} / ${selectedViews.length + 1}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        await addMixedText(pdf, `페이지 ${selectedViews.length + 1} / ${selectedViews.length + 1}`, pageWidth / 2, pageHeight - 10, {
+          fontSize: 10,
+          color: '#969696',
+          align: 'center'
+        });
       }
       
       // PDF 다운로드

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
@@ -15,6 +15,9 @@ import FirebaseDataDebug from '@/components/debug/FirebaseDataDebug';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+
+// AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
+const ARViewer = lazy(() => import('@/editor/ar-viewer/ARViewer'));
 
 // WebGL 메모리 누수를 방지하기 위한 개선된 함수
 function disposeWebGLCanvases() {
@@ -83,6 +86,12 @@ function AppContent() {
         <Route path="/step0" element={<Navigate to="/step1" replace />} />
         <Route path="/step2" element={<Navigate to="/configurator" replace />} />
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />
+        {/* AR 뷰어 라우트 */}
+        <Route path="/ar-viewer" element={
+          <Suspense fallback={<div>Loading AR Viewer...</div>}>
+            <ARViewer />
+          </Suspense>
+        } />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>

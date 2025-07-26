@@ -56,6 +56,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 호버 상태 관리
   const [isHovered, setIsHovered] = useState(false);
   
+  // 디버깅 로그는 나중에 adjustedPosition이 계산된 후에 출력합니다
+  
   // 테마 색상 가져오기
   const getThemeColor = () => {
     if (typeof window !== 'undefined') {
@@ -325,6 +327,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }, [furnitureWidthMm, actualModuleData.dimensions.width, adjustedPosition.x, placedModule.position.x, slotInfo?.hasColumn, placedModule.id]);
 
+  // 연필 아이콘 디버깅 로그 (adjustedPosition 계산 후)
+  console.log('🖊️ 연필 아이콘 표시 조건:', {
+    viewMode,
+    showDimensions,
+    should3DMode: viewMode === '3D',
+    shouldShowIcon: viewMode === '3D',
+    moduleId: placedModule.moduleId,
+    furnitureId: placedModule.id,
+    position: {
+      x: adjustedPosition.x,
+      y: furnitureStartY + height / 2 + 1,
+      z: furnitureZ + depth / 2 + 0.5
+    }
+  });
+
   return (
     <group>
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
@@ -484,19 +501,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
-      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true일 때만 */}
-      {viewMode === '3D' && showDimensions && (
+      {/* 3D 모드에서 편집 아이콘 표시 */}
+      {viewMode === '3D' && (
         <Html
           position={[
             adjustedPosition.x,
-            furnitureStartY - 1.8, // 하부 프레임 아래로 더 내림
-            furnitureZ + depth / 2 + 0.5 // 가구 앞쪽 더 멀리
+            furnitureStartY - 1.8, // 원래 위치로 (하부 프레임 아래)
+            furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
           center
           style={{
             userSelect: 'none',
             pointerEvents: 'auto',
-            zIndex: 1000,
+            zIndex: 100,
             background: 'transparent'
           }}
         >
@@ -506,14 +523,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              backgroundColor: 'white',
+              width: '32px',
+              height: '32px',
               border: `2px solid ${getThemeColor()}`,
+              borderRadius: '50%',
+              backgroundColor: '#ffffff',
               transition: 'all 0.2s ease',
-              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
               opacity: isHovered ? 1 : 0.8,
+              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
             }}
             onClick={(e) => {
@@ -528,9 +545,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               }
             }}
             onPointerDown={(e) => e.stopPropagation()}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             title="가구 속성 편집"
           >
-            <EditIcon size={16} color={getThemeColor()} />
+            <EditIcon color={getThemeColor()} size={18} />
           </div>
         </Html>
       )}
