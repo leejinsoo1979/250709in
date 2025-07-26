@@ -164,7 +164,68 @@ const Room: React.FC<RoomProps> = ({
     widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
   } = dimensions;
   
-  
+  // 기둥 분절 계산을 메모이제이션 (dimensions 정의 이후로 이동)
+  const frameSegments = useMemo(() => {
+    const columns = spaceInfo.columns || [];
+    const hasDeepColumns = columns.some(column => column.depth >= 730);
+    
+    if (columns.length === 0 || !hasDeepColumns) {
+      return null; // 분절 없음
+    }
+    
+    // 노서라운드일 때는 슬롯 가이드와 동일한 범위 사용
+    let frameWidth, frameX;
+    if (spaceInfo.surroundType === 'no-surround') {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const { threeUnitBoundaries } = indexing;
+      const slotStartX = threeUnitBoundaries[0];
+      const slotEndX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
+      frameWidth = slotEndX - slotStartX;
+      frameX = (slotStartX + slotEndX) / 2;
+    } else {
+      frameWidth = baseFrame.width;
+      // xOffset 직접 계산 (-width / 2)
+      frameX = (-width / 2) + frameThickness.left + frameWidth / 2;
+    }
+    
+    const segments: Array<{ width: number; x: number }> = [];
+    const frameStartX = frameX - frameWidth / 2;
+    const frameEndX = frameX + frameWidth / 2;
+    
+    // 기둥들을 X 위치 기준으로 정렬
+    const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
+    
+    let currentX = frameStartX;
+    
+    // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
+    sortedColumns.forEach((column) => {
+      const columnWidthM = column.width * 0.01;
+      const columnLeftX = column.position[0] - columnWidthM / 2;
+      const columnRightX = column.position[0] + columnWidthM / 2;
+      
+      if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+        const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+        if (leftSegmentWidth > 0) {
+          segments.push({
+            width: leftSegmentWidth,
+            x: currentX + leftSegmentWidth / 2
+          });
+        }
+        currentX = columnRightX;
+      }
+    });
+    
+    // 마지막 세그먼트
+    const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+    if (lastSegmentWidth > 0) {
+      segments.push({
+        width: lastSegmentWidth,
+        x: currentX + lastSegmentWidth / 2
+      });
+    }
+    
+    return segments.length > 0 ? segments : null;
+  }, [spaceInfo.columns, spaceInfo.surroundType, spaceInfo.width, spaceInfo.gapConfig?.left, spaceInfo.gapConfig?.right, baseFrame.width, frameThickness.left, width]);
 
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
@@ -777,7 +838,7 @@ const Room: React.FC<RoomProps> = ({
       {showFrame && topBottomFrameHeightMm > 0 && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
-          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
+          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
           
           {/* 기둥이 있는 경우 상단 프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1127,7 +1188,7 @@ const Room: React.FC<RoomProps> = ({
       {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
         <>
           {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
-          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
+          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
           
           {/* 기둥이 있는 경우 하부 프레임을 분절하여 렌더링 */}
           {(() => {

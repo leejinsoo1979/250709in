@@ -448,4 +448,17 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   );
 };
 
-export default ColumnAsset;
+export default React.memo(ColumnAsset, (prevProps, nextProps) => {
+  // 커스텀 비교 함수: 위치, 크기, 색상이 같으면 리렌더링 방지
+  return (
+    prevProps.position[0] === nextProps.position[0] &&
+    prevProps.position[1] === nextProps.position[1] &&
+    prevProps.position[2] === nextProps.position[2] &&
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.depth === nextProps.depth &&
+    prevProps.color === nextProps.color &&
+    prevProps.id === nextProps.id &&
+    prevProps.renderMode === nextProps.renderMode
+  );
+});

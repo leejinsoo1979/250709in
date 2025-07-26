@@ -378,7 +378,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         }
       });
     }
-  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, position: m.position }))), JSON.stringify(spaceInfo.columns)]); // placedModules와 columns 변경사항을 세밀하게 감지
+  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, position: m.position }))), JSON.stringify(spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, width: col.width, height: col.height, depth: col.depth })))]); // placedModules와 columns 변경사항을 세밀하게 감지
   
   // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시

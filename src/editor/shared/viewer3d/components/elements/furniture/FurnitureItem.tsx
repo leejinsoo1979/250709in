@@ -129,7 +129,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       columnsCount: spaceInfo.columns?.length || 0
     });
     return analyzeColumnSlots(spaceInfo);
-  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex]);
+  }, [spaceInfo.columns, spaceInfo.width, spaceInfo.depth, spaceInfo.surroundType, spaceInfo.gapConfig]);
   
   const slotInfo = placedModule.slotIndex !== undefined ? columnSlots[placedModule.slotIndex] : undefined;
   
@@ -142,12 +142,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
   
+  // 깊이 계산: customDepth가 있으면 사용, 없으면 기본 깊이 사용
+  const actualDepthMm = placedModule.customDepth || actualModuleData.dimensions.depth;
+  
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   let furnitureWidthMm = actualModuleData.dimensions.width;
   let adjustedPosition = placedModule.position;
+  let furnitureDepthMm = actualDepthMm; // 기본 깊이
   
-  // 도어 위치 고정을 위한 원래 슬롯 정보 계산
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - 메모이제이션
+  const indexing = useMemo(() => calculateSpaceIndexing(spaceInfo), [
+    spaceInfo.width,
+    spaceInfo.columnCount,
+    spaceInfo.surroundType,
+    spaceInfo.gapConfig
+  ]);
   
   // 듀얼 가구인지 확인하여 도어 크기 결정
   const isDualFurniture = Math.abs(actualModuleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
@@ -199,6 +208,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 침범에 따른 새로운 가구 경계 계산
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
     
+    console.log('🎯 FurnitureItem - furnitureBounds 결과:', {
+      moduleId: placedModule.id,
+      slotIndex: placedModule.slotIndex,
+      columnType: slotInfo.columnType,
+      columnProcessingMethod: slotInfo.columnProcessingMethod,
+      renderWidth: furnitureBounds.renderWidth,
+      depthAdjustmentNeeded: furnitureBounds.depthAdjustmentNeeded,
+      furnitureBounds
+    });
+    
     // 가구 크기: 밀어내는 효과로 실제 렌더링 너비 조정
     furnitureWidthMm = furnitureBounds.renderWidth;
     
@@ -208,14 +227,48 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       x: furnitureBounds.center
     };
     
+    // Column C (300mm) 깊이 조정 처리
+    if (slotInfo.columnProcessingMethod === 'depth-adjustment' && slotInfo.columnType === 'medium') {
+      // depthAdjustmentNeeded 확인 또는 직접 계산
+      if (furnitureBounds.depthAdjustmentNeeded) {
+        const columnIntrusionMm = slotInfo.column.depth;
+        
+        // 150mm 이상 침범 시: 폭은 원래대로, 깊이 조정
+        furnitureWidthMm = actualModuleData.dimensions.width; // 폭 원래대로 복원
+        furnitureDepthMm = Math.max(200, 730 - columnIntrusionMm); // 최소 200mm 깊이 보장
+        
+        // 위치도 원래 슬롯 중심으로 복원
+        adjustedPosition = {
+          ...placedModule.position,
+          x: originalSlotCenterX
+        };
+        
+        console.log('🟣 Column C 깊이 조정 (depthAdjustmentNeeded=true):', {
+          columnDepth: slotInfo.column.depth,
+          depthAdjustmentNeeded: furnitureBounds.depthAdjustmentNeeded,
+          originalWidth: actualModuleData.dimensions.width,
+          restoredWidth: furnitureWidthMm,
+          originalDepth: actualDepthMm,
+          adjustedDepth: furnitureDepthMm,
+          depthReduction: actualDepthMm - furnitureDepthMm,
+          positionRestored: '원래 슬롯 중심으로'
+        });
+      }
+    }
+    
     console.log('🪑 기둥 침범 - 가구 크기 및 위치 조정:', {
       moduleId: placedModule.moduleId,
       slotIndex: placedModule.slotIndex,
       columnId: slotInfo.column?.id,
       columnDepth: slotInfo.column?.depth,
+      columnType: slotInfo.columnType,
+      columnProcessingMethod: slotInfo.columnProcessingMethod,
       originalWidth: actualModuleData.dimensions.width,
       furnitureWidth: furnitureWidthMm,
+      originalDepth: actualDepthMm,
+      furnitureDepth: furnitureDepthMm,
       widthReduced: actualModuleData.dimensions.width > furnitureWidthMm,
+      depthReduced: actualDepthMm > furnitureDepthMm,
       reductionAmount: actualModuleData.dimensions.width - furnitureWidthMm,
       originalSlotWidth: originalSlotWidthMm,
       originalSlotCenter: originalSlotCenterX,
@@ -238,6 +291,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 치수를 Three.js 단위로 변환
   const width = mmToThreeUnits(furnitureWidthMm);
   
+  // 가구 폭이 0이면 렌더링하지 않음 (기둥이 150mm 이상 침범한 경우)
+  if (furnitureWidthMm <= 0) {
+    console.log('⚠️ 가구 폭이 0 이하로 렌더링 건너뜀:', {
+      moduleId: placedModule.id,
+      furnitureWidth: furnitureWidthMm,
+      slotIndex: placedModule.slotIndex
+    });
+    return null;
+  }
+  
   // 가구 높이 계산: 받침대 설정에 따라 조정
   let furnitureHeightMm = internalSpace.height;
   if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
@@ -247,10 +310,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   const height = mmToThreeUnits(furnitureHeightMm);
-  
-  // 깊이 계산: customDepth가 있으면 사용, 없으면 기본 깊이 사용
-  const actualDepthMm = placedModule.customDepth || actualModuleData.dimensions.depth;
-  const depth = mmToThreeUnits(actualDepthMm);
+  const depth = mmToThreeUnits(furnitureDepthMm); // furnitureDepthMm 사용 (기둥 침범 시 조정됨)
 
   // 도어 두께 (20mm)
   const doorThicknessMm = 20;
@@ -258,16 +318,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Room.tsx와 동일한 Z축 위치 계산
   const panelDepthMm = 1500; // 전체 공간 깊이
-  const furnitureDepthMm = 600; // 가구 공간 깊이
+  const furnitureSpaceDepthMm = 600; // 가구 공간 깊이
   const panelDepth = mmToThreeUnits(panelDepthMm);
-  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+  const furnitureSpaceDepth = mmToThreeUnits(furnitureSpaceDepthMm);
   
   // Room.tsx와 동일한 계산: 뒷벽에서 600mm만 나오도록
   const zOffset = -panelDepth / 2; // 공간 메쉬용 깊이 중앙
-  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2; // 뒷벽에서 600mm
+  const furnitureZOffset = zOffset + (panelDepth - furnitureSpaceDepth) / 2; // 뒷벽에서 600mm
   
   // 가구를 가구 공간의 뒷쪽에 배치 (프레임 앞면에서 도어 두께만큼 뒤)
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
+  const furnitureZ = furnitureZOffset + furnitureSpaceDepth/2 - doorThickness - depth/2;
 
   // 드래그 중일 때만 테마 색상 사용, 평소에는 undefined (재질 기본 색상 사용)
   const furnitureColor = isDraggingThis ? getThemeColor() : undefined;
@@ -312,29 +372,39 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 위치가 조정되었는지 확인
     const isPositionAdjusted = Math.abs(adjustedPosition.x - placedModule.position.x) > 0.001;
     
+    // 깊이가 조정되었는지 확인
+    const isDepthAdjusted = furnitureDepthMm !== actualDepthMm;
+    
     // 현재 저장된 값과 비교하여 실제로 변경이 필요한지 확인
     const needsWidthUpdate = hasColumn && isWidthAdjusted && placedModule.adjustedWidth !== furnitureWidthMm;
     const needsPositionUpdate = hasColumn && isPositionAdjusted && 
       (!placedModule.adjustedPosition || Math.abs(placedModule.adjustedPosition.x - adjustedPosition.x) > 0.001);
-    const needsClearUpdate = !hasColumn && (placedModule.adjustedWidth !== undefined || placedModule.adjustedPosition !== undefined);
+    const needsDepthUpdate = hasColumn && isDepthAdjusted && placedModule.customDepth !== furnitureDepthMm;
+    const needsClearUpdate = !hasColumn && (placedModule.adjustedWidth !== undefined || placedModule.adjustedPosition !== undefined || 
+      (placedModule.customDepth !== undefined && placedModule.customDepth !== actualModuleData.dimensions.depth));
     
     // 실제로 업데이트가 필요한 경우만 수행
-    if (needsWidthUpdate || needsPositionUpdate || needsClearUpdate) {
-      console.log('📏 가구 폭/위치 업데이트:', {
+    if (needsWidthUpdate || needsPositionUpdate || needsDepthUpdate || needsClearUpdate) {
+      console.log('📏 가구 폭/위치/깊이 업데이트:', {
         id: placedModule.id,
         needsWidthUpdate,
         needsPositionUpdate,
+        needsDepthUpdate,
         needsClearUpdate,
         adjustedWidth: hasColumn && isWidthAdjusted ? furnitureWidthMm : undefined,
-        adjustedPosition: hasColumn && isPositionAdjusted ? adjustedPosition : undefined
+        adjustedPosition: hasColumn && isPositionAdjusted ? adjustedPosition : undefined,
+        customDepth: hasColumn && isDepthAdjusted ? furnitureDepthMm : 
+          (!hasColumn ? actualModuleData.dimensions.depth : undefined)
       });
       
       updatePlacedModule(placedModule.id, {
         adjustedWidth: hasColumn && isWidthAdjusted ? furnitureWidthMm : undefined,
-        adjustedPosition: hasColumn && isPositionAdjusted ? adjustedPosition : undefined
+        adjustedPosition: hasColumn && isPositionAdjusted ? adjustedPosition : undefined,
+        customDepth: hasColumn && isDepthAdjusted ? furnitureDepthMm : 
+          (!hasColumn ? actualModuleData.dimensions.depth : undefined)
       });
     }
-  }, [furnitureWidthMm, actualModuleData.dimensions.width, adjustedPosition.x, placedModule.position.x, slotInfo?.hasColumn, placedModule.id]);
+  }, [furnitureWidthMm, actualModuleData.dimensions.width, adjustedPosition.x, placedModule.position.x, furnitureDepthMm, actualDepthMm, slotInfo?.hasColumn, placedModule.id]);
 
   // 연필 아이콘 디버깅 로그 (adjustedPosition 계산 후)
   console.log('🖊️ 연필 아이콘 표시 조건:', {
@@ -400,7 +470,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               color={(isDraggingThis || isEditMode) ? getThemeColor() : undefined}
               internalHeight={furnitureHeightMm}
               hasDoor={isDraggingThis ? false : (slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? actualModuleData.hasDoor ?? false))}
-              customDepth={actualDepthMm}
+              customDepth={furnitureDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={spaceInfo}
               originalSlotWidth={originalSlotWidthMm}
@@ -483,7 +553,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       </group>
 
       {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
-      {(placedModule.hasDoor ?? false) && slotInfo && slotInfo.hasColumn && moduleData.type === 'box' && spaceInfo && (
+      {(placedModule.hasDoor ?? false) && slotInfo && slotInfo.hasColumn && moduleData.type === 'box' && spaceInfo && furnitureWidthMm > 0 && (
         <group
           position={[
             originalSlotCenterX, // 항상 원래 슬롯 중심
@@ -494,7 +564,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         >
           <DoorModule
             moduleWidth={originalSlotWidthMm} // 원래 슬롯 크기 사용
-            moduleDepth={actualDepthMm}
+            moduleDepth={furnitureDepthMm} // 조정된 깊이 사용
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
             color={furnitureColor}
