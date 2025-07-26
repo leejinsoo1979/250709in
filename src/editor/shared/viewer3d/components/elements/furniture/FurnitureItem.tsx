@@ -487,7 +487,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group
           position={[
             originalSlotCenterX, // 항상 원래 슬롯 중심
-            0, // DoorModule이 자체적으로 Y 위치를 계산함
+            furnitureStartY + height / 2, // 가구 중심과 동일한 Y 위치 (DoorModule 내부 계산과 맞춤)
             furnitureZ // 가구와 동일한 Z 위치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}

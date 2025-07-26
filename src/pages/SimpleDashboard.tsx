@@ -389,6 +389,8 @@ const SimpleDashboard: React.FC = () => {
       newBookmarks.delete(projectId);
     } else {
       newBookmarks.add(projectId);
+      // 북마크 추가 시 북마크 메뉴로 이동
+      setActiveMenu('bookmarks');
     }
     setBookmarkedProjects(newBookmarks);
     if (user) {
@@ -403,6 +405,8 @@ const SimpleDashboard: React.FC = () => {
       newBookmarks.delete(designId);
     } else {
       newBookmarks.add(designId);
+      // 북마크 추가 시 북마크 메뉴로 이동
+      setActiveMenu('bookmarks');
     }
     setBookmarkedDesigns(newBookmarks);
     if (user) {
