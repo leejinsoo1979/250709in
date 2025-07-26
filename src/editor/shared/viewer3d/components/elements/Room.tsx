@@ -1231,24 +1231,32 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            return frameSegments.map((segment, index) => (
-              <BoxWithEdges
-                key={`base-frame-segment-${index}`}
-                args={[
-                  segment.width, 
-                  baseFrameHeight, 
-                  mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
-                ]}
-                position={[
-                  segment.x, // 분절된 위치
-                  panelStartY + baseFrameHeight/2, 
-                  // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
-                ]}
-                material={baseFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-              />
-            ));
+            return frameSegments.map((segment, index) => {
+              console.log(`🎨 Base frame segment ${index} material:`, {
+                hasBaseFrameMaterial: !!baseFrameMaterial,
+                materialType: baseFrameMaterial?.type,
+                segmentWidth: segment.width
+              });
+              
+              return (
+                <BoxWithEdges
+                  key={`base-frame-segment-${index}`}
+                  args={[
+                    segment.width, 
+                    baseFrameHeight, 
+                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
+                  ]}
+                  position={[
+                    segment.x, // 분절된 위치
+                    panelStartY + baseFrameHeight/2, 
+                    // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                  ]}
+                  material={baseFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                />
+              );
+            });
           })()}
         </>
       )}

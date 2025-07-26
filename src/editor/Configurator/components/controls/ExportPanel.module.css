@@ -327,4 +327,94 @@
   color: var(--theme-primary);
   opacity: 1;
   font-weight: 700;
+}
+
+/* Tab Styles */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 4px;
+  background: var(--theme-background);
+  border-radius: 6px;
+  border: 1px solid var(--theme-border);
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tab:hover {
+  color: var(--theme-text);
+  background: var(--theme-surface-hover);
+}
+
+.tab.active {
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* PDF Views Styles */
+.pdfViews {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdfViewItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--theme-surface);
+}
+
+.pdfViewItem:hover {
+  border-color: var(--theme-primary);
+  background: var(--theme-surface-hover);
+}
+
+.pdfViewItem:has(input:checked) {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
+  box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.2);
+}
+
+.pdfViewInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.pdfViewName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+}
+
+.pdfViewBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-primary);
+  background: var(--theme-primary-light);
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 } 

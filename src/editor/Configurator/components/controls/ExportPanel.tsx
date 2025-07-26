@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
+import { usePDFExport, type ViewType } from '@/editor/shared/hooks/usePDFExport';
 import styles from './ExportPanel.module.css';
 
 interface DrawingTypeInfo {
@@ -51,17 +52,16 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
   }
 ];
 
-/**
- * 도면 내보내기 패널 컴포넌트
- * 오른쪽 컨트롤 패널 하단에 위치
- */
 const ExportPanel: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
   const { exportToDXF, canExportDXF, getExportStatusMessage } = useDXFExport();
+  const { exportToPDF, canExportPDF, VIEW_TYPES, isExporting: isPDFExporting } = usePDFExport();
   
   const [isExporting, setIsExporting] = useState(false);
   const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front']);
+  const [selectedPDFViews, setSelectedPDFViews] = useState<ViewType[]>(['3d-front', '2d-front']);
+  const [activeTab, setActiveTab] = useState<'dxf' | 'pdf'>('dxf');
   const [lastExportResult, setLastExportResult] = useState<{
     success: boolean;
     message: string;
@@ -79,6 +79,17 @@ const ExportPanel: React.FC = () => {
     });
   };
 
+  // PDF 뷰 선택/해제 핸들러
+  const handlePDFViewToggle = (viewType: ViewType) => {
+    setSelectedPDFViews(prev => {
+      if (prev.includes(viewType)) {
+        return prev.filter(type => type !== viewType);
+      } else {
+        return [...prev, viewType];
+      }
+    });
+  };
+
   // DXF 내보내기 실행
   const handleExportDXF = async () => {
     if (!spaceInfo || !canExportDXF(spaceInfo, placedModules) || selectedDrawingTypes.length === 0) {
@@ -89,14 +100,12 @@ const ExportPanel: React.FC = () => {
     setLastExportResult(null);
 
     try {
-      // 선택된 각 도면 타입별로 내보내기 실행
       const results = [];
       for (const drawingType of selectedDrawingTypes) {
         const result = await exportToDXF(spaceInfo, placedModules, drawingType);
         results.push({ drawingType, result });
       }
 
-      // 모든 결과가 성공인지 확인
       const allSuccess = results.every(r => r.result.success);
       const successCount = results.filter(r => r.result.success).length;
       
@@ -112,7 +121,6 @@ const ExportPanel: React.FC = () => {
         });
       }
       
-      // 성공 메시지는 3초 후 자동 사라짐
       if (allSuccess) {
         setTimeout(() => {
           setLastExportResult(null);
@@ -128,42 +136,174 @@ const ExportPanel: React.FC = () => {
     }
   };
 
+  // PDF 내보내기 실행
+  const handleExportPDF = async () => {
+    if (!spaceInfo || !canExportPDF(spaceInfo, placedModules) || selectedPDFViews.length === 0) {
+      return;
+    }
+
+    try {
+      const result = await exportToPDF(spaceInfo, placedModules, selectedPDFViews);
+      setLastExportResult(result);
+      
+      if (result.success) {
+        setTimeout(() => {
+          setLastExportResult(null);
+        }, 3000);
+      }
+    } catch (error) {
+      setLastExportResult({
+        success: false,
+        message: '예상치 못한 오류가 발생했습니다.'
+      });
+    }
+  };
+
   const isExportEnabled = spaceInfo && canExportDXF(spaceInfo, placedModules) && selectedDrawingTypes.length > 0;
+  const isPDFExportEnabled = spaceInfo && canExportPDF(spaceInfo, placedModules) && selectedPDFViews.length > 0;
   const statusMessage = spaceInfo ? getExportStatusMessage(spaceInfo, placedModules) : '공간 정보가 없습니다.';
 
   return (
     <div className={styles.exportPanel}>
       <div className={styles.header}>
-        <h3 className={styles.title}>도면 내보내기</h3>
+        <h3 className={styles.title}>내보내기</h3>
         <p className={styles.description}>
-          현재 가구 배치를 CAD 도면(DXF)으로 내보냅니다
+          현재 가구 배치를 도면 또는 PDF로 내보냅니다
         </p>
       </div>
 
-      {/* 도면 타입 선택 */}
-      <div className={styles.drawingTypeSelection}>
-        <h4 className={styles.selectionTitle}>내보낼 도면 선택</h4>
-        <div className={styles.drawingTypes}>
-          {DRAWING_TYPES.map(drawingType => (
-            <label key={drawingType.id} className={styles.drawingTypeItem}>
-              <input
-                type="checkbox"
-                checked={selectedDrawingTypes.includes(drawingType.id)}
-                onChange={() => handleDrawingTypeToggle(drawingType.id)}
-                className={styles.checkbox}
-              />
-              <div className={styles.drawingTypeInfo}>
-                <div className={styles.drawingTypeIcon}>{drawingType.icon}</div>
-                <div className={styles.drawingTypeText}>
-                  <span className={styles.drawingTypeName}>{drawingType.name}</span>
-                  <span className={styles.drawingTypeDescription}>{drawingType.description}</span>
-                </div>
-              </div>
-            </label>
-          ))}
-        </div>
+      {/* 탭 메뉴 */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === 'dxf' ? styles.active : ''}`}
+          onClick={() => setActiveTab('dxf')}
+        >
+          CAD 도면 (DXF)
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'pdf' ? styles.active : ''}`}
+          onClick={() => setActiveTab('pdf')}
+        >
+          PDF 문서
+        </button>
       </div>
 
+      {/* DXF 탭 내용 */}
+      {activeTab === 'dxf' && (
+        <>
+          <div className={styles.drawingTypeSelection}>
+            <h4 className={styles.selectionTitle}>내보낼 도면 선택</h4>
+            <div className={styles.drawingTypes}>
+              {DRAWING_TYPES.map(drawingType => (
+                <label key={drawingType.id} className={styles.drawingTypeItem}>
+                  <input
+                    type="checkbox"
+                    checked={selectedDrawingTypes.includes(drawingType.id)}
+                    onChange={() => handleDrawingTypeToggle(drawingType.id)}
+                    className={styles.checkbox}
+                  />
+                  <div className={styles.drawingTypeInfo}>
+                    <div className={styles.drawingTypeIcon}>{drawingType.icon}</div>
+                    <div className={styles.drawingTypeText}>
+                      <span className={styles.drawingTypeName}>{drawingType.name}</span>
+                      <span className={styles.drawingTypeDescription}>{drawingType.description}</span>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <button
+              className={`${styles.exportButton} ${!isExportEnabled ? styles.disabled : ''}`}
+              onClick={handleExportDXF}
+              disabled={!isExportEnabled || isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  내보내는 중...
+                </>
+              ) : (
+                <>
+                  DXF 도면 다운로드 ({selectedDrawingTypes.length}개)
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className={styles.info}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>파일 형식:</span>
+              <span className={styles.infoValue}>DXF (AutoCAD 호환)</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>축척:</span>
+              <span className={styles.infoValue}>1:100</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* PDF 탭 내용 */}
+      {activeTab === 'pdf' && (
+        <>
+          <div className={styles.drawingTypeSelection}>
+            <h4 className={styles.selectionTitle}>포함할 뷰 선택</h4>
+            <div className={styles.pdfViews}>
+              {VIEW_TYPES.map(view => (
+                <label key={view.id} className={styles.pdfViewItem}>
+                  <input
+                    type="checkbox"
+                    checked={selectedPDFViews.includes(view.id)}
+                    onChange={() => handlePDFViewToggle(view.id)}
+                    className={styles.checkbox}
+                  />
+                  <div className={styles.pdfViewInfo}>
+                    <span className={styles.pdfViewName}>{view.name}</span>
+                    {view.viewMode === '2D' && (
+                      <span className={styles.pdfViewBadge}>치수 포함</span>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <button
+              className={`${styles.exportButton} ${!isPDFExportEnabled ? styles.disabled : ''}`}
+              onClick={handleExportPDF}
+              disabled={!isPDFExportEnabled || isPDFExporting}
+            >
+              {isPDFExporting ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  PDF 생성 중...
+                </>
+              ) : (
+                <>
+                  PDF 다운로드 ({selectedPDFViews.length}개 뷰)
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className={styles.info}>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>파일 형식:</span>
+              <span className={styles.infoValue}>PDF (A4 가로)</span>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.infoLabel}>포함 내용:</span>
+              <span className={styles.infoValue}>3D/2D 뷰, 치수, 가구 정보</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 공통 상태 메시지 */}
       <div className={styles.status}>
         <div className={styles.statusMessage}>
           {statusMessage}
@@ -181,25 +321,7 @@ const ExportPanel: React.FC = () => {
         )}
       </div>
 
-      <div className={styles.actions}>
-        <button
-          className={`${styles.exportButton} ${!isExportEnabled ? styles.disabled : ''}`}
-          onClick={handleExportDXF}
-          disabled={!isExportEnabled || isExporting}
-        >
-          {isExporting ? (
-            <>
-              <span className={styles.spinner}></span>
-              내보내는 중...
-            </>
-          ) : (
-            <>
-              DXF 도면 다운로드 ({selectedDrawingTypes.length}개)
-            </>
-          )}
-        </button>
-      </div>
-
+      {/* 결과 메시지 */}
       {lastExportResult && (
         <div className={`${styles.result} ${lastExportResult.success ? styles.success : styles.error}`}>
           <div className={styles.resultMessage}>
@@ -212,23 +334,8 @@ const ExportPanel: React.FC = () => {
           )}
         </div>
       )}
-
-      <div className={styles.info}>
-        <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>파일 형식:</span>
-          <span className={styles.infoValue}>DXF (AutoCAD 호환)</span>
-        </div>
-        <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>축척:</span>
-          <span className={styles.infoValue}>1:100</span>
-        </div>
-        <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>단위:</span>
-          <span className={styles.infoValue}>밀리미터(mm)</span>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default ExportPanel; 
+export default ExportPanel;

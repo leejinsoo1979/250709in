@@ -796,6 +796,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         }}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        data-viewer-container="true"
       >
         <ThreeCanvas 
           cameraPosition={cameraPosition}
