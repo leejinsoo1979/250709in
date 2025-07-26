@@ -378,7 +378,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         }
       });
     }
-  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, position: m.position })))]); // placedModules 변경사항을 세밀하게 감지
+  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, position: m.position }))), JSON.stringify(spaceInfo.columns)]); // placedModules와 columns 변경사항을 세밀하게 감지
   
   // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
@@ -3396,101 +3396,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 기둥만 렌더링하는 함수
   const renderColumns = () => {
-    console.log('🏗️ renderColumns 호출됨:', {
-      hasColumns: !!spaceInfo.columns,
-      columnCount: spaceInfo.columns?.length,
-      currentViewDirection,
-      columns: spaceInfo.columns
-    });
-    
-    if (!spaceInfo.columns || spaceInfo.columns.length === 0) {
-      console.log('❌ 기둥이 없어서 렌더링 안함');
-      return null;
-    }
-    
-          return spaceInfo.columns.map((column) => {
-        const columnWidthM = column.width * 0.01;
-        const spaceWidthM = spaceInfo.width * 0.01;
-        
-        // 벽면과의 거리 계산 (mm)
-        const distanceToLeft = Math.round((spaceWidthM / 2 + column.position[0] - columnWidthM / 2) * 100);
-        const distanceToRight = Math.round((spaceWidthM / 2 - column.position[0] - columnWidthM / 2) * 100);
-        
-        console.log(`🏗️ 기둥 ${column.id} 렌더링:`, {
-          position: column.position,
-          distanceToLeft,
-          distanceToRight,
-          width: column.width
-        });
-      
-      return (
-        <group key={`column-2d-${column.id}`}>
-
-          {/* 왼쪽 간격 라벨 */}
-          <EditableLabel
-            columnId={column.id}
-            side="left"
-            currentValue={Math.max(0, distanceToLeft)}
-            position={[
-              (-spaceWidthM / 2 + column.position[0] - columnWidthM / 2) / 2, 
-              spaceHeight / 2, 
-              0.002
-            ]}
-            color={guideColor}
-            label="왼쪽 간격"
-          />
-          {(() => {
-            console.log(`🏷️ 왼쪽 라벨 렌더링 - 기둥 ${column.id}:`, {
-              position: [(-spaceWidthM / 2 + column.position[0] - columnWidthM / 2) / 2, spaceHeight / 2, 0.002],
-              value: Math.max(0, distanceToLeft)
-            });
-            return null;
-          })()}
-
-          {/* 오른쪽 간격 라벨 */}
-          <EditableLabel
-            columnId={column.id}
-            side="right"
-            currentValue={Math.max(0, distanceToRight)}
-            position={[
-              (spaceWidthM / 2 + column.position[0] + columnWidthM / 2) / 2, 
-              spaceHeight / 2, 
-              0.002
-            ]}
-            color={guideColor}
-            label="오른쪽 간격"
-          />
-
-          {/* 기둥 너비 라벨 - 3D 뷰에서는 제거 */}
-
-          {/* 왼쪽 간격 가이드라인 */}
-          <Line
-            points={[
-              [-spaceWidthM / 2, spaceHeight / 2, 0.001],
-              [column.position[0] - columnWidthM / 2, spaceHeight / 2, 0.001]
-            ]}
-            color={guideColor}
-            lineWidth={2}
-            dashed
-            dashSize={0.05}
-            gapSize={0.025}
-          />
-
-          {/* 오른쪽 간격 가이드라인 */}
-          <Line
-            points={[
-              [column.position[0] + columnWidthM / 2, spaceHeight / 2, 0.001],
-              [spaceWidthM / 2, spaceHeight / 2, 0.001]
-            ]}
-            color={guideColor}
-            lineWidth={2}
-            dashed
-            dashSize={0.05}
-            gapSize={0.025}
-          />
-        </group>
-      );
-    });
+    // 기둥 관련 거리 표시는 ColumnDistanceLabels에서 더블클릭 시에만 표시
+    return null;
   };
 
   console.log('🎨 CleanCAD2D 최종 렌더링:', {

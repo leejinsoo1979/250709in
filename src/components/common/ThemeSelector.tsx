@@ -15,28 +15,43 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   const { theme, setThemeMode, setThemeColor, toggleMode } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
+  // 4x7 그리드로 정리된 색상 배열
   const themeColors: { id: ThemeColor; name: string; color: string }[] = [
-    { id: 'green', name: '초록색', color: '#10b981' },
-    { id: 'blue', name: '파란색', color: '#3b82f6' },
-    { id: 'wine', name: '와인색', color: '#991b1b' },
-    { id: 'gold', name: '골드', color: '#d97706' },
-    { id: 'navy', name: '네이비', color: '#1e3a8a' },
-    { id: 'emerald', name: '에메랄드', color: '#059669' },
-    { id: 'purple', name: '보라색', color: '#8b5cf6' },
-    { id: 'orange', name: '주황색', color: '#f97316' },
-    { id: 'red', name: '빨간색', color: '#ef4444' },
-    { id: 'pink', name: '분홍색', color: '#ec4899' },
-    { id: 'indigo', name: '남색', color: '#6366f1' },
-    { id: 'teal', name: '청록색', color: '#14b8a6' },
-    { id: 'yellow', name: '노란색', color: '#eab308' },
-    { id: 'gray', name: '회색', color: '#6b7280' },
-    { id: 'cyan', name: '하늘색', color: '#06b6d4' },
-    { id: 'lime', name: '연두색', color: '#84cc16' },
-    { id: 'black', name: '검정색', color: '#1a1a1a' },
-    { id: 'violet', name: '바이올렛', color: '#C128D7' },
-    { id: 'mint', name: '민트', color: '#0CBA80' },
-    { id: 'neon', name: '네온그린', color: '#18CF23' },
-    { id: 'rust', name: '러스트', color: '#BE5028' },
+    // 1번째 줄
+    { id: 'black', name: '차콜블랙', color: '#1C1C1C' },
+    { id: 'gray', name: '다크그레이', color: '#2D2D2D' },
+    { id: 'blue', name: '스카이블루', color: '#4DA0FF' },
+    { id: 'navy', name: '로얄블루', color: '#1E74FF' },
+    { id: 'indigo', name: '페일블루', color: '#7BA3D6' },
+    { id: 'teal', name: '딥틸', color: '#165A69' },
+    { id: 'cyan', name: '다크틸', color: '#144C59' },
+    
+    // 2번째 줄
+    { id: 'white', name: '라이트그레이', color: '#EDEDED' },
+    { id: 'silver', name: '미디엄그레이', color: '#808080' },
+    { id: 'orange', name: '피치오렌지', color: '#FF9C6A' },
+    { id: 'rust', name: '선셋오렌지', color: '#FF7438' },
+    { id: 'brown', name: '다크브라운', color: '#5A2B1D' },
+    { id: 'emerald', name: '포레스트그린', color: '#00574F' },
+    { id: 'darkgray', name: '블루그레이', color: '#2C3844' },
+    
+    // 3번째 줄
+    { id: 'wine', name: '버건디', color: '#96004F' },
+    { id: 'purple', name: '딥퍼플', color: '#3C2532' },
+    { id: 'pink', name: '코랄핑크', color: '#FF6D78' },
+    { id: 'red', name: '레드', color: '#FF4A4A' },
+    { id: 'maroon', name: '다크레드', color: '#3F0D0D' },
+    { id: 'turquoise', name: '터콰이즈', color: '#003A7A' },
+    { id: 'slate', name: '슬레이트', color: '#2E3A47' },
+    
+    // 4번째 줄
+    { id: 'copper', name: '코퍼', color: '#AD4F34' },
+    { id: 'mint', name: '민트', color: '#00938E' },
+    { id: 'lime', name: '라임그린', color: '#57BA7B' },
+    { id: 'green', name: '그린', color: '#2FAA4A' },
+    { id: 'forest', name: '다크그린', color: '#1B3924' },
+    { id: 'olive', name: '올리브', color: '#4C462C' },
+    { id: 'yellow', name: '올리브그린', color: '#88992E' },
   ];
 
   const themeModes: { id: ThemeMode; name: string; icon: React.ReactNode }[] = [
@@ -148,13 +163,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                       setThemeColor(color.id);
                       setIsOpen(false);
                     }}
+                    title={color.name}
                   >
                     <div 
                       className={styles.colorPreview}
                       style={{ backgroundColor: color.color }}
-                    />
-                    <span>{color.name}</span>
-                    {theme.color === color.id && <span className={styles.checkIcon}>✓</span>}
+                    >
+                      {theme.color === color.id && <span className={styles.checkIcon}>✓</span>}
+                    </div>
                   </button>
                 ))}
               </div>

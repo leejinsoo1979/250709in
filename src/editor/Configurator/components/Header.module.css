@@ -256,11 +256,20 @@
   border: 1px solid var(--theme-primary);
   border-radius: 20px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .userProfile:hover {
-  background: var(--theme-success-light);
+  background: var(--theme-primary);
+  border-color: var(--theme-primary-hover);
+}
+
+.userProfile:hover .userProfileName {
+  color: white;
+}
+
+.userProfile:active {
+  transform: scale(0.98);
 }
 
 .userProfileAvatar {

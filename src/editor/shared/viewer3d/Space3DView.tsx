@@ -489,7 +489,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <div style={{ 
             position: 'relative', 
             overflow: 'hidden', 
-            backgroundColor: '#1a1a1a'
+            backgroundColor: '#121212'
           }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('front').position}
@@ -516,7 +516,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'absolute',
               top: '8px',
               left: '8px',
-              backgroundColor: 'rgba(0,0,0,0.7)',
+              backgroundColor: 'rgba(18,18,18,0.7)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -531,7 +531,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 position: 'absolute',
                 top: '8px',
                 right: '8px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
+                backgroundColor: 'rgba(18,18,18,0.7)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '4px',
@@ -548,7 +548,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(18,18,18,0.7)';
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
               }}
               title="전체화면으로 보기"
@@ -563,7 +563,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <div style={{ 
             position: 'relative', 
             overflow: 'hidden', 
-            backgroundColor: '#1a1a1a'
+            backgroundColor: '#121212'
           }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('top').position}
@@ -590,7 +590,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'absolute',
               top: '8px',
               left: '8px',
-              backgroundColor: 'rgba(0,0,0,0.7)',
+              backgroundColor: 'rgba(18,18,18,0.7)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -605,7 +605,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 position: 'absolute',
                 top: '8px',
                 right: '8px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
+                backgroundColor: 'rgba(18,18,18,0.7)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '4px',
@@ -622,7 +622,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(18,18,18,0.7)';
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
               }}
               title="전체화면으로 보기"
@@ -637,7 +637,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <div style={{ 
             position: 'relative', 
             overflow: 'hidden', 
-            backgroundColor: '#1a1a1a'
+            backgroundColor: '#121212'
           }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('left').position}
@@ -664,7 +664,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'absolute',
               top: '8px',
               left: '8px',
-              backgroundColor: 'rgba(0,0,0,0.7)',
+              backgroundColor: 'rgba(18,18,18,0.7)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -679,7 +679,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 position: 'absolute',
                 top: '8px',
                 right: '8px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
+                backgroundColor: 'rgba(18,18,18,0.7)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '4px',
@@ -696,7 +696,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(18,18,18,0.7)';
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
               }}
               title="전체화면으로 보기"
@@ -711,7 +711,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <div style={{ 
             position: 'relative', 
             overflow: 'hidden', 
-            backgroundColor: '#1a1a1a'
+            backgroundColor: '#121212'
           }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('right').position}
@@ -738,7 +738,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'absolute',
               top: '8px',
               left: '8px',
-              backgroundColor: 'rgba(0,0,0,0.7)',
+              backgroundColor: 'rgba(18,18,18,0.7)',
               color: '#fff',
               padding: '4px 8px',
               borderRadius: '4px',
@@ -753,7 +753,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 position: 'absolute',
                 top: '8px',
                 right: '8px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
+                backgroundColor: 'rgba(18,18,18,0.7)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '4px',
@@ -770,7 +770,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(18,18,18,0.7)';
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
               }}
               title="전체화면으로 보기"
@@ -869,8 +869,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     removeColumn(id);
                   }}
                 />
-                {/* 기둥 벽면 간격 라벨 (기둥 팝업이 열렸을 때만 표시) */}
-                {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+                {/* 기둥 벽면 간격 라벨 (2D 모드에서 기둥 편집 모달이 열렸을 때만 표시) */}
+                {viewMode === '2D' && activePopup.type === 'columnEdit' && activePopup.id === column.id && (
                   <ColumnDistanceLabels
                     column={column}
                     spaceInfo={spaceInfo}
@@ -942,7 +942,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               right: '10px',
               width: '36px',
               height: '36px',
-              backgroundColor: theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
+              backgroundColor: theme.mode === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
               border: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
               borderRadius: '4px',
               color: theme.mode === 'dark' ? '#ffffff' : '#000000',
@@ -956,12 +956,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,1)';
+              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
               e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
               e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)';
+              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
               e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
@@ -1042,7 +1042,7 @@ const QuadrantContent: React.FC<{
               removeColumn(id);
             }}
           />
-          {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+          {viewMode === '2D' && activePopup.type === 'columnEdit' && activePopup.id === column.id && (
             <ColumnDistanceLabels
               column={column}
               spaceInfo={spaceInfo}

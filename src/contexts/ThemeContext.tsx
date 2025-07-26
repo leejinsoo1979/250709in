@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'red' | 'pink' | 'indigo' | 'teal' | 'yellow' | 'gray' | 'cyan' | 'lime' | 'black' | 'wine' | 'gold' | 'navy' | 'emerald' | 'violet' | 'mint' | 'neon' | 'rust';
+export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'red' | 'pink' | 'indigo' | 'teal' | 'yellow' | 'gray' | 'cyan' | 'lime' | 'black' | 'wine' | 'gold' | 'navy' | 'emerald' | 'violet' | 'mint' | 'neon' | 'rust' | 'white' | 'silver' | 'brown' | 'darkgray' | 'maroon' | 'turquoise' | 'slate' | 'copper' | 'forest' | 'olive';
 
 export interface ThemeConfig {
   mode: ThemeMode;
@@ -215,10 +215,70 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryDark: '#166534',
     },
     rust: {
-      primary: '#BE5028',
-      primaryHover: '#A8441F',
-      primaryLight: theme.mode === 'dark' ? 'rgba(190, 80, 40, 0.2)' : '#fef2f2',
-      primaryDark: '#7F2D14',
+      primary: '#FF7438',
+      primaryHover: '#FF5722',
+      primaryLight: theme.mode === 'dark' ? 'rgba(255, 116, 56, 0.2)' : '#ffe4db',
+      primaryDark: '#E64A19',
+    },
+    white: {
+      primary: '#EDEDED',
+      primaryHover: '#E0E0E0',
+      primaryLight: theme.mode === 'dark' ? 'rgba(237, 237, 237, 0.2)' : '#fafafa',
+      primaryDark: '#BDBDBD',
+    },
+    silver: {
+      primary: '#808080',
+      primaryHover: '#666666',
+      primaryLight: theme.mode === 'dark' ? 'rgba(128, 128, 128, 0.2)' : '#f5f5f5',
+      primaryDark: '#4d4d4d',
+    },
+    brown: {
+      primary: '#5A2B1D',
+      primaryHover: '#4A2318',
+      primaryLight: theme.mode === 'dark' ? 'rgba(90, 43, 29, 0.2)' : '#f5e6e0',
+      primaryDark: '#3E1810',
+    },
+    darkgray: {
+      primary: '#2C3844',
+      primaryHover: '#232D37',
+      primaryLight: theme.mode === 'dark' ? 'rgba(44, 56, 68, 0.2)' : '#e8eaed',
+      primaryDark: '#1A2027',
+    },
+    maroon: {
+      primary: '#3F0D0D',
+      primaryHover: '#330A0A',
+      primaryLight: theme.mode === 'dark' ? 'rgba(63, 13, 13, 0.2)' : '#fce4e4',
+      primaryDark: '#260707',
+    },
+    turquoise: {
+      primary: '#003A7A',
+      primaryHover: '#002F63',
+      primaryLight: theme.mode === 'dark' ? 'rgba(0, 58, 122, 0.2)' : '#e0e9f4',
+      primaryDark: '#00254C',
+    },
+    slate: {
+      primary: '#2E3A47',
+      primaryHover: '#252F3A',
+      primaryLight: theme.mode === 'dark' ? 'rgba(46, 58, 71, 0.2)' : '#e9ebee',
+      primaryDark: '#1C242D',
+    },
+    copper: {
+      primary: '#AD4F34',
+      primaryHover: '#954329',
+      primaryLight: theme.mode === 'dark' ? 'rgba(173, 79, 52, 0.2)' : '#fbe8e3',
+      primaryDark: '#7D3820',
+    },
+    forest: {
+      primary: '#1B3924',
+      primaryHover: '#152D1D',
+      primaryLight: theme.mode === 'dark' ? 'rgba(27, 57, 36, 0.2)' : '#e3ebe6',
+      primaryDark: '#0F2116',
+    },
+    olive: {
+      primary: '#4C462C',
+      primaryHover: '#3D3A23',
+      primaryLight: theme.mode === 'dark' ? 'rgba(76, 70, 44, 0.2)' : '#eeece4',
+      primaryDark: '#2E2B1A',
     },
   };
 
@@ -237,9 +297,9 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       overlay: 'rgba(0, 0, 0, 0.5)',
     },
     dark: {
-      background: '#000000',
-      backgroundSecondary: '#000000',
-      surface: '#000000',
+      background: '#121212',
+      backgroundSecondary: '#121212',
+      surface: '#121212',
       text: '#ffffff',
       textSecondary: '#cccccc',
       textMuted: '#999999',

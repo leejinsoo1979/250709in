@@ -6,9 +6,9 @@
   --theme-primary-light: rgba(16, 185, 129, 0.2);
   --theme-primary-dark: #047857;
   
-  --theme-background: #000000;
-  --theme-background-secondary: #1a1a1a;
-  --theme-surface: #0f0f0f;
+  --theme-background: #121212;
+  --theme-background-secondary: #121212;
+  --theme-surface: #121212;
   --theme-text: #ffffff;
   --theme-text-secondary: #cccccc;
   --theme-text-muted: #999999;

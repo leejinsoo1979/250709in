@@ -13,7 +13,7 @@ const SceneBackground: React.FC<SceneBackgroundProps> = ({ viewMode }) => {
   
   useEffect(() => {
     const backgroundColor = viewMode === '2D' && theme.mode === 'dark' 
-      ? '#000000' 
+      ? '#121212' 
       : viewMode === '2D' 
         ? '#ffffff' 
         : '#ffffff'; // 3D 모드는 항상 흰색

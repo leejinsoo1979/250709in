@@ -5,6 +5,7 @@ import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
+import ProfilePopup from './ProfilePopup';
 
 interface HeaderProps {
   title: string;
@@ -59,6 +60,9 @@ const Header: React.FC<HeaderProps> = ({
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+  const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+  const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 디버깅용 로그
@@ -127,6 +131,18 @@ const Header: React.FC<HeaderProps> = ({
     if (newName && newName.trim() && newName.trim() !== currentName) {
       onProjectNameChange?.(newName.trim());
     }
+  };
+
+  // 프로필 클릭 핸들러
+  const handleProfileClick = () => {
+    if (profileButtonRef.current) {
+      const rect = profileButtonRef.current.getBoundingClientRect();
+      setProfilePopupPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+    setIsProfilePopupOpen(!isProfilePopupOpen);
   };
 
   return (
@@ -307,7 +323,12 @@ const Header: React.FC<HeaderProps> = ({
           )}
 
           {onProfile && (
-            <div className={styles.userProfile}>
+            <div 
+              ref={profileButtonRef}
+              className={styles.userProfile} 
+              onClick={handleProfileClick}
+              style={{ cursor: 'pointer' }}
+            >
               <div className={styles.userProfileAvatar}>
                 {user?.photoURL && !imageError ? (
                   <img 
@@ -348,6 +369,13 @@ const Header: React.FC<HeaderProps> = ({
       <SettingsPanel 
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
+      />
+      
+      {/* 프로필 팝업 */}
+      <ProfilePopup
+        isOpen={isProfilePopupOpen}
+        onClose={() => setIsProfilePopupOpen(false)}
+        position={profilePopupPosition}
       />
     </header>
   );

@@ -51,7 +51,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--theme-text, #1a1a1a);
+  color: var(--theme-text, #121212);
 }
 
 .content {
@@ -76,7 +76,7 @@
 
 .confirmButton {
   padding: 10px 32px;
-  background-color: var(--theme-primary, #1a1a1a);
+  background-color: var(--theme-primary, #121212);
   color: white;
   border: none;
   border-radius: 6px;

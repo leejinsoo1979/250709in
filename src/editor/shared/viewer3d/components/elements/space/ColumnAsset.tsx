@@ -208,6 +208,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         onPositionChange(id, boundedPosition);
         // 즉시 렌더링 업데이트 - 가구 크기 변경 지연 방지
         invalidate();
+        // 강제로 모든 프레임 다시 렌더링
+        requestAnimationFrame(() => {
+          invalidate();
+        });
       }
     };
     
@@ -237,12 +241,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     }
   };
 
-  // 애니메이션 효과 제거 (기둥은 회전하지 않음)
-  // useFrame((state) => {
-  //   if (meshRef.current && isHovered) {
-  //     meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
-  //   }
-  // });
+  // 드래그 중일 때 지속적으로 invalidate 호출
+  useFrame(() => {
+    if (isDragging) {
+      invalidate();
+    }
+  });
 
   return (
     <group position={position}>
