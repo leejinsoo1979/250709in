@@ -7,6 +7,7 @@ interface DesignCardProps {
   onEdit: (design: any) => void;
   onCopy: (design: any) => void;
   onDelete: (design: any) => void;
+  onView?: (design: any) => void;
 }
 interface CreateDesignCardProps {
   onCreateDesign: () => void;
@@ -26,10 +27,13 @@ const formatDate = (date: Date | string | { seconds?: number } | null | undefine
 };
 
 // 개별 디자인 카드
-const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelete }) => {
+const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelete, onView }) => {
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     e.stopPropagation();
-    // 디자인 상세 보기
+    // 디자인 상세 보기 - 3D 미리보기 열기
+    if (onView) {
+      onView(design);
+    }
   };
 
   const handleAction = (action: string, e: React.MouseEvent<HTMLButtonElement>): void => {
@@ -127,12 +131,14 @@ const DesignGrid: React.FC<{
   onEditDesign: any;
   onCopyDesign: any;
   onDeleteDesign: any;
+  onViewDesign?: any;
 }> = ({
   designs = [],
   onCreateDesign,
   onEditDesign,
   onCopyDesign,
-  onDeleteDesign
+  onDeleteDesign,
+  onViewDesign
 }) => {
   if (designs.length === 0) {
     return <EmptyState onCreateDesign={onCreateDesign} />;
@@ -148,6 +154,7 @@ const DesignGrid: React.FC<{
           onEdit={onEditDesign}
           onCopy={onCopyDesign}
           onDelete={onDeleteDesign}
+          onView={onViewDesign}
         />
       ))}
     </div>

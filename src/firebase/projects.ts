@@ -11,7 +11,8 @@ import {
   orderBy, 
   serverTimestamp,
   Timestamp,
-  setDoc
+  setDoc,
+  getDocFromServer
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
@@ -40,7 +41,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
         furnitureCount: 0,
       },
       // spaceConfig은 사용자가 전달한 값 사용
-      spaceConfig: data.spaceConfig || {
+      spaceConfig: projectData.spaceConfig || {
         width: 3600,
         height: 2400,
         depth: 1500,
@@ -107,9 +108,11 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       ? { ...baseData, folderId: data.folderId }
       : baseData;
       
-    console.log('📋 최종 Firestore 저장 데이터:', designFileData);
-
-    console.log('📝 Firestore에 저장할 데이터:', designFileData);
+    console.log('📋 최종 Firestore 저장 데이터:', {
+      ...designFileData,
+      furnitureModulesCount: designFileData.furniture?.placedModules?.length || 0,
+      spaceConfigKeys: designFileData.spaceConfig ? Object.keys(designFileData.spaceConfig) : []
+    });
 
     const docRef = await addDoc(collection(db, 'designFiles'), designFileData);
     
@@ -194,7 +197,7 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
     }
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDocFromServer(docRef);
 
     if (!docSnap.exists()) {
       return { project: null, error: '프로젝트를 찾을 수 없습니다.' };
@@ -232,7 +235,7 @@ export const getProjectById = async (projectId: string): Promise<{ project: any 
     }
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDocFromServer(docRef);
 
     if (!docSnap.exists()) {
       return { project: null, error: '프로젝트를 찾을 수 없습니다.' };
@@ -371,8 +374,18 @@ export const updateDesignFile = async (
   }
 ): Promise<{ error: string | null }> => {
   try {
+    console.log('🔥 [updateDesignFile] 시작:', {
+      designFileId,
+      hasName: !!updates.name,
+      hasSpaceConfig: !!updates.spaceConfig,
+      hasFurniture: !!updates.furniture,
+      hasThumbnail: !!updates.thumbnail,
+      furnitureCount: updates.furniture?.placedModules?.length || 0
+    });
+
     const user = await getCurrentUserAsync();
     if (!user) {
+      console.error('🔥 [updateDesignFile] 사용자 인증 실패');
       return { error: '로그인이 필요합니다.' };
     }
 
@@ -381,6 +394,7 @@ export const updateDesignFile = async (
     // 디자인파일 존재 여부 확인
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
+      console.error('🔥 [updateDesignFile] 디자인파일 없음:', designFileId);
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
@@ -392,7 +406,25 @@ export const updateDesignFile = async (
       ...(updates.thumbnail && { thumbnail: updates.thumbnail })
     };
 
+    console.log('🔥 [updateDesignFile] 업데이트 데이터:', {
+      hasUpdatedAt: !!updateData.updatedAt,
+      keys: Object.keys(updateData),
+      furnitureModulesCount: updateData.furniture?.placedModules?.length || 0
+    });
+
     await updateDoc(docRef, updateData);
+    
+    // 저장 후 즉시 확인
+    console.log('🔥 [updateDesignFile] 저장 직후 확인 시작');
+    const verifyDoc = await getDoc(docRef);
+    if (verifyDoc.exists()) {
+      const savedData = verifyDoc.data();
+      console.log('🔥 [updateDesignFile] 저장 직후 확인:', {
+        savedFurnitureCount: savedData.furniture?.placedModules?.length || 0,
+        savedUpdatedAt: savedData.updatedAt,
+        savedSpaceConfigKeys: savedData.spaceConfig ? Object.keys(savedData.spaceConfig) : []
+      });
+    }
     
     // 디자인파일이 업데이트되면 해당 프로젝트의 썸네일도 업데이트
     if (updates.thumbnail) {
@@ -521,6 +553,72 @@ export const getUserProjects = async (userId?: string): Promise<{ projects: Proj
 //     // 이 에러는 무시 (중요하지 않음)
 //   }
 // };
+
+// 디자인 파일 ID로 조회
+export const getDesignFileById = async (designFileId: string): Promise<{ designFile: DesignFile | null; error: string | null }> => {
+  try {
+    console.log('🔥 [Firebase] getDesignFileById 호출:', designFileId);
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      console.log('🔥 [Firebase] 사용자 인증 실패');
+      return { designFile: null, error: '로그인이 필요합니다.' };
+    }
+
+    const docRef = doc(db, 'designFiles', designFileId);
+    console.log('🔥 [Firebase] Firestore 문서 조회 중... (서버에서 직접)');
+    // 캐시를 무시하고 서버에서 직접 가져오기
+    const docSnap = await getDocFromServer(docRef);
+    console.log('🔥 [Firebase] 문서 존재 여부:', docSnap.exists());
+
+    if (!docSnap.exists()) {
+      console.log('🔥 [Firebase] 디자인 파일이 존재하지 않음');
+      return { designFile: null, error: '디자인 파일을 찾을 수 없습니다.' };
+    }
+
+    const data = docSnap.data();
+    console.log('🔥 [Firebase] 디자인 파일 원본 데이터:', data);
+    console.log('🔥 [Firebase] 디자인 파일 가구 데이터:', { 
+      hasData: !!data,
+      projectId: data?.projectId,
+      hasFurniture: !!data?.furniture,
+      furnitureData: data?.furniture,
+      placedModules: data?.furniture?.placedModules,
+      furnitureCount: data?.furniture?.placedModules?.length || 0
+    });
+    
+    // 디자인 파일이 속한 프로젝트의 소유자 확인
+    const projectRef = doc(db, PROJECTS_COLLECTION, data.projectId);
+    const projectSnap = await getDoc(projectRef);
+    
+    if (!projectSnap.exists() || projectSnap.data().userId !== user.uid) {
+      return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+    }
+
+    const designFile: DesignFile = {
+      id: docSnap.id,
+      name: data.name,
+      projectId: data.projectId,
+      folderId: data.folderId,
+      spaceConfig: data.spaceConfig,
+      furniture: data.furniture || { placedModules: [] },
+      thumbnail: data.thumbnail,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+
+    console.log('🔍 디자인 파일 조회 완료:', {
+      id: designFile.id,
+      name: designFile.name,
+      furniture: designFile.furniture,
+      placedModulesCount: designFile.furniture?.placedModules?.length || 0
+    });
+
+    return { designFile, error: null };
+  } catch (error) {
+    console.error('디자인 파일 조회 에러:', error);
+    return { designFile: null, error: '디자인 파일을 불러오는 중 오류가 발생했습니다.' };
+  }
+};
 
 // 폴더 데이터 타입
 export interface FolderData {

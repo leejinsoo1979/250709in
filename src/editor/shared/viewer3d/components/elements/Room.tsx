@@ -1415,7 +1415,27 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 배치된 가구들 */}
-      <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} placedModules={placedModules} />
+      {placedModules && placedModules.length > 0 ? (
+        // 뷰어 모드에서만 props로 전달
+        <>
+          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
+            viewMode,
+            renderMode,
+            placedModulesCount: placedModules?.length || 0,
+            placedModules: placedModules
+          })}
+          <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} placedModules={placedModules} />
+        </>
+      ) : (
+        // 일반 에디터 모드에서는 props 없이
+        <>
+          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
+            viewMode,
+            renderMode
+          })}
+          <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} />
+        </>
+      )}
     </group>
   );
 };

@@ -153,10 +153,14 @@ export const findNextAvailableSlot = (
   const step = direction === 'left' ? -1 : 1;
   const maxSlot = indexing.columnCount - (isDualFurniture ? 1 : 0);
   
+  // 듀얼장의 경우 한 칸씩만 이동하도록 수정
+  // 싱글장은 기존대로 동작
+  const moveStep = step;
+  
   // 방향에 따라 끝까지 검색
-  for (let slot = currentSlot + step; 
+  for (let slot = currentSlot + moveStep; 
        direction === 'right' ? slot <= maxSlot : slot >= 0; 
-       slot += step) {
+       slot += moveStep) {
     
     if (isSlotAvailable(slot, isDualFurniture, placedModules, spaceInfo, moduleId, excludeModuleId)) {
       return slot;

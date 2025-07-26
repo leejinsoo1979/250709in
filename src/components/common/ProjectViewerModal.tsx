@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
-import { getProjectById } from '../../firebase/projects';
+import { getProjectById, getDesignFileById } from '../../firebase/projects';
 import { ProjectSummary } from '../../firebase/types';
-import Space3DView from '../../editor/shared/viewer3d/Space3DView';
+import Space3DViewerReadOnly from '../../editor/shared/viewer3d/Space3DViewerReadOnly';
 import styles from './ProjectViewerModal.module.css';
 
 interface ProjectViewerModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
+  designFileId?: string;
 }
 
-const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId }) => {
+const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId }) => {
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,68 +24,107 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
     if (isOpen && projectId) {
       loadProject();
     }
-  }, [isOpen, projectId]);
+  }, [isOpen, projectId, designFileId]);
 
   const loadProject = async () => {
+    console.log('🔥 ProjectViewerModal - loadProject 시작:', { projectId, designFileId });
     setLoading(true);
     setError(null);
     
     try {
-      const result = await getProjectById(projectId);
-      if (result.project) {
-        // Firebase 프로젝트 데이터를 뷰어용으로 변환
-        const projectSummary: ProjectSummary = {
-          id: result.project.id,
-          title: result.project.title,
-          createdAt: result.project.createdAt,
-          updatedAt: result.project.updatedAt,
-          furnitureCount: result.project.stats?.furnitureCount || 0,
-          spaceSize: {
-            width: result.project.spaceConfig?.width || 3600,
-            height: result.project.spaceConfig?.height || 2400,
-            depth: result.project.spaceConfig?.depth || 1500,
-          },
-          thumbnail: result.project.thumbnail,
-          folderId: result.project.folderId,
-          // 뷰어를 위한 추가 데이터 - 전체 프로젝트 데이터 사용
-          spaceInfo: result.project.spaceConfig || {
-            width: 3600,
-            height: 2400,
-            depth: 1500,
-            installType: 'builtin',  // installationType이 아닌 installType
-            surroundType: 'surround',
-            baseConfig: {
-              type: 'floor',
-              height: 65,
-              placementType: 'floor',
+      // 디자인 파일 ID가 있으면 디자인 파일 로드, 없으면 프로젝트 로드
+      if (designFileId) {
+        console.log('🔥 디자인 파일 로드 시도:', designFileId);
+        const designResult = await getDesignFileById(designFileId);
+        console.log('🔥 디자인 파일 로드 결과:', designResult);
+        
+        if (designResult.designFile) {
+          const projectSummary: ProjectSummary = {
+            id: designResult.designFile.projectId,
+            title: designResult.designFile.name,
+            createdAt: designResult.designFile.createdAt,
+            updatedAt: designResult.designFile.updatedAt,
+            furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
+            spaceSize: {
+              width: designResult.designFile.spaceConfig?.width || 3600,
+              height: designResult.designFile.spaceConfig?.height || 2400,
+              depth: designResult.designFile.spaceConfig?.depth || 1500,
             },
-            hasFloorFinish: false,
-            floorFinish: null,
-            wallConfig: {
-              left: true,
-              right: true,
-              top: true,
-            },
-            materialConfig: {
-              interiorColor: '#FFFFFF',
-              doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
-            },
-            columns: [],
-            frameSize: { upper: 50, left: 50, right: 50 },
-            gapConfig: { left: 2, right: 2 },
-          },
-          placedModules: result.project.furniture?.placedModules || []
-        };
-        console.log('프로젝트 뷰어 데이터 로드:', {
-          title: projectSummary.title,
-          placedModulesCount: projectSummary.placedModules?.length || 0,
-          placedModulesData: projectSummary.placedModules,
-          spaceInfo: !!projectSummary.spaceInfo,
-          fullProjectData: result.project
-        });
-        setProject(projectSummary);
+            thumbnail: designResult.designFile.thumbnail,
+            folderId: '',
+            spaceInfo: designResult.designFile.spaceConfig,
+            placedModules: designResult.designFile.furniture?.placedModules || []
+          };
+          
+          console.log('디자인 파일 로드:', {
+            designFileId,
+            name: designResult.designFile.name,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModules: projectSummary.placedModules,
+            spaceConfig: projectSummary.spaceInfo
+          });
+          
+          setProject(projectSummary);
+        } else {
+          setError(designResult.error || '디자인 파일을 찾을 수 없습니다.');
+        }
       } else {
-        setError(result.error || '프로젝트를 찾을 수 없습니다.');
+        const result = await getProjectById(projectId);
+        if (result.project) {
+          // Firebase 프로젝트 데이터를 뷰어용으로 변환
+          const projectSummary: ProjectSummary = {
+            id: result.project.id,
+            title: result.project.title,
+            createdAt: result.project.createdAt,
+            updatedAt: result.project.updatedAt,
+            furnitureCount: result.project.stats?.furnitureCount || 0,
+            spaceSize: {
+              width: result.project.spaceConfig?.width || 3600,
+              height: result.project.spaceConfig?.height || 2400,
+              depth: result.project.spaceConfig?.depth || 1500,
+            },
+            thumbnail: result.project.thumbnail,
+            folderId: result.project.folderId,
+            // 뷰어를 위한 추가 데이터 - 전체 프로젝트 데이터 사용
+            spaceInfo: result.project.spaceConfig || {
+              width: 3600,
+              height: 2400,
+              depth: 1500,
+              installType: 'builtin',  // installationType이 아닌 installType
+              surroundType: 'surround',
+              baseConfig: {
+                type: 'floor',
+                height: 65,
+                placementType: 'floor',
+              },
+              hasFloorFinish: false,
+              floorFinish: null,
+              wallConfig: {
+                left: true,
+                right: true,
+                top: true,
+              },
+              materialConfig: {
+                interiorColor: '#FFFFFF',
+                doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
+              },
+              columns: [],
+              frameSize: { upper: 50, left: 50, right: 50 },
+              gapConfig: { left: 2, right: 2 },
+            },
+            placedModules: result.project.furniture?.placedModules || []
+          };
+          console.log('프로젝트 뷰어 데이터 로드:', {
+            title: projectSummary.title,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModulesData: projectSummary.placedModules,
+            spaceInfo: !!projectSummary.spaceInfo,
+            fullProjectData: result.project
+          });
+          setProject(projectSummary);
+        } else {
+          setError(result.error || '프로젝트를 찾을 수 없습니다.');
+        }
       }
     } catch (err) {
       console.error('프로젝트 로드 실패:', err);
@@ -190,7 +230,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
-                {console.log('🎨 Space3DView 렌더링 시작:', {
+                {console.log('🎨 읽기 전용 뷰어 렌더링:', {
                   projectId,
                   viewMode,
                   hasProject: !!project,
@@ -198,14 +238,12 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                   spaceInfo: project.spaceInfo,
                   placedModulesCount: project.placedModules?.length || 0
                 })}
-                <Space3DView 
+                <Space3DViewerReadOnly
                   key={`${projectId}-${viewMode}`}
-                  isViewerOnly={true}
-                  project={project}
-                  projectId={projectId}
+                  spaceConfig={project.spaceInfo}
+                  placedModules={project.placedModules || []}
                   viewMode={viewMode}
                   renderMode="solid"
-                  spaceInfo={project.spaceInfo}
                 />
               </div>
             )}

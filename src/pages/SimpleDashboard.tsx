@@ -117,9 +117,11 @@ const SimpleDashboard: React.FC = () => {
   const [viewerModal, setViewerModal] = useState<{
     isOpen: boolean;
     projectId: string;
+    designFileId?: string;
   }>({
     isOpen: false,
-    projectId: ''
+    projectId: '',
+    designFileId: undefined
   });
 
   // 로그아웃 모달 상태 추가
@@ -134,6 +136,7 @@ const SimpleDashboard: React.FC = () => {
   // 메뉴 상태 추가
   const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>('all');
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+  const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
   const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
   const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
   
@@ -329,10 +332,16 @@ const SimpleDashboard: React.FC = () => {
   // 북마크 및 휴지통 데이터 로드
   useEffect(() => {
     if (user) {
-      // 북마크 로드
+      // 프로젝트 북마크 로드
       const savedBookmarks = localStorage.getItem(`bookmarks_${user.uid}`);
       if (savedBookmarks) {
         setBookmarkedProjects(new Set(JSON.parse(savedBookmarks)));
+      }
+      
+      // 디자인 파일 북마크 로드
+      const savedDesignBookmarks = localStorage.getItem(`design_bookmarks_${user.uid}`);
+      if (savedDesignBookmarks) {
+        setBookmarkedDesigns(new Set(JSON.parse(savedDesignBookmarks)));
       }
       
       // 휴지통 프로젝트 로드
@@ -373,7 +382,7 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [selectedProject, breadcrumbPath]);
 
-  // 북마크 토글 함수
+  // 프로젝트 북마크 토글 함수
   const toggleBookmark = (projectId: string) => {
     const newBookmarks = new Set(bookmarkedProjects);
     if (newBookmarks.has(projectId)) {
@@ -384,6 +393,20 @@ const SimpleDashboard: React.FC = () => {
     setBookmarkedProjects(newBookmarks);
     if (user) {
       localStorage.setItem(`bookmarks_${user.uid}`, JSON.stringify(Array.from(newBookmarks)));
+    }
+  };
+  
+  // 디자인 파일 북마크 토글 함수
+  const toggleDesignBookmark = (designId: string) => {
+    const newBookmarks = new Set(bookmarkedDesigns);
+    if (newBookmarks.has(designId)) {
+      newBookmarks.delete(designId);
+    } else {
+      newBookmarks.add(designId);
+    }
+    setBookmarkedDesigns(newBookmarks);
+    if (user) {
+      localStorage.setItem(`design_bookmarks_${user.uid}`, JSON.stringify(Array.from(newBookmarks)));
     }
   };
 
@@ -461,6 +484,7 @@ const SimpleDashboard: React.FC = () => {
     
     switch (activeMenu) {
       case 'bookmarks':
+        // 북마크된 프로젝트들 반환
         return allProjects.filter(p => 
           bookmarkedProjects.has(p.id) && !deletedProjectIds.has(p.id)
         );
@@ -473,6 +497,30 @@ const SimpleDashboard: React.FC = () => {
         // 삭제된 프로젝트는 제외하고 반환
         return allProjects.filter(p => !deletedProjectIds.has(p.id));
     }
+  };
+  
+  // 북마크된 디자인 파일들 가져오기
+  const getBookmarkedDesignItems = () => {
+    const items = [];
+    
+    // 모든 프로젝트를 순회하며 북마크된 디자인 파일 찾기
+    allProjects.forEach(project => {
+      const designFiles = projectDesignFiles[project.id] || [];
+      
+      designFiles.forEach(designFile => {
+        if (bookmarkedDesigns.has(designFile.id)) {
+          items.push({
+            id: designFile.id,
+            type: 'design',
+            name: designFile.name,
+            project: project,
+            designFile: designFile
+          });
+        }
+      });
+    });
+    
+    return items;
   };
   
   // 프로젝트의 모든 파일과 폴더를 가져오는 함수
@@ -647,6 +695,36 @@ const SimpleDashboard: React.FC = () => {
       console.log('📊 최종 아이템 개수:', items.length);
       return items;
     }
+    
+    // 북마크 메뉴인 경우 프로젝트와 디자인 파일 모두 표시
+    if (activeMenu === 'bookmarks') {
+      const items = [];
+      
+      // 북마크된 프로젝트들
+      const filteredProjects = getFilteredProjects();
+      filteredProjects.forEach(project => {
+        items.push({
+          id: project.id,
+          type: 'project',
+          name: project.title,
+          project: project,
+          icon: ''
+        });
+      });
+      
+      // 북마크된 디자인 파일들
+      const bookmarkedDesignItems = getBookmarkedDesignItems();
+      items.push(...bookmarkedDesignItems);
+      
+      console.log('📋 북마크 뷰 - 전체 아이템:', {
+        totalItems: items.length,
+        projectsCount: filteredProjects.length,
+        designsCount: bookmarkedDesignItems.length
+      });
+      
+      return items;
+    }
+    
     // 메뉴별 프로젝트 필터링 적용
     const filteredProjects = getFilteredProjects();
     console.log('📋 전체 프로젝트 뷰 - 필터링된 프로젝트들:', {
@@ -717,17 +795,20 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // 3D 뷰어 모달 핸들러
-  const handleOpenViewer = (projectId: string) => {
+  const handleOpenViewer = (projectId: string, designFileId?: string) => {
+    console.log('🔥 handleOpenViewer 호출:', { projectId, designFileId });
     setViewerModal({
       isOpen: true,
-      projectId: projectId
+      projectId: projectId,
+      designFileId: designFileId
     });
   };
 
   const handleCloseViewer = () => {
     setViewerModal({
       isOpen: false,
-      projectId: ''
+      projectId: '',
+      designFileId: undefined
     });
   };
 
@@ -1586,7 +1667,7 @@ const SimpleDashboard: React.FC = () => {
               <StarIcon size={20} />
             </div>
             <span>북마크</span>
-            <span className={styles.navItemCount}>{allProjects.filter(p => bookmarkedProjects.has(p.id)).length}</span>
+            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedDesigns.size}</span>
           </div>
           
           <div 
@@ -2205,9 +2286,6 @@ const SimpleDashboard: React.FC = () => {
             </div>
 
             {/* 협업 탭들 */}
-            {activeMenu === 'bookmarks' && (
-              <BookmarksTab onProjectSelect={(projectId) => navigate(`/configurator?projectId=${projectId}`)} />
-            )}
             {activeMenu === 'shared' && (
               <SharedTab onProjectSelect={(projectId) => navigate(`/configurator?projectId=${projectId}`)} />
             )}
@@ -2218,8 +2296,8 @@ const SimpleDashboard: React.FC = () => {
               <ProfileTab />
             )}
             
-            {/* 기존 프로젝트 그리드 (all, trash 메뉴일 때만 표시) */}
-            {(activeMenu === 'all' || activeMenu === 'trash') && (
+            {/* 기존 프로젝트 그리드 (all, trash, bookmarks 메뉴일 때 표시) */}
+            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks') && (
               <>
               {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                 <div className={styles.listTableHeader}>
@@ -2407,9 +2485,9 @@ const SimpleDashboard: React.FC = () => {
                         (() => {
                           // 디자인 파일인 경우 해당 디자인의 썸네일 표시
                           if (item.type === 'design') {
-                            // 해당 디자인 파일 찾기
+                            // 해당 디자인 파일 찾기 (item.designFile이 있으면 우선 사용)
                             const designFiles = projectDesignFiles[item.project.id] || [];
-                            const designFile = designFiles.find(df => df.name === item.name);
+                            const designFile = item.designFile || designFiles.find(df => df.name === item.name || df.id === item.id);
                             
                             console.log('🔍 디자인 카드 썸네일 생성:', {
                               itemName: item.name,
@@ -2452,7 +2530,17 @@ const SimpleDashboard: React.FC = () => {
                                     className={styles.overlayButton}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleOpenViewer(item.project.id);
+                                      console.log('🔥 디자인 미리보기 버튼 클릭:', {
+                                        itemId: item.id,
+                                        itemType: item.type,
+                                        projectId: item.project.id,
+                                        hasDesignFile: !!item.designFile,
+                                        designFileId: item.designFile?.id,
+                                        itemData: item
+                                      });
+                                      // 실제 디자인 파일이 있으면 디자인 파일 ID 사용, 없으면 프로젝트 ID만 사용
+                                      const actualDesignFileId = item.designFile?.id || (item.id.endsWith('-design') ? undefined : item.id);
+                                      handleOpenViewer(item.project.id, actualDesignFileId);
                                     }}
                                   >
                                     <EyeIcon size={16} />
@@ -2877,16 +2965,23 @@ const SimpleDashboard: React.FC = () => {
               <ShareIcon size={14} />
               공유하기
             </div>
-            {moreMenu.itemType === 'project' && (
+            {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design') && (
               <div 
                 className={styles.moreMenuItem}
                 onClick={() => {
-                  toggleBookmark(moreMenu.itemId);
+                  if (moreMenu.itemType === 'project') {
+                    toggleBookmark(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'design') {
+                    toggleDesignBookmark(moreMenu.itemId);
+                  }
                   closeMoreMenu();
                 }}
               >
                 <StarIcon size={14} />
-                {bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가'}
+                {moreMenu.itemType === 'project' 
+                  ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                  : (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                }
               </div>
             )}
             <div 
@@ -3009,6 +3104,7 @@ const SimpleDashboard: React.FC = () => {
         isOpen={viewerModal.isOpen}
         onClose={handleCloseViewer}
         projectId={viewerModal.projectId}
+        designFileId={viewerModal.designFileId}
       />
 
       {/* 설정 패널 */}

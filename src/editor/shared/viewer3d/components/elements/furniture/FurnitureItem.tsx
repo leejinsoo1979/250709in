@@ -76,7 +76,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 모듈 데이터 가져오기
   let moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
   
+  console.log('🔥 FurnitureItem 렌더링:', {
+    placedModuleId: placedModule.id,
+    moduleId: placedModule.moduleId,
+    moduleDataFound: !!moduleData,
+    placedModuleData: placedModule,
+    internalSpace
+  });
+  
   if (!moduleData) {
+    console.error('❌ 모듈 데이터를 찾을 수 없음:', placedModule.moduleId);
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
 
@@ -478,7 +487,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group
           position={[
             originalSlotCenterX, // 항상 원래 슬롯 중심
-            furnitureStartY + height / 2, // 가구와 동일한 Y 위치
+            0, // DoorModule이 자체적으로 Y 위치를 계산함
             furnitureZ // 가구와 동일한 Z 위치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}

@@ -10,15 +10,25 @@ import FurnitureItem from './FurnitureItem';
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
   renderMode: 'solid' | 'wireframe';
+  placedModules?: any[];
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   viewMode,
-  renderMode
+  renderMode,
+  placedModules: propPlacedModules
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const placedModules = useFurnitureStore(state => state.placedModules);
+  const storePlacedModules = useFurnitureStore(state => state.placedModules);
+  const placedModules = propPlacedModules || storePlacedModules;
   const { activePopup } = useUIStore();
+  
+  console.log('🔥 PlacedFurnitureContainer 렌더링:', {
+    placedModulesCount: placedModules.length,
+    placedModules: placedModules,
+    isViewerOnly: !!propPlacedModules,
+    spaceInfo: !!spaceInfo
+  });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -48,16 +58,24 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
   }
 
-  // 커스텀 훅들 사용
-  const selectionState = useFurnitureSelection();
-  const dragHandlers = useFurnitureDrag({ 
+  // 커스텀 훅들 사용 (viewer 모드가 아닐 때만)
+  const isViewerOnly = !!propPlacedModules;
+  const selectionState = !isViewerOnly ? useFurnitureSelection() : { dragMode: false, handleFurnitureClick: () => {} };
+  const dragHandlers = !isViewerOnly ? useFurnitureDrag({ 
     spaceInfo
-  });
+  }) : {
+    handlePointerDown: () => {},
+    handlePointerMove: () => {},
+    handlePointerUp: () => {},
+    draggingModuleId: null
+  };
 
   // 키보드 이벤트 훅 (스마트 건너뛰기 로직 사용)
-  useFurnitureKeyboard({
-    spaceInfo
-  });
+  if (!isViewerOnly) {
+    useFurnitureKeyboard({
+      spaceInfo
+    });
+  }
 
   return (
     <group>

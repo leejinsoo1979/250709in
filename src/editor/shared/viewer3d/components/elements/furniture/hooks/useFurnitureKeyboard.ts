@@ -88,7 +88,8 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              targetModuleId
+              editingModule.moduleId,
+              targetModuleId // excludeModuleId로 전달
             );
             
             if (nextSlot !== null) {
@@ -121,7 +122,8 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              targetModuleId
+              editingModule.moduleId,
+              targetModuleId // excludeModuleId로 전달
             );
             
             if (nextSlot !== null) {

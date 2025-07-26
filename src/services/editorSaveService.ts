@@ -100,7 +100,7 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
       description: basicInfo.description,
       version: '1.0.0',
       createdAt: basicInfo.createdAt,
-      updatedAt: new Date() as any,
+      updatedAt: basicInfo.updatedAt, // Firebase에서 serverTimestamp()로 처리됨
     },
     spaceConfig,
     customLayout,

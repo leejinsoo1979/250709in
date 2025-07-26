@@ -1,8 +1,13 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { Settings, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
+import { useNavigate } from 'react-router-dom';
+import { useProjectStore } from '@/store/core/projectStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useState, useEffect, useRef } from 'react';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -20,6 +25,65 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggle
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Store hooks for checking unsaved changes
+  const projectStore = useProjectStore();
+  const spaceConfigStore = useSpaceConfigStore();
+  const furnitureStore = useFurnitureStore();
+  
+  // Track initial state
+  const [initialState, setInitialState] = useState<any>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  
+  // Save initial state when component mounts
+  useEffect(() => {
+    const state = {
+      project: {
+        basicInfo: projectStore.basicInfo,
+        updatedAt: projectStore.updatedAt
+      },
+      spaceConfig: {
+        spaceInfo: spaceConfigStore.spaceInfo,
+        materialConfig: spaceConfigStore.materialConfig,
+        columns: spaceConfigStore.columns
+      },
+      furniture: {
+        placedModules: furnitureStore.placedModules
+      }
+    };
+    setInitialState(JSON.parse(JSON.stringify(state)));
+  }, []);
+  
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    if (!initialState) return false;
+    
+    const currentState = {
+      project: {
+        basicInfo: projectStore.basicInfo,
+        updatedAt: projectStore.updatedAt
+      },
+      spaceConfig: {
+        spaceInfo: spaceConfigStore.spaceInfo,
+        materialConfig: spaceConfigStore.materialConfig,
+        columns: spaceConfigStore.columns
+      },
+      furniture: {
+        placedModules: furnitureStore.placedModules
+      }
+    };
+    
+    return JSON.stringify(initialState) !== JSON.stringify(currentState);
+  };
+  
+  const handleExitClick = () => {
+    if (hasUnsavedChanges()) {
+      setShowExitConfirm(true);
+    } else {
+      navigate('/dashboard');
+    }
+  };
   const tabs = [
     {
       id: 'module' as SidebarTab,
@@ -74,12 +138,60 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* 하단 설정 버튼 */}
+      {/* 하단 나가기 버튼 */}
       <div className={styles.userSection}>
-        <button className={styles.settingsButton} title="설정">
-          <Settings size={24} />
+        <button 
+          className={styles.settingsButton} 
+          title="대시보드로 나가기"
+          onClick={handleExitClick}
+        >
+          <LogOut size={24} />
         </button>
       </div>
+      
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div 
+          className={styles.modalOverlay}
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div 
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalIcon}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 className={styles.modalTitle}>
+              저장하지 않은 변경사항이 있습니다
+            </h3>
+            <p className={styles.modalDescription}>
+              변경사항을 저장하지 않고 나가시겠습니까?
+              <br />
+              저장하지 않은 내용은 잃어버리게 됩니다.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalButtonCancel}
+                onClick={() => setShowExitConfirm(false)}
+              >
+                취소
+              </button>
+              <button
+                className={styles.modalButtonConfirm}
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  navigate('/dashboard');
+                }}
+              >
+                저장하지 않고 나가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

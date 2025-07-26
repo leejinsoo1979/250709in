@@ -196,6 +196,125 @@
   color: var(--theme-info);
 }
 
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--theme-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: var(--theme-surface);
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: var(--popup-shadow);
+  animation: slideIn 0.3s ease;
+  border: 1px solid var(--theme-border);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalIcon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  background: var(--theme-primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-primary);
+}
+
+.modalTitle {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.modalDescription {
+  margin: 0 0 28px 0;
+  color: var(--theme-text-secondary);
+  line-height: 1.6;
+  text-align: center;
+  font-size: 15px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modalButtonCancel {
+  padding: 10px 24px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+.modalButtonCancel:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-text-secondary);
+}
+
+.modalButtonConfirm {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--theme-primary);
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+.modalButtonConfirm:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--theme-primary-light);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .sidebar {
@@ -224,5 +343,27 @@
     width: 14px;
     height: 14px;
     right: 4px;
+  }
+  
+  .modalContent {
+    padding: 24px;
+    margin: 0 20px;
+  }
+  
+  .modalTitle {
+    font-size: 18px;
+  }
+  
+  .modalDescription {
+    font-size: 14px;
+  }
+  
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+  
+  .modalButtonCancel,
+  .modalButtonConfirm {
+    width: 100%;
   }
 }

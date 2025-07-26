@@ -411,14 +411,24 @@ const Configurator: React.FC = () => {
           if (currentDesignFileId) {
             console.log('💾 [DEBUG] 기존 디자인 파일 업데이트');
             const { updateDesignFile } = await import('@/firebase/projects');
-            const { error } = await updateDesignFile(currentDesignFileId, {
+            
+            const updatePayload = {
               name: currentDesignFileName || basicInfo.title,
               spaceConfig: removeUndefinedValues(spaceInfo),
               furniture: {
                 placedModules: removeUndefinedValues(placedModules)
               },
               thumbnail: thumbnail
+            };
+            
+            console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
+              name: updatePayload.name,
+              spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
+              furnitureCount: updatePayload.furniture.placedModules.length,
+              hasThumbnail: !!updatePayload.thumbnail
             });
+            
+            const { error } = await updateDesignFile(currentDesignFileId, updatePayload);
             
             if (error) {
               console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', error);
