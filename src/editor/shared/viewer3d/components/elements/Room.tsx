@@ -677,15 +677,18 @@ const Room: React.FC<RoomProps> = ({
       })}
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
+      {/* 노서라운드 모드에서는 좌우 프레임 숨김 */}
       {console.log('🔍 Left Frame Check:', {
         showFrame,
         'frameThickness.left': frameThickness.left,
         'frameThickness.left > 0': frameThickness.left > 0,
         surroundType: spaceInfo.surroundType,
+        'is no-surround': spaceInfo.surroundType === 'no-surround',
         'surroundType !== no-surround': spaceInfo.surroundType !== 'no-surround',
         installType: spaceInfo.installType,
         'frameThicknessMm.left': frameThicknessMm.left,
-        'should render': showFrame && frameThickness.left > 0
+        'should render': showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround',
+        'FINAL RENDER': showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround'
       })}
       {showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround' && (
         <BoxWithEdges
@@ -718,15 +721,18 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
+      {/* 노서라운드 모드에서는 좌우 프레임 숨김 */}
       {console.log('🔍 Right Frame Check:', {
         showFrame,
         'frameThickness.right': frameThickness.right,
         'frameThickness.right > 0': frameThickness.right > 0,
         surroundType: spaceInfo.surroundType,
+        'is no-surround': spaceInfo.surroundType === 'no-surround',
         'surroundType !== no-surround': spaceInfo.surroundType !== 'no-surround',
         installType: spaceInfo.installType,
         'frameThicknessMm.right': frameThicknessMm.right,
-        'should render': showFrame && frameThickness.right > 0
+        'should render': showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround',
+        'FINAL RENDER': showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround'
       })}
       {showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround' && (
         <BoxWithEdges
@@ -760,7 +766,7 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
-      {/* 노서라운드 모드에서는 전체 너비로 확장 */}
+      {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {showFrame && topBottomFrameHeightMm > 0 && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
@@ -1041,7 +1047,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
-      {showFrame &&
+      {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
+      {showFrame && spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (
         <group 
@@ -1068,7 +1075,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
-      {showFrame &&
+      {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
+      {showFrame && spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (
         <group 
@@ -1425,6 +1433,12 @@ export default React.memo(Room, (prevProps, nextProps) => {
   if (prevSpace.wallFinishThickness !== nextSpace.wallFinishThickness) return false;
   if (prevSpace.hasFloorFinish !== nextSpace.hasFloorFinish) return false;
   if (prevSpace.floorFinishThickness !== nextSpace.floorFinishThickness) return false;
+  
+  // surroundType 비교 (노서라운드 설정 변경 시 프레임 업데이트)
+  if (prevSpace.surroundType !== nextSpace.surroundType) return false;
+  
+  // frameSize 비교 (프레임 크기 변경 시 업데이트)
+  if (JSON.stringify(prevSpace.frameSize) !== JSON.stringify(nextSpace.frameSize)) return false;
   
   // 재질 설정 비교
   if (JSON.stringify(prevSpace.materialConfig) !== JSON.stringify(nextSpace.materialConfig)) return false;

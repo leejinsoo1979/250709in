@@ -64,10 +64,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   
-  // 테마나 뷰모드 변경 시 캔버스 재생성
+  // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
   useEffect(() => {
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  }, [theme, viewMode, view2DDirection, renderMode]);
+  }, [theme, viewMode, view2DDirection]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);
