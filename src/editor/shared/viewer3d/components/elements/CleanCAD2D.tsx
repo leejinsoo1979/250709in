@@ -1251,9 +1251,122 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const actualSpaceHeight = mmToThreeUnits(spaceInfo.height);
     
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    const topDimensionY = actualSpaceHeight + mmToThreeUnits(hasPlacedModules ? 280 : 200);
+    const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 X 위치
     
     return (
       <group>
+        {/* 상단 전체 깊이 치수선 */}
+        <group>
+          {/* 치수선 */}
+          <Line
+            points={[[leftDimensionX, topDimensionY, spaceZOffset], [leftDimensionX, topDimensionY, spaceZOffset + panelDepth]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 전면 화살표 */}
+          <Line
+            points={createArrowHead([leftDimensionX, topDimensionY, spaceZOffset], [leftDimensionX, topDimensionY, spaceZOffset + 0.05])}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 후면 화살표 */}
+          <Line
+            points={createArrowHead([leftDimensionX, topDimensionY, spaceZOffset + panelDepth], [leftDimensionX, topDimensionY, spaceZOffset + panelDepth - 0.05])}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 전체 깊이 치수 텍스트 */}
+          {(showDimensionsText || isStep2) && (
+            <Text
+              position={[leftDimensionX - mmToThreeUnits(60), topDimensionY, spaceZOffset + panelDepth / 2]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, Math.PI / 2, 0]}
+            >
+              {spaceInfo.depth}
+            </Text>
+          )}
+          
+          {/* 연장선 (전면) */}
+          <Line
+            points={[[0, 0, spaceZOffset], [leftDimensionX - mmToThreeUnits(20), 0, spaceZOffset]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[[0, actualSpaceHeight, spaceZOffset], [leftDimensionX - mmToThreeUnits(20), actualSpaceHeight, spaceZOffset]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 연장선 (후면) */}
+          <Line
+            points={[[0, 0, spaceZOffset + panelDepth], [leftDimensionX - mmToThreeUnits(20), 0, spaceZOffset + panelDepth]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[[0, actualSpaceHeight, spaceZOffset + panelDepth], [leftDimensionX - mmToThreeUnits(20), actualSpaceHeight, spaceZOffset + panelDepth]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+        </group>
+        
+        {/* 좌측 전체 높이 치수선 */}
+        <group>
+          {/* 치수선 */}
+          <Line
+            points={[[leftDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 하단 화살표 */}
+          <Line
+            points={createArrowHead([leftDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 상단 화살표 */}
+          <Line
+            points={createArrowHead([leftDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 전체 높이 치수 텍스트 */}
+          {(showDimensionsText || isStep2) && (
+            <Text
+              position={[leftDimensionX - mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+            >
+              {spaceInfo.height}
+            </Text>
+          )}
+          
+          {/* 연장선 */}
+          <Line
+            points={[[0, 0, spaceZOffset], [0, 0, spaceZOffset - mmToThreeUnits(180)]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[[0, actualSpaceHeight, spaceZOffset], [0, actualSpaceHeight, spaceZOffset - mmToThreeUnits(180)]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+        </group>
 
 
 
@@ -1629,61 +1742,89 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     );
   };
 
-  // 우측뷰 치수선 - 객체 좌표계와 맞춤
+  // 우측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderRightView = () => {
+    if (viewDirection !== 'right') return null;
+    
+    // Room.tsx와 동일한 계산
+    const panelDepthMm = spaceInfo.depth || 600;
+    const furnitureDepthMm = 600;
     const spaceWidth = mmToThreeUnits(spaceInfo.width);
     const spaceDepth = mmToThreeUnits(spaceInfo.depth);
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
-    const topDimensionY = spaceHeight + mmToThreeUnits(hasPlacedModules ? 280 : 200);
-    const rightDimensionZ = -mmToThreeUnits(200);
+    const spaceHeight = mmToThreeUnits(spaceInfo.height);
+    const panelDepth = mmToThreeUnits(panelDepthMm);
+    const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
     
-    // 우측뷰에서는 Z축이 가로(깊이), Y축이 세로(높이)
-    // 공간은 Z축 중심에서 -depth/2 ~ +depth/2로 배치됨
-    const spaceZOffset = -spaceDepth / 2;
+    // Room.tsx와 완전히 동일한 Z 오프셋 계산
+    const spaceZOffset = -panelDepth / 2;
+    const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
+    
+    const actualSpaceWidth = mmToThreeUnits(spaceInfo.width);
+    const actualSpaceHeight = mmToThreeUnits(spaceInfo.height);
+    
+    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    const topDimensionY = actualSpaceHeight + mmToThreeUnits(hasPlacedModules ? 280 : 200);
+    const rightDimensionX = actualSpaceWidth + mmToThreeUnits(200); // 우측 치수선 X 위치
     
     return (
       <group>
         {/* 상단 전체 깊이 치수선 */}
         <group>
+          {/* 치수선 */}
           <Line
-            points={[[spaceWidth, topDimensionY, spaceZOffset], [spaceWidth, topDimensionY, spaceZOffset + spaceDepth]]}
+            points={[[rightDimensionX, topDimensionY, spaceZOffset], [rightDimensionX, topDimensionY, spaceZOffset + panelDepth]]}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 전면 화살표 */}
           <Line
-            points={createArrowHead([spaceWidth, topDimensionY, spaceZOffset], [spaceWidth, topDimensionY, spaceZOffset + 0.05])}
+            points={createArrowHead([rightDimensionX, topDimensionY, spaceZOffset], [rightDimensionX, topDimensionY, spaceZOffset + 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 후면 화살표 */}
           <Line
-            points={createArrowHead([spaceWidth, topDimensionY, spaceZOffset + spaceDepth], [spaceWidth, topDimensionY, spaceZOffset + spaceDepth - 0.05])}
+            points={createArrowHead([rightDimensionX, topDimensionY, spaceZOffset + panelDepth], [rightDimensionX, topDimensionY, spaceZOffset + panelDepth - 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 전체 깊이 치수 텍스트 */}
-          <Text
-            position={[spaceWidth, topDimensionY + mmToThreeUnits(40), spaceZOffset + spaceDepth / 2]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {spaceInfo.depth}
-          </Text>
+          {(showDimensionsText || isStep2) && (
+            <Text
+              position={[rightDimensionX + mmToThreeUnits(60), topDimensionY, spaceZOffset + panelDepth / 2]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, -Math.PI / 2, 0]}
+            >
+              {spaceInfo.depth}
+            </Text>
+          )}
           
-          {/* 연장선 (가구 우측면에서 조금 떨어진 위치에서 시작) */}
+          {/* 연장선 (전면) */}
           <Line
-            points={[[spaceWidth, 0, spaceZOffset], [spaceWidth, topDimensionY + mmToThreeUnits(20), spaceZOffset]]}
+            points={[[actualSpaceWidth, 0, spaceZOffset], [rightDimensionX + mmToThreeUnits(20), 0, spaceZOffset]]}
             color={dimensionColor}
             lineWidth={1}
           />
           <Line
-            points={[[spaceWidth, 0, spaceZOffset + spaceDepth], [spaceWidth, topDimensionY + mmToThreeUnits(20), spaceZOffset + spaceDepth]]}
+            points={[[actualSpaceWidth, actualSpaceHeight, spaceZOffset], [rightDimensionX + mmToThreeUnits(20), actualSpaceHeight, spaceZOffset]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          
+          {/* 연장선 (후면) */}
+          <Line
+            points={[[actualSpaceWidth, 0, spaceZOffset + panelDepth], [rightDimensionX + mmToThreeUnits(20), 0, spaceZOffset + panelDepth]]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[[actualSpaceWidth, actualSpaceHeight, spaceZOffset + panelDepth], [rightDimensionX + mmToThreeUnits(20), actualSpaceHeight, spaceZOffset + panelDepth]]}
             color={dimensionColor}
             lineWidth={1}
           />
@@ -1691,46 +1832,49 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         {/* 우측 전체 높이 치수선 */}
         <group>
+          {/* 치수선 */}
           <Line
-            points={[[spaceWidth, 0, rightDimensionZ], [spaceWidth, spaceHeight, rightDimensionZ]]}
+            points={[[rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 하단 화살표 */}
           <Line
-            points={createArrowHead([spaceWidth, 0, rightDimensionZ], [spaceWidth, 0.05, rightDimensionZ])}
+            points={createArrowHead([rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 상단 화살표 */}
           <Line
-            points={createArrowHead([spaceWidth, spaceHeight, rightDimensionZ], [spaceWidth, spaceHeight - 0.05, rightDimensionZ])}
+            points={createArrowHead([rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
             color={dimensionColor}
             lineWidth={1}
           />
           
           {/* 전체 높이 치수 텍스트 */}
-          <Text
-            position={[spaceWidth, spaceHeight / 2, rightDimensionZ - mmToThreeUnits(60)]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-            rotation={[0, 0, -Math.PI / 2]}
-          >
-            {spaceInfo.height}
-          </Text>
+          {(showDimensionsText || isStep2) && (
+            <Text
+              position={[rightDimensionX + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, -Math.PI / 2]}
+            >
+              {spaceInfo.height}
+            </Text>
+          )}
           
-          {/* 연장선 (가구 우측면에서 조금 떨어진 위치에서 시작) */}
+          {/* 연장선 */}
           <Line
-            points={[[spaceWidth, 0, spaceZOffset], [spaceWidth, 0, rightDimensionZ - mmToThreeUnits(20)]]}
+            points={[[actualSpaceWidth, 0, spaceZOffset], [actualSpaceWidth, 0, spaceZOffset - mmToThreeUnits(180)]]}
             color={dimensionColor}
             lineWidth={1}
           />
           <Line
-            points={[[spaceWidth, spaceHeight, spaceZOffset], [spaceWidth, spaceHeight, rightDimensionZ - mmToThreeUnits(20)]]}
+            points={[[actualSpaceWidth, actualSpaceHeight, spaceZOffset], [actualSpaceWidth, actualSpaceHeight, spaceZOffset - mmToThreeUnits(180)]]}
             color={dimensionColor}
             lineWidth={1}
           />
@@ -1739,7 +1883,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 좌측 3구간 높이 치수선 */}
         <group>
           {(() => {
-            const leftDimensionZ = spaceZOffset + spaceDepth + mmToThreeUnits(120);
+            const leftDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120);
             const topFrameHeight = frameSize.top;
             const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
             const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight;

@@ -27,6 +27,9 @@ interface UIState {
   // 그리드(가이드) 표시 상태
   showGuides: boolean;
   
+  // 축 표시 상태
+  showAxis: boolean;
+  
   // 활성 팝업 상태 (가구, 가구 편집, 기둥, 기둥 편집, 가벽, 가벽 편집 모달 중 하나만 활성화)
   activePopup: {
     type: 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null;
@@ -57,6 +60,7 @@ interface UIState {
   toggleDoors: () => void;
   toggleDimensions: () => void;
   toggleGuides: () => void;
+  toggleAxis: () => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -84,6 +88,7 @@ const initialUIState = {
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: false, // 기본값: 그리드(가이드) 표시 안함
+  showAxis: true, // 기본값: 축 표시
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null,
     id: null
@@ -119,6 +124,9 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ showDimensionsText: !state.showDimensionsText })),
       toggleGuides: () =>
         set((state) => ({ showGuides: !state.showGuides })),
+      
+      toggleAxis: () =>
+        set((state) => ({ showAxis: !state.showAxis })),
       
       // 가구 팝업 열기 (다른 모든 팝업 닫기)
       openFurniturePopup: (moduleId) =>

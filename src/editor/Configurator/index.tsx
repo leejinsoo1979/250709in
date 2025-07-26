@@ -60,7 +60,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -1936,6 +1936,8 @@ const Configurator: React.FC = () => {
             onShowDimensionsTextToggle={toggleDimensionsText}
             showGuides={showGuides}
             onShowGuidesToggle={toggleGuides}
+            showAxis={showAxis}
+            onShowAxisToggle={toggleAxis}
             doorsOpen={doorsOpen}
             onDoorsToggle={toggleDoors}
             hasDoorsInstalled={hasDoorsInstalled}

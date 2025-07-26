@@ -723,7 +723,7 @@ const Room: React.FC<RoomProps> = ({
         'frameThicknessMm.left': frameThicknessMm.left,
         'should render': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (
+      {showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround' && (
         <BoxWithEdges
           args={[
             frameThickness.left, 
@@ -764,7 +764,7 @@ const Room: React.FC<RoomProps> = ({
         'frameThicknessMm.right': frameThicknessMm.right,
         'should render': showFrame && frameThickness.right > 0
       })}
-      {showFrame && frameThickness.right > 0 && (
+      {showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround' && (
         <BoxWithEdges
           args={[
             frameThickness.right, 

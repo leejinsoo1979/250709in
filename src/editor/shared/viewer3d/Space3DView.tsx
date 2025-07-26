@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
@@ -39,7 +39,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, activePopup, setView2DDirection, setViewMode: setUIViewMode } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -437,6 +437,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     };
   };
 
+  // 전환 애니메이션 처리 함수
+  const handleQuadrantExpand = (direction: 'front' | 'top' | 'left' | 'right') => {
+    // 즉시 뷰 변경하여 깜빡임 방지
+    setView2DDirection(direction);
+    setUIViewMode('2D');
+  };
+
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
@@ -451,7 +458,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             gridTemplateColumns: '1fr 1fr',
             gridTemplateRows: '1fr 1fr',
             gap: '0',
-            backgroundColor: colors.primary || '#4CAF50'
+            backgroundColor: colors.primary || '#4CAF50',
+            overflow: 'hidden'
           }}
         >
           {/* 가로 중앙선 */}
@@ -478,7 +486,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             transform: 'translateX(-50%)'
           }} />
           {/* 좌측 상단: 정면 뷰 */}
-          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+          <div style={{ 
+            position: 'relative', 
+            overflow: 'hidden', 
+            backgroundColor: '#1a1a1a'
+          }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('front').position}
               cameraTarget={getOptimizedCameraForView('front').target}
@@ -496,6 +508,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
+                showAxis={showAxis}
                 isStep2={isStep2}
               />
             </ThreeCanvas>
@@ -511,12 +524,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
               border: '1px solid rgba(255,255,255,0.1)'
-            }}>정면</div>
+            }}>front</div>
             <button
-              onClick={() => {
-                setView2DDirection('front');
-                setViewMode('2D');
-              }}
+              onClick={() => handleQuadrantExpand('front')}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -550,7 +560,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 상단: 상부 뷰 */}
-          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+          <div style={{ 
+            position: 'relative', 
+            overflow: 'hidden', 
+            backgroundColor: '#1a1a1a'
+          }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('top').position}
               cameraTarget={getOptimizedCameraForView('top').target}
@@ -568,6 +582,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
+                showAxis={showAxis}
                 isStep2={isStep2}
               />
             </ThreeCanvas>
@@ -583,12 +598,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
               border: '1px solid rgba(255,255,255,0.1)'
-            }}>상부</div>
+            }}>top</div>
             <button
-              onClick={() => {
-                setView2DDirection('top');
-                setViewMode('2D');
-              }}
+              onClick={() => handleQuadrantExpand('top')}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -622,7 +634,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 좌측 하단: 좌측면 뷰 */}
-          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+          <div style={{ 
+            position: 'relative', 
+            overflow: 'hidden', 
+            backgroundColor: '#1a1a1a'
+          }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('left').position}
               cameraTarget={getOptimizedCameraForView('left').target}
@@ -640,6 +656,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
+                showAxis={showAxis}
                 isStep2={isStep2}
               />
             </ThreeCanvas>
@@ -655,12 +672,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
               border: '1px solid rgba(255,255,255,0.1)'
-            }}>좌측면</div>
+            }}>left</div>
             <button
-              onClick={() => {
-                setView2DDirection('left');
-                setViewMode('2D');
-              }}
+              onClick={() => handleQuadrantExpand('left')}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -694,7 +708,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 하단: 우측면 뷰 */}
-          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+          <div style={{ 
+            position: 'relative', 
+            overflow: 'hidden', 
+            backgroundColor: '#1a1a1a'
+          }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('right').position}
               cameraTarget={getOptimizedCameraForView('right').target}
@@ -712,6 +730,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
+                showAxis={showAxis}
                 isStep2={isStep2}
               />
             </ThreeCanvas>
@@ -727,12 +746,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
               border: '1px solid rgba(255,255,255,0.1)'
-            }}>우측면</div>
+            }}>right</div>
             <button
-              onClick={() => {
-                setView2DDirection('right');
-                setViewMode('2D');
-              }}
+              onClick={() => handleQuadrantExpand('right')}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -790,7 +806,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <React.Suspense fallback={null}>
             {/* 확실히 작동하는 CAD 그리드 */}
             {viewMode === '2D' && (
-              <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showGuides} />
+              <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
             )}
             
             {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
@@ -974,8 +990,9 @@ const QuadrantContent: React.FC<{
   showFrame: boolean;
   showDimensions: boolean;
   showGuides: boolean;
+  showAxis: boolean;
   isStep2?: boolean;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, isStep2 }) => {
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2 }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -983,7 +1000,7 @@ const QuadrantContent: React.FC<{
   return (
     <React.Suspense fallback={null}>
       {/* CAD 그리드 */}
-      <CADGrid viewMode="2D" view2DDirection={viewDirection} enabled={showGuides} />
+      <CADGrid viewMode="2D" view2DDirection={viewDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
       
       {/* 조명 시스템 */}
       <directionalLight 

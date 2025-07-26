@@ -32,6 +32,9 @@ interface ViewerControlsProps {
   showGuides: boolean;
   onShowGuidesToggle: () => void;
   
+  showAxis: boolean;
+  onShowAxisToggle: () => void;
+  
   doorsOpen: boolean;
   onDoorsToggle: () => void;
   
@@ -55,6 +58,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onShowDimensionsTextToggle,
   showGuides,
   onShowGuidesToggle,
+  showAxis,
+  onShowAxisToggle,
   doorsOpen,
   onDoorsToggle,
   hasDoorsInstalled = false,
@@ -69,17 +74,14 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   ];
 
   const viewDirections = [
-    { id: 'front' as ViewDirection, label: '정면' },
-    { id: 'top' as ViewDirection, label: '상부' },
-    { id: 'left' as ViewDirection, label: '좌측면' },
-    { id: 'right' as ViewDirection, label: '우측면' }
+    { id: 'front' as ViewDirection, label: 'front' },
+    { id: 'top' as ViewDirection, label: 'top' },
+    { id: 'left' as ViewDirection, label: 'left' },
+    { id: 'right' as ViewDirection, label: 'right' }
   ];
 
-  // 2D 모드에서만 전체 버튼 추가
-  const viewDirectionsWithAll = viewMode === '2D' ? [
-    ...viewDirections,
-    { id: 'all' as ViewDirection, label: '전체' }
-  ] : viewDirections;
+  // 2D 모드에서 사용할 뷰 방향들
+  const viewDirectionsWithAll = viewDirections;
 
   const renderModes = [
     { id: 'solid' as RenderMode, label: 'Solid' },
@@ -144,6 +146,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               />
               <span className={styles.checkmark}></span>
               그리드
+            </label>
+
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showAxis}
+                onChange={onShowAxisToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              축
             </label>
           </div>
         )}
