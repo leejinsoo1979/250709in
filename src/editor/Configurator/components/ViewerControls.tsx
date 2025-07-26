@@ -3,7 +3,7 @@ import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 
 export type ViewMode = '2D' | '3D';
-export type ViewDirection = 'front' | 'top' | 'left' | 'right';
+export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
 export type RenderMode = 'solid' | 'wireframe';
 
 interface ViewerControlsProps {
@@ -75,6 +75,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     { id: 'right' as ViewDirection, label: '우측면' }
   ];
 
+  // 2D 모드에서만 전체 버튼 추가
+  const viewDirectionsWithAll = viewMode === '2D' ? [
+    ...viewDirections,
+    { id: 'all' as ViewDirection, label: '전체' }
+  ] : viewDirections;
+
   const renderModes = [
     { id: 'solid' as RenderMode, label: 'Solid' },
     { id: 'wireframe' as RenderMode, label: 'Wireframe' }
@@ -84,11 +90,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const handleViewDirectionChange = (direction: ViewDirection) => {
     setView2DDirection(direction);
     onViewDirectionChange(direction); // 기존 콜백도 호출 (호환성)
-    
-    // 3D 모드에서 상부 버튼을 누르면 자동으로 2D 모드로 전환
-    if (viewMode === '3D' && direction === 'top') {
-      onViewModeChange('2D');
-    }
   };
 
   return (
@@ -201,19 +202,21 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* 우측 뷰 컨트롤들 */}
       <div className={styles.rightControls}>
-        {/* 뷰 방향 선택 - 3D/2D 모드 모두에서 표시 */}
-        <div className={styles.viewDirectionGroup}>
-          {viewDirections.map((direction) => (
-            <button
-              key={direction.id}
-              data-view-direction={direction.id}
-              className={`${styles.viewDirectionButton} ${view2DDirection === direction.id ? styles.active : ''}`}
-              onClick={() => handleViewDirectionChange(direction.id)}
-            >
-              {direction.label}
-            </button>
-          ))}
-        </div>
+        {/* 뷰 방향 선택 - 2D 모드에서만 표시 */}
+        {viewMode === '2D' && (
+          <div className={styles.viewDirectionGroup}>
+            {viewDirectionsWithAll.map((direction) => (
+              <button
+                key={direction.id}
+                data-view-direction={direction.id}
+                className={`${styles.viewDirectionButton} ${view2DDirection === direction.id ? styles.active : ''}`}
+                onClick={() => handleViewDirectionChange(direction.id)}
+              >
+                {direction.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

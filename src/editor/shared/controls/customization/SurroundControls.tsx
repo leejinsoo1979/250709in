@@ -93,25 +93,44 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     };
 
     if (type === 'surround') {
-      updates.frameSize = {
-        left: hasLeftWall ? 50 : END_PANEL_WIDTH,
-        right: hasRightWall ? 50 : END_PANEL_WIDTH,
-        top: 10,
-      };
+      // 서라운드 모드: 설치 타입에 따라 프레임 크기 결정
+      const installType = spaceInfo.installType;
+      
+      if (installType === 'builtin' || installType === 'built-in') {
+        // 양쪽벽: 기본 프레임 50mm
+        updates.frameSize = {
+          left: 50,
+          right: 50,
+          top: 10,
+        };
+      } else if (installType === 'semistanding' || installType === 'semi-standing') {
+        // 한쪽벽: 벽 있는 쪽은 50mm, 없는 쪽은 20mm
+        updates.frameSize = {
+          left: hasLeftWall ? 50 : END_PANEL_WIDTH,
+          right: hasRightWall ? 50 : END_PANEL_WIDTH,
+          top: 10,
+        };
+      } else if (installType === 'freestanding') {
+        // 벽없음: 양쪽 모두 20mm 엔드패널 (서라운드에서는 frameSize로 관리)
+        updates.frameSize = {
+          left: END_PANEL_WIDTH,
+          right: END_PANEL_WIDTH,
+          top: 10,
+        };
+      }
+      
       updates.gapConfig = undefined;
     } else {
       // 노서라운드(타이트) 설정
       const gapSizeValue = 2; // 기본 이격거리
       
-      updates.frameSize = {
-        left: hasLeftWall ? 0 : END_PANEL_WIDTH, // 벽이 없으면 엔드판넬 18mm
-        right: hasRightWall ? 0 : END_PANEL_WIDTH, // 벽이 없으면 엔드판넬 18mm
-        top: 10, // 상단 프레임은 기본값 10mm 유지
-      };
+      // 노서라운드에서는 프레임 크기를 undefined로 설정하여 
+      // geometry.ts에서 자동 계산하도록 함
+      updates.frameSize = undefined;
       
       updates.gapConfig = {
-        left: hasLeftWall ? gapSizeValue : undefined, // 벽이 있을 때만 이격거리
-        right: hasRightWall ? gapSizeValue : undefined, // 벽이 있을 때만 이격거리
+        left: hasLeftWall ? gapSizeValue : 0,
+        right: hasRightWall ? gapSizeValue : 0,
       };
     }
 

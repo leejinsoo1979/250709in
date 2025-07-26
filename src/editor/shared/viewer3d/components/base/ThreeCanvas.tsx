@@ -20,9 +20,12 @@ import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/con
 interface ThreeCanvasProps {
   children: React.ReactNode;
   cameraPosition?: [number, number, number];
+  cameraTarget?: [number, number, number];
+  cameraUp?: [number, number, number];
   viewMode?: '2D' | '3D';
   view2DDirection?: 'front' | 'left' | 'right' | 'top';
   renderMode?: 'solid' | 'wireframe';
+  isSplitView?: boolean;
 }
 
 /**
@@ -32,9 +35,12 @@ interface ThreeCanvasProps {
 const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   children,
   cameraPosition,
+  cameraTarget,
+  cameraUp,
   viewMode = '3D',
   view2DDirection = 'front',
-  renderMode = 'wireframe'
+  renderMode = 'wireframe',
+  isSplitView = false
 }) => {
   // 테마 컨텍스트
   const { theme } = useTheme();
@@ -64,7 +70,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   }, [theme, viewMode, view2DDirection, renderMode]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
-  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection);
+  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);
   const eventHandlers = useCanvasEventHandlers();
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
@@ -361,6 +367,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             zoom={camera.zoom}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}
+            up={camera.up || [0, 1, 0]}
+            onUpdate={(self) => {
+              if (camera.up) {
+                self.up.set(...camera.up);
+              }
+              self.lookAt(...camera.target);
+            }}
           />
         ) : (
           <PerspectiveCamera
@@ -369,6 +382,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             fov={camera.fov}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}
+            onUpdate={(self) => self.lookAt(...camera.target)}
           />
         )}
         

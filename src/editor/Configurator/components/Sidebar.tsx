@@ -59,14 +59,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
-      {/* 폴딩 버튼 - 우측 중앙 */}
-      <button 
-        className={styles.foldButton}
-        onClick={onToggle}
-        title={isOpen ? '사이드바 접기' : '사이드바 열기'}
-      >
-        {isOpen ? '<' : '>'}
-      </button>
       {/* 탭 리스트 */}
       <div className={styles.tabList}>
         {tabs.map((tab) => (

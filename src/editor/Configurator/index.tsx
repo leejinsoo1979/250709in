@@ -1878,7 +1878,16 @@ const Configurator: React.FC = () => {
           </>
         )}
 
-        {/* 사이드바 */}
+        {/* 좌측 사이드바 토글 버튼 - 항상 같은 위치에 고정 */}
+        <button
+          className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
+          onClick={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+          title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
+        >
+          <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
+        </button>
+
+        {/* 사이드바 - 항상 표시 */}
         <Sidebar
           activeTab={activeSidebarTab}
           onTabClick={handleSidebarTabClick}
@@ -1887,18 +1896,29 @@ const Configurator: React.FC = () => {
         />
 
         {/* 사이드바 컨텐츠 패널 */}
-        {activeSidebarTab && (
-          <div className={styles.sidebarContent}>
-            {renderSidebarContent()}
-          </div>
-        )}
+        <div 
+          className={styles.sidebarContent}
+          style={{
+            transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
+            opacity: activeSidebarTab ? 1 : 0,
+            pointerEvents: activeSidebarTab ? 'auto' : 'none'
+          }}
+        >
+          {renderSidebarContent()}
+        </div>
 
         {/* 중앙 뷰어 영역 */}
-        <div className={
-          isRightPanelOpen
-            ? styles.viewerArea
-            : styles.viewerArea + ' ' + styles['viewerArea--rightPanelClosed']
-        } style={{position: 'relative'}}>
+        <div 
+          className={styles.viewerArea}
+          style={{
+            position: 'absolute',
+            left: activeSidebarTab ? '304px' : '64px', /* 64px는 사이드바 너비 */
+            right: isRightPanelOpen ? '260px' : '0',
+            top: 0,
+            bottom: 0,
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
 
           {/* 뷰어 컨트롤 */}
           <ViewerControls
@@ -1951,62 +1971,48 @@ const Configurator: React.FC = () => {
             />
           </div>
 
-          {/* 우측바가 접힌 상태일 때 펼치기 버튼 - viewerArea 기준으로 오른쪽 끝 중앙에 */}
-          {!isRightPanelOpen && !isFileTreeOpen && (
-            <button
-              className={styles.rightUnfoldButton}
-              onClick={() => setIsRightPanelOpen(true)}
-              title="우측 패널 펼치기"
-            >
-              {'>'}
-            </button>
-          )}
         </div>
 
+        {/* 우측 패널 폴드/언폴드 버튼 - 항상 같은 위치에 표시 */}
+        <button
+          className={`${styles.rightPanelToggle} ${isRightPanelOpen ? styles.open : ''}`}
+          onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+          title={isRightPanelOpen ? "우측 패널 접기" : "우측 패널 펼치기"}
+        >
+          <span className={styles.foldToggleIcon}>{isRightPanelOpen ? '>' : '<'}</span>
+        </button>
+
         {/* 우측 패널 */}
-        {isRightPanelOpen && (
-          <div className={styles.rightPanel}>
-            <button
-              className={styles.foldToggleButton}
-              onClick={() => setIsRightPanelOpen(false)}
-              title="우측 패널 접기"
-            >
-              <span className={styles.foldToggleIcon}>{'>'}</span>
-            </button>
-            {/* 탭 헤더 */}
-            <div className={styles.rightPanelHeader}>
-              <div className={styles.rightPanelTabs}>
-                <button
-                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
-                  onClick={() => setActiveRightPanelTab('placement')}
-                >
-                  배치 속성
-                </button>
-                <button
-                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
-                  onClick={() => setActiveRightPanelTab('module')}
-                >
-                  모듈 속성
-                </button>
-              </div>
-            </div>
-            {/* 패널 컨텐츠 */}
-            <div className={styles.rightPanelContent}>
-              {renderRightPanelContent()}
+        <div 
+          className={styles.rightPanel}
+          style={{
+            transform: isRightPanelOpen ? 'translateX(0) scale(1)' : 'translateX(100%) scale(0.95)',
+            opacity: isRightPanelOpen ? 1 : 0,
+            pointerEvents: isRightPanelOpen ? 'auto' : 'none'
+          }}
+        >
+          {/* 탭 헤더 */}
+          <div className={styles.rightPanelHeader}>
+            <div className={styles.rightPanelTabs}>
+              <button
+                className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
+                onClick={() => setActiveRightPanelTab('placement')}
+              >
+                배치 속성
+              </button>
+              <button
+                className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
+                onClick={() => setActiveRightPanelTab('module')}
+              >
+                모듈 속성
+              </button>
             </div>
           </div>
-        )}
-        {/* 우측바가 접힌 상태일 때 펼치기 버튼 */}
-        {!isRightPanelOpen && (
-          <button
-            className={styles.foldToggleButton}
-            onClick={() => setIsRightPanelOpen(true)}
-            title="우측 패널 펼치기"
-            style={{ left: -16, top: '50%', transform: 'translateY(-50%)', position: 'absolute', zIndex: 100 }}
-          >
-            <span className={styles.foldToggleIcon}>◀</span>
-          </button>
-        )}
+          {/* 패널 컨텐츠 */}
+          <div className={styles.rightPanelContent}>
+            {renderRightPanelContent()}
+          </div>
+        </div>
       </div>
 
       {/* 가구 편집 창들 - 기존 기능 유지 */}

@@ -23,6 +23,9 @@ import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
 import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getModuleById } from '@/data/modules';
 
 /**
  * Space3DView 컴포넌트
@@ -36,7 +39,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, activePopup } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, activePopup, setView2DDirection, setViewMode: setUIViewMode } = useUIStore();
+  const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
+  const { theme } = useTheme();
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
@@ -96,6 +101,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
         // 상부뷰는 위에서 아래를 내려다보므로 centerY에 거리를 더함
         return [centerX, centerY + topDistance, centerZ] as [number, number, number];
+      case 'all':
+        // 전체 뷰에서는 정면 카메라 위치 사용 (4분할은 별도 처리)
+        return frontPosition;
       default:
         return frontPosition;
     }
@@ -251,6 +259,516 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }, []);
   
 
+  // 가구의 경계 계산 함수
+  const calculateFurnitureBounds = useMemo(() => {
+    if (!spaceInfo || placedModules.length === 0) {
+      return null;
+    }
+    
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+    
+    placedModules.forEach(module => {
+      const moduleData = getModuleById(module.moduleId);
+      if (!moduleData) return;
+      
+      const width = mmToThreeUnits(module.customWidth || moduleData.width);
+      const height = mmToThreeUnits(module.customHeight || moduleData.height);
+      const depth = mmToThreeUnits(module.customDepth || moduleData.depth);
+      
+      const x = module.position.x;
+      const y = module.position.y;
+      const z = module.position.z;
+      
+      minX = Math.min(minX, x - width / 2);
+      maxX = Math.max(maxX, x + width / 2);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y + height);
+      minZ = Math.min(minZ, z - depth / 2);
+      maxZ = Math.max(maxZ, z + depth / 2);
+    });
+    
+    // 공간의 경계도 포함
+    const spaceWidth = mmToThreeUnits(spaceInfo.width);
+    const spaceHeight = mmToThreeUnits(spaceInfo.height);
+    const spaceDepth = mmToThreeUnits(spaceInfo.depth || 1500);
+    
+    minX = Math.min(minX, -spaceWidth / 2);
+    maxX = Math.max(maxX, spaceWidth / 2);
+    minY = 0;
+    maxY = Math.max(maxY, spaceHeight);
+    minZ = Math.min(minZ, -spaceDepth / 2);
+    maxZ = Math.max(maxZ, spaceDepth / 2);
+    
+    return {
+      center: {
+        x: (minX + maxX) / 2,
+        y: (minY + maxY) / 2,
+        z: (minZ + maxZ) / 2
+      },
+      size: {
+        width: maxX - minX,
+        height: maxY - minY,
+        depth: maxZ - minZ
+      }
+    };
+  }, [spaceInfo, placedModules]);
+
+  // 각 뷰에 최적화된 카메라 위치 계산
+  const getOptimizedCameraForView = (viewDirection: 'front' | 'left' | 'right' | 'top') => {
+    const bounds = calculateFurnitureBounds;
+    
+    // 가구가 없을 때도 공간 기준으로 계산
+    const spaceWidth = mmToThreeUnits(spaceInfo?.width || 3000);
+    const spaceHeight = mmToThreeUnits(spaceInfo?.height || 2400);
+    const spaceDepth = mmToThreeUnits(spaceInfo?.depth || 1500);
+    
+    if (!bounds) {
+      // 가구가 없을 때는 공간 중심과 크기 사용
+      const center = { x: 0, y: spaceHeight / 2, z: 0 };
+      const size = { width: spaceWidth, height: spaceHeight, depth: spaceDepth };
+      const fov = 50;
+      
+      let distance;
+      let position;
+      let up: [number, number, number] = [0, 1, 0];
+      
+      switch (viewDirection) {
+        case 'front':
+          distance = Math.max(
+            (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
+            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          position = [center.x, center.y, center.z + distance];
+          up = [0, 1, 0];
+          break;
+          
+        case 'top':
+          distance = Math.max(
+            (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
+            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2)
+          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          position = [center.x, center.y + distance, center.z];
+          up = [0, 0, -1];
+          break;
+          
+        case 'left':
+          distance = Math.max(
+            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
+            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          position = [center.x - distance, center.y, center.z];
+          up = [0, 1, 0];
+          break;
+          
+        case 'right':
+          distance = Math.max(
+            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
+            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          position = [center.x + distance, center.y, center.z];
+          up = [0, 1, 0];
+          break;
+      }
+      
+      return {
+        position: position as [number, number, number],
+        target: [center.x, center.y, center.z] as [number, number, number],
+        up: up
+      };
+    }
+    
+    const center = bounds.center;
+    const size = bounds.size;
+    const fov = 50;
+    const aspect = 1; // 각 quadrant는 정사각형에 가까움
+    
+    let distance;
+    let position;
+    let up: [number, number, number] = [0, 1, 0]; // 기본 up vector
+    
+    switch (viewDirection) {
+      case 'front':
+        // 너비와 높이 기준으로 거리 계산
+        distance = Math.max(
+          (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
+          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        position = [center.x, center.y, center.z + distance];
+        up = [0, 1, 0]; // Y축이 위
+        break;
+        
+      case 'top':
+        // 너비와 깊이 기준으로 거리 계산
+        distance = Math.max(
+          (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
+          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2)
+        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        position = [center.x, center.y + distance, center.z];
+        up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위 (앞쪽이 위)
+        break;
+        
+      case 'left':
+        // 깊이와 높이 기준으로 거리 계산
+        distance = Math.max(
+          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
+          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        position = [center.x - distance, center.y, center.z];
+        up = [0, 1, 0]; // Y축이 위
+        break;
+        
+      case 'right':
+        // 깊이와 높이 기준으로 거리 계산
+        distance = Math.max(
+          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
+          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
+        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        position = [center.x + distance, center.y, center.z];
+        up = [0, 1, 0]; // Y축이 위
+        break;
+    }
+    
+    return {
+      position: position as [number, number, number],
+      target: [center.x, center.y, center.z] as [number, number, number],
+      up: up
+    };
+  };
+
+  // 4분할 뷰 렌더링
+  if (viewMode === '2D' && view2DDirection === 'all') {
+    return (
+      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
+        <div 
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            minHeight: '400px',
+            position: 'relative',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+            gap: '0',
+            backgroundColor: colors.primary || '#4CAF50'
+          }}
+        >
+          {/* 가로 중앙선 */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: 0,
+            right: 0,
+            height: '1px',
+            backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+            zIndex: 10,
+            transform: 'translateY(-50%)'
+          }} />
+          
+          {/* 세로 중앙선 */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: '50%',
+            width: '1px',
+            backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
+            zIndex: 10,
+            transform: 'translateX(-50%)'
+          }} />
+          {/* 좌측 상단: 정면 뷰 */}
+          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+            <ThreeCanvas 
+              cameraPosition={getOptimizedCameraForView('front').position}
+              cameraTarget={getOptimizedCameraForView('front').target}
+              cameraUp={getOptimizedCameraForView('front').up}
+              viewMode="2D"
+              view2DDirection="front"
+              renderMode={renderMode}
+              isSplitView={true}
+            >
+              <QuadrantContent 
+                viewDirection="front" 
+                spaceInfo={spaceInfo} 
+                materialConfig={materialConfig}
+                showAll={showAll}
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+              />
+            </ThreeCanvas>
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>정면</div>
+            <button
+              onClick={() => {
+                setView2DDirection('front');
+                setViewMode('2D');
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '4px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(4px)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+              title="전체화면으로 보기"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 우측 상단: 상부 뷰 */}
+          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+            <ThreeCanvas 
+              cameraPosition={getOptimizedCameraForView('top').position}
+              cameraTarget={getOptimizedCameraForView('top').target}
+              cameraUp={getOptimizedCameraForView('top').up}
+              viewMode="2D"
+              view2DDirection="top"
+              renderMode={renderMode}
+              isSplitView={true}
+            >
+              <QuadrantContent 
+                viewDirection="top" 
+                spaceInfo={spaceInfo} 
+                materialConfig={materialConfig}
+                showAll={showAll}
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+              />
+            </ThreeCanvas>
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>상부</div>
+            <button
+              onClick={() => {
+                setView2DDirection('top');
+                setViewMode('2D');
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '4px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(4px)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+              title="전체화면으로 보기"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 좌측 하단: 좌측면 뷰 */}
+          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+            <ThreeCanvas 
+              cameraPosition={getOptimizedCameraForView('left').position}
+              cameraTarget={getOptimizedCameraForView('left').target}
+              cameraUp={getOptimizedCameraForView('left').up}
+              viewMode="2D"
+              view2DDirection="left"
+              renderMode={renderMode}
+              isSplitView={true}
+            >
+              <QuadrantContent 
+                viewDirection="left" 
+                spaceInfo={spaceInfo} 
+                materialConfig={materialConfig}
+                showAll={showAll}
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+              />
+            </ThreeCanvas>
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>좌측면</div>
+            <button
+              onClick={() => {
+                setView2DDirection('left');
+                setViewMode('2D');
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '4px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(4px)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+              title="전체화면으로 보기"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 우측 하단: 우측면 뷰 */}
+          <div style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+            <ThreeCanvas 
+              cameraPosition={getOptimizedCameraForView('right').position}
+              cameraTarget={getOptimizedCameraForView('right').target}
+              cameraUp={getOptimizedCameraForView('right').up}
+              viewMode="2D"
+              view2DDirection="right"
+              renderMode={renderMode}
+              isSplitView={true}
+            >
+              <QuadrantContent 
+                viewDirection="right" 
+                spaceInfo={spaceInfo} 
+                materialConfig={materialConfig}
+                showAll={showAll}
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+              />
+            </ThreeCanvas>
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>우측면</div>
+            <button
+              onClick={() => {
+                setView2DDirection('right');
+                setViewMode('2D');
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '4px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(4px)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+              title="전체화면으로 보기"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </Space3DViewProvider>
+    );
+  }
+
   return (
     <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
       <div 
@@ -396,8 +914,166 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </React.Suspense>
         </ThreeCanvas>
 
+        {/* 분할 모드 버튼 - 2D 모드에서만 표시 */}
+        {viewMode === '2D' && view2DDirection !== 'all' && (
+          <button
+            onClick={() => {
+              setView2DDirection('all');
+            }}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              width: '36px',
+              height: '36px',
+              backgroundColor: theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
+              border: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+              borderRadius: '4px',
+              color: theme.mode === 'dark' ? '#ffffff' : '#000000',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              zIndex: 20,
+              padding: '0',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,1)';
+              e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)';
+              e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="4분할 뷰로 보기"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="8" height="8" />
+              <rect x="13" y="3" width="8" height="8" />
+              <rect x="3" y="13" width="8" height="8" />
+              <rect x="13" y="13" width="8" height="8" />
+            </svg>
+          </button>
+        )}
+
       </div>
     </Space3DViewProvider>
+  );
+};
+
+// 4분할 뷰를 위한 별도 컴포넌트
+const QuadrantContent: React.FC<{
+  viewDirection: 'front' | 'left' | 'right' | 'top';
+  spaceInfo: any;
+  materialConfig: any;
+  showAll: boolean;
+  showFrame: boolean;
+  showDimensions: boolean;
+  showGuides: boolean;
+  isStep2?: boolean;
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, isStep2 }) => {
+  const { placedModules } = useFurnitureStore();
+  const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
+  const { activePopup } = useUIStore();
+
+  return (
+    <React.Suspense fallback={null}>
+      {/* CAD 그리드 */}
+      <CADGrid viewMode="2D" view2DDirection={viewDirection} enabled={showGuides} />
+      
+      {/* 조명 시스템 */}
+      <directionalLight 
+        position={[5, 15, 20]} 
+        intensity={2.5} 
+        color="#ffffff"
+      />
+      <directionalLight 
+        position={[-8, 10, 15]} 
+        intensity={0.6} 
+        color="#ffffff"
+      />
+      <directionalLight 
+        position={[8, 10, 15]} 
+        intensity={0.6} 
+        color="#ffffff"
+      />
+      <ambientLight intensity={0.8} color="#ffffff" />
+      
+      {/* 기본 요소들 */}
+      <Room spaceInfo={spaceInfo} viewMode="2D" materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
+      
+      {/* 기둥 에셋 렌더링 */}
+      {(spaceInfo?.columns || []).map((column) => (
+        <React.Fragment key={column.id}>
+          <ColumnAsset
+            id={column.id}
+            position={column.position}
+            width={column.width}
+            height={column.height}
+            depth={column.depth}
+            color={column.color}
+            spaceInfo={spaceInfo}
+            renderMode="solid"
+            onPositionChange={(id, newPosition) => {
+              updateColumn(id, { position: newPosition });
+            }}
+            onRemove={(id) => {
+              removeColumn(id);
+            }}
+          />
+          {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+            <ColumnDistanceLabels
+              column={column}
+              spaceInfo={spaceInfo}
+              onPositionChange={(columnId, newPosition) => {
+                updateColumn(columnId, { position: newPosition });
+              }}
+              onColumnUpdate={(columnId, updates) => {
+                updateColumn(columnId, updates);
+              }}
+              showLabels={true}
+            />
+          )}
+        </React.Fragment>
+      ))}
+      
+      {/* 가벽 에셋 렌더링 */}
+      {(spaceInfo?.walls || []).map((wall) => (
+        <WallAsset
+          key={wall.id}
+          id={wall.id}
+          position={wall.position}
+          width={wall.width}
+          height={wall.height}
+          depth={wall.depth}
+          color={wall.color}
+          spaceInfo={spaceInfo}
+          renderMode="solid"
+          onPositionChange={(id, newPosition) => {
+            updateWall(id, { position: newPosition });
+          }}
+          onRemove={(id) => {
+            removeWall(id);
+          }}
+        />
+      ))}
+      
+      {/* 컬럼 가이드 표시 */}
+      {showAll && <ColumnGuides />}
+      
+      {/* CAD 스타일 치수/가이드 표시 */}
+      <CleanCAD2D 
+        viewDirection={viewDirection} 
+        showDimensions={showDimensions}
+        isStep2={isStep2}
+      />
+      
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} />
+    </React.Suspense>
   );
 };
 

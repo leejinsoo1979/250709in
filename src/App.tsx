@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
@@ -11,6 +12,9 @@ import TestDashboard from '@/pages/TestDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
 import FirebaseDebug from '@/components/FirebaseDebug';
 import FirebaseDataDebug from '@/components/debug/FirebaseDataDebug';
+import { useProjectStore } from '@/store/core/projectStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 // WebGL 메모리 누수를 방지하기 위한 개선된 함수
 function disposeWebGLCanvases() {
@@ -34,6 +38,32 @@ function RouteChangeHandler() {
 
 // 앱 컴포넌트
 function AppContent() {
+  // 스토어에서 isDirty 상태 가져오기
+  const projectIsDirty = useProjectStore((state) => state.isDirty);
+  const spaceConfigIsDirty = useSpaceConfigStore((state) => state.isDirty);
+  const furnitureIsDirty = useFurnitureStore((state) => state.isDirty);
+  
+  // 어느 하나라도 변경사항이 있으면 true
+  const hasUnsavedChanges = projectIsDirty || spaceConfigIsDirty || furnitureIsDirty;
+
+  // 브라우저 새로고침/닫기 시 경고
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        const message = '저장하지 않은 변경사항이 있습니다. 정말로 페이지를 떠나시겠습니까?';
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
   return (
     <>
       <RouteChangeHandler />
@@ -60,28 +90,15 @@ function AppContent() {
 }
 
 function App() {
-  // 앱 종료 시 메모리 정리 - R3F가 자체적으로 정리하므로 제거
-  // useEffect(() => {
-  //   const cleanup = () => {
-  //     disposeWebGLCanvases();
-  //   };
-  //   
-  //   // 페이지 언로드 시 정리
-  //   window.addEventListener('beforeunload', cleanup);
-  //   
-  //   return () => {
-  //     window.removeEventListener('beforeunload', cleanup);
-  //     cleanup();
-  //   };
-  // }, []);
-
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <AlertProvider>
           <AuthProvider>
             <Router>
-              <AppContent />
+              <NavigationProvider>
+                <AppContent />
+              </NavigationProvider>
             </Router>
           </AuthProvider>
         </AlertProvider>

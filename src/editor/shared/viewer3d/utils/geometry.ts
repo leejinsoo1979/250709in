@@ -212,36 +212,29 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
     let leftThickness = 0;
     let rightThickness = 0;
     
-    // frameSize가 명시적으로 설정되어 있으면 그 값을 우선 사용
-    if (frameSize?.left !== undefined) {
-      leftThickness = frameSize.left;
-    }
-    if (frameSize?.right !== undefined) {
-      rightThickness = frameSize.right;
-    }
-    
-    // frameSize가 없는 경우에만 기본값 사용
-    if (frameSize?.left === undefined || frameSize?.right === undefined) {
-      // 노서라운드: 벽이 없는 쪽에만 20mm 엔드패널
+    // frameSize가 명시적으로 설정된 경우 사용 (프레임 크기 조정 시)
+    if (frameSize && (frameSize.left !== undefined || frameSize.right !== undefined)) {
+      leftThickness = frameSize.left ?? 0;
+      rightThickness = frameSize.right ?? 0;
+    } else {
+      // frameSize가 없으면 설치 타입과 벽 구성에 따라 자동 계산
       if (installType === 'builtin' || installType === 'built-in') {
-        // 양쪽벽: 프레임 없음
-        leftThickness = frameSize?.left ?? 0;
-        rightThickness = frameSize?.right ?? 0;
-        console.log('🔍 노서라운드 빌트인: 좌우 프레임 없음', { installType, surroundType });
+        // 양쪽벽: 모두 0mm (프레임 없음)
+        leftThickness = 0;
+        rightThickness = 0;
       } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        // 한쪽벽: 벽 없는 쪽에만 20mm 엔드패널
+        // 한쪽벽: 벽이 있는 쪽은 0mm, 없는 쪽은 20mm 엔드패널
         if (wallConfig?.left) {
-          leftThickness = frameSize?.left ?? 0;  // 좌측벽 있음: 프레임 없음
-          rightThickness = frameSize?.right ?? 20; // 우측벽 없음: 20mm 엔드패널
+          leftThickness = 0;   // 좌측벽 있음: 프레임 없음
+          rightThickness = 20; // 우측벽 없음: 20mm 엔드패널
         } else {
-          leftThickness = frameSize?.left ?? 20; // 좌측벽 없음: 20mm 엔드패널
-          rightThickness = frameSize?.right ?? 0;  // 우측벽 있음: 프레임 없음
+          leftThickness = 20;  // 좌측벽 없음: 20mm 엔드패널
+          rightThickness = 0;  // 우측벽 있음: 프레임 없음
         }
       } else if (installType === 'freestanding') {
         // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
-        leftThickness = frameSize?.left ?? 20;
-        rightThickness = frameSize?.right ?? 20;
-        console.log('🔍 노서라운드 벽없음: 좌우 20mm 엔드패널', { installType, surroundType });
+        leftThickness = 20;
+        rightThickness = 20;
       }
     }
     
@@ -250,7 +243,8 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       leftThickness, 
       rightThickness,
       installType,
-      surroundType 
+      surroundType,
+      wallConfig
     });
     
     return {
@@ -264,10 +258,10 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
   let leftThickness = 0;
   let rightThickness = 0;
   
-  // frameSize가 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
-  const defaultFrameSize = 10;
-  const leftFrameSize = frameSize?.left || defaultFrameSize;
-  const rightFrameSize = frameSize?.right || defaultFrameSize;
+  // frameSize가 설정되어 있으면 그 값을 사용, 없으면 기본값 50mm (서라운드 기본값)
+  const defaultFrameSize = 50;
+  const leftFrameSize = frameSize?.left !== undefined ? frameSize.left : defaultFrameSize;
+  const rightFrameSize = frameSize?.right !== undefined ? frameSize.right : defaultFrameSize;
   
   switch (installType) {
     case 'builtin':

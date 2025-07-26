@@ -27,11 +27,51 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         break;
     }
 
-    console.log('🏢 InstallTypeControls - updating with:', { installType: type, wallConfig });
-    onUpdate({
+    // 프레임 설정도 함께 업데이트
+    const updates: Partial<SpaceInfo> = {
       installType: type,
       wallConfig,
-    });
+    };
+    
+    // 서라운드 모드일 때 프레임 크기 재설정
+    if (spaceInfo.surroundType === 'surround') {
+      if (type === 'builtin') {
+        // 양쪽벽: 기본 프레임 50mm
+        updates.frameSize = {
+          left: 50,
+          right: 50,
+          top: spaceInfo.frameSize?.top || 10,
+        };
+      } else if (type === 'semistanding') {
+        // 한쪽벽: 벽 있는 쪽은 50mm, 없는 쪽은 20mm
+        updates.frameSize = {
+          left: wallConfig.left ? 50 : 20,
+          right: wallConfig.right ? 50 : 20,
+          top: spaceInfo.frameSize?.top || 10,
+        };
+      } else if (type === 'freestanding') {
+        // 벽없음: 서라운드에서는 양쪽 20mm
+        updates.frameSize = {
+          left: 20,
+          right: 20,
+          top: spaceInfo.frameSize?.top || 10,
+        };
+      }
+    }
+    // 노서라운드 모드일 때는 frameSize를 undefined로 설정
+    else if (spaceInfo.surroundType === 'no-surround') {
+      updates.frameSize = undefined;
+      
+      // gapConfig도 업데이트
+      const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
+      updates.gapConfig = {
+        left: wallConfig.left ? currentGapConfig.left : 0,
+        right: wallConfig.right ? currentGapConfig.right : 0,
+      };
+    }
+    
+    console.log('🏢 InstallTypeControls - updating with:', updates);
+    onUpdate(updates);
   };
 
   const handleWallConfigChange = (side: 'left' | 'right') => {

@@ -6,6 +6,7 @@ import { calculateDynamicFOV, calculateCameraTarget, calculateOptimalDistance, m
 export interface CameraConfig {
   position: [number, number, number];
   target: [number, number, number];
+  up?: [number, number, number];
   fov: number;
   is2DMode: boolean;
   spaceWidth: number;
@@ -28,7 +29,10 @@ export interface CameraConfig {
 export const useCameraManager = (
   viewMode: '2D' | '3D' = '3D',
   cameraPosition: [number, number, number] = [0, 5, 10],
-  view2DDirection?: 'front' | 'left' | 'right' | 'top'
+  view2DDirection?: 'front' | 'left' | 'right' | 'top',
+  cameraTarget?: [number, number, number],
+  cameraUp?: [number, number, number],
+  isSplitView?: boolean
 ): CameraConfig => {
   // 스토어에서 공간 정보 가져오기 (상위 의존성)
   const { spaceInfo } = useSpaceConfigStore();
@@ -41,8 +45,8 @@ export const useCameraManager = (
     // 2D/3D 모두 Space3DView에서 계산한 cameraPosition을 그대로 사용
     const position: [number, number, number] = cameraPosition;
 
-    // 모든 뷰에서 공간 중앙을 바라보도록 통일
-    const target = calculateCameraTarget(spaceInfo.height);
+    // cameraTarget이 제공되면 사용, 아니면 공간 중앙 계산
+    const target = cameraTarget || calculateCameraTarget(spaceInfo.height);
     
     const fov = calculateDynamicFOV(spaceInfo.width);
 
@@ -50,7 +54,9 @@ export const useCameraManager = (
     const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
     
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
-    const zoom = 1200 / distance; // 기본 1200을 거리로 나누어 조정
+    // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.5배로 조정
+    const zoomMultiplier = isSplitView ? 0.5 : 1.0;
+    const zoom = (1200 / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
     
@@ -63,6 +69,7 @@ export const useCameraManager = (
     return {
       position,
       target,
+      up: cameraUp || [0, 1, 0],
       fov,
       is2DMode,
       spaceWidth: spaceInfo.width,
@@ -74,7 +81,7 @@ export const useCameraManager = (
       canvasAspectRatio,
       zoom,
     };
-  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, placedModules.length]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView]);
 
   return cameraConfig;
 }; 

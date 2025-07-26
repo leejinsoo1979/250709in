@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // 2D 뷰 방향 타입 정의
-export type View2DDirection = 'front' | 'left' | 'right' | 'top';
+export type View2DDirection = 'front' | 'left' | 'right' | 'top' | 'all';
 
 // 프레임 강조 타입 정의
 export type HighlightedFrame = 'left' | 'right' | 'top' | 'base' | null;

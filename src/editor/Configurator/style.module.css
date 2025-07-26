@@ -10,7 +10,6 @@
 
 /* 메인 컨텐츠 영역 */
 .mainContent {
-  display: flex;
   flex: 1;
   position: relative;
   overflow: hidden;
@@ -67,9 +66,42 @@
   color: var(--theme-text-tertiary);
 }
 
-/* 우측바 펼치기 버튼 */
-.rightUnfoldButton {
-  position: absolute;
+
+/* 좌측 패널 토글 버튼 - 항상 같은 위치에 고정 */
+.leftPanelToggle {
+  position: fixed;
+  left: 64px; /* 사이드바 너비 */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 40px;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-muted);
+  border: none;
+  border-radius: 0 8px 8px 0;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  z-index: 12;
+  box-shadow: var(--theme-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leftPanelToggle.open {
+  left: 304px; /* 사이드바(64px) + 컨텐츠패널(240px) */
+}
+
+.leftPanelToggle:hover {
+  background: var(--theme-border);
+  color: var(--theme-info);
+}
+
+/* 우측 패널 토글 버튼 - 항상 같은 위치에 고정 */
+.rightPanelToggle {
+  position: fixed;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
@@ -82,15 +114,19 @@
   font-size: 20px;
   font-weight: 400;
   cursor: pointer;
-  z-index: 10 !important;
+  z-index: 11;
   box-shadow: var(--theme-shadow);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.rightUnfoldButton:hover {
+.rightPanelToggle.open {
+  right: 260px; /* 우측 패널 너비만큼 이동 */
+}
+
+.rightPanelToggle:hover {
   background: var(--theme-border);
   color: var(--theme-info);
 }
@@ -113,10 +149,55 @@
   }
 }
 
+/* 패널 애니메이션 */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* 부드러운 패널 열림 효과 */
+@keyframes panelBounce {
+  0% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 
 
 /* 사이드바 컨텐츠 패널 */
 .sidebarContent {
+  position: fixed;
+  left: 64px; /* 사이드바 너비 */
+  top: 56px; /* 헤더 높이 */
+  bottom: 0;
   width: 240px; /* 더 좁게 */
   min-width: 220px;
   max-width: 260px;
@@ -127,6 +208,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease,
+              box-shadow 0.3s ease;
+  transform-origin: left center;
 }
 
 /* 사이드바 패널 공통 */
@@ -347,11 +432,10 @@
   background: var(--theme-surface);
   overflow: hidden;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
-.viewerArea--rightPanelClosed {
-  padding-right: 48px;
-}
 
 
 
@@ -456,6 +540,10 @@
 
 /* 우측 패널 */
 .rightPanel {
+  position: fixed;
+  right: 0;
+  top: 56px; /* 헤더 높이 */
+  bottom: 0;
   width: 260px; /* 더 좁게 */
   min-width: 240px;
   max-width: 280px;
@@ -464,7 +552,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease,
+              box-shadow 0.3s ease;
+  transform-origin: right center;
+  box-shadow: -2px 0 8px var(--theme-shadow, rgba(0, 0, 0, 0.08));
+  z-index: 10;
 }
 
 .rightPanelHeader {
@@ -758,6 +851,10 @@
   .rightPanel {
     width: 340px;
   }
+  
+  .rightPanelToggle.open {
+    right: 340px;
+  }
 }
 
 /* 중간 데스크톱 - 맥북 프로 16인치 (1400px 이하) */
@@ -768,6 +865,10 @@
   
   .rightPanel {
     width: 300px;
+  }
+  
+  .rightPanelToggle.open {
+    right: 300px;
   }
   
   .rightPanelContent {
@@ -789,6 +890,10 @@
   .rightPanel {
     width: 260px;
     min-width: 240px;
+  }
+  
+  .rightPanelToggle.open {
+    right: 260px;
   }
   
   .viewerArea {
@@ -1119,6 +1224,8 @@
 .rightPanel .foldToggleButton {
   left: -16px;
   border-radius: 8px 0 0 8px;
+  /* 패널과 함께 움직이도록 설정 */
+  position: absolute;
 }
 
 /* 토글 버튼 그룹 스타일 */

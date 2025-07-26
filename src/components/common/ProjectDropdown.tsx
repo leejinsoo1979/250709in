@@ -126,7 +126,7 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
           <div className={styles.projectAvatar}>
             {currentProject ? (
               <span className={styles.avatarText}>
-                {currentProject.title.charAt(0).toUpperCase()}
+                {currentProject.title ? currentProject.title.charAt(0).toUpperCase() : '?'}
               </span>
             ) : (
               <FolderIcon size={16} />
