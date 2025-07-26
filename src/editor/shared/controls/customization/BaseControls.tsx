@@ -33,14 +33,27 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 기존 baseConfig가 없으면 기본값으로 초기화하여 생성
     const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
     
-    onUpdate({
-      baseConfig: {
-        ...currentBaseConfig,
-        type,
-        // 받침대 있음 선택 시 placementType 속성 제거
-        ...(type === 'floor' ? {} : { placementType: currentBaseConfig.placementType || 'ground' }),
-      },
-    });
+    // 받침대 없음 선택 시 자동으로 띄워서 배치, 높이 200mm
+    if (type === 'stand') {
+      setFloatHeight(200); // 기본값 200mm로 설정
+      onUpdate({
+        baseConfig: {
+          ...currentBaseConfig,
+          type,
+          placementType: 'float', // 자동으로 띄워서 배치 선택
+          floatHeight: 200, // 기본 높이 200mm
+        },
+      });
+    } else {
+      // 받침대 있음 선택
+      onUpdate({
+        baseConfig: {
+          ...currentBaseConfig,
+          type,
+          // placementType 속성 제거
+        },
+      });
+    }
   };
 
   // 배치 유형 변경 처리

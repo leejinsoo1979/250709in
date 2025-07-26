@@ -1,0 +1,275 @@
+/* 섹션 컨테이너 */
+.configSection {
+  border-bottom: 1px solid var(--theme-border);
+  padding: 16px 0;
+  transition: all 0.2s ease;
+}
+
+.configSection:last-child {
+  border-bottom: none;
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sectionDot {
+  width: 6px;
+  height: 6px;
+  background: var(--theme-primary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* 컨텐츠 영역 */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.description {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 갭 그리드 */
+.gapGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.gapItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gapLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  text-align: center;
+}
+
+/* 갭 컨트롤 */
+.gapControl {
+  display: flex;
+  align-items: center;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+  transition: all 0.2s ease;
+}
+
+.gapControl:hover:not(.disabled) {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 1px var(--theme-primary-light);
+}
+
+.gapControl:focus-within:not(.disabled) {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
+}
+
+/* 비활성화된 갭 컨트롤 */
+.gapControl.disabled {
+  opacity: 0.5;
+  background: var(--theme-background);
+  cursor: not-allowed;
+}
+
+.gapControl.disabled .controlButton,
+.gapControl.disabled .gapInput {
+  cursor: not-allowed;
+}
+
+/* 컨트롤 버튼 */
+.controlButton {
+  background: var(--theme-surface);
+  border: none;
+  width: 28px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.controlButton:hover:not(:disabled) {
+  background: var(--theme-background);
+  color: var(--theme-primary);
+}
+
+.controlButton:active:not(:disabled) {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  transform: scale(0.95);
+}
+
+.controlButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--theme-text-muted);
+}
+
+.controlButton:first-child {
+  border-right: 1px solid var(--theme-border);
+}
+
+.controlButton:last-child {
+  border-left: 1px solid var(--theme-border);
+}
+
+/* 갭 입력 필드 */
+.gapInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text);
+  padding: 0 4px;
+  min-width: 32px;
+}
+
+.gapInput:focus {
+  outline: none;
+}
+
+.gapInput:disabled {
+  color: var(--theme-text-muted);
+  cursor: not-allowed;
+}
+
+.gapInput::-webkit-inner-spin-button,
+.gapInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 단위 표시 */
+.unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  padding: 0 4px;
+  user-select: none;
+}
+
+/* 정보 표시 */
+.info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--theme-primary-light);
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.infoIcon {
+  font-size: 12px;
+  filter: grayscale(100%);
+  opacity: 0.7;
+}
+
+.infoText {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
+  font-weight: 500;
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .gapControl {
+    background: var(--theme-background);
+  }
+  
+  .controlButton {
+    background: var(--theme-background-secondary);
+  }
+  
+  .controlButton:hover {
+    background: var(--theme-surface);
+  }
+  
+  .info {
+    background: rgba(var(--theme-primary-rgb), 0.1);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1399px) {
+  .gapGrid {
+    gap: 10px;
+  }
+  
+  .gapControl {
+    height: 30px;
+  }
+  
+  .controlButton {
+    width: 26px;
+    font-size: 13px;
+  }
+  
+  .gapInput {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .configSection {
+    padding: 12px 0;
+  }
+  
+  .sectionHeader {
+    margin-bottom: 10px;
+  }
+  
+  .gapGrid {
+    gap: 8px;
+  }
+  
+  .gapControl {
+    height: 28px;
+  }
+  
+  .controlButton {
+    width: 24px;
+  }
+}

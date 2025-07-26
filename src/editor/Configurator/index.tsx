@@ -39,6 +39,7 @@ import {
   SurroundControls,
   BaseControls
 } from '@/editor/shared/controls';
+import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 
 import styles from './style.module.css';
 
@@ -66,7 +67,8 @@ const Configurator: React.FC = () => {
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
-  const [moduleCategory, setModuleCategory] = useState<'tall' | 'lower'>('tall'); // 키큰장/하부장 토글
+  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upperlower'>('tall'); // 키큰장/상하부장 토글
+  const [upperLowerTab, setUpperLowerTab] = useState<'upper' | 'lower'>('upper'); // 상부장/하부장 탭
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
@@ -145,11 +147,42 @@ const Configurator: React.FC = () => {
     setViewMode('3D');
     setView2DDirection('front');
   }, [setViewMode, setView2DDirection]);
+  
+  // MaterialConfig 변경 모니터링
+  useEffect(() => {
+    if (spaceInfo.materialConfig) {
+      console.log('🔍 Configurator - MaterialConfig 변경 감지:', {
+        interiorColor: spaceInfo.materialConfig.interiorColor,
+        doorColor: spaceInfo.materialConfig.doorColor,
+        interiorTexture: spaceInfo.materialConfig.interiorTexture,
+        doorTexture: spaceInfo.materialConfig.doorTexture,
+        isCabinetTexture1: {
+          interior: spaceInfo.materialConfig.interiorTexture?.includes('cabinet texture1'),
+          door: spaceInfo.materialConfig.doorTexture?.includes('cabinet texture1')
+        }
+      });
+    }
+  }, [spaceInfo.materialConfig]);
 
 
   // 현재 컬럼 수를 안전하게 가져오는 함수
   // FrameSize 업데이트 도우미 함수
   const updateFrameSize = (property: 'left' | 'right' | 'top', value: number) => {
+    // 엔드패널인 경우 값 변경 불가 (20mm 고정)
+    if (property === 'left' && (
+      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+      spaceInfo.installType === 'freestanding'
+    )) {
+      return; // 좌측 엔드패널은 20mm 고정
+    }
+    
+    if (property === 'right' && (
+      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+      spaceInfo.installType === 'freestanding'
+    )) {
+      return; // 우측 엔드패널은 20mm 고정
+    }
+    
     const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     handleSpaceInfoUpdate({
       frameSize: {
@@ -257,6 +290,22 @@ const Configurator: React.FC = () => {
         if (spaceConfig.installType === 'built-in') {
           spaceConfig.installType = 'builtin';
         }
+        
+        // wallConfig가 없으면 installType에 맞게 기본값 설정
+        if (!spaceConfig.wallConfig) {
+          switch (spaceConfig.installType) {
+            case 'builtin':
+              spaceConfig.wallConfig = { left: true, right: true };
+              break;
+            case 'semistanding':
+              spaceConfig.wallConfig = { left: true, right: false };
+              break;
+            case 'freestanding':
+              spaceConfig.wallConfig = { left: false, right: false };
+              break;
+          }
+        }
+        
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture.placedModules);
         setCurrentProjectId(projectId);
@@ -407,19 +456,18 @@ const Configurator: React.FC = () => {
             }
           }
             
-            // 다른 창(대시보드)에 프로젝트 업데이트 알림
-            try {
-              const channel = new BroadcastChannel('project-updates');
-              channel.postMessage({ 
-                type: 'PROJECT_SAVED', 
-                projectId: currentProjectId,
-                timestamp: Date.now()
-              });
-              console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
-              channel.close();
-            } catch (broadcastError) {
-              console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
-            }
+          // 다른 창(대시보드)에 프로젝트 업데이트 알림
+          try {
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({ 
+              type: 'PROJECT_SAVED', 
+              projectId: currentProjectId,
+              timestamp: Date.now()
+            });
+            console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
+            channel.close();
+          } catch (broadcastError) {
+            console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
           }
         } catch (firebaseError) {
           console.error('💾 [ERROR] Firebase 저장 중 예외:', firebaseError);
@@ -1009,11 +1057,199 @@ const Configurator: React.FC = () => {
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
     console.log('🔧 handleSpaceInfoUpdate called with:', updates);
     console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
+    
+    // surroundType 업데이트 시 디버깅
+    if (updates.surroundType) {
+      console.log('🔧 Configurator - surroundType update:', {
+        previous: spaceInfo.surroundType,
+        new: updates.surroundType,
+        willUpdateStore: true
+      });
+    }
+    
     let finalUpdates = { ...updates };
     
     // installType 하이픈 문제 수정
     if (finalUpdates.installType === 'built-in') {
       finalUpdates.installType = 'builtin';
+    }
+    
+    // 서라운드 타입 변경 시 프레임 설정 초기화
+    if (updates.surroundType) {
+      const currentInstallType = finalUpdates.installType || spaceInfo.installType;
+      const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
+      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };
+      
+      if (updates.surroundType === 'surround') {
+        // 서라운드 모드
+        switch (currentInstallType) {
+          case 'builtin':
+            newFrameSize.left = 50;
+            newFrameSize.right = 50;
+            break;
+          case 'semistanding':
+            if (currentWallConfig.left && !currentWallConfig.right) {
+              newFrameSize.left = 50;
+              newFrameSize.right = 20;
+            } else if (!currentWallConfig.left && currentWallConfig.right) {
+              newFrameSize.left = 20;
+              newFrameSize.right = 50;
+            }
+            break;
+          case 'freestanding':
+            newFrameSize.left = 20;
+            newFrameSize.right = 20;
+            break;
+        }
+      } else if (updates.surroundType === 'no-surround') {
+        // 노서라운드 모드
+        switch (currentInstallType) {
+          case 'builtin':
+            // 빌트인: 좌우 프레임 없음
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
+            break;
+          case 'semistanding':
+            // 세미스탠딩: 벽 없는 쪽만 엔드패널
+            if (currentWallConfig.left && !currentWallConfig.right) {
+              newFrameSize.left = 0;
+              newFrameSize.right = 20;
+            } else if (!currentWallConfig.left && currentWallConfig.right) {
+              newFrameSize.left = 20;
+              newFrameSize.right = 0;
+            }
+            break;
+          case 'freestanding':
+            // 프리스탠딩: 양쪽 엔드패널
+            newFrameSize.left = 20;
+            newFrameSize.right = 20;
+            break;
+        }
+        
+        // 노서라운드일 때 gapConfig 설정
+        finalUpdates.gapConfig = {
+          left: currentWallConfig.left ? 2 : 0,
+          right: currentWallConfig.right ? 2 : 0
+        };
+      }
+      
+      finalUpdates.frameSize = newFrameSize;
+      console.log('🔧 서라운드 타입 변경에 따른 프레임 초기화:', {
+        surroundType: updates.surroundType,
+        installType: currentInstallType,
+        frameSize: newFrameSize,
+        gapConfig: finalUpdates.gapConfig
+      });
+    }
+    
+    // 세미스탠딩에서 벽 위치 변경 시 프레임 설정 자동 업데이트
+    if (updates.wallConfig && spaceInfo.installType === 'semistanding' && (spaceInfo.surroundType === 'surround')) {
+      const newFrameSize = { ...spaceInfo.frameSize };
+      
+      if (updates.wallConfig.left && !updates.wallConfig.right) {
+        // 좌측벽만 있음: 좌측 프레임 50mm, 우측 엔드패널 20mm
+        newFrameSize.left = 50;
+        newFrameSize.right = 20;
+      } else if (!updates.wallConfig.left && updates.wallConfig.right) {
+        // 우측벽만 있음: 좌측 엔드패널 20mm, 우측 프레임 50mm
+        newFrameSize.left = 20;
+        newFrameSize.right = 50;
+      }
+      
+      finalUpdates.frameSize = newFrameSize;
+      console.log('🔧 세미스탠딩 프레임 자동 업데이트:', newFrameSize);
+    }
+    
+    // 설치 타입 변경 시 wallConfig와 프레임 설정 자동 업데이트
+    if (updates.installType) {
+      // wallConfig가 함께 전달되었으면 그대로 사용, 아니면 자동 설정
+      if (updates.wallConfig) {
+        console.log('🔧 InstallTypeControls에서 전달된 wallConfig 사용:', updates.wallConfig);
+        finalUpdates.wallConfig = updates.wallConfig;
+      } else {
+        // wallConfig 자동 설정
+        switch (updates.installType) {
+          case 'builtin':
+            finalUpdates.wallConfig = { left: true, right: true };
+            break;
+          case 'semistanding':
+            // 세미스탠딩은 기본값 좌측벽만 (사용자가 변경 가능)
+            finalUpdates.wallConfig = { left: true, right: false };
+            break;
+          case 'freestanding':
+            finalUpdates.wallConfig = { left: false, right: false };
+            break;
+        }
+        console.log('🔧 자동 설정된 wallConfig:', finalUpdates.wallConfig);
+      }
+      
+      // 프레임 설정
+      const newFrameSize = { ...spaceInfo.frameSize };
+      const wallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
+      
+      if (spaceInfo.surroundType === 'surround') {
+        // 서라운드 모드
+        switch (updates.installType) {
+          case 'builtin':
+            // 양쪽벽: 양쪽 모두 프레임 50mm
+            newFrameSize.left = 50;
+            newFrameSize.right = 50;
+            break;
+          case 'semistanding':
+            // 한쪽벽: 벽 위치에 따라 프레임/엔드패널 설정
+            if (wallConfig.left && !wallConfig.right) {
+              newFrameSize.left = 50;   // 좌측벽: 프레임
+              newFrameSize.right = 20;  // 우측: 엔드패널
+            } else if (!wallConfig.left && wallConfig.right) {
+              newFrameSize.left = 20;   // 좌측: 엔드패널
+              newFrameSize.right = 50;  // 우측벽: 프레임
+            }
+            break;
+          case 'freestanding':
+            // 벽없음: 양쪽 모두 엔드패널 20mm
+            newFrameSize.left = 20;
+            newFrameSize.right = 20;
+            break;
+        }
+      } else if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드 모드
+        switch (updates.installType) {
+          case 'builtin':
+            // 빌트인: 좌우 프레임 없음
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
+            break;
+          case 'semistanding':
+            // 세미스탠딩: 벽 없는 쪽만 엔드패널
+            if (wallConfig.left && !wallConfig.right) {
+              newFrameSize.left = 0;
+              newFrameSize.right = 20;
+            } else if (!wallConfig.left && wallConfig.right) {
+              newFrameSize.left = 20;
+              newFrameSize.right = 0;
+            }
+            break;
+          case 'freestanding':
+            // 프리스탠딩: 양쪽 엔드패널
+            newFrameSize.left = 20;
+            newFrameSize.right = 20;
+            break;
+        }
+        
+        // 노서라운드일 때 gapConfig도 업데이트
+        finalUpdates.gapConfig = {
+          left: wallConfig.left ? 2 : 0,
+          right: wallConfig.right ? 2 : 0
+        };
+      }
+      
+      finalUpdates.frameSize = newFrameSize;
+      
+      console.log('🔧 설치타입 변경에 따른 wallConfig 및 프레임 자동 업데이트:', {
+        installType: updates.installType,
+        wallConfig: finalUpdates.wallConfig,
+        frameSize: finalUpdates.frameSize
+      });
     }
     
     // 폭(width)이 변경되었을 때 도어 개수 자동 조정
@@ -1054,6 +1290,12 @@ const Configurator: React.FC = () => {
         finalUpdates = { ...finalUpdates, customColumnCount: correctedCount };
       }
     }
+    
+    console.log('🔧 최종 업데이트 적용:', {
+      updates: finalUpdates,
+      hasWallConfig: !!finalUpdates.wallConfig,
+      wallConfig: finalUpdates.wallConfig
+    });
     
     setSpaceInfo(finalUpdates);
   };
@@ -1132,7 +1374,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 키큰장/하부장 토글 탭 */}
+              {/* 키큰장/상하부장 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button 
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
@@ -1141,15 +1383,36 @@ const Configurator: React.FC = () => {
                   키큰장
                 </button>
                 <button 
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('lower')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upperlower' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('upperlower')}
                 >
-                  하부장
+                  상하부장
                 </button>
               </div>
               
+              {/* 상하부장 선택 시 상부장/하부장 탭 표시 */}
+              {moduleCategory === 'upperlower' && (
+                <div className={styles.upperLowerTabs}>
+                  <button 
+                    className={`${styles.upperLowerTab} ${upperLowerTab === 'upper' ? styles.active : ''}`}
+                    onClick={() => setUpperLowerTab('upper')}
+                  >
+                    상부장
+                  </button>
+                  <button 
+                    className={`${styles.upperLowerTab} ${upperLowerTab === 'lower' ? styles.active : ''}`}
+                    onClick={() => setUpperLowerTab('lower')}
+                  >
+                    하부장
+                  </button>
+                </div>
+              )}
+              
               <div className={styles.moduleSection}>
-                <ModuleGallery moduleCategory={moduleCategory} />
+                <ModuleGallery 
+                  moduleCategory={moduleCategory} 
+                  upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
+                />
               </div>
             </div>
           </div>
@@ -1190,18 +1453,6 @@ const Configurator: React.FC = () => {
       case 'placement':
         return (
           <div className={styles.spaceControls}>
-            {/* 설치 타입 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>설치 타입</h3>
-              </div>
-              <InstallTypeControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-              />
-            </div>
-
             {/* 공간 설정 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -1325,6 +1576,18 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
+            {/* 공간 유형 */}
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>공간 유형</h3>
+              </div>
+              <InstallTypeControls 
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
+              />
+            </div>
+
             {/* 프레임 설정 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -1335,13 +1598,13 @@ const Configurator: React.FC = () => {
               {/* 프레임 타입 */}
               <div className={styles.toggleButtonGroup}>
                 <button
-                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'no-surround') === 'surround' ? styles.active : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
                 >
                   서라운드
                 </button>
                 <button
-                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'no-surround') === 'no-surround' ? styles.active : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
                 >
                   노서라운드
@@ -1349,14 +1612,19 @@ const Configurator: React.FC = () => {
               </div>
 
               {/* 서라운드 선택 시 - 프레임 속성 설정 */}
-              {(spaceInfo.surroundType || 'no-surround') === 'surround' && (
+              {(spaceInfo.surroundType || 'surround') === 'surround' && (
                 <div className={styles.subSetting}>
                   <label className={styles.subLabel}>프레임 폭 설정</label>
                   
                   <div className={styles.frameGrid}>
                     {/* 좌측 */}
                     <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>좌측</label>
+                      <label className={styles.frameItemLabel}>
+                        {spaceInfo.installType === 'builtin' ? '좌측' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
+                         spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
+                      </label>
                       <div className={styles.frameItemInput}>
                         <button 
                           className={styles.frameButton}
@@ -1365,6 +1633,10 @@ const Configurator: React.FC = () => {
                             const newLeft = Math.max(10, currentLeft - 1);
                             updateFrameSize('left', newLeft);
                           }}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         >
                           −
                         </button>
@@ -1380,6 +1652,10 @@ const Configurator: React.FC = () => {
                           onFocus={() => setHighlightedFrame('left')}
                           onBlur={() => setHighlightedFrame(null)}
                           className={styles.frameNumberInput}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         />
                         <button 
                           className={styles.frameButton}
@@ -1388,6 +1664,10 @@ const Configurator: React.FC = () => {
                             const newLeft = Math.min(100, currentLeft + 1);
                             updateFrameSize('left', newLeft);
                           }}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         >
                           +
                         </button>
@@ -1396,7 +1676,12 @@ const Configurator: React.FC = () => {
 
                     {/* 우측 */}
                     <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>우측</label>
+                      <label className={styles.frameItemLabel}>
+                        {spaceInfo.installType === 'builtin' ? '우측' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
+                         spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
+                      </label>
                       <div className={styles.frameItemInput}>
                         <button 
                           className={styles.frameButton}
@@ -1405,6 +1690,10 @@ const Configurator: React.FC = () => {
                             const newRight = Math.max(10, currentRight - 1);
                             updateFrameSize('right', newRight);
                           }}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         >
                           −
                         </button>
@@ -1420,6 +1709,10 @@ const Configurator: React.FC = () => {
                           onFocus={() => setHighlightedFrame('right')}
                           onBlur={() => setHighlightedFrame(null)}
                           className={styles.frameNumberInput}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         />
                         <button 
                           className={styles.frameButton}
@@ -1428,6 +1721,10 @@ const Configurator: React.FC = () => {
                             const newRight = Math.min(100, currentRight + 1);
                             updateFrameSize('right', newRight);
                           }}
+                          disabled={
+                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+                            spaceInfo.installType === 'freestanding'
+                          }
                         >
                           +
                         </button>
@@ -1479,180 +1776,13 @@ const Configurator: React.FC = () => {
                 </div>
               )}
 
-              {/* 이격거리 설정 - 노서라운드 선택 시에만 표시 */}
-              {(spaceInfo.surroundType || 'no-surround') === 'no-surround' && (
-                <div className={styles.subSetting}>
-                  <label className={styles.subLabel}>이격거리</label>
-                  
-                  <div className={styles.frameGrid}>
-                    {/* 좌측 이격거리 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>좌측</label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentLeft = spaceInfo.gapConfig?.left || 2;
-                            const newLeft = Math.max(1, currentLeft - 1);
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: newLeft, 
-                                right: spaceInfo.gapConfig?.right || 2
-                              }
-                            });
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={spaceInfo.gapConfig?.left || 2}
-                          onChange={(e) => {
-                            const value = Math.min(10, Math.max(1, parseInt(e.target.value) || 2));
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: value, 
-                                right: spaceInfo.gapConfig?.right || 2
-                              }
-                            });
-                          }}
-                          className={styles.frameNumberInput}
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentLeft = spaceInfo.gapConfig?.left || 2;
-                            const newLeft = Math.min(10, currentLeft + 1);
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: newLeft, 
-                                right: spaceInfo.gapConfig?.right || 2
-                              }
-                            });
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 우측 이격거리 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>우측</label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentRight = spaceInfo.gapConfig?.right || 2;
-                            const newRight = Math.max(1, currentRight - 1);
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: spaceInfo.gapConfig?.left || 2,
-                                right: newRight
-                              }
-                            });
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={spaceInfo.gapConfig?.right || 2}
-                          onChange={(e) => {
-                            const value = Math.min(10, Math.max(1, parseInt(e.target.value) || 2));
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: spaceInfo.gapConfig?.left || 2,
-                                right: value
-                              }
-                            });
-                          }}
-                          className={styles.frameNumberInput}
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentRight = spaceInfo.gapConfig?.right || 2;
-                            const newRight = Math.min(10, currentRight + 1);
-                            handleSpaceInfoUpdate({ 
-                              gapConfig: { 
-                                left: spaceInfo.gapConfig?.left || 2,
-                                right: newRight
-                              }
-                            });
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 상부 프레임 높이 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>상부</label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 10;
-                            const newTop = Math.max(1, currentTop - 1);
-                            handleSpaceInfoUpdate({ 
-                              frameSize: { 
-                                left: spaceInfo.frameSize?.left || 50,
-                                right: spaceInfo.frameSize?.right || 50,
-                                top: newTop
-                              }
-                            });
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          max="50"
-                          value={spaceInfo.frameSize?.top || 10}
-                          onChange={(e) => {
-                            const value = Math.min(50, Math.max(1, parseInt(e.target.value) || 10));
-                            handleSpaceInfoUpdate({ 
-                              frameSize: { 
-                                left: spaceInfo.frameSize?.left || 50,
-                                right: spaceInfo.frameSize?.right || 50,
-                                top: value
-                              }
-                            });
-                          }}
-                          className={styles.frameNumberInput}
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 10;
-                            const newTop = Math.min(50, currentTop + 1);
-                            handleSpaceInfoUpdate({ 
-                              frameSize: { 
-                                left: spaceInfo.frameSize?.left || 50,
-                                right: spaceInfo.frameSize?.right || 50,
-                                top: newTop
-                              }
-                            });
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                  
-                  <div className={styles.frameUnit}>단위: mm</div>
-                </div>
-              )}
             </div>
+
+            {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
+            <GapControls 
+              spaceInfo={spaceInfo}
+              onUpdate={handleSpaceInfoUpdate}
+            />
 
             {/* 받침대 */}
             <div className={styles.configSection}>
@@ -1703,7 +1833,6 @@ const Configurator: React.FC = () => {
         projectName={currentDesignFileName || basicInfo.title || "새로운 디자인"}
         onSave={saveProject}
         onPrevious={handlePrevious}
-        onNext={handleNext}
         onHelp={handleHelp}
         onConvert={handleConvert}
         onLogout={handleLogout}

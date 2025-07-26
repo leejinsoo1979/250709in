@@ -1,5 +1,10 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 
+// 노서라운드 빌트인 여부 확인 함수
+const isNoSurroundBuiltin = (spaceInfo: SpaceInfo): boolean => {
+  return spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in');
+};
+
 /**
  * 백패널 두께 (9mm) - 얇은 백패널
  */
@@ -207,25 +212,46 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
     let leftThickness = 0;
     let rightThickness = 0;
     
-    // 노서라운드: 벽이 없는 쪽에만 20mm 엔드패널
-    if (installType === 'builtin' || installType === 'built-in') {
-      // 양쪽벽: 프레임 없음
-      leftThickness = 0;
-      rightThickness = 0;
-    } else if (installType === 'semistanding' || installType === 'semi-standing') {
-      // 한쪽벽: 벽 없는 쪽에만 20mm 엔드패널
-      if (wallConfig?.left) {
-        leftThickness = 0;  // 좌측벽 있음: 프레임 없음
-        rightThickness = 20; // 우측벽 없음: 20mm 엔드패널
-      } else {
-        leftThickness = 20; // 좌측벽 없음: 20mm 엔드패널
-        rightThickness = 0;  // 우측벽 있음: 프레임 없음
-      }
-    } else {
-      // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
-      leftThickness = 20;
-      rightThickness = 20;
+    // frameSize가 명시적으로 설정되어 있으면 그 값을 우선 사용
+    if (frameSize?.left !== undefined) {
+      leftThickness = frameSize.left;
     }
+    if (frameSize?.right !== undefined) {
+      rightThickness = frameSize.right;
+    }
+    
+    // frameSize가 없는 경우에만 기본값 사용
+    if (frameSize?.left === undefined || frameSize?.right === undefined) {
+      // 노서라운드: 벽이 없는 쪽에만 20mm 엔드패널
+      if (installType === 'builtin' || installType === 'built-in') {
+        // 양쪽벽: 프레임 없음
+        leftThickness = frameSize?.left ?? 0;
+        rightThickness = frameSize?.right ?? 0;
+        console.log('🔍 노서라운드 빌트인: 좌우 프레임 없음', { installType, surroundType });
+      } else if (installType === 'semistanding' || installType === 'semi-standing') {
+        // 한쪽벽: 벽 없는 쪽에만 20mm 엔드패널
+        if (wallConfig?.left) {
+          leftThickness = frameSize?.left ?? 0;  // 좌측벽 있음: 프레임 없음
+          rightThickness = frameSize?.right ?? 20; // 우측벽 없음: 20mm 엔드패널
+        } else {
+          leftThickness = frameSize?.left ?? 20; // 좌측벽 없음: 20mm 엔드패널
+          rightThickness = frameSize?.right ?? 0;  // 우측벽 있음: 프레임 없음
+        }
+      } else if (installType === 'freestanding') {
+        // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
+        leftThickness = frameSize?.left ?? 20;
+        rightThickness = frameSize?.right ?? 20;
+        console.log('🔍 노서라운드 벽없음: 좌우 20mm 엔드패널', { installType, surroundType });
+      }
+    }
+    
+    console.log('🔍 노서라운드 프레임 계산 결과:', { 
+      frameSize, 
+      leftThickness, 
+      rightThickness,
+      installType,
+      surroundType 
+    });
     
     return {
       left: leftThickness, // mm 단위 그대로 반환 (Room.tsx에서 필요에 따라 변환)
@@ -244,13 +270,15 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
   const rightFrameSize = frameSize?.right || defaultFrameSize;
   
   switch (installType) {
+    case 'builtin':
     case 'built-in':
       // 빌트인: 양쪽 모두 벽이 있으므로 frameSize 값 사용
       leftThickness = leftFrameSize;
       rightThickness = rightFrameSize;
       break;
+    case 'semistanding':
     case 'semi-standing':
-      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 18mm 엔드패널
+      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 20mm 엔드패널
       if (wallConfig.left && !wallConfig.right) {
         leftThickness = leftFrameSize;
         rightThickness = END_PANEL_THICKNESS;
@@ -263,8 +291,9 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
         rightThickness = END_PANEL_THICKNESS;
       }
       break;
+    case 'freestanding':
     case 'free-standing':
-              // 프리스탠딩: 양쪽 모두 벽이 없으므로 18mm 엔드패널
+      // 프리스탠딩: 양쪽 모두 벽이 없으므로 20mm 엔드패널
       leftThickness = END_PANEL_THICKNESS;
       rightThickness = END_PANEL_THICKNESS;
       break;
@@ -288,6 +317,7 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return { width: 0, widthMm: 0 };
   }
+  
   let baseWidthMm;
   
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
@@ -318,9 +348,11 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return 0;
   }
+  
   // 받침대가 있는 경우에만 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
-    return spaceInfo.baseConfig.height || 65;
+    const height = spaceInfo.baseConfig.height || 65;
+    return height;
   }
   return 0;
 };
@@ -333,6 +365,7 @@ export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return SURROUND_FRAME_THICKNESS;
   }
+  
   // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
   return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
 }; 

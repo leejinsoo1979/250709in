@@ -18,18 +18,33 @@ export const useSurroundCalculations = (
   hasRightWall: boolean
 ): SurroundCalculations => {
   const derivedStore = useDerivedSpaceStore();
-  const END_PANEL_WIDTH = 18; // 고정 18mm
+  const END_PANEL_WIDTH = 20; // 고정 20mm
 
   // 노서라운드 모드에서 프레임 너비 계산
   const noSurroundFrameWidth = useMemo(() => {
     const isNoSurround = spaceInfo.surroundType === 'no-surround';
-    if (!isNoSurround || !spaceInfo.gapConfig) return null;
+    if (!isNoSurround) return null;
     
     const totalWidth = spaceInfo.width;
+    let leftReduction = 0;
+    let rightReduction = 0;
     
-    // 좌우 각각 이격거리만큼 줄어든 값이 상하단 프레임의 너비가 됨
-    return totalWidth - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
-  }, [spaceInfo.surroundType, spaceInfo.gapConfig, spaceInfo.width]);
+    // 벽이 없으면 엔드판넬, 벽이 있으면 이격거리
+    if (!hasLeftWall) {
+      leftReduction = END_PANEL_WIDTH;
+    } else if (spaceInfo.gapConfig?.left) {
+      leftReduction = spaceInfo.gapConfig.left;
+    }
+    
+    if (!hasRightWall) {
+      rightReduction = END_PANEL_WIDTH;
+    } else if (spaceInfo.gapConfig?.right) {
+      rightReduction = spaceInfo.gapConfig.right;
+    }
+    
+    // 좌우 각각의 감소값만큼 줄어든 값이 상하단 프레임의 너비가 됨
+    return totalWidth - leftReduction - rightReduction;
+  }, [spaceInfo.surroundType, spaceInfo.gapConfig, spaceInfo.width, hasLeftWall, hasRightWall]);
 
   // 서라운드 모드에서 프레임 너비 계산
   const surroundFrameWidth = useMemo(() => {

@@ -987,26 +987,61 @@ export const findAvailableSpacesInColumnSlot = (
   const availableSpaces = [];
   const minWidth = 150; // 최소 150mm
   
+  // 같은 슬롯에 있는 기존 가구들 확인
+  const modulesInSlot = existingModules.filter(m => m.slotIndex === slotIndex);
+  console.log(`🔍 슬롯 ${slotIndex}의 기존 가구:`, modulesInSlot.length);
+  
+  // 기존 가구들의 위치와 크기 확인
+  const occupiedSpaces = modulesInSlot.map(m => {
+    const width = (m.adjustedWidth || 600) * 0.001; // mm to m
+    const halfWidth = width / 2;
+    return {
+      left: m.position.x - halfWidth,
+      right: m.position.x + halfWidth,
+      z: m.position.z || 0,
+      id: m.id
+    };
+  });
+  
+  // 공간이 점유되었는지 확인하는 함수
+  const isSpaceOccupied = (centerX: number, width: number, z: number = 0) => {
+    const halfWidth = width * 0.001 / 2; // mm to m
+    const left = centerX - halfWidth;
+    const right = centerX + halfWidth;
+    
+    return occupiedSpaces.some(occupied => {
+      // Z축이 다르면 겹치지 않음 (앞뒤로 배치된 경우)
+      if (Math.abs(occupied.z - z) > 0.05) return false;
+      
+      // X축 겹침 확인
+      return !(right <= occupied.left || left >= occupied.right);
+    });
+  };
+  
   // 1. 왼쪽 공간 확인
   const leftSpace = (columnLeftX - slotLeftX) * 1000; // mm
   if (leftSpace >= minWidth) {
     const centerX = slotLeftX + (columnLeftX - slotLeftX) / 2;
-    availableSpaces.push({
-      position: { x: centerX, z: 0 },
-      maxWidth: leftSpace,
-      type: 'left' as const
-    });
+    if (!isSpaceOccupied(centerX, leftSpace)) {
+      availableSpaces.push({
+        position: { x: centerX, z: 0 },
+        maxWidth: leftSpace,
+        type: 'left' as const
+      });
+    }
   }
   
   // 2. 오른쪽 공간 확인
   const rightSpace = (slotRightX - columnRightX) * 1000; // mm
   if (rightSpace >= minWidth) {
     const centerX = columnRightX + (slotRightX - columnRightX) / 2;
-    availableSpaces.push({
-      position: { x: centerX, z: 0 },
-      maxWidth: rightSpace,
-      type: 'right' as const
-    });
+    if (!isSpaceOccupied(centerX, rightSpace)) {
+      availableSpaces.push({
+        position: { x: centerX, z: 0 },
+        maxWidth: rightSpace,
+        type: 'right' as const
+      });
+    }
   }
   
   // 3. 기둥 앞 공간 확인 (얕은 기둥인 경우)
@@ -1014,32 +1049,27 @@ export const findAvailableSpacesInColumnSlot = (
     const frontSpace = 730 - column.depth; // 슬롯 깊이 - 기둥 깊이
     if (frontSpace >= 200) { // 최소 200mm
       const frontZ = columnZ + columnDepth / 2 + (frontSpace * 0.001) / 2;
-      availableSpaces.push({
-        position: { x: column.position[0], z: frontZ },
-        maxWidth: column.width - 20, // 기둥 폭보다 약간 작게
-        type: 'front' as const
-      });
+      const frontWidth = Math.min(column.width, 300); // 기둥 너비 또는 최대 300mm
+      if (!isSpaceOccupied(column.position[0], frontWidth, frontZ)) {
+        availableSpaces.push({
+          position: { x: column.position[0], z: frontZ },
+          maxWidth: frontWidth,
+          type: 'front' as const
+        });
+      }
     }
   }
   
-  // 기존 가구와 겹치는 공간 제거
-  return availableSpaces.filter(space => {
-    for (const module of existingModules) {
-      if (module.slotIndex !== slotIndex) continue;
-      
-      // 간단한 충돌 검사 (x축만)
-      const moduleWidth = module.adjustedWidth || 600; // 기본값
-      const moduleLeft = module.position.x - (moduleWidth * 0.001) / 2;
-      const moduleRight = module.position.x + (moduleWidth * 0.001) / 2;
-      const spaceLeft = space.position.x - (space.maxWidth * 0.001) / 2;
-      const spaceRight = space.position.x + (space.maxWidth * 0.001) / 2;
-      
-      if (moduleLeft < spaceRight && moduleRight > spaceLeft) {
-        return false; // 충돌
-      }
-    }
-    return true;
+  console.log(`📍 슬롯 ${slotIndex}의 사용 가능한 공간:`, {
+    count: availableSpaces.length,
+    spaces: availableSpaces.map(s => ({
+      type: s.type,
+      width: s.maxWidth,
+      position: `(${s.position.x.toFixed(2)}, ${s.position.z.toFixed(2)})`
+    }))
   });
+  
+  return availableSpaces;
 };
 
 /**

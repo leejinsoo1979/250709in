@@ -50,9 +50,12 @@ const SceneCleanup: React.FC = () => {
   
   // 컴포넌트 언마운트 시 자원 정리
   useEffect(() => {
+    const currentGl = gl;
+    const currentScene = scene;
+    
     return () => {
       // 씬 내의 모든 메쉬와 재질 해제
-      scene.traverse((object) => {
+      currentScene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           if (object.geometry) {
             object.geometry.dispose();
@@ -73,17 +76,19 @@ const SceneCleanup: React.FC = () => {
       // 더 안전한 방식으로 Three.js 객체 정리
       try {
         // WebGL 렌더러의 내부 자원만 정리 (컨텍스트 손실은 하지 않음)
-        const renderer = gl as THREE.WebGLRenderer;
-        renderer.dispose();
+        const renderer = currentGl as THREE.WebGLRenderer;
         
-        console.log('Three.js resources cleaned up');
+        // 렌더 타겟만 정리 (dispose 호출 제거)
+        renderer.setRenderTarget(null);
+        
+        // console.log('Three.js resources cleaned up safely');
       } catch (e) {
-        console.warn('Failed to clean up Three.js resources:', e);
+        // console.warn('Failed to clean up Three.js resources:', e);
       }
       
-      console.log('Scene cleanup completed');
+      // console.log('Scene cleanup completed');
     };
-  }, [scene, gl]);
+  }, []); // 의존성 배열을 비워서 한 번만 실행
   
   return null;
 };

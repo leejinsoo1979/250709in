@@ -93,6 +93,51 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [showWarning, setShowWarning] = useState(false);
+  
+  // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('🔑 키 입력 감지:', e.key, 'activePopup.type:', activePopup.type, 'showWarning:', showWarning);
+      
+      // 경고창이 열려있을 때
+      if (showWarning) {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+          e.preventDefault();
+          setShowWarning(false);
+          console.log('✅ 경고창 닫기');
+        }
+        return;
+      }
+      
+      // 메인 팝업이 열려있을 때 (furnitureEdit 타입 체크)
+      if (activePopup.type === 'furnitureEdit') {
+        if (e.key === 'Enter') {
+          // input 필드에 포커스가 있는 경우는 제외 (깊이 입력 필드)
+          const activeElement = document.activeElement;
+          console.log('🎯 액티브 요소:', activeElement?.tagName, activeElement);
+          
+          if (activeElement?.tagName !== 'INPUT') {
+            e.preventDefault();
+            console.log('✅ 엔터키로 팝업 닫기');
+            closeAllPopups(); // 확인 버튼과 동일한 동작
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          console.log('✅ ESC키로 팝업 닫기');
+          closeAllPopups(); // 취소와 동일한 동작
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    console.log('🎯 키 이벤트 리스너 등록');
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      console.log('🎯 키 이벤트 리스너 제거');
+    };
+  }, [activePopup.type, showWarning, closeAllPopups]);
+  
   // 기본 가구 깊이 계산 (가구별 defaultDepth 우선, 없으면 fallback)
   const getDefaultDepth = useCallback((moduleData?: ModuleData) => {
     // 가구별 기본 깊이가 정의되어 있으면 사용
@@ -152,7 +197,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setCustomDepth(initialDepth);
       setDepthInputValue(initialDepth.toString());
       setHingePosition(currentPlacedModule.hingePosition || 'right');
-      setHasDoor(currentPlacedModule.hasDoor ?? false);
+      setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
       
       console.log('🔧 팝업 초기값 설정:', {
         moduleId: currentPlacedModule.moduleId,

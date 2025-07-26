@@ -8,6 +8,7 @@ import { useDropPositioning } from './useDropPositioning';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { isSlotAvailable } from '../../utils/slotAvailability';
+import { useAlert } from '@/hooks/useAlert';
 
 export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const addModule = useFurnitureStore(state => state.addModule);
@@ -15,6 +16,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { checkSlotOccupancy } = useSlotOccupancy(spaceInfo);
   const { calculateDropPosition, findAvailableSlot } = useDropPositioning(spaceInfo);
+  const { showAlert, AlertComponent } = useAlert();
   
   // Three.js 컨텍스트 접근 (그림자 업데이트용)
   const { gl, invalidate } = useThree();
@@ -48,11 +50,23 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
       const currentDragData = JSON.parse(dragDataString);
       
       if (currentDragData && currentDragData.type === 'furniture') {
+        // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
+        const isSpecialDualFurniture = currentDragData.moduleData.id.includes('dual-2drawer-styler-') || 
+                                     currentDragData.moduleData.id.includes('dual-4drawer-pantshanger-');
+        
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
+        if (isSpecialDualFurniture && indexing.columnWidth < 550) {
+          showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+          setFurniturePlacementMode(false);
+          return;
+        }
+        
         // 드롭 위치 계산
         const dropPosition = calculateDropPosition(e, currentDragData);
         if (!dropPosition) return;
 
-        const indexing = calculateSpaceIndexing(spaceInfo);
         let finalX = dropPosition.x;
         
         // 슬롯 사용 가능 여부 확인 - 기둥이 있어도 150mm 이상 공간이 있으면 배치 가능
@@ -176,6 +190,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   return {
     handleDragOver,
     handleDragLeave,
-    handleDrop
+    handleDrop,
+    AlertComponent
   };
 }; 

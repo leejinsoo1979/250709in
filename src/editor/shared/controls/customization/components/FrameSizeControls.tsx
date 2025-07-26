@@ -35,7 +35,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   onFrameSizeBlur,
   onKeyDown
 }) => {
-  const END_PANEL_WIDTH = 18; // 고정 18mm
+  const END_PANEL_WIDTH = 20; // 고정 20mm
   const { setHighlightedFrame } = useUIStore();
 
   // 입력 필드 포커스 핸들러
@@ -59,7 +59,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
       <div className={styles.section}>
         <span className={styles.label}>프레임 설정</span>
         <div className={styles.description}>
-          벽이 있는 쪽은 40~100mm 범위에서 조정 가능하며, 벽이 없는 쪽은 18mm 엔드패널로 고정됩니다.
+          벽이 있는 쪽은 40~100mm 범위에서 조정 가능하며, 벽이 없는 쪽은 20mm 엔드패널로 고정됩니다.
         </div>
         {surroundFrameWidth && (
           <div className={styles.infoBox} style={{ marginBottom: '12px' }}>
@@ -132,14 +132,23 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
     <div className={styles.section}>
       <span className={styles.label}>프레임 설정</span>
       <p className={styles.description}>
-        노서라운드에서는 좌우 프레임이 제거되고, 선택한 이격거리({gapSize}mm)에 따라 
-        상/하단 프레임 폭이 자동 계산됩니다.
+        {hasLeftWall && hasRightWall ? (
+          <>노서라운드에서는 좌우 프레임이 제거되고, 선택한 이격거리({gapSize}mm)에 따라 
+          상/하단 프레임 폭이 자동 계산됩니다.</>
+        ) : (
+          <>노서라운드에서 벽이 없는 쪽은 {END_PANEL_WIDTH}mm 엔드패널로 고정되며,
+          벽이 있는 쪽은 이격거리({gapSize}mm)가 적용됩니다.</>
+        )}
       </p>
       {noSurroundFrameWidth && (
         <div className={styles.infoBox} style={{ marginBottom: '12px' }}>
           <span>프레임 폭 내경: <strong>{noSurroundFrameWidth}mm</strong></span>
           <span className={styles.infoDetail}>
-            (전체 폭 {spaceWidth}mm - 좌우 이격거리 각 {gapSize}mm)
+            (전체 폭 {spaceWidth}mm 
+            {!hasLeftWall && ` - 좌측 엔드패널 ${END_PANEL_WIDTH}mm`}
+            {hasLeftWall && ` - 좌측 이격거리 ${gapSize}mm`}
+            {!hasRightWall && ` - 우측 엔드패널 ${END_PANEL_WIDTH}mm`}
+            {hasRightWall && ` - 우측 이격거리 ${gapSize}mm`})
           </span>
           <span className={styles.infoDetail} style={{ marginTop: '4px' }}>
             슬롯 수: <strong>{columnInfo.columnCount}개</strong> / 슬롯당 너비: <strong>{columnInfo.columnWidth}mm</strong>

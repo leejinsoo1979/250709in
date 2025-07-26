@@ -17,6 +17,7 @@ interface BoxModuleProps {
   moduleData: ModuleData;
   color?: string;
   isDragging?: boolean;
+  isEditMode?: boolean; // 편집 모드 여부
   internalHeight?: number;
   hasDoor?: boolean;
   customDepth?: number;
@@ -27,6 +28,8 @@ interface BoxModuleProps {
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm)
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
+  viewMode?: '2D' | '3D';
+  renderMode?: 'solid' | 'wireframe';
 }
 
 /**
@@ -40,6 +43,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   moduleData,
   color,
   isDragging = false,
+  isEditMode = false,
   internalHeight,
   hasDoor = false,
   customDepth,
@@ -49,7 +53,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   doorXOffset = 0,
   originalSlotWidth,
   slotCenterX,
-  adjustedWidth
+  adjustedWidth,
+  viewMode,
+  renderMode
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
@@ -60,6 +66,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     internalHeight,
     customDepth,
     isDragging,
+    isEditMode,
     adjustedWidth
   });
   
@@ -70,6 +77,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -90,6 +98,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -110,6 +119,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -130,6 +140,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -150,6 +161,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -170,6 +182,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -190,6 +203,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -210,6 +224,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
+        isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
         customDepth={customDepth}
@@ -227,7 +242,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // === 2단계: 일반 폴백 케이스 (공통 로직 사용) ===
   // 나머지 케이스들을 공통 로직으로 처리
   return (
-    <BaseFurnitureShell {...baseFurniture}>
+    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging}>
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (
         <SectionsRenderer
@@ -240,7 +255,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           shelfZOffset={baseFurniture.shelfZOffset}
           material={baseFurniture.material}
           calculateSectionHeight={baseFurniture.calculateSectionHeight}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode || useSpace3DView().renderMode}
         />
       )}
       
@@ -263,6 +278,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          isDragging={isDragging}
+        isEditMode={isEditMode}
+          isEditMode={isEditMode}
         />
       )}
     </BaseFurnitureShell>

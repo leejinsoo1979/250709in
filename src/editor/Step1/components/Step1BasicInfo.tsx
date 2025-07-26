@@ -73,7 +73,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
       <div className={styles.modalContent}>
         <div className={styles.header}>
           <button

@@ -59,7 +59,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     fontWeight: '600',
     outline: 'none',
     backgroundColor: '#ffffff',
-    color: '#000000'
+    color: '#000000',
+    WebkitTextFillColor: '#000000',
+    opacity: 1
   };
   
   const containerStyle = {
@@ -100,6 +102,47 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       }, 100);
     }
   }, [editingDistance]);
+
+  // 다크모드인지 확인
+  const isDarkMode = theme?.mode === 'dark' || document.body.classList.contains('theme-dark');
+  
+  // 컴포넌트 마운트 시 다크모드 대응 스타일 강제 적용
+  useEffect(() => {
+    // 기존 스타일 제거
+    const existingStyle = document.querySelector('[data-column-distance-styles="true"]');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    const style = document.createElement('style');
+    style.textContent = `
+      /* 기둥 거리 입력 필드 - 특정 클래스로 제한 */
+      .column-distance-label-input {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        -webkit-text-fill-color: #000000 !important;
+        opacity: 1 !important;
+        caret-color: #000000 !important;
+      }
+      /* 상태별 스타일 */
+      .column-distance-label-input:focus,
+      .column-distance-label-input:hover,
+      .column-distance-label-input:active,
+      .column-distance-label-input:disabled {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        -webkit-text-fill-color: #000000 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    style.setAttribute('data-column-distance-styles', 'true');
+    
+    return () => {
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
 
   // 컴포넌트 렌더링 디버그 로그 (개발 모드에서만)
   // console.log('🏛️ ColumnDistanceLabels 렌더링:', {
@@ -282,27 +325,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
-              <style>
-                {`
-                  .column-distance-input > div > input[type="number"],
-                  .column-distance-input input[type="number"],
-                  .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                  /* 다크모드에서도 강제 적용 */
-                  .theme-dark .column-distance-input input,
-                  body.theme-dark .column-distance-input input,
-                  [data-theme="dark"] .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                `}
-              </style>
               <div 
                 className="column-distance-input"
                 style={{
@@ -330,6 +352,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 <input
                   ref={inputRef}
                   type="number"
+                  className="column-distance-label-input"
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -354,8 +377,10 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                     fontFamily: 'system-ui, -apple-system, sans-serif',
                     fontWeight: '600',
                     outline: 'none',
-                    backgroundColor: '#ffffff !important',
-                    color: '#000000 !important',
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1,
                     WebkitAppearance: 'none',
                     MozAppearance: 'textfield'
                   }}
@@ -473,27 +498,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
-              <style>
-                {`
-                  .column-distance-input > div > input[type="number"],
-                  .column-distance-input input[type="number"],
-                  .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                  /* 다크모드에서도 강제 적용 */
-                  .theme-dark .column-distance-input input,
-                  body.theme-dark .column-distance-input input,
-                  [data-theme="dark"] .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                `}
-              </style>
               <div 
                 className="column-distance-input"
                 style={{
@@ -521,6 +525,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 <input
                   ref={inputRef}
                   type="number"
+                  className="column-distance-label-input"
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -545,8 +550,10 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                     fontFamily: 'system-ui, -apple-system, sans-serif',
                     fontWeight: '600',
                     outline: 'none',
-                    backgroundColor: '#ffffff !important',
-                    color: '#000000 !important',
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1,
                     WebkitAppearance: 'none',
                     MozAppearance: 'textfield'
                   }}
@@ -633,27 +640,6 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               position={[0, 0, 0.1]}
               style={{ pointerEvents: 'auto' }}
             >
-              <style>
-                {`
-                  .column-distance-input > div > input[type="number"],
-                  .column-distance-input input[type="number"],
-                  .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                  /* 다크모드에서도 강제 적용 */
-                  .theme-dark .column-distance-input input,
-                  body.theme-dark .column-distance-input input,
-                  [data-theme="dark"] .column-distance-input input {
-                    color: #000000 !important;
-                    background-color: #ffffff !important;
-                    -webkit-text-fill-color: #000000 !important;
-                    opacity: 1 !important;
-                  }
-                `}
-              </style>
               <div 
                 className="column-distance-input"
                 style={{
@@ -681,6 +667,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 <input
                   ref={inputRef}
                   type="number"
+                  className="column-distance-label-input"
                   value={editingValue}
                   onChange={(e) => setEditingValue(e.target.value)}
                   onKeyDown={(e) => {

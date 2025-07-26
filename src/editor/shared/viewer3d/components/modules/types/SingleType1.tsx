@@ -20,30 +20,11 @@ const BoxWithEdges: React.FC<{
   
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 드래그 중일 때 고스트 효과 적용
+  // 드래그 중일 때는 이미 처리된 재질 그대로 사용
   const processedMaterial = React.useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = material.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
-      // 테마 색상 가져오기
-      const getThemeColor = () => {
-        if (typeof window !== "undefined") {
-          const computedStyle = getComputedStyle(document.documentElement);
-          const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-          if (primaryColor) {
-            return primaryColor;
-          }
-        }
-        return "#10b981"; // 기본값 (green)
-      };
-      
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.needsUpdate = true;
-      return ghostMaterial;
-    }
+    // useBaseFurniture에서 이미 드래그 상태 처리가 되어있으므로 그대로 사용
     return material;
-  }, [material, isDragging]);
+  }, [material]);
 
   return (
     <group position={position}>
@@ -100,6 +81,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   hingePosition = 'right',
   spaceInfo,
   isDragging = false,
+  isEditMode = false,
   doorWidth,
   adjustedWidth
 }) => {
@@ -109,6 +91,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     internalHeight,
     customDepth,
     isDragging,
+    isEditMode,
     adjustedWidth
   });
 
@@ -255,6 +238,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
           isDragging={isDragging}
+          isEditMode={isEditMode}
         />
       )}
     </group>

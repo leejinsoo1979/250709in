@@ -320,9 +320,9 @@
 .toggleButton {
   flex: 1;
   padding: 10px 16px;
-  border: 1px solid var(--theme-border);
-  background: var(--theme-surface);
-  color: var(--theme-text-secondary);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -332,26 +332,26 @@
 
 .toggleButton:hover {
   border-color: var(--theme-primary);
-  color: var(--theme-text);
+  color: #111827;
 }
 
 .toggleButton.active {
   background: var(--theme-primary);
-  color: white;
+  color: #ffffff;
   border-color: var(--theme-primary);
 }
 
 .subOption {
   margin-top: 12px;
   padding: 12px;
-  background: var(--theme-background-secondary);
+  background: #f9fafb;
   border-radius: 8px;
 }
 
 .subLabel {
   font-size: 13px;
   font-weight: 500;
-  color: var(--theme-text-secondary);
+  color: #6b7280;
   margin-bottom: 8px;
   display: block;
 }
@@ -365,11 +365,11 @@
 .numberInput {
   width: 80px;
   padding: 8px 12px;
-  border: 1px solid var(--theme-border);
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 14px;
-  background: var(--theme-surface);
-  color: var(--theme-text);
+  background: #ffffff;
+  color: #111827;
   text-align: center;
 }
 
@@ -380,5 +380,5 @@
 
 .unit {
   font-size: 14px;
-  color: var(--theme-text-secondary);
+  color: #6b7280;
 }

@@ -13,6 +13,7 @@ const BaseTypeSelector: React.FC<BaseTypeSelectorProps> = ({
 }) => {
   const isFloor = baseConfig?.type === 'floor' || !baseConfig;
   const isStand = baseConfig?.type === 'stand';
+  
 
   return (
     <div className={styles.section}>

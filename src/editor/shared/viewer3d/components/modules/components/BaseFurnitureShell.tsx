@@ -33,58 +33,23 @@ const BoxWithEdges: React.FC<{
     }
   }, [viewMode, gl]);
   
-  // 재질 처리 - 드래그 중일 때 고스트 효과 적용
-  const processedMaterial = useMemo(() => {
-    console.log('🔧 BaseFurnitureShell - isDragging:', isDragging, 'isInternalSurface:', isInternalSurface, 'material.map:', material instanceof THREE.MeshStandardMaterial ? material.map : 'N/A');
-    
-    // 드래그 중일 때 테마색 투명 고스트 효과
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = material.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
-      
-      // 테마 색상 가져오기
-      const getThemeColor = () => {
-        if (typeof window !== 'undefined') {
-          const computedStyle = getComputedStyle(document.documentElement);
-          const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-          if (primaryColor) {
-            return primaryColor;
-          }
-        }
-        return '#10b981'; // 기본값 (green)
-      };
-      
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.needsUpdate = true;
-      return ghostMaterial;
+  // 재질은 그대로 사용 (useBaseFurniture에서 이미 투명도 처리됨)
+  const processedMaterial = material;
+  
+  // 재질 텍스처 확인
+  useEffect(() => {
+    if (material && 'map' in material) {
+      const mat = material as THREE.MeshStandardMaterial;
+      console.log('🪑 BaseFurnitureShell BoxWithEdges 재질 상태:', {
+        hasMap: !!mat.map,
+        mapImage: mat.map?.image?.src,
+        color: mat.color?.getHexString(),
+        toneMapped: mat.toneMapped,
+        roughness: mat.roughness,
+        isInternalSurface
+      });
     }
-    
-    if (isInternalSurface && material instanceof THREE.MeshStandardMaterial) {
-      console.log('🎯 내부 표면 재질 처리 - 원본 텍스처:', material.map);
-      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
-      return material;
-    }
-    
-    // 2D 모드에서 솔리드 렌더링 시 투명도 적용
-    if (material instanceof THREE.MeshStandardMaterial) {
-      if (viewMode === '2D' && renderMode === 'solid') {
-        const transparentMaterial = material.clone();
-        // 텍스처와 모든 속성 복사
-        transparentMaterial.map = material.map;
-        transparentMaterial.color = material.color.clone();
-        transparentMaterial.normalMap = material.normalMap;
-        transparentMaterial.roughnessMap = material.roughnessMap;
-        transparentMaterial.metalnessMap = material.metalnessMap;
-        transparentMaterial.transparent = true;
-        transparentMaterial.opacity = 0.5;
-        transparentMaterial.needsUpdate = true;
-        return transparentMaterial;
-      }
-    }
-    
-    return material;
-  }, [material, isInternalSurface, renderMode, viewMode, isDragging]);
+  }, [material, isInternalSurface]);
 
   return (
     <group position={position}>
@@ -92,12 +57,11 @@ const BoxWithEdges: React.FC<{
       {renderMode === 'solid' && (
         <mesh 
           geometry={geometry} 
+          material={processedMaterial}
           receiveShadow={viewMode === '3D'} 
           castShadow={viewMode === '3D'}
           renderOrder={isInternalSurface ? 1 : 0}
-        >
-          <primitive object={processedMaterial} />
-        </mesh>
+        />
       )}
       {/* 와이어프레임 모드에서도 레이캐스팅을 위한 메시 필요 */}
       {renderMode === 'wireframe' && (
@@ -274,33 +238,30 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         </>
       )}
       
-      {/* 상단 판재 - 내부 표면으로 처리 */}
+      {/* 상단 판재 */}
       <BoxWithEdges
         args={[innerWidth, basicThickness, depth]}
         position={[0, height/2 - basicThickness/2, 0]}
         material={material}
         renderMode={renderMode}
-        isInternalSurface={true}
         isDragging={isDragging}
       />
       
-      {/* 하단 판재 - 내부 표면으로 처리 */}
+      {/* 하단 판재 */}
       <BoxWithEdges
         args={[innerWidth, basicThickness, depth]}
         position={[0, -height/2 + basicThickness/2, 0]}
         material={material}
         renderMode={renderMode}
-        isInternalSurface={true}
         isDragging={isDragging}
       />
       
-      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) - 내부 표면으로 처리 */}
+      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
       <BoxWithEdges
         args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
         position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
         material={material}
         renderMode={renderMode}
-        isInternalSurface={true}
         isDragging={isDragging}
       />
       

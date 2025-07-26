@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
 import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
@@ -17,6 +18,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
+  const { activePopup } = useUIStore();
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -52,19 +54,16 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     spaceInfo
   });
 
-  // 드래그 상태가 변경될 때마다 컴포넌트 리렌더링
-  const forceRenderKey = dragHandlers.forceRender;
-
   // 키보드 이벤트 훅 (스마트 건너뛰기 로직 사용)
   useFurnitureKeyboard({
     spaceInfo
   });
 
   return (
-    <group key={forceRenderKey}>
+    <group>
       {placedModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
-        const isEditMode = selectionState.editMode && selectionState.editingModuleId === placedModule.id;
+        const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
 
         return (

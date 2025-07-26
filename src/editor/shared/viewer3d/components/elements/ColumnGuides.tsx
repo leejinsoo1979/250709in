@@ -38,6 +38,11 @@ const ColumnGuides: React.FC = () => {
   // 띄워서 배치인지 확인
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   
+  // 내경 공간의 시작 높이 계산 (바닥 마감재 + 하단 프레임 높이)
+  const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+  const furnitureStartY = (floorFinishHeightMm + baseFrameHeightMm) * 0.01; // mm → Three.js 단위 변환
+  
   // CSS 변수에서 실제 테마 색상 가져오기
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {
     if (typeof window !== 'undefined') {
@@ -61,11 +66,6 @@ const ColumnGuides: React.FC = () => {
   // 내경의 앞뒤 좌표 (Three.js 단위)
   const frontZ = mmToThreeUnits(internalSpace.depth / 2);
   const backZ = -frontZ;
-  
-  // 내경 공간의 시작 높이 계산 (바닥 마감재 + 하단 프레임 높이)
-  const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-  const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
-  const furnitureStartY = (floorFinishHeightMm + baseFrameHeightMm) * 0.01; // mm → Three.js 단위 변환
   
   return (
     <group>
@@ -97,6 +97,7 @@ const ColumnGuides: React.FC = () => {
       
       {/* 각 컬럼 경계에 수직 가이드 라인 */}
       {threeUnitBoundaries.map((xPos: number, index: number) => {
+        
         // 2D 상부뷰에서는 수직선 대신 수평선으로 표시
         if (viewMode === '2D' && view2DDirection === 'top') {
           // 3D와 동일한 700mm 길이

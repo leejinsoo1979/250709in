@@ -20,18 +20,18 @@ const SurroundTypeSelector: React.FC<SurroundTypeSelectorProps> = ({
     <div className={styles.section}>
       <div className={styles.toggleButtonGroup}>
         <button
-          className={`${styles.toggleButton} ${isNoSurround ? styles.toggleButtonActive : ''}`}
-          onClick={() => !disabled && onSurroundTypeChange('no-surround')}
-          disabled={disabled}
-        >
-          있음
-        </button>
-        <button
           className={`${styles.toggleButton} ${isSurround ? styles.toggleButtonActive : ''}`}
           onClick={() => !disabled && onSurroundTypeChange('surround')}
           disabled={disabled}
         >
-          없음
+          서라운드(일반)
+        </button>
+        <button
+          className={`${styles.toggleButton} ${isNoSurround ? styles.toggleButtonActive : ''}`}
+          onClick={() => !disabled && onSurroundTypeChange('no-surround')}
+          disabled={disabled}
+        >
+          노서라운드(타이트)
         </button>
       </div>
     </div>

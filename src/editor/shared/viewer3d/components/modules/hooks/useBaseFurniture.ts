@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { ModuleData, SectionConfig } from '@/data/modules/shelving';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // 백패널 두께 상수
 const BACK_PANEL_THICKNESS = 9;
@@ -17,6 +18,7 @@ interface BaseFurnitureOptions {
   internalHeight?: number;
   customDepth?: number;
   isDragging?: boolean;
+  isEditMode?: boolean; // 편집 모드 여부
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
 }
 
@@ -66,6 +68,7 @@ export const useBaseFurniture = (
     internalHeight, 
     customDepth, 
     isDragging = false,
+    isEditMode = false,
     adjustedWidth
   } = options;
   
@@ -118,56 +121,139 @@ export const useBaseFurniture = (
   
   // 재질 설정 (도어와 완전히 동일한 재질로 통일)
   const { renderMode, viewMode } = useSpace3DView();
+  const { theme } = useTheme();
   
-  // 색상 결정: 특수 상태가 아닐 때 내부 색상과 도어 색상이 같으면 도어 색상을 직접 사용
-  const furnitureColor = color || (
-    !color && materialConfig.interiorColor === materialConfig.doorColor 
-      ? materialConfig.doorColor  // 같은 색상이면 도어 색상을 직접 사용하여 완전히 동일한 처리
-      : materialConfig.interiorColor
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
+  
+  // 색상 결정: 드래그 중이거나 편집 모드면 테마 색상 사용, 아니면 기본 색상
+  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
+    color || (materialConfig.interiorColor === materialConfig.doorColor 
+      ? materialConfig.doorColor
+      : materialConfig.interiorColor)
   );
   
-  // 공통 재질 생성 함수 (도어, 프레임과 완전히 동일)
+  // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
-    const newMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(furnitureColor),
-      metalness: 0.0,        // 완전 비금속 (도어와 동일)
-      roughness: 0.6,        // 도어와 동일한 거칠기
-      envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(0x000000),  // 자체발광 완전 제거
-      // 도어와 동일한 투명도 처리 (단, 드래그 상태는 가구만의 특수 처리)
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging,
-      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isDragging ? 0.4 : 1.0,
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#FFFFFF'), // 기본 흰색으로 생성
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+      emissive: new THREE.Color(0x000000),
     });
-
-    return newMaterial;
-  }, [furnitureColor, renderMode, viewMode, isDragging]);
+    
+    console.log('🎨 useBaseFurniture 재질 생성 (한 번만)');
+    
+    return mat;
+  }, []); // 의존성 배열 비움 - 한 번만 생성
+  
+  // 재질 속성 업데이트 (재생성 없이)
+  useEffect(() => {
+    if (material) {
+      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용
+      if (isDragging || isEditMode) {
+        material.color.set(getThemeColor());
+        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
+        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
+        material.emissiveIntensity = 0.2; // 약간의 발광
+      } else {
+        material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
+        material.emissiveIntensity = 0;
+        if (!material.map) {
+          // 드래그 중이 아니고 편집 모드가 아니고 텍스처가 없을 때만 기본 색상 사용
+          material.color.set(furnitureColor);
+        }
+      }
+      
+      // 투명도 설정
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
+      material.opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : (isDragging ? 0.6 : (isEditMode ? 0.3 : 1.0));
+      material.needsUpdate = true;
+      
+      console.log('🎨 재질 속성 업데이트:', {
+        furnitureColor: (isDragging || isEditMode) ? getThemeColor() : furnitureColor,
+        actualColor: material.color.getHexString(),
+        transparent: material.transparent,
+        opacity: material.opacity,
+        hasMap: !!material.map,
+        isDragging,
+        isEditMode,
+        emissive: material.emissive.getHexString(),
+        emissiveIntensity: material.emissiveIntensity
+      });
+    }
+  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
-    const textureUrl = materialConfig.interiorTexture;
-    if (import.meta.env.DEV) {
-      console.log('🎨 Texture URL:', textureUrl, 'Material:', material);
+    // 드래그 중이거나 편집 모드일 때는 텍스처 적용하지 않음
+    if (isDragging || isEditMode) {
+      if (material) {
+        material.map = null;
+        material.needsUpdate = true;
+      }
+      return;
     }
+    
+    const textureUrl = materialConfig.interiorTexture;
+    
+    console.log('🎨 useBaseFurniture 텍스처 적용 시작:', {
+      textureUrl,
+      hasMaterial: !!material,
+      furnitureColor,
+      isDragging,
+      materialConfig,
+      isCabinetTexture1: textureUrl ? isCabinetTexture1(textureUrl) : false
+    });
     
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(textureUrl)) {
-        if (import.meta.env.DEV) {
-          console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
-        }
+        console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
         applyCabinetTexture1Settings(material);
-        if (import.meta.env.DEV) {
-          console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
-        }
+        console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용):', {
+          color: material.color.getHexString(),
+          toneMapped: material.toneMapped,
+          roughness: material.roughness
+        });
+        
+        // 강제로 씬 업데이트
+        material.needsUpdate = true;
       }
       
       const textureLoader = new THREE.TextureLoader();
+      const fullUrl = textureUrl.startsWith('http') ? textureUrl : `${window.location.origin}${textureUrl}`;
+      console.log('🔄 텍스처 로딩 시작:', {
+        원본URL: textureUrl,
+        전체URL: fullUrl,
+        현재위치: window.location.href
+      });
+      
       textureLoader.load(
         textureUrl, 
         (texture) => {
-          if (import.meta.env.DEV) {
-            console.log('✅ 텍스처 로딩 성공:', textureUrl);
+          // 편집 모드나 드래그 중이면 텍스처 로드해도 적용하지 않음
+          if (isDragging || isEditMode) {
+            texture.dispose(); // 메모리 해제
+            return;
           }
+          
+          console.log('✅ 텍스처 로딩 성공:', {
+            url: textureUrl,
+            image: texture.image,
+            size: texture.image ? `${texture.image.width}x${texture.image.height}` : 'unknown'
+          });
+          
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
@@ -185,9 +271,13 @@ export const useBaseFurniture = (
           // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
           requestAnimationFrame(() => {
             material.needsUpdate = true;
-            if (import.meta.env.DEV) {
-              console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료');
-            }
+            console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료:', {
+              hasMap: !!material.map,
+              mapImage: material.map?.image?.src,
+              color: material.color.getHexString(),
+              toneMapped: material.toneMapped,
+              roughness: material.roughness
+            });
           });
         },
         undefined,
@@ -196,17 +286,18 @@ export const useBaseFurniture = (
         }
       );
     } else if (material) {
-      if (import.meta.env.DEV) {
-        console.log('🧹 텍스처 제거, 색상만 사용');
-      }
+      console.log('🧹 텍스처 제거, 색상만 사용');
       // 텍스처가 없으면 맵 제거하고 기본 색상으로 복원
-      material.map = null;
+      if (material.map) {
+        material.map.dispose(); // 기존 텍스처 메모리 해제
+        material.map = null;
+      }
       material.color.set(furnitureColor);
       material.toneMapped = true; // 기본 톤 매핑 복원
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  }, [materialConfig.interiorTexture, material, furnitureColor]);
+  }, [materialConfig.interiorTexture, material, furnitureColor, isDragging, isEditMode]);
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;

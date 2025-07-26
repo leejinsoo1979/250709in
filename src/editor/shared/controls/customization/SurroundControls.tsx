@@ -25,7 +25,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
   const hasRightWall = spaceInfo.wallConfig.right;
-  const END_PANEL_WIDTH = 18; // 고정 18mm
+  const END_PANEL_WIDTH = 20; // 고정 20mm
 
   const [frameSize, setFrameSize] = useState<FrameSize>(() => {
     if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 50 };
@@ -87,6 +87,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 서라운드 타입 변경 처리
   const handleSurroundTypeChange = (type: SurroundType) => {
+    console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
     const updates: Partial<SpaceInfo> = {
       surroundType: type,
     };
@@ -103,14 +104,14 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       const gapSizeValue = 2; // 기본 이격거리
       
       updates.frameSize = {
-        left: 0, // 좌측 프레임 제거
-        right: 0, // 우측 프레임 제거
+        left: hasLeftWall ? 0 : END_PANEL_WIDTH, // 벽이 없으면 엔드판넬 18mm
+        right: hasRightWall ? 0 : END_PANEL_WIDTH, // 벽이 없으면 엔드판넬 18mm
         top: 10, // 상단 프레임은 기본값 10mm 유지
       };
       
       updates.gapConfig = {
-        left: gapSizeValue,
-        right: gapSizeValue,
+        left: hasLeftWall ? gapSizeValue : undefined, // 벽이 있을 때만 이격거리
+        right: hasRightWall ? gapSizeValue : undefined, // 벽이 있을 때만 이격거리
       };
     }
 
@@ -267,8 +268,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         disabled={disabled}
       />
 
-      {/* 노서라운드 선택 시 이격거리 설정 */}
-      {isNoSurround && (
+      {/* 노서라운드 선택 시 이격거리 설정 (벽이 있는 경우에만) */}
+      {isNoSurround && (hasLeftWall || hasRightWall) && (
         <GapControls
           gapSize={gapSize}
           onGapSizeChange={handleGapSizeChange}

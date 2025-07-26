@@ -48,6 +48,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();
   
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
+  
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   
@@ -79,6 +91,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }, 300);
     }
   }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate, gl]);
+  
+  // 드래그 상태가 변경될 때만 렌더링 업데이트 (성능 최적화)
+  useEffect(() => {
+    if (isDraggingThis !== undefined) {
+      invalidate();
+    }
+  }, [isDraggingThis, invalidate]);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -231,8 +250,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구를 가구 공간의 뒷쪽에 배치 (프레임 앞면에서 도어 두께만큼 뒤)
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
 
-  // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
-  const furnitureColor = useMemo(() => isDraggingThis ? new THREE.Color(theme.color) : undefined, [isDraggingThis, theme.color]);
+  // 드래그 중일 때만 테마 색상 사용, 평소에는 undefined (재질 기본 색상 사용)
+  const furnitureColor = isDraggingThis ? getThemeColor() : undefined;
   
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산
   let optimalHingePosition = placedModule.hingePosition || 'right';
@@ -329,26 +348,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         {/* 가구 타입에 따라 다른 컴포넌트 렌더링 */}
         {moduleData.type === 'box' ? (
           // 박스형 가구 렌더링 (도어 제외)
-          <BoxModule 
-            viewMode={viewMode}
-            renderMode={renderMode}
-            moduleData={{
-              ...actualModuleData, // 변환된 모듈 데이터 사용
-              dimensions: {
-                ...actualModuleData.dimensions,
-                width: furnitureWidthMm // 조정된 너비 전달
-              }
-            }}
-            isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
-            color={furnitureColor}
-            internalHeight={furnitureHeightMm}
-            hasDoor={slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false)} // 기둥 침범 시 도어는 별도 렌더링
-            customDepth={actualDepthMm}
-            hingePosition={optimalHingePosition}
-            spaceInfo={spaceInfo}
-            originalSlotWidth={originalSlotWidthMm}
-            slotCenterX={0} // 기둥 침범과 무관하게 가구 본체와 동일한 위치
-          />
+          <>
+            <BoxModule 
+              viewMode={viewMode}
+              renderMode={renderMode}
+              moduleData={{
+                ...actualModuleData,
+                dimensions: {
+                  ...actualModuleData.dimensions,
+                  width: furnitureWidthMm
+                }
+              }}
+              isDragging={isDraggingThis}
+              isEditMode={isEditMode}
+              color={(isDraggingThis || isEditMode) ? getThemeColor() : undefined}
+              internalHeight={furnitureHeightMm}
+              hasDoor={isDraggingThis ? false : (slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? actualModuleData.hasDoor ?? false))}
+              customDepth={actualDepthMm}
+              hingePosition={optimalHingePosition}
+              spaceInfo={spaceInfo}
+              originalSlotWidth={originalSlotWidthMm}
+              slotCenterX={0}
+              adjustedWidth={furnitureWidthMm}
+            />
+          </>
         ) : (
           // 기본 가구 (단순 Box) 렌더링
           <>
@@ -359,19 +382,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <meshBasicMaterial transparent opacity={0.0} />
               ) : (
                 <meshPhysicalMaterial 
-                  color={isDraggingThis ? theme.color : '#cccccc'}
+                  color={isDraggingThis || isEditMode ? getThemeColor() : '#cccccc'}
                   clearcoat={0.1}
                   clearcoatRoughness={0.8}
                   metalness={0.0}
                   roughness={0.7}
                   reflectivity={0.2}
                   transparent={isDraggingThis || isEditMode}
-                  opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
+                  opacity={isDraggingThis ? 0.6 : (isEditMode ? 0.3 : 1.0)}
                 />
               )}
             </mesh>
             <Edges 
-              color={isDraggingThis ? theme.color : isEditMode ? '#ff8800' : isDragMode ? '#ff0000' : (theme?.mode === 'dark' ? '#ffffff' : '#cccccc')} 
+              color={isDraggingThis || isEditMode ? getThemeColor() : isDragMode ? '#ff0000' : (theme?.mode === 'dark' ? '#ffffff' : '#cccccc')} 
               threshold={1} 
               scale={1.001}
             />
@@ -384,7 +407,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   const context = canvas.getContext('2d')!;
                   canvas.width = 256;
                   canvas.height = 128;
-                  context.fillStyle = 'rgba(255, 140, 0, 0.9)';
+                  // 테마 색상을 16진수에서 RGBA로 변환
+                  const themeColor = getThemeColor();
+                  const r = parseInt(themeColor.slice(1, 3), 16);
+                  const g = parseInt(themeColor.slice(3, 5), 16);
+                  const b = parseInt(themeColor.slice(5, 7), 16);
+                  context.fillStyle = `rgba(${r}, ${g}, ${b}, 0.9)`;
                   context.fillRect(0, 0, 256, 128);
                   context.fillStyle = '#ffffff';
                   context.font = '16px Arial';
@@ -435,6 +463,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             originalSlotWidth={originalSlotWidthMm}
             slotCenterX={0} // 이미 절대 좌표로 배치했으므로 0
             moduleData={actualModuleData} // 실제 모듈 데이터
+            isDragging={isDraggingThis}
+            isEditMode={isEditMode}
           />
         </group>
       )}

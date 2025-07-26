@@ -15,7 +15,6 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D'); // 기본값을 3D로 변경
   const [viewerKey, setViewerKey] = useState(0);
   const [hasAircon, setHasAircon] = useState(false);
-  const [hasFloorFinish, setHasFloorFinish] = useState(spaceInfo.hasFloorFinish || false);
   const [renderMode, setRenderMode] = useState<'solid' | 'wireframe'>('solid');
   const [showAll, setShowAll] = useState(true);
   const [showDimensions, setShowDimensions] = useState(true);
@@ -44,7 +43,7 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
   }, [spaceInfo.width, spaceInfo.height]);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
       <div className={styles.modalContent}>
         <div className={styles.header}>
           <button
@@ -283,56 +282,6 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                 </div>
                 )}
 
-                {/* 바닥 마감재 */}
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>바닥 마감재</label>
-                  <div className={styles.buttonGroup}>
-                    <button 
-                      className={`${styles.typeButton} ${hasFloorFinish ? styles.active : ''}`}
-                      onClick={() => {
-                        setHasFloorFinish(true);
-                        handleUpdate({ 
-                          hasFloorFinish: true,
-                          floorFinish: { height: 10 }
-                        });
-                      }}
-                    >
-                      있음
-                    </button>
-                    <button 
-                      className={`${styles.typeButton} ${!hasFloorFinish ? styles.active : ''}`}
-                      onClick={() => {
-                        setHasFloorFinish(false);
-                        handleUpdate({ 
-                          hasFloorFinish: false,
-                          floorFinish: undefined
-                        });
-                      }}
-                    >
-                      없음
-                    </button>
-                  </div>
-                  {/* 바닥 마감재 높이 - 있음 선택시에만 표시 */}
-                  {hasFloorFinish && (
-                    <div className={styles.sizeInputs}>
-                      <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>높이</label>
-                        <div className={styles.inputWithUnit}>
-                          <input 
-                            type="number" 
-                            className={styles.sizeInput}
-                            value={spaceInfo.floorFinish?.height || 10}
-                            onChange={(e) => handleUpdate({ 
-                              floorFinish: { height: parseInt(e.target.value) || 10 }
-                            })}
-                            placeholder="10"
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>

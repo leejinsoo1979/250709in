@@ -285,6 +285,52 @@
   background: var(--theme-primary-hover, var(--theme-primary-hover));
 }
 
+/* 상부장/하부장 탭 - 메인 카테고리 탭과 동일한 스타일 */
+.upperLowerTabs {
+  display: flex;
+  margin-bottom: 16px;
+  border: 1px solid var(--theme-border, var(--theme-border));
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--theme-surface, #ffffff);
+}
+
+.upperLowerTab {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--theme-surface, #ffffff);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text, #374151);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upperLowerTab:not(:last-child) {
+  border-right: 1px solid var(--theme-border);
+}
+
+.upperLowerTab:hover {
+  background: var(--theme-background-secondary, #f9fafb);
+  color: var(--theme-text, #1f2937);
+}
+
+.upperLowerTab.active {
+  background: var(--theme-primary, var(--theme-primary));
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.upperLowerTab.active:hover {
+  background: var(--theme-primary-hover, var(--theme-primary-hover));
+}
+
 .moduleSection {
   flex: 1;
   min-height: 0;

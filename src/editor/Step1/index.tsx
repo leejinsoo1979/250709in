@@ -100,7 +100,11 @@ const Step1: React.FC<Step1Props> = ({ onClose }) => {
     else navigate('/dashboard');
   };
 
-  return <StepContainer onClose={handleClose} />;
+  return (
+    <div data-theme="light" style={{ colorScheme: 'light' }}>
+      <StepContainer onClose={handleClose} />
+    </div>
+  );
 };
 
 export default Step1;

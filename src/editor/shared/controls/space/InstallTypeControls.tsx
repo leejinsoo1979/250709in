@@ -35,12 +35,31 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
   };
 
   const handleWallConfigChange = (side: 'left' | 'right') => {
-    onUpdate({
-      wallConfig: {
-        left: side === 'left',
-        right: side === 'right',
-      },
+    const newWallConfig = {
+      left: side === 'left',
+      right: side === 'right',
+    };
+    
+    // 노서라운드 모드일 때 gapConfig도 함께 업데이트
+    const updates: Partial<SpaceInfo> = {
+      wallConfig: newWallConfig
+    };
+    
+    if (spaceInfo.surroundType === 'no-surround') {
+      const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
+      updates.gapConfig = {
+        left: newWallConfig.left ? currentGapConfig.left : 0,
+        right: newWallConfig.right ? currentGapConfig.right : 0
+      };
+    }
+    
+    console.log('🏢 InstallTypeControls - wallConfig 변경:', { 
+      newWallConfig, 
+      gapConfig: updates.gapConfig,
+      surroundType: spaceInfo.surroundType 
     });
+    
+    onUpdate(updates);
   };
 
   return (

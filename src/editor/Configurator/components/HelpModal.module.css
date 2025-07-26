@@ -15,13 +15,14 @@
 .modal {
   background: var(--theme-surface);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--theme-shadow-lg);
   width: 500px;
   max-height: 80vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: slideIn 0.3s ease-out;
+  border: 1px solid var(--theme-border);
 }
 
 .header {
@@ -74,7 +75,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .shortcutItem:last-child {
@@ -82,26 +83,26 @@
 }
 
 .key {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
   border-radius: 6px;
   padding: 6px 12px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 13px;
   font-weight: 600;
-  color: #495057;
+  color: var(--theme-text);
   min-width: 80px;
   text-align: center;
 }
 
 .action {
   font-size: 14px;
-  color: #333;
+  color: var(--theme-text);
   font-weight: 500;
 }
 
 .tips {
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--theme-border);
   padding-top: 20px;
 }
 
@@ -109,7 +110,7 @@
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .tips ul {
@@ -120,7 +121,7 @@
 .tips li {
   margin-bottom: 8px;
   font-size: 14px;
-  color: #666;
+  color: var(--theme-text-secondary);
   line-height: 1.5;
 }
 

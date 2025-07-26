@@ -18,6 +18,7 @@ export interface FurnitureTypeProps {
   hingePosition?: 'left' | 'right';
   spaceInfo?: SpaceInfo;
   isDragging?: boolean;
+  isEditMode?: boolean; // 편집 모드 여부
   doorWidth?: number; // 도어 너비 (사용하지 않음 - 도어는 항상 원래 슬롯 크기)
   doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm)

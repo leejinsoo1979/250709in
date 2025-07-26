@@ -32,14 +32,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
 
-  // 간단한 렌더링 업데이트
+  // 간단한 렌더링 업데이트 - 디바운스 적용
   const triggerRender = useCallback(() => {
-    if (import.meta.env.DEV) {
-      console.log('🔄 렌더링 업데이트');
-    }
     invalidate();
-    setForceRender(prev => prev + 1);
-  }, [invalidate, setForceRender]);
+    // forceRender 상태 업데이트 제거 (불필요한 리렌더링 방지)
+  }, [invalidate]);
 
   // 가구 충돌 감지 함수
   const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number) => {
@@ -85,14 +82,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
         collidingModules.push(module.id);
-        if (import.meta.env.DEV) {
-          console.log('🚨 충돌 감지:', {
-            movingModule: movingModuleId,
-            collidingModule: module.id,
-            movingSlots: occupiedSlots,
-            existingSlots: moduleSlots
-          });
-        }
       }
     });
 
@@ -102,9 +91,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 충돌한 가구들 제거
   const removeCollidingFurniture = useCallback((collidingModuleIds: string[]) => {
     collidingModuleIds.forEach(moduleId => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ 충돌한 가구 제거:', moduleId);
-      }
       removeModule(moduleId);
     });
   }, [removeModule]);
@@ -138,6 +124,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
     
+    // 드래그 시작 시 즉시 렌더링 업데이트
+    triggerRender();
+    
     // 포인터 캡처
     const target = e.target as Element & { setPointerCapture?: (pointerId: number) => void };
     if (target && target.setPointerCapture) {
@@ -165,18 +154,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       spaceInfo
     );
     
-    if (import.meta.env.DEV) {
-      console.log('🎯 드래그 중 레이캐스팅:', { 
-        mouseX: event.nativeEvent.clientX, 
-        mouseY: event.nativeEvent.clientY, 
-        detectedSlot: slotIndex 
-      });
-    }
-    
     if (slotIndex !== null) {
-      if (import.meta.env.DEV) {
-        console.log('✅ 슬롯 감지됨:', slotIndex);
-      }
       
       // 현재 드래그 중인 모듈 정보 가져오기
       const currentModule = placedModules.find(m => m.id === draggingModuleId);
@@ -204,22 +182,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         finalX = indexing.threeUnitPositions[slotIndex];
       }
 
-      if (import.meta.env.DEV) {
-        console.log('📍 가구 이동:', { 
-          slotIndex, 
-          finalX, 
-          currentX: currentModule.position.x,
-          isDualFurniture 
-        });
-      }
 
       // 충돌 감지 및 충돌한 가구 제거
       const collidingModules = detectFurnitureCollisions(draggingModuleId, slotIndex);
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
-        if (import.meta.env.DEV) {
-          console.log('🗑️ 총 ' + collidingModules.length + '개 가구 제거됨');
-        }
       }
 
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth 계산
@@ -277,10 +244,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       if (gl && gl.shadowMap) {
         gl.shadowMap.needsUpdate = true;
       }
-    } else {
-      if (import.meta.env.DEV) {
-        console.log('❌ 슬롯 감지 실패');
-      }
     }
   };
 
@@ -295,13 +258,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
       
+      // 드래그 종료 시 즉시 렌더링 업데이트
+      triggerRender();
+      
       // 드래그 종료 후 짧은 지연 후에 드래그 상태 해제 (자석 효과 방지)
       setTimeout(() => {
         setFurnitureDragging(false); // 드래그 상태 해제
+        triggerRender(); // 드래그 상태 해제 후에도 렌더링 업데이트
       }, 100); // 100ms 지연
-      
-      // 드래그 종료 시 그림자 업데이트
-      invalidate();
       
       // 3D 모드에서 그림자 강제 업데이트
       if (gl && gl.shadowMap) {

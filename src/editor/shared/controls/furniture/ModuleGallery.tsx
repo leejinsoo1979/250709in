@@ -8,6 +8,7 @@ import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/sl
 import { getModuleById } from '@/data/modules';
 import styles from './ModuleGallery.module.css';
 import Button from '@/components/common/Button';
+import { useAlert } from '@/hooks/useAlert';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -44,10 +45,25 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const addModule = useFurnitureStore(state => state.addModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const { showAlert, AlertComponent } = useAlert();
 
   // 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
     if (!isValid) {
+      e.preventDefault();
+      return;
+    }
+    
+    // 공간 인덱싱 계산
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    
+    // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
+    const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
+                                 module.id.includes('dual-4drawer-pantshanger-');
+    
+    // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
+    if (isSpecialDualFurniture && indexing.columnWidth < 550) {
+      showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
       e.preventDefault();
       return;
     }
@@ -93,6 +109,16 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 공간 인덱싱 계산
       const indexing = calculateSpaceIndexing(spaceInfo);
       const internalSpace = calculateInternalSpace(spaceInfo);
+      
+      // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
+      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
+                                   module.id.includes('dual-4drawer-pantshanger-');
+      
+      // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
+      if (isSpecialDualFurniture && indexing.columnWidth < 550) {
+        showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+        return;
+      }
       
       // 듀얼/싱글 가구 판별
       const isDualFurniture = module.id.startsWith('dual-');
@@ -176,39 +202,42 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   };
 
   return (
-    <div 
-      className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''}`}
-      draggable={isValid}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDoubleClick={handleDoubleClick}
-      title={isValid ? `드래그하여 배치 또는 더블클릭으로 자동 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
-    >
-      <div className={styles.thumbnailImage}>
-        <img 
-          src={iconPath} 
-          alt={module.name}
-          onError={(e) => {
-            // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
-            const img = e.target as HTMLImageElement;
-            if (!img.dataset.fallbackAttempted) {
-              img.dataset.fallbackAttempted = 'true';
-              img.src = getImagePath('single-2drawer-hanging.png');
-            }
-          }}
-        />
+    <>
+      <div 
+        className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''}`}
+        draggable={isValid}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDoubleClick={handleDoubleClick}
+        title={isValid ? `드래그하여 배치 또는 더블클릭으로 자동 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
+      >
+        <div className={styles.thumbnailImage}>
+          <img 
+            src={iconPath} 
+            alt={module.name}
+            onError={(e) => {
+              // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
+              const img = e.target as HTMLImageElement;
+              if (!img.dataset.fallbackAttempted) {
+                img.dataset.fallbackAttempted = 'true';
+                img.src = getImagePath('single-2drawer-hanging.png');
+              }
+            }}
+          />
+        </div>
+        {!isValid && <div className={styles.disabledOverlay} />}
       </div>
-      {!isValid && <div className={styles.disabledOverlay} />}
-    </div>
+      <AlertComponent />
+    </>
   );
 };
 
 interface ModuleGalleryProps {
-  moduleCategory?: 'tall' | 'lower';
-  lowerSubCategory?: 'lower' | 'upper';
+  moduleCategory?: 'tall' | 'upperlower';
+  upperLowerTab?: 'upper' | 'lower';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', lowerSubCategory = 'lower' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper' }) => {
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
@@ -250,26 +279,12 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       } 
       // 듀얼 컬럼 모듈 판단 (2컬럼 너비 ± 여백 허용치)
       else if (Math.abs(moduleWidth - (columnWidth * 2)) <= MARGIN_TOLERANCE) {
-        // 특수 듀얼 가구 조건부 노출: 슬롯폭이 550mm 이상일 때만 표시
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                       module.id.includes('dual-4drawer-pantshanger-');
-        if (isSpecialDualFurniture && columnWidth < 550) {
-          // 슬롯폭이 550mm 미만이면 특수 가구는 제외 (스타일러, 바지걸이장)
-          return acc;
-        }
         acc.dualModules.push(module);
       } 
       // 그 외 케이스는 가장 가까운 컬럼 수에 할당
       else if (moduleWidth < (columnWidth * 1.5)) {
         acc.singleModules.push(module);
       } else {
-        // 특수 듀얼 가구 조건부 노출: 슬롯폭이 550mm 이상일 때만 표시
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                       module.id.includes('dual-4drawer-pantshanger-');
-        if (isSpecialDualFurniture && columnWidth < 550) {
-          // 슬롯폭이 550mm 미만이면 특수 가구는 제외 (스타일러, 바지걸이장)
-          return acc;
-        }
         acc.dualModules.push(module);
       }
       
@@ -279,8 +294,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 현재 선택된 탭에 따른 모듈 목록 (moduleCategory 필터링 추가)
   const currentModules = useMemo(() => {
-    // 하부장이 선택된 경우 빈 배열 반환 (현재 하부장 모듈이 없음)
-    if (moduleCategory === 'lower') {
+    // 상하부장이 선택된 경우 빈 배열 반환 (현재 상하부장 모듈이 없음)
+    if (moduleCategory === 'upperlower') {
       return [];
     }
     
@@ -312,25 +327,25 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   return (
     <div className={styles.container}>
-      {/* 탭 메뉴 */}
+      {/* 탭 메뉴 - 키큰장과 상하부장 모두에서 표시 */}
       <div className={styles.tabMenu}>
         <button
           className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
           onClick={() => setSelectedType('all')}
         >
-          전체 ({singleModules.length + dualModules.length})
+          전체 ({moduleCategory === 'upperlower' ? 0 : singleModules.length + dualModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
           onClick={() => setSelectedType('single')}
         >
-          싱글 ({singleModules.length})
+          싱글 ({moduleCategory === 'upperlower' ? 0 : singleModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
           onClick={() => setSelectedType('dual')}
         >
-          듀얼 ({dualModules.length})
+          듀얼 ({moduleCategory === 'upperlower' ? 0 : dualModules.length})
         </button>
       </div>
       
@@ -352,8 +367,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
           })
         ) : (
           <div className={styles.emptyMessage}>
-            {moduleCategory === 'lower' 
-              ? `${lowerSubCategory === 'lower' ? '하부장' : '상부장'} 모듈은 아직 준비 중입니다` 
+            {moduleCategory === 'upperlower' 
+              ? `${upperLowerTab === 'lower' ? '하부장' : '상부장'} 모듈은 아직 준비 중입니다` 
               : '이 유형에 맞는 가구가 없습니다'}
           </div>
         )}

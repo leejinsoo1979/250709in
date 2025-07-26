@@ -1211,15 +1211,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {Math.round(column.width)}
             </Text>
             
-            {/* 연장선 */}
+            {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
             <Line
-              points={[[leftX, spaceHeight, 0.001], [leftX, dimY + mmToThreeUnits(15), 0.001]]}
+              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
               renderOrder={999999}
             />
             <Line
-              points={[[rightX, spaceHeight, 0.001], [rightX, dimY + mmToThreeUnits(15), 0.001]]}
+              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
               renderOrder={999999}
@@ -2797,14 +2797,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {Math.round(column.width)}
               </Text>
               
-              {/* 연장선 */}
+              {/* 연장선 - 가구와 동일한 길이로 수정 */}
               <Line
-                points={[[leftX, spaceHeight, spaceZOffset], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                points={[[leftX, spaceHeight, spaceZOffset], [leftX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
               <Line
-                points={[[rightX, spaceHeight, spaceZOffset], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
+                points={[[rightX, spaceHeight, spaceZOffset], [rightX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />

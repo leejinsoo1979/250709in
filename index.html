@@ -20,9 +20,34 @@
         }
       }(window.location))
     </script>
+    <!-- 초기 테마 설정 스크립트 - 깜빡임 방지 -->
+    <script>
+      (function() {
+        const THEME_STORAGE_KEY = 'app-theme-config';
+        try {
+          const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+          if (savedTheme) {
+            const theme = JSON.parse(savedTheme);
+            // 즉시 body에 클래스 추가
+            document.documentElement.classList.add(`theme-${theme.mode}-${theme.color}`);
+            // 기본 스타일 적용 (가장 중요한 배경색)
+            if (theme.mode === 'dark') {
+              document.documentElement.style.backgroundColor = '#000000';
+              document.documentElement.style.color = '#ffffff';
+            } else {
+              document.documentElement.style.backgroundColor = '#ffffff';
+              document.documentElement.style.color = '#111827';
+            }
+          }
+        } catch (e) {
+          // 에러 무시
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <div id="modal-root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

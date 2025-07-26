@@ -634,7 +634,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 바닥 마감재 */}
             <FormControl
-              label=""
+              label="바닥 마감재"
               expanded={expandedSections.has('floor')}
               onToggle={() => toggleSection('floor')}
             >
@@ -647,7 +647,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 프레임 속성 */}
             <FormControl
-              label=""
+              label="프레임 속성"
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
             >

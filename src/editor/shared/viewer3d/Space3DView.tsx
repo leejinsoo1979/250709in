@@ -13,7 +13,7 @@ import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import CADGrid from './components/elements/CADGrid';
 
-import SlotDropZones from './components/elements/SlotDropZones';
+import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 
 
 import { useLocation } from 'react-router-dom';
@@ -36,7 +36,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, activePopup } = useUIStore();
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
@@ -92,20 +92,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
         return [rightDistance, centerY, centerZ] as [number, number, number];
       case 'top':
-        // 상단: Y축에서 너비와 깊이를 고려한 최적 거리 (비율 보정)
+        // 상단: Y축에서 너비와 깊이를 고려한 최적 거리
         const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
+        // 상부뷰는 위에서 아래를 내려다보므로 centerY에 거리를 더함
         return [centerX, centerY + topDistance, centerZ] as [number, number, number];
       default:
         return frontPosition;
     }
   }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
   
-  // 각 위치별 고유한 키를 생성하여 2D 방향 변경 시 ThreeCanvas 재생성 (OrbitControls 리셋)
-  // 공간 크기는 키에서 제외하여 크기 변경 시 캔버스 재생성 방지 (깜박거림 해결)
-  const viewerKey = useMemo(() => 
-    `${location.pathname}-${viewMode}-${view2DDirection}`, 
-    [location.pathname, viewMode, view2DDirection]
-  );
+  // Canvas key를 완전히 제거하여 재생성 방지
+  // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
   
   // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
@@ -257,7 +254,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   return (
     <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
       <div 
-        key={viewerKey}
         style={{ 
           width: '100%', 
           height: '100%', 
@@ -268,7 +264,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         onDragOver={handleDragOver}
       >
         <ThreeCanvas 
-          key={viewerKey}
           cameraPosition={cameraPosition}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
@@ -340,18 +335,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     removeColumn(id);
                   }}
                 />
-                {/* 기둥 벽면 간격 라벨 (2D, 3D 모드 모두 표시) */}
-                <ColumnDistanceLabels
-                  column={column}
-                  spaceInfo={spaceInfo}
-                  onPositionChange={(columnId, newPosition) => {
-                    updateColumn(columnId, { position: newPosition });
-                  }}
-                  onColumnUpdate={(columnId, updates) => {
-                    updateColumn(columnId, updates);
-                  }}
-                  showLabels={showDimensions}
-                />
+                {/* 기둥 벽면 간격 라벨 (기둥 팝업이 열렸을 때만 표시) */}
+                {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+                  <ColumnDistanceLabels
+                    column={column}
+                    spaceInfo={spaceInfo}
+                    onPositionChange={(columnId, newPosition) => {
+                      updateColumn(columnId, { position: newPosition });
+                    }}
+                    onColumnUpdate={(columnId, updates) => {
+                      updateColumn(columnId, updates);
+                    }}
+                    showLabels={true}
+                  />
+                )}
               </React.Fragment>
             ))}
             
@@ -395,7 +392,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZones spaceInfo={spaceInfo} showAll={showAll} />
+            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} />
           </React.Suspense>
         </ThreeCanvas>
 

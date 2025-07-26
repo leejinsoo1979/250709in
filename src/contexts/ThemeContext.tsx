@@ -40,9 +40,10 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const [theme, setTheme] = useState<ThemeConfig>(() => {
     const initialTheme = getInitialTheme();
-    // 초기 렌더링 시 즉시 테마 적용
-    // DOM이 준비된 후 테마 적용
-    setTimeout(() => applyThemeToDocument(initialTheme), 0);
+    // 초기 렌더링 시 즉시 테마 적용 (setTimeout 제거)
+    if (typeof window !== 'undefined' && document.documentElement) {
+      applyThemeToDocument(initialTheme);
+    }
     return initialTheme;
   });
 
@@ -287,6 +288,13 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   root.style.setProperty('--theme-success', colors.primary);
   root.style.setProperty('--theme-success-hover', colors.primaryHover);
   root.style.setProperty('--theme-success-light', colors.primaryLight);
+
+  // 팝업 그림자 - 테마에 따라 다르게 설정
+  if (theme.mode === 'dark') {
+    root.style.setProperty('--popup-shadow', `0 20px 50px rgba(0, 0, 0, 0.8), 0 10px 20px ${colors.primaryLight}`);
+  } else {
+    root.style.setProperty('--popup-shadow', '0 20px 50px rgba(0, 0, 0, 0.3), 0 10px 20px rgba(0, 0, 0, 0.15)');
+  }
 
   // body에 테마 클래스 추가
   document.body.className = document.body.className.replace(/theme-\w+-\w+/g, '');

@@ -156,11 +156,11 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     height: DEFAULT_BASE_VALUES.FLOOR_FINISH_HEIGHT
   },
   // Configurator 초기값 설정
-  surroundType: 'no-surround',
+  surroundType: 'surround',  // 기본값을 서라운드로 변경
   frameSize: {
-    left: 0,  // 노서라운드는 프레임 없음
-    right: 0,
-    top: 0
+    left: 50,  // 서라운드 기본 프레임 크기
+    right: 50,
+    top: 10
   },
   gapConfig: {
     left: 2, // 기본 이격거리 2mm
@@ -169,7 +169,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   baseConfig: {
     type: 'floor',
     height: DEFAULT_BASE_VALUES.HEIGHT,
-    placementType: 'ground'
+    placementType: 'float'  // 기본값을 띄워서 배치로 변경
   },
   // 재질 설정 초기값
   materialConfig: {
@@ -200,6 +200,16 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         spaceInfo: { ...state.spaceInfo, ...processedInfo },
         isDirty: true,
       };
+      
+      // wallConfig 업데이트 디버그
+      if (processedInfo.wallConfig) {
+        console.log('🏪 SpaceConfigStore - wallConfig 업데이트:', {
+          이전: state.spaceInfo.wallConfig,
+          새로운: processedInfo.wallConfig,
+          최종: newState.spaceInfo.wallConfig
+        });
+      }
+      
       return newState;
     });
   },

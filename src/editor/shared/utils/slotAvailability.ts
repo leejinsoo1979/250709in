@@ -83,25 +83,12 @@ export const isSlotAvailable = (
     }
   }
   
-  // 기둥이 있는 슬롯인 경우 실제 3D 공간 충돌 검사
+  // 기둥이 있는 슬롯인 경우 - 항상 배치 가능으로 처리 (실제 배치는 SlotDropZones에서 처리)
   if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
-    // 기둥이 있는 슬롯에서는 실제 위치와 크기 기반 충돌 검사
-    for (const placedModule of placedModules) {
-      // 제외할 모듈은 건너뛰기
-      if (excludeModuleId && placedModule.id === excludeModuleId) {
-        continue;
-      }
-      
-      // 같은 슬롯에 있는 가구들 확인
-      if (targetSlots.includes(placedModule.slotIndex || -1)) {
-        // 같은 슬롯에 이미 가구가 있어도 기둥이 있으면 공간이 남을 수 있음
-        console.log(`✅ 슬롯 ${placedModule.slotIndex}에 기둥이 있어 추가 배치 검토`);
-        
-        // 실제 3D 충돌 검사는 FurnitureItem에서 처리하도록 허용
-        // 여기서는 기본적으로 허용하고, 실제 배치 시 위치 조정
-        continue;
-      }
-    }
+    console.log(`✅ 기둥이 있는 슬롯 ${slotIndex} - 배치 가능성 있음 (상세 검사는 SlotDropZones에서)`);
+    // 기둥이 있는 슬롯은 여러 가구가 배치될 수 있으므로 항상 true 반환
+    // 실제 배치 가능 여부는 SlotDropZones의 findAvailableSpacesInColumnSlot에서 판단
+    return true;
   } else {
     // 기둥이 없는 슬롯에서는 기존 로직 사용
     for (const placedModule of placedModules) {

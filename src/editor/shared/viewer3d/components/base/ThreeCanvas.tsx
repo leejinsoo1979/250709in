@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/contexts/ThemeContext';
+import { ErrorBoundary } from 'react-error-boundary';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -10,23 +11,10 @@ import { useCanvasEventHandlers } from './hooks/useCanvasEventHandlers'; // 하�
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
+import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
 
-// React Three Fiber의 EventManager를 위한 인터페이스 정의
-interface EventManager {
-  connect: (domElement: HTMLCanvasElement) => void;
-  disconnect: () => void;
-}
 
-// EventManager 타입 가드
-function isEventManager(value: unknown): value is EventManager {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    'connect' in value &&
-    'disconnect' in value
-  );
-}
 
 // ThreeCanvas 컴포넌트 props 정의
 interface ThreeCanvasProps {
@@ -63,7 +51,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  const [forceRender, setForceRender] = useState(0);
   
   // 캔버스 참조 저장
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -81,114 +68,80 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const eventHandlers = useCanvasEventHandlers();
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
-  // viewMode 변경 감지 및 그림자 강제 업데이트
+  // viewMode 변경 시 그림자 설정 업데이트
   useEffect(() => {
-    if (viewMode === '3D') {
-              if (import.meta.env.DEV) {
-          console.log('🔄 3D 모드 전환 - 그림자 강제 업데이트');
-        }
-      // 약간의 지연 후 그림자 업데이트
-      setTimeout(() => {
-        setForceRender(prev => prev + 1);
-      }, 150);
+    if (rendererRef.current && viewMode === '3D') {
+      if (import.meta.env.DEV) {
+        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트');
+      }
+      // 그림자 설정 업데이트
+      rendererRef.current.shadowMap.enabled = true;
+      rendererRef.current.shadowMap.needsUpdate = true;
+    } else if (rendererRef.current && viewMode === '2D') {
+      // 2D 모드에서는 그림자 비활성화
+      rendererRef.current.shadowMap.enabled = false;
     }
   }, [viewMode]);
+
+  // 테마 변경 시 배경색 업데이트
+  useEffect(() => {
+    if (rendererRef.current) {
+      const newBgColor = getBackgroundColor();
+      rendererRef.current.setClearColor(new THREE.Color(newBgColor), 1.0);
+      
+      // Scene 배경색도 업데이트
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const r3f = (canvas as any).__r3f;
+        if (r3f?.scene) {
+          r3f.scene.background = new THREE.Color(newBgColor);
+        }
+      }
+    }
+  }, [theme.mode, viewMode, getBackgroundColor]);
   
-  // 강력한 WebGL 컨텍스트 정리 함수
-  const forceCleanupWebGL = useCallback(() => {
-    console.log('Force cleaning up WebGL context...');
+  // WebGL 컨텍스트 정리 함수 (더 부드러운 접근)
+  const cleanupWebGL = useCallback(() => {
+    console.log('Cleaning up WebGL resources...');
     
-    // 기존 renderer 정리
+    // 기존 renderer 정리 (forceContextLoss 제거)
     if (rendererRef.current) {
       try {
         rendererRef.current.dispose();
-        rendererRef.current.forceContextLoss();
+        // forceContextLoss를 제거하여 불필요한 context lost 에러 방지
       } catch (error) {
         console.warn('Error disposing renderer:', error);
       }
       rendererRef.current = null;
     }
     
-    // 기존 canvas 정리
-    if (canvasRef.current) {
-      try {
-        // 모든 WebGL 컨텍스트 강제 해제
-        const webgl = canvasRef.current.getContext('webgl') as WebGLRenderingContext | null;
-        const webgl2 = canvasRef.current.getContext('webgl2') as WebGL2RenderingContext | null;
-        const experimental = canvasRef.current.getContext('experimental-webgl') as WebGLRenderingContext | null;
-        
-        [webgl, webgl2, experimental].forEach(gl => {
-          if (gl) {
-            const ext = gl.getExtension('WEBGL_lose_context');
-            if (ext) ext.loseContext();
-          }
-        });
-        
-        // Canvas 요소 속성 초기화
-        canvasRef.current.width = 1;
-        canvasRef.current.height = 1;
-        canvasRef.current.style.display = 'none';
-        
-      } catch (error) {
-        console.warn('Error cleaning up canvas context:', error);
-      }
-      
-      // DOM에서 완전히 제거
-      if (canvasRef.current.parentNode) {
-        canvasRef.current.parentNode.removeChild(canvasRef.current);
-      }
-      canvasRef.current = null;
-    }
-    
-    // 컨테이너의 모든 canvas 요소 정리
-    if (containerRef.current) {
-      const canvases = containerRef.current.querySelectorAll('canvas');
-      canvases.forEach(canvas => {
-        try {
-          const gl = (canvas.getContext('webgl') || canvas.getContext('webgl2')) as WebGLRenderingContext | WebGL2RenderingContext | null;
-          if (gl) {
-            const ext = gl.getExtension('WEBGL_lose_context');
-            if (ext) ext.loseContext();
-          }
-          if (canvas.parentNode) {
-            canvas.parentNode.removeChild(canvas);
-          }
-        } catch (error) {
-          console.warn('Error cleaning up stray canvas:', error);
-        }
-      });
-    }
+    // Canvas 참조만 제거 (DOM 조작 최소화)
+    canvasRef.current = null;
   }, []);
 
-  // 새로운 캔버스 키 생성 및 강제 정리
-  const regenerateCanvas = useCallback(() => {
-    forceCleanupWebGL();
-    
-    // 즉시 새로운 키 생성 (지연 제거)
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 9);
-    const newKey = `canvas-${viewMode}-${timestamp}-${random}`;
-    console.log('Regenerating canvas with key:', newKey);
-    setCanvasKey(newKey);
-    setForceRender(prev => prev + 1);
-  }, [viewMode, forceCleanupWebGL]);
+  // Canvas 재생성 함수 제거 - 더 이상 필요하지 않음
   
   // 마운트 시 상태 설정
   useEffect(() => {
     setMounted(true);
     return () => {
       setMounted(false);
-      forceCleanupWebGL();
+      cleanupWebGL();
     };
-  }, [forceCleanupWebGL]);
+  }, [cleanupWebGL]);
   
-  // ViewMode가 변경될 때 캔버스 재생성
-  useEffect(() => {
-    if (mounted) {
-      console.log('ViewMode changed, regenerating canvas...');
-      regenerateCanvas();
-    }
-  }, [viewMode, mounted, regenerateCanvas]);
+  // ViewMode가 변경될 때 캔버스 재생성 - 제거
+  // 불필요한 재생성은 React Three Fiber 컨텍스트 문제를 유발
+  // useEffect(() => {
+  //   if (mounted) {
+  //     // 초기 마운트 직후에는 실행하지 않음
+  //     const timer = setTimeout(() => {
+  //       console.log('ViewMode changed, regenerating canvas...');
+  //       regenerateCanvas();
+  //     }, 100);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [viewMode]); // regenerateCanvas 의존성 제거로 무한 루프 방지
 
   // 2D 모드에서 트랙패드 줌 속도 조절
   useEffect(() => {
@@ -199,8 +152,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         
-        // 줌 속도를 더 많이 줄임 (기존 0.3에서 0.2로)
-        const scaledDeltaY = e.deltaY * 0.2;
+        // 줌 속도를 더 많이 줄임 (0.1로 변경 - 트랙패드에서 더 부드럽게)
+        const scaledDeltaY = e.deltaY * 0.1;
         
         // 새로운 휠 이벤트 생성
         const newEvent = new WheelEvent('wheel', {
@@ -234,6 +187,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       container.removeEventListener('wheel', handleWheel, { capture: true });
     };
   }, [viewMode]);
+
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
@@ -281,30 +235,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [viewMode, mounted]);
   
-  // WebGL 컨텍스트 관리
-  useEffect(() => {
-    const handleContextLost = (e: Event) => {
-      console.warn('WebGL context lost event triggered');
-      e.preventDefault();
-      regenerateCanvas();
-    };
-    
-    const handleContextRestored = () => {
-      console.log('WebGL context restored');
-    };
-    
-    if (canvasRef.current) {
-      canvasRef.current.addEventListener('webglcontextlost', handleContextLost);
-      canvasRef.current.addEventListener('webglcontextrestored', handleContextRestored);
-      
-      return () => {
-        if (canvasRef.current) {
-          canvasRef.current.removeEventListener('webglcontextlost', handleContextLost);
-          canvasRef.current.removeEventListener('webglcontextrestored', handleContextRestored);
-        }
-      };
-    }
-  }, [regenerateCanvas]);
 
   // 로딩 상태
   if (!mounted) {
@@ -323,32 +253,49 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   }
 
   return (
-    <div 
-      ref={containerRef}
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0,
-        touchAction: 'none'
+    <ErrorBoundary
+      fallback={
+        <div style={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          background: getBackgroundColor() 
+        }}>
+          <p>3D viewer error. Please refresh the page.</p>
+        </div>
+      }
+      onError={(error) => {
+        console.error('Canvas ErrorBoundary caught:', error);
       }}
-      onDrop={eventHandlers.handleDrop}
-      onDragOver={eventHandlers.handleDragOver}
-      onDragLeave={eventHandlers.handleDragLeave}
     >
-      <Canvas
-        key={`${canvasKey}-${forceRender}`}
-        ref={canvasRef}
+      <div 
+        ref={containerRef}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0,
+          touchAction: 'none'
+        }}
+        onDrop={eventHandlers.handleDrop}
+        onDragOver={eventHandlers.handleDragOver}
+        onDragLeave={eventHandlers.handleDragLeave}
+      >
+        <Canvas
+        key={canvasKey}
         shadows={viewMode === '3D'}
         style={{ 
-          background: getBackgroundColor(),
+          background: viewMode === '2D' && theme.mode === 'dark' ? '#000000' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: 'default',
           touchAction: 'none'
         }}
         dpr={[1, 2]}
+        frameloop="always"
         gl={{
           powerPreference: 'high-performance',  // 고성능 GPU 사용
           antialias: true,
@@ -360,85 +307,38 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           logarithmicDepthBuffer: true,  // 더 정확한 깊이 버퍼
           precision: 'highp',  // 고정밀도 셰이더
         }}
-        onCreated={({ gl, events, scene }) => {
-          console.log('Canvas created with key:', canvasKey);
-          
-          // 새로운 캔버스 설정
+        onCreated={({ gl, scene }) => {
+          // renderer 참조 저장
           canvasRef.current = gl.domElement;
           rendererRef.current = gl;
           
-          // 전문적인 고품질 렌더링 설정
+          // 기본 렌더링 설정
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
           
-          // 최고품질 그림자 설정 - 3D 모드에서만 활성화
+          // 그림자 설정 - 3D 모드에서만
           gl.shadowMap.enabled = viewMode === '3D';
           if (viewMode === '3D') {
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;  // PCF 소프트 그림자로 변경 (더 안정적)
+            gl.shadowMap.type = THREE.PCFSoftShadowMap;
             gl.shadowMap.autoUpdate = true;
             gl.shadowMap.needsUpdate = true;
           }
           
-          // 그림자 품질 강화
-          gl.capabilities.maxTextureSize = 4096;
+          // 초기 배경색 설정
+          const initialBgColor = getBackgroundColor();
+          gl.setClearColor(new THREE.Color(initialBgColor), 1.0);
           
-          // 그림자 강제 렌더링
-          gl.setRenderTarget(null);
-          gl.clear(true, true, true);
-          
-          // 자연스러운 톤매핑 설정
-          gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.0;  // 자연스러운 노출
-          
-          // 정확한 색상 공간 설정
-          gl.outputColorSpace = THREE.SRGBColorSpace;
-          
-          // 렌더링 최적화 - 동적 배경색 사용
-          const dynamicBgColor = getBackgroundColor();
-          console.log('Setting canvas clear color to:', dynamicBgColor);
-          gl.setClearColor(new THREE.Color(dynamicBgColor), 1.0);
-          gl.autoClear = true;
-          gl.autoClearColor = true;
-          gl.autoClearDepth = true;
-          gl.autoClearStencil = true;
-          
-          // 고급 렌더링 옵션
-          gl.sortObjects = true;  // 투명도 정렬
-          gl.localClippingEnabled = true;  // 로컬 클리핑
-          
-          // 캔버스 표시 및 설정
-          gl.domElement.style.display = 'block';
-          gl.domElement.setAttribute('data-canvas-key', canvasKey);
-          
-          // 씬 배경색 설정 (동적 배경색 사용)
+          // 씬 배경색 설정
           if (scene) {
-            scene.background = new THREE.Color(dynamicBgColor);
-            // 환경맵 자동 설정 허용 (Environment 컴포넌트에서 처리)
-            // scene.environment = null; // 이 라인을 주석처리하여 환경맵 적용 허용
-            scene.fog = null; // 포그 비활성화로 선명도 유지
-            
-            // 환경맵 디버깅
-            console.log('Scene environment setup - allowing Environment component to set scene.environment');
+            scene.background = new THREE.Color(initialBgColor);
+            scene.fog = null;
           }
-          
-          // 이벤트 시스템 설정
-          if (events && isEventManager(events)) {
-            try {
-              events.disconnect();
-              events.connect(gl.domElement);
-            } catch (error) {
-              console.warn('Error connecting events:', error);
-            }
-          }
-          
-          console.log('Professional-grade canvas setup completed successfully');
-        }}
-        onPointerMissed={() => {
-          // Canvas가 정상적으로 작동하는지 확인하는 이벤트
-          console.log('Canvas pointer event working');
         }}
       >
         {/* 자원 정리 컴포넌트 */}
-        <SceneCleanup />
+        <Suspense fallback={null}>
+          <SceneCleanup />
+          <SceneBackground viewMode={viewMode} />
+        </Suspense>
         
         {/* 커스텀 줌 컨트롤러 - 2D 모드에서만 활성화 */}
         {viewMode === '2D' && (
@@ -489,7 +389,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           mouseButtons={controlsConfig.mouseButtons}
           touches={controlsConfig.touches}
           panSpeed={1.0}
-          zoomSpeed={viewMode === '2D' ? 0.3 : 1.2}
+          zoomSpeed={viewMode === '2D' ? 0.15 : 1.2}
           enableDamping={true}
           dampingFactor={viewMode === '2D' ? 0.1 : 0.05}
           screenSpacePanning={true}
@@ -505,6 +405,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {children}
       </Canvas>
     </div>
+    </ErrorBoundary>
   );
 };
 

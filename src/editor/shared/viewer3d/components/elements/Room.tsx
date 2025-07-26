@@ -38,7 +38,7 @@ interface RoomProps {
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-const END_PANEL_THICKNESS = 18; // 18mm
+const END_PANEL_THICKNESS = 20; // 20mm로 통일
 
 // 2D 모드용 Box with Edges 컴포넌트 - EdgesGeometry 사용으로 일관성 확보
 const BoxWithEdges: React.FC<{
@@ -46,7 +46,8 @@ const BoxWithEdges: React.FC<{
   position: [number, number, number];
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
-}> = ({ args, position, material, renderMode }) => {
+  onBeforeRender?: () => void;
+}> = ({ args, position, material, renderMode, onBeforeRender }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode } = useSpace3DView();
@@ -64,7 +65,7 @@ const BoxWithEdges: React.FC<{
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'} onBeforeRender={onBeforeRender}>
           <primitive object={material} />
         </mesh>
       )}
@@ -85,10 +86,8 @@ const Room: React.FC<RoomProps> = ({
   showFrame = true,
   placedModules
 }) => {
-  console.log('🏠 Room - viewMode:', viewMode);
-  console.log('🏠 Room - typeof viewMode:', typeof viewMode);
-  console.log('🏠 Room - viewMode === "3D":', viewMode === '3D');
-  console.log('🏠 Room - viewMode === "3d":', viewMode === '3d');
+  // 고유 ID로 어떤 Room 인스턴스인지 구분
+  const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
   if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number') {
     return null;
   }
@@ -99,6 +98,15 @@ const Room: React.FC<RoomProps> = ({
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
+    console.log('🔍 Room Component - spaceInfo:', {
+      roomId,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      frameSize: spaceInfo.frameSize,
+      showFrame,
+      'showFrame prop value': showFrame,
+      timestamp: new Date().toISOString()
+    });
     const { width: widthMm, height: heightMm } = calculateRoomDimensions(spaceInfo);
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
@@ -107,6 +115,19 @@ const Room: React.FC<RoomProps> = ({
     const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
     const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
     const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+    
+    // 노서라운드 빌트인 디버그
+    console.log('🔍 Room - 프레임 계산 결과:', {
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      frameThicknessMm,
+      topBottomFrameHeightMm,
+      baseFrameHeightMm,
+      baseFrameMm,
+      isNoSurround: spaceInfo.surroundType === 'no-surround',
+      isBuiltin: spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in',
+      shouldHideAllFrames: spaceInfo.surroundType === 'no-surround'
+    });
     
     // mm를 Three.js 단위로 변환
     return {
@@ -142,6 +163,7 @@ const Room: React.FC<RoomProps> = ({
     // 원본 mm 값들
     widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
   } = dimensions;
+  
   
 
   
@@ -304,19 +326,16 @@ const Room: React.FC<RoomProps> = ({
 
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
-  console.log('🏠 Room - spaceInfo.installType:', spaceInfo.installType);
-  console.log('🏠 Room - wallConfig:', wallConfig);
-  console.log('🏠 Room - installType 비교:', {
-    'is_builtin': spaceInfo.installType === 'builtin',
-    'is_built-in': spaceInfo.installType === 'built-in',
-    'actual_value': spaceInfo.installType
-  });
-  console.log('🏠 Room - 엔드패널/프레임 설정:', {
+  console.log('🏠 Room - 노서라운드 빌트인 프레임 체크:', {
+    installType: spaceInfo.installType,
     surroundType: spaceInfo.surroundType,
+    isNoSurround: spaceInfo.surroundType === 'no-surround',
+    isBuiltin: spaceInfo.installType === 'builtin',
     frameThicknessMm,
     frameThickness,
     leftPanel: frameThickness.left > 0 ? `${frameThicknessMm.left}mm` : 'none',
-    rightPanel: frameThickness.right > 0 ? `${frameThicknessMm.right}mm` : 'none'
+    rightPanel: frameThickness.right > 0 ? `${frameThicknessMm.right}mm` : 'none',
+    shouldHaveNoFrames: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'builtin'
   });
   
   // 내부 공간 계산 (세로 가이드 선 위치 확인용)
@@ -326,6 +345,18 @@ const Room: React.FC<RoomProps> = ({
   // 바닥 슬롯 메쉬와 동일한 깊이 계산
   const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
   const slotFloorDepth = frameEndZ - backZ; // 바닥 슬롯 메쉬 깊이
+  
+  // 디버그용 - 엔드패널 깊이 차이 확인
+  if (spaceInfo.installType === 'freestanding' || 
+      (spaceInfo.installType === 'semistanding' && (!wallConfig?.left || !wallConfig?.right))) {
+    console.log('🔍 엔드패널 깊이 비교:', {
+      서라운드_깊이mm: slotFloorDepth / 0.01,
+      노서라운드_깊이mm: (slotFloorDepth - mmToThreeUnits(20)) / 0.01,
+      차이mm: 20,
+      slotFloorDepth,
+      노서라운드깊이: slotFloorDepth - mmToThreeUnits(20)
+    });
+  }
 
   return (
     <group position={[0, 0, groupZOffset]}>
@@ -535,13 +566,24 @@ const Room: React.FC<RoomProps> = ({
         const floorDepth = frameEndZ - backZ - mmToThreeUnits(20);
         
         const columns = spaceInfo.columns || [];
-        const floorY = panelStartY + (
-          spaceInfo.baseConfig?.type === 'floor' 
-            ? baseFrameHeight 
-            : spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
-              ? floatHeight
-              : 0
+        
+        // 슬롯 가이드와 동일한 Y 위치 계산 (ColumnGuides와 일치시킴)
+        // internalSpace.startY는 이미 받침대 높이를 포함하고 있음
+        const floorY = mmToThreeUnits(internalSpace.startY) + (
+          spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+            ? floatHeight
+            : 0
         );
+        
+        console.log('🎯 Floor mesh Y calculation:', {
+          internalSpace_startY: internalSpace.startY,
+          baseFrameHeightMm,
+          floorFinishHeightMm,
+          floatHeight,
+          floorY,
+          baseConfig: spaceInfo.baseConfig,
+          panelStartY
+        });
         
         // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
         const hasDeepColumns = columns.some(column => column.depth >= 730);
@@ -661,7 +703,26 @@ const Room: React.FC<RoomProps> = ({
         ))}</>;
       })()}
       
+      {/* 프레임 렌더링 디버그 */}
+      {spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && console.log('🔍 프레임 렌더링 체크:', {
+        showFrame,
+        frameThicknessLeft: frameThickness.left,
+        frameThicknessRight: frameThickness.right,
+        leftCondition: showFrame && frameThickness.left > 0,
+        rightCondition: showFrame && frameThickness.right > 0
+      })}
+      
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
+      {console.log('🔍 Left Frame Check:', {
+        showFrame,
+        'frameThickness.left': frameThickness.left,
+        'frameThickness.left > 0': frameThickness.left > 0,
+        surroundType: spaceInfo.surroundType,
+        'surroundType !== no-surround': spaceInfo.surroundType !== 'no-surround',
+        installType: spaceInfo.installType,
+        'frameThicknessMm.left': frameThicknessMm.left,
+        'should render': showFrame && frameThickness.left > 0
+      })}
       {showFrame && frameThickness.left > 0 && (
         <BoxWithEdges
           args={[
@@ -671,9 +732,9 @@ const Room: React.FC<RoomProps> = ({
             (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
             spaceInfo.installType === 'freestanding' 
               ? (spaceInfo.surroundType === 'no-surround' 
-                  ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드 엔드패널: 20mm 짧게
-                  : slotFloorDepth)  // 서라운드 엔드패널: 전체 깊이
-              : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
+                  ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드: 20mm 짧게
+                  : slotFloorDepth)
+              : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (20mm)
           ]}
           position={[
             xOffset + frameThickness.left/2, 
@@ -693,6 +754,16 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
+      {console.log('🔍 Right Frame Check:', {
+        showFrame,
+        'frameThickness.right': frameThickness.right,
+        'frameThickness.right > 0': frameThickness.right > 0,
+        surroundType: spaceInfo.surroundType,
+        'surroundType !== no-surround': spaceInfo.surroundType !== 'no-surround',
+        installType: spaceInfo.installType,
+        'frameThicknessMm.right': frameThicknessMm.right,
+        'should render': showFrame && frameThickness.right > 0
+      })}
       {showFrame && frameThickness.right > 0 && (
         <BoxWithEdges
           args={[
@@ -726,7 +797,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장 */}
-      {showFrame && topBottomFrameHeightMm > 0 && (
+      {showFrame && topBottomFrameHeightMm > 0 && spaceInfo.surroundType !== 'no-surround' && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
@@ -873,7 +944,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 서브프레임 - 상단 프레임에서 앞쪽으로 내려오는 판 (ㄱ자의 세로 부분, X축 기준 90도 회전) */}
       {/* 상단 프레임 높이가 18mm보다 클 때만 렌더링 (서브프레임 높이 18mm와 비교) */}
       {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
-      {showFrame && topBottomFrameHeightMm > 18 && (spaceInfo.surroundType || 'surround') !== 'no-surround' && (
+      {showFrame && topBottomFrameHeightMm > 18 && spaceInfo.surroundType !== 'no-surround' && (
         <>
           {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1060,7 +1131,7 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
+      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && spaceInfo.surroundType !== 'no-surround' && (
         <>
           {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${finalPanelWidth.toFixed(2)}`) */}
@@ -1212,7 +1283,7 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 서브프레임 - 하단 프레임에서 앞쪽으로 올라오는 판 (ㄱ자의 세로 부분, X축 기준 -90도 회전) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (
+      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && spaceInfo.surroundType !== 'no-surround' && (
         <>
           {/* 기둥이 있는 경우 하단 서브프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1394,6 +1465,13 @@ export default React.memo(Room, (prevProps, nextProps) => {
   // 재질 설정 비교
   if (JSON.stringify(prevSpace.materialConfig) !== JSON.stringify(nextSpace.materialConfig)) return false;
   if (JSON.stringify(prevProps.materialConfig) !== JSON.stringify(nextProps.materialConfig)) return false;
+  
+  // baseConfig 비교 (설치 타입 변경 시 벽 높이 업데이트를 위해)
+  if (JSON.stringify(prevSpace.baseConfig) !== JSON.stringify(nextSpace.baseConfig)) return false;
+  
+  // installType과 wallConfig 비교 (벽 렌더링에 영향)
+  if (prevSpace.installType !== nextSpace.installType) return false;
+  if (JSON.stringify(prevSpace.wallConfig) !== JSON.stringify(nextSpace.wallConfig)) return false;
   
   // 가구 배치 비교 (빠른 비교를 위해 길이만 우선 확인)
   const prevModules = prevProps.placedModules || [];
