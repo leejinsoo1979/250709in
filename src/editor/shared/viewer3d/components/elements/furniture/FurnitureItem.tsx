@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { Box, Edges } from '@react-three/drei';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../../utils/geometry';
@@ -12,6 +12,8 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
+import { EditIcon } from '@/components/common/Icons';
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -47,6 +49,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();
+  
+  // UI 상태에서 showDimensions 가져오기
+  const showDimensions = useUIStore(state => state.showDimensions);
+  
+  // 호버 상태 관리
+  const [isHovered, setIsHovered] = useState(false);
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
@@ -333,9 +341,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         onPointerUp={onPointerUp}
         onPointerOver={() => {
           document.body.style.cursor = isDragMode ? 'grab' : (isDraggingThis ? 'grabbing' : 'grab');
+          setIsHovered(true);
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'default';
+          setIsHovered(false);
         }}
       >
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
@@ -389,7 +399,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   roughness={0.7}
                   reflectivity={0.2}
                   transparent={isDraggingThis || isEditMode}
-                  opacity={isDraggingThis ? 0.6 : (isEditMode ? 0.3 : 1.0)}
+                  opacity={isDraggingThis ? 0.6 : (isEditMode ? 0.2 : 1.0)}
+                  depthWrite={isEditMode ? false : true}
+                  emissive={isEditMode ? getThemeColor() : undefined}
+                  emissiveIntensity={isEditMode ? 0.1 : 0}
                 />
               )}
             </mesh>
@@ -462,7 +475,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             doorXOffset={0} // 사용하지 않음
             originalSlotWidth={originalSlotWidthMm}
             slotCenterX={0} // 이미 절대 좌표로 배치했으므로 0
-            moduleData={actualModuleData} // 실제 모듈 데이터
+            moduleData={{ ...actualModuleData, id: placedModule.id }} // ID 추가
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
           />
@@ -470,6 +483,57 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
+      
+      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true일 때만 */}
+      {viewMode === '3D' && showDimensions && (
+        <Html
+          position={[
+            adjustedPosition.x,
+            furnitureStartY - 1.8, // 하부 프레임 아래로 더 내림
+            furnitureZ + depth / 2 + 0.5 // 가구 앞쪽 더 멀리
+          ]}
+          center
+          style={{
+            userSelect: 'none',
+            pointerEvents: 'auto',
+            zIndex: 1000,
+            background: 'transparent'
+          }}
+        >
+          <div
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              border: `2px solid ${getThemeColor()}`,
+              transition: 'all 0.2s ease',
+              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+              opacity: isHovered ? 1 : 0.8,
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              // 이미 편집 모드라면 팝업 닫기
+              if (isEditMode) {
+                const closeAllPopups = useUIStore.getState().closeAllPopups;
+                closeAllPopups();
+              } else {
+                // 편집 모드가 아니면 팝업 열기
+                onDoubleClick(e as any, placedModule.id);
+              }
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title="가구 속성 편집"
+          >
+            <EditIcon size={16} color={getThemeColor()} />
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

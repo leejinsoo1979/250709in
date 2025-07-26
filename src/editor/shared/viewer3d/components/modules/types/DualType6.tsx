@@ -14,19 +14,21 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
-}> = ({ args, position, material, renderMode = 'solid', isDragging = false }) => {
+  isEditMode?: boolean;
+}> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false }) => {
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   const { theme } = useTheme();
   
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 드래그 중일 때 고스트 효과 적용
+  // 드래그 중이거나 편집 모드일 때 고스트 효과 적용
   const processedMaterial = React.useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
+    if ((isDragging || isEditMode) && material instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
+      ghostMaterial.opacity = isEditMode ? 0.2 : 0.6;
+      
       // 테마 색상 가져오기
       const getThemeColor = () => {
         if (typeof window !== "undefined") {
@@ -40,11 +42,16 @@ const BoxWithEdges: React.FC<{
       };
       
       ghostMaterial.color = new THREE.Color(getThemeColor());
+      if (isEditMode) {
+        ghostMaterial.emissive = new THREE.Color(getThemeColor());
+        ghostMaterial.emissiveIntensity = 0.1;
+        ghostMaterial.depthWrite = false;
+      }
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
     return material;
-  }, [material, isDragging]);
+  }, [material, isDragging, isEditMode]);
 
   return (
     <group position={position}>
@@ -100,6 +107,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   hingePosition = 'right',
   spaceInfo,
   isDragging = false,
+  isEditMode = false,
   doorWidth,
   originalSlotWidth,
   slotCenterX
@@ -109,7 +117,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     color,
     internalHeight,
     customDepth,
-    isDragging
+    isDragging,
+    isEditMode
   });
 
   const {
@@ -298,6 +307,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             material={material}
             renderMode={useSpace3DView().renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
         )}
         
@@ -309,6 +319,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             material={material}
             renderMode={useSpace3DView().renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
         )}
         
@@ -320,6 +331,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             material={material}
             renderMode={useSpace3DView().renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
         )}
       </>
@@ -335,6 +347,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={useSpace3DView().renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 우측 측면 판재 - 통짜 (측면판 분할 안됨) */}
@@ -344,6 +357,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={useSpace3DView().renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음) */}
@@ -353,6 +367,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={useSpace3DView().renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 하단 판재 - 좌/우 분리 */}
@@ -383,6 +398,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={useSpace3DView().renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
@@ -396,10 +412,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
-          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          moduleData={moduleData} // 실제 듀얼캐빔넷 분할 정보
           originalSlotWidth={originalSlotWidth}
           slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
           isDragging={isDragging}
+          isEditMode={isEditMode}
         />
       )}
     </group>

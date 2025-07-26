@@ -13,19 +13,20 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
-}> = ({ args, position, material, renderMode = 'solid', isDragging = false }) => {
+  isEditMode?: boolean;
+}> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false }) => {
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
   const { theme } = useTheme();
   
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 드래그 중일 때 고스트 효과 적용
+  // 드래그 중이거나 편집 모드일 때 고스트 효과 적용
   const processedMaterial = React.useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
+    if ((isDragging || isEditMode) && material instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
+      ghostMaterial.opacity = isEditMode ? 0.2 : 0.6;
       // 테마 색상 가져오기
       const getThemeColor = () => {
         if (typeof window !== "undefined") {
@@ -39,11 +40,16 @@ const BoxWithEdges: React.FC<{
       };
       
       ghostMaterial.color = new THREE.Color(getThemeColor());
+      if (isEditMode) {
+        ghostMaterial.emissive = new THREE.Color(getThemeColor());
+        ghostMaterial.emissiveIntensity = 0.1;
+        ghostMaterial.depthWrite = false;
+      }
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
     return material;
-  }, [material, isDragging]);
+  }, [material, isDragging, isEditMode]);
 
   return (
     <group position={position}>
@@ -100,6 +106,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   hingePosition = 'right',
   spaceInfo,
   isDragging = false,
+  isEditMode = false,
   doorWidth
 }) => {
   // 공통 로직 사용
@@ -107,7 +114,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     color,
     internalHeight,
     customDepth,
-    isDragging
+    isDragging,
+    isEditMode
   });
 
   const {
@@ -153,6 +161,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
+                  isEditMode={isEditMode}
                 />
                 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
@@ -162,6 +171,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
+                  isEditMode={isEditMode}
                 />
                 
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
@@ -172,6 +182,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isEditMode={isEditMode}
                   />
                 )}
               </React.Fragment>
@@ -188,6 +199,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
           
           {/* 오른쪽 측면 판재 */}
@@ -197,6 +209,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
         </>
       )}
@@ -208,6 +221,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 하단 판재 */}
@@ -217,6 +231,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
@@ -226,6 +241,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
@@ -253,6 +269,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
           isDragging={isDragging}
+          isEditMode={isEditMode}
+          moduleData={moduleData}
         />
       )}
     </group>

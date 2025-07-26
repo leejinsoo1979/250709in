@@ -21,6 +21,7 @@ import { useAlert } from '@/contexts/AlertContext';
 interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
   showAll?: boolean;
+  showDimensions?: boolean;
 }
 
 // 전역 window 타입 확장
@@ -30,7 +31,7 @@ declare global {
   }
 }
 
-const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true }) => {
+const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true }) => {
   if (!spaceInfo) return null;
   
   const placedModules = useFurnitureStore(state => state.placedModules);
@@ -244,6 +245,51 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           </mesh>
         );
       })}
+      
+      {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 */}
+      {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && (() => {
+        // ColumnGuides와 완전히 동일한 계산 사용
+        const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+        const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+        
+        // ColumnGuides와 동일한 Y 좌표 계산
+        const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+        
+        // ColumnGuides와 동일한 Z 좌표 계산
+        const frontZ = mmToThreeUnits(internalSpace.depth / 2);
+        const backZ = -frontZ;
+        
+        // 가이드라인과 동일한 X 좌표
+        const leftX = indexing.threeUnitBoundaries[0];
+        const rightX = indexing.threeUnitBoundaries[indexing.threeUnitBoundaries.length - 1];
+        const centerX = (leftX + rightX) / 2;
+        const width = rightX - leftX;
+        
+        // CSS 변수에서 실제 테마 색상 가져오기
+        const getThemeColorFromCSS = () => {
+          if (typeof window !== 'undefined') {
+            const computedColor = getComputedStyle(document.documentElement)
+              .getPropertyValue('--theme-primary').trim();
+            return computedColor || '#10b981';
+          }
+          return '#10b981';
+        };
+        
+        const primaryColor = getThemeColorFromCSS();
+        
+        return (
+          <mesh
+            position={[centerX, floorY, backZ + mmToThreeUnits(350)]} // 중심을 backZ + 350mm로 이동
+          >
+            <boxGeometry args={[width, 0.001, mmToThreeUnits(700)]} />
+            <meshBasicMaterial 
+              color={primaryColor} 
+              transparent 
+              opacity={0.2} 
+            />
+          </mesh>
+        );
+      })()}
       
       {/* 가구 미리보기 */}
       {hoveredSlotIndex !== null && currentDragData && indexing.threeUnitPositions.map((slotX, slotIndex) => {

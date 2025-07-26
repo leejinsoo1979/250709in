@@ -589,26 +589,8 @@ const Room: React.FC<RoomProps> = ({
         const hasDeepColumns = columns.some(column => column.depth >= 730);
         
         if (columns.length === 0 || !hasDeepColumns) {
-          // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 바닥면으로 렌더링
-          return (
-            <mesh
-              position={[
-                slotCenterX, 
-                floorY, 
-                backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
-              ]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              receiveShadow
-            >
-              <planeGeometry args={[slotWidth, floorDepth]} />
-              <meshStandardMaterial 
-                color={colors.primary}
-                transparent={true} 
-                opacity={0.4}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-          );
+          // 기둥이 없거나 모든 기둥이 729mm 이하면 바닥면 렌더링 안함 (SlotDropZonesSimple에서 처리)
+          return null;
         }
         
         // 기둥이 있는 경우 분절된 바닥면들 렌더링
@@ -681,26 +663,8 @@ const Room: React.FC<RoomProps> = ({
           );
         }
         
-        return <>{floorSegments.map((segment, index) => (
-          <mesh
-            key={`floor-segment-${index}`}
-            position={[
-              segment.x, // 분절된 위치
-              floorY, 
-              backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
-            ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            receiveShadow
-          >
-            <planeGeometry args={[segment.width, floorDepth]} />
-            <meshStandardMaterial 
-              color={colors.primary}
-              transparent={true} 
-              opacity={0.4}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        ))}</>;
+        // 분절된 바닥면도 렌더링 안함 (SlotDropZonesSimple에서 처리)
+        return null;
       })()}
       
       {/* 프레임 렌더링 디버그 */}

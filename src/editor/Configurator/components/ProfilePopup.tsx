@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, User, Mail, Calendar, Shield } from 'lucide-react';
+import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import styles from './ProfilePopup.module.css';
 
@@ -51,78 +51,93 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
       {/* 프로필 팝업 */}
       <div className={styles.popup} style={{ top: position.top, right: position.right }}>
         <div className={styles.header}>
-          <h3 className={styles.title}>프로필 정보</h3>
-          <button className={styles.closeButton} onClick={onClose}>
-            <X size={18} />
-          </button>
+          <div className={styles.headerContent}>
+            <div className={styles.headerLeft}>
+              {user.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName || '사용자'} className={styles.headerAvatar} />
+              ) : (
+                <div className={styles.headerAvatarPlaceholder}>
+                  <User size={20} />
+                </div>
+              )}
+              <div className={styles.headerInfo}>
+                <h3 className={styles.headerName}>{user.displayName || '사용자'}</h3>
+                <p className={styles.headerEmail}>{user.email}</p>
+              </div>
+            </div>
+            <button className={styles.closeButton} onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className={styles.content}>
-          {/* 프로필 이미지 */}
-          <div className={styles.avatarSection}>
-            {user.photoURL ? (
-              <img src={user.photoURL} alt={user.displayName || '사용자'} className={styles.avatar} />
-            ) : (
-              <div className={styles.avatarPlaceholder}>
-                <User size={40} />
-              </div>
-            )}
-          </div>
 
           {/* 사용자 정보 */}
-          <div className={styles.infoSection}>
-            <div className={styles.infoItem}>
-              <User size={16} className={styles.icon} />
-              <div className={styles.infoContent}>
-                <span className={styles.label}>이름</span>
-                <span className={styles.value}>{user.displayName || '설정되지 않음'}</span>
+          <div className={styles.section}>
+            <h4 className={styles.sectionTitle}>계정 정보</h4>
+            <div className={styles.infoSection}>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>
+                <Shield size={18} />
+                <span>인증 방법</span>
               </div>
+              <span className={styles.infoValue}>
+                {user.providerData?.[0]?.providerId === 'google.com' ? 'Google 계정' : 
+                 user.providerData?.[0]?.providerId === 'password' ? '이메일 인증' : 
+                 '기타'}
+              </span>
             </div>
 
-            <div className={styles.infoItem}>
-              <Mail size={16} className={styles.icon} />
-              <div className={styles.infoContent}>
-                <span className={styles.label}>이메일</span>
-                <span className={styles.value}>{user.email}</span>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>
+                <Calendar size={18} />
+                <span>가입일</span>
               </div>
+              <span className={styles.infoValue}>
+                {formatCreatedDate(user.metadata?.creationTime)}
+              </span>
             </div>
 
-            <div className={styles.infoItem}>
-              <Shield size={16} className={styles.icon} />
-              <div className={styles.infoContent}>
-                <span className={styles.label}>인증 방법</span>
-                <span className={styles.value}>
-                  {user.providerData?.[0]?.providerId === 'google.com' ? 'Google' : 
-                   user.providerData?.[0]?.providerId === 'password' ? '이메일/비밀번호' : 
-                   '기타'}
-                </span>
+            <div className={styles.infoRow}>
+              <div className={styles.infoLabel}>
+                <Calendar size={18} />
+                <span>마지막 활동</span>
               </div>
+              <span className={styles.infoValue}>
+                {formatLastSignIn(user.metadata?.lastSignInTime)}
+              </span>
             </div>
-
-            <div className={styles.infoItem}>
-              <Calendar size={16} className={styles.icon} />
-              <div className={styles.infoContent}>
-                <span className={styles.label}>가입일</span>
-                <span className={styles.value}>
-                  {formatCreatedDate(user.metadata?.creationTime)}
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.infoItem}>
-              <Calendar size={16} className={styles.icon} />
-              <div className={styles.infoContent}>
-                <span className={styles.label}>마지막 로그인</span>
-                <span className={styles.value}>
-                  {formatLastSignIn(user.metadata?.lastSignInTime)}
-                </span>
-              </div>
             </div>
           </div>
 
-          {/* UID (개발자용) */}
+          {/* 빠른 메뉴 */}
+          <div className={styles.section}>
+            <h4 className={styles.sectionTitle}>빠른 메뉴</h4>
+            <div className={styles.menuSection}>
+              <button className={styles.menuItem}>
+                <div className={styles.menuLeft}>
+                  <Settings size={18} />
+                  <span>계정 설정</span>
+                </div>
+                <ChevronRight size={16} />
+              </button>
+              <button className={styles.menuItem} onClick={() => {
+                // 로그아웃 처리
+                window.location.href = '/logout';
+              }}>
+                <div className={styles.menuLeft}>
+                  <LogOut size={18} />
+                  <span>로그아웃</span>
+                </div>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* UID (개발자용) - 더 작게 */}
           <div className={styles.uidSection}>
-            <span className={styles.uidLabel}>사용자 ID</span>
+            <span className={styles.uidLabel}>User ID</span>
             <code className={styles.uid}>{user.uid}</code>
           </div>
         </div>

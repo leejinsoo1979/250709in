@@ -914,8 +914,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 기둥 생성 마커는 드래그 앤 드롭 방식으로 대체됨 */}
             
             {/* Configurator에서 표시되는 요소들 */}
-            {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showAll(가이드)이 true일 때만 */}
-            {showAll && <ColumnGuides />}
+            {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
+            {showDimensions && showAll && <ColumnGuides />}
             
             {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
             <CleanCAD2D 
@@ -926,7 +926,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} />
+            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
           </React.Suspense>
         </ThreeCanvas>
 
@@ -1080,7 +1080,7 @@ const QuadrantContent: React.FC<{
       ))}
       
       {/* 컬럼 가이드 표시 */}
-      {showAll && <ColumnGuides />}
+      {showDimensions && showAll && <ColumnGuides />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
       <CleanCAD2D 
@@ -1089,7 +1089,7 @@ const QuadrantContent: React.FC<{
         isStep2={isStep2}
       />
       
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
     </React.Suspense>
   );
 };

@@ -132,6 +132,9 @@ interface BaseFurnitureShellProps {
   // 드래그 상태
   isDragging?: boolean;
   
+  // 편집 모드 상태
+  isEditMode?: boolean;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -157,6 +160,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   getSectionHeights,
   mmToThreeUnits,
   isDragging = false,
+  isEditMode = false,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -190,6 +194,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
+                  isEditMode={isEditMode}
                 />
                 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
@@ -199,6 +204,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
+                  isEditMode={isEditMode}
                 />
                 
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
@@ -209,6 +215,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isEditMode={isEditMode}
                   />
                 )}
               </React.Fragment>
@@ -225,6 +232,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
           
           {/* 오른쪽 측면 판재 */}
@@ -234,6 +242,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
+            isEditMode={isEditMode}
           />
         </>
       )}
@@ -245,6 +254,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 하단 판재 */}
@@ -254,6 +264,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
@@ -263,6 +274,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isEditMode={isEditMode}
       />
       
       {/* 내부 구조 (타입별로 다른 내용) */}

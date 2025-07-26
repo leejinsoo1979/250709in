@@ -173,10 +173,10 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryDark: '#000000',
     },
     wine: {
-      primary: '#991b1b',
-      primaryHover: '#7f1d1d',
-      primaryLight: theme.mode === 'dark' ? 'rgba(153, 27, 27, 0.2)' : '#fef2f2',
-      primaryDark: '#450a0a',
+      primary: '#845EC2',
+      primaryHover: '#744EB2',
+      primaryLight: theme.mode === 'dark' ? 'rgba(132, 94, 194, 0.2)' : '#e6dcf5',
+      primaryDark: '#643EA2',
     },
     gold: {
       primary: '#d97706',
@@ -221,10 +221,10 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryDark: '#E64A19',
     },
     white: {
-      primary: '#EDEDED',
-      primaryHover: '#E0E0E0',
-      primaryLight: theme.mode === 'dark' ? 'rgba(237, 237, 237, 0.2)' : '#fafafa',
-      primaryDark: '#BDBDBD',
+      primary: '#D65DB1',
+      primaryHover: '#C44DA0',
+      primaryLight: theme.mode === 'dark' ? 'rgba(214, 93, 177, 0.2)' : '#f5d4ed',
+      primaryDark: '#B84D91',
     },
     silver: {
       primary: '#808080',

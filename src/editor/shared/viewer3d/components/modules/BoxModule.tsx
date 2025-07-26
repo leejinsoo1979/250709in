@@ -242,7 +242,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // === 2단계: 일반 폴백 케이스 (공통 로직 사용) ===
   // 나머지 케이스들을 공통 로직으로 처리
   return (
-    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging}>
+    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (
         <SectionsRenderer
@@ -279,7 +279,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           slotCenterX={slotCenterX}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           isDragging={isDragging}
-        isEditMode={isEditMode}
           isEditMode={isEditMode}
         />
       )}

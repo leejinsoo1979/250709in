@@ -43,6 +43,16 @@
   line-height: 16px;
 }
 
+.toggleLabel.clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.toggleLabel.clickable:hover {
+  color: var(--theme-text);
+}
+
 .switch {
   width: 36px;
   height: 18px;

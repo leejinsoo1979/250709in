@@ -18,40 +18,40 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   // 4x7 그리드로 정리된 색상 배열
   const themeColors: { id: ThemeColor; name: string; color: string }[] = [
     // 1번째 줄
-    { id: 'black', name: '차콜블랙', color: '#1C1C1C' },
-    { id: 'gray', name: '다크그레이', color: '#2D2D2D' },
-    { id: 'blue', name: '스카이블루', color: '#4DA0FF' },
-    { id: 'navy', name: '로얄블루', color: '#1E74FF' },
-    { id: 'indigo', name: '페일블루', color: '#7BA3D6' },
-    { id: 'teal', name: '딥틸', color: '#165A69' },
-    { id: 'cyan', name: '다크틸', color: '#144C59' },
+    { id: 'black', name: '차콜블랙', color: '#1a1a1a' },
+    { id: 'gray', name: '다크그레이', color: '#6b7280' },
+    { id: 'blue', name: '스카이블루', color: '#3b82f6' },
+    { id: 'navy', name: '로얄블루', color: '#1e3a8a' },
+    { id: 'indigo', name: '페일블루', color: '#6366f1' },
+    { id: 'teal', name: '딥틸', color: '#14b8a6' },
+    { id: 'cyan', name: '다크틸', color: '#06b6d4' },
     
     // 2번째 줄
-    { id: 'white', name: '라이트그레이', color: '#EDEDED' },
+    { id: 'white', name: '라이트그레이', color: '#D65DB1' },
     { id: 'silver', name: '미디엄그레이', color: '#808080' },
-    { id: 'orange', name: '피치오렌지', color: '#FF9C6A' },
+    { id: 'orange', name: '피치오렌지', color: '#f97316' },
     { id: 'rust', name: '선셋오렌지', color: '#FF7438' },
     { id: 'brown', name: '다크브라운', color: '#5A2B1D' },
-    { id: 'emerald', name: '포레스트그린', color: '#00574F' },
+    { id: 'emerald', name: '포레스트그린', color: '#059669' },
     { id: 'darkgray', name: '블루그레이', color: '#2C3844' },
     
     // 3번째 줄
-    { id: 'wine', name: '버건디', color: '#96004F' },
-    { id: 'purple', name: '딥퍼플', color: '#3C2532' },
-    { id: 'pink', name: '코랄핑크', color: '#FF6D78' },
-    { id: 'red', name: '레드', color: '#FF4A4A' },
+    { id: 'wine', name: '버건디', color: '#845EC2' },
+    { id: 'purple', name: '딥퍼플', color: '#8b5cf6' },
+    { id: 'pink', name: '코랄핑크', color: '#ec4899' },
+    { id: 'red', name: '레드', color: '#ef4444' },
     { id: 'maroon', name: '다크레드', color: '#3F0D0D' },
     { id: 'turquoise', name: '터콰이즈', color: '#003A7A' },
     { id: 'slate', name: '슬레이트', color: '#2E3A47' },
     
     // 4번째 줄
     { id: 'copper', name: '코퍼', color: '#AD4F34' },
-    { id: 'mint', name: '민트', color: '#00938E' },
-    { id: 'lime', name: '라임그린', color: '#57BA7B' },
-    { id: 'green', name: '그린', color: '#2FAA4A' },
+    { id: 'mint', name: '민트', color: '#0CBA80' },
+    { id: 'lime', name: '라임그린', color: '#84cc16' },
+    { id: 'green', name: '그린', color: '#10b981' },
     { id: 'forest', name: '다크그린', color: '#1B3924' },
     { id: 'olive', name: '올리브', color: '#4C462C' },
-    { id: 'yellow', name: '올리브그린', color: '#88992E' },
+    { id: 'yellow', name: '올리브그린', color: '#eab308' },
   ];
 
   const themeModes: { id: ThemeMode; name: string; icon: React.ReactNode }[] = [

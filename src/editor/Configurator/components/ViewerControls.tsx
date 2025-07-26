@@ -100,7 +100,41 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.leftControls}>
         {/* 치수 표시 토글 */}
         <div className={styles.toggleGroup}>
-          <span className={styles.toggleLabel}>{showDimensions ? 'ON' : 'OFF'}</span>
+          <span 
+            className={`${styles.toggleLabel} ${styles.clickable}`}
+            onClick={() => {
+              console.log('🎯 ON/OFF 라벨 클릭, 현재 상태:', showDimensions);
+              
+              // 토글이 꺼져있으면 켜고 모든 항목 체크
+              if (!showDimensions) {
+                onShowDimensionsToggle();
+                // 모든 항목이 체크되어 있지 않으면 체크
+                if (!showAll) onShowAllToggle();
+                if (!showDimensionsText) onShowDimensionsTextToggle();
+                if (!showGuides) onShowGuidesToggle();
+                if (!showAxis) onShowAxisToggle();
+                return;
+              }
+              
+              // 토글이 켜져있을 때: 토글을 끄지 않고 모든 체크박스 해제
+              const anyChecked = showAll || showDimensionsText || showGuides || showAxis;
+              
+              if (anyChecked) {
+                // 하나라도 체크되어 있으면 모두 체크 해제
+                if (showAll) onShowAllToggle();
+                if (showDimensionsText) onShowDimensionsTextToggle();
+                if (showGuides) onShowGuidesToggle();
+                if (showAxis) onShowAxisToggle();
+                // showDimensions는 끄지 않음
+              } else {
+                // 모두 체크 해제되어 있으면 토글 OFF
+                onShowDimensionsToggle();
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            {showDimensions ? 'ON' : 'OFF'}
+          </span>
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
             onClick={() => {
@@ -112,54 +146,52 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </button>
         </div>
 
-        {/* 체크박스 옵션들 - showDimensions가 true일 때만 표시 */}
-        {showDimensions && (
-          <div className={styles.checkboxGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showAll}
-                onChange={onShowAllToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              가이드
-            </label>
+        {/* 체크박스 옵션들 - 항상 표시 */}
+        <div className={styles.checkboxGroup}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={showDimensions && showAll}
+              onChange={onShowAllToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            가이드
+          </label>
 
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showDimensionsText}
-                onChange={onShowDimensionsTextToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              치수
-            </label>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={showDimensions && showDimensionsText}
+              onChange={onShowDimensionsTextToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            치수
+          </label>
 
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showGuides}
-                onChange={onShowGuidesToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              그리드
-            </label>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={showDimensions && showGuides}
+              onChange={onShowGuidesToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            그리드
+          </label>
 
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showAxis}
-                onChange={onShowAxisToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              축
-            </label>
-          </div>
-        )}
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={showDimensions && showAxis}
+              onChange={onShowAxisToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            축
+          </label>
+        </div>
 
         {/* 두 번째 도어 토글 제거 (불필요) */}
       </div>

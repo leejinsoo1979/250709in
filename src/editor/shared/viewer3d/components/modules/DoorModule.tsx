@@ -18,13 +18,26 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
   isDragging?: boolean;
-}> = ({ args, position, material, renderMode, isDragging = false }) => {
+  isEditMode?: boolean;
+}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false }) => {
   const { theme } = useTheme();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
   const { viewMode } = useSpace3DView();
   const { gl } = useThree();
+  
+  // BoxWithEdges 컴포넌트 내부에 getThemeColor 함수 정의
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
   
   // Shadow auto-update enabled - manual shadow updates removed
 
@@ -52,17 +65,18 @@ const BoxWithEdges: React.FC<{
         <mesh 
           geometry={geometry} 
           material={processedMaterial}
-          receiveShadow={viewMode === '3D'} 
-          castShadow={viewMode === '3D'}
+          receiveShadow={viewMode === '3D' && !isEditMode} 
+          castShadow={viewMode === '3D' && !isEditMode}
+          renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
         />
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (
-        <lineSegments geometry={edgesGeometry}>
+        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 0}>
           <lineBasicMaterial 
-            color="#505050"
+            color={isEditMode ? getThemeColor() : "#505050"}
             transparent={true}
-            opacity={0.9}
+            opacity={isEditMode ? 0.3 : 0.9}
             depthTest={true}
             depthWrite={false}
             polygonOffset={true}
@@ -201,38 +215,57 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.color.set(isSelected ? getThemeColor() : doorColor);
         }
         
-        // 드래그 중이거나 편집 모드일 때 설정
-        if (isDragging || isEditMode) {
+        // 편집 모드일 때 설정 (드래그와 분리)
+        if (isEditMode) {
           mat.transparent = true;
-          mat.opacity = 0.6;
+          mat.opacity = 0.15; // 매우 투명하게 (고스트 효과)
           mat.color.set(getThemeColor());
-          mat.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
+          mat.map = null; // 편집 모드에는 텍스처 제거
+          mat.depthWrite = false; // 깊이 버퍼 쓰기 비활성화
+          mat.depthTest = true; // 깊이 테스트는 활성화
+          mat.side = THREE.DoubleSide; // 양면 렌더링
+          mat.emissive = new THREE.Color(getThemeColor()); // 발광 효과
+          mat.emissiveIntensity = 0.1; // 약한 발광
+        } else if (isDragging) {
+          mat.transparent = true;
+          mat.opacity = 0.3;
+          mat.color.set(getThemeColor());
+          mat.map = null;
+          mat.depthWrite = false;
+          mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D' && renderMode === 'solid') {
           mat.transparent = true;
           mat.opacity = 0.2;
+          mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
           mat.transparent = true;
           mat.opacity = 0.3;
+          mat.depthWrite = true;
         } else if (isSelected) {
           mat.transparent = true;
           mat.opacity = 0.5;
+          mat.depthWrite = true;
         } else {
           mat.transparent = false;
           mat.opacity = 1.0;
+          mat.depthWrite = true;
         }
         
         mat.needsUpdate = true;
       }
     });
     
-    console.log('🚪 DoorModule 재질 업데이트:', {
-      isDragging,
-      isEditMode,
-      doorColor,
-      actualColor: doorMaterial?.color.getHexString(),
-      transparent: doorMaterial?.transparent,
-      opacity: doorMaterial?.opacity
-    });
+    if (isEditMode) {
+      console.log('🚪👻 DoorModule 편집 모드 활성화:', {
+        isEditMode,
+        moduleId: moduleData?.id,
+        opacity: doorMaterial?.opacity,
+        transparent: doorMaterial?.transparent,
+        depthWrite: doorMaterial?.depthWrite,
+        emissive: doorMaterial?.emissive?.getHexString(),
+        color: doorMaterial?.color.getHexString()
+      });
+    }
   }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
 
   // Shadow auto-update enabled - manual shadow updates removed
@@ -400,28 +433,60 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const hingeOffset = panelThickness / 2; // 9mm
   const hingeOffsetUnits = mmToThreeUnits(hingeOffset);
   
+  // 편집 모드 체크 로그
+  useEffect(() => {
+    if (isEditMode) {
+      console.log('🚪🔓 도어 편집 모드 활성화:', {
+        isEditMode,
+        doorsOpen,
+        shouldOpen: doorsOpen || isEditMode,
+        moduleId: moduleData?.id
+      });
+    }
+  }, [isEditMode, doorsOpen, moduleData?.id]);
+
+  // 도어 열림 상태 계산
+  const shouldOpenDoors = doorsOpen || isEditMode;
+  
   // 애니메이션 설정 - 힌지 위치별로 별도 애니메이션 (80도 열림)
+  // 편집 모드에서도 부드러운 애니메이션 적용
   const leftHingeDoorSpring = useSpring({
     // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 80도
-    rotation: doorsOpen ? -4 * Math.PI / 9 : 0,
-    config: { tension: 70, friction: 20 }
+    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0,
+    config: { 
+      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
+      friction: 20, // 원래대로 복원 (충분한 감속)
+      clamp: true   // 오버슈팅 방지
+    },
   });
   
   const rightHingeDoorSpring = useSpring({
     // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 80도
-    rotation: doorsOpen ? 4 * Math.PI / 9 : 0,
-    config: { tension: 70, friction: 20 }
+    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0,
+    config: { 
+      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
+      friction: 20, // 원래대로 복원 (충분한 감속)
+      clamp: true   // 오버슈팅 방지
+    },
   });
   
   // 듀얼 가구용 애니메이션 설정 (80도 열림)
   const dualLeftDoorSpring = useSpring({
-    rotation: doorsOpen ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
-    config: { tension: 70, friction: 20 }
+    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
+    config: { 
+      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
+      friction: 20, // 원래대로 복원 (충분한 감속)
+      clamp: true   // 오버슈팅 방지
+    },
   });
   
   const dualRightDoorSpring = useSpring({
-    rotation: doorsOpen ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
-    config: { tension: 70, friction: 20 }
+    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
+    config: { 
+      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
+      friction: 20, // 원래대로 복원 (충분한 감속)
+      clamp: true   // 오버슈팅 방지
+    },
   });
 
   // 도어 위치 계산: 원래 슬롯 중심 사용 (기존 방식)
@@ -466,6 +531,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 material={leftDoorMaterial}
                 renderMode={renderMode}
                 isDragging={isDragging}
+                isEditMode={isEditMode}
               />
             </group>
           </animated.group>
@@ -482,6 +548,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 material={rightDoorMaterial}
                 renderMode={renderMode}
                 isDragging={isDragging}
+                isEditMode={isEditMode}
               />
             </group>
           </animated.group>
@@ -513,6 +580,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               material={doorMaterial}
               renderMode={renderMode}
               isDragging={isDragging}
+              isEditMode={isEditMode}
             />
             {/* 윤곽선 */}
             <lineSegments>

@@ -900,7 +900,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         })}
         
         {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 */}
-        {showAll && indexing.threeUnitBoundaries.length > 1 && (() => {
+        {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && (() => {
           // ColumnGuides와 완전히 동일한 계산 사용
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
