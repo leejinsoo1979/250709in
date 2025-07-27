@@ -12,6 +12,7 @@ import ColumnCreationMarkers from './components/elements/space/ColumnCreationMar
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import CADGrid from './components/elements/CADGrid';
+import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 
@@ -26,6 +27,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
+import { useThrottle } from '@/editor/shared/hooks/useThrottle';
 
 /**
  * Space3DView 컴포넌트
@@ -33,7 +35,7 @@ import { getModuleById } from '@/data/modules';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2 } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone = 'normal' } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -42,6 +44,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
+  
+  // 기둥 위치 업데이트를 16ms(60fps)로 제한하여 성능 개선
+  const throttledUpdateColumn = useThrottle((id: string, updates: any) => {
+    updateColumn(id, updates);
+  }, 16);
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   
@@ -61,6 +68,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
     // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
   }, [spaceInfo?.columns]);
+  
+
   
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
@@ -147,7 +156,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       if (typeof handleSlotDrop === 'function') {
-        handleSlotDrop(e.nativeEvent, canvas);
+        handleSlotDrop(e.nativeEvent, canvas, activeZone);
       }
     } catch (error) {
       console.error('드롭 데이터 파싱 오류:', error);
@@ -447,7 +456,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
-      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
+      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
         <div 
           style={{ 
             width: '100%', 
@@ -851,6 +860,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 기본 요소들 */}
             <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
             
+            {/* 단내림 공간 렌더링 */}
+            <DroppedCeilingSpace spaceInfo={spaceInfo} />
+            
             {/* 기둥 에셋 렌더링 */}
             {(spaceInfo?.columns || []).map((column) => (
               <React.Fragment key={column.id}>
@@ -864,19 +876,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   spaceInfo={spaceInfo}
                   renderMode={renderMode}
                   onPositionChange={(id, newPosition) => {
-                    updateColumn(id, { position: newPosition });
+                    throttledUpdateColumn(id, { position: newPosition });
                   }}
                   onRemove={(id) => {
                     removeColumn(id);
                   }}
                 />
                 {/* 기둥 벽면 간격 라벨 (2D 모드에서 기둥 편집 모달이 열렸을 때만 표시) */}
-                {viewMode === '2D' && activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+                {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
                   <ColumnDistanceLabels
                     column={column}
                     spaceInfo={spaceInfo}
                     onPositionChange={(columnId, newPosition) => {
-                      updateColumn(columnId, { position: newPosition });
+                      throttledUpdateColumn(columnId, { position: newPosition });
                     }}
                     onColumnUpdate={(columnId, updates) => {
                       updateColumn(columnId, updates);
@@ -993,10 +1005,14 @@ const QuadrantContent: React.FC<{
   showGuides: boolean;
   showAxis: boolean;
   isStep2?: boolean;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2 }) => {
+  throttledUpdateColumn?: (id: string, updates: any) => void;
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
+  
+  // throttledUpdateColumn이 전달되지 않으면 기본 updateColumn 사용
+  const handleUpdateColumn = throttledUpdateColumn || updateColumn;
 
   return (
     <React.Suspense fallback={null}>
@@ -1024,6 +1040,9 @@ const QuadrantContent: React.FC<{
       {/* 기본 요소들 */}
       <Room spaceInfo={spaceInfo} viewMode="2D" materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
       
+      {/* 단내림 공간 렌더링 */}
+      <DroppedCeilingSpace spaceInfo={spaceInfo} />
+      
       {/* 기둥 에셋 렌더링 */}
       {(spaceInfo?.columns || []).map((column) => (
         <React.Fragment key={column.id}>
@@ -1037,21 +1056,21 @@ const QuadrantContent: React.FC<{
             spaceInfo={spaceInfo}
             renderMode="solid"
             onPositionChange={(id, newPosition) => {
-              updateColumn(id, { position: newPosition });
+              handleUpdateColumn(id, { position: newPosition });
             }}
             onRemove={(id) => {
               removeColumn(id);
             }}
           />
-          {viewMode === '2D' && activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+          {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
             <ColumnDistanceLabels
               column={column}
               spaceInfo={spaceInfo}
               onPositionChange={(columnId, newPosition) => {
-                updateColumn(columnId, { position: newPosition });
+                handleUpdateColumn(columnId, { position: newPosition });
               }}
               onColumnUpdate={(columnId, updates) => {
-                updateColumn(columnId, updates);
+                handleUpdateColumn(columnId, updates);
               }}
               showLabels={true}
             />

@@ -10,6 +10,7 @@ export { default as HeightControl } from './space/HeightControl';
 export { default as DepthControl } from './space/DepthControl';
 export { default as InstallTypeControls } from './space/InstallTypeControls';
 export { default as FloorFinishControls } from './space/FloorFinishControls';
+export { default as DroppedCeilingControl } from './space/DroppedCeilingControl';
 
 // 맞춤 설정 관련 컨트롤
 export { default as SurroundControls } from './customization/SurroundControls';

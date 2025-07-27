@@ -115,11 +115,33 @@ export const calculateSlotStartY = (spaceInfo: SpaceInfo): number => {
 export const calculateFurniturePosition = (
   slotIndex: number,
   moduleId: string,
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  zone?: 'normal' | 'dropped'
 ): number | null => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
+  // 단내림이 활성화되고 영역이 지정된 경우
+  if (spaceInfo.droppedCeiling?.enabled && zone && indexing.zones) {
+    const zoneInfo = zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
+    if (!zoneInfo) return null;
+    
+    const mmToThreeUnits = (mm: number) => mm * 0.01;
+    
+    if (isDual && slotIndex < zoneInfo.columnCount - 1) {
+      // 듀얼 가구: 두 슬롯의 중앙
+      const leftSlotCenterMm = zoneInfo.startX + (slotIndex * zoneInfo.columnWidth) + (zoneInfo.columnWidth / 2);
+      const rightSlotCenterMm = zoneInfo.startX + ((slotIndex + 1) * zoneInfo.columnWidth) + (zoneInfo.columnWidth / 2);
+      const dualCenterMm = (leftSlotCenterMm + rightSlotCenterMm) / 2;
+      return mmToThreeUnits(dualCenterMm);
+    } else {
+      // 싱글 가구: 해당 슬롯의 중앙
+      const slotCenterMm = zoneInfo.startX + (slotIndex * zoneInfo.columnWidth) + (zoneInfo.columnWidth / 2);
+      return mmToThreeUnits(slotCenterMm);
+    }
+  }
+  
+  // 단내림이 없는 경우 기존 로직 사용
   if (isDual) {
     // 듀얼 가구: 듀얼 위치 배열 사용
     if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {

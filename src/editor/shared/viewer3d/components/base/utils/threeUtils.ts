@@ -51,6 +51,11 @@ export const calculateDynamicFOV = (width: number): number => {
 export const mmToThreeUnits = (mm: number) => mm * MM_TO_THREE_UNITS;
 
 /**
+ * Three.js 단위를 mm로 변환
+ */
+export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_UNITS;
+
+/**
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
 export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {

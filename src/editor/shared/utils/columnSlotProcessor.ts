@@ -20,6 +20,7 @@ export interface ColumnSlotInfo {
   // 기둥 깊이 기반 처리 정보 추가
   columnType?: 'deep' | 'shallow' | 'medium'; // 깊은 기둥(>=500mm) vs 얕은 기둥(<500mm) vs 중간 기둥(300mm)
   columnProcessingMethod?: 'width-adjustment' | 'depth-adjustment'; // 기둥 처리 방식
+  allowMultipleFurniture?: boolean; // 한 슬롯에 여러 가구 배치 가능 여부 (기둥 C의 경우)
   depthAdjustment?: {
     canPlaceSingle: boolean;
     canPlaceDual: boolean;
@@ -435,11 +436,19 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       columnType = 'medium';
       columnProcessingMethod = 'depth-adjustment';
       
+      // Column C의 특별한 처리 - 분할 배치 분석
+      const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
+      depthAdjustment = depthAnalysis.depthAdjustment;
+      splitPlacement = depthAnalysis.splitPlacement;
+      
       console.log('🔍 Column C(300mm) 분석 결과:', {
         slotIndex,
         columnDepth: columnInSlot.depth,
         columnType,
-        processingMethod: columnProcessingMethod
+        processingMethod: columnProcessingMethod,
+        canSplit: splitPlacement?.canSplit,
+        leftWidth: splitPlacement?.leftWidth,
+        rightWidth: splitPlacement?.rightWidth
       });
     }
 
@@ -473,7 +482,9 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       columnType,
       columnProcessingMethod,
       depthAdjustment,
-      splitPlacement
+      splitPlacement,
+      // 기둥 C (300mm)의 경우 한 슬롯에 2개 배치 가능
+      allowMultipleFurniture: columnType === 'medium' && columnProcessingMethod === 'depth-adjustment'
     });
   }
   
@@ -1078,9 +1089,68 @@ export const findAvailableSpacesInColumnSlot = (
   const availableSpaces = [];
   const minWidth = 150; // 최소 150mm
   
+  // 기둥 C (300mm) 특별 처리
+  const isColumnC = slotInfo.columnType === 'medium' && slotInfo.allowMultipleFurniture;
+  
   // 같은 슬롯에 있는 기존 가구들 확인
   const modulesInSlot = existingModules.filter(m => m.slotIndex === slotIndex);
-  console.log(`🔍 슬롯 ${slotIndex}의 기존 가구:`, modulesInSlot.length);
+  console.log(`🔍 슬롯 ${slotIndex}의 기존 가구:`, {
+    count: modulesInSlot.length,
+    isColumnC,
+    allowMultiple: slotInfo.allowMultipleFurniture,
+    columnType: slotInfo.columnType
+  });
+  
+  // 기둥 C의 경우 최대 2개까지 배치 가능
+  if (isColumnC && modulesInSlot.length >= 2) {
+    console.log('❌ 기둥 C 슬롯에 이미 2개의 가구가 배치됨');
+    return [];
+  }
+  
+  // 기둥 C가 아닌 경우 기존 가구가 있으면 추가 배치 불가
+  if (!isColumnC && modulesInSlot.length >= 1) {
+    console.log('❌ 일반 기둥 슬롯에 이미 가구가 배치됨');
+    return [];
+  }
+  
+  // Column C에서 이미 하나의 가구가 있고 그것이 분할된 상태인 경우
+  if (isColumnC && modulesInSlot.length === 1 && modulesInSlot[0].isSplit) {
+    const existingModule = modulesInSlot[0];
+    const columnPosition = slotInfo.column.position as 'left' | 'right' | 'center';
+    const columnWidthM = slotInfo.column.width * 0.001; // mm to m
+    
+    console.log('🔄 기둥 C 분할 모드 - 두 번째 가구 배치 위치 계산:', {
+      columnPosition,
+      existingModulePosition: existingModule.position
+    });
+    
+    // 기둥 위치에 따라 두 번째 가구의 배치 위치 결정
+    if (columnPosition === 'left') {
+      // 좌측 기둥: 두 번째 가구는 기둥 오른쪽부터 슬롯 중앙까지
+      const columnRightX = slotLeftX + columnWidthM;
+      const availableWidth = (slotInfo.width - slotInfo.column.width) / 2;
+      const furnitureWidthM = availableWidth * 0.001;
+      const positionX = columnRightX + furnitureWidthM / 2;
+      
+      return [{
+        position: { x: positionX, z: 0 },
+        maxWidth: availableWidth,
+        type: 'left'
+      }];
+    } else if (columnPosition === 'right') {
+      // 우측 기둥: 두 번째 가구는 슬롯 중앙부터 기둥 왼쪽까지
+      const columnLeftX = slotRightX - columnWidthM;
+      const availableWidth = (slotInfo.width - slotInfo.column.width) / 2;
+      const furnitureWidthM = availableWidth * 0.001;
+      const positionX = columnLeftX - furnitureWidthM / 2;
+      
+      return [{
+        position: { x: positionX, z: 0 },
+        maxWidth: availableWidth,
+        type: 'right'
+      }];
+    }
+  }
   
   // 기존 가구들의 위치와 크기 확인
   const occupiedSpaces = modulesInSlot.map(m => {

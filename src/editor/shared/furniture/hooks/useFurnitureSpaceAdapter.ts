@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PlacedModule } from '../types';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing, findSlotIndexFromPosition } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 
 interface UseFurnitureSpaceAdapterProps {
   setPlacedModules: React.Dispatch<React.SetStateAction<PlacedModule[]>>;
@@ -144,12 +145,48 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
 
         // 새로운 위치 계산
         let newX: number;
-        if (isDualModule && newIndexing.threeUnitDualPositions) {
-          // 듀얼 가구: 듀얼 위치 배열 사용
-          newX = newIndexing.threeUnitDualPositions[slotIndex];
+        let zone: 'normal' | 'dropped' = 'normal';
+        let customWidth: number | undefined;
+        
+        // 단내림 활성화 시 영역 확인
+        if (newSpaceInfo.droppedCeiling?.enabled && newIndexing.zones) {
+          // 현재 슬롯의 영역 확인
+          const moduleX = newIndexing.threeUnitPositions[slotIndex] * 1000; // Three.js units to mm
+          const zoneInfo = ColumnIndexer.findZoneAndSlotFromPosition(
+            { x: moduleX },
+            newSpaceInfo,
+            newIndexing
+          );
+          
+          if (zoneInfo) {
+            zone = zoneInfo.zone;
+            const zoneSlots = zone === 'dropped' && newIndexing.zones.dropped
+              ? newIndexing.zones.dropped
+              : newIndexing.zones.normal;
+            
+            // 영역별 위치 계산
+            const slotCenterX = zoneSlots.startX + (zoneInfo.slotIndex * zoneSlots.columnWidth) + (zoneSlots.columnWidth / 2);
+            newX = slotCenterX * 0.001; // mm to Three.js units
+            
+            // 단내림 영역의 경우 커스텀 너비 설정
+            if (zone === 'dropped') {
+              customWidth = zoneSlots.columnWidth;
+            }
+          } else {
+            // 영역을 찾을 수 없는 경우 기본값 사용
+            newX = isDualModule && newIndexing.threeUnitDualPositions
+              ? newIndexing.threeUnitDualPositions[slotIndex]
+              : newIndexing.threeUnitPositions[slotIndex];
+          }
         } else {
-          // 싱글 가구: 일반 위치 배열 사용
-          newX = newIndexing.threeUnitPositions[slotIndex];
+          // 단내림 비활성화 시 기존 로직
+          if (isDualModule && newIndexing.threeUnitDualPositions) {
+            // 듀얼 가구: 듀얼 위치 배열 사용
+            newX = newIndexing.threeUnitDualPositions[slotIndex];
+          } else {
+            // 싱글 가구: 일반 위치 배열 사용
+            newX = newIndexing.threeUnitPositions[slotIndex];
+          }
         }
         
         updatedModules.push({
@@ -158,7 +195,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           position: { ...module.position, x: newX },
           slotIndex,
           isDualSlot: newModuleId.includes('dual'),
-          isValidInCurrentSpace: true
+          isValidInCurrentSpace: true,
+          zone,
+          customWidth
         });
       });
       

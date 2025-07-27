@@ -4,6 +4,7 @@ import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-thr
 import * as THREE from 'three';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -45,6 +46,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useTheme();
   
+  // 단내림 설정 변경 감지
+  const { spaceInfo } = useSpaceConfigStore();
+  
   // 테마에 따른 배경색 결정
   const getBackgroundColor = useCallback(() => {
     if (viewMode === '2D') {
@@ -68,6 +72,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   useEffect(() => {
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   }, [theme, viewMode, view2DDirection]);
+  
+  // 단내림 설정 변경 시 캔버스 강제 업데이트
+  useEffect(() => {
+    if (spaceInfo?.droppedCeiling) {
+      console.log('🔄 ThreeCanvas - 단내림 설정 변경 감지, 캔버스 강제 업데이트');
+      // 캔버스 키를 변경하여 강제로 재생성
+      setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    }
+  }, [spaceInfo?.droppedCeiling?.enabled, spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.width, spaceInfo?.droppedCeiling?.dropHeight]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);

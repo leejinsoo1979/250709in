@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './RightPanel.module.css';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -165,9 +165,19 @@ interface DoorSliderProps {
 
 const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const { spaceInfo } = useSpaceConfigStore();
   
   // 도어 1개 너비 (588mm)
   const DOOR_WIDTH = 588;
+  
+  // 단내림이 활성화된 경우 메인 구간의 폭 계산
+  const getMainZoneWidth = () => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
+      return width - (spaceInfo.droppedCeiling.width || 900);
+    }
+    return width;
+  };
   
   // 공간 넓이 기반 최소/최대 도어 개수 계산
   const calculateDoorRange = (spaceWidth: number) => {
@@ -180,7 +190,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     const MAX_SLOT_WIDTH = 600;
     
     // 실제 설치 가능한 최소/최대 도어 개수 계산
-    const minPossible = Math.max(1, Math.floor(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
+    const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
     const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm
     
     // 이상적인 도어 개수 (588mm 기준)
@@ -193,7 +203,9 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     };
   };
   
-  const doorRange = calculateDoorRange(width);
+  // 메인 구간의 폭을 기준으로 도어 범위 계산
+  const mainZoneWidth = getMainZoneWidth();
+  const doorRange = calculateDoorRange(mainZoneWidth);
   const minDoors = doorRange.min;
   const maxDoors = doorRange.max;
   
@@ -256,14 +268,15 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     }
   }, [clampedValue, value, onChange]);
 
-  // width 변경 시 현재 값이 새로운 범위를 벗어나면 자동 조정
+  // width 또는 단내림 설정 변경 시 현재 값이 새로운 범위를 벗어나면 자동 조정
   React.useEffect(() => {
-    const range = calculateDoorRange(width);
+    const mainZoneWidth = getMainZoneWidth();
+    const range = calculateDoorRange(mainZoneWidth);
     if (value < range.min || value > range.max) {
       const newValue = Math.max(range.min, Math.min(range.max, value));
       onChange(newValue);
     }
-  }, [width, value, onChange]);
+  }, [width, value, onChange, spaceInfo.droppedCeiling]);
   
   // 슬라이더 라벨 생성 (동적)
   const generateLabels = () => {
@@ -433,12 +446,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
   frameType,
   onFrameTypeChange
 }) => {
+  const { spaceInfo } = useSpaceConfigStore();
+  const { setActiveDroppedCeilingTab } = useUIStore();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['brand', 'price', 'material', 'space', 'layout', 'floor', 'frame'])
+    new Set(['brand', 'price', 'material', 'space', 'mainSpace', 'layout', 'floor', 'frame'])
   );
+  
+  // 초기 렌더링 시 UIStore 동기화
+  useEffect(() => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      setActiveDroppedCeilingTab(activeTab === 'placement' ? 'main' : 'dropped');
+    }
+  }, [activeTab, spaceInfo.droppedCeiling?.enabled, setActiveDroppedCeilingTab]);
 
   // 도어 개수 범위 계산
   const DOOR_WIDTH = 588;
+  
+  // 단내림이 활성화된 경우 메인 구간의 폭 계산
+  const getMainZoneWidth = () => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
+      return width - (spaceInfo.droppedCeiling.width || 900);
+    }
+    return width;
+  };
   
   const calculateDoorRange = (spaceWidth: number) => {
     // 양쪽 여백 고려 (프레임 등)
@@ -450,7 +481,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
     const MAX_SLOT_WIDTH = 600;
     
     // 실제 설치 가능한 최소/최대 도어 개수 계산
-    const minPossible = Math.max(1, Math.floor(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
+    const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm
     const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm
     
     // 이상적인 도어 개수 (588mm 기준)
@@ -463,15 +494,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
     };
   };
 
-  // width 변경 시 doorCount 자동 조정
+  // width 또는 단내림 설정 변경 시 doorCount 자동 조정
   React.useEffect(() => {
-    const range = calculateDoorRange(width);
+    const mainZoneWidth = getMainZoneWidth();
+    const range = calculateDoorRange(mainZoneWidth);
     if (doorCount < range.min || doorCount > range.max) {
       // 현재 doorCount가 새로운 범위를 벗어나면 가장 가까운 유효한 값으로 조정
       const newDoorCount = Math.max(range.min, Math.min(range.max, doorCount));
       onDoorCountChange(newDoorCount);
     }
-  }, [width, doorCount, onDoorCountChange]);
+  }, [width, doorCount, onDoorCountChange, spaceInfo.droppedCeiling]);
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -485,11 +517,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
 
   
-  const doorRange = calculateDoorRange(width);
+  // 메인 구간의 폭을 기준으로 도어 범위 계산
+  const mainZoneWidth = getMainZoneWidth();
+  const doorRange = calculateDoorRange(mainZoneWidth);
   const minDoors = doorRange.min;
   const maxDoors = doorRange.max;
 
-  const tabs = [
+  const tabs = spaceInfo.droppedCeiling?.enabled ? [
+    { id: 'placement' as RightPanelTab, label: '메인구간' },
+    { id: 'module' as RightPanelTab, label: '단내림 구간' }
+  ] : [
     { id: 'placement' as RightPanelTab, label: '배치 속성' },
     { id: 'module' as RightPanelTab, label: '모듈 속성' }
   ];
@@ -525,7 +562,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
             <button
               key={tab.id}
               className={`${styles.tabButton} ${activeTab === tab.id ? styles.active : ''}`}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => {
+                onTabChange(tab.id);
+                // 단내림이 활성화된 경우 UIStore 업데이트
+                if (spaceInfo.droppedCeiling?.enabled) {
+                  setActiveDroppedCeilingTab(tab.id === 'placement' ? 'main' : 'dropped');
+                }
+              }}
             >
               {tab.label}
             </button>
@@ -588,7 +631,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               onToggle={() => toggleSection('space')}
             >
               <NumberInput
-                label=""
+                label="전체 폭"
                 value={width}
                 onChange={(newWidth) => {
                   onWidthChange(newWidth);
@@ -599,28 +642,80 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 step={100}
               />
               <NumberInput
-                label=""
+                label="높이"
                 value={height}
                 onChange={onHeightChange}
                 min={2000}
                 max={3000}
                 step={100}
               />
+              
+              {/* 단내림 활성화 시 구간별 정보 표시 */}
+              {spaceInfo.droppedCeiling?.enabled && (
+                <div className={styles.zoneInfo}>
+                  <div className={styles.zoneInfoItem}>
+                    <span className={styles.zoneLabel}>메인 구간:</span>
+                    <span className={styles.zoneValue}>{width - spaceInfo.droppedCeiling.width} mm</span>
+                  </div>
+                  <div className={styles.zoneInfoItem}>
+                    <span className={styles.zoneLabel}>단내림 구간:</span>
+                    <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
+                  </div>
+                </div>
+              )}
             </FormControl>
+
+            {/* 메인공간 사이즈 - 단내림 활성화되고 메인구간 탭일 때만 표시 */}
+            {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && (
+              <FormControl
+                label="메인공간 사이즈"
+                expanded={expandedSections.has('mainSpace')}
+                onToggle={() => toggleSection('mainSpace')}
+              >
+                <div className={styles.numberInput}>
+                  <div className={styles.inputLabel}>메인구간 폭</div>
+                  <div className={styles.inputGroup}>
+                    <div className={styles.inputField}>
+                      <input
+                        type="number"
+                        value={width - spaceInfo.droppedCeiling.width}
+                        readOnly
+                        style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <span className={styles.inputUnit}>mm</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.numberInput}>
+                  <div className={styles.inputLabel}>메인구간 높이</div>
+                  <div className={styles.inputGroup}>
+                    <div className={styles.inputField}>
+                      <input
+                        type="number"
+                        value={height}
+                        readOnly
+                        style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
+                      />
+                      <span className={styles.inputUnit}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              </FormControl>
+            )}
 
             {/* 레이아웃 */}
             <FormControl
-              label=""
+              label="레이아웃"
               expanded={expandedSections.has('layout')}
               onToggle={() => toggleSection('layout')}
             >
               <NumberInput
-                label=""
+                label={spaceInfo.droppedCeiling?.enabled ? "메인 구간 도어 개수" : "도어 개수"}
                 value={doorCount}
                 onChange={onDoorCountChange}
                 min={minDoors}
                 max={maxDoors}
-                unit=""
+                unit="개"
               />
               
               <DoorSlider

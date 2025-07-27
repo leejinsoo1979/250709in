@@ -10,6 +10,7 @@ export const Space3DViewProvider: React.FC<Space3DViewProps & { children: React.
   svgSize,
   renderMode = 'wireframe',
   viewMode = '3D',
+  activeZone = 'normal',
   children
 }) => {
   // 3D 오브젝트 스타일 생성
@@ -25,7 +26,8 @@ export const Space3DViewProvider: React.FC<Space3DViewProps & { children: React.
     styles,
     renderMode,
     viewMode,
-    roomDimensions
+    roomDimensions,
+    activeZone
   };
   
   return (

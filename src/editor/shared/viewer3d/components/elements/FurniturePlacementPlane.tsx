@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '../../utils/geometry';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -72,6 +73,62 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     return '#10b981'; // 기본값 (green)
   }, [theme.color]);
   
+  // 단내림 영역 정보 계산
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled && indexing.zones;
+  
+  // 단내림이 있을 때 영역별 메시 생성
+  if (hasDroppedCeiling && indexing.zones) {
+    const meshes = [];
+    
+    // 메인 구간 메시
+    if (indexing.zones.normal) {
+      const normalCenterX = indexing.zones.normal.startX + indexing.zones.normal.width / 2;
+      const normalWidth = mmToThreeUnits(indexing.zones.normal.width);
+      
+      meshes.push(
+        <group key="normal-zone" position={[mmToThreeUnits(normalCenterX), planeY - 0.1, planeZ]}>
+          {!hasAnyDoor && (
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[normalWidth, planeDepth]} />
+              <meshBasicMaterial 
+                color={themeColorHex}
+                transparent 
+                opacity={0.3}
+                side={2}
+              />
+            </mesh>
+          )}
+        </group>
+      );
+    }
+    
+    // 단내림 구간 메시
+    if (indexing.zones.dropped) {
+      const droppedCenterX = indexing.zones.dropped.startX + indexing.zones.dropped.width / 2;
+      const droppedWidth = mmToThreeUnits(indexing.zones.dropped.width);
+      
+      meshes.push(
+        <group key="dropped-zone" position={[mmToThreeUnits(droppedCenterX), planeY - 0.1, planeZ]}>
+          {!hasAnyDoor && (
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[droppedWidth, planeDepth]} />
+              <meshBasicMaterial 
+                color={themeColorHex}
+                transparent 
+                opacity={0.3}
+                side={2}
+              />
+            </mesh>
+          )}
+        </group>
+      );
+    }
+    
+    return <>{meshes}</>;
+  }
+  
+  // 단내림이 없으면 기존처럼 전체 영역 하나의 메시
   return (
     <group position={[internalCenterXThreeUnits, planeY - 0.1, planeZ]}>
       {/* 도어가 하나라도 장착되어 있으면 바닥 슬롯 매쉬를 렌더링하지 않음 */}

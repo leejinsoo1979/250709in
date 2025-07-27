@@ -50,15 +50,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   
   const { invalidate } = useThree();
   
-  // 기둥 위치나 크기 변경 시 즉시 렌더링 업데이트
+  // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
   useEffect(() => {
-    invalidate();
+    if (!isDragging) {
+      invalidate();
+    }
   }, [position, width, height, depth, invalidate]);
-  
-  // 드래그 상태 변경 시에도 즉시 업데이트
-  useEffect(() => {
-    invalidate();
-  }, [isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
@@ -195,23 +192,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         zPosition // Z는 뒷벽에 고정
       ];
       
-      // console.log('🎯 기둥 드래그 위치 업데이트:', {
-      //   id,
-      //   oldPosition: position,
-      //   newPosition: boundedPosition,
-      //   spaceWidth,
-      //   worldX,
-      //   moveDistance
-      // });
       
       if (onPositionChange && !isNaN(boundedPosition[0]) && !isNaN(boundedPosition[1]) && !isNaN(boundedPosition[2])) {
         onPositionChange(id, boundedPosition);
-        // 즉시 렌더링 업데이트 - 가구 크기 변경 지연 방지
-        invalidate();
-        // 강제로 모든 프레임 다시 렌더링
-        requestAnimationFrame(() => {
-          invalidate();
-        });
       }
     };
     
@@ -241,12 +224,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     }
   };
 
-  // 드래그 중일 때 지속적으로 invalidate 호출
-  useFrame(() => {
-    if (isDragging) {
-      invalidate();
-    }
-  });
+  // 드래그 중일 때는 프레임마다 업데이트하지 않음 (성능 최적화)
+  // React Three Fiber가 자동으로 처리하도록 함
 
   return (
     <group position={position}>

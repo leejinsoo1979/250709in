@@ -109,9 +109,9 @@ export class SpaceCalculator {
     if (internalWidth <= SLOT_MAX_WIDTH) {
       return 1;
     } 
-    // 그 외의 경우 기존 로직 적용 - 정확한 분할을 위해 반올림 사용
+    // 그 외의 경우 - 슬롯이 600mm를 초과하지 않도록 올림 처리
     else {
-      return Math.round(internalWidth / SLOT_MAX_WIDTH);
+      return Math.ceil(internalWidth / SLOT_MAX_WIDTH);
     }
   }
 } 

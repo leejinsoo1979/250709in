@@ -3,7 +3,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { 
   getColumnCountLimits
 } from '@/editor/shared/utils/indexing';
-import { useInternalWidth, useDerivedSpaceStore } from '@/store/derivedSpaceStore';
+import { useInternalWidth, useDerivedSpaceStore, useMainZoneInfo } from '@/store/derivedSpaceStore';
 
 interface ColumnLimits {
   minColumns: number;
@@ -29,6 +29,9 @@ export const useBaseCalculations = (
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isCalculated = useDerivedSpaceStore((state) => state.isCalculated);
   const derivedSpaceStore = useDerivedSpaceStore();
+  
+  // 단내림이 있을 때는 메인구간 정보 사용
+  const mainZoneInfo = useMainZoneInfo();
 
   // 데이터 불일치 감지 및 재계산 (Side Effect)
   useEffect(() => {
@@ -47,15 +50,19 @@ export const useBaseCalculations = (
     }
   }, [internalWidth, spaceInfo, isCalculated, derivedSpaceStore]);
 
+  // 단내림이 있을 때는 메인구간 너비 사용, 없으면 전체 너비 사용
+  const effectiveWidth = mainZoneInfo.width;
+  const effectiveColumnCount = mainZoneInfo.columnCount;
+  
   // 컬럼 제한 계산 (순수 계산)
   const columnLimits = useMemo(() => {
-    return getColumnCountLimits(internalWidth);
-  }, [internalWidth]);
+    return getColumnCountLimits(effectiveWidth);
+  }, [effectiveWidth]);
 
   // 현재 컬럼 너비 계산
   const currentColumnWidth = useMemo(() => {
-    return Math.floor(internalWidth / columnCount);
-  }, [internalWidth, columnCount]);
+    return mainZoneInfo.columnWidth;
+  }, [mainZoneInfo.columnWidth]);
 
   // 자동 모드 여부
   const isAutoMode = useMemo(() => {
@@ -63,10 +70,10 @@ export const useBaseCalculations = (
   }, [spaceInfo.customColumnCount]);
 
   return {
-    internalWidth,
+    internalWidth: effectiveWidth,
     columnLimits,
     currentColumnWidth,
     isAutoMode,
-    derivedColumnCount
+    derivedColumnCount: effectiveColumnCount
   };
 }; 

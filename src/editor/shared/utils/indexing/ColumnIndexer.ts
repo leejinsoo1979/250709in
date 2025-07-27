@@ -17,6 +17,20 @@ export interface SpaceIndexingResult {
   internalWidth: number;          // 내경 너비 (mm)
   internalStartX: number;         // 내경 시작 X좌표 (mm)
   threeUnitColumnWidth: number;   // Three.js 단위 슬롯 너비
+  zones?: {                       // 영역별 슬롯 정보 (단내림 활성화 시)
+    normal: {
+      startX: number;
+      width: number;
+      columnCount: number;
+      columnWidth: number;
+    };
+    dropped: {
+      startX: number;
+      width: number;
+      columnCount: number;
+      columnWidth: number;
+    } | null;
+  };
 }
 
 /**
@@ -44,6 +58,83 @@ export class ColumnIndexer {
         internalWidth: 0,
         internalStartX: 0,
         threeUnitColumnWidth: 0
+      };
+    }
+    
+    // 단내림이 활성화된 경우에도 전체 영역 정보는 유지하되, zones에 영역별 정보 추가
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // 전체 영역에 대한 기본 계산 수행
+      const totalWidth = spaceInfo.width;
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const frameThickness = calculateFrameThickness(spaceInfo);
+      
+      // 전체 영역의 시작점
+      let internalStartX;
+      if (spaceInfo.surroundType === 'no-surround') {
+        let leftReduction = 0;
+        
+        if (spaceInfo.installType === 'builtin') {
+          leftReduction = 2;
+        } else if (spaceInfo.installType === 'semistanding') {
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = 2;
+          } else {
+            leftReduction = 20;
+          }
+        } else {
+          leftReduction = 20;
+        }
+        
+        internalStartX = -(totalWidth / 2) + leftReduction;
+      } else {
+        internalStartX = -(totalWidth / 2) + frameThickness.left;
+      }
+      
+      // 전체 영역의 컬럼 수 (호환성을 위해 유지)
+      let columnCount;
+      if (spaceInfo.customColumnCount) {
+        columnCount = spaceInfo.customColumnCount;
+      } else {
+        columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
+      }
+      
+      // 전체 영역 기준 컬럼 너비
+      const columnWidth = Math.floor(internalWidth / columnCount);
+      
+      // 전체 영역의 경계와 위치 (호환성을 위해 유지)
+      const columnBoundaries = [];
+      const columnPositions = [];
+      for (let i = 0; i <= columnCount; i++) {
+        columnBoundaries.push(internalStartX + (i * columnWidth));
+      }
+      for (let i = 0; i < columnCount; i++) {
+        columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
+      }
+      
+      // Three.js 단위 변환
+      const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
+      const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
+      
+      // 듀얼 가구용 위치
+      const dualColumnPositions = [];
+      const threeUnitDualPositions = [];
+      
+      // 영역별 정보 추가
+      const zones = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      
+      return {
+        columnCount,
+        columnPositions,
+        threeUnitPositions,
+        columnBoundaries,
+        threeUnitBoundaries,
+        dualColumnPositions,
+        threeUnitDualPositions,
+        columnWidth,
+        internalWidth,
+        internalStartX,
+        threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(columnWidth),
+        zones
       };
     }
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
@@ -248,5 +339,278 @@ export class ColumnIndexer {
         Math.abs(pos - position.x) < tolerance
       );
     }
+  }
+
+  /**
+   * 단내림 영역별 슬롯 정보 계산
+   */
+  static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number) {
+    const frameThickness = calculateFrameThickness(spaceInfo);
+    
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
+      const indexing = this.calculateSpaceIndexing(spaceInfo);
+      return {
+        normal: {
+          startX: indexing.internalStartX,
+          width: indexing.internalWidth,
+          columnCount: indexing.columnCount,
+          columnWidth: indexing.columnWidth
+        },
+        dropped: null
+      };
+    }
+    
+    // 단내림이 활성화된 경우 영역 분리
+    const totalWidth = spaceInfo.width;
+    const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+    const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+    
+    // PDF 공식에 따른 영역 너비 계산
+    let normalAreaWidth: number; // 메인구간 너비
+    let droppedAreaWidth: number; // 단내림구간 너비
+    let normalStartX: number; // 메인구간 시작점
+    let droppedStartX: number; // 단내림구간 시작점
+    
+    // 전체 공간 중심점 (원점 기준)
+    const xOffset = -totalWidth / 2;
+    
+    if (spaceInfo.surroundType === 'surround') {
+      // 서라운드: 프레임 안쪽에서 시작
+      if (spaceInfo.installType === 'builtin') {
+        // 빌트인: 양쪽 프레임 50mm씩, 메인구간은 빨간선까지 확장
+        normalAreaWidth = totalWidth - droppedWidth - 50; // 메인구간은 단내림 경계까지
+        droppedAreaWidth = droppedWidth - 50; // 단내림구간은 오른쪽 프레임까지
+        
+        if (droppedPosition === 'left') {
+          droppedStartX = xOffset + 50; // 왼쪽 프레임 안쪽
+          normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
+        } else {
+          normalStartX = xOffset + 50; // 왼쪽 프레임 안쪽
+          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
+        }
+      } else if (spaceInfo.installType === 'semistanding') {
+        // 세미스탠딩: 벽쪽 프레임 50mm, 엔드패널쪽 20mm
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽: 50 + ... + 20, 메인구간은 빨간선까지 확장
+          normalAreaWidth = totalWidth - droppedWidth - 50; // 메인구간은 단내림 경계까지
+          droppedAreaWidth = droppedWidth - 20; // 단내림구간은 오른쪽 엔드패널까지
+          
+          if (droppedPosition === 'left') {
+            droppedStartX = xOffset + 50; // 왼쪽 프레임 안쪽
+            normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
+          } else {
+            normalStartX = xOffset + 50; // 왼쪽 프레임 안쪽
+            droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
+          }
+        } else {
+          // 오른쪽 벽: 20 + ... + 50, 메인구간은 빨간선까지 확장
+          normalAreaWidth = totalWidth - droppedWidth - 20; // 메인구간은 단내림 경계까지
+          droppedAreaWidth = droppedWidth - 50; // 단내림구간은 오른쪽 프레임까지
+          
+          if (droppedPosition === 'left') {
+            droppedStartX = xOffset + 20; // 왼쪽 엔드패널
+            normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
+          } else {
+            normalStartX = xOffset + 20; // 왼쪽 엔드패널
+            droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
+          }
+        }
+      } else {
+        // 프리스탠딩: 20 + ... + 20
+        normalAreaWidth = totalWidth - droppedWidth - 20; // 메인구간은 단내림 경계까지
+        droppedAreaWidth = droppedWidth - 20; // 단내림구간은 오른쪽 엔드패널까지
+        
+        if (droppedPosition === 'left') {
+          droppedStartX = xOffset + 20; // 왼쪽 엔드패널
+          normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
+        } else {
+          normalStartX = xOffset + 20; // 왼쪽 엔드패널
+          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
+        }
+      }
+    } else {
+      // 노서라운드: PDF 1,4,5페이지 참조
+      if (spaceInfo.installType === 'builtin') {
+        // 빌트인: 전체 너비에서 이격거리만 제외
+        normalAreaWidth = totalWidth - droppedWidth - 4;
+        droppedAreaWidth = droppedWidth - 4;
+        
+        if (droppedPosition === 'left') {
+          droppedStartX = xOffset + 2;
+          normalStartX = xOffset + droppedWidth; // 천장 분절라인
+        } else {
+          normalStartX = xOffset + 2;
+          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인
+        }
+      } else if (spaceInfo.installType === 'semistanding') {
+        // 세미스탠딩: 벽쪽 2mm, 엔드패널쪽 20mm
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽: 2 + ... + 20
+          normalAreaWidth = totalWidth - droppedWidth - 22;
+          droppedAreaWidth = droppedWidth - 22;
+          
+          if (droppedPosition === 'left') {
+            droppedStartX = xOffset + 2;
+            normalStartX = xOffset + droppedWidth;
+          } else {
+            normalStartX = xOffset + 2;
+            droppedStartX = xOffset + (totalWidth - droppedWidth);
+          }
+        } else {
+          // 오른쪽 벽: 20 + ... + 2
+          normalAreaWidth = totalWidth - droppedWidth - 22;
+          droppedAreaWidth = droppedWidth - 22;
+          
+          if (droppedPosition === 'left') {
+            droppedStartX = xOffset + 20;
+            normalStartX = xOffset + droppedWidth;
+          } else {
+            normalStartX = xOffset + 20;
+            droppedStartX = xOffset + (totalWidth - droppedWidth);
+          }
+        }
+      } else {
+        // 프리스탠딩: 20 + ... + 20
+        normalAreaWidth = totalWidth - droppedWidth - 40;
+        droppedAreaWidth = droppedWidth - 40;
+        
+        if (droppedPosition === 'left') {
+          droppedStartX = xOffset + 20;
+          normalStartX = xOffset + droppedWidth;
+        } else {
+          normalStartX = xOffset + 20;
+          droppedStartX = xOffset + (totalWidth - droppedWidth);
+        }
+      }
+    }
+    
+    console.log('🔍 [calculateZoneSlotInfo] PDF 공식 적용 결과:', {
+      totalWidth,
+      droppedWidth,
+      normalAreaWidth,
+      droppedAreaWidth,
+      normalStartX,
+      droppedStartX,
+      customColumnCount
+    });
+    
+    // 각 영역의 컬럼 수 계산
+    let normalColumnCount: number;
+    let droppedColumnCount: number;
+    
+    // customColumnCount가 제공되면 메인 영역에 사용
+    if (customColumnCount !== undefined && customColumnCount > 0) {
+      normalColumnCount = customColumnCount;
+      // 단내림 영역은 너비에 맞게 자동 계산
+      droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaWidth);
+    } else {
+      // customColumnCount가 없으면 각 영역의 너비에 맞는 독립적인 계산
+      normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaWidth);
+      droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaWidth);
+    }
+    
+    console.log('🔍 [calculateZoneSlotInfo] 영역별 컬럼 수:', {
+      normalColumnCount,
+      droppedColumnCount,
+      customColumnCount,
+      'customColumnCount 적용': customColumnCount !== undefined && customColumnCount > 0 ? '예' : '아니오',
+      '메인구간 계산': `${normalAreaWidth}mm / 600mm = ${normalAreaWidth/600}`,
+      '단내림구간 계산': `${droppedAreaWidth}mm / 600mm = ${droppedAreaWidth/600}`
+    });
+    
+    // 각 영역의 컬럼 너비 계산
+    const normalColumnWidth = Math.floor(normalAreaWidth / normalColumnCount);
+    const droppedColumnWidth = Math.floor(droppedAreaWidth / droppedColumnCount);
+    
+    const result = {
+      normal: {
+        startX: normalStartX,
+        width: normalAreaWidth,
+        columnCount: normalColumnCount,
+        columnWidth: normalColumnWidth
+      },
+      dropped: {
+        startX: droppedStartX,
+        width: droppedAreaWidth,
+        columnCount: droppedColumnCount,
+        columnWidth: droppedColumnWidth
+      }
+    };
+    
+    console.log('🎯 [calculateZoneSlotInfo] 최종 영역 정보:', {
+      normal: {
+        startX: normalStartX,
+        endX: normalStartX + normalAreaWidth,
+        width: normalAreaWidth,
+        columnCount: normalColumnCount,
+        columnWidth: normalColumnWidth,
+        '슬롯 경계': Array.from({ length: normalColumnCount + 1 }, (_, i) => 
+          normalStartX + (i * normalColumnWidth)
+        )
+      },
+      dropped: {
+        startX: droppedStartX,
+        endX: droppedStartX + droppedAreaWidth,
+        width: droppedAreaWidth,
+        columnCount: droppedColumnCount,
+        columnWidth: droppedColumnWidth,
+        '슬롯 경계': Array.from({ length: droppedColumnCount + 1 }, (_, i) => 
+          droppedStartX + (i * droppedColumnWidth)
+        )
+      }
+    });
+    
+    return result;
+  }
+
+  /**
+   * 주어진 위치가 어떤 영역에 속하는지와 해당 영역의 슬롯 인덱스 찾기
+   */
+  static findZoneAndSlotFromPosition(
+    position: { x: number }, // mm 단위
+    spaceInfo: SpaceInfo,
+    indexing: SpaceIndexingResult
+  ): { zone: 'normal' | 'dropped', slotIndex: number } | null {
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      // 단내림이 없는 경우 전체 영역이 normal
+      const slotIndex = this.findClosestColumnIndex(
+        { x: SpaceCalculator.mmToThreeUnits(position.x) },
+        indexing
+      );
+      return { zone: 'normal', slotIndex };
+    }
+    
+    const zoneInfo = this.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (!zoneInfo.dropped) return null;
+    
+    // 위치가 어느 영역에 속하는지 확인
+    const droppedEndX = zoneInfo.dropped.startX + zoneInfo.dropped.width;
+    const normalEndX = zoneInfo.normal.startX + zoneInfo.normal.width;
+    
+    // 단내림 영역 확인
+    if (position.x >= zoneInfo.dropped.startX && position.x <= droppedEndX) {
+      // 단내림 영역 내 슬롯 인덱스 계산
+      const relativeX = position.x - zoneInfo.dropped.startX;
+      const slotIndex = Math.floor(relativeX / zoneInfo.dropped.columnWidth);
+      return {
+        zone: 'dropped',
+        slotIndex: Math.min(slotIndex, zoneInfo.dropped.columnCount - 1)
+      };
+    }
+    
+    // 일반 영역 확인
+    if (position.x >= zoneInfo.normal.startX && position.x <= normalEndX) {
+      // 일반 영역 내 슬롯 인덱스 계산
+      const relativeX = position.x - zoneInfo.normal.startX;
+      const slotIndex = Math.floor(relativeX / zoneInfo.normal.columnWidth);
+      return {
+        zone: 'normal',
+        slotIndex: Math.min(slotIndex, zoneInfo.normal.columnCount - 1)
+      };
+    }
+    
+    // 범위 밖인 경우
+    return null;
   }
 } 

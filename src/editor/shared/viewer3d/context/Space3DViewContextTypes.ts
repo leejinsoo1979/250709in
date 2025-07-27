@@ -16,6 +16,9 @@ export interface Space3DViewContextType {
   
   // 계산된 3D 치수
   roomDimensions: ReturnType<typeof calculateRoomDimensions>;
+  
+  // 현재 활성 영역 (단내림 사용 시)
+  activeZone?: 'normal' | 'dropped';
 }
 
 // 컨텍스트 생성

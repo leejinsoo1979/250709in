@@ -54,8 +54,12 @@ interface UIState {
   // 가구 드래그 상태
   isFurnitureDragging: boolean;
   
+  // 활성 단내림 탭 상태
+  activeDroppedCeilingTab: 'main' | 'dropped';
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
+  setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
   toggleDimensions: () => void;
@@ -99,6 +103,7 @@ const initialUIState = {
   isWallCreationMode: false,  // 기본값: 가벽 생성 모드 비활성화
   selectedWallId: null,  // 기본값: 가벽 선택 없음
   isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
+  activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
 };
 
 export const useUIStore = create<UIState>()(
@@ -108,6 +113,9 @@ export const useUIStore = create<UIState>()(
       
       setViewMode: (mode) =>
         set({ viewMode: mode }),
+        
+      setActiveDroppedCeilingTab: (tab) =>
+        set({ activeDroppedCeilingTab: tab }),
       
       setView2DDirection: (direction) =>
         set({ view2DDirection: direction }),

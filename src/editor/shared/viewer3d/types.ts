@@ -35,6 +35,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   isEmbedded?: boolean;
   /** Step 2 모드 (공간 높이와 폭만 표시) */
   isStep2?: boolean;
+  /** 현재 활성 영역 (단내림 사용 시) */
+  activeZone?: 'normal' | 'dropped';
 }
 
 /**

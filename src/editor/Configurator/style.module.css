@@ -99,31 +99,42 @@
   color: var(--theme-info);
 }
 
-/* 우측 패널 토글 버튼 - 항상 같은 위치에 고정 */
-.rightPanelToggle {
+/* 우측 패널 컨테이너 */
+.rightPanelContainer {
   position: fixed;
   right: 0;
+  top: 56px;
+  bottom: 0;
+  z-index: 10;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 우측 패널 토글 버튼 */
+.rightPanelToggle {
+  position: fixed;
+  right: 320px;
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--theme-background-secondary);
   color: var(--theme-text-muted);
   border: none;
   border-radius: 8px 0 0 8px;
-  font-size: 20px;
-  font-weight: 400;
+  box-shadow: var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.04));
   cursor: pointer;
-  z-index: 11;
-  box-shadow: var(--theme-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 11;
 }
 
-.rightPanelToggle.open {
-  right: 260px; /* 우측 패널 너비만큼 이동 */
+/* 패널이 닫혔을 때 버튼 위치 */
+.rightPanelToggle:not(.open) {
+  right: 0;
+  border-radius: 8px 0 0 8px;
 }
 
 .rightPanelToggle:hover {
@@ -540,13 +551,9 @@
 
 /* 우측 패널 */
 .rightPanel {
-  position: fixed;
-  right: 0;
-  top: 56px; /* 헤더 높이 */
-  bottom: 0;
-  width: 260px; /* 더 좁게 */
-  min-width: 240px;
-  max-width: 280px;
+  position: relative;
+  width: 100%;
+  height: 100%;
   background: var(--theme-surface, white);
   border-left: 1px solid var(--theme-border, var(--theme-border));
   display: flex;
@@ -567,6 +574,52 @@
 
 .rightPanelTabs {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  gap: 8px;
+  width: 100%;
+}
+
+.tabGroup {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.addTabButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.addTabButton:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+.addTabButton.active {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: white;
+}
+
+.addTabButton.active:hover {
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
 }
 
 .rightPanelTab {
@@ -837,9 +890,6 @@
     width: 400px;
   }
   
-  .rightPanel {
-    width: 380px;
-  }
 }
 
 /* 일반 데스크톱 (1400-1919px) */
@@ -848,13 +898,6 @@
     width: 360px;
   }
   
-  .rightPanel {
-    width: 340px;
-  }
-  
-  .rightPanelToggle.open {
-    right: 340px;
-  }
 }
 
 /* 중간 데스크톱 - 맥북 프로 16인치 (1400px 이하) */
@@ -863,13 +906,6 @@
     width: 320px;
   }
   
-  .rightPanel {
-    width: 300px;
-  }
-  
-  .rightPanelToggle.open {
-    right: 300px;
-  }
   
   .rightPanelContent {
     padding: 20px;
@@ -887,14 +923,8 @@
     min-width: 250px;
   }
   
-  .rightPanel {
-    width: 260px;
-    min-width: 240px;
-  }
   
-  .rightPanelToggle.open {
-    right: 260px;
-  }
+  /* 기본값과 동일하므로 설정 불필요 */
   
   .viewerArea {
     min-width: 350px; /* 뷰어 최소 너비 보장 */
@@ -939,10 +969,6 @@
     min-width: 250px;
   }
   
-  .rightPanel {
-    width: 240px;
-    min-width: 240px;
-  }
   
   .viewerArea {
     min-width: 400px;
@@ -1019,6 +1045,11 @@
     border-top: 1px solid var(--theme-border);
     overflow-y: auto;
   }
+  
+  .rightPanelToggle {
+    display: none; /* 모바일에서는 숨김 */
+  }
+  
   
   .rightPanelContent {
     padding: 12px;
@@ -1171,9 +1202,6 @@
     width: 200px;
   }
   
-  .rightPanel {
-    width: 200px;
-  }
   
   .rightPanelContent,
   .modulePanelContent {
@@ -1222,7 +1250,7 @@
   border-radius: 0 8px 8px 0;
 }
 .rightPanel .foldToggleButton {
-  left: -16px;
+  left: -14px;
   border-radius: 8px 0 0 8px;
   /* 패널과 함께 움직이도록 설정 */
   position: absolute;
@@ -1486,5 +1514,147 @@
 .comingSoonIcon {
   font-size: 48px;
   opacity: 0.5;
+}
+
+/* 토글 버튼 그룹 (공통 스타일과 동일) */
+.toggleButtonGroup {
+  display: flex;
+  border: 1px solid var(--theme-primary);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--theme-surface);
+  margin-bottom: 16px;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Apple SD Gothic Neo', -apple-system, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid var(--theme-primary);
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.toggleButton:last-child {
+  border-right: none;
+}
+
+.toggleButton:hover {
+  background: var(--theme-primary-light);
+}
+
+.toggleButtonActive {
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+}
+
+.toggleButtonActive:hover {
+  background: var(--theme-primary-hover);
+}
+
+.stepDownSettings {
+  animation: fadeIn 0.3s ease-out;
+  padding: 12px 0;
+}
+
+.stepDownDescription {
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.stepDownNote {
+  font-size: 12px;
+  color: var(--theme-text-muted);
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.stepDownNote p {
+  margin: 0 0 4px 0;
+}
+
+.stepDownNote p:last-child {
+  margin-bottom: 0;
+}
+
+/* 입력 필드 관련 스타일 (공통 스타일과 동일) */
+.inputGroupTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 4px;
+}
+
+.inputWithUnit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--theme-background-secondary);
+  color: var(--theme-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
+}
+
+.inputWithUnitField {
+  padding-right: 40px;
+}
+
+.unit {
+  position: absolute;
+  right: 12px;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* 슬라이더 섹션 라벨 */
+.sliderSectionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 8px;
+  padding: 4px 0;
 }
 

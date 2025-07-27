@@ -28,14 +28,17 @@ export interface PlacedModule {
   
   // 사용자 정의 속성들
   customDepth?: number; // 사용자가 선택한 깊이 (mm)
+  customWidth?: number; // 사용자가 선택한 너비 (mm) - 기둥 C 분할 시 사용
   adjustedWidth?: number; // 기둥 침범으로 조정된 폭 (mm)
   adjustedPosition?: { x: number; y: number; z: number }; // 기둥 침범으로 조정된 위치
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: 'right')
+  isSplit?: boolean; // 기둥 C 분할 배치 여부
   
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
   isValidInCurrentSpace?: boolean; // 현재 공간 설정에서 유효한지 여부
+  zone?: 'normal' | 'dropped'; // 가구가 배치된 영역 (일반/단내림)
   
   // 기둥 포함 슬롯 관련 정보
   columnSlotInfo?: ColumnSlotMetadata; // 기둥이 포함된 슬롯 정보

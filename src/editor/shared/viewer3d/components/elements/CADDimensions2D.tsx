@@ -169,6 +169,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
           dashSize={0.02}
           gapSize={0.01}
         />
+        
+        {/* 상단 보조 가이드 연장선 (좌측) */}
+        <Line
+          points={[
+            [0, dimensionOffsetY, 0.01],
+            [-mmToThreeUnits(50), dimensionOffsetY, 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
+        />
+        
+        {/* 상단 보조 가이드 연장선 (우측) */}
+        <Line
+          points={[
+            [spaceWidth, dimensionOffsetY, 0.01],
+            [spaceWidth + mmToThreeUnits(50), dimensionOffsetY, 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
+        />
       </group>
       
       {/* 전체 높이 치수 (좌측) */}
@@ -256,6 +276,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
           dashSize={0.02}
           gapSize={0.01}
         />
+        
+        {/* 좌측 보조 가이드 연장선 (하단) */}
+        <Line
+          points={[
+            [dimensionOffsetX, floatHeight, 0.01],
+            [dimensionOffsetX, floatHeight - mmToThreeUnits(50), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
+        />
+        
+        {/* 좌측 보조 가이드 연장선 (상단) */}
+        <Line
+          points={[
+            [dimensionOffsetX, floatHeight + actualFrameHeight, 0.01],
+            [dimensionOffsetX, floatHeight + actualFrameHeight + mmToThreeUnits(50), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
+        />
       </group>
       
       {/* 우측 높이 치수 */}
@@ -342,6 +382,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
           dashed
           dashSize={0.02}
           gapSize={0.01}
+        />
+        
+        {/* 우측 보조 가이드 연장선 (하단) */}
+        <Line
+          points={[
+            [rightDimensionOffsetX, floatHeight, 0.01],
+            [rightDimensionOffsetX, floatHeight - mmToThreeUnits(50), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
+        />
+        
+        {/* 우측 보조 가이드 연장선 (상단) */}
+        <Line
+          points={[
+            [rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01],
+            [rightDimensionOffsetX, floatHeight + actualFrameHeight + mmToThreeUnits(50), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={0.5}
         />
       </group>
       
@@ -581,6 +641,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
           </group>
         );
       })}
+      
       
       {/* 컬럼 치수 표시 */}
       {(() => {

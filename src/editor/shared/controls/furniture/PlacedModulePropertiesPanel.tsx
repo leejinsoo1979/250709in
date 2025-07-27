@@ -5,7 +5,6 @@ import { useUIStore } from '@/store/uiStore';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
-import { calculateSpaceIndexing } from '../../utils/indexing';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 이미지 매핑 함수
@@ -90,6 +89,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [customDepth, setCustomDepth] = useState<number>(580); // 임시 기본값
   const [depthInputValue, setDepthInputValue] = useState<string>('580');
   const [depthError, setDepthError] = useState<string>('');
+  const [customWidth, setCustomWidth] = useState<number>(583); // 임시 기본값
+  const [widthInputValue, setWidthInputValue] = useState<string>('583');
+  const [widthError, setWidthError] = useState<string>('');
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [showWarning, setShowWarning] = useState(false);
@@ -160,31 +162,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     ? getModuleById(currentPlacedModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) 
     : null;
 
-  // 기둥 옆 캐비넷 여부 확인 (조건부 렌더링 전에 미리 계산)
-  const isCoverDoor = React.useMemo(() => {
-    if (!currentPlacedModule || !moduleData) return false;
+  // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
+  const { slotInfo, isCoverDoor, isColumnC } = React.useMemo(() => {
+    if (!currentPlacedModule || !moduleData) return { slotInfo: null, isCoverDoor: false, isColumnC: false };
     
     // 슬롯 인덱스가 있으면 기둥 슬롯 분석
+    let slotInfo = null;
     if (currentPlacedModule.slotIndex !== undefined) {
       const columnSlots = analyzeColumnSlots(spaceInfo);
-      const slotInfo = columnSlots[currentPlacedModule.slotIndex];
-      return slotInfo?.hasColumn || false;
+      slotInfo = columnSlots[currentPlacedModule.slotIndex];
+    } else {
+      // 슬롯 인덱스가 없으면 위치 기반으로 판단
+      const columnSlots = analyzeColumnSlots(spaceInfo);
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      
+      // 가구 위치에서 가장 가까운 슬롯 찾기
+      const slotIndex = indexing.threeUnitPositions.findIndex(pos => 
+        Math.abs(pos - currentPlacedModule.position.x) < 0.1
+      );
+      
+      if (slotIndex >= 0) {
+        slotInfo = columnSlots[slotIndex];
+      }
     }
     
-    // 슬롯 인덱스가 없으면 위치 기반으로 판단
-    const columnSlots = analyzeColumnSlots(spaceInfo);
-    const indexing = calculateSpaceIndexing(spaceInfo);
+    const isCoverDoor = slotInfo?.hasColumn || false;
+    const isColumnC = slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture || false;
     
-    // 가구 위치에서 가장 가까운 슬롯 찾기
-    const slotIndex = indexing.threeUnitPositions.findIndex(pos => 
-      Math.abs(pos - currentPlacedModule.position.x) < 0.1
-    );
-    
-    if (slotIndex >= 0) {
-      return columnSlots[slotIndex]?.hasColumn || false;
-    }
-    
-    return false;
+    return { slotInfo, isCoverDoor, isColumnC };
   }, [currentPlacedModule, moduleData, spaceInfo]);
 
   // 초기값 설정 - 의존성에서 getDefaultDepth 제거하여 불필요한 재실행 방지
@@ -194,8 +199,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? currentPlacedModule.customDepth 
         : getDefaultDepth(moduleData);
       
+      const initialWidth = currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
+        ? currentPlacedModule.customWidth 
+        : moduleData.dimensions.width;
+      
       setCustomDepth(initialDepth);
       setDepthInputValue(initialDepth.toString());
+      setCustomWidth(initialWidth);
+      setWidthInputValue(initialWidth.toString());
       setHingePosition(currentPlacedModule.hingePosition || 'right');
       setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
       
@@ -204,7 +215,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         hasCustomDepth: currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null,
         customDepth: currentPlacedModule.customDepth,
         defaultDepth: getDefaultDepth(moduleData),
-        finalDepth: initialDepth
+        finalDepth: initialDepth,
+        hasCustomWidth: currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null,
+        customWidth: currentPlacedModule.customWidth,
+        defaultWidth: moduleData.dimensions.width,
+        finalWidth: initialWidth
       });
     }
   }, [currentPlacedModule?.id, moduleData?.id]); // id만 의존성으로 하여 모듈 변경 시에만 실행
@@ -248,6 +263,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  const handleCustomWidthChange = (newWidth: number) => {
+    setCustomWidth(newWidth);
+    if (activePopup.id) {
+      // 기존 customDepth 유지
+      const updateData: any = { 
+        customWidth: newWidth,
+        isSplit: true // 너비가 조정되면 분할 상태로 표시
+      };
+      
+      // 기존 customDepth가 있으면 유지
+      if (currentPlacedModule.customDepth !== undefined) {
+        updateData.customDepth = currentPlacedModule.customDepth;
+      }
+      
+      updatePlacedModule(activePopup.id, updateData);
+      
+      console.log('📏 가구 너비 조정:', {
+        originalWidth: moduleData.dimensions.width,
+        newWidth,
+        columnPosition: slotInfo?.column?.position,
+        customDepth: currentPlacedModule.customDepth
+      });
+    }
+  };
+
   // 깊이 입력 필드 처리
   const handleDepthInputChange = (value: string) => {
     // 숫자와 빈 문자열만 허용
@@ -286,6 +326,44 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 너비 입력 필드 처리
+  const handleWidthInputChange = (value: string) => {
+    // 숫자와 빈 문자열만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      setWidthInputValue(value);
+      setWidthError('');
+    }
+  };
+
+  const handleWidthInputBlur = () => {
+    const value = widthInputValue;
+    if (value === '') {
+      // 빈 값인 경우 기존 값으로 되돌림
+      setWidthInputValue(customWidth.toString());
+      return;
+    }
+    
+    const numValue = parseInt(value);
+    const minWidth = 150; // 최소 너비
+    const maxWidth = moduleData.dimensions.width; // 최대 너비는 원래 크기
+    
+    // 범위 검증
+    if (numValue < minWidth) {
+      setWidthError(`최소 ${minWidth}mm 이상이어야 합니다`);
+    } else if (numValue > maxWidth) {
+      setWidthError(`최대 ${maxWidth}mm 이하여야 합니다`);
+    } else {
+      setWidthError('');
+      handleCustomWidthChange(numValue);
+    }
+  };
+
+  const handleWidthKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleWidthInputBlur();
+    }
+  };
+
   const handleHingePositionChange = (position: 'left' | 'right') => {
     // 커버도어인 경우 경고 표시
     if (isCoverDoor) {
@@ -307,6 +385,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       updatePlacedModule(activePopup.id, { hasDoor: doorEnabled });
     }
   };
+
 
   return (
     <div className={styles.overlay}>
@@ -351,7 +430,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <div className={styles.property}>
                 <span className={styles.propertyLabel}>크기:</span>
                 <span className={styles.propertyValue}>
-                  {moduleData.dimensions.width} × {moduleData.dimensions.height} × {customDepth}mm
+                  {customWidth} × {moduleData.dimensions.height} × {customDepth}mm
                 </span>
               </div>
               
@@ -365,6 +444,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           </div>
           
+          {/* 너비 설정 (기둥 C인 경우만 표시) */}
+          {isColumnC && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>너비 설정</h5>
+              <div className={styles.depthInputWrapper}>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    value={widthInputValue}
+                    onChange={(e) => handleWidthInputChange(e.target.value)}
+                    onBlur={handleWidthInputBlur}
+                    onKeyDown={handleWidthKeyDown}
+                    className={`${styles.depthInput} furniture-depth-input ${widthError ? styles.inputError : ''}`}
+                    placeholder={`150-${moduleData.dimensions.width}`}
+                    style={{
+                      color: '#000000',
+                      backgroundColor: '#ffffff',
+                      WebkitTextFillColor: '#000000',
+                      opacity: 1
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                {widthError && <div className={styles.errorMessage}>{widthError}</div>}
+                <div className={styles.depthRange}>
+                  범위: 150mm ~ {moduleData.dimensions.width}mm
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 깊이 설정 */}
           <div className={styles.propertySection}>
             <h5 className={styles.sectionTitle}>깊이 설정</h5>
@@ -442,6 +552,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               )}
             </div>
           )}
+
 
           {/* 삭제 버튼 */}
           <button 

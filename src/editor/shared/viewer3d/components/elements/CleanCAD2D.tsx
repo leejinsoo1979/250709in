@@ -8,6 +8,7 @@ import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -501,6 +502,104 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           lineWidth={1}
         />
       </group>
+
+      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 */}
+      {spaceInfo.droppedCeiling?.enabled && (
+        <group>
+          {(() => {
+            const normalBounds = getNormalZoneBounds(spaceInfo);
+            const droppedBounds = getDroppedZoneBounds(spaceInfo);
+            const subDimensionY = topDimensionY - mmToThreeUnits(80); // 전체 폭 치수선 아래
+            
+            // 메인 구간 치수선
+            const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
+              ? mmToThreeUnits(droppedBounds.width) + leftOffset
+              : leftOffset;
+            const mainEndX = spaceInfo.droppedCeiling.position === 'left'
+              ? mmToThreeUnits(spaceInfo.width) + leftOffset
+              : mmToThreeUnits(normalBounds.width) + leftOffset;
+            
+            // 단내림 구간 치수선
+            const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
+              ? leftOffset
+              : mmToThreeUnits(normalBounds.width) + leftOffset;
+            const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
+              ? mmToThreeUnits(droppedBounds.width) + leftOffset
+              : mmToThreeUnits(spaceInfo.width) + leftOffset;
+            
+            return (
+              <>
+                {/* 메인 구간 치수선 */}
+                <Line
+                  points={[[mainStartX, subDimensionY, 0.002], [mainEndX, subDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([mainStartX, subDimensionY, 0.002], [mainStartX + 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([mainEndX, subDimensionY, 0.002], [mainEndX - 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    position={[(mainStartX + mainEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {normalBounds.width}
+                  </Text>
+                )}
+                
+                {/* 단내림 구간 치수선 */}
+                <Line
+                  points={[[droppedStartX, subDimensionY, 0.002], [droppedEndX, subDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([droppedStartX, subDimensionY, 0.002], [droppedStartX + 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([droppedEndX, subDimensionY, 0.002], [droppedEndX - 0.05, subDimensionY, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {droppedBounds.width}
+                  </Text>
+                )}
+                
+                {/* 구간 분리 가이드라인 */}
+                <Line
+                  points={[
+                    [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, 0, 0.001],
+                    [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, subDimensionY - mmToThreeUnits(20), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                  dashed
+                />
+              </>
+            );
+          })()}
+        </group>
+      )}
       
       {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {!isStep2 && (
@@ -1047,6 +1146,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         if (!moduleData) return null;
         
+        // 단내림 여부 확인
+        const hasStepDown = spaceInfo.droppedCeiling?.enabled || false;
+        const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
+        const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
+        
         // 기둥에 의해 조정된 너비와 위치 사용
         const actualWidth = module.adjustedWidth || moduleData.dimensions.width;
         const moduleWidth = mmToThreeUnits(actualWidth);
@@ -1088,29 +1192,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const leftThreeWidth = mmToThreeUnits(leftWidth);
         const rightThreeWidth = mmToThreeUnits(rightWidth);
         
+        // 메인구간 경계 계산
+        const mainAreaLeft = hasStepDown && stepDownPosition === 'left' 
+          ? mmToThreeUnits(stepDownWidth) 
+          : 0;
+        const mainAreaRight = hasStepDown && stepDownPosition === 'right'
+          ? mmToThreeUnits(spaceInfo.width - stepDownWidth)
+          : mmToThreeUnits(spaceInfo.width);
+        
+        // 모듈이 속한 구간 확인 (메인구간 또는 단내림 구간)
+        const isInMainArea = leftX >= mainAreaLeft && rightX <= mainAreaRight;
+        const isInStepDownArea = hasStepDown && !isInMainArea;
+        
+        // 가이드라인 높이 계산
+        const guideTopY = isInStepDownArea && spaceInfo.droppedCeiling
+          ? mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight)
+          : mmToThreeUnits(spaceInfo.height);
+        const guideBottomY = 0;
+        
+        // 가이드라인은 해당 구간 내에서만 표시
+        const shouldShowGuide = isInMainArea || isInStepDownArea;
+        
         return (
           <group key={`module-guide-${index}`} renderOrder={999999}>
-            {/* 가구 좌측 가이드라인 (점선) - 캐비넷 하단부터 시작 */}
-            <Line
-              points={[[leftX, spaceHeight, 0.001], [leftX, spaceHeight, 0.001]]}
-              color={gridColor}
-              lineWidth={0.5}
-              dashed
-              dashSize={0.02}
-              gapSize={0.01}
-              renderOrder={999999}
-            />
+            {/* 가구 좌측 가이드라인 (점선) - 해당 구간 내에서만 표시 */}
+            {shouldShowGuide && (
+              <Line
+                points={[[leftX, guideBottomY, 0.001], [leftX, guideTopY, 0.001]]}
+                color={gridColor}
+                lineWidth={0.5}
+                dashed
+                dashSize={0.02}
+                gapSize={0.01}
+                renderOrder={999999}
+              />
+            )}
             
-            {/* 가구 우측 가이드라인 (점선) - 캐비넷 하단부터 시작 */}
-            <Line
-              points={[[rightX, spaceHeight, 0.001], [rightX, spaceHeight, 0.001]]}
-              color={gridColor}
-              lineWidth={0.5}
-              dashed
-              dashSize={0.02}
-              gapSize={0.01}
-              renderOrder={999999}
-            />
+            {/* 가구 우측 가이드라인 (점선) - 해당 구간 내에서만 표시 */}
+            {shouldShowGuide && (
+              <Line
+                points={[[rightX, guideBottomY, 0.001], [rightX, guideTopY, 0.001]]}
+                color={gridColor}
+                lineWidth={0.5}
+                dashed
+                dashSize={0.02}
+                gapSize={0.01}
+                renderOrder={999999}
+              />
+            )}
             
             {/* 가구 치수선 */}
             <Line
@@ -1738,6 +1867,100 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
         </group>
+
+        {/* 단내림 구간 치수선 - 좌측뷰 */}
+        {spaceInfo.droppedCeiling?.enabled && (
+          <group>
+            {(() => {
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              const subDimensionY = actualSpaceHeight + mmToThreeUnits(50); // 전체 폭 치수선 아래
+              
+              // 메인 구간 치수선 (좌측뷰에서는 좌우가 반대)
+              const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
+                ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width)
+                : -actualSpaceWidth/2;
+              const mainEndX = spaceInfo.droppedCeiling.position === 'left'
+                ? actualSpaceWidth/2
+                : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width);
+              
+              // 단내림 구간 치수선
+              const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
+                ? -actualSpaceWidth/2
+                : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width);
+              const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
+                ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width)
+                : actualSpaceWidth/2;
+              
+              return (
+                <>
+                  {/* 메인 구간 치수선 */}
+                  <Line
+                    points={[[mainStartX, subDimensionY, 0], [mainEndX, subDimensionY, 0]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([mainStartX, subDimensionY, 0], [mainStartX + 0.05, subDimensionY, 0])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([mainEndX, subDimensionY, 0], [mainEndX - 0.05, subDimensionY, 0])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    position={[(mainStartX + mainEndX) / 2, subDimensionY + mmToThreeUnits(30), 0]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {normalBounds.width}
+                  </Text>
+                  
+                  {/* 단내림 구간 치수선 */}
+                  <Line
+                    points={[[droppedStartX, subDimensionY, 0], [droppedEndX, subDimensionY, 0]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([droppedStartX, subDimensionY, 0], [droppedStartX + 0.05, subDimensionY, 0])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([droppedEndX, subDimensionY, 0], [droppedEndX - 0.05, subDimensionY, 0])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {droppedBounds.width}
+                  </Text>
+                  
+                  {/* 구간 분리 가이드라인 */}
+                  <Line
+                    points={[
+                      [spaceInfo.droppedCeiling.position === 'left' ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width) : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width), 0, 0],
+                      [spaceInfo.droppedCeiling.position === 'left' ? -actualSpaceWidth/2 + mmToThreeUnits(droppedBounds.width) : -actualSpaceWidth/2 + mmToThreeUnits(normalBounds.width), subDimensionY - mmToThreeUnits(20), 0]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={1}
+                    dashed
+                  />
+                </>
+              );
+            })()}
+          </group>
+        )}
       </group>
     );
   };
@@ -3415,6 +3638,59 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       {/* 기둥은 showDimensions가 true일 때만 렌더링 (2D 정면 뷰에서만) */}
       {showDimensions && currentViewDirection === 'front' && renderColumns()}
+      
+      {/* 단내림 구간 경계선 및 가이드 */}
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && (
+        <group>
+          {/* 단내림 구간 경계선 (수직선) */}
+          <Line
+            points={[
+              [
+                spaceInfo.droppedCeiling?.position === 'left' 
+                  ? mmToThreeUnits(spaceInfo.droppedCeiling?.width || 0)
+                  : mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)), 
+                0, 
+                0.001
+              ],
+              [
+                spaceInfo.droppedCeiling?.position === 'left'
+                  ? mmToThreeUnits(spaceInfo.droppedCeiling?.width || 0)
+                  : mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)),
+                mmToThreeUnits(spaceInfo.height),
+                0.001
+              ]
+            ]}
+            color={primaryColor}
+            lineWidth={2}
+            dashed
+            dashSize={0.03}
+            gapSize={0.02}
+          />
+          
+          {/* 단내림 높이 표시선 (수평선) */}
+          <Line
+            points={[
+              [
+                spaceInfo.droppedCeiling?.position === 'left' ? 0 : mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)),
+                mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0)),
+                0.001
+              ],
+              [
+                spaceInfo.droppedCeiling?.position === 'left' 
+                  ? mmToThreeUnits(spaceInfo.droppedCeiling?.width || 0)
+                  : mmToThreeUnits(spaceInfo.width),
+                mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0)),
+                0.001
+              ]
+            ]}
+            color={primaryColor}
+            lineWidth={1}
+            dashed
+            dashSize={0.02}
+            gapSize={0.01}
+          />
+        </group>
+      )}
     </group>
   );
 };

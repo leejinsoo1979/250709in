@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단내림(Dropped Ceiling) 기능 테스트 - 수정 버전</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #FF9800;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #666;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #FF9800;
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+        }
+        .test-header {
+            font-weight: bold;
+            color: #FF9800;
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.completed {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .status.in-progress {
+            background-color: #FF9800;
+            color: white;
+        }
+        .status.pending {
+            background-color: #9E9E9E;
+            color: white;
+        }
+        .code-block {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .issue {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .solution {
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>단내림(Dropped Ceiling) 기능 테스트 - 수정 완료</h1>
+        
+        <div class="note">
+            <strong>테스트 날짜:</strong> 2025-07-27<br>
+            <strong>목적:</strong> 기존 hasStepDown 시스템에서 새로운 droppedCeiling 시스템으로 마이그레이션 완료 확인
+        </div>
+
+        <h2>1. 마이그레이션 완료 사항</h2>
+        <div class="test-section">
+            <div class="test-case">
+                <div class="test-header">SpaceInfo 인터페이스 <span class="status completed">완료</span></div>
+                <p>✅ DroppedCeilingConfig 인터페이스 추가</p>
+                <div class="code-block">
+export interface DroppedCeilingConfig {
+  enabled: boolean;
+  position: 'left' | 'right';
+  width: number;
+  dropHeight: number;
+  depth?: number;
+}
+                </div>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">컴포넌트 마이그레이션 <span class="status completed">완료</span></div>
+                <p>✅ ColumnGuides.tsx - droppedCeiling 사용으로 변경</p>
+                <p>✅ CleanCAD2D.tsx - droppedCeiling 사용으로 변경</p>
+                <p>✅ Room.tsx - droppedCeiling 사용으로 변경</p>
+                <p>✅ Configurator/index.tsx - droppedCeiling 사용으로 변경</p>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">하위 호환성 제거 <span class="status completed">완료</span></div>
+                <p>✅ DroppedCeilingControl에서 hasStepDown 관련 코드 제거</p>
+                <p>✅ 모든 컴포넌트에서 stepDownHeight, stepDownWidth, stepDownPosition 참조 제거</p>
+            </div>
+        </div>
+
+        <h2>2. 기능 테스트 항목</h2>
+        <div class="test-section">
+            <div class="test-case">
+                <div class="test-header">단내림 토글 테스트</div>
+                <p>1. Configurator에서 "+" 버튼 클릭 → 단내림 탭 추가</p>
+                <p>2. 단내림 설정 확인:</p>
+                <ul>
+                    <li>기본값: width=1200mm, dropHeight=200mm, position='left'</li>
+                    <li>실제 높이 = 2400mm - 200mm = 2200mm</li>
+                </ul>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">3D 뷰어 렌더링 테스트</div>
+                <p>1. ColumnGuides: 영역별 슬롯 가이드 표시</p>
+                <ul>
+                    <li>일반 영역: 파란색 점선 (기본)</li>
+                    <li>단내림 영역: 주황색 점선 (계획)</li>
+                </ul>
+                <p>2. Room: 천장 높이 차이 렌더링</p>
+                <p>3. CleanCAD2D: 2D 뷰에서 경계선 표시</p>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">가구 배치 테스트</div>
+                <p>1. 단내림 영역 높이 제한 확인</p>
+                <p>2. 영역 간 가구 이동 가능 확인</p>
+                <p>3. 슬롯 폭 자동 조정 확인</p>
+            </div>
+        </div>
+
+        <h2>3. 수정된 주요 코드</h2>
+        <div class="test-section">
+            <div class="test-case">
+                <div class="test-header">ColumnGuides.tsx 변경 사항</div>
+                <div class="code-block">
+// Before
+const hasDroppedCeiling = spaceInfo.hasStepDown;
+const droppedHeight = hasDroppedCeiling && spaceInfo.stepDownHeight ? spaceInfo.stepDownHeight : spaceInfo.height;
+
+// After
+const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+const droppedHeight = hasDroppedCeiling && spaceInfo.droppedCeiling 
+  ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight 
+  : spaceInfo.height;
+                </div>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">Room.tsx 변경 사항</div>
+                <div class="code-block">
+// Before
+if (spaceInfo.hasStepDown && spaceInfo.stepDownPosition === 'left' && spaceInfo.stepDownHeight && spaceInfo.stepDownWidth) {
+  const stepDownHeightThree = mmToThreeUnits(spaceInfo.stepDownHeight);
+  const stepDownWidthThree = mmToThreeUnits(spaceInfo.stepDownWidth);
+
+// After
+if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left') {
+  const stepDownHeightThree = mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight);
+  const stepDownWidthThree = mmToThreeUnits(spaceInfo.droppedCeiling.width);
+                </div>
+            </div>
+        </div>
+
+        <h2>4. 테스트 결과</h2>
+        <div class="test-section">
+            <div class="test-case">
+                <div class="test-header">성공 항목 <span class="status completed">완료</span></div>
+                <p>✅ 모든 컴포넌트가 새로운 droppedCeiling 구조 사용</p>
+                <p>✅ 기존 hasStepDown 참조 모두 제거</p>
+                <p>✅ dropHeight 기반 높이 계산 (기존 stepDownHeight 대신)</p>
+                <p>✅ TypeScript 타입 안전성 확보</p>
+            </div>
+
+            <div class="test-case">
+                <div class="test-header">주의 사항</div>
+                <p>⚠️ 기존 프로젝트 데이터 마이그레이션 필요</p>
+                <p>⚠️ 단내림 영역 색상 구분 추가 개발 필요</p>
+                <p>⚠️ 영역별 독립적인 컬럼 수 설정 기능 추가 필요</p>
+            </div>
+        </div>
+
+        <h2>5. 다음 단계</h2>
+        <div class="test-section">
+            <div class="test-case">
+                <div class="test-header">추가 개발 사항</div>
+                <ul>
+                    <li>단내림 영역 슬롯 가이드 색상 구분 (주황색)</li>
+                    <li>데이터 마이그레이션 스크립트 작성</li>
+                    <li>영역별 독립 컬럼 수 설정 UI</li>
+                    <li>단내림 전용 가구 카테고리</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

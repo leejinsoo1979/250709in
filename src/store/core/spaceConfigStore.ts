@@ -60,6 +60,22 @@ export interface SpaceInfo {
   // 구조물 설정 추가
   columns?: Column[];
   walls?: Wall[];
+  
+  // 단내림 설정 추가
+  droppedCeiling?: DroppedCeilingConfig;
+  
+  // 도어 개수 설정 (단내림 활성화 시 사용)
+  mainDoorCount?: number;              // 메인 구간 도어 개수
+  droppedCeilingDoorCount?: number;    // 단내림 구간 도어 개수
+}
+
+// 단내림 설정 인터페이스
+export interface DroppedCeilingConfig {
+  enabled: boolean;              // 단내림 활성화 여부
+  position: 'left' | 'right';   // 단내림 위치
+  width: number;                 // 단내림 영역 폭 (mm)
+  dropHeight: number;            // 천장에서 내려오는 높이 (mm)
+  depth?: number;                // 공간 깊이 (생략 시 spaceInfo.depth 사용)
 }
 
 // 공간 설정 상태 타입
@@ -175,6 +191,13 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   materialConfig: {
     interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,
     doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR
+  },
+  // 단내림 기본값 설정
+  droppedCeiling: {
+    enabled: false,
+    position: 'right',
+    width: 900,
+    dropHeight: 200
   }
 };
 
@@ -192,8 +215,18 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     set((state) => {
       // installType 하이픈 문제 수정
       const processedInfo = { ...info };
-      if (processedInfo.installType === 'built-in') {
+      if (processedInfo.installType === 'built-in' as any) {
         processedInfo.installType = 'builtin';
+      }
+      
+      // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
+      if (processedInfo.droppedCeiling?.enabled && 
+          (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
+        processedInfo.droppedCeiling = {
+          ...processedInfo.droppedCeiling,
+          width: processedInfo.droppedCeiling.width || 900,
+          dropHeight: processedInfo.droppedCeiling.dropHeight || 200
+        };
       }
       
       const newState = {

@@ -15,6 +15,20 @@ export interface DerivedSpaceState {
   columnBoundaries: number[]
   dualColumnPositions: number[]
   
+  // 단내림 영역별 정보
+  zones?: {
+    normal?: {
+      width: number
+      columnCount: number
+      columnWidth: number
+    }
+    dropped?: {
+      width: number
+      columnCount: number
+      columnWidth: number
+    }
+  }
+  
   // 계산 상태
   isCalculated: boolean
   lastCalculatedSpaceInfo: SpaceInfo | null
@@ -59,7 +73,21 @@ export const useDerivedSpaceStore = create<DerivedSpaceState>((set) => ({
       // 3. 내부 공간 계산 (높이, 깊이 포함)
       const internalSpace = calculateInternalSpace(validatedSpaceInfo)
       
-      // 4. 상태 업데이트
+      // 4. 단내림 영역별 정보 추가
+      const zones = indexing.zones ? {
+        normal: indexing.zones.normal ? {
+          width: indexing.zones.normal.width,
+          columnCount: indexing.zones.normal.columnCount,
+          columnWidth: indexing.zones.normal.columnWidth
+        } : undefined,
+        dropped: indexing.zones.dropped ? {
+          width: indexing.zones.dropped.width,
+          columnCount: indexing.zones.dropped.columnCount,
+          columnWidth: indexing.zones.dropped.columnWidth
+        } : undefined
+      } : undefined
+      
+      // 5. 상태 업데이트
       set({
         internalWidth,
         columnCount: indexing.columnCount,
@@ -70,6 +98,7 @@ export const useDerivedSpaceStore = create<DerivedSpaceState>((set) => ({
         threeUnitPositions: indexing.threeUnitPositions,
         columnBoundaries: indexing.columnBoundaries,
         dualColumnPositions: indexing.dualColumnPositions,
+        zones,
         isCalculated: true,
         lastCalculatedSpaceInfo: validatedSpaceInfo,
       })
@@ -131,4 +160,22 @@ export const useInternalSpace = () => {
   const depth = useDerivedSpaceStore((state) => state.internalDepth)
   
   return { width, height, depth }
-} 
+}
+
+// 단내림이 있을 때 메인구간의 정보를 반환하는 훅
+export const useMainZoneInfo = () => 
+  useDerivedSpaceStore((state) => {
+    if (state.zones?.normal) {
+      return {
+        width: state.zones.normal.width,
+        columnCount: state.zones.normal.columnCount,
+        columnWidth: state.zones.normal.columnWidth
+      }
+    }
+    // 단내림이 없으면 전체 공간 정보 반환
+    return {
+      width: state.internalWidth,
+      columnCount: state.columnCount,
+      columnWidth: state.columnWidth
+    }
+  }) 
