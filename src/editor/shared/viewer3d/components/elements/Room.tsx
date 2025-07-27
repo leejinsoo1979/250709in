@@ -1042,7 +1042,7 @@ const Room: React.FC<RoomProps> = ({
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
           const upperPartHeight = droppedCeilingHeight;
-          const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
+          const upperPartCenterY = panelStartY + height - upperPartHeight/2;
           
           return (
             <>
@@ -1209,31 +1209,20 @@ const Room: React.FC<RoomProps> = ({
                 ? frameStartX + droppedWidth
                 : frameEndX - droppedWidth;
               
-              // 프레임 너비 계산 - PDF 공식에 따라
+              // 프레임 너비 계산 - 동적 계산
               let droppedFrameWidth, normalFrameWidth;
               
               if (spaceInfo.surroundType === 'surround') {
-                // 서라운드 모드: 전체 3600mm에서 좌우 프레임 50mm씩 빼면 3500mm
-                // 단내림 900mm일 때: 메인구간 2650mm, 단내림구간 850mm
-                if (droppedWidth / 0.01 === 900) {
-                  droppedFrameWidth = mmToThreeUnits(850);
-                  normalFrameWidth = mmToThreeUnits(2650);
-                } else {
-                  // 기본 계산: 단내림 너비에서 50mm 빼기
-                  droppedFrameWidth = droppedWidth - mmToThreeUnits(50);
-                  normalFrameWidth = frameWidth - droppedFrameWidth;
-                }
+                // 서라운드 모드: 좌우 프레임 고려
+                // 단내림 구간 프레임 = 단내림 너비 - 프레임 두께
+                droppedFrameWidth = droppedWidth - frameThickness.left;
+                normalFrameWidth = frameWidth - droppedFrameWidth;
               } else {
-                // 노서라운드 모드: 전체 3600mm에서 좌우 이격거리 2mm씩 빼면 3596mm
-                // 단내림 900mm일 때: 메인구간 2698mm, 단내림구간 898mm
-                if (droppedWidth / 0.01 === 900) {
-                  droppedFrameWidth = mmToThreeUnits(898);
-                  normalFrameWidth = mmToThreeUnits(2698);
-                } else {
-                  // 기본 계산: 단내림 너비에서 2mm 빼기
-                  droppedFrameWidth = droppedWidth - mmToThreeUnits(2);
-                  normalFrameWidth = frameWidth - droppedFrameWidth;
-                }
+                // 노서라운드 모드: 좌우 이격거리 고려
+                // 단내림 구간 프레임 = 단내림 너비 - 이격거리
+                const gapSize = mmToThreeUnits(spaceInfo.gapConfig?.left || 2);
+                droppedFrameWidth = droppedWidth - gapSize;
+                normalFrameWidth = frameWidth - droppedFrameWidth;
               }
               
               // 프레임 중심 위치 계산

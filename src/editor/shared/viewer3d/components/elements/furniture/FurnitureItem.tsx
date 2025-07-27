@@ -191,15 +191,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   ]);
   
   // 듀얼 가구인지 확인하여 도어 크기 결정
-  const isDualFurniture = Math.abs(actualModuleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-  const originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth; // 듀얼이면 2배, 싱글이면 1배
+  let isDualFurniture = placedModule.isDualSlot || false;
+  let originalSlotWidthMm = indexing.columnWidth;
+  
+  // 단내림 영역의 경우 해당 영역의 슬롯 너비 기준으로 판별
+  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && indexing.zones) {
+    const zoneInfo = placedModule.zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
+    if (zoneInfo) {
+      isDualFurniture = isDualFurniture || Math.abs(actualModuleData.dimensions.width - (zoneInfo.columnWidth * 2)) < 50;
+      originalSlotWidthMm = isDualFurniture ? (zoneInfo.columnWidth * 2) : zoneInfo.columnWidth;
+    }
+  } else {
+    isDualFurniture = isDualFurniture || Math.abs(actualModuleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+    originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
+  }
   
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
   let originalSlotCenterX: number;
   
   // 슬롯 인덱스가 있으면 정확한 슬롯 중심 위치 계산 (우선순위)
-  if (placedModule.slotIndex !== undefined && indexing.threeUnitPositions[placedModule.slotIndex] !== undefined) {
-    originalSlotCenterX = indexing.threeUnitPositions[placedModule.slotIndex]; // 실제 슬롯 중심 위치
+  // 단내림 영역 고려
+  if (placedModule.slotIndex !== undefined) {
+    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && indexing.zones) {
+      const zoneInfo = placedModule.zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
+      if (zoneInfo && placedModule.slotIndex < zoneInfo.columnCount) {
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const slotCenterMm = zoneInfo.startX + (placedModule.slotIndex * zoneInfo.columnWidth) + (zoneInfo.columnWidth / 2);
+        originalSlotCenterX = mmToThreeUnits(slotCenterMm);
+      } else {
+        originalSlotCenterX = indexing.threeUnitPositions[placedModule.slotIndex] || placedModule.position.x;
+      }
+    } else if (indexing.threeUnitPositions[placedModule.slotIndex] !== undefined) {
+      originalSlotCenterX = indexing.threeUnitPositions[placedModule.slotIndex]; // 실제 슬롯 중심 위치
+    } else {
+      originalSlotCenterX = placedModule.position.x;
+    }
   } else {
     // 슬롯 인덱스가 없는 경우, 듀얼 가구라면 듀얼 위치에서 찾기
     

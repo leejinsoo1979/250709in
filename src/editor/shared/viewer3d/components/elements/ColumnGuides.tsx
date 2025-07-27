@@ -160,7 +160,7 @@ const ColumnGuides: React.FC = () => {
   // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
   const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
   const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
-  const droppedCeilingY = hasDroppedCeiling ? mmToThreeUnits(droppedHeight) + floatHeight : ceilingY;
+  const droppedCeilingY = hasDroppedCeiling ? floorY + mmToThreeUnits(droppedHeight) : ceilingY;
   
   // 단내림 경계 X 좌표 계산
   let droppedBoundaryX = null;
@@ -185,6 +185,18 @@ const ColumnGuides: React.FC = () => {
     ceilingY: number,
     zoneType: string
   ) => {
+    console.log('📐 renderSlotGuides 호출됨:', {
+      zoneType,
+      startX,
+      width,
+      columnCount,
+      columnWidth,
+      ceilingY,
+      floorY,
+      backZ,
+      frontZ
+    });
+    
     const guides = [];
     
     // 활성 탭에 따른 강조 여부 결정
@@ -316,8 +328,18 @@ const ColumnGuides: React.FC = () => {
       }
     });
     
+    console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
     return guides;
   };
+
+  console.log('🏗️ ColumnGuides 렌더링:', {
+    hasDroppedCeiling,
+    activeDroppedCeilingTab,
+    'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
+    'zoneSlotInfo.normal': zoneSlotInfo.normal,
+    showDimensions,
+    viewMode
+  });
 
   return (
     <group>
@@ -334,14 +356,23 @@ const ColumnGuides: React.FC = () => {
           )}
           
           {/* 단내림구간 탭 선택 시 단내림 영역만 표시 */}
-          {activeDroppedCeilingTab === 'dropped' && renderSlotGuides(
-            zoneSlotInfo.dropped.startX,
-            zoneSlotInfo.dropped.width,
-            zoneSlotInfo.dropped.columnCount,
-            zoneSlotInfo.dropped.columnWidth,
-            droppedCeilingY,
-            'dropped'
-          )}
+          {activeDroppedCeilingTab === 'dropped' && (() => {
+            console.log('🔍 단내림 가이드 렌더링 시도:', {
+              activeDroppedCeilingTab,
+              'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
+              droppedCeilingY,
+              droppedHeight,
+              'condition': activeDroppedCeilingTab === 'dropped'
+            });
+            return renderSlotGuides(
+              zoneSlotInfo.dropped.startX,
+              zoneSlotInfo.dropped.width,
+              zoneSlotInfo.dropped.columnCount,
+              zoneSlotInfo.dropped.columnWidth,
+              droppedCeilingY,
+              'dropped'
+            );
+          })()}
         </>
       ) : (
         /* 단내림이 없는 경우 전체 영역 슬롯 가이드 */

@@ -864,14 +864,45 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <DroppedCeilingSpace spaceInfo={spaceInfo} />
             
             {/* 기둥 에셋 렌더링 */}
-            {(spaceInfo?.columns || []).map((column) => (
-              <React.Fragment key={column.id}>
-                <ColumnAsset
-                  id={column.id}
-                  position={column.position}
-                  width={column.width} // mm 단위 그대로 전달
-                  height={column.height}
-                  depth={column.depth}
+            {(spaceInfo?.columns || []).map((column) => {
+              // 기둥이 단내림 영역에 있는지 확인
+              let columnHeight = column.height;
+              if (spaceInfo.droppedCeiling?.enabled) {
+                const totalWidth = spaceInfo.width;
+                const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+                const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+                const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+                
+                // 기둥의 X 좌표 (mm 단위로 변환)
+                const columnXMm = column.position[0] * 100; // Three.js 단위를 mm로 변환
+                const centerX = 0; // 공간 중심
+                const leftBoundary = centerX - totalWidth / 2;
+                const rightBoundary = centerX + totalWidth / 2;
+                
+                // 단내림 영역 경계 계산
+                let droppedStartX, droppedEndX;
+                if (droppedPosition === 'left') {
+                  droppedStartX = leftBoundary;
+                  droppedEndX = leftBoundary + droppedWidth;
+                } else {
+                  droppedStartX = rightBoundary - droppedWidth;
+                  droppedEndX = rightBoundary;
+                }
+                
+                // 기둥이 단내림 영역에 있으면 높이 조정
+                if (columnXMm >= droppedStartX && columnXMm <= droppedEndX) {
+                  columnHeight = column.height - dropHeight;
+                }
+              }
+              
+              return (
+                <React.Fragment key={column.id}>
+                  <ColumnAsset
+                    id={column.id}
+                    position={column.position}
+                    width={column.width} // mm 단위 그대로 전달
+                    height={columnHeight}
+                    depth={column.depth}
                   color={column.color}
                   spaceInfo={spaceInfo}
                   renderMode={renderMode}
@@ -897,16 +928,48 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   />
                 )}
               </React.Fragment>
-            ))}
+              );
+            })}
             
             {/* 가벽 에셋 렌더링 */}
-            {(spaceInfo?.walls || []).map((wall) => (
+            {(spaceInfo?.walls || []).map((wall) => {
+              // 가벽이 단내림 영역에 있는지 확인
+              let wallHeight = wall.height;
+              if (spaceInfo.droppedCeiling?.enabled) {
+                const totalWidth = spaceInfo.width;
+                const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+                const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+                const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+                
+                // 가벽의 X 좌표 (mm 단위로 변환)
+                const wallXMm = wall.position[0] * 100; // Three.js 단위를 mm로 변환
+                const centerX = 0; // 공간 중심
+                const leftBoundary = centerX - totalWidth / 2;
+                const rightBoundary = centerX + totalWidth / 2;
+                
+                // 단내림 영역 경계 계산
+                let droppedStartX, droppedEndX;
+                if (droppedPosition === 'left') {
+                  droppedStartX = leftBoundary;
+                  droppedEndX = leftBoundary + droppedWidth;
+                } else {
+                  droppedStartX = rightBoundary - droppedWidth;
+                  droppedEndX = rightBoundary;
+                }
+                
+                // 가벽이 단내림 영역에 있으면 높이 조정
+                if (wallXMm >= droppedStartX && wallXMm <= droppedEndX) {
+                  wallHeight = wall.height - dropHeight;
+                }
+              }
+              
+              return (
               <WallAsset
                 key={wall.id}
                 id={wall.id}
                 position={wall.position}
                 width={wall.width} // mm 단위 그대로 전달
-                height={wall.height}
+                height={wallHeight}
                 depth={wall.depth}
                 color={wall.color}
                 spaceInfo={spaceInfo}
@@ -918,7 +981,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   removeWall(id);
                 }}
               />
-            ))}
+              );
+            })}
             
             {/* 기둥 드래그 시 고스트 프리뷰 */}
             <ColumnGhostPreview spaceInfo={spaceInfo} />

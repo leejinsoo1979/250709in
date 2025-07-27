@@ -240,8 +240,13 @@ const Configurator: React.FC = () => {
     let count = range.ideal;
     
     // 단내림이 활성화된 경우 메인구간 도어 개수 사용
-    if (spaceInfo.droppedCeiling?.enabled && spaceInfo.mainDoorCount) {
-      count = spaceInfo.mainDoorCount;
+    if (spaceInfo.droppedCeiling?.enabled) {
+      if (spaceInfo.mainDoorCount) {
+        count = spaceInfo.mainDoorCount;
+      } else {
+        // mainDoorCount가 없으면 현재 customColumnCount 사용
+        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
+      }
     } else if (spaceInfo.customColumnCount) {
       count = spaceInfo.customColumnCount;
     } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
@@ -1079,6 +1084,15 @@ const Configurator: React.FC = () => {
     console.log('🔧 handleSpaceInfoUpdate called with:', updates);
     console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
     
+    // mainDoorCount 업데이트 감지
+    if (updates.mainDoorCount !== undefined) {
+      console.log('🚪 mainDoorCount 업데이트:', {
+        이전값: spaceInfo.mainDoorCount,
+        새값: updates.mainDoorCount,
+        단내림활성화: spaceInfo.droppedCeiling?.enabled
+      });
+    }
+    
     // 단내림 설정 변경 감지
     const isDroppedCeilingUpdate = updates.droppedCeiling !== undefined;
     if (isDroppedCeilingUpdate) {
@@ -1792,6 +1806,12 @@ const Configurator: React.FC = () => {
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>레이아웃</h3>
                 </div>
+                {console.log('🔍 레이아웃 섹션 렌더링:', {
+                  activeTab: activeRightPanelTab,
+                  단내림활성화: spaceInfo.droppedCeiling?.enabled,
+                  mainDoorCount: spaceInfo.mainDoorCount,
+                  customColumnCount: spaceInfo.customColumnCount
+                })}
                 
                 {/* 도어 개수 입력 */}
                 {!spaceInfo.droppedCeiling?.enabled ? (
@@ -1866,11 +1886,17 @@ const Configurator: React.FC = () => {
                           type="number"
                           min={1}
                           max={20}
-                          value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                          value={getCurrentColumnCount()}
                           onChange={(e) => {
                             const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
                             const range = calculateDoorRange(mainWidth);
                             const value = Math.min(range.max, Math.max(range.min, parseInt(e.target.value) || range.min));
+                            console.log('🔥 메인구간 도어 개수 변경:', {
+                              입력값: e.target.value,
+                              계산된값: value,
+                              범위: range,
+                              메인구간폭: mainWidth
+                            });
                             handleSpaceInfoUpdate({ mainDoorCount: value });
                           }}
                           className={styles.numberInput}
