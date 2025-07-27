@@ -14,7 +14,7 @@ import ColumnDropTarget from './ColumnDropTarget';
  */
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab } = useUIStore();
+  const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
   const { theme } = useTheme();
   
   // 현재 활성 탭 확인 (DOM에서 직접 감지)
@@ -96,13 +96,17 @@ const ColumnGuides: React.FC = () => {
     : 0;
   const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
   
-  // 영역별 슬롯 정보 계산
-  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+  // 영역별 슬롯 정보 계산 - mainDoorCount도 고려
+  const zoneSlotInfo = React.useMemo(() => {
+    return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
   
   // 디버깅 로그 추가
   React.useEffect(() => {
     console.log('🎯 ColumnGuides - 슬롯 정보 업데이트:', {
       customColumnCount: spaceInfo.customColumnCount,
+      mainDoorCount: spaceInfo.mainDoorCount,
+      droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
       hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
       zoneSlotInfo: {
         normal: zoneSlotInfo.normal ? {
@@ -117,7 +121,7 @@ const ColumnGuides: React.FC = () => {
         } : null
       }
     });
-  }, [spaceInfo.customColumnCount, spaceInfo.droppedCeiling, zoneSlotInfo]);
+  }, [spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, spaceInfo.droppedCeiling, zoneSlotInfo]);
   
   // 1개 컬럼인 경우 가이드 표시 불필요 (단내림 활성화 시에는 표시)
   if (columnCount <= 1 && !hasDroppedCeiling) return null;
@@ -408,20 +412,30 @@ const ColumnGuides: React.FC = () => {
           })}
           
           {/* 단내림구간 탭 선택 시 단내림 영역 드롭 타겟만 표시 */}
-          {activeDroppedCeilingTab === 'dropped' && Array.from({ length: zoneSlotInfo.dropped.columnCount }, (_, i) => {
-            const x = mmToThreeUnits(
-              zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2)
-            );
-            return (
-              <ColumnDropTarget
+          {activeDroppedCeilingTab === 'dropped' && (() => {
+            console.log('🎯 단내림 영역 ColumnDropTarget 생성 시도:', {
+              activeDroppedCeilingTab,
+              'zoneSlotInfo.dropped.columnCount': zoneSlotInfo.dropped.columnCount,
+              furnitureStartY
+            });
+            
+            return Array.from({ length: zoneSlotInfo.dropped.columnCount }, (_, i) => {
+              const x = mmToThreeUnits(
+                zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2)
+              );
+              console.log(`🎯 단내림 ColumnDropTarget ${i}:`, { x, y: furnitureStartY });
+              
+              return (
+                <ColumnDropTarget
                 key={`dropped-column-${i}`}
                 columnIndex={i}
                 columnWidth={zoneSlotInfo.dropped.columnWidth}
                 position={{ x, y: furnitureStartY, z: 0 }}
                 internalSpace={internalSpace}
               />
-            );
-          })}
+              );
+            });
+          })()}
         </>
       ) : (
         /* 단내림이 없는 경우 기존 방식 */

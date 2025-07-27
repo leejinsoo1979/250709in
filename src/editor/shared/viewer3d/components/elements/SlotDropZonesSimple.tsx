@@ -22,6 +22,7 @@ interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
   showAll?: boolean;
   showDimensions?: boolean;
+  activeZone?: 'normal' | 'dropped';
 }
 
 // 전역 window 타입 확장
@@ -31,7 +32,7 @@ declare global {
   }
 }
 
-const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true }) => {
+const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true, activeZone: activeZoneProp }) => {
   if (!spaceInfo) return null;
   
   const placedModules = useFurnitureStore(state => state.placedModules);
@@ -42,7 +43,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
-  const { viewMode, activeZone } = useSpace3DView();
+  const { viewMode } = useSpace3DView();
+  const activeZone = activeZoneProp;
   
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();

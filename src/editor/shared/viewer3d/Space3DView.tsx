@@ -795,7 +795,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }
 
   return (
-    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode}>
+    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
       <div 
         style={{ 
           width: '100%', 
@@ -1003,7 +1003,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
+            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} activeZone={activeZone} />
           </React.Suspense>
         </ThreeCanvas>
 

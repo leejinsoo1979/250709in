@@ -499,14 +499,19 @@ export class ColumnIndexer {
     let normalColumnCount: number;
     let droppedColumnCount: number;
     
-    // customColumnCount가 제공되면 메인 영역에 사용
-    if (customColumnCount !== undefined && customColumnCount > 0) {
+    // 단내림이 활성화된 경우 mainDoorCount를 메인 영역에 사용
+    if (spaceInfo.droppedCeiling?.enabled && spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+      normalColumnCount = spaceInfo.mainDoorCount;
+    } else if (customColumnCount !== undefined && customColumnCount > 0) {
       normalColumnCount = customColumnCount;
-      // 단내림 영역은 너비에 맞게 자동 계산
-      droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaWidth);
     } else {
-      // customColumnCount가 없으면 각 영역의 너비에 맞는 독립적인 계산
       normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaWidth);
+    }
+    
+    // 단내림 영역은 droppedCeilingDoorCount가 있으면 사용, 없으면 자동 계산
+    if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
+      droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
+    } else {
       droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaWidth);
     }
     
@@ -514,7 +519,9 @@ export class ColumnIndexer {
       normalColumnCount,
       droppedColumnCount,
       customColumnCount,
-      'customColumnCount 적용': customColumnCount !== undefined && customColumnCount > 0 ? '예' : '아니오',
+      mainDoorCount: spaceInfo.mainDoorCount,
+      droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
+      'mainDoorCount 적용': spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0 ? '예' : '아니오',
       '메인구간 계산': `${normalAreaWidth}mm / 600mm = ${normalAreaWidth/600}`,
       '단내림구간 계산': `${droppedAreaWidth}mm / 600mm = ${droppedAreaWidth/600}`
     });

@@ -517,10 +517,35 @@ const Room: React.FC<RoomProps> = ({
               : 0;
             const droppedCeilingHeight = mmToThreeUnits(dropHeight);
             
+            console.log('🔍 오른쪽 벽 단내림 조건 체크:', {
+              'spaceInfo.droppedCeiling': spaceInfo.droppedCeiling,
+              hasDroppedCeiling,
+              isRightDropped,
+              dropHeight,
+              condition: hasDroppedCeiling && isRightDropped
+            });
+            
             // 오른쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
             if (hasDroppedCeiling && isRightDropped) {
               const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               const droppedCenterY = panelStartY + droppedHeight/2;
+              
+              console.log('🏗️ 오른쪽 단내림 벽 렌더링:', {
+                hasDroppedCeiling,
+                isRightDropped,
+                spaceHeight: spaceInfo.height,
+                dropHeight,
+                droppedHeight: droppedHeight / 0.01,
+                originalHeight: height / 0.01,
+                droppedCenterY,
+                panelStartY,
+                extendedPanelDepth: extendedPanelDepth / 0.01,
+                'mesh position': {
+                  x: width/2,
+                  y: droppedCenterY,
+                  z: extendedZOffset + extendedPanelDepth/2
+                }
+              });
               
               return (
                 <>

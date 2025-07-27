@@ -76,6 +76,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   const internalSpace = calculateInternalSpace(spaceInfo);
   const indexing = calculateSpaceIndexing(spaceInfo);
   
+  // 영역별 슬롯 정보 계산 - mainDoorCount와 droppedCeilingDoorCount도 고려
+  const zoneSlotInfo = React.useMemo(() => {
+    return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
+  
   // 기둥 슬롯 분석 (기둥 변경사항에 반응하도록 개선)
   const columnSlots = React.useMemo(() => {
     console.log('🔄 SlotDropZones - 기둥 슬롯 분석 업데이트:', {
@@ -247,7 +252,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 단내림 영역의 경우 실제 전체 슬롯 인덱스로 변환 필요
     let globalSlotIndex = slotIndex;
     if (zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      const zoneInfo = zoneSlotInfo;
       if (zoneInfo.dropped) {
         // 단내림 영역의 슬롯은 normal 영역 뒤에 오므로 전체 인덱스 조정
         globalSlotIndex = zoneInfo.normal.columnCount + zoneSlotIndex;
@@ -1097,7 +1102,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         {/* 레이캐스팅용 투명 콜라이더들 - 단내림 영역별로 생성 */}
         {(() => {
           const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-          const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          // zoneSlotInfo는 이미 위에서 계산됨
           
           if (hasDroppedCeiling && zoneSlotInfo.dropped) {
             // 단내림 활성화된 경우 - 현재 활성 탭의 영역만 콜라이더 생성
@@ -1185,7 +1190,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         {showAll && showDimensions && (() => {
           // 단내림 활성화 여부 확인
           const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-          const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          // zoneSlotInfo는 이미 위에서 계산됨
           
           // ColumnGuides와 완전히 동일한 계산 사용
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
@@ -1284,7 +1289,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           if (!currentDragData || hoveredSlotIndex === null) return null;
           
           const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-          const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          // zoneSlotInfo는 이미 위에서 계산됨
           
           // 현재 활성 영역의 슬롯 정보 가져오기
           let zoneInfo = null;
