@@ -174,14 +174,56 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   const getMainZoneWidth = () => {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      return width - (spaceInfo.droppedCeiling.width || 900);
+      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 900);
+      console.log('🎯 메인 구간 폭 계산 (DoorSlider):', {
+        totalWidth: width,
+        droppedWidth: spaceInfo.droppedCeiling.width || 900,
+        mainZoneWidth
+      });
+      return mainZoneWidth;
+    }
+    return width;
+  };
+  
+  // 단내림 구간의 폭 계산 (단내림 구간 도어개수 슬라이더용)
+  const getDroppedCeilingWidth = () => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      return spaceInfo.droppedCeiling.width || 900;
     }
     return width;
   };
   
   // 공간 넓이 기반 최소/최대 도어 개수 계산
   const calculateDoorRange = (spaceWidth: number) => {
-    // 양쪽 여백 고려 (프레임 등)
+    // 단내림이 활성화된 경우 ColumnIndexer.ts의 calculateZoneSlotInfo와 동일한 공식 적용
+    if (spaceInfo.droppedCeiling?.enabled) {
+      const frameThickness = 50; // 프레임 두께
+      const normalAreaInternalWidth = spaceWidth - frameThickness;
+      const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
+      const MIN_SLOT_WIDTH = 400; // 슬롯 최소 너비 제한
+      
+      // 최소 필요 슬롯 개수 (600mm 제한)
+      const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
+      // 최대 가능 슬롯 개수 (400mm 제한)
+      const maxPossibleSlots = Math.floor(normalAreaInternalWidth / MIN_SLOT_WIDTH);
+      
+      console.log('🎯 단내림 활성화 시 슬롯 계산 (ColumnIndexer 공식):', {
+        spaceWidth,
+        normalAreaInternalWidth,
+        minRequiredSlots,
+        maxPossibleSlots,
+        maxSlotWidth: MAX_SLOT_WIDTH,
+        minSlotWidth: MIN_SLOT_WIDTH
+      });
+      
+      return {
+        min: Math.max(1, minRequiredSlots),
+        max: Math.max(minRequiredSlots, maxPossibleSlots),
+        ideal: Math.max(minRequiredSlots, Math.round(normalAreaInternalWidth / 500))
+      };
+    }
+    
+    // 단내림이 비활성화된 경우 기존 로직
     const FRAME_MARGIN = 100; // 양쪽 50mm씩
     const usableWidth = spaceWidth - FRAME_MARGIN;
     
@@ -203,9 +245,34 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     };
   };
   
-  // 메인 구간의 폭을 기준으로 도어 범위 계산
-  const mainZoneWidth = getMainZoneWidth();
-  const doorRange = calculateDoorRange(mainZoneWidth);
+  // 도어 범위 계산 - 단내림 구간의 도어개수 슬라이더인지 확인
+  // 단내림 구간 슬라이더는 width가 단내림 폭과 같거나, 단내림이 활성화되어 있고 width가 900 이하일 때
+  const isDroppedCeilingSlider = spaceInfo.droppedCeiling?.enabled && 
+    (width === (spaceInfo.droppedCeiling.width || 900) || width <= 900);
+  
+  let doorRange;
+  if (isDroppedCeilingSlider) {
+    // 단내림 구간의 도어개수 슬라이더인 경우
+    doorRange = calculateDoorRange(width);
+    console.log('🎯 단내림 구간 도어개수 슬라이더:', {
+      width,
+      droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+      doorRange,
+      value,
+      isDroppedCeilingSlider
+    });
+  } else {
+    // 메인 구간의 도어개수 슬라이더인 경우
+    const mainZoneWidth = getMainZoneWidth();
+    doorRange = calculateDoorRange(mainZoneWidth);
+    console.log('🎯 메인 구간 도어개수 슬라이더:', {
+      mainZoneWidth,
+      doorRange,
+      value,
+      isDroppedCeilingSlider
+    });
+  }
+  
   const minDoors = doorRange.min;
   const maxDoors = doorRange.max;
   
@@ -273,21 +340,43 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     if (clampedValue !== value) {
       onChange(clampedValue);
     }
-  }, [clampedValue, value, onChange]);
+  }, [clampedValue, value]);
 
   // width 또는 단내림 설정 변경 시 현재 값이 새로운 범위를 벗어나면 자동 조정
   React.useEffect(() => {
     const mainZoneWidth = getMainZoneWidth();
     const range = calculateDoorRange(mainZoneWidth);
+    
+    // 단내림이 활성화된 경우 메인 구간의 도어 개수가 너무 적으면 자동으로 증가
+    if (spaceInfo.droppedCeiling?.enabled) {
+      const frameThickness = 50; // 프레임 두께
+      const normalAreaInternalWidth = mainZoneWidth - frameThickness;
+      const MAX_SLOT_WIDTH = 600;
+      const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
+      
+      if (value < minRequiredSlots) {
+        console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 자동 조정: ${value} → ${minRequiredSlots}`);
+        onChange(minRequiredSlots);
+        return;
+      }
+    }
+    
     if (value < range.min || value > range.max) {
       const newValue = Math.max(range.min, Math.min(range.max, value));
       onChange(newValue);
     }
-  }, [width, value, onChange, spaceInfo.droppedCeiling]);
+  }, [width, value, spaceInfo.droppedCeiling]);
   
   // 슬라이더 라벨 생성 (동적)
   const generateLabels = () => {
     const doorCount = maxDoors - minDoors + 1;
+    
+    console.log('🎯 DoorSlider 라벨 생성:', {
+      minDoors,
+      maxDoors,
+      doorCount,
+      clampedValue
+    });
     
     if (doorCount <= 8) {
       // 도어 개수가 8개 이하면 모든 값 표시
@@ -295,6 +384,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
       for (let i = minDoors; i <= maxDoors; i++) {
         labels.push(i);
       }
+      console.log('🎯 생성된 라벨:', labels);
       return labels;
     } else {
       // 도어 개수가 많으면 대표값들만 표시
@@ -307,12 +397,21 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
       if (labels[labels.length - 1] !== maxDoors) {
         labels.push(maxDoors);
       }
+      console.log('🎯 생성된 라벨:', labels);
       return labels;
     }
   };
   
   const labels = generateLabels();
   const sliderPosition = getSliderPosition(clampedValue);
+  
+  console.log('🎯 DoorSlider 렌더링:', {
+    labels,
+    sliderPosition,
+    clampedValue,
+    minDoors,
+    maxDoors
+  });
   
   return (
     <div className={styles.doorSlider}>
@@ -468,7 +567,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const getMainZoneWidth = () => {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      return width - (spaceInfo.droppedCeiling.width || 900);
+      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 900);
+      console.log('🎯 메인 구간 폭 계산 (RightPanel):', {
+        totalWidth: width,
+        droppedWidth: spaceInfo.droppedCeiling.width || 900,
+        mainZoneWidth
+      });
+      return mainZoneWidth;
     }
     return width;
   };

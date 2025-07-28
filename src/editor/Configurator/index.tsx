@@ -1334,6 +1334,60 @@ const Configurator: React.FC = () => {
       }
     }
     
+    // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
+    if (updates.droppedCeiling?.enabled && !spaceInfo.droppedCeiling?.enabled) {
+      // 단내림이 새로 활성화된 경우
+      const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
+      const droppedWidth = updates.droppedCeiling.width || 900;
+      const mainZoneWidth = currentWidth - droppedWidth;
+      const frameThickness = 50;
+      const normalAreaInternalWidth = mainZoneWidth - frameThickness;
+      const MAX_SLOT_WIDTH = 600;
+      const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
+      
+      // 현재 메인 도어 개수가 최소 필요 개수보다 적으면 자동 조정
+      const currentMainDoorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 1;
+      if (currentMainDoorCount < minRequiredSlots) {
+        console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 자동 조정: ${currentMainDoorCount} → ${minRequiredSlots}`);
+        finalUpdates = { ...finalUpdates, mainDoorCount: minRequiredSlots };
+      }
+      
+      // 단내림 구간 도어개수 기본값 설정
+      const droppedFrameThickness = 50;
+      const droppedInternalWidth = droppedWidth - droppedFrameThickness;
+      const droppedMinSlots = Math.max(1, Math.ceil(droppedInternalWidth / MAX_SLOT_WIDTH));
+      const droppedMaxSlots = Math.max(droppedMinSlots, Math.floor(droppedInternalWidth / 400));
+      const droppedDefaultCount = Math.max(droppedMinSlots, Math.min(droppedMaxSlots, 2));
+      
+      console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
+        droppedWidth,
+        droppedInternalWidth,
+        droppedMinSlots,
+        droppedMaxSlots
+      });
+      
+      finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: droppedDefaultCount };
+    }
+    
+    // 단내림 폭 변경 시 단내림 도어개수 자동 조정
+    if (updates.droppedCeiling?.width && spaceInfo.droppedCeiling?.enabled) {
+      const frameThickness = 50;
+      const internalWidth = updates.droppedCeiling.width - frameThickness;
+      const MAX_SLOT_WIDTH = 600;
+      const MIN_SLOT_WIDTH = 400;
+      const newDoorRange = {
+        min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
+        max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
+      };
+      
+      const currentDoorCount = spaceInfo.droppedCeilingDoorCount || 2;
+      if (currentDoorCount < newDoorRange.min || currentDoorCount > newDoorRange.max) {
+        const adjustedDoorCount = Math.max(newDoorRange.min, Math.min(newDoorRange.max, currentDoorCount));
+        console.log(`🔧 단내림 폭 변경 시 도어개수 자동 조정: ${currentDoorCount} → ${adjustedDoorCount}`);
+        finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: adjustedDoorCount };
+      }
+    }
+    
     console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
       hasWallConfig: !!finalUpdates.wallConfig,
@@ -1716,8 +1770,7 @@ const Configurator: React.FC = () => {
                                     ...spaceInfo.droppedCeiling,
                                     enabled: true,
                                     width: value
-                                  },
-                                  droppedCeilingDoorCount: newDoorCount
+                                  }
                                 });
                               }
                             }}
@@ -1835,32 +1888,158 @@ const Configurator: React.FC = () => {
                   </div>
                   
                   {/* 단내림 구간 도어 개수 입력 */}
-                  <TouchCompatibleControl
-                    label="단내림 구간 도어 개수"
-                    value={spaceInfo.droppedCeilingDoorCount || 1}
-                    min={1}
-                    max={Math.min(5, calculateDoorRange(spaceInfo.droppedCeiling?.width || 900).max)}
-                    step={1}
-                    unit="개"
-                    onChange={(value) => {
-                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                    }}
-                    type="number"
-                  />
+                  <div className={styles.inputGroup}>
+                    <div className={styles.inputRow}>
+                      <label className={styles.inputLabel}>단내림 구간 도어 개수</label>
+                      <div className={styles.numberInputGroup}>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const current = spaceInfo.droppedCeilingDoorCount || 2;
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const MAX_SLOT_WIDTH = 600;
+                            const MIN_SLOT_WIDTH = 400;
+                            const doorRange = {
+                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
+                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
+                            };
+                            if (current > doorRange.min) {
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current - 1 });
+                            }
+                          }}
+                          disabled={(() => {
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || (() => {
+                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                              const frameThickness = 50;
+                              const internalWidth = droppedWidth - frameThickness;
+                              const MAX_SLOT_WIDTH = 600;
+                              return Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
+                            })();
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
+                            return currentValue <= minValue;
+                          })()}
+                        >
+                          −
+                        </button>
+                        <div className={styles.numberInputValue}>
+                          {(() => {
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const MAX_SLOT_WIDTH = 600;
+                            const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
+                            const finalValue = spaceInfo.droppedCeilingDoorCount || calculatedMin;
+                            
+                            console.log('🔍 단내림 구간 도어개수 입력필드:', {
+                              droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
+                              droppedCeiling: spaceInfo.droppedCeiling,
+                              droppedWidth,
+                              internalWidth,
+                              calculatedMin,
+                              finalValue
+                            });
+                            
+                            return null;
+                          })()}
+                          <input
+                            type="number"
+                            value={(() => {
+                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                              const frameThickness = 50;
+                              const internalWidth = droppedWidth - frameThickness;
+                              const MAX_SLOT_WIDTH = 600;
+                              const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
+                              
+                              // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 유효한 값이면 사용
+                              if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount && spaceInfo.droppedCeilingDoorCount >= calculatedMin) {
+                                return spaceInfo.droppedCeilingDoorCount;
+                              }
+                              // 그렇지 않으면 계산된 기본값 사용
+                              return calculatedMin;
+                            })()}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 2;
+                              console.log('🔍 단내림 구간 도어개수 변경:', {
+                                inputValue: e.target.value,
+                                parsedValue: value,
+                                previousValue: spaceInfo.droppedCeilingDoorCount
+                              });
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                            }}
+                            style={{ 
+                              width: '60px', 
+                              textAlign: 'center',
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--theme-text)',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          />
+                        </div>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const current = spaceInfo.droppedCeilingDoorCount || 2;
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const MAX_SLOT_WIDTH = 600;
+                            const MIN_SLOT_WIDTH = 400;
+                            const doorRange = {
+                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
+                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
+                            };
+                            if (current < doorRange.max) {
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current + 1 });
+                            }
+                          }}
+                          disabled={(() => {
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || (() => {
+                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                              const frameThickness = 50;
+                              const internalWidth = droppedWidth - frameThickness;
+                              const MAX_SLOT_WIDTH = 600;
+                              return Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
+                            })();
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const maxValue = Math.max(1, Math.floor(internalWidth / 400));
+                            return currentValue >= maxValue;
+                          })()}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <DoorSlider
+                      value={(() => {
+                        // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 설정되어 있으면 사용
+                        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount) {
+                          return spaceInfo.droppedCeilingDoorCount;
+                        }
+                        // 그렇지 않으면 계산된 기본값 사용
+                        const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                        const frameThickness = 50;
+                        const internalWidth = droppedWidth - frameThickness;
+                        const MAX_SLOT_WIDTH = 600;
+                        const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
+                        return calculatedMin;
+                      })()}
+                      onChange={(value) => {
+                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                      }}
+                      width={spaceInfo.droppedCeiling?.width || 900}
+                    />
+                  </div>
                   
-                  {/* 단내림 구간 도어 개수 슬라이더 */}
-                  <TouchCompatibleControl
-                    label=""
-                    value={spaceInfo.droppedCeilingDoorCount || 1}
-                    min={1}
-                    max={Math.min(5, calculateDoorRange(spaceInfo.droppedCeiling?.width || 900).max)}
-                    step={1}
-                    unit=""
-                    onChange={(value) => {
-                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                    }}
-                    type="slider"
-                  />
+
                 </div>
               </>
             )}
@@ -2002,7 +2181,7 @@ const Configurator: React.FC = () => {
                       onChange={(value) => {
                         handleSpaceInfoUpdate({ mainDoorCount: value });
                       }}
-                      width={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
+                      width={spaceInfo.width || 4800}
                     />
                   </div>
                 </>
@@ -2469,7 +2648,7 @@ const Configurator: React.FC = () => {
                     
                     // 메인구간 도어 개수 계산
                     const totalWidth = spaceInfo.width || 4800;
-                    const droppedWidth = 1200; // 단내림 기본 폭
+                    const droppedWidth = 900; // 단내림 기본 폭 (올바른 값)
                     const mainWidth = totalWidth - droppedWidth;
                     const mainRange = calculateDoorRange(mainWidth);
                     const currentCount = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || mainRange.ideal;

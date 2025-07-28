@@ -198,7 +198,9 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     position: 'right',
     width: 900,
     dropHeight: 200
-  }
+  },
+  // 도어 개수 기본값 설정
+  droppedCeilingDoorCount: 2  // 단내림 구간 도어 개수 기본값
 };
 
 // 초기 상태

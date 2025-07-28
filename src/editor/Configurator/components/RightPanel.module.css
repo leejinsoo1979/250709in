@@ -438,7 +438,7 @@
 
 .sliderTrack {
   height: 6px;
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.2));
   border-radius: 3px;
   position: relative;
   margin: 12px 0 8px 0;
@@ -464,7 +464,7 @@
   transform: translate(-50%, -50%);
   cursor: grab;
   transition: transform 0.1s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--theme-primary-light, rgba(0, 0, 0, 0.2));
   z-index: 10;
   /* 터치 타겟 확대 */
   &::before {
@@ -480,13 +480,13 @@
 
 .sliderHandle:hover {
   transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--theme-primary-light, rgba(0, 0, 0, 0.3));
 }
 
 .sliderHandle:active {
   cursor: grabbing;
   transform: translate(-50%, -50%) scale(0.95);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px var(--theme-primary-light, rgba(0, 0, 0, 0.2));
 }
 
 .sliderLabels {
@@ -521,7 +521,7 @@
 .sliderLabels span.active {
   color: var(--theme-primary);
   font-weight: 600;
-  background: var(--theme-primary-light);
+  background: var(--theme-primary-light, rgba(99, 102, 241, 0.1));
   border: 1px solid var(--theme-primary);
 }
 
