@@ -1,0 +1,426 @@
+/* ================================
+   Responsive CSS Framework
+   각 디바이스별 반응형 스타일
+   ================================ */
+
+/* ================================
+   Breakpoints
+   ================================ */
+:root {
+  /* Mobile First Breakpoints */
+  --breakpoint-xs: 320px;   /* Small phones */
+  --breakpoint-sm: 576px;   /* Phones */
+  --breakpoint-md: 768px;   /* Tablets */
+  --breakpoint-lg: 1024px;  /* Desktop */
+  --breakpoint-xl: 1280px;  /* Large Desktop */
+  --breakpoint-xxl: 1920px; /* Extra Large Desktop */
+}
+
+/* ================================
+   Mobile Devices (320px - 767px)
+   ================================ */
+@media screen and (max-width: 767px) {
+  /* Typography */
+  html {
+    font-size: 14px; /* Base font size for mobile */
+  }
+  
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.1rem; }
+  
+  /* Layout */
+  .container {
+    padding: 0 16px;
+    max-width: 100%;
+  }
+  
+  /* Grid System */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* Components */
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    width: 100%;
+    height: 100vh;
+    transition: left 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .sidebar.active {
+    left: 0;
+  }
+  
+  /* Buttons */
+  button, .button {
+    min-height: 44px; /* iOS touch target */
+    padding: 12px 20px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  /* Forms */
+  input, textarea, select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px;
+    width: 100%;
+  }
+  
+  /* Modal */
+  .modal {
+    padding: 20px;
+    width: 95%;
+    max-width: none;
+  }
+  
+  /* Navigation */
+  .nav {
+    flex-direction: column;
+  }
+  
+  /* Cards */
+  .card {
+    margin-bottom: 16px;
+  }
+}
+
+/* ================================
+   Small Mobile (320px - 575px)
+   ================================ */
+@media screen and (max-width: 575px) {
+  /* Extra small devices specific styles */
+  .container {
+    padding: 0 12px;
+  }
+  
+  /* Hide non-essential elements */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Stack elements vertically */
+  .flex-row {
+    flex-direction: column;
+  }
+}
+
+/* ================================
+   Tablets (768px - 1023px)
+   ================================ */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  /* Typography */
+  html {
+    font-size: 15px;
+  }
+  
+  /* Layout */
+  .container {
+    padding: 0 24px;
+    max-width: 750px;
+    margin: 0 auto;
+  }
+  
+  /* Grid System */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    position: sticky;
+    top: 0;
+  }
+  
+  /* Modal */
+  .modal {
+    width: 80%;
+    max-width: 600px;
+  }
+}
+
+/* ================================
+   Desktop (1024px - 1279px)
+   ================================ */
+@media screen and (min-width: 1024px) and (max-width: 1279px) {
+  /* Typography */
+  html {
+    font-size: 16px;
+  }
+  
+  /* Layout */
+  .container {
+    padding: 0 32px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  
+  /* Grid System */
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 320px;
+  }
+}
+
+/* ================================
+   Large Desktop (1280px - 1919px)
+   ================================ */
+@media screen and (min-width: 1280px) and (max-width: 1919px) {
+  /* Layout */
+  .container {
+    padding: 0 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Grid System */
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+  }
+}
+
+/* ================================
+   Extra Large Desktop (1920px+)
+   ================================ */
+@media screen and (min-width: 1920px) {
+  /* Layout */
+  .container {
+    padding: 0 48px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  /* Grid System */
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 40px;
+  }
+}
+
+/* ================================
+   Touch Device Specific
+   ================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch-friendly styles */
+  button, 
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover effects */
+  button:hover,
+  a:hover {
+    background-color: inherit;
+    color: inherit;
+  }
+  
+  /* Add active states */
+  button:active,
+  a:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* ================================
+   Portrait Orientation
+   ================================ */
+@media screen and (orientation: portrait) {
+  /* Portrait specific styles */
+  .landscape-only {
+    display: none !important;
+  }
+  
+  /* Adjust layouts for portrait */
+  .viewer-container {
+    height: 50vh;
+  }
+  
+  .controls-container {
+    height: 50vh;
+    overflow-y: auto;
+  }
+}
+
+/* ================================
+   Landscape Orientation
+   ================================ */
+@media screen and (orientation: landscape) {
+  /* Landscape specific styles */
+  .portrait-only {
+    display: none !important;
+  }
+  
+  /* Adjust layouts for landscape */
+  .viewer-container {
+    width: 60%;
+    height: 100vh;
+  }
+  
+  .controls-container {
+    width: 40%;
+    height: 100vh;
+  }
+}
+
+/* ================================
+   High DPI Displays
+   ================================ */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi) {
+  /* High resolution specific styles */
+  .icon {
+    background-size: contain;
+  }
+  
+  /* Use higher resolution images */
+  .logo {
+    background-image: url('/images/logo@2x.png');
+  }
+}
+
+/* ================================
+   Print Styles
+   ================================ */
+@media print {
+  /* Hide non-printable elements */
+  .no-print,
+  .sidebar,
+  .header,
+  .footer,
+  button,
+  .controls {
+    display: none !important;
+  }
+  
+  /* Print-friendly styles */
+  body {
+    font-size: 12pt;
+    color: #000;
+    background: #fff;
+  }
+  
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+  
+  /* Page breaks */
+  .page-break {
+    page-break-after: always;
+  }
+}
+
+/* ================================
+   Utility Classes
+   ================================ */
+
+/* Responsive Display */
+.hide-xs { display: none; }
+.hide-sm { display: none; }
+.hide-md { display: none; }
+.hide-lg { display: none; }
+.hide-xl { display: none; }
+
+@media (min-width: 576px) { .hide-xs { display: initial; } }
+@media (min-width: 768px) { .hide-sm { display: initial; } }
+@media (min-width: 1024px) { .hide-md { display: initial; } }
+@media (min-width: 1280px) { .hide-lg { display: initial; } }
+@media (min-width: 1920px) { .hide-xl { display: initial; } }
+
+.show-xs { display: initial; }
+.show-sm { display: initial; }
+.show-md { display: initial; }
+.show-lg { display: initial; }
+.show-xl { display: initial; }
+
+@media (min-width: 576px) { .show-xs { display: none; } }
+@media (min-width: 768px) { .show-sm { display: none; } }
+@media (min-width: 1024px) { .show-md { display: none; } }
+@media (min-width: 1280px) { .show-lg { display: none; } }
+@media (min-width: 1920px) { .show-xl { display: none; } }
+
+/* Responsive Text Alignment */
+.text-center-xs { text-align: center; }
+.text-left-xs { text-align: left; }
+.text-right-xs { text-align: right; }
+
+@media (min-width: 768px) {
+  .text-center-md { text-align: center; }
+  .text-left-md { text-align: left; }
+  .text-right-md { text-align: right; }
+}
+
+@media (min-width: 1024px) {
+  .text-center-lg { text-align: center; }
+  .text-left-lg { text-align: left; }
+  .text-right-lg { text-align: right; }
+}
+
+/* Responsive Spacing */
+.p-xs { padding: 8px; }
+.p-sm { padding: 16px; }
+.p-md { padding: 24px; }
+.p-lg { padding: 32px; }
+.p-xl { padding: 48px; }
+
+.m-xs { margin: 8px; }
+.m-sm { margin: 16px; }
+.m-md { margin: 24px; }
+.m-lg { margin: 32px; }
+.m-xl { margin: 48px; }
+
+/* Responsive Flex */
+@media (max-width: 767px) {
+  .flex-column-mobile {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .flex-column-tablet {
+    flex-direction: column !important;
+  }
+}
+
+/* Responsive Grid Columns */
+.col-xs-1 { grid-column: span 1; }
+.col-xs-2 { grid-column: span 2; }
+.col-xs-3 { grid-column: span 3; }
+.col-xs-4 { grid-column: span 4; }
+.col-xs-5 { grid-column: span 5; }
+.col-xs-6 { grid-column: span 6; }
+.col-xs-full { grid-column: 1 / -1; }
+
+@media (min-width: 768px) {
+  .col-md-1 { grid-column: span 1; }
+  .col-md-2 { grid-column: span 2; }
+  .col-md-3 { grid-column: span 3; }
+  .col-md-4 { grid-column: span 4; }
+  .col-md-5 { grid-column: span 5; }
+  .col-md-6 { grid-column: span 6; }
+  .col-md-full { grid-column: 1 / -1; }
+}
+
+@media (min-width: 1024px) {
+  .col-lg-1 { grid-column: span 1; }
+  .col-lg-2 { grid-column: span 2; }
+  .col-lg-3 { grid-column: span 3; }
+  .col-lg-4 { grid-column: span 4; }
+  .col-lg-5 { grid-column: span 5; }
+  .col-lg-6 { grid-column: span 6; }
+  .col-lg-full { grid-column: 1 / -1; }
+}

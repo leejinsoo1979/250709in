@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   Timestamp,
   setDoc,
-  getDocFromServer
+  getDocFromServer,
+  getDocsFromServer
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
@@ -138,7 +139,8 @@ export const getDesignFiles = async (projectId: string): Promise<{ designFiles: 
       where('projectId', '==', projectId)
     );
 
-    const querySnapshot = await getDocs(q);
+    // 캐시 문제 해결을 위해 서버에서 직접 가져오기
+    const querySnapshot = await getDocsFromServer(q);
     const designFiles: DesignFileSummary[] = [];
 
     querySnapshot.forEach((doc) => {
@@ -285,8 +287,8 @@ export const updateProject = async (
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     
-    // 먼저 소유자 확인
-    const docSnap = await getDoc(docRef);
+    // 먼저 소유자 확인 (서버에서 직접 가져오기)
+    const docSnap = await getDocFromServer(docRef);
     if (!docSnap.exists() || docSnap.data().userId !== user.uid) {
       return { error: '프로젝트에 접근할 권한이 없습니다.' };
     }
@@ -336,8 +338,8 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     
-    // 먼저 소유자 확인
-    const docSnap = await getDoc(docRef);
+    // 먼저 소유자 확인 (서버에서 직접 가져오기)
+    const docSnap = await getDocFromServer(docRef);
     if (!docSnap.exists() || docSnap.data().userId !== user.uid) {
       return { error: '프로젝트에 접근할 권한이 없습니다.' };
     }
@@ -347,7 +349,7 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
       collection(db, 'designFiles'),
       where('projectId', '==', projectId)
     );
-    const designFilesSnapshot = await getDocs(designFilesQuery);
+    const designFilesSnapshot = await getDocsFromServer(designFilesQuery);
     
     const deletePromises = designFilesSnapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
@@ -391,8 +393,8 @@ export const updateDesignFile = async (
 
     const docRef = doc(db, 'designFiles', designFileId);
     
-    // 디자인파일 존재 여부 확인
-    const docSnap = await getDoc(docRef);
+    // 디자인파일 존재 여부 확인 (서버에서 직접 가져오기)
+    const docSnap = await getDocFromServer(docRef);
     if (!docSnap.exists()) {
       console.error('🔥 [updateDesignFile] 디자인파일 없음:', designFileId);
       return { error: '디자인파일을 찾을 수 없습니다.' };
@@ -414,9 +416,9 @@ export const updateDesignFile = async (
 
     await updateDoc(docRef, updateData);
     
-    // 저장 후 즉시 확인
+    // 저장 후 즉시 확인 (서버에서 직접 가져오기)
     console.log('🔥 [updateDesignFile] 저장 직후 확인 시작');
-    const verifyDoc = await getDoc(docRef);
+    const verifyDoc = await getDocFromServer(docRef);
     if (verifyDoc.exists()) {
       const savedData = verifyDoc.data();
       console.log('🔥 [updateDesignFile] 저장 직후 확인:', {
@@ -465,7 +467,7 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
     
     // 먼저 소유권 확인 (디자인파일이 속한 프로젝트의 소유자인지 확인)
     const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
-    const projectSnap = await getDoc(projectRef);
+    const projectSnap = await getDocFromServer(projectRef);
     
     if (!projectSnap.exists() || projectSnap.data().userId !== user.uid) {
       return { error: '이 디자인파일을 삭제할 권한이 없습니다.' };
@@ -504,7 +506,8 @@ export const getUserProjects = async (userId?: string): Promise<{ projects: Proj
       orderBy('updatedAt', 'desc')
     );
 
-    const querySnapshot = await getDocs(q);
+    // 캐시 문제 해결을 위해 서버에서 직접 가져오기
+    const querySnapshot = await getDocsFromServer(q);
     const projects: ProjectSummary[] = [];
 
     querySnapshot.forEach((doc) => {
@@ -588,7 +591,7 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
     
     // 디자인 파일이 속한 프로젝트의 소유자 확인
     const projectRef = doc(db, PROJECTS_COLLECTION, data.projectId);
-    const projectSnap = await getDoc(projectRef);
+    const projectSnap = await getDocFromServer(projectRef);
     
     if (!projectSnap.exists() || projectSnap.data().userId !== user.uid) {
       return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
@@ -671,7 +674,7 @@ export const loadFolderData = async (
     }
 
     const folderDocRef = doc(db, 'projectFolders', `${user.uid}_${projectId}`);
-    const docSnap = await getDoc(folderDocRef);
+    const docSnap = await getDocFromServer(folderDocRef);
 
     if (!docSnap.exists()) {
       return { folders: [], error: null };

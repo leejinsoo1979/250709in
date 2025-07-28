@@ -204,12 +204,12 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
                             currentProject?.id === project.id ? styles.activeAvatar : ''
                           }`}>
                             <span className={styles.avatarText}>
-                              {project.title.charAt(0).toUpperCase()}
+                              {project.title ? project.title.charAt(0).toUpperCase() : '?'}
                             </span>
                           </div>
                           <div className={styles.projectItemInfo}>
                             <div className={styles.projectItemName}>
-                              {project.title}
+                              {project.title || '제목 없음'}
                             </div>
                             <div className={styles.projectItemMeta}>
                               <span className={styles.itemDate}>

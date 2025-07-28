@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase 설정 (환경변수에서 가져오기)
@@ -18,7 +18,14 @@ const app = initializeApp(firebaseConfig);
 
 // Firebase 서비스 초기화
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Firestore 초기화 - 캐시 설정 최적화
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
+
 export const storage = getStorage(app);
 
 export default app; 

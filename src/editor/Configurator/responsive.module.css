@@ -1,0 +1,428 @@
+/* ================================
+   Configurator Responsive Styles
+   3D 에디터 반응형 스타일
+   ================================ */
+
+/* ================================
+   Mobile Layout (320px - 767px)
+   ================================ */
+@media screen and (max-width: 767px) {
+  /* Main Container */
+  .configurator {
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  /* Header */
+  .header {
+    height: 56px;
+    padding: 8px 12px;
+  }
+  
+  .headerTitle {
+    font-size: 16px;
+  }
+  
+  .headerActions {
+    gap: 8px;
+  }
+  
+  .headerButton {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  /* 3D Viewer */
+  .viewerContainer {
+    height: 40vh;
+    min-height: 300px;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Controls Container */
+  .controlsContainer {
+    height: calc(60vh - 56px);
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(60vh - 56px);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    background: var(--theme-background);
+    z-index: 1000;
+    border-top: 1px solid var(--theme-border);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .sidebar.active {
+    transform: translateY(0);
+  }
+  
+  /* Sidebar Handle */
+  .sidebarHandle {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--theme-border);
+    border-radius: 2px;
+  }
+  
+  /* Tab Navigation */
+  .tabNav {
+    padding: 16px 12px 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .tabButton {
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  /* Content Panels */
+  .panel {
+    padding: 16px;
+  }
+  
+  /* Module Library */
+  .moduleGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .moduleCard {
+    padding: 12px;
+  }
+  
+  /* Right Panel */
+  .rightPanel {
+    display: none; /* Hide on mobile */
+  }
+  
+  /* Floating Action Button */
+  .floatingActionButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--theme-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 999;
+  }
+}
+
+/* ================================
+   Small Mobile (320px - 575px)
+   ================================ */
+@media screen and (max-width: 575px) {
+  /* Even more compact layout */
+  .moduleGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .headerActions {
+    flex-wrap: wrap;
+  }
+  
+  /* Simplify controls */
+  .complexControl {
+    display: none;
+  }
+  
+  .simpleControl {
+    display: block;
+  }
+}
+
+/* ================================
+   Tablet Portrait (768px - 1023px)
+   ================================ */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+  .configurator {
+    flex-direction: column;
+  }
+  
+  .viewerContainer {
+    height: 50vh;
+    width: 100%;
+  }
+  
+  .sidebar {
+    height: calc(50vh - 64px);
+    width: 100%;
+    position: relative;
+    transform: none;
+  }
+  
+  .moduleGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  
+  .rightPanel {
+    position: fixed;
+    right: -320px;
+    top: 64px;
+    bottom: 0;
+    width: 320px;
+    transition: right 0.3s ease;
+    background: var(--theme-background);
+    border-left: 1px solid var(--theme-border);
+    z-index: 900;
+  }
+  
+  .rightPanel.active {
+    right: 0;
+  }
+}
+
+/* ================================
+   Tablet Landscape (768px - 1023px)
+   ================================ */
+@media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .configurator {
+    flex-direction: row;
+  }
+  
+  .viewerContainer {
+    width: 60%;
+    height: calc(100vh - 64px);
+  }
+  
+  .sidebar {
+    width: 40%;
+    height: calc(100vh - 64px);
+    position: relative;
+  }
+  
+  .rightPanel {
+    display: none;
+  }
+}
+
+/* ================================
+   Desktop (1024px+)
+   ================================ */
+@media screen and (min-width: 1024px) {
+  /* Default desktop layout */
+  .configurator {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 320px;
+    height: 100%;
+    position: relative;
+    transform: none;
+    border-right: 1px solid var(--theme-border);
+  }
+  
+  .viewerContainer {
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+  
+  .rightPanel {
+    width: 320px;
+    height: 100%;
+    position: relative;
+    border-left: 1px solid var(--theme-border);
+  }
+  
+  .moduleGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  /* No mobile-specific UI elements */
+  .floatingActionButton,
+  .sidebarHandle {
+    display: none;
+  }
+}
+
+/* ================================
+   Large Desktop (1280px+)
+   ================================ */
+@media screen and (min-width: 1280px) {
+  .sidebar {
+    width: 360px;
+  }
+  
+  .rightPanel {
+    width: 360px;
+  }
+  
+  .moduleGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ================================
+   Extra Large Desktop (1920px+)
+   ================================ */
+@media screen and (min-width: 1920px) {
+  .sidebar {
+    width: 400px;
+  }
+  
+  .rightPanel {
+    width: 400px;
+  }
+  
+  .moduleGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+/* ================================
+   Touch Device Optimizations
+   ================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .tabButton,
+  .moduleCard,
+  .controlButton {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover effects */
+  .moduleCard:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Add touch feedback */
+  .moduleCard:active,
+  .tabButton:active,
+  .controlButton:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  
+  /* Swipe gestures for panels */
+  .swipeablePanel {
+    touch-action: pan-y;
+  }
+  
+  /* Larger drag handles */
+  .dragHandle {
+    padding: 12px;
+    cursor: grab;
+  }
+  
+  .dragHandle:active {
+    cursor: grabbing;
+  }
+}
+
+/* ================================
+   Orientation Changes
+   ================================ */
+@media screen and (orientation: portrait) {
+  /* Optimize for portrait viewing */
+  .viewerContainer {
+    aspect-ratio: 4/3;
+  }
+  
+  .viewerControls {
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  /* Optimize for landscape viewing */
+  .viewerContainer {
+    aspect-ratio: 16/9;
+  }
+  
+  .viewerControls {
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+  }
+}
+
+/* ================================
+   Responsive Typography
+   ================================ */
+@media screen and (max-width: 767px) {
+  .title { font-size: 20px; }
+  .subtitle { font-size: 16px; }
+  .body { font-size: 14px; }
+  .caption { font-size: 12px; }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .title { font-size: 24px; }
+  .subtitle { font-size: 18px; }
+  .body { font-size: 15px; }
+  .caption { font-size: 13px; }
+}
+
+@media screen and (min-width: 1024px) {
+  .title { font-size: 28px; }
+  .subtitle { font-size: 20px; }
+  .body { font-size: 16px; }
+  .caption { font-size: 14px; }
+}
+
+/* ================================
+   Responsive Animations
+   ================================ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================
+   Print Styles
+   ================================ */
+@media print {
+  .sidebar,
+  .rightPanel,
+  .header,
+  .controls,
+  .floatingActionButton {
+    display: none !important;
+  }
+  
+  .viewerContainer {
+    width: 100%;
+    height: 100%;
+    page-break-inside: avoid;
+  }
+}
