@@ -74,6 +74,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   
+  // 초기 카메라 설정 저장
+  const initialCameraSetup = useRef<{
+    position0: THREE.Vector3 | null;
+    target0: THREE.Vector3 | null;
+    zoom0: number | null;
+  }>({
+    position0: null,
+    target0: null,
+    zoom0: null
+  });
+  
+  
   // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
   useEffect(() => {
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
@@ -175,6 +187,77 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       window.removeEventListener('furniture-drag-end', handleFurnitureDragEnd);
     };
   }, []);
+
+  // 스페이스바로 카메라 리셋
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 스페이스바 (32) 또는 Space 키
+      if (e.code === 'Space' || e.keyCode === 32) {
+        e.preventDefault(); // 페이지 스크롤 방지
+        
+        if (controlsRef.current) {
+          const controls = controlsRef.current;
+          
+          console.log('🎯 카메라 리셋 전 상태:', {
+            currentPosition: controls.object.position.toArray(),
+            currentTarget: controls.target.toArray(),
+            cameraPosition,
+            cameraTarget,
+            cameraConfig: camera
+          });
+          
+          // OrbitControls 리셋
+          controls.reset();
+          
+          // 전달받은 카메라 위치로 재설정
+          if (cameraPosition) {
+            controls.object.position.set(...cameraPosition);
+          } else {
+            controls.object.position.set(...camera.position);
+          }
+          
+          if (cameraTarget) {
+            controls.target.set(...cameraTarget);
+          } else {
+            controls.target.set(...camera.target);
+          }
+          
+          // 카메라 up 벡터도 리셋
+          if (cameraUp) {
+            controls.object.up.set(...cameraUp);
+          } else if (camera.up) {
+            controls.object.up.set(...camera.up);
+          } else {
+            controls.object.up.set(0, 1, 0);
+          }
+          
+          if (camera.is2DMode && camera.zoom) {
+            controls.object.zoom = camera.zoom;
+            controls.object.updateProjectionMatrix();
+          }
+          
+          // 카메라가 타겟을 바라보도록 설정
+          controls.object.lookAt(controls.target);
+          
+          // 컨트롤 업데이트
+          controls.update();
+          
+          console.log('🎯 카메라 위치 리셋 완료', {
+            newPosition: controls.object.position.toArray(),
+            newTarget: controls.target.toArray(),
+            newUp: controls.object.up.toArray(),
+            zoom: controls.object.zoom
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [camera, cameraPosition, cameraTarget, cameraUp]);
   
   // ViewMode가 변경될 때 캔버스 재생성 - 제거
   // 불필요한 재생성은 React Three Fiber 컨텍스트 문제를 유발
@@ -427,7 +510,25 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         
         {/* OrbitControls */}
         <OrbitControls 
-          ref={controlsRef}
+          ref={(ref) => {
+            controlsRef.current = ref;
+            // OrbitControls가 처음 생성될 때 초기 상태 저장
+            if (ref && !initialCameraSetup.current.position0) {
+              // 짧은 지연 후 초기 상태 저장 (OrbitControls가 완전히 초기화된 후)
+              setTimeout(() => {
+                if (ref && ref.object) {
+                  console.log('📸 OrbitControls 초기 상태 저장', {
+                    position: ref.object.position.toArray(),
+                    target: ref.target.toArray(),
+                    zoom: ref.object.zoom
+                  });
+                  initialCameraSetup.current.position0 = ref.object.position.clone();
+                  initialCameraSetup.current.target0 = ref.target.clone();
+                  initialCameraSetup.current.zoom0 = ref.object.zoom;
+                }
+              }, 100);
+            }
+          }}
           enabled={controlsConfig.enabled && !isFurnitureDragging}
           target={controlsConfig.target}
           minPolarAngle={controlsConfig.minPolarAngle}

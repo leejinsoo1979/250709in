@@ -24,7 +24,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
-import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
+import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget } from './components/base/utils/threeUtils';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -817,6 +817,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       >
         <ThreeCanvas 
           cameraPosition={cameraPosition}
+          cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
           renderMode={renderMode}
