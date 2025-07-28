@@ -75,21 +75,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 분할창(mainDoorCount)이 설정된 경우도 처리
   if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
-    // 분할창인 경우, 기본 슬롯 수와 다르면 spaceInfo 조정
+    // 분할창인 경우 항상 조정 (mainDoorCount 정보 유지)
     const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
-    if (spaceInfo.mainDoorCount !== defaultColumnCount) {
-      zoneSpaceInfo = {
-        ...spaceInfo,
-        customColumnCount: spaceInfo.mainDoorCount,
-        columnMode: 'custom' as const
-      };
-      console.log('🎯 [FurnitureItem] 분할창 가구 - 크기 조정:', {
-        mainDoorCount: spaceInfo.mainDoorCount,
-        defaultColumnCount,
-        originalWidth: spaceInfo.width,
-        moduleId: placedModule.moduleId
-      });
-    }
+    zoneSpaceInfo = {
+      ...spaceInfo,
+      mainDoorCount: spaceInfo.mainDoorCount,  // mainDoorCount 유지 중요!
+      customColumnCount: spaceInfo.mainDoorCount,
+      columnMode: 'custom' as const
+    };
+    console.log('🎯 [FurnitureItem] 분할창 가구 - 크기 조정:', {
+      mainDoorCount: spaceInfo.mainDoorCount,
+      defaultColumnCount,
+      originalWidth: spaceInfo.width,
+      moduleId: placedModule.moduleId,
+      moduleDataBefore: moduleData
+    });
   }
   // 단내림 영역이 활성화되고 가구가 특정 영역에 속한 경우
   else if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {

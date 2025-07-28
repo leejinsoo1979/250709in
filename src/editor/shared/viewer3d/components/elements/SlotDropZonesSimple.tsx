@@ -280,22 +280,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
     
-    // 분할창인 경우 spaceInfo 조정
+    // 분할창인 경우 spaceInfo 조정 - mainDoorCount 정보도 포함
     let adjustedSpaceInfo = spaceInfo;
     if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
       const defaultColumnCount = Math.max(1, Math.floor(internalSpace.width / 600));
-      if (spaceInfo.mainDoorCount !== defaultColumnCount) {
-        adjustedSpaceInfo = {
-          ...spaceInfo,
-          customColumnCount: spaceInfo.mainDoorCount,
-          columnMode: 'custom' as const
-        };
-        console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
-          mainDoorCount: spaceInfo.mainDoorCount,
-          defaultColumnCount,
-          internalWidth: internalSpace.width
-        });
-      }
+      adjustedSpaceInfo = {
+        ...spaceInfo,
+        mainDoorCount: spaceInfo.mainDoorCount,  // mainDoorCount 유지
+        customColumnCount: spaceInfo.mainDoorCount,
+        columnMode: 'custom' as const
+      };
+      console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
+        mainDoorCount: spaceInfo.mainDoorCount,
+        defaultColumnCount,
+        internalWidth: internalSpace.width,
+        adjustedSpaceInfo
+      });
     }
     
     // 가구 데이터 조회 (조정된 spaceInfo 사용)
