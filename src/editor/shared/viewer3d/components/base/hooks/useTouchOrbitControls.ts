@@ -19,6 +19,7 @@ export const useTouchOrbitControls = (
   
   const initialDistance = useRef<number>(0);
   const lastScale = useRef<number>(1);
+  const lastAngle = useRef<number>(0);
 
   // 터치 컨트롤 훅 사용
   useTouchControls({
@@ -31,6 +32,15 @@ export const useTouchOrbitControls = (
       controlsRef.current.dollyIn(zoomScale);
       controlsRef.current.update();
       lastScale.current = scale;
+    },
+    onRotate: (angle) => {
+      if (!controlsRef.current || !enableRotate || !enabled) return;
+      
+      // 회전 제스처 처리
+      const deltaAngle = angle - lastAngle.current;
+      controlsRef.current.rotateLeft((deltaAngle * Math.PI) / 180);
+      controlsRef.current.update();
+      lastAngle.current = angle;
     },
     onPan: (deltaX, deltaY) => {
       if (!controlsRef.current || !enabled) return;

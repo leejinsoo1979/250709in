@@ -4,6 +4,7 @@ interface TouchState {
   startX: number;
   startY: number;
   startDistance: number;
+  startAngle: number;
   lastX: number;
   lastY: number;
   touchCount: number;
@@ -40,6 +41,7 @@ export const useTouchControls = (options: UseTouchControlsOptions) => {
     startX: 0,
     startY: 0,
     startDistance: 0,
+    startAngle: 0,
     lastX: 0,
     lastY: 0,
     touchCount: 0,
@@ -112,6 +114,10 @@ export const useTouchControls = (options: UseTouchControlsOptions) => {
       }
       
       touchState.current.startDistance = getTouchDistance(touches);
+      
+      // 회전 각도 초기화
+      const initialAngle = getTouchAngle(touches);
+      touchState.current.startAngle = initialAngle;
     }
   }, [options, preventDefault, triggerHapticFeedback]);
 
@@ -150,6 +156,11 @@ export const useTouchControls = (options: UseTouchControlsOptions) => {
       const scale = currentDistance / touchState.current.startDistance;
       
       options.onPinch?.(scale);
+      
+      // 회전 제스처 처리
+      const currentAngle = getTouchAngle(touches);
+      const deltaAngle = currentAngle - touchState.current.startAngle;
+      options.onRotate?.(deltaAngle);
       
       touchState.current.startDistance = currentDistance;
     }
