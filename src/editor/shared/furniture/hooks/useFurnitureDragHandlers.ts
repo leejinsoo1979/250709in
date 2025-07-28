@@ -9,6 +9,7 @@ import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { isSlotAvailable } from '../../utils/slotAvailability';
 import { useAlert } from '@/hooks/useAlert';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '../../utils/columnSlotProcessor';
 
 export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const addModule = useFurnitureStore(state => state.addModule);
@@ -108,20 +109,71 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
         const customDepth = getDefaultDepth(moduleData);
         
+        // 기둥 슬롯 정보 확인
+        const columnSlots = analyzeColumnSlots(spaceInfo);
+        const targetSlotInfo = columnSlots[dropPosition.column];
+        
+        let adjustedWidth: number | undefined = undefined;
+        let adjustedPosition = { x: finalX, y: 0, z: 0 };
+        let adjustedDepth = customDepth;
+        
+        // 기둥이 있는 슬롯에 배치하는 경우
+        if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+          const columnDepth = targetSlotInfo.column.depth;
+          
+          // 듀얼 가구는 기둥 슬롯에 배치 불가
+          if (dropPosition.isDualFurniture) {
+            console.log('❌ 듀얼 가구는 기둥 슬롯에 배치 불가');
+            return;
+          }
+          
+          // calculateFurnitureBounds를 사용하여 정확한 위치와 크기 계산
+          const slotWidthM = indexing.columnWidth * 0.01;
+          const originalSlotBounds = {
+            left: finalX - slotWidthM / 2,
+            right: finalX + slotWidthM / 2,
+            center: finalX
+          };
+          
+          const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+          
+          // 크기와 위치 조정
+          adjustedWidth = furnitureBounds.renderWidth;
+          adjustedPosition.x = furnitureBounds.center;
+          
+          // 공간이 부족한 경우 배치 취소
+          if (adjustedWidth < 150) {
+            console.log('❌ 기둥 슬롯에 공간 부족:', adjustedWidth, 'mm');
+            return;
+          }
+          
+          // Column C (300mm) 특별 처리 - 깊이 조정
+          if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
+            adjustedDepth = 730 - columnDepth; // 430mm
+            console.log('🟣 Column C 깊이 조정:', adjustedDepth, 'mm');
+          }
+          
+          console.log('🎯 기둥 슬롯 배치:', {
+            slotIndex: dropPosition.column,
+            columnDepth,
+            originalWidth: indexing.columnWidth,
+            adjustedWidth,
+            adjustedPosition,
+            adjustedDepth
+          });
+        }
+        
         // 새 모듈 배치
         const newModule = {
           id: placedId,
           moduleId: currentDragData.moduleData.id,
-          position: {
-            x: finalX,
-            y: 0,
-            z: 0
-          },
+          position: adjustedPosition,
           rotation: 0,
           slotIndex: dropPosition.column, // 슬롯 인덱스 저장
           isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
-          customDepth: customDepth // 가구별 기본 깊이 설정
+          customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
+          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정
         };
         
         addModule(newModule);
