@@ -23,7 +23,7 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
 
   // 검색 필터링
   const filteredProjects = projects.filter(project =>
-    project.title.toLowerCase().includes(searchQuery.toLowerCase())
+    project.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // 최근 프로젝트 순으로 정렬
