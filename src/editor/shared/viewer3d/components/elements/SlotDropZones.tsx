@@ -271,16 +271,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       moduleId: dragData.moduleData.id
     });
     
-    // 기둥이 없는 슬롯인 경우에만 일반 가용성 검사
-    // 기둥이 있는 슬롯은 나중에 findAvailableSpacesInColumnSlot에서 상세 검사
-    if (!targetSlotInfo?.hasColumn) {
-      // 슬롯 가용성 검사 - 충돌 시 배치 실패 (영역별 슬롯 인덱스 사용)
-      if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
-        console.log('❌ 슬롯 가용성 검사 실패');
-        return false; // 충돌하는 슬롯에는 배치 불가
-      }
-    } else {
-      console.log('✅ 기둥 슬롯이므로 가용성 검사 건너뜀 - findAvailableSpacesInColumnSlot에서 검사 예정');
+    // 모든 슬롯에 대해 기본 가용성 검사 수행 (기둥 유무 관계없이)
+    if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
+      console.log('❌ 슬롯 가용성 검사 실패');
+      return false; // 충돌하는 슬롯에는 배치 불가
+    }
+    
+    // 기둥이 있는 슬롯의 경우 추가 검사 수행
+    if (targetSlotInfo?.hasColumn) {
+      console.log('✅ 기둥 슬롯 추가 검사 - findAvailableSpacesInColumnSlot에서 상세 검사 예정');
     }
     
     // 가구 데이터 조회
@@ -408,11 +407,12 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         });
         
         // 위치와 크기 조정
-        finalPosition = { 
+        let finalPosition = { 
           x: bestSpace.position.x, 
           y: 0, 
           z: bestSpace.position.z 
         };
+        let adjustedFurnitureWidth: number;
         // 150mm 공간에도 배치 가능하도록 자동 크기 조정
         // 사용 가능한 공간이 150mm 이상이면 그 공간에 맞게 가구 크기 조정
         if (bestSpace.maxWidth >= 150) {
@@ -464,12 +464,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           rotation: 0,
           hasDoor: shouldHaveDoor, // 첫 번째 모듈만 도어
           customDepth: finalCustomDepth,
-          customWidth: customWidthForSplit, // 분할 배치 시 너비
+          customWidth: customWidthForSplit || customWidth, // 분할 배치 시 너비
           slotIndex: zoneSlotIndex,
           isDualSlot: actualIsDual,
           isValidInCurrentSpace: true,
           zone: zone,
-          customWidth: customWidth,
           adjustedWidth: adjustedFurnitureWidth,
           hingePosition: targetSlotInfo ? calculateOptimalHingePosition(targetSlotInfo) : 'right',
           isSplit: (bestSpace.type === 'left' || bestSpace.type === 'right') && targetSlotInfo.columnType === 'medium', // Column C 분할 여부
@@ -483,7 +482,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             wasConvertedFromDual: actualModuleId !== dragData.moduleData.id,
             originalDualSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
             actualSlots: actualIsDual ? [slotIndex, slotIndex + 1] : [slotIndex],
-            doorWidth: doorWidthForColumn,
+            doorWidth: actualModuleData.dimensions.width - 3, // 기본값: 가구 너비 - 3mm
             spaceType: bestSpace.type, // 'left', 'right', 'front'
             moduleOrder: existingModulesInSlot.length // 이 슬롯에서 몇 번째 모듈인지
           }
