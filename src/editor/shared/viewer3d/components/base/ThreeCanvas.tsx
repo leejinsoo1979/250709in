@@ -11,6 +11,8 @@ import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useCanvasEventHandlers } from './hooks/useCanvasEventHandlers'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
+import { useTouchOrbitControls } from './hooks/useTouchOrbitControls'; // 터치 컨트롤
+import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
@@ -48,6 +50,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
+  
+  // 반응형 감지
+  const { isTouchDevice, isMobile, isTablet } = useResponsive();
   
   // 테마에 따른 배경색 결정
   const getBackgroundColor = useCallback(() => {
@@ -254,6 +259,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [viewMode, mounted]);
   
+  // 터치 컨트롤 적용
+  useTouchOrbitControls(controlsRef, {
+    enabled: isTouchDevice || isMobile || isTablet,
+    enableRotate: true,
+    enableZoom: true,
+    enablePan: true,
+  });
 
   // 로딩 상태
   if (!mounted) {

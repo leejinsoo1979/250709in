@@ -419,8 +419,10 @@ export class ColumnIndexer {
     // 단내림 영역 컬럼 수
     if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
       droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
+      console.log('🎯 단내림 컬럼 수 (설정값):', droppedColumnCount);
     } else {
       droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaInternalWidth);
+      console.log('🎯 단내림 컬럼 수 (자동계산):', droppedColumnCount, 'from width:', droppedAreaInternalWidth);
     }
     
     // 각 영역의 컬럼 너비 계산

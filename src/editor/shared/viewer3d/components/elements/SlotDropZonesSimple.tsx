@@ -64,8 +64,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
   // 드롭 처리 함수
-  const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped'): boolean => {
+  const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZoneParam?: 'normal' | 'dropped'): boolean => {
+    const zoneToUse = activeZoneParam || activeZone;
+    console.log('🎯 handleSlotDrop called with activeZoneParam:', activeZoneParam, ', activeZone:', activeZone, ', using:', zoneToUse);
+    console.log('🎯 spaceInfo.droppedCeiling:', spaceInfo.droppedCeiling);
     if (!currentDragData) {
+      console.log('❌ No currentDragData');
       return false;
     }
     
@@ -92,9 +96,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
     
+    console.log('🎯 단내림 체크:', {
+      enabled: spaceInfo.droppedCeiling?.enabled,
+      zoneToUse: zoneToUse,
+      condition: spaceInfo.droppedCeiling?.enabled && zoneToUse
+    });
+    
     // 단내림이 활성화된 경우 영역별 처리
-    if (spaceInfo.droppedCeiling?.enabled && activeZone) {
+    if (spaceInfo.droppedCeiling?.enabled && zoneToUse) {
+      console.log('🎯 단내림 활성화, zoneToUse:', zoneToUse);
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      console.log('🎯 zoneInfo:', zoneInfo);
       
       // 마우스 위치를 Three.js 좌표로 변환
       const rect = canvasElement.getBoundingClientRect();
@@ -107,7 +119,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let zoneColumnCount: number;
       let zoneColumnWidth: number;
       
-      if (activeZone === 'dropped' && zoneInfo.dropped) {
+      if (zoneToUse === 'dropped' && zoneInfo.dropped) {
         zoneStartX = zoneInfo.dropped.startX;
         zoneColumnCount = zoneInfo.dropped.columnCount;
         zoneColumnWidth = zoneInfo.dropped.columnWidth;
@@ -121,9 +133,29 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const relativeX = worldXMm - zoneStartX;
       const columnIndex = Math.max(0, Math.min(Math.floor(relativeX / zoneColumnWidth), zoneColumnCount - 1));
       
-      // 가구 데이터 조회
-      const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+      // 영역별 spaceInfo 생성 (가구 크기 계산용)
+      const zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneToUse === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped.width : zoneInfo.normal.width,
+        customColumnCount: zoneColumnCount
+      };
+      
+      // 영역별 internalSpace 생성
+      const zoneInternalSpace = {
+        ...internalSpace,
+        width: zoneToUse === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped.width : zoneInfo.normal.width
+      };
+      
+      // 가구 데이터 조회 (영역별 공간 정보 사용)
+      console.log('🎯 Getting module data with:', {
+        moduleId: dragData.moduleData.id,
+        zoneInternalSpace,
+        zoneSpaceInfo
+      });
+      const moduleData = getModuleById(dragData.moduleData.id, zoneInternalSpace, zoneSpaceInfo);
+      console.log('🎯 Module data found:', moduleData);
       if (!moduleData) {
+        console.log('❌ Module data not found!');
         return false;
       }
       
@@ -141,11 +173,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const rightColumnCenterMm = zoneStartX + ((dualIndex + 1) * zoneColumnWidth) + (zoneColumnWidth / 2);
         const dualCenterMm = (leftColumnCenterMm + rightColumnCenterMm) / 2;
         finalX = dualCenterMm * 0.01; // mm to Three.js
-        console.log(`🎯 [${activeZone}] Dual furniture drop position:`, dualIndex, finalX);
+        console.log(`🎯 [${zoneToUse}] Dual furniture drop position:`, dualIndex, finalX);
       } else {
         const columnCenterMm = zoneStartX + (columnIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
         finalX = columnCenterMm * 0.01; // mm to Three.js
-        console.log(`🎯 [${activeZone}] Single furniture drop position:`, columnIndex, finalX);
+        console.log(`🎯 [${zoneToUse}] Single furniture drop position:`, columnIndex, finalX);
       }
       
       // 고유 ID 생성
@@ -167,13 +199,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isValidInCurrentSpace: true,
         adjustedWidth: moduleData.dimensions.width,
         hingePosition: 'right' as 'left' | 'right',
-        zone: activeZone // 영역 정보 저장
+        zone: zoneToUse // 영역 정보 저장
       };
       
+      console.log('🎯 Adding new module:', newModule);
       addModule(newModule);
       setCurrentDragData(null);
       
+      console.log('🎯 Module added successfully');
       return true;
+    } else {
+      console.log('🎯 단내림 비활성화 또는 zoneToUse 없음, 기존 로직 사용');
     }
     
     // 단내림이 없는 경우 기존 로직

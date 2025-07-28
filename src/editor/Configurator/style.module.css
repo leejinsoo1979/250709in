@@ -916,6 +916,53 @@
   }
 }
 
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 모든 버튼 터치 타겟 확대 */
+  .button,
+  .toggleButton,
+  .incrementButton,
+  .decrementButton,
+  .tabButton,
+  .rightPanelTab {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* 슬라이더 터치 영역 확대 */
+  .doorSlider {
+    height: 12px;
+    margin: 20px 0;
+  }
+  
+  .doorSlider::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  /* 입력 필드 크기 증가 */
+  .input,
+  .numberInput {
+    height: 44px;
+    font-size: 16px; /* iOS 자동 줌 방지 */
+  }
+  
+  /* 드래그 가능 영역 표시 */
+  .draggable {
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+  }
+  
+  /* 스크롤 영역 터치 최적화 */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
 /* 맥북 에어/프로 13인치 (1200px 이하) */
 @media (max-width: 1199px) and (min-width: 1024px) {
   .sidebarContent {
@@ -954,6 +1001,102 @@
   .doorSlider::-webkit-slider-thumb {
     width: 18px;
     height: 18px;
+  }
+}
+
+/* 태블릿 세로 모드 (768px 이하) */
+@media (max-width: 767px) and (orientation: portrait) {
+  /* 사이드바를 하단 서랍으로 */
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: auto;
+    max-height: 60vh;
+    transform: translateY(calc(100% - 60px));
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    border-top: 1px solid var(--theme-border);
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .sidebar.open {
+    transform: translateY(0);
+  }
+  
+  /* 사이드바 헤더를 드래그 핸들로 */
+  .sidebarHeader::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--theme-border);
+    border-radius: 2px;
+  }
+  
+  /* 우측 패널을 플로팅 카드로 */
+  .rightPanel {
+    position: fixed;
+    bottom: 70px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  
+  /* 뷰어 영역 전체 화면 */
+  .viewerArea {
+    position: fixed !important;
+    top: 56px;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 60px;
+  }
+  
+  /* 좌측 패널 토글 숨김 */
+  .leftPanelToggle {
+    display: none;
+  }
+  
+  /* 우측 패널 토글 위치 조정 */
+  .rightPanelToggle {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--theme-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+}
+
+/* 모바일 가로 모드 */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* 헤더 높이 축소 */
+  .header {
+    height: 44px;
+  }
+  
+  /* 사이드바 컴팩트 모드 */
+  .sidebar {
+    width: 200px;
+  }
+  
+  /* 우측 패널 높이 제한 */
+  .rightPanel {
+    max-height: calc(100vh - 88px);
   }
 }
 

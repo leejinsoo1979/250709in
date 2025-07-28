@@ -1425,7 +1425,7 @@ const Room: React.FC<RoomProps> = ({
                 <BoxWithEdges
                   key={`top-frame-segment-${index}`}
                   args={[
-                    segment.width, 
+                    segment.width,
                     topBottomFrameHeight, 
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
@@ -1564,7 +1564,7 @@ const Room: React.FC<RoomProps> = ({
               >
                 <BoxWithEdges
                   args={[
-                    segment.width, 
+                    segment.width,
                     mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}
@@ -1855,7 +1855,7 @@ const Room: React.FC<RoomProps> = ({
                 <BoxWithEdges
                   key={`base-frame-segment-${index}`}
                   args={[
-                    segment.width, 
+                    segment.width,
                     baseFrameHeight, 
                     mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                   ]}
@@ -2013,7 +2013,7 @@ const Room: React.FC<RoomProps> = ({
               >
                 <BoxWithEdges
                   args={[
-                    segment.width, 
+                    segment.width,
                     mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}

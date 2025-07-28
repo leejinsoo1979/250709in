@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -18,6 +18,7 @@ import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './component
 import RightPanel, { RightPanelTab } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
 import FileTree from '@/components/FileTree/FileTree';
+import { TouchCompatibleControl } from './components/TouchCompatibleControls';
 
 
 // 기존 작동하는 컴포넌트들
@@ -57,7 +58,7 @@ const Configurator: React.FC = () => {
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
   const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
-  const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
+  const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, setActiveDroppedCeilingTab } = useUIStore();
@@ -1462,6 +1463,7 @@ const Configurator: React.FC = () => {
                 <ModuleGallery 
                   moduleCategory={moduleCategory} 
                   upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
+                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : 'normal'}
                 />
               </div>
             </div>
@@ -1512,17 +1514,29 @@ const Configurator: React.FC = () => {
               </div>
               
               <div className={styles.inputGroup}>
-                <WidthControl 
-                  spaceInfo={spaceInfo}
-                  onUpdate={handleSpaceInfoUpdate}
+                <TouchCompatibleControl
+                  label={`폭 (${SPACE_LIMITS.WIDTH.MIN}mm ~ ${SPACE_LIMITS.WIDTH.MAX}mm)`}
+                  value={spaceInfo?.width || DEFAULT_SPACE_VALUES.WIDTH}
+                  min={SPACE_LIMITS.WIDTH.MIN}
+                  max={SPACE_LIMITS.WIDTH.MAX}
+                  step={10}
+                  unit="mm"
+                  onChange={(value) => handleSpaceInfoUpdate({ width: value })}
                   disabled={hasSpecialDualFurniture}
+                  type="number"
                 />
               </div>
               
               <div className={styles.inputGroup}>
-                <HeightControl 
-                  spaceInfo={spaceInfo}
-                  onUpdate={handleSpaceInfoUpdate}
+                <TouchCompatibleControl
+                  label={`높이 (${SPACE_LIMITS.HEIGHT.MIN}mm ~ ${SPACE_LIMITS.HEIGHT.MAX}mm)`}
+                  value={spaceInfo?.height || DEFAULT_SPACE_VALUES.HEIGHT}
+                  min={SPACE_LIMITS.HEIGHT.MIN}
+                  max={SPACE_LIMITS.HEIGHT.MAX}
+                  step={10}
+                  unit="mm"
+                  onChange={(value) => handleSpaceInfoUpdate({ height: value })}
+                  type="number"
                 />
               </div>
             </div>
@@ -1542,30 +1556,61 @@ const Configurator: React.FC = () => {
                       <label className={styles.inputLabel}>메인구간 폭</label>
                       <div className={styles.inputWithUnit}>
                         <input
-                          type="number"
+                          type="text"
                           min="100"
                           max={(spaceInfo.width || 4800) - 100}
                           step="10"
-                          value={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
-                          onChange={(e) => {
+                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
+                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onBlur={(e) => {
                             const inputValue = e.target.value;
-                            // 빈 값일 때는 업데이트하지 않음 (사용자가 입력 중)
-                            if (inputValue === '') return;
+                            const totalWidth = spaceInfo.width || 4800;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const currentMainWidth = totalWidth - currentDroppedWidth;
+                            
+                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                              e.target.value = currentMainWidth.toString();
+                              return;
+                            }
                             
                             const mainWidth = parseInt(inputValue);
-                            if (!isNaN(mainWidth)) {
-                              const totalWidth = spaceInfo.width || 4800;
-                              const newDroppedWidth = totalWidth - mainWidth;
-                              // 입력 중에는 느슨한 검증
-                              if (newDroppedWidth >= 0 && mainWidth >= 0) {
-                                handleSpaceInfoUpdate({ 
-                                  droppedCeiling: {
-                                    ...spaceInfo.droppedCeiling,
-                                    enabled: true,
-                                    width: Math.max(100, Math.min(totalWidth - 100, newDroppedWidth))
-                                  }
-                                });
-                              }
+                            const newDroppedWidth = totalWidth - mainWidth;
+                            
+                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
+                            if (newDroppedWidth < 100) {
+                              e.target.value = (totalWidth - 100).toString();
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: 100
+                                }
+                              });
+                            } else if (newDroppedWidth > totalWidth - 100) {
+                              e.target.value = '100';
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: totalWidth - 100
+                                }
+                              });
+                            } else {
+                              // 유효한 값이면 그대로 적용
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: newDroppedWidth
+                                }
+                              });
                             }
                           }}
                           className={`${styles.input} ${styles.inputWithUnitField}`}
@@ -1623,37 +1668,73 @@ const Configurator: React.FC = () => {
                         <label className={styles.inputLabel}>단내림 구간 폭</label>
                         <div className={styles.inputWithUnit}>
                           <input
-                            type="number"
+                            type="text"
                             min="100"
                             max={(spaceInfo.width || 4800) - 100}
                             step="10"
-                            value={spaceInfo.droppedCeiling?.width || 900}
-                            onChange={(e) => {
+                            defaultValue={spaceInfo.droppedCeiling?.width || 900}
+                            key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onBlur={(e) => {
                               const inputValue = e.target.value;
-                              if (inputValue === '') return;
+                              const totalWidth = spaceInfo.width || 4800;
+                              const currentWidth = spaceInfo.droppedCeiling?.width || 900;
+                              
+                              // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                              if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                                e.target.value = currentWidth.toString();
+                                return;
+                              }
                               
                               const value = parseInt(inputValue);
-                              if (!isNaN(value) && value > 0) {
-                                const totalWidth = spaceInfo.width || 4800;
+                              
+                              // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
+                              if (value < 100) {
+                                e.target.value = '100';
                                 handleSpaceInfoUpdate({ 
                                   droppedCeiling: {
                                     ...spaceInfo.droppedCeiling,
                                     enabled: true,
-                                    width: Math.max(100, Math.min(totalWidth - 100, value))
+                                    width: 100
                                   }
                                 });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const totalWidth = spaceInfo.width || 4800;
-                              const value = Math.max(100, Math.min(totalWidth - 100, parseInt(e.target.value) || 900));
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: value
+                              } else if (value > totalWidth - 100) {
+                                const maxValue = totalWidth - 100;
+                                e.target.value = maxValue.toString();
+                                handleSpaceInfoUpdate({ 
+                                  droppedCeiling: {
+                                    ...spaceInfo.droppedCeiling,
+                                    enabled: true,
+                                    width: maxValue
+                                  }
+                                });
+                              } else {
+                                // 유효한 값이면 그대로 적용하고, 도어 개수도 업데이트
+                                const range = calculateDoorRange(value);
+                                const currentDoorCount = spaceInfo.droppedCeilingDoorCount || 0;
+                                
+                                // 현재 도어 개수가 범위를 벗어나면 조정
+                                let newDoorCount = currentDoorCount;
+                                if (currentDoorCount < range.min || currentDoorCount === 0) {
+                                  newDoorCount = range.min;
+                                } else if (currentDoorCount > range.max) {
+                                  newDoorCount = range.max;
                                 }
-                              });
+                                
+                                handleSpaceInfoUpdate({ 
+                                  droppedCeiling: {
+                                    ...spaceInfo.droppedCeiling,
+                                    enabled: true,
+                                    width: value
+                                  },
+                                  droppedCeilingDoorCount: newDoorCount
+                                });
+                              }
                             }}
                             className={`${styles.input} ${styles.inputWithUnitField}`}
                           />
@@ -1769,88 +1850,32 @@ const Configurator: React.FC = () => {
                   </div>
                   
                   {/* 단내림 구간 도어 개수 입력 */}
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>단내림 구간 도어 개수</label>
-                      <div className={styles.numberInputGroup}>
-                        <button 
-                          className={styles.decrementButton}
-                          onClick={() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const range = calculateDoorRange(droppedWidth);
-                            const currentCount = spaceInfo.droppedCeilingDoorCount || 1;
-                            const newCount = Math.max(1, currentCount - 1);
-                            handleSpaceInfoUpdate({ droppedCeilingDoorCount: newCount });
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min={1}
-                          max={(() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const range = calculateDoorRange(droppedWidth);
-                            return Math.min(5, range.max);
-                          })()}
-                          value={spaceInfo.droppedCeilingDoorCount || 1}
-                          onChange={(e) => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const range = calculateDoorRange(droppedWidth);
-                            const value = Math.min(Math.min(5, range.max), Math.max(1, parseInt(e.target.value) || 1));
-                            handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                          }}
-                          className={styles.numberInput}
-                        />
-                        <button 
-                          className={styles.incrementButton}
-                          onClick={() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const range = calculateDoorRange(droppedWidth);
-                            const currentCount = spaceInfo.droppedCeilingDoorCount || 1;
-                            const newCount = Math.min(Math.min(5, range.max), currentCount + 1);
-                            handleSpaceInfoUpdate({ droppedCeilingDoorCount: newCount });
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <TouchCompatibleControl
+                    label="단내림 구간 도어 개수"
+                    value={spaceInfo.droppedCeilingDoorCount || 1}
+                    min={1}
+                    max={Math.min(5, calculateDoorRange(spaceInfo.droppedCeiling?.width || 900).max)}
+                    step={1}
+                    unit="개"
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                    }}
+                    type="number"
+                  />
                   
                   {/* 단내림 구간 도어 개수 슬라이더 */}
-                  <div className={styles.doorSliderContainer}>
-                    {(() => {
-                      const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                      const range = calculateDoorRange(droppedWidth);
-                      const value = spaceInfo.droppedCeilingDoorCount || 1;
-                      return (
-                        <>
-                          <input
-                            type="range"
-                            min={1}
-                            max={Math.min(5, range.max)}
-                            value={value}
-                            onChange={(e) => {
-                              const newValue = parseInt(e.target.value);
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: newValue });
-                            }}
-                            className={styles.doorSlider}
-                          />
-                          <div className={styles.sliderLabels}>
-                            {[1, 2, 3, 4, 5].filter(n => n <= range.max).map(num => (
-                              <span 
-                                key={num} 
-                                className={`${styles.sliderLabel} ${value === num ? styles.active : ''}`}
-                              >
-                                {num}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                  <TouchCompatibleControl
+                    label=""
+                    value={spaceInfo.droppedCeilingDoorCount || 1}
+                    min={1}
+                    max={Math.min(5, calculateDoorRange(spaceInfo.droppedCeiling?.width || 900).max)}
+                    step={1}
+                    unit=""
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                    }}
+                    type="slider"
+                  />
                 </div>
               </>
             )}
@@ -1872,199 +1897,65 @@ const Configurator: React.FC = () => {
                 {/* 도어 개수 입력 */}
                 {!spaceInfo.droppedCeiling?.enabled ? (
                 // 단내림이 없을 때 - 기존 도어 개수
-                <div className={styles.inputGroup}>
-                  <div className={styles.inputRow}>
-                    <label className={styles.inputLabel}>도어 개수</label>
-                    <div className={styles.numberInputGroup}>
-                      <button 
-                        className={styles.decrementButton}
-                        onClick={() => {
-                          const currentCount = getCurrentColumnCount();
-                          const range = calculateDoorRange(spaceInfo.width || 4800);
-                          const newCount = Math.max(range.min, currentCount - 1);
-                          handleSpaceInfoUpdate({ customColumnCount: newCount });
-                        }}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        min={(() => {
-                          const range = calculateDoorRange(spaceInfo.width || 4800);
-                          return range.min;
-                        })()}
-                        max={(() => {
-                          const range = calculateDoorRange(spaceInfo.width || 4800);
-                          return range.max;
-                        })()}
-                        value={getCurrentColumnCount()}
-                        onChange={(e) => {
-                          const range = calculateDoorRange(spaceInfo.width || 4800);
-                          const value = Math.min(range.max, Math.max(range.min, parseInt(e.target.value) || range.min));
-                          handleSpaceInfoUpdate({ customColumnCount: value });
-                        }}
-                        className={styles.numberInput}
-                      />
-                      <button 
-                        className={styles.incrementButton}
-                        onClick={() => {
-                          const currentCount = getCurrentColumnCount();
-                          const range = calculateDoorRange(spaceInfo.width || 4800);
-                          const newCount = Math.min(range.max, currentCount + 1);
-                          handleSpaceInfoUpdate({ customColumnCount: newCount });
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <TouchCompatibleControl
+                  label="도어 개수"
+                  value={getCurrentColumnCount()}
+                  min={calculateDoorRange(spaceInfo.width || 4800).min}
+                  max={calculateDoorRange(spaceInfo.width || 4800).max}
+                  step={1}
+                  unit="개"
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ customColumnCount: value });
+                  }}
+                  type="number"
+                />
               ) : (
                 // 단내림이 있을 때 - 기존 구간과 단내림 구간 분리
                 <>
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>메인구간 도어 개수</label>
-                      <div className={styles.numberInputGroup}>
-                        <button 
-                          className={styles.decrementButton}
-                          onClick={() => {
-                            const currentCount = spaceInfo.mainDoorCount || getCurrentColumnCount();
-                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
-                            const range = calculateDoorRange(mainWidth);
-                            const newCount = Math.max(range.min, currentCount - 1);
-                            handleSpaceInfoUpdate({ mainDoorCount: newCount });
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min={1}
-                          max={20}
-                          value={getCurrentColumnCount()}
-                          onChange={(e) => {
-                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
-                            const range = calculateDoorRange(mainWidth);
-                            const value = Math.min(range.max, Math.max(range.min, parseInt(e.target.value) || range.min));
-                            console.log('🔥 메인구간 도어 개수 변경:', {
-                              입력값: e.target.value,
-                              계산된값: value,
-                              범위: range,
-                              메인구간폭: mainWidth
-                            });
-                            handleSpaceInfoUpdate({ mainDoorCount: value });
-                          }}
-                          className={styles.numberInput}
-                        />
-                        <button 
-                          className={styles.incrementButton}
-                          onClick={() => {
-                            const currentCount = spaceInfo.mainDoorCount || getCurrentColumnCount();
-                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
-                            const range = calculateDoorRange(mainWidth);
-                            const newCount = Math.min(range.max, currentCount + 1);
-                            handleSpaceInfoUpdate({ mainDoorCount: newCount });
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <TouchCompatibleControl
+                    label="메인구간 도어 개수"
+                    value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                    min={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
+                    max={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
+                    step={1}
+                    unit="개"
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ mainDoorCount: value });
+                    }}
+                    type="number"
+                  />
                 </>
               )}
 
               {/* 도어 개수 슬라이더 */}
               {!spaceInfo.droppedCeiling?.enabled ? (
-                // 단내림이 없을 때 - 기존 슬라이더
-                <div className={styles.doorSliderContainer}>
-                  {(() => {
-                    const range = calculateDoorRange(spaceInfo.width || 4800);
-                    return (
-                      <>
-                        <input
-                          type="range"
-                          min={range.min}
-                          max={range.max}
-                          value={getCurrentColumnCount()}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            handleSpaceInfoUpdate({ customColumnCount: value });
-                          }}
-                          className={styles.doorSlider}
-                        />
-                        <div className={styles.sliderLabels}>
-                          {(() => {
-                            const labels = [];
-                            const step = Math.max(1, Math.floor((range.max - range.min) / 6)); // 최대 7개 라벨
-                            for (let i = range.min; i <= range.max; i += step) {
-                              labels.push(i);
-                            }
-                            if (!labels.includes(range.max)) {
-                              labels.push(range.max);
-                            }
-                            return labels.map(num => (
-                              <span 
-                                key={num} 
-                                className={`${styles.sliderLabel} ${getCurrentColumnCount() === num ? styles.active : ''}`}
-                              >
-                                {num}
-                              </span>
-                            ));
-                          })()}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                // 단내림이 없을 때 - 터치 최적화 슬라이더
+                <TouchCompatibleControl
+                  label=""
+                  value={getCurrentColumnCount()}
+                  min={calculateDoorRange(spaceInfo.width || 4800).min}
+                  max={calculateDoorRange(spaceInfo.width || 4800).max}
+                  step={1}
+                  unit=""
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ customColumnCount: value });
+                  }}
+                  type="slider"
+                />
               ) : (
-                // 단내림이 있을 때 - 메인구간만 표시
-                <div className={styles.doorSliderContainer}>
-                    {(() => {
-                      // 단내림이 있을 때는 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-                      const totalWidth = spaceInfo.width || 4800;
-                      const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                      const mainWidth = totalWidth - droppedWidth;
-                      const range = calculateDoorRange(mainWidth);
-                      const value = spaceInfo.mainDoorCount || getCurrentColumnCount();
-                      return (
-                        <>
-                          <input
-                            type="range"
-                            min={range.min}
-                            max={range.max}
-                            value={value}
-                            onChange={(e) => {
-                              const newValue = parseInt(e.target.value);
-                              handleSpaceInfoUpdate({ mainDoorCount: newValue });
-                            }}
-                            className={styles.doorSlider}
-                          />
-                          <div className={styles.sliderLabels}>
-                            {(() => {
-                              const labels = [];
-                              const step = Math.max(1, Math.floor((range.max - range.min) / 6));
-                              for (let i = range.min; i <= range.max; i += step) {
-                                labels.push(i);
-                              }
-                              if (!labels.includes(range.max)) {
-                                labels.push(range.max);
-                              }
-                              return labels.map(num => (
-                                <span 
-                                  key={num} 
-                                  className={`${styles.sliderLabel} ${value === num ? styles.active : ''}`}
-                                >
-                                  {num}
-                                </span>
-                              ));
-                            })()}
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                // 단내림이 있을 때 - 메인구간 터치 최적화 슬라이더
+                <TouchCompatibleControl
+                  label=""
+                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                  min={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
+                  max={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
+                  step={1}
+                  unit=""
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ mainDoorCount: value });
+                  }}
+                  type="slider"
+                />
               )}
               </div>
             )}
@@ -2522,14 +2413,25 @@ const Configurator: React.FC = () => {
                 onClick={() => {
                   setShowStepDownTab(!showStepDownTab);
                   if (!showStepDownTab) {
+                    // 단내림 추가 시 배치된 가구 모두 제거
+                    clearAllModules();
+                    
+                    // 메인구간 도어 개수 계산
+                    const totalWidth = spaceInfo.width || 4800;
+                    const droppedWidth = 1200; // 단내림 기본 폭
+                    const mainWidth = totalWidth - droppedWidth;
+                    const mainRange = calculateDoorRange(mainWidth);
+                    const currentCount = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || mainRange.ideal;
+                    
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
                         enabled: true,
-                        width: 1200,  // 기본값 설정
+                        width: droppedWidth,  // 기본값 설정
                         dropHeight: 200,  // 기본값 설정 (높이 2200mm = 2400mm - 200mm)
                         position: 'right'  // 기본값 설정
                       },
-                      droppedCeilingDoorCount: 2  // 기본값 설정
+                      droppedCeilingDoorCount: 2,  // 기본값 설정
+                      mainDoorCount: Math.max(mainRange.min, Math.min(mainRange.max, currentCount))  // 메인구간 도어 개수 설정
                     });
                     // 강제로 3D 뷰 업데이트
                     setTimeout(() => {
@@ -2540,8 +2442,8 @@ const Configurator: React.FC = () => {
                         }
                       });
                     }, 0);
-                    setActiveRightPanelTab('stepDown');
-                    setActiveDroppedCeilingTab('dropped');
+                    setActiveRightPanelTab('slotA');
+                    setActiveDroppedCeilingTab('main');
                   } else {
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {

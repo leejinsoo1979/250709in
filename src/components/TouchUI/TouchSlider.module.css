@@ -1,0 +1,135 @@
+.touchSlider {
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touchSlider.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text-primary);
+}
+
+.value {
+  font-weight: 600;
+  color: var(--theme-primary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--theme-background-tertiary);
+  color: var(--theme-text-primary);
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--theme-primary);
+  color: white;
+  transform: scale(1.05);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sliderTrack {
+  flex: 1;
+  height: 44px;
+  position: relative;
+  background: var(--theme-background-tertiary);
+  border-radius: 22px;
+  cursor: pointer;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sliderTrack::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  height: 6px;
+  background: var(--theme-border);
+  border-radius: 3px;
+  transform: translateY(-50%);
+}
+
+.sliderFill {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  height: 6px;
+  background: var(--theme-primary);
+  border-radius: 3px;
+  transform: translateY(-50%);
+  transition: width 0.1s ease-out;
+  pointer-events: none;
+}
+
+.sliderHandle {
+  position: absolute;
+  top: 50%;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 3px solid var(--theme-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s ease-out;
+  pointer-events: none;
+}
+
+.sliderTrack:active .sliderHandle {
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 터치 디바이스에서 호버 효과 제거 */
+@media (hover: none) {
+  .button:hover:not(:disabled) {
+    background: var(--theme-background-tertiary);
+    color: var(--theme-text-primary);
+    transform: scale(1);
+  }
+}
+
+/* 다크 모드 */
+.touchSlider :global(.theme-dark) .sliderHandle {
+  background: var(--theme-background-primary);
+  border-color: var(--theme-primary);
+}

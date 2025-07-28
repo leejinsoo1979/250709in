@@ -156,7 +156,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       if (typeof handleSlotDrop === 'function') {
-        handleSlotDrop(e.nativeEvent, canvas, activeZone);
+        // activeZone이 있을 때만 전달
+        if (activeZone) {
+          console.log('🎯 Space3DView handleDrop - activeZone:', activeZone);
+          handleSlotDrop(e.nativeEvent, canvas, activeZone);
+        } else {
+          handleSlotDrop(e.nativeEvent, canvas);
+        }
       }
     } catch (error) {
       console.error('드롭 데이터 파싱 오류:', error);

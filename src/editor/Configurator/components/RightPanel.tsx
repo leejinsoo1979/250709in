@@ -757,6 +757,50 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
         {activeTab === 'module' && (
           <div className={styles.moduleSettings}>
+            {/* 단내림 구간이 활성화된 경우 도어 개수 표시 */}
+            {spaceInfo.droppedCeiling?.enabled && (
+              <div className={styles.formContainer}>
+                <FormControl
+                  label="단내림 구간 레이아웃"
+                  expanded={expandedSections.has('droppedLayout')}
+                  onToggle={() => toggleSection('droppedLayout')}
+                >
+                  <div className={styles.numberInput}>
+                    <div className={styles.inputLabel}>단내림 구간 도어 개수</div>
+                    <div className={styles.inputGroup}>
+                      <div className={styles.inputField}>
+                        <input
+                          type="number"
+                          value={spaceInfo.droppedCeilingDoorCount || 0}
+                          readOnly
+                          style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
+                        />
+                        <span className={styles.inputUnit}>개</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.zoneInfo} style={{ marginTop: '12px' }}>
+                    <div className={styles.zoneInfoItem}>
+                      <span className={styles.zoneLabel}>구간 폭:</span>
+                      <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
+                    </div>
+                    <div className={styles.zoneInfoItem}>
+                      <span className={styles.zoneLabel}>구간 높이:</span>
+                      <span className={styles.zoneValue}>{height - spaceInfo.droppedCeiling.dropHeight} mm</span>
+                    </div>
+                    {spaceInfo.droppedCeilingDoorCount && (
+                      <div className={styles.zoneInfoItem}>
+                        <span className={styles.zoneLabel}>슬롯 폭:</span>
+                        <span className={styles.zoneValue}>
+                          {Math.floor((spaceInfo.droppedCeiling.width - 100) / spaceInfo.droppedCeilingDoorCount)} mm
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+              </div>
+            )}
             <ModuleContent />
           </div>
         )}
