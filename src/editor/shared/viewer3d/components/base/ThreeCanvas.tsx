@@ -66,6 +66,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const [isFurnitureDragging, setIsFurnitureDragging] = useState(false);
   
   // 캔버스 참조 저장
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -153,6 +154,27 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       cleanupWebGL();
     };
   }, [cleanupWebGL]);
+
+  // 가구 드래그 이벤트 리스너
+  useEffect(() => {
+    const handleFurnitureDragStart = () => {
+      console.log('🎯 가구 드래그 시작 - OrbitControls 회전 비활성화');
+      setIsFurnitureDragging(true);
+    };
+
+    const handleFurnitureDragEnd = () => {
+      console.log('🎯 가구 드래그 종료 - OrbitControls 회전 활성화');
+      setIsFurnitureDragging(false);
+    };
+
+    window.addEventListener('furniture-drag-start', handleFurnitureDragStart);
+    window.addEventListener('furniture-drag-end', handleFurnitureDragEnd);
+
+    return () => {
+      window.removeEventListener('furniture-drag-start', handleFurnitureDragStart);
+      window.removeEventListener('furniture-drag-end', handleFurnitureDragEnd);
+    };
+  }, []);
   
   // ViewMode가 변경될 때 캔버스 재생성 - 제거
   // 불필요한 재생성은 React Three Fiber 컨텍스트 문제를 유발
@@ -406,34 +428,40 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* OrbitControls */}
         <OrbitControls 
           ref={controlsRef}
-          enabled={controlsConfig.enabled}
+          enabled={controlsConfig.enabled && !isFurnitureDragging}
           target={controlsConfig.target}
           minPolarAngle={controlsConfig.minPolarAngle}
           maxPolarAngle={controlsConfig.maxPolarAngle}
           minAzimuthAngle={controlsConfig.minAzimuthAngle}
           maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
-          enablePan={controlsConfig.enablePan}
-          enableZoom={controlsConfig.enableZoom}
-          enableRotate={controlsConfig.enableRotate}
+          enablePan={controlsConfig.enablePan && !isFurnitureDragging}
+          enableZoom={controlsConfig.enableZoom && !isFurnitureDragging}
+          enableRotate={controlsConfig.enableRotate && !isFurnitureDragging}
           minDistance={controlsConfig.minDistance}
           maxDistance={controlsConfig.maxDistance}
           mouseButtons={controlsConfig.mouseButtons}
           touches={controlsConfig.touches}
           panSpeed={1.0}
-          zoomSpeed={viewMode === '2D' ? 0.15 : 1.2}
+          zoomSpeed={viewMode === '2D' ? 0.15 : 0.8}
           enableDamping={true}
           dampingFactor={viewMode === '2D' ? 0.1 : 0.05}
           screenSpacePanning={true}
           makeDefault
         />
         
-        {/* 터치 컨트롤 설정 - 터치 디바이스에서만 활성화 */}
-        {(isTouchDevice || isMobile || isTablet) && (
+        {/* 터치 컨트롤 설정 - 항상 활성화 (테스트용) */}
+        <TouchOrbitControlsSetup 
+          controlsRef={controlsRef}
+          enabled={!isFurnitureDragging}
+        />
+        
+        {/* 기존 조건부 터치 컨트롤 (나중에 필요시 사용) */}
+        {/* {(isTouchDevice || isMobile || isTablet) && (
           <TouchOrbitControlsSetup 
             controlsRef={controlsRef}
             enabled={true}
           />
-        )}
+        )} */}
         
         {/* 기본 조명 제거 - Space3DView에서 모든 조명 관리 */}
         {/* 기본 조명이 우리 조명과 충돌하므로 제거 */}

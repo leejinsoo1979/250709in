@@ -167,6 +167,11 @@ export const useTouchOrbitControls = (
       lastTouchPositions = startTouches.map(touch => ({ x: touch.clientX, y: touch.clientY }));
       touchCount.current = e.touches.length;
       
+      console.log('🖐️ 터치 시작:', {
+        touchCount: e.touches.length,
+        positions: lastTouchPositions
+      });
+      
       // 두 손가락 터치 시작 시 팬 모드 활성화
       if (e.touches.length === 2) {
         isPanning.current = true;
@@ -193,6 +198,12 @@ export const useTouchOrbitControls = (
           controlsRef.current.rotateLeft((deltaX * rotateSpeed * Math.PI) / 180);
           controlsRef.current.rotateUp((deltaY * rotateSpeed * Math.PI) / 180);
           controlsRef.current.update();
+          
+          console.log('🔄 한 손가락 회전:', {
+            deltaX: deltaX.toFixed(2),
+            deltaY: deltaY.toFixed(2),
+            rotateSpeed: rotateSpeed.toFixed(4)
+          });
         }
         
         lastTouchPositions[0] = { x: touch.clientX, y: touch.clientY };
@@ -224,6 +235,13 @@ export const useTouchOrbitControls = (
             const zoomScale = currentDistance / lastDistance;
             const adjustedZoomScale = Math.pow(zoomScale, zoomSensitivity);
             controlsRef.current.dollyIn(adjustedZoomScale);
+            
+            console.log('🔍 두 손가락 줌:', {
+              currentDistance: currentDistance.toFixed(2),
+              lastDistance: lastDistance.toFixed(2),
+              zoomScale: zoomScale.toFixed(3),
+              adjustedZoomScale: adjustedZoomScale.toFixed(3)
+            });
           } else {
             // 팬 처리
             const centerX = (touch1.clientX + touch2.clientX) / 2;
@@ -237,6 +255,12 @@ export const useTouchOrbitControls = (
             // 팬 민감도 조정
             const panSpeed = panSensitivity * 0.01;
             controlsRef.current.pan(-deltaX * panSpeed, -deltaY * panSpeed, 0);
+            
+            console.log('📱 두 손가락 팬:', {
+              deltaX: deltaX.toFixed(2),
+              deltaY: deltaY.toFixed(2),
+              panSpeed: panSpeed.toFixed(4)
+            });
           }
           
           controlsRef.current.update();
@@ -251,6 +275,10 @@ export const useTouchOrbitControls = (
       if (isFurnitureDrag.current) return;
       
       e.preventDefault();
+      console.log('🖐️ 터치 종료:', {
+        remainingTouches: e.touches.length
+      });
+      
       touchCount.current = 0;
       isPanning.current = false;
       startTouches = [];
@@ -262,10 +290,13 @@ export const useTouchOrbitControls = (
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
+    console.log('🎮 터치 컨트롤 활성화됨');
+
     return () => {
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
+      console.log('🎮 터치 컨트롤 비활성화됨');
     };
   }, [enabled, sensitivity, zoomSensitivity, panSensitivity, controlsRef, gl.domElement]);
 

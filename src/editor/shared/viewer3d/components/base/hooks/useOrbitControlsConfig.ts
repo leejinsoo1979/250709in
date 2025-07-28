@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import * as THREE from 'three';
 import { CAMERA_SETTINGS } from '../utils/constants';
 
@@ -27,14 +27,17 @@ export interface OrbitControlsConfig {
 
 /**
  * OrbitControls 설정을 관리하는 훅
- * 2D 모드에서는 회전 비활성화, 줌만 허용
- * 3D 모드에서는 드래그 컨트롤과의 충돌을 피하기 위해 왼쪽 버튼은 비활성화, 오른쪽 버튼으로 회전, 중간 버튼으로 팬
- * Option + 왼쪽 드래그로도 팬 기능 제공 (맥북 트랙패드 사용자용)
  * 
- * 트랙패드 제스처:
- * - 한 손가락: 객체 선택/드래그
- * - 두 손가락 드래그: 화면 팬 이동
- * - 두 손가락 핀치: 줌 인/아웃
+ * 맥북 트랙패드 제스처 (개선된 버전):
+ * - 한 손가락 클릭 후 드래그: 카메라 회전 (3D 모드에서만)
+ * - 두 손가락 스크롤: 줌 인/아웃
+ * - 두 손가락 클릭 후 드래그: 화면 팬 이동
+ * 
+ * 마우스 컨트롤:
+ * - 왼쪽 버튼: 회전 (3D 모드에서만) 
+ * - 중간 버튼(휠 클릭): 팬
+ * - 휠 스크롤: 줌 인/아웃
+ * - 오른쪽 버튼: 팬
  * 
  * @param cameraTarget 카메라 타겟 위치
  * @param viewMode 뷰 모드 (2D 또는 3D)
@@ -48,48 +51,6 @@ export const useOrbitControlsConfig = (
   spaceWidth?: number,
   spaceHeight?: number
 ): OrbitControlsConfig => {
-  // Option/Shift 키 상태 추적 (맥북 트랙패드 사용자를 위한 팬 기능)
-  const [isOptionPressed, setIsOptionPressed] = useState(false);
-  const [isShiftPressed, setIsShiftPressed] = useState(false);
-
-  // 키보드 이벤트 리스너 등록
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey) { // 맥에서 Option 키는 altKey로 감지됨
-        setIsOptionPressed(true);
-      }
-      if (event.shiftKey) { // Shift 키로도 팬 가능
-        setIsShiftPressed(true);
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (!event.altKey) { // Option 키가 해제되면
-        setIsOptionPressed(false);
-      }
-      if (!event.shiftKey) { // Shift 키가 해제되면
-        setIsShiftPressed(false);
-      }
-    };
-
-    // 전역 키보드 이벤트 리스너 등록
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    
-    // 포커스 잃을 때도 상태 리셋
-    const handleBlur = () => {
-      setIsOptionPressed(false);
-      setIsShiftPressed(false);
-    };
-    window.addEventListener('blur', handleBlur);
-
-    // 정리 함수
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, []);
   
   // 공간 크기에 따른 동적 거리 계산
   const calculateDynamicDistances = useMemo(() => {
@@ -138,16 +99,16 @@ export const useOrbitControlsConfig = (
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
       mouseButtons: {
-        LEFT: (isOptionPressed || isShiftPressed) ? THREE.MOUSE.PAN : undefined, // Option/Shift 누르면 팬, 아니면 가구/라벨 클릭용으로 비활성화
+        LEFT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 3D 모드에서만 왼쪽 버튼으로 회전
         MIDDLE: THREE.MOUSE.PAN, // 중간 버튼(휠 클릭)으로 팬 기능
-        RIGHT: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 2D 모드에서는 우클릭도 팬, 3D 모드에서만 회전
+        RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼으로 팬
       },
       touches: {
-        ONE: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, // 2D: 팬만, 3D: 한 손가락 회전
-        TWO: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.DOLLY_PAN, // 2D: 팬만, 3D: 두 손가락 줌+팬
+        ONE: is2DMode ? undefined : THREE.TOUCH.ROTATE, // 3D 모드에서만 한 손가락으로 회전
+        TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락으로 줌+팬 (두 손가락 스크롤: 줌, 두 손가락 클릭 드래그: 팬)
       },
     };
-  }, [cameraTarget, viewMode, isOptionPressed, isShiftPressed, calculateDynamicDistances]);
+  }, [cameraTarget, viewMode, calculateDynamicDistances]);
 
   return config;
 }; 
