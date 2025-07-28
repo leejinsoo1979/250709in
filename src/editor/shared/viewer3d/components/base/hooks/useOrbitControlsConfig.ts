@@ -143,8 +143,8 @@ export const useOrbitControlsConfig = (
         RIGHT: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 2D 모드에서는 우클릭도 팬, 3D 모드에서만 회전
       },
       touches: {
-        ONE: undefined, // 단일 터치는 객체 선택/드래그용으로 남겨둠
-        TWO: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.DOLLY_PAN, // 2D: 팬만, 3D: 줌+팬
+        ONE: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, // 2D: 팬만, 3D: 한 손가락 회전
+        TWO: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.DOLLY_PAN, // 2D: 팬만, 3D: 두 손가락 줌+팬
       },
     };
   }, [cameraTarget, viewMode, isOptionPressed, isShiftPressed, calculateDynamicDistances]);

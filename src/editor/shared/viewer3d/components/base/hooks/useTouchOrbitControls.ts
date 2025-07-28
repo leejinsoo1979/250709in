@@ -20,12 +20,13 @@ export const useTouchOrbitControls = (
   const initialDistance = useRef<number>(0);
   const lastScale = useRef<number>(1);
   const lastAngle = useRef<number>(0);
+  const isFurnitureDrag = useRef(false);
 
   // 터치 컨트롤 훅 사용
   useTouchControls({
     element: gl.domElement,
     onPinch: (scale) => {
-      if (!controlsRef.current || !enableZoom || !enabled) return;
+      if (!controlsRef.current || !enableZoom || !enabled || isFurnitureDrag.current) return;
       
       // 핀치 줌
       const zoomScale = scale / lastScale.current;
@@ -34,18 +35,18 @@ export const useTouchOrbitControls = (
       lastScale.current = scale;
     },
     onRotate: (angle) => {
-      if (!controlsRef.current || !enableRotate || !enabled) return;
+      if (!controlsRef.current || !enableRotate || !enabled || isFurnitureDrag.current) return;
       
-      // 회전 제스처 처리
+      // 회전 제스처 처리 (두 손가락)
       const deltaAngle = angle - lastAngle.current;
       controlsRef.current.rotateLeft((deltaAngle * Math.PI) / 180);
       controlsRef.current.update();
       lastAngle.current = angle;
     },
     onPan: (deltaX, deltaY) => {
-      if (!controlsRef.current || !enabled) return;
+      if (!controlsRef.current || !enabled || isFurnitureDrag.current) return;
       
-      // 1손가락: 회전, 2손가락: 팬
+      // 한 손가락: 카메라 회전, 두 손가락: 팬
       if (enableRotate) {
         // 회전 민감도 조정
         const rotateSpeed = 0.5;
@@ -61,6 +62,26 @@ export const useTouchOrbitControls = (
       controlsRef.current.reset();
     },
   });
+
+  // 가구 드래그 상태 감지
+  useEffect(() => {
+    const handleFurnitureDragStart = () => {
+      isFurnitureDrag.current = true;
+    };
+
+    const handleFurnitureDragEnd = () => {
+      isFurnitureDrag.current = false;
+    };
+
+    // 전역 이벤트 리스너 추가
+    window.addEventListener('furniture-drag-start', handleFurnitureDragStart);
+    window.addEventListener('furniture-drag-end', handleFurnitureDragEnd);
+
+    return () => {
+      window.removeEventListener('furniture-drag-start', handleFurnitureDragStart);
+      window.removeEventListener('furniture-drag-end', handleFurnitureDragEnd);
+    };
+  }, []);
 
   // 터치 이벤트 중 기본 동작 방지
   useEffect(() => {

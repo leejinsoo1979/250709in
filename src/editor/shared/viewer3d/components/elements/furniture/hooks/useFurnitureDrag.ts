@@ -117,6 +117,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     isDragging.current = true;
     setFurnitureDragging(true); // 드래그 상태 설정
     
+    // 가구 드래그 시작 이벤트 발생
+    window.dispatchEvent(new CustomEvent('furniture-drag-start'));
+    
     if (import.meta.env.DEV) {
       console.log('✅ 드래그 상태 설정 완료:', { draggingModuleId: placedModuleId, isDragging: isDragging.current });
     }
@@ -257,6 +260,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       isDragging.current = false;
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
+      
+      // 가구 드래그 종료 이벤트 발생
+      window.dispatchEvent(new CustomEvent('furniture-drag-end'));
       
       // 드래그 종료 시 즉시 렌더링 업데이트
       triggerRender();
