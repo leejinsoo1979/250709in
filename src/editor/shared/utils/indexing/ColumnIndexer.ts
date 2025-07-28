@@ -346,11 +346,20 @@ export class ColumnIndexer {
    */
   static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number) {
     const frameThickness = calculateFrameThickness(spaceInfo);
+    const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-      const columnCount = customColumnCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
+      let columnCount = customColumnCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
+      
+      // 슬롯 너비가 600mm를 초과하지 않도록 최소 슬롯 개수 보장
+      const minRequiredSlots = Math.ceil(internalWidth / MAX_SLOT_WIDTH);
+      if (columnCount < minRequiredSlots) {
+        columnCount = minRequiredSlots;
+        console.warn(`슬롯 너비 제한: ${minRequiredSlots}개 이상의 슬롯이 필요합니다.`);
+      }
+      
       const columnWidth = Math.floor(internalWidth / columnCount);
       
       // 프레임을 고려한 내부 시작점
@@ -416,6 +425,13 @@ export class ColumnIndexer {
       normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaInternalWidth);
     }
     
+    // 메인 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
+    const minRequiredNormalSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
+    if (normalColumnCount < minRequiredNormalSlots) {
+      normalColumnCount = minRequiredNormalSlots;
+      console.warn(`메인 영역 슬롯 너비 제한: ${minRequiredNormalSlots}개 이상의 슬롯이 필요합니다.`);
+    }
+    
     // 단내림 영역 컬럼 수
     if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
       droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
@@ -425,9 +441,24 @@ export class ColumnIndexer {
       console.log('🎯 단내림 컬럼 수 (자동계산):', droppedColumnCount, 'from width:', droppedAreaInternalWidth);
     }
     
-    // 각 영역의 컬럼 너비 계산
+    // 단내림 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
+    const minRequiredDroppedSlots = Math.ceil(droppedAreaInternalWidth / MAX_SLOT_WIDTH);
+    if (droppedColumnCount < minRequiredDroppedSlots) {
+      droppedColumnCount = minRequiredDroppedSlots;
+      console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
+    }
+    
+    // 각 영역의 컬럼 너비 계산 (600mm 제한 확인)
     const normalColumnWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
     const droppedColumnWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
+    
+    // 최종 검증 (디버깅용)
+    if (normalColumnWidth > MAX_SLOT_WIDTH) {
+      console.error(`⚠️ 메인 영역 슬롯 너비가 600mm를 초과합니다: ${normalColumnWidth}mm`);
+    }
+    if (droppedColumnWidth > MAX_SLOT_WIDTH) {
+      console.error(`⚠️ 단내림 영역 슬롯 너비가 600mm를 초과합니다: ${droppedColumnWidth}mm`);
+    }
     
     return {
       normal: {
