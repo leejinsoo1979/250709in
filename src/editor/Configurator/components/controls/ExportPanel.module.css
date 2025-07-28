@@ -150,6 +150,9 @@
 
 .actions {
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .exportButton {
@@ -172,10 +175,22 @@
   letter-spacing: 0.05em;
 }
 
+.exportButton.secondary {
+  background: transparent;
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
+}
+
 .exportButton:hover:not(.disabled) {
   background: var(--theme-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.exportButton.secondary:hover:not(.disabled) {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary-hover);
 }
 
 .exportButton:active:not(.disabled) {

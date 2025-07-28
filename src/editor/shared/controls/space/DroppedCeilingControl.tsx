@@ -49,29 +49,28 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
     }
   };
 
-  const handleWidthChange = (width: number) => {
+  const handleWidthChange = (value: number) => {
     if (droppedCeiling) {
-      const validatedWidth = Math.max(300, Math.min(2000, width));
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
-          width: validatedWidth
+          width: value
         }
       });
     }
   };
 
-  const handleDropHeightChange = (dropHeight: number) => {
+  const handleDropHeightChange = (value: number) => {
     if (droppedCeiling) {
-      const validatedDropHeight = Math.max(100, Math.min(500, dropHeight));
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
-          dropHeight: validatedDropHeight
+          dropHeight: value
         }
       });
     }
   };
+
 
   return (
     <div className={styles.droppedCeilingControl}>

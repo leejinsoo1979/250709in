@@ -3,6 +3,13 @@ import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
+import { 
+  formatDxfText, 
+  getSafeFurnitureName, 
+  formatDimensionsText, 
+  getSafeDrawingTypeName,
+  formatDxfDate 
+} from './dxfKoreanText';
 
 interface DXFModuleData {
   name: string;
@@ -128,18 +135,60 @@ const drawFrontSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
   // 좌측 세로선 (좌측 벽)
   dxf.addLine(point3d(0, spaceInfo.height), point3d(0, 0));
   
+  // 좌측 전체 높이 치수선 추가
+  const leftDimensionX = -100; // 공간 외곽선에서 왼쪽으로 100mm 떨어진 위치
+  
+  // 치수선 (세로선)
+  dxf.addLine(point3d(leftDimensionX, 0), point3d(leftDimensionX, spaceInfo.height));
+  
+  // 치수 화살표 (간단한 수평선으로 표현)
+  dxf.addLine(point3d(leftDimensionX - 20, 0), point3d(leftDimensionX + 20, 0));
+  dxf.addLine(point3d(leftDimensionX - 20, spaceInfo.height), point3d(leftDimensionX + 20, spaceInfo.height));
+  
+  // 연장선 (공간 외곽선에서 치수선까지)
+  dxf.addLine(point3d(0, 0), point3d(leftDimensionX - 20, 0));
+  dxf.addLine(point3d(0, spaceInfo.height), point3d(leftDimensionX - 20, spaceInfo.height));
+  
+  // 높이 치수 텍스트 (90도 회전)
+  dxf.addText(
+    point3d(leftDimensionX - 50, spaceInfo.height / 2),
+    30, // 텍스트 높이
+    `${spaceInfo.height}mm`
+  );
+  
+  // 하단 전체 폭 치수선 추가
+  const bottomDimensionY = -100; // 공간 외곽선 아래 100mm 떨어진 위치
+  
+  // 치수선 (가로선)
+  dxf.addLine(point3d(0, bottomDimensionY), point3d(spaceInfo.width, bottomDimensionY));
+  
+  // 치수 화살표 (간단한 수직선으로 표현)
+  dxf.addLine(point3d(0, bottomDimensionY - 20), point3d(0, bottomDimensionY + 20));
+  dxf.addLine(point3d(spaceInfo.width, bottomDimensionY - 20), point3d(spaceInfo.width, bottomDimensionY + 20));
+  
+  // 연장선 (공간 외곽선에서 치수선까지)
+  dxf.addLine(point3d(0, 0), point3d(0, bottomDimensionY - 20));
+  dxf.addLine(point3d(spaceInfo.width, 0), point3d(spaceInfo.width, bottomDimensionY - 20));
+  
+  // 폭 치수 텍스트
+  dxf.addText(
+    point3d(spaceInfo.width / 2, bottomDimensionY - 50),
+    30, // 텍스트 높이
+    `${spaceInfo.width}mm`
+  );
+  
   // 공간 라벨
   dxf.addText(
     point3d(spaceInfo.width / 2, spaceInfo.height + 200),
     100, // 텍스트 높이
-    `정면도: ${spaceInfo.width}mm(폭) × ${spaceInfo.height}mm(높이)`
+    formatDxfText(`Front Elevation: ${spaceInfo.width}mm(W) × ${spaceInfo.height}mm(H)`)
   );
   
   // 깊이 정보 추가 표기
   dxf.addText(
     point3d(spaceInfo.width / 2, spaceInfo.height + 300),
     60, // 텍스트 높이
-    `공간 깊이: ${spaceInfo.depth}mm`
+    formatDxfText(`Space Depth: ${spaceInfo.depth}mm`)
   );
 };
 
@@ -157,18 +206,60 @@ const drawPlanSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
   // 좌측 세로선 (좌측 벽)
   dxf.addLine(point3d(0, spaceInfo.depth), point3d(0, 0));
   
+  // 좌측 깊이 치수선 추가
+  const leftDimensionX = -100; // 공간 외곽선에서 왼쪽으로 100mm 떨어진 위치
+  
+  // 치수선 (세로선)
+  dxf.addLine(point3d(leftDimensionX, 0), point3d(leftDimensionX, spaceInfo.depth));
+  
+  // 치수 화살표
+  dxf.addLine(point3d(leftDimensionX - 20, 0), point3d(leftDimensionX + 20, 0));
+  dxf.addLine(point3d(leftDimensionX - 20, spaceInfo.depth), point3d(leftDimensionX + 20, spaceInfo.depth));
+  
+  // 연장선
+  dxf.addLine(point3d(0, 0), point3d(leftDimensionX - 20, 0));
+  dxf.addLine(point3d(0, spaceInfo.depth), point3d(leftDimensionX - 20, spaceInfo.depth));
+  
+  // 깊이 치수 텍스트
+  dxf.addText(
+    point3d(leftDimensionX - 50, spaceInfo.depth / 2),
+    30,
+    `${spaceInfo.depth}mm`
+  );
+  
+  // 하단 폭 치수선 추가
+  const bottomDimensionY = -100;
+  
+  // 치수선 (가로선)
+  dxf.addLine(point3d(0, bottomDimensionY), point3d(spaceInfo.width, bottomDimensionY));
+  
+  // 치수 화살표
+  dxf.addLine(point3d(0, bottomDimensionY - 20), point3d(0, bottomDimensionY + 20));
+  dxf.addLine(point3d(spaceInfo.width, bottomDimensionY - 20), point3d(spaceInfo.width, bottomDimensionY + 20));
+  
+  // 연장선
+  dxf.addLine(point3d(0, 0), point3d(0, bottomDimensionY - 20));
+  dxf.addLine(point3d(spaceInfo.width, 0), point3d(spaceInfo.width, bottomDimensionY - 20));
+  
+  // 폭 치수 텍스트
+  dxf.addText(
+    point3d(spaceInfo.width / 2, bottomDimensionY - 50),
+    30,
+    `${spaceInfo.width}mm`
+  );
+  
   // 공간 라벨
   dxf.addText(
     point3d(spaceInfo.width / 2, spaceInfo.depth + 200),
     100, // 텍스트 높이
-    `평면도: ${spaceInfo.width}mm(폭) × ${spaceInfo.depth}mm(깊이)`
+    formatDxfText(`Plan View: ${spaceInfo.width}mm(W) × ${spaceInfo.depth}mm(D)`)
   );
   
   // 높이 정보 추가 표기
   dxf.addText(
     point3d(spaceInfo.width / 2, spaceInfo.depth + 300),
     60, // 텍스트 높이
-    `공간 높이: ${spaceInfo.height}mm`
+    formatDxfText(`Space Height: ${spaceInfo.height}mm`)
   );
 };
 
@@ -186,18 +277,60 @@ const drawSideSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
   // 좌측 세로선 (앞쪽 벽)
   dxf.addLine(point3d(0, spaceInfo.height), point3d(0, 0));
   
+  // 좌측 높이 치수선 추가
+  const leftDimensionX = -100; // 공간 외곽선에서 왼쪽으로 100mm 떨어진 위치
+  
+  // 치수선 (세로선)
+  dxf.addLine(point3d(leftDimensionX, 0), point3d(leftDimensionX, spaceInfo.height));
+  
+  // 치수 화살표
+  dxf.addLine(point3d(leftDimensionX - 20, 0), point3d(leftDimensionX + 20, 0));
+  dxf.addLine(point3d(leftDimensionX - 20, spaceInfo.height), point3d(leftDimensionX + 20, spaceInfo.height));
+  
+  // 연장선
+  dxf.addLine(point3d(0, 0), point3d(leftDimensionX - 20, 0));
+  dxf.addLine(point3d(0, spaceInfo.height), point3d(leftDimensionX - 20, spaceInfo.height));
+  
+  // 높이 치수 텍스트
+  dxf.addText(
+    point3d(leftDimensionX - 50, spaceInfo.height / 2),
+    30,
+    `${spaceInfo.height}mm`
+  );
+  
+  // 하단 깊이 치수선 추가
+  const bottomDimensionY = -100;
+  
+  // 치수선 (가로선)
+  dxf.addLine(point3d(0, bottomDimensionY), point3d(spaceInfo.depth, bottomDimensionY));
+  
+  // 치수 화살표
+  dxf.addLine(point3d(0, bottomDimensionY - 20), point3d(0, bottomDimensionY + 20));
+  dxf.addLine(point3d(spaceInfo.depth, bottomDimensionY - 20), point3d(spaceInfo.depth, bottomDimensionY + 20));
+  
+  // 연장선
+  dxf.addLine(point3d(0, 0), point3d(0, bottomDimensionY - 20));
+  dxf.addLine(point3d(spaceInfo.depth, 0), point3d(spaceInfo.depth, bottomDimensionY - 20));
+  
+  // 깊이 치수 텍스트
+  dxf.addText(
+    point3d(spaceInfo.depth / 2, bottomDimensionY - 50),
+    30,
+    `${spaceInfo.depth}mm`
+  );
+  
   // 공간 라벨
   dxf.addText(
     point3d(spaceInfo.depth / 2, spaceInfo.height + 200),
     100, // 텍스트 높이
-    `측면도: ${spaceInfo.depth}mm(깊이) × ${spaceInfo.height}mm(높이)`
+    formatDxfText(`Side Section: ${spaceInfo.depth}mm(D) × ${spaceInfo.height}mm(H)`)
   );
   
   // 폭 정보 추가 표기
   dxf.addText(
     point3d(spaceInfo.depth / 2, spaceInfo.height + 300),
     60, // 텍스트 높이
-    `공간 폭: ${spaceInfo.width}mm`
+    formatDxfText(`Space Width: ${spaceInfo.width}mm`)
   );
 };
 
@@ -366,23 +499,24 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const centerX = x1 + dimensions.width / 2;
     const centerY = y1 + dimensions.height / 2;
     
+    const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
     dxf.addText(
       point3d(centerX, centerY),
       Math.min(dimensions.height / 4, 50), // 높이에 비례한 텍스트 크기
-      moduleData.name || `가구${index + 1}`
+      safeFurnitureName
     );
     
     // 가구 타입 정보 표시 (디버깅용)
-    const furnitureType = shelfCount === 0 ? '오픈박스' : 
-                         shelfCount === 1 ? '2단' :
-                         shelfCount === 6 ? '7단' :
-                         shelfCount === 2 ? '듀얼2단' :
-                         shelfCount === 12 ? '듀얼7단' : `${shelfCount}선반`;
+    const furnitureType = shelfCount === 0 ? 'Open Box' : 
+                         shelfCount === 1 ? '2-Shelf' :
+                         shelfCount === 6 ? '7-Shelf' :
+                         shelfCount === 2 ? 'Dual 2-Shelf' :
+                         shelfCount === 12 ? 'Dual 7-Shelf' : `${shelfCount}-Shelf`;
     
     dxf.addText(
       point3d(centerX, y1 - 120),
       20,
-      `슬롯${slotIndex + 1} | ${furnitureType}`
+      `Slot${slotIndex + 1} | ${furnitureType}`
     );
     
     // 좌표 정보 표시 (디버깅용)
@@ -406,10 +540,10 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     dxf.addText(
       point3d(centerX, y1 - 80),
       25, // 텍스트 높이
-      `${dimensions.width}W×${dimensions.height}H×${dimensions.depth}D`
+      formatDimensionsText(dimensions.width, dimensions.height, dimensions.depth)
     );
     
-    // 높이 치수선 (우측에 표시)
+    // 높이 치수선 (우측에 표시) - IMPORTANT: Keep this for dimension lines
     if (dimensions.height > 100) {
       const dimensionX = x2 + 50; // 가구 우측 끝에서 50mm 떨어진 위치
       
@@ -573,23 +707,24 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const centerX = x1 + dimensions.width / 2;
     const centerY = y1 + dimensions.depth / 2;
     
+    const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
     dxf.addText(
       point3d(centerX, centerY),
       Math.min(dimensions.width / 4, dimensions.depth / 4, 50), // 크기에 비례한 텍스트 크기
-      moduleData.name || `가구${index + 1}`
+      safeFurnitureName
     );
     
     // 가구 타입 정보 표시 (디버깅용)
-    const furnitureType = shelfCount === 0 ? '오픈박스' : 
-                         shelfCount === 1 ? '2단' :
-                         shelfCount === 6 ? '7단' :
-                         shelfCount === 2 ? '듀얼2단' :
-                         shelfCount === 12 ? '듀얼7단' : `${shelfCount}선반`;
+    const furnitureType = shelfCount === 0 ? 'Open Box' : 
+                         shelfCount === 1 ? '2-Shelf' :
+                         shelfCount === 6 ? '7-Shelf' :
+                         shelfCount === 2 ? 'Dual 2-Shelf' :
+                         shelfCount === 12 ? 'Dual 7-Shelf' : `${shelfCount}-Shelf`;
     
     dxf.addText(
       point3d(centerX, y1 - 80),
       15,
-      `슬롯${slotIndex + 1} | ${furnitureType}`
+      `Slot${slotIndex + 1} | ${furnitureType}`
     );
     
     // 가구 치수 디버깅 로그
@@ -606,7 +741,7 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     dxf.addText(
       point3d(centerX, y1 - 50),
       20, // 텍스트 높이
-      `${dimensions.width}W×${dimensions.depth}D×${dimensions.height}H`
+      formatDimensionsText(dimensions.width, dimensions.depth, dimensions.height)
     );
   });
 };
@@ -713,30 +848,31 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const centerX = furnitureCenterX;
     const centerY = furnitureCenterY;
     
+    const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
     dxf.addText(
       point3d(centerX, centerY),
       Math.min(actualDepthMm / 4, dimensions.height / 4, 50), // 크기에 비례한 텍스트 크기
-      moduleData.name || `가구${index + 1}`
+      safeFurnitureName
     );
     
     // 가구 타입 정보 표시 (디버깅용)
-    const furnitureType = shelfCount === 0 ? '오픈박스' : 
-                         shelfCount === 1 ? '2단' :
-                         shelfCount === 6 ? '7단' :
-                         shelfCount === 2 ? '듀얼2단' :
-                         shelfCount === 12 ? '듀얼7단' : `${shelfCount}선반`;
+    const furnitureType = shelfCount === 0 ? 'Open Box' : 
+                         shelfCount === 1 ? '2-Shelf' :
+                         shelfCount === 6 ? '7-Shelf' :
+                         shelfCount === 2 ? 'Dual 2-Shelf' :
+                         shelfCount === 12 ? 'Dual 7-Shelf' : `${shelfCount}-Shelf`;
     
     dxf.addText(
       point3d(centerX, y1 - 80),
       15,
-      `${furnitureType} | ${index + 1}번째`
+      `${furnitureType} | #${index + 1}`
     );
     
     // 가구 치수 표기 (하단에 표시)
     dxf.addText(
       point3d(centerX, y1 - 50),
       20, // 텍스트 높이
-      `${dimensions.width}W×${actualDepthMm}D×${dimensions.height}H`
+      formatDimensionsText(dimensions.width, actualDepthMm, dimensions.height)
     );
     
     // 깊이 치수선 (하단에 표시)
@@ -769,48 +905,42 @@ const drawTitleAndInfo = (dxf: DxfWriter, spaceInfo: SpaceInfo, drawingType: str
   const titleY = drawingType === 'plan' ? spaceInfo.depth : spaceInfo.height;
   
   // 도면 타입별 제목 설정
-  const drawingTypeNames = {
-    front: { ko: '정면도', en: 'Front Elevation' },
-    plan: { ko: '평면도', en: 'Plan View' },
-    side: { ko: '측면도', en: 'Side Section' }
-  };
-  
-  const currentDrawingType = drawingTypeNames[drawingType as keyof typeof drawingTypeNames] || drawingTypeNames.front;
+  const currentDrawingType = getSafeDrawingTypeName(drawingType);
   
   // 제목
   dxf.addText(
     point3d(titleX, titleY - 100),
     80, // 텍스트 높이
-    `가구 배치 ${currentDrawingType.ko}`
+    `Furniture Layout ${currentDrawingType.safe}`
   );
   
   // 날짜
-  const currentDate = new Date().toLocaleDateString('ko-KR');
+  const currentDate = formatDxfDate();
   dxf.addText(
     point3d(titleX, titleY - 200),
     40, // 텍스트 높이
-    `작성일: ${currentDate}`
+    `Date: ${currentDate}`
   );
   
   // 도면 종류
   dxf.addText(
     point3d(titleX, titleY - 280),
     40, // 텍스트 높이
-    `도면: ${currentDrawingType.ko} (${currentDrawingType.en})`
+    `Drawing: ${currentDrawingType.safe}`
   );
   
   // 축척
   dxf.addText(
     point3d(titleX, titleY - 360),
     40, // 텍스트 높이
-    '축척: 1:100'
+    'Scale: 1:100'
   );
   
   // 단위
   dxf.addText(
     point3d(titleX, titleY - 440),
     40, // 텍스트 높이
-    '단위: mm'
+    'Unit: mm'
   );
   
   // 도면 타입별 치수 표기
@@ -819,28 +949,28 @@ const drawTitleAndInfo = (dxf: DxfWriter, spaceInfo: SpaceInfo, drawingType: str
     dxf.addText(
       point3d(spaceInfo.width / 2, -200),
       60, // 텍스트 높이
-      `폭: ${spaceInfo.width}mm × 깊이: ${spaceInfo.depth}mm`
+      `Width: ${spaceInfo.width}mm × Depth: ${spaceInfo.depth}mm`
     );
     
     // 공간 높이 정보
     dxf.addText(
       point3d(spaceInfo.width / 2, -280),
       50, // 텍스트 높이
-      `공간 높이: ${spaceInfo.height}mm`
+      `Space Height: ${spaceInfo.height}mm`
     );
   } else {
     // 정면도용 치수 표기 (기본)
     dxf.addText(
       point3d(spaceInfo.width / 2, -200),
       60, // 텍스트 높이
-      `폭: ${spaceInfo.width}mm × 높이: ${spaceInfo.height}mm`
+      `Width: ${spaceInfo.width}mm × Height: ${spaceInfo.height}mm`
     );
     
     // 공간 깊이 정보
     dxf.addText(
       point3d(spaceInfo.width / 2, -280),
       50, // 텍스트 높이
-      `공간 깊이: ${spaceInfo.depth}mm`
+      `Space Depth: ${spaceInfo.depth}mm`
     );
   }
 };

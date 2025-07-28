@@ -44,6 +44,8 @@ const ColumnGuides: React.FC = () => {
       });
       
       setActiveRightPanelTab(foundActiveTab);
+      // UIStore의 activeDroppedCeilingTab도 업데이트
+      setActiveDroppedCeilingTab(foundActiveTab === 'stepDown' ? 'dropped' : 'main');
       console.log('🔍 최종 활성 탭:', foundActiveTab);
     };
     
@@ -80,7 +82,7 @@ const ColumnGuides: React.FC = () => {
       observer.disconnect();
       document.removeEventListener('click', handleClick);
     };
-  }, []);
+  }, [setActiveDroppedCeilingTab]);
   
   // 인덱싱 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -176,9 +178,18 @@ const ColumnGuides: React.FC = () => {
     }
   }
   
-  // 내경의 앞뒤 좌표 (Three.js 단위)
-  const frontZ = mmToThreeUnits(internalSpace.depth / 2);
-  const backZ = -frontZ;
+  // Room.tsx와 동일한 계산 사용하여 바닥 슬롯 메쉬와 일치시킴
+  const backZ = -mmToThreeUnits(internalSpace.depth / 2); // 내경의 뒤쪽 좌표
+  
+  // 가구 깊이 및 위치 계산 (Room.tsx와 동일)
+  const panelDepthMm = spaceInfo.depth || 1500;
+  const furnitureDepthMm = 600; // 가구 깊이 고정값
+  const zOffset = -mmToThreeUnits(panelDepthMm) / 2;
+  const furnitureZOffset = zOffset + (mmToThreeUnits(panelDepthMm) - mmToThreeUnits(furnitureDepthMm)) / 2;
+  const frameEndZ = furnitureZOffset + mmToThreeUnits(furnitureDepthMm) / 2;
+  
+  // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
+  const frontZ = frameEndZ;
   
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (
@@ -224,15 +235,27 @@ const ColumnGuides: React.FC = () => {
       positions.push(mmToThreeUnits(startX + (i * columnWidth) + (columnWidth / 2)));
     }
     
+    // 내경 공간의 실제 경계 계산
+    const internalStartX = mmToThreeUnits(internalSpace.startX);
+    const internalEndX = mmToThreeUnits(internalSpace.startX + internalSpace.width);
+    
     // 바닥과 천장 수평 가이드
     if (boundaries.length >= 2) {
+      // 2D 정면 뷰에서는 내경 범위 내에서만 표시
+      const startBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
+        ? Math.max(boundaries[0], internalStartX) 
+        : boundaries[0];
+      const endBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
+        ? Math.min(boundaries[boundaries.length - 1], internalEndX) 
+        : boundaries[boundaries.length - 1];
+      
       // 바닥 가이드
       guides.push(
         <Line
           key={`${zoneType}-floor-horizontal`}
           points={[
-            new THREE.Vector3(boundaries[0], floorY, backZ),
-            new THREE.Vector3(boundaries[boundaries.length - 1], floorY, backZ)
+            new THREE.Vector3(startBoundaryX, floorY, backZ),
+            new THREE.Vector3(endBoundaryX, floorY, backZ)
           ]}
           color={zoneColor}
           lineWidth={zoneLineWidth}
@@ -247,8 +270,8 @@ const ColumnGuides: React.FC = () => {
         <Line
           key={`${zoneType}-ceiling-horizontal`}
           points={[
-            new THREE.Vector3(boundaries[0], ceilingY, backZ),
-            new THREE.Vector3(boundaries[boundaries.length - 1], ceilingY, backZ)
+            new THREE.Vector3(startBoundaryX, ceilingY, backZ),
+            new THREE.Vector3(endBoundaryX, ceilingY, backZ)
           ]}
           color={zoneColor}
           lineWidth={zoneLineWidth}
@@ -261,6 +284,14 @@ const ColumnGuides: React.FC = () => {
     
     // 각 슬롯 경계의 수직 가이드
     boundaries.forEach((xPos, index) => {
+      // 2D 정면 뷰에서 단내림 영역의 외부 경계선만 스킵
+      if (viewMode === '2D' && view2DDirection === 'front' && zoneType === 'dropped') {
+        // 단내림 영역의 첫 번째(왼쪽 단내림) 또는 마지막(오른쪽 단내림) 경계선 스킵
+        if ((isLeftDropped && index === boundaries.length - 1) || (!isLeftDropped && index === 0)) {
+          return;
+        }
+      }
+      
       // 2D 상부뷰에서는 수평선으로 표시
       if (viewMode === '2D' && view2DDirection === 'top') {
         guides.push(
@@ -359,8 +390,8 @@ const ColumnGuides: React.FC = () => {
             'main'
           )}
           
-          {/* 단내림구간 탭 선택 시 단내림 영역만 표시 */}
-          {activeDroppedCeilingTab === 'dropped' && (() => {
+          {/* 단내림구간 탭 선택 시 단내림 영역만 표시 - 2D 정면뷰에서는 제외 */}
+          {activeDroppedCeilingTab === 'dropped' && !(viewMode === '2D' && view2DDirection === 'front') && (() => {
             console.log('🔍 단내림 가이드 렌더링 시도:', {
               activeDroppedCeilingTab,
               'zoneSlotInfo.dropped': zoneSlotInfo.dropped,

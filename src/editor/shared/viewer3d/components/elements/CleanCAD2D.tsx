@@ -9,6 +9,8 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
+import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -404,7 +406,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 치수선 위치 설정 - 3D 모드에서는 더 위쪽에 배치
   const hasPlacedModules = placedModules.length > 0;
   const is3DMode = currentViewDirection === '3D'; // 3D 모드인지 판단
-  const topDimensionY = spaceHeight + mmToThreeUnits(hasPlacedModules ? (is3DMode ? 350 : 280) : (is3DMode ? 270 : 200)); // 상단 전체 치수선
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+  // 단내림이 있으면 전체 치수선을 더 위로 올림
+  const topDimensionY = spaceHeight + mmToThreeUnits(
+    hasDroppedCeiling 
+      ? (hasPlacedModules ? (is3DMode ? 430 : 360) : (is3DMode ? 350 : 280))
+      : (hasPlacedModules ? (is3DMode ? 350 : 280) : (is3DMode ? 270 : 200))
+  ); // 상단 전체 치수선
   const columnDimensionY = spaceHeight + mmToThreeUnits(120); // 컬럼 치수선
   const leftDimensionX = -mmToThreeUnits(is3DMode ? 250 : 200); // 좌측 치수선 (3D에서는 더 왼쪽)
   
@@ -413,6 +421,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   // 프레임 사이즈 정보
   const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+  
+  // 디버깅 로그
+  console.log('🔍 CleanCAD2D Debug:', {
+    spaceWidth: spaceInfo.width,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+    droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+    frameSize,
+    leftOffset,
+    normalBoundsWidth: spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0),
+    droppedBoundsWidth: spaceInfo.droppedCeiling?.width || 0
+  });
   
   // 화살표 생성 함수
   const createArrowHead = (start: [number, number, number], end: [number, number, number], size = 0.015) => {
@@ -475,7 +495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           lineWidth={1}
         />
         
-        {/* 전체 폭 (프레임 포함) 치수 텍스트 - Text 3D 사용 */}
+        {/* 전체 폭 치수 텍스트 - Text 3D 사용 */}
         {(showDimensionsText || isStep2) && (
           <Text
             position={[mmToThreeUnits(spaceInfo.width) / 2 + leftOffset, topDimensionY + mmToThreeUnits(40), 0.01]}
@@ -488,44 +508,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </Text>
         )}
         
-        {/* 연장선 (좌측 프레임) */}
+        {/* 연장선 (좌측 프레임) - 간격 조정 */}
         <Line
-          points={[[leftOffset, 0, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(20), 0.001]]}
+          points={[[leftOffset, 0, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
           color={dimensionColor}
           lineWidth={1}
         />
         
-        {/* 연장선 (우측 프레임) */}
+        {/* 연장선 (우측 프레임) - 간격 조정 */}
         <Line
-          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(20), 0.001]]}
+          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
           color={dimensionColor}
           lineWidth={1}
         />
       </group>
 
-      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 */}
-      {spaceInfo.droppedCeiling?.enabled && (
+      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== 'top' && (
         <group>
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
             const droppedBounds = getDroppedZoneBounds(spaceInfo);
-            const subDimensionY = topDimensionY - mmToThreeUnits(80); // 전체 폭 치수선 아래
+            const subDimensionY = topDimensionY - mmToThreeUnits(120); // 전체 폭 치수선 아래 (간격 증가)
+            
+            // 프레임 두께 계산
+            const frameThickness = calculateFrameThickness(spaceInfo);
+            
+            // 프레임을 포함한 전체 좌표 계산
+            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
+            const droppedWidth = spaceInfo.droppedCeiling.width;
             
             // 메인 구간 치수선
             const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-              ? mmToThreeUnits(droppedBounds.width) + leftOffset
+              ? leftOffset + mmToThreeUnits(droppedWidth)
               : leftOffset;
             const mainEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? mmToThreeUnits(spaceInfo.width) + leftOffset
-              : mmToThreeUnits(normalBounds.width) + leftOffset;
+              ? leftOffset + mmToThreeUnits(spaceInfo.width)
+              : leftOffset + mmToThreeUnits(mainWidth);
             
             // 단내림 구간 치수선
             const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
               ? leftOffset
-              : mmToThreeUnits(normalBounds.width) + leftOffset;
+              : leftOffset + mmToThreeUnits(mainWidth);
             const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? mmToThreeUnits(droppedBounds.width) + leftOffset
-              : mmToThreeUnits(spaceInfo.width) + leftOffset;
+              ? leftOffset + mmToThreeUnits(droppedWidth)
+              : leftOffset + mmToThreeUnits(spaceInfo.width);
             
             return (
               <>
@@ -553,7 +580,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                   >
-                    {normalBounds.width}
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
+                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                    })()}
                   </Text>
                 )}
                 
@@ -581,19 +634,81 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                   >
-                    {droppedBounds.width}
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
+                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                    })()}
                   </Text>
                 )}
                 
-                {/* 구간 분리 가이드라인 */}
+                {/* 구간 분리 가이드라인 - 간격 조정 */}
                 <Line
                   points={[
                     [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, 0, 0.001],
-                    [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, subDimensionY - mmToThreeUnits(20), 0.001]
+                    [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, subDimensionY - mmToThreeUnits(40), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                   dashed
+                />
+                
+                {/* 메인 구간 연장선 (치수선에서 벽면까지) */}
+                <Line
+                  points={[
+                    [mainStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[
+                    [mainEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                
+                {/* 단내림 구간 연장선 (치수선에서 벽면까지) */}
+                <Line
+                  points={[
+                    [droppedStartX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={[
+                    [droppedEndX, subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={1}
                 />
               </>
             );
@@ -895,8 +1010,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 좌측 전체 높이 치수선 - 가구 배치 시에만 표시 (Step 2는 예외) */}
-      {(placedModules.length > 0 || isStep2) && (
+      {/* 좌측 전체 높이 치수선 - 항상 표시 */}
       <group>
         {/* 치수선 */}
         <Line
@@ -945,7 +1059,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           lineWidth={1}
         />
       </group>
-      )}
       
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
       {!isStep2 && (
@@ -1356,6 +1469,189 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </group>
         );
       })}
+      
+      {/* 단내림 구간 치수선 - 탑뷰 */}
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'top' && (
+        <group>
+          {(() => {
+            // 탑뷰에서 필요한 변수들 재정의
+            const spaceWidth = mmToThreeUnits(spaceInfo.width);
+            const spaceDepth = mmToThreeUnits(spaceInfo.depth);
+            const spaceXOffset = -spaceWidth / 2;
+            const spaceZOffset = -spaceDepth / 2;
+            
+            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 300 : 250); // 전체 폭 치수선 아래
+            
+            // 프레임 두께 계산
+            const frameThickness = calculateFrameThickness(spaceInfo);
+            
+            // 프레임을 포함한 전체 좌표 계산
+            const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
+            const droppedWidth = spaceInfo.droppedCeiling.width;
+            
+            // 메인 구간 치수선
+            const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
+              ? spaceXOffset + mmToThreeUnits(droppedWidth)
+              : spaceXOffset;
+            const mainEndX = spaceInfo.droppedCeiling.position === 'left'
+              ? spaceXOffset + spaceWidth
+              : spaceXOffset + mmToThreeUnits(mainWidth);
+            
+            // 단내림 구간 치수선
+            const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
+              ? spaceXOffset
+              : spaceXOffset + mmToThreeUnits(mainWidth);
+            const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
+              ? spaceXOffset + mmToThreeUnits(droppedWidth)
+              : spaceXOffset + spaceWidth;
+            
+            return (
+              <>
+                {/* 메인 구간 치수선 */}
+                <Line
+                  points={[[mainStartX, spaceHeight, subDimensionZ], [mainEndX, spaceHeight, subDimensionZ]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={createArrowHead([mainStartX, spaceHeight, subDimensionZ], [mainStartX + 0.05, spaceHeight, subDimensionZ])}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={createArrowHead([mainEndX, spaceHeight, subDimensionZ], [mainEndX - 0.05, spaceHeight, subDimensionZ])}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
+                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                    })()}
+                  </Text>
+                )}
+                
+                {/* 단내림 구간 치수선 */}
+                <Line
+                  points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={createArrowHead([droppedStartX, spaceHeight, subDimensionZ], [droppedStartX + 0.05, spaceHeight, subDimensionZ])}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={createArrowHead([droppedEndX, spaceHeight, subDimensionZ], [droppedEndX - 0.05, spaceHeight, subDimensionZ])}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                {(showDimensionsText || isStep2) && (
+                  <Text
+                    position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
+                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                    })()}
+                  </Text>
+                )}
+                
+                {/* 구간 분리 가이드라인 */}
+                <Line
+                  points={[
+                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, spaceZOffset], 
+                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={0.5}
+                  dashed
+                />
+                
+                {/* 연장선 - 메인 영역 */}
+                <Line
+                  points={[
+                    [spaceInfo.droppedCeiling.position === 'left' ? mainEndX : mainStartX, spaceHeight, spaceZOffset],
+                    [spaceInfo.droppedCeiling.position === 'left' ? mainEndX : mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                
+                {/* 연장선 - 단내림 영역 */}
+                <Line
+                  points={[
+                    [spaceInfo.droppedCeiling.position === 'left' ? droppedStartX : droppedEndX, spaceHeight, spaceZOffset],
+                    [spaceInfo.droppedCeiling.position === 'left' ? droppedStartX : droppedEndX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+              </>
+            );
+          })()}
+        </group>
+      )}
         </>
       )}
     </group>
@@ -1917,7 +2213,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                   >
-                    {normalBounds.width}
+                    {(() => {
+                      const frameThickness = calculateFrameThickness(spaceInfo);
+                      console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
+                        surroundType: spaceInfo.surroundType,
+                        installType: spaceInfo.installType,
+                        wallConfig: spaceInfo.wallConfig,
+                        frameThickness,
+                        droppedPosition: spaceInfo.droppedCeiling.position
+                      });
+                      
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      if (spaceInfo.droppedCeiling.position === 'left') {
+                        // 왼쪽 단내림: 메인구간은 오른쪽 프레임/엔드패널 제외
+                        return spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction;
+                      } else {
+                        // 오른쪽 단내림: 메인구간은 왼쪽 프레임/엔드패널 제외
+                        return spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction;
+                      }
+                    })()}
                   </Text>
                   
                   {/* 단내림 구간 치수선 */}
@@ -1943,7 +2278,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                   >
-                    {droppedBounds.width}
+                    {(() => {
+                      const frameThickness = calculateFrameThickness(spaceInfo);
+                      
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      if (spaceInfo.droppedCeiling.position === 'left') {
+                        // 왼쪽 단내림: 단내림구간은 왼쪽 프레임/엔드패널 제외
+                        return spaceInfo.droppedCeiling.width - leftReduction;
+                      } else {
+                        // 오른쪽 단내림: 단내림구간은 오른쪽 프레임/엔드패널 제외
+                        return spaceInfo.droppedCeiling.width - rightReduction;
+                      }
+                    })()}
                   </Text>
                   
                   {/* 구간 분리 가이드라인 */}
@@ -2488,7 +2855,196 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>
         
-
+        {/* 단내림 구간 치수선 - 탑뷰 */}
+        {spaceInfo.droppedCeiling?.enabled && (
+          <group>
+            {(() => {
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              const subDimensionZ = spaceZOffset - mmToThreeUnits(280); // 전체 폭 치수선 아래
+              
+              // 프레임 두께 계산
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              
+              // 프레임을 포함한 전체 좌표 계산
+              const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
+              const droppedWidth = spaceInfo.droppedCeiling.width;
+              
+              // 메인 구간 치수선
+              const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
+                ? spaceXOffset + mmToThreeUnits(droppedWidth)
+                : spaceXOffset;
+              const mainEndX = spaceInfo.droppedCeiling.position === 'left'
+                ? spaceXOffset + spaceWidth
+                : spaceXOffset + mmToThreeUnits(mainWidth);
+              
+              // 단내림 구간 치수선
+              const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
+                ? spaceXOffset
+                : spaceXOffset + mmToThreeUnits(mainWidth);
+              const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
+                ? spaceXOffset + mmToThreeUnits(droppedWidth)
+                : spaceXOffset + spaceWidth;
+              
+              return (
+                <>
+                  {/* 메인 구간 치수선 */}
+                  <Line
+                    points={[[mainStartX, spaceHeight, subDimensionZ], [mainEndX, spaceHeight, subDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([mainStartX, spaceHeight, subDimensionZ], [mainStartX + 0.05, spaceHeight, subDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([mainEndX, spaceHeight, subDimensionZ], [mainEndX - 0.05, spaceHeight, subDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Text
+                    position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
+                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                    })()}
+                  </Text>
+                  
+                  {/* 단내림 구간 치수선 */}
+                  <Line
+                    points={[[droppedStartX, spaceHeight, subDimensionZ], [droppedEndX, spaceHeight, subDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([droppedStartX, spaceHeight, subDimensionZ], [droppedStartX + 0.05, spaceHeight, subDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([droppedEndX, spaceHeight, subDimensionZ], [droppedEndX - 0.05, spaceHeight, subDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Text
+                    position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
+                    fontSize={smallFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {(() => {
+                      // 노서라운드일 때 실제 축소값 계산
+                      let leftReduction = frameThickness.left;
+                      let rightReduction = frameThickness.right;
+                      
+                      if (spaceInfo.surroundType === 'no-surround') {
+                        if (spaceInfo.installType === 'builtin') {
+                          leftReduction = 2;
+                          rightReduction = 2;
+                        } else if (spaceInfo.installType === 'semistanding') {
+                          if (spaceInfo.wallConfig?.left) {
+                            leftReduction = 2;
+                            rightReduction = 20;
+                          } else {
+                            leftReduction = 20;
+                            rightReduction = 2;
+                          }
+                        } else if (spaceInfo.installType === 'freestanding') {
+                          leftReduction = 20;
+                          rightReduction = 20;
+                        }
+                      }
+                      
+                      return spaceInfo.droppedCeiling.position === 'left' 
+                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
+                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                    })()}
+                  </Text>
+                  
+                  {/* 구간 분리 가이드라인 */}
+                  <Line
+                    points={[
+                      [spaceInfo.droppedCeiling.position === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width), spaceHeight, spaceZOffset],
+                      [spaceInfo.droppedCeiling.position === 'left' ? spaceXOffset + mmToThreeUnits(droppedBounds.width) : spaceXOffset + mmToThreeUnits(normalBounds.width), spaceHeight, subDimensionZ + mmToThreeUnits(20)]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={0.5}
+                    dashed
+                  />
+                  
+                  {/* 메인 구간 연장선 */}
+                  <Line
+                    points={[
+                      [mainStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
+                      [mainStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={[
+                      [mainEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
+                      [mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={0.5}
+                  />
+                  
+                  {/* 단내림 구간 연장선 */}
+                  <Line
+                    points={[
+                      [droppedStartX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
+                      [droppedStartX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={[
+                      [droppedEndX, spaceHeight, spaceZOffset - mmToThreeUnits(100)],
+                      [droppedEndX, spaceHeight, subDimensionZ - mmToThreeUnits(10)]
+                    ]}
+                    color={subGuideColor}
+                    lineWidth={0.5}
+                  />
+                </>
+              );
+            })()}
+          </group>
+        )}
         
         {/* 뒷벽과 좌우 벽 실선 표시 */}
         <group>
@@ -3639,8 +4195,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 기둥은 showDimensions가 true일 때만 렌더링 (2D 정면 뷰에서만) */}
       {showDimensions && currentViewDirection === 'front' && renderColumns()}
       
-      {/* 단내림 구간 경계선 및 가이드 */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && (
+      {/* 단내림 구간 경계선 및 가이드 - 2D 정면뷰에서는 숨김 */}
+      {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && false && (
         <group>
           {/* 단내림 구간 경계선 (수직선) */}
           <Line

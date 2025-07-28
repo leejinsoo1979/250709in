@@ -28,7 +28,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, renderMode, setViewMode, setView2DDirection, setRenderMode } = useUIStore();
+  const { viewMode, view2DDirection, setViewMode, setView2DDirection } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -37,7 +37,6 @@ export function usePDFExport() {
     // 현재 뷰 설정 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
-    const originalRenderMode = renderMode;
     
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
@@ -49,39 +48,96 @@ export function usePDFExport() {
       }
     }
     
-    // 렌더 모드 설정
-    setRenderMode(targetRenderMode);
+    // 렌더 모드는 이미 설정된 상태로 캡처 (targetRenderMode 파라미터는 무시)
     
     // 뷰 변경이 적용되길 기다림
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // 3D 뷰어 컨테이너 찾기
-    const viewerContainer = document.querySelector('[data-viewer-container]');
+    let viewerContainer = document.querySelector('[data-viewer-container="true"]');
     if (!viewerContainer) {
-      throw new Error('3D 뷰어를 찾을 수 없습니다.');
+      console.error('뷰어 컨테이너를 찾을 수 없습니다. 선택자: [data-viewer-container="true"]');
+      // 대체 선택자 시도
+      viewerContainer = document.querySelector('.viewer-container') || document.querySelector('#viewer-container');
+      if (!viewerContainer) {
+        throw new Error('3D 뷰어를 찾을 수 없습니다.');
+      }
     }
     
-    // html2canvas로 캡처
-    const capturedCanvas = await html2canvas(viewerContainer as HTMLElement, {
-      backgroundColor: '#ffffff',
-      scale: 2, // 고화질을 위해 2배 스케일
-      logging: false,
-      useCORS: true,
-      allowTaint: true,
+    // WebGL canvas를 직접 찾아서 캡처 시도
+    const canvas = viewerContainer.querySelector('canvas');
+    let imageData: string;
+    
+    console.log('Canvas 캡처 시도:', {
+      viewerContainer: !!viewerContainer,
+      canvas: !!canvas,
+      canvasWidth: canvas?.width,
+      canvasHeight: canvas?.height
     });
+    
+    if (canvas && (viewInfo.viewMode === '3D' || viewInfo.viewMode === '2D')) {
+      // WebGL canvas가 있으면 직접 캡처
+      try {
+        // Three.js 렌더링 대기
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        
+        // Canvas를 캡처
+        imageData = (canvas as HTMLCanvasElement).toDataURL('image/png');
+        
+        // 캡처된 이미지가 비어있는지 확인
+        if (!imageData || imageData === 'data:,' || imageData.length < 100) {
+          throw new Error('Canvas 캡처 결과가 비어있습니다.');
+        }
+        
+        console.log('Canvas 직접 캡처 성공:', imageData.substring(0, 50) + '...');
+      } catch (canvasError) {
+        console.warn('Canvas 직접 캡처 실패, html2canvas 사용:', canvasError);
+        
+        // Canvas 직접 캡처 실패 시 html2canvas 사용
+        const capturedCanvas = await html2canvas(viewerContainer as HTMLElement, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          // WebGL 캔버스 캡처를 위한 추가 옵션
+          onclone: (clonedDoc) => {
+            const clonedCanvas = clonedDoc.querySelector('canvas');
+            if (clonedCanvas && canvas) {
+              const ctx = clonedCanvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(canvas, 0, 0);
+              }
+            }
+          }
+        });
+        
+        imageData = capturedCanvas.toDataURL('image/png');
+      }
+    } else {
+      // WebGL canvas가 없으면 기존 방식으로 캡처
+      const capturedCanvas = await html2canvas(viewerContainer as HTMLElement, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      imageData = capturedCanvas.toDataURL('image/png');
+    }
     
     // 원래 뷰로 복원
     setViewMode(originalViewMode);
     if (originalViewMode === '2D') {
       setView2DDirection(originalView2DDirection);
     }
-    setRenderMode(originalRenderMode);
     
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    return capturedCanvas.toDataURL('image/png');
-  }, [viewMode, view2DDirection, renderMode, setViewMode, setView2DDirection, setRenderMode]);
+    return imageData;
+  }, [viewMode, view2DDirection, setViewMode, setView2DDirection]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
@@ -92,18 +148,28 @@ export function usePDFExport() {
     setIsExporting(true);
     
     try {
-      // PDF 문서 생성 (A4 가로 방향)
+      // PDF 문서 생성 (A3 가로 방향 - 건축 도면 표준)
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4',
+        format: 'a3',
       });
       
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 20;
-      const contentWidth = pageWidth - (margin * 2);
-      const contentHeight = pageHeight - (margin * 2);
+      const borderMargin = 10; // 외곽 테두리 여백
+      const innerMargin = 5;   // 내부 테두리 여백
+      const titleBlockHeight = 40; // 타이틀 블록 높이
+      const titleBlockWidth = 180; // 타이틀 블록 너비
+      
+      // 도면 색상 정의 (건축 도면 표준)
+      const colors = {
+        black: '#000000',      // 주 선
+        gray: '#666666',       // 보조 선
+        lightGray: '#CCCCCC',  // 가이드 선
+        text: '#000000',       // 텍스트
+        white: '#FFFFFF'       // 배경
+      };
       
       // 프로젝트 정보
       const projectTitle = title || '가구 배치 설계도';
@@ -132,129 +198,291 @@ export function usePDFExport() {
           pdf.addPage();
         }
         
-        // 헤더 - 회사명과 로고
-        pdf.setFontSize(24);
-        pdf.setTextColor(16, 185, 129); // 테마 컬러
-        pdf.text('MODULAR FURNITURE', margin, margin);
+        // 페이지 외곽 테두리 (건축 도면 표준)
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.7);
+        pdf.rect(borderMargin, borderMargin, pageWidth - 2 * borderMargin, pageHeight - 2 * borderMargin, 'S');
         
-        // 프로젝트 정보
-        await addMixedText(pdf, projectTitle, margin, margin + 10, {
-          fontSize: 16,
-          color: '#000000'
+        // 내부 테두리
+        pdf.setLineWidth(0.3);
+        pdf.rect(borderMargin + innerMargin, borderMargin + innerMargin, 
+                pageWidth - 2 * (borderMargin + innerMargin), 
+                pageHeight - 2 * (borderMargin + innerMargin), 'S');
+        
+        // 타이틀 블록 영역 (우측 하단)
+        const titleBlockX = pageWidth - borderMargin - innerMargin - titleBlockWidth;
+        const titleBlockY = pageHeight - borderMargin - innerMargin - titleBlockHeight;
+        
+        // 타이틀 블록 테두리
+        pdf.setLineWidth(0.5);
+        pdf.rect(titleBlockX, titleBlockY, titleBlockWidth, titleBlockHeight, 'S');
+        
+        // 타이틀 블록 내부 구분선들
+        // 회사 로고 영역
+        pdf.line(titleBlockX + 40, titleBlockY, titleBlockX + 40, titleBlockY + titleBlockHeight);
+        // 프로젝트 정보 영역
+        pdf.line(titleBlockX, titleBlockY + 20, titleBlockX + titleBlockWidth, titleBlockY + 20);
+        // 도면 정보 영역  
+        pdf.line(titleBlockX + 90, titleBlockY + 20, titleBlockX + 90, titleBlockY + titleBlockHeight);
+        pdf.line(titleBlockX + 140, titleBlockY + 20, titleBlockX + 140, titleBlockY + titleBlockHeight);
+        
+        // 회사 로고 영역
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.text('MF', titleBlockX + 20, titleBlockY + 12, { align: 'center' });
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('MODULAR', titleBlockX + 20, titleBlockY + 17, { align: 'center' });
+        pdf.text('FURNITURE', titleBlockX + 20, titleBlockY + 21, { align: 'center' });
+        
+        // 프로젝트 정보 필드
+        pdf.setFontSize(8);
+        pdf.text('PROJECT:', titleBlockX + 45, titleBlockY + 6);
+        await addMixedText(pdf, projectTitle.toUpperCase(), titleBlockX + 45, titleBlockY + 11, {
+          fontSize: 10,
+          color: colors.text,
+          fontWeight: '700'
         });
         
-        await addMixedText(pdf, `날짜: ${currentDate}`, margin, margin + 18, {
-          fontSize: 12,
-          color: '#646464'
-        });
-        await addMixedText(pdf, `뷰: ${viewInfo.name}`, margin, margin + 25, {
-          fontSize: 12,
-          color: '#646464'
-        });
-        await addMixedText(pdf, `렌더링: ${targetRenderMode === 'solid' ? '솔리드' : '와이어프레임'}`, margin, margin + 32, {
-          fontSize: 12,
-          color: '#646464'
+        pdf.text('CLIENT:', titleBlockX + 45, titleBlockY + 17);
+        await addMixedText(pdf, 'MODULAR FURNITURE SYSTEM', titleBlockX + 65, titleBlockY + 17, {
+          fontSize: 8,
+          color: colors.text
         });
         
-        // 공간 정보
-        const spaceInfoText = `공간: ${spaceInfo.width}W × ${spaceInfo.height}H × ${spaceInfo.depth}D mm`;
-        const furnitureInfoText = `가구: ${placedModules.length}개`;
-        await addMixedText(pdf, spaceInfoText, pageWidth - margin - 80, margin + 10, {
-          fontSize: 12,
-          color: '#646464'
-        });
-        await addMixedText(pdf, furnitureInfoText, pageWidth - margin - 80, margin + 18, {
-          fontSize: 12,
-          color: '#646464'
+        // 도면 정보 필드
+        pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 26);
+        pdf.text(`${i + 1} / ${selectedViews.length}`, titleBlockX + 20, titleBlockY + 26);
+        
+        pdf.text('DATE:', titleBlockX + 5, titleBlockY + 32);
+        pdf.text(currentDate, titleBlockX + 20, titleBlockY + 32);
+        
+        pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 38);
+        pdf.text('AS SHOWN', titleBlockX + 20, titleBlockY + 38);
+        
+        // 공간 사양
+        pdf.text('SPACE:', titleBlockX + 95, titleBlockY + 26);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${spaceInfo.width} × ${spaceInfo.height} × ${spaceInfo.depth}`, titleBlockX + 95, titleBlockY + 32);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('(W × H × D) mm', titleBlockX + 95, titleBlockY + 36);
+        
+        // 도면 타입
+        pdf.text('VIEW:', titleBlockX + 145, titleBlockY + 26);
+        await addMixedText(pdf, viewInfo.name, titleBlockX + 145, titleBlockY + 32, {
+          fontSize: 9,
+          color: colors.text,
+          fontWeight: '500'
         });
         
-        // 구분선
-        pdf.setDrawColor(220, 220, 220);
-        pdf.line(margin, margin + 38, pageWidth - margin, margin + 38);
+        // 렌더링 모드
+        pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 38);
+        pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 165, titleBlockY + 38);
         
         try {
           // 뷰 캡처
           const imageData = await captureView(viewType, targetRenderMode);
           
-          // 이미지 크기 계산 (비율 유지)
-          const imageAreaHeight = contentHeight - 43;
-          const imageAreaWidth = contentWidth;
+          // 이미지 영역 정의 (타이틀 블록을 피해서)
+          const drawingAreaX = borderMargin + innerMargin + 5;
+          const drawingAreaY = borderMargin + innerMargin + 5;
+          const drawingAreaWidth = pageWidth - 2 * (borderMargin + innerMargin) - 10;
+          const drawingAreaHeight = pageHeight - 2 * (borderMargin + innerMargin) - titleBlockHeight - 15;
+          
+          // 뷰 타이틀 (좌측 하단)
+          const viewTitleY = titleBlockY + 10;
+          pdf.setLineWidth(0.3);
+          pdf.rect(drawingAreaX, viewTitleY, 100, 25, 'S');
+          
+          // 뷰 타이틀 내용
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(12);
+          pdf.text('VIEW TITLE', drawingAreaX + 50, viewTitleY + 10, { align: 'center' });
+          
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(10);
+          await addMixedText(pdf, viewInfo.name.toUpperCase(), drawingAreaX + 50, viewTitleY + 16, {
+            fontSize: 10,
+            color: colors.text,
+            align: 'center'
+          });
+          
+          pdf.setFontSize(8);
+          pdf.text('SCALE: AS SHOWN', drawingAreaX + 50, viewTitleY + 22, { align: 'center' });
           
           // 이미지를 PDF에 삽입
           pdf.addImage(
             imageData,
             'PNG',
-            margin,
-            margin + 43,
-            imageAreaWidth,
-            imageAreaHeight,
+            drawingAreaX,
+            drawingAreaY,
+            drawingAreaWidth,
+            drawingAreaHeight,
             undefined,
             'FAST'
           );
         } catch (error) {
           console.error(`뷰 캡처 실패 (${viewType}):`, error);
           // 캡처 실패 시 플레이스홀더 표시
-          pdf.setFillColor(245, 245, 245);
-          pdf.rect(margin, margin + 43, contentWidth, contentHeight - 43, 'F');
+          const drawingAreaX = borderMargin + innerMargin + 5;
+          const drawingAreaY = borderMargin + innerMargin + 5;
+          const drawingAreaWidth = pageWidth - 2 * (borderMargin + innerMargin) - 10;
+          const drawingAreaHeight = pageHeight - 2 * (borderMargin + innerMargin) - titleBlockHeight - 15;
           
-          await addKoreanText(pdf, '뷰 캡처에 실패했습니다', pageWidth / 2, pageHeight / 2, {
+          // 십자선 표시
+          pdf.setDrawColor(200, 200, 200);
+          pdf.setLineWidth(0.2);
+          pdf.line(drawingAreaX, drawingAreaY, drawingAreaX + drawingAreaWidth, drawingAreaY + drawingAreaHeight);
+          pdf.line(drawingAreaX + drawingAreaWidth, drawingAreaY, drawingAreaX, drawingAreaY + drawingAreaHeight);
+          
+          // 에러 메시지
+          pdf.setTextColor(150, 150, 150);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(14);
+          await addKoreanText(pdf, '뷰 캡처 실패', pageWidth / 2, pageHeight / 2 - 20, {
             fontSize: 14,
             color: '#969696',
             align: 'center'
           });
+          
+          pdf.setFontSize(10);
+          pdf.text('VIEW CAPTURE FAILED', pageWidth / 2, pageHeight / 2, { align: 'center' });
         }
         
-        // 하단 정보
-        await addMixedText(pdf, `페이지 ${i + 1} / ${selectedViews.length}`, pageWidth / 2, pageHeight - 10, {
-          fontSize: 10,
-          color: '#969696',
-          align: 'center'
-        });
+        // 저작권 표시 (상단 테두리)
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(6);
+        pdf.setTextColor(100, 100, 100);
+        const disclaimer = 'GENERAL NOTE: DO NOT SCALE FROM DRAWINGS. USE MARKED DIMENSIONS. TO BE READ WITH ALL OTHER CONSULTANTS DRAWINGS. THE ARCHITECT TO BE NOTIFIED IMMEDIATELY SHOULD ANY DISCREPANCY OCCUR.';
+        pdf.text(disclaimer, pageWidth / 2, borderMargin - 2, { align: 'center' });
         
-        // 하단 구분선
-        pdf.setDrawColor(220, 220, 220);
-        pdf.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+        // 도면 번호 표시 (각 모서리)
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        // 좌상단
+        pdf.text(`${i + 1}`, borderMargin + innerMargin + 3, borderMargin + innerMargin + 5);
+        // 우상단
+        pdf.text(`${i + 1}`, pageWidth - borderMargin - innerMargin - 3, borderMargin + innerMargin + 5, { align: 'right' });
+        // 좌하단
+        pdf.text(`${i + 1}`, borderMargin + innerMargin + 3, pageHeight - borderMargin - innerMargin - 2);
+        // 우하단 (타이틀 블록에 포함됨)
       }
       
       // 마지막 페이지에 가구 목록 추가
       if (furnitureList.length > 0) {
         pdf.addPage();
         
-        // 헤더
-        pdf.setFontSize(24);
-        pdf.setTextColor(16, 185, 129);
-        pdf.text('MODULAR FURNITURE', margin, margin);
+        // 외곽 테두리
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.7);
+        pdf.rect(borderMargin, borderMargin, pageWidth - 2 * borderMargin, pageHeight - 2 * borderMargin, 'S');
         
-        await addMixedText(pdf, '가구 목록', margin, margin + 10, {
-          fontSize: 16,
-          color: '#000000'
+        // 내부 테두리
+        pdf.setLineWidth(0.3);
+        pdf.rect(borderMargin + innerMargin, borderMargin + innerMargin, 
+                pageWidth - 2 * (borderMargin + innerMargin), 
+                pageHeight - 2 * (borderMargin + innerMargin), 'S');
+        
+        // 타이틀 블록 (우측 하단)
+        const titleBlockX = pageWidth - borderMargin - innerMargin - titleBlockWidth;
+        const titleBlockY = pageHeight - borderMargin - innerMargin - titleBlockHeight;
+        
+        pdf.setLineWidth(0.5);
+        pdf.rect(titleBlockX, titleBlockY, titleBlockWidth, titleBlockHeight, 'S');
+        
+        // 타이틀 블록 구분선
+        pdf.line(titleBlockX + 40, titleBlockY, titleBlockX + 40, titleBlockY + titleBlockHeight);
+        pdf.line(titleBlockX, titleBlockY + 20, titleBlockX + titleBlockWidth, titleBlockY + 20);
+        pdf.line(titleBlockX + 90, titleBlockY + 20, titleBlockX + 90, titleBlockY + titleBlockHeight);
+        pdf.line(titleBlockX + 140, titleBlockY + 20, titleBlockX + 140, titleBlockY + titleBlockHeight);
+        
+        // 회사 로고
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.text('MF', titleBlockX + 20, titleBlockY + 12, { align: 'center' });
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('MODULAR', titleBlockX + 20, titleBlockY + 17, { align: 'center' });
+        pdf.text('FURNITURE', titleBlockX + 20, titleBlockY + 21, { align: 'center' });
+        
+        // 프로젝트 정보
+        pdf.setFontSize(8);
+        pdf.text('PROJECT:', titleBlockX + 45, titleBlockY + 6);
+        await addMixedText(pdf, projectTitle.toUpperCase(), titleBlockX + 45, titleBlockY + 11, {
+          fontSize: 10,
+          color: colors.text,
+          fontWeight: '700'
         });
         
-        await addMixedText(pdf, `총 ${furnitureList.length}개 가구`, margin, margin + 18, {
-          fontSize: 12,
-          color: '#646464'
+        pdf.text('CLIENT:', titleBlockX + 45, titleBlockY + 17);
+        await addMixedText(pdf, 'MODULAR FURNITURE SYSTEM', titleBlockX + 65, titleBlockY + 17, {
+          fontSize: 8,
+          color: colors.text
         });
         
-        // 구분선
-        pdf.setDrawColor(220, 220, 220);
-        pdf.line(margin, margin + 25, pageWidth - margin, margin + 25);
+        // 도면 정보
+        pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 26);
+        pdf.text(`${selectedViews.length + 1} / ${selectedViews.length + 1}`, titleBlockX + 20, titleBlockY + 26);
+        
+        pdf.text('DATE:', titleBlockX + 5, titleBlockY + 32);
+        pdf.text(currentDate, titleBlockX + 20, titleBlockY + 32);
+        
+        pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 38);
+        pdf.text('N/A', titleBlockX + 20, titleBlockY + 38);
+        
+        // 도면 타입
+        pdf.text('DRAWING:', titleBlockX + 95, titleBlockY + 26);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('FURNITURE', titleBlockX + 95, titleBlockY + 32);
+        pdf.text('SCHEDULE', titleBlockX + 95, titleBlockY + 36);
+        pdf.setFont('helvetica', 'normal');
+        
+        // 총 개수
+        pdf.text('TOTAL:', titleBlockX + 145, titleBlockY + 26);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${furnitureList.length} ITEMS`, titleBlockX + 145, titleBlockY + 32);
+        pdf.setFont('helvetica', 'normal');
+        
+        // 상단 경고문
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(6);
+        pdf.setTextColor(100, 100, 100);
+        const disclaimer = 'GENERAL NOTE: DO NOT SCALE FROM DRAWINGS. USE MARKED DIMENSIONS. TO BE READ WITH ALL OTHER CONSULTANTS DRAWINGS. THE ARCHITECT TO BE NOTIFIED IMMEDIATELY SHOULD ANY DISCREPANCY OCCUR.';
+        pdf.text(disclaimer, pageWidth / 2, borderMargin - 2, { align: 'center' });
+        
+        // 페이지 번호
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`${selectedViews.length + 1}`, borderMargin + innerMargin + 3, borderMargin + innerMargin + 5);
+        pdf.text(`${selectedViews.length + 1}`, pageWidth - borderMargin - innerMargin - 3, borderMargin + innerMargin + 5, { align: 'right' });
+        pdf.text(`${selectedViews.length + 1}`, borderMargin + innerMargin + 3, pageHeight - borderMargin - innerMargin - 2);
+        
+        // 가구 목록 테이블
+        const tableX = borderMargin + innerMargin + 10;
+        const tableY = borderMargin + innerMargin + 20;
+        const tableWidth = pageWidth - 2 * (borderMargin + innerMargin) - titleBlockWidth - 30;
         
         // 테이블 헤더
-        let yPos = margin + 35;
+        let yPos = tableY;
+        const colWidths = [30, 120, 40, 40, 40, 50];
+        const headers = ['NO.', 'FURNITURE NAME', 'WIDTH', 'HEIGHT', 'DEPTH', 'POSITION'];
+        let xPos = tableX;
         
-        const colWidths = [80, 30, 30, 30, 30];
-        const headers = ['가구명', '폭(mm)', '높이(mm)', '깊이(mm)', '위치'];
-        let xPos = margin;
+        // 헤더 테두리
+        pdf.setLineWidth(0.5);
+        pdf.setDrawColor(0, 0, 0);
+        pdf.rect(tableX, yPos, tableWidth, 15, 'S');
         
-        // 헤더 배경
-        pdf.setFillColor(245, 245, 245);
-        pdf.rect(margin, yPos - 5, contentWidth, 15, 'F');
-        
+        // 헤더 필드
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
         for (let index = 0; index < headers.length; index++) {
-          await addKoreanText(pdf, headers[index], xPos + 2, yPos + 3, {
-            fontSize: 11,
-            color: '#000000'
-          });
+          pdf.text(headers[index], xPos + colWidths[index] / 2, yPos + 10, { align: 'center' });
+          if (index < headers.length - 1) {
+            pdf.setLineWidth(0.3);
+            pdf.line(xPos + colWidths[index], yPos, xPos + colWidths[index], yPos + 15);
+          }
           xPos += colWidths[index];
         }
         
@@ -267,49 +495,66 @@ export function usePDFExport() {
           if (yPos > pageHeight - 30) {
             // 페이지가 넘어가면 새 페이지 추가
             pdf.addPage();
-            yPos = margin + 20;
+            yPos = tableY;
           }
           
-          xPos = margin;
+          xPos = tableX;
           
-          // 홀수 행 배경색
-          if (index % 2 === 0) {
-            pdf.setFillColor(250, 250, 250);
-            pdf.rect(margin, yPos - 5, contentWidth, 12, 'F');
-          }
+          // 행 테두리
+          const rowHeight = 12;
+          pdf.setLineWidth(0.3);
+          pdf.rect(tableX, yPos, tableWidth, rowHeight, 'S');
           
-          // 테이블 데이터
-          const rowData = [
-            furniture.name,
+          // 가구 번호
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.text((index + 1).toString().padStart(2, '0'), xPos + colWidths[0] / 2, yPos + 8, { align: 'center' });
+          xPos += colWidths[0];
+          pdf.line(xPos, yPos, xPos, yPos + rowHeight);
+          
+          // 가구명
+          const furnitureName = furniture.name.toUpperCase();
+          const displayName = furnitureName.length > 30 ? furnitureName.substring(0, 28) + '...' : furnitureName;
+          await addMixedText(pdf, displayName, xPos + 5, yPos + 8, {
+            fontSize: 8,
+            color: colors.text
+          });
+          xPos += colWidths[1];
+          pdf.line(xPos, yPos, xPos, yPos + rowHeight);
+          
+          // 치수 데이터
+          const dimensions = [
             furniture.width.toString(),
-            furniture.height.toString(),
-            furniture.depth.toString(),
-            furniture.position.toString()
+            furniture.height.toString(), 
+            furniture.depth.toString()
           ];
           
-          for (let colIndex = 0; colIndex < rowData.length; colIndex++) {
-            const data = rowData[colIndex];
-            const text = data.length > 20 ? data.substring(0, 18) + '...' : data;
-            await addMixedText(pdf, text, xPos + 2, yPos + 3, {
-              fontSize: 11,
-              color: '#3c3c3c'
-            });
-            xPos += colWidths[colIndex];
+          for (let i = 0; i < dimensions.length; i++) {
+            pdf.text(dimensions[i], xPos + colWidths[2 + i] / 2, yPos + 8, { align: 'center' });
+            xPos += colWidths[2 + i];
+            if (i < dimensions.length - 1) {
+              pdf.line(xPos, yPos, xPos, yPos + rowHeight);
+            }
           }
           
-          // 행 구분선
-          pdf.setDrawColor(240, 240, 240);
-          pdf.line(margin, yPos + 7, pageWidth - margin, yPos + 7);
+          // 위치
+          pdf.line(xPos, yPos, xPos, yPos + rowHeight);
+          pdf.text(furniture.position.toString(), xPos + colWidths[5] / 2, yPos + 8, { align: 'center' });
           
-          yPos += 12;
+          yPos += rowHeight;
         }
         
-        // 하단 정보
-        await addMixedText(pdf, `페이지 ${selectedViews.length + 1} / ${selectedViews.length + 1}`, pageWidth / 2, pageHeight - 10, {
-          fontSize: 10,
-          color: '#969696',
-          align: 'center'
-        });
+        // 테이블 하단 마감
+        pdf.setLineWidth(0.5);
+        pdf.line(tableX, yPos, tableX + tableWidth, yPos);
+        
+        // 주석 (테이블 하단)
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text('ALL DIMENSIONS IN MILLIMETERS', tableX, yPos + 10);
+        pdf.text('VERIFY ALL DIMENSIONS ON SITE', tableX, yPos + 15);
+        pdf.text('FURNITURE POSITIONS REFER TO FLOOR PLAN', tableX, yPos + 20);
       }
       
       // PDF 다운로드

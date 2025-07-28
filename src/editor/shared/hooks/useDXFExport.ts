@@ -4,6 +4,7 @@ import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { PlacedModule } from '../furniture/types';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../viewer3d/utils/geometry';
+import JSZip from 'jszip';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side';
@@ -167,8 +168,158 @@ export const useDXFExport = () => {
      return `${moduleCount}개 가구가 포함된 도면이 생성됩니다.`;
    }, []);
 
+  /**
+   * 여러 DXF 파일을 ZIP으로 묶어서 다운로드
+   * @param spaceInfo 공간 정보
+   * @param placedModules 배치된 가구 모듈들
+   * @param drawingTypes 도면 타입들
+   */
+  const exportToZIP = useCallback(async (
+    spaceInfo: SpaceInfo,
+    placedModules: PlacedModule[],
+    drawingTypes: DrawingType[]
+  ) => {
+    try {
+      console.log(`🔧 DXF ZIP 내보내기 시작...`);
+      console.log('📊 선택된 도면:', drawingTypes);
+      
+      // ZIP 파일 생성
+      const zip = new JSZip();
+      
+      // 내부 공간 계산
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      
+      // 각 도면 타입별로 DXF 생성
+      for (const drawingType of drawingTypes) {
+        console.log(`📄 ${drawingType} 도면 생성 중...`);
+        
+        // DXF 데이터 준비
+        const dxfData = {
+          spaceInfo: spaceInfo,
+          drawingType,
+          placedModules: placedModules.map(module => {
+            const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+            
+            return {
+              id: module.id,
+              moduleId: module.moduleId,
+              position: {
+                x: module.position.x,
+                y: module.position.y,
+                z: module.position.z
+              },
+              moduleData: {
+                name: moduleData?.name || `모듈-${module.moduleId}`,
+                dimensions: {
+                  width: moduleData?.dimensions.width || 400,
+                  height: moduleData?.dimensions.height || 400,
+                  depth: module.customDepth || moduleData?.dimensions.depth || 300
+                }
+              },
+              rotation: module.rotation,
+              slotIndex: module.slotIndex,
+              isDualSlot: module.isDualSlot
+            };
+          })
+        };
+        
+        // DXF 내용 생성
+        const dxfContent = generateDXF(dxfData);
+        
+        // 파일명 생성
+        const filename = generateDXFFilename(spaceInfo, drawingType);
+        
+        // ZIP에 파일 추가
+        zip.file(filename, dxfContent);
+        
+        console.log(`✅ ${drawingType} 도면 추가 완료: ${filename}`);
+      }
+      
+      // README 파일 추가 (도면 정보 포함)
+      const readmeContent = `가구 배치 도면 (DXF)
+========================
+
+생성일: ${new Date().toLocaleDateString('ko-KR')}
+공간 크기: ${spaceInfo.width}mm × ${spaceInfo.height}mm × ${spaceInfo.depth}mm
+
+포함된 도면:
+${drawingTypes.map(type => {
+  const typeNames = {
+    front: '- 정면도 (Front Elevation)',
+    plan: '- 평면도 (Plan View)',
+    side: '- 측면도 (Side Section)'
+  };
+  return typeNames[type] || `- ${type}`;
+}).join('\n')}
+
+가구 개수: ${placedModules.length}개
+
+도면 정보:
+- 축척: 1:100
+- 단위: mm (밀리미터)
+- CAD 호환: AutoCAD DXF 형식
+
+참고사항:
+- 모든 치수는 밀리미터(mm) 단위입니다.
+- 가구 배치는 실제 공간 치수를 기준으로 합니다.
+- DXF 파일은 대부분의 CAD 프로그램에서 열 수 있습니다.
+`;
+      
+      zip.file('README.txt', readmeContent);
+      
+      // ZIP 파일 생성 및 다운로드
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // 파일명 생성
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+      const dimensions = `${spaceInfo.width}W-${spaceInfo.height}H-${spaceInfo.depth}D`;
+      const zipFilename = `furniture-drawings-${dimensions}-${timestamp}.zip`;
+      
+      // 다운로드 링크 생성
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = zipFilename;
+      
+      // 다운로드 실행
+      document.body.appendChild(link);
+      link.click();
+      
+      // 정리
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log(`✅ DXF ZIP 파일 다운로드 완료: ${zipFilename}`);
+      
+      // 도면 타입별 메시지
+      const drawingTypeNames = {
+        front: '정면도',
+        plan: '평면도',
+        side: '측면도'
+      };
+      
+      const selectedDrawingNames = drawingTypes.map(type => drawingTypeNames[type]).join(', ');
+      
+      return {
+        success: true,
+        filename: zipFilename,
+        message: `DXF 도면 ${drawingTypes.length}개 (${selectedDrawingNames})가 ZIP 파일로 생성되었습니다.`
+      };
+      
+    } catch (error) {
+      console.error(`❌ DXF ZIP 내보내기 실패:`, error);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+        message: `DXF ZIP 파일 생성에 실패했습니다.`
+      };
+    }
+  }, []);
+
   return {
     exportToDXF,
+    exportToZIP,
     canExportDXF,
     getExportStatusMessage
   };

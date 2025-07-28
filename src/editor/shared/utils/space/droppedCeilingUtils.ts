@@ -4,7 +4,7 @@ import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry
 import { SpaceCalculator } from '../indexing/SpaceCalculator';
 
 /**
- * 단내림 영역의 경계 정보를 계산 (내경 기준)
+ * 단내림 영역의 경계 정보를 계산 (전체 공간 기준)
  * 연속된 구조에서 높이 차이만 있는 영역의 경계를 반환
  */
 export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
@@ -15,43 +15,15 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
   const droppedWidth = spaceInfo.droppedCeiling.width || 900;
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
   
-  // 프레임 두께 계산
-  const frameThickness = calculateFrameThickness(spaceInfo);
+  // 전체 공간 기준 시작점
+  const totalStartX = -(spaceInfo.width / 2);
   
-  // 내경 시작점 계산 (ColumnIndexer와 동일)
-  let internalStartX;
-  if (spaceInfo.surroundType === 'no-surround') {
-    let leftReduction = 0;
-    
-    if (spaceInfo.installType === 'builtin') {
-      leftReduction = 2;
-    } else if (spaceInfo.installType === 'semistanding') {
-      if (spaceInfo.wallConfig?.left) {
-        leftReduction = 2;
-      } else {
-        leftReduction = 20;
-      }
-    } else {
-      leftReduction = 20;
-    }
-    
-    internalStartX = -(spaceInfo.width / 2) + leftReduction;
-  } else {
-    internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
-  }
-  
-  // 내경 너비
-  const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-  
-  // 영역별 너비 (ColumnIndexer와 동일)
-  const normalWidth = internalWidth - droppedWidth;
-  
-  // 위치에 따른 시작점 계산 (ColumnIndexer와 동일)
+  // 위치에 따른 시작점 계산
   let droppedStartX;
   if (position === 'left') {
-    droppedStartX = internalStartX;
+    droppedStartX = totalStartX;
   } else {
-    droppedStartX = internalStartX + normalWidth;
+    droppedStartX = totalStartX + (spaceInfo.width - droppedWidth);
   }
   
   return {
@@ -108,42 +80,17 @@ export const getDroppedZoneThreeBounds = (spaceInfo: SpaceInfo) => {
 };
 
 /**
- * 일반 영역의 경계 정보를 계산 (내경 기준)
+ * 일반 영역의 경계 정보를 계산 (전체 공간 기준)
  */
 export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
-  // 프레임 두께 계산
-  const frameThickness = calculateFrameThickness(spaceInfo);
-  
-  // 내경 시작점 계산 (ColumnIndexer와 동일)
-  let internalStartX;
-  if (spaceInfo.surroundType === 'no-surround') {
-    let leftReduction = 0;
-    
-    if (spaceInfo.installType === 'builtin') {
-      leftReduction = 2;
-    } else if (spaceInfo.installType === 'semistanding') {
-      if (spaceInfo.wallConfig?.left) {
-        leftReduction = 2;
-      } else {
-        leftReduction = 20;
-      }
-    } else {
-      leftReduction = 20;
-    }
-    
-    internalStartX = -(spaceInfo.width / 2) + leftReduction;
-  } else {
-    internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
-  }
-  
-  // 내경 너비
-  const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+  // 전체 공간 기준 시작점
+  const totalStartX = -(spaceInfo.width / 2);
   
   if (!spaceInfo.droppedCeiling?.enabled) {
     return {
-      startX: internalStartX,
-      endX: internalStartX + internalWidth,
-      width: internalWidth,
+      startX: totalStartX,
+      endX: totalStartX + spaceInfo.width,
+      width: spaceInfo.width,
       height: spaceInfo.height
     };
   }
@@ -151,14 +98,14 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
   const { position } = spaceInfo.droppedCeiling;
   // 기본값 처리
   const droppedWidth = spaceInfo.droppedCeiling.width || 900;
-  const normalWidth = internalWidth - droppedWidth;
+  const normalWidth = spaceInfo.width - droppedWidth;
   
-  // 위치에 따른 시작점 계산 (ColumnIndexer와 동일)
+  // 위치에 따른 시작점 계산
   let normalStartX;
   if (position === 'left') {
-    normalStartX = internalStartX + droppedWidth;
+    normalStartX = totalStartX + droppedWidth;
   } else {
-    normalStartX = internalStartX;
+    normalStartX = totalStartX;
   }
   
   return {

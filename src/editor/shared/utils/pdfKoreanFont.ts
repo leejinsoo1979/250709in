@@ -12,26 +12,44 @@ const loadGoogleFont = () => {
 loadGoogleFont();
 
 // Function to convert text to image for Korean support
-export const createTextImage = async (text: string, fontSize: number = 12, color: string = '#000000'): Promise<string> => {
+export const createTextImage = async (text: string, fontSize: number = 12, color: string = '#000000', fontWeight: string = '400'): Promise<string> => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   
   if (!ctx) throw new Error('Canvas context not available');
   
-  // Set canvas size based on text
-  ctx.font = `${fontSize}px "Noto Sans KR", "Malgun Gothic", sans-serif`;
+  // Higher resolution for crisp text
+  const scale = 3; // 3x resolution for sharp text
+  
+  // Set canvas size based on text with higher resolution
+  ctx.font = `${fontWeight} ${fontSize}px "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   const metrics = ctx.measureText(text);
-  canvas.width = Math.ceil(metrics.width) + 4;
-  canvas.height = fontSize * 1.5;
+  
+  canvas.width = Math.ceil((metrics.width + 8) * scale);
+  canvas.height = Math.ceil(fontSize * 1.8 * scale);
+  
+  // Scale context for higher resolution
+  ctx.scale(scale, scale);
+  
+  // Enable font smoothing
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   
   // Clear and redraw with proper font
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = `${fontSize}px "Noto Sans KR", "Malgun Gothic", sans-serif`;
+  ctx.font = `${fontWeight} ${fontSize}px "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
   ctx.fillStyle = color;
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, 2, canvas.height / 2);
+  ctx.textAlign = 'left';
   
-  return canvas.toDataURL('image/png');
+  // Add slight letter spacing for better readability
+  if (fontWeight === '700' || fontWeight === '500') {
+    ctx.letterSpacing = '0.5px';
+  }
+  
+  ctx.fillText(text, 4, (fontSize * 1.8) / 2);
+  
+  return canvas.toDataURL('image/png', 1.0);
 };
 
 // Helper to add Korean text to PDF
@@ -44,22 +62,26 @@ export const addKoreanText = async (
     fontSize?: number;
     color?: string;
     align?: 'left' | 'center' | 'right';
+    fontWeight?: string;
   }
 ) => {
   const fontSize = options?.fontSize || 12;
   const color = options?.color || '#000000';
+  const fontWeight = options?.fontWeight || '400';
   
   try {
-    // Create text as image
-    const textImage = await createTextImage(text, fontSize, color);
+    // Create text as image with higher resolution
+    const textImage = await createTextImage(text, fontSize, color, fontWeight);
     
     // Calculate dimensions
     const img = new Image();
     img.src = textImage;
     await new Promise(resolve => img.onload = resolve);
     
-    const imgWidth = img.width * 0.75; // Convert pixels to points
-    const imgHeight = img.height * 0.75;
+    // Adjust scale for high resolution image
+    const scale = 3; // Must match the scale in createTextImage
+    const imgWidth = (img.width / scale) * 0.75; // Convert pixels to points
+    const imgHeight = (img.height / scale) * 0.75;
     
     // Adjust x position based on alignment
     let adjustedX = x;
@@ -69,8 +91,7 @@ export const addKoreanText = async (
       adjustedX = x - imgWidth;
     }
     
-    // Add image to PDF
-    // For Korean text, we need to adjust the y position differently
+    // Add image to PDF with proper positioning
     pdf.addImage(textImage, 'PNG', adjustedX, y - imgHeight * 0.75, imgWidth, imgHeight);
     
     return { width: imgWidth, height: imgHeight };
@@ -99,11 +120,15 @@ export const addMixedText = async (
     font?: string;
     fontStyle?: string;
     align?: 'left' | 'center' | 'right';
+    fontWeight?: string;
   }
 ) => {
   if (containsKorean(text)) {
-    // Use image-based approach for Korean
-    await addKoreanText(pdf, text, x, y, options);
+    // Use image-based approach for Korean with font weight
+    await addKoreanText(pdf, text, x, y, {
+      ...options,
+      fontWeight: options?.fontWeight || (options?.fontStyle === 'bold' ? '700' : '400')
+    });
   } else {
     // Use regular PDF text for non-Korean
     if (options?.fontSize) pdf.setFontSize(options.fontSize);

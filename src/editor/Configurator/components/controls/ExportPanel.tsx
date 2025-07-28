@@ -55,7 +55,7 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
 const ExportPanel: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
-  const { exportToDXF, canExportDXF, getExportStatusMessage } = useDXFExport();
+  const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage } = useDXFExport();
   const { exportToPDF, canExportPDF, VIEW_TYPES, isExporting: isPDFExporting } = usePDFExport();
   
   const [isExporting, setIsExporting] = useState(false);
@@ -91,7 +91,7 @@ const ExportPanel: React.FC = () => {
     });
   };
 
-  // DXF 내보내기 실행
+  // DXF 내보내기 실행 (개별 파일)
   const handleExportDXF = async () => {
     if (!spaceInfo || !canExportDXF(spaceInfo, placedModules) || selectedDrawingTypes.length === 0) {
       return;
@@ -137,9 +137,50 @@ const ExportPanel: React.FC = () => {
     }
   };
 
+  // DXF 내보내기 실행 (ZIP 파일)
+  const handleExportDXFZip = async () => {
+    if (!spaceInfo || !canExportDXF(spaceInfo, placedModules) || selectedDrawingTypes.length === 0) {
+      return;
+    }
+
+    setIsExporting(true);
+    setLastExportResult(null);
+
+    try {
+      const result = await exportToZIP(spaceInfo, placedModules, selectedDrawingTypes);
+      
+      setLastExportResult(result);
+      
+      if (result.success) {
+        setTimeout(() => {
+          setLastExportResult(null);
+        }, 3000);
+      }
+    } catch {
+      setLastExportResult({
+        success: false,
+        message: '예상치 못한 오류가 발생했습니다.'
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // PDF 내보내기 실행
   const handleExportPDF = async () => {
+    console.log('PDF Export clicked', {
+      spaceInfo: !!spaceInfo,
+      canExport: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
+      selectedViews: selectedPDFViews.length,
+      placedModules: placedModules.length
+    });
+    
     if (!spaceInfo || !canExportPDF(spaceInfo, placedModules) || selectedPDFViews.length === 0) {
+      console.log('Export blocked:', {
+        hasSpaceInfo: !!spaceInfo,
+        canExport: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
+        hasSelectedViews: selectedPDFViews.length > 0
+      });
       return;
     }
 
@@ -153,6 +194,7 @@ const ExportPanel: React.FC = () => {
         }, 3000);
       }
     } catch (error) {
+      console.error('PDF Export error:', error);
       setLastExportResult({
         success: false,
         message: '예상치 못한 오류가 발생했습니다.'
@@ -163,6 +205,17 @@ const ExportPanel: React.FC = () => {
   const isExportEnabled = spaceInfo && canExportDXF(spaceInfo, placedModules) && selectedDrawingTypes.length > 0;
   const isPDFExportEnabled = spaceInfo && canExportPDF(spaceInfo, placedModules) && selectedPDFViews.length > 0;
   const statusMessage = spaceInfo ? getExportStatusMessage(spaceInfo, placedModules) : '공간 정보가 없습니다.';
+  
+  // PDF 버튼 상태 디버깅
+  console.log('PDF Button State:', {
+    isPDFExportEnabled,
+    isPDFExporting,
+    disabled: !isPDFExportEnabled || isPDFExporting,
+    spaceInfo: !!spaceInfo,
+    canExportPDF: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
+    selectedPDFViews: selectedPDFViews.length,
+    placedModules: placedModules.length
+  });
 
   return (
     <div className={styles.exportPanel}>
@@ -218,6 +271,23 @@ const ExportPanel: React.FC = () => {
           <div className={styles.actions}>
             <button
               className={`${styles.exportButton} ${!isExportEnabled ? styles.disabled : ''}`}
+              onClick={handleExportDXFZip}
+              disabled={!isExportEnabled || isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <span className={styles.spinner}></span>
+                  내보내는 중...
+                </>
+              ) : (
+                <>
+                  ZIP 파일로 다운로드 ({selectedDrawingTypes.length}개)
+                </>
+              )}
+            </button>
+            
+            <button
+              className={`${styles.exportButton} ${styles.secondary} ${!isExportEnabled ? styles.disabled : ''}`}
               onClick={handleExportDXF}
               disabled={!isExportEnabled || isExporting}
             >
@@ -228,7 +298,7 @@ const ExportPanel: React.FC = () => {
                 </>
               ) : (
                 <>
-                  DXF 도면 다운로드 ({selectedDrawingTypes.length}개)
+                  개별 파일로 다운로드
                 </>
               )}
             </button>

@@ -349,226 +349,98 @@ export class ColumnIndexer {
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
-      const indexing = this.calculateSpaceIndexing(spaceInfo);
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const columnCount = customColumnCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
+      const columnWidth = Math.floor(internalWidth / columnCount);
+      
+      // 프레임을 고려한 내부 시작점
+      const internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
+      
       return {
         normal: {
-          startX: indexing.internalStartX,
-          width: indexing.internalWidth,
-          columnCount: indexing.columnCount,
-          columnWidth: indexing.columnWidth
+          startX: internalStartX,
+          width: internalWidth,
+          columnCount,
+          columnWidth
         },
         dropped: null
       };
     }
     
-    // 단내림이 활성화된 경우 영역 분리
+    // 단내림이 활성화된 경우
     const totalWidth = spaceInfo.width;
     const droppedWidth = spaceInfo.droppedCeiling.width || 900;
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
     
-    // PDF 공식에 따른 영역 너비 계산
-    let normalAreaWidth: number; // 메인구간 너비
-    let droppedAreaWidth: number; // 단내림구간 너비
-    let normalStartX: number; // 메인구간 시작점
-    let droppedStartX: number; // 단내림구간 시작점
+    // 전체 내부 너비 (프레임 제외)
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+    const internalStartX = -(totalWidth / 2) + frameThickness.left;
     
-    // 전체 공간 중심점 (원점 기준)
-    const xOffset = -totalWidth / 2;
+    // 각 구간의 내부 너비 계산 (해당 쪽 프레임만 제외)
+    let normalAreaInternalWidth: number;
+    let droppedAreaInternalWidth: number;
     
-    if (spaceInfo.surroundType === 'surround') {
-      // 서라운드: 프레임 안쪽에서 시작
-      if (spaceInfo.installType === 'builtin') {
-        // 빌트인: 양쪽 프레임 50mm씩, 메인구간은 빨간선까지 확장
-        normalAreaWidth = totalWidth - droppedWidth - 50; // 메인구간은 단내림 경계까지
-        droppedAreaWidth = droppedWidth - 50; // 단내림구간은 오른쪽 프레임까지
-        
-        if (droppedPosition === 'left') {
-          droppedStartX = xOffset + 50; // 왼쪽 프레임 안쪽
-          normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
-        } else {
-          normalStartX = xOffset + 50; // 왼쪽 프레임 안쪽
-          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
-        }
-      } else if (spaceInfo.installType === 'semistanding') {
-        // 세미스탠딩: 벽쪽 프레임 50mm, 엔드패널쪽 20mm
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽: 50 + ... + 20, 메인구간은 빨간선까지 확장
-          normalAreaWidth = totalWidth - droppedWidth - 50; // 메인구간은 단내림 경계까지
-          droppedAreaWidth = droppedWidth - 20; // 단내림구간은 오른쪽 엔드패널까지
-          
-          if (droppedPosition === 'left') {
-            droppedStartX = xOffset + 50; // 왼쪽 프레임 안쪽
-            normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
-          } else {
-            normalStartX = xOffset + 50; // 왼쪽 프레임 안쪽
-            droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
-          }
-        } else {
-          // 오른쪽 벽: 20 + ... + 50, 메인구간은 빨간선까지 확장
-          normalAreaWidth = totalWidth - droppedWidth - 20; // 메인구간은 단내림 경계까지
-          droppedAreaWidth = droppedWidth - 50; // 단내림구간은 오른쪽 프레임까지
-          
-          if (droppedPosition === 'left') {
-            droppedStartX = xOffset + 20; // 왼쪽 엔드패널
-            normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
-          } else {
-            normalStartX = xOffset + 20; // 왼쪽 엔드패널
-            droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
-          }
-        }
-      } else {
-        // 프리스탠딩: 20 + ... + 20
-        normalAreaWidth = totalWidth - droppedWidth - 20; // 메인구간은 단내림 경계까지
-        droppedAreaWidth = droppedWidth - 20; // 단내림구간은 오른쪽 엔드패널까지
-        
-        if (droppedPosition === 'left') {
-          droppedStartX = xOffset + 20; // 왼쪽 엔드패널
-          normalStartX = xOffset + droppedWidth; // 천장 분절라인 (빨간선 위치)
-        } else {
-          normalStartX = xOffset + 20; // 왼쪽 엔드패널
-          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인 (빨간선 위치)
-        }
-      }
+    if (droppedPosition === 'left') {
+      // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
+      droppedAreaInternalWidth = droppedWidth - frameThickness.left; // 900 - 50 = 850
+      normalAreaInternalWidth = (totalWidth - droppedWidth) - frameThickness.right; // 2700 - 50 = 2650
     } else {
-      // 노서라운드: PDF 1,4,5페이지 참조
-      if (spaceInfo.installType === 'builtin') {
-        // 빌트인: 전체 너비에서 이격거리만 제외
-        normalAreaWidth = totalWidth - droppedWidth - 4;
-        droppedAreaWidth = droppedWidth - 4;
-        
-        if (droppedPosition === 'left') {
-          droppedStartX = xOffset + 2;
-          normalStartX = xOffset + droppedWidth; // 천장 분절라인
-        } else {
-          normalStartX = xOffset + 2;
-          droppedStartX = xOffset + (totalWidth - droppedWidth); // 천장 분절라인
-        }
-      } else if (spaceInfo.installType === 'semistanding') {
-        // 세미스탠딩: 벽쪽 2mm, 엔드패널쪽 20mm
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽: 2 + ... + 20
-          normalAreaWidth = totalWidth - droppedWidth - 22;
-          droppedAreaWidth = droppedWidth - 22;
-          
-          if (droppedPosition === 'left') {
-            droppedStartX = xOffset + 2;
-            normalStartX = xOffset + droppedWidth;
-          } else {
-            normalStartX = xOffset + 2;
-            droppedStartX = xOffset + (totalWidth - droppedWidth);
-          }
-        } else {
-          // 오른쪽 벽: 20 + ... + 2
-          normalAreaWidth = totalWidth - droppedWidth - 22;
-          droppedAreaWidth = droppedWidth - 22;
-          
-          if (droppedPosition === 'left') {
-            droppedStartX = xOffset + 20;
-            normalStartX = xOffset + droppedWidth;
-          } else {
-            normalStartX = xOffset + 20;
-            droppedStartX = xOffset + (totalWidth - droppedWidth);
-          }
-        }
-      } else {
-        // 프리스탠딩: 20 + ... + 20
-        normalAreaWidth = totalWidth - droppedWidth - 40;
-        droppedAreaWidth = droppedWidth - 40;
-        
-        if (droppedPosition === 'left') {
-          droppedStartX = xOffset + 20;
-          normalStartX = xOffset + droppedWidth;
-        } else {
-          normalStartX = xOffset + 20;
-          droppedStartX = xOffset + (totalWidth - droppedWidth);
-        }
-      }
+      // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
+      normalAreaInternalWidth = (totalWidth - droppedWidth) - frameThickness.left; // 2700 - 50 = 2650
+      droppedAreaInternalWidth = droppedWidth - frameThickness.right; // 900 - 50 = 850
     }
     
-    console.log('🔍 [calculateZoneSlotInfo] PDF 공식 적용 결과:', {
-      totalWidth,
-      droppedWidth,
-      normalAreaWidth,
-      droppedAreaWidth,
-      normalStartX,
-      droppedStartX,
-      customColumnCount
-    });
+    let normalStartX: number;
+    let droppedStartX: number;
+    
+    if (droppedPosition === 'left') {
+      // 왼쪽 단내림
+      droppedStartX = internalStartX;
+      normalStartX = internalStartX + droppedAreaInternalWidth;
+    } else {
+      // 오른쪽 단내림
+      normalStartX = internalStartX;
+      droppedStartX = internalStartX + normalAreaInternalWidth;
+    }
     
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;
     let droppedColumnCount: number;
     
-    // 단내림이 활성화된 경우 mainDoorCount를 메인 영역에 사용
-    if (spaceInfo.droppedCeiling?.enabled && spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+    // 메인 영역 컬럼 수
+    if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
       normalColumnCount = spaceInfo.mainDoorCount;
     } else if (customColumnCount !== undefined && customColumnCount > 0) {
       normalColumnCount = customColumnCount;
     } else {
-      normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaWidth);
+      normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaInternalWidth);
     }
     
-    // 단내림 영역은 droppedCeilingDoorCount가 있으면 사용, 없으면 자동 계산
+    // 단내림 영역 컬럼 수
     if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
       droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
     } else {
-      droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaWidth);
+      droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaInternalWidth);
     }
     
-    console.log('🔍 [calculateZoneSlotInfo] 영역별 컬럼 수:', {
-      normalColumnCount,
-      droppedColumnCount,
-      customColumnCount,
-      mainDoorCount: spaceInfo.mainDoorCount,
-      droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
-      'mainDoorCount 적용': spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0 ? '예' : '아니오',
-      '메인구간 계산': `${normalAreaWidth}mm / 600mm = ${normalAreaWidth/600}`,
-      '단내림구간 계산': `${droppedAreaWidth}mm / 600mm = ${droppedAreaWidth/600}`
-    });
-    
     // 각 영역의 컬럼 너비 계산
-    const normalColumnWidth = Math.floor(normalAreaWidth / normalColumnCount);
-    const droppedColumnWidth = Math.floor(droppedAreaWidth / droppedColumnCount);
+    const normalColumnWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
+    const droppedColumnWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
     
-    const result = {
+    return {
       normal: {
         startX: normalStartX,
-        width: normalAreaWidth,
+        width: normalAreaInternalWidth,
         columnCount: normalColumnCount,
         columnWidth: normalColumnWidth
       },
       dropped: {
         startX: droppedStartX,
-        width: droppedAreaWidth,
+        width: droppedAreaInternalWidth,
         columnCount: droppedColumnCount,
         columnWidth: droppedColumnWidth
       }
     };
-    
-    console.log('🎯 [calculateZoneSlotInfo] 최종 영역 정보:', {
-      normal: {
-        startX: normalStartX,
-        endX: normalStartX + normalAreaWidth,
-        width: normalAreaWidth,
-        columnCount: normalColumnCount,
-        columnWidth: normalColumnWidth,
-        '슬롯 경계': Array.from({ length: normalColumnCount + 1 }, (_, i) => 
-          normalStartX + (i * normalColumnWidth)
-        )
-      },
-      dropped: {
-        startX: droppedStartX,
-        endX: droppedStartX + droppedAreaWidth,
-        width: droppedAreaWidth,
-        columnCount: droppedColumnCount,
-        columnWidth: droppedColumnWidth,
-        '슬롯 경계': Array.from({ length: droppedColumnCount + 1 }, (_, i) => 
-          droppedStartX + (i * droppedColumnWidth)
-        )
-      }
-    });
-    
-    return result;
   }
 
   /**

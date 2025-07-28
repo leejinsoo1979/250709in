@@ -957,9 +957,21 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   droppedEndX = rightBoundary;
                 }
                 
+                console.log('🏗️ 가벽 단내림 체크:', {
+                  wallId: wall.id,
+                  wallXMm,
+                  droppedStartX,
+                  droppedEndX,
+                  isInDroppedArea: wallXMm >= droppedStartX && wallXMm <= droppedEndX,
+                  originalHeight: wall.height,
+                  dropHeight,
+                  wallHeight
+                });
+                
                 // 가벽이 단내림 영역에 있으면 높이 조정
                 if (wallXMm >= droppedStartX && wallXMm <= droppedEndX) {
                   wallHeight = wall.height - dropHeight;
+                  console.log('🏗️ 가벽 높이 조정됨:', { wallId: wall.id, originalHeight: wall.height, adjustedHeight: wallHeight });
                 }
               }
               
@@ -1101,12 +1113,6 @@ const QuadrantContent: React.FC<{
       />
       <ambientLight intensity={0.8} color="#ffffff" />
       
-      {/* 기본 요소들 */}
-      <Room spaceInfo={spaceInfo} viewMode="2D" materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
-      
-      {/* 단내림 공간 렌더링 */}
-      <DroppedCeilingSpace spaceInfo={spaceInfo} />
-      
       {/* 기둥 에셋 렌더링 */}
       {(spaceInfo?.columns || []).map((column) => (
         <React.Fragment key={column.id}>
@@ -1140,27 +1146,6 @@ const QuadrantContent: React.FC<{
             />
           )}
         </React.Fragment>
-      ))}
-      
-      {/* 가벽 에셋 렌더링 */}
-      {(spaceInfo?.walls || []).map((wall) => (
-        <WallAsset
-          key={wall.id}
-          id={wall.id}
-          position={wall.position}
-          width={wall.width}
-          height={wall.height}
-          depth={wall.depth}
-          color={wall.color}
-          spaceInfo={spaceInfo}
-          renderMode="solid"
-          onPositionChange={(id, newPosition) => {
-            updateWall(id, { position: newPosition });
-          }}
-          onRemove={(id) => {
-            removeWall(id);
-          }}
-        />
       ))}
       
       {/* 컬럼 가이드 표시 */}

@@ -429,10 +429,18 @@ const Room: React.FC<RoomProps> = ({
   return (
     <group position={[0, 0, groupZOffset]}>
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D 모드에서만 표시) */}
-      {(viewMode === '3D' || viewMode === '3d') && (
+      {console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode)}
+      {viewMode !== '2D' && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
+          {console.log('🔍 왼쪽 벽 installType 체크:', {
+            installType: spaceInfo.installType,
+            wallConfig,
+            wallConfigLeft: wallConfig?.left,
+            condition: (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+              (spaceInfo.installType === 'semistanding' && wallConfig?.left))
+          })}
           {(spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
             (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
@@ -447,55 +455,41 @@ const Room: React.FC<RoomProps> = ({
               hasDroppedCeiling,
               isLeftDropped,
               dropHeight,
-              condition: hasDroppedCeiling && isLeftDropped
+              condition: hasDroppedCeiling && isLeftDropped,
+              'spaceInfo.height': spaceInfo.height,
+              'droppedHeight(mm)': spaceInfo.height - dropHeight,
+              'height(Three.js)': height / 0.01,
+              'droppedHeight(Three.js)': (spaceInfo.height - dropHeight) * 0.01
             });
             
-            // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
+            // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
             if (hasDroppedCeiling && isLeftDropped) {
-              const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-              const droppedCenterY = panelStartY + droppedHeight/2;
+              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차
+              const droppedWallHeight = height - droppedCeilingHeight;
+              const droppedCenterY = panelStartY + droppedWallHeight/2;
               
-              console.log('🏗️ 왼쪽 단내림 벽 렌더링:', {
-                hasDroppedCeiling,
-                isLeftDropped,
-                spaceHeight: spaceInfo.height,
-                dropHeight,
-                droppedHeight: droppedHeight / 0.01,
-                originalHeight: height / 0.01,
-                droppedCenterY,
-                panelStartY,
-                extendedPanelDepth: extendedPanelDepth / 0.01,
-                'mesh position': {
-                  x: -width/2,
-                  y: droppedCenterY,
-                  z: extendedZOffset + extendedPanelDepth/2
-                }
+              console.log('🔴 왼쪽 단내림 벽 렌더링:', {
+                '전체 높이': height / 0.01,
+                '단내림 높이차': droppedCeilingHeight / 0.01,
+                '단내림 벽 높이': droppedWallHeight / 0.01,
+                'panelStartY': panelStartY,
+                'droppedCenterY': droppedCenterY
               });
               
               return (
-                <>
-                  {/* 단내림 영역 벽 (낮은 부분) */}
-                  <mesh
-                    position={[-width/2 - 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
-                    rotation={[0, Math.PI / 2, 0]}
-                  >
-                    <planeGeometry args={[extendedPanelDepth, droppedHeight]} />
-                    <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
-                  </mesh>
-                  {/* 상단 연결 부분 */}
-                  <mesh
-                    position={[-width/2 - 0.001, panelStartY + height - droppedCeilingHeight/2, extendedZOffset + extendedPanelDepth/2]}
-                    rotation={[0, Math.PI / 2, 0]}
-                  >
-                    <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                    <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
-                  </mesh>
-                </>
+                <mesh
+                  position={[-width/2 - 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
+                  rotation={[0, Math.PI / 2, 0]}
+                >
+                  <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+                </mesh>
               );
             }
             
-            // 단내림이 없거나 우측 단내림인 경우 기존 렌더링
-            return (
+            // 단내림이 없거나 오른쪽 단내림인 경우 기존 렌더링
+            if (!hasDroppedCeiling || !isLeftDropped) {
+              return (
               <mesh
                 position={[-width/2 - 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
                 rotation={[0, Math.PI / 2, 0]}
@@ -503,7 +497,10 @@ const Room: React.FC<RoomProps> = ({
                 <planeGeometry args={[extendedPanelDepth, height]} />
                 <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
               </mesh>
-            );
+              );
+            }
+            
+            return null;
           })()}
           
           {/* 오른쪽 외부 벽면 - 단내림 고려 */}
@@ -522,55 +519,39 @@ const Room: React.FC<RoomProps> = ({
               hasDroppedCeiling,
               isRightDropped,
               dropHeight,
-              condition: hasDroppedCeiling && isRightDropped
+              condition: hasDroppedCeiling && isRightDropped,
+              viewMode,
+              '벽 렌더링 조건': (viewMode === '3D' || viewMode === '3d')
             });
             
-            // 오른쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
+            // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
             if (hasDroppedCeiling && isRightDropped) {
-              const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-              const droppedCenterY = panelStartY + droppedHeight/2;
+              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차
+              const droppedWallHeight = height - droppedCeilingHeight;
+              const droppedCenterY = panelStartY + droppedWallHeight/2;
               
-              console.log('🏗️ 오른쪽 단내림 벽 렌더링:', {
-                hasDroppedCeiling,
-                isRightDropped,
-                spaceHeight: spaceInfo.height,
-                dropHeight,
-                droppedHeight: droppedHeight / 0.01,
-                originalHeight: height / 0.01,
-                droppedCenterY,
-                panelStartY,
-                extendedPanelDepth: extendedPanelDepth / 0.01,
-                'mesh position': {
-                  x: width/2,
-                  y: droppedCenterY,
-                  z: extendedZOffset + extendedPanelDepth/2
-                }
+              console.log('🔵 오른쪽 단내림 벽 렌더링:', {
+                '전체 높이': height / 0.01,
+                '단내림 높이차': droppedCeilingHeight / 0.01,
+                '단내림 벽 높이': droppedWallHeight / 0.01,
+                'panelStartY': panelStartY,
+                'droppedCenterY': droppedCenterY
               });
               
               return (
-                <>
-                  {/* 단내림 영역 벽 (낮은 부분) */}
-                  <mesh
-                    position={[width/2 + 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
-                    rotation={[0, -Math.PI / 2, 0]}
-                  >
-                    <planeGeometry args={[extendedPanelDepth, droppedHeight]} />
-                    <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
-                  </mesh>
-                  {/* 상단 연결 부분 */}
-                  <mesh
-                    position={[width/2 + 0.001, panelStartY + height - droppedCeilingHeight/2, extendedZOffset + extendedPanelDepth/2]}
-                    rotation={[0, -Math.PI / 2, 0]}
-                  >
-                    <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                    <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
-                  </mesh>
-                </>
+                <mesh
+                  position={[width/2 + 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
+                  rotation={[0, -Math.PI / 2, 0]}
+                >
+                  <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
+                </mesh>
               );
             }
             
-            // 단내림이 없거나 좌측 단내림인 경우 기존 렌더링
-            return (
+            // 단내림이 없는 경우 기존 렌더링
+            if (!hasDroppedCeiling) {
+              return (
               <mesh
                 position={[width/2 + 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
                 rotation={[0, -Math.PI / 2, 0]}
@@ -578,11 +559,14 @@ const Room: React.FC<RoomProps> = ({
                 <planeGeometry args={[extendedPanelDepth, height]} />
                 <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
               </mesh>
-            );
+              );
+            }
+            
+            return null;
           })()}
           
-          {/* 상단 외부 벽면 (천장) - 단내림이 있는 경우 분할 */}
-          {(() => {
+          {/* 상단 외부 벽면 (천장) - 단내림이 있는 경우 분할 - 탑뷰에서는 숨김 */}
+          {viewMode !== '2D' && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const droppedWidth = hasDroppedCeiling && spaceInfo.droppedCeiling 
               ? mmToThreeUnits(spaceInfo.droppedCeiling.width || 900)
@@ -606,14 +590,53 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
+            // 천장은 프레임 영역을 포함한 전체 너비로 렌더링
             // 단내림이 있는 경우 천장을 두 영역으로 분할
-            const droppedAreaWidth = droppedWidth;
-            const normalAreaWidth = width - droppedWidth;
+            
+            // 좌우 공간 축소값 계산 (프레임 또는 이격거리/엔드패널)
+            let leftReduction = 0;
+            let rightReduction = 0;
+            
+            if (spaceInfo.surroundType === 'surround') {
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              leftReduction = frameThickness.left;
+              rightReduction = frameThickness.right;
+            } else {
+              // 노서라운드: 이격거리 또는 엔드패널
+              if (spaceInfo.installType === 'builtin') {
+                leftReduction = 2;
+                rightReduction = 2;
+              } else if (spaceInfo.installType === 'semistanding') {
+                if (spaceInfo.wallConfig?.left) {
+                  leftReduction = 2;
+                  rightReduction = 20;
+                } else {
+                  leftReduction = 20;
+                  rightReduction = 2;
+                }
+              } else {
+                leftReduction = 20;
+                rightReduction = 20;
+              }
+            }
+            
+            let droppedAreaWidth: number;
+            let normalAreaWidth: number;
+            
+            if (isLeftDropped) {
+              // 왼쪽 단내림: 천장은 전체 너비 사용
+              droppedAreaWidth = droppedWidth;
+              normalAreaWidth = width - droppedWidth;
+            } else {
+              // 오른쪽 단내림: 천장은 전체 너비 사용
+              normalAreaWidth = width - droppedWidth;
+              droppedAreaWidth = droppedWidth;
+            }
             
             // 단내림 영역의 X 위치 계산
             const droppedAreaX = isLeftDropped
               ? xOffset + droppedAreaWidth/2
-              : xOffset + width - droppedAreaWidth/2;
+              : xOffset + normalAreaWidth + droppedAreaWidth/2;
             
             // 일반 영역의 X 위치 계산
             const normalAreaX = isLeftDropped
@@ -622,11 +645,19 @@ const Room: React.FC<RoomProps> = ({
             
             console.log('🔥 천장 분할 계산:', {
               hasDroppedCeiling,
+              surroundType: spaceInfo.surroundType,
+              installType: spaceInfo.installType,
+              wallConfig: spaceInfo.wallConfig,
+              leftReduction,
+              rightReduction,
+              droppedWidth: droppedWidth / 0.01,
               droppedAreaWidth: droppedAreaWidth / 0.01,
               normalAreaWidth: normalAreaWidth / 0.01,
               droppedAreaX,
               normalAreaX,
-              droppedCeilingHeight: droppedCeilingHeight / 0.01
+              droppedCeilingHeight: droppedCeilingHeight / 0.01,
+              totalWidth: width / 0.01,
+              calculatedTotal: (droppedAreaWidth + normalAreaWidth + mmToThreeUnits(leftReduction) + mmToThreeUnits(rightReduction)) / 0.01
             });
             
             return (
@@ -649,10 +680,12 @@ const Room: React.FC<RoomProps> = ({
                   <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse')} />
                 </mesh>
                 
-                {/* 단내림 경계 수직 벽 */}
+                {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
                 <mesh
                   position={[
-                    isLeftDropped ? xOffset + droppedAreaWidth : xOffset + normalAreaWidth, 
+                    isLeftDropped 
+                      ? xOffset + droppedAreaWidth  // 왼쪽 단내림: 단내림 너비 위치
+                      : xOffset + normalAreaWidth,   // 오른쪽 단내림: 메인 너비 위치
                     panelStartY + height - droppedCeilingHeight/2, 
                     extendedZOffset + extendedPanelDepth/2
                   ]}
@@ -665,14 +698,16 @@ const Room: React.FC<RoomProps> = ({
             );
           })()}
           
-          {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) */}
-          <mesh
-            position={[xOffset + width/2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth/2]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[width, extendedPanelDepth]} />
-            <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical')} />
-          </mesh>
+          {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰에서는 숨김 */}
+          {viewMode !== '2D' && (
+            <mesh
+              position={[xOffset + width/2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth/2]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[width, extendedPanelDepth]} />
+              <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical')} />
+            </mesh>
+          )}
           
           {/* 벽장 공간의 3면에서 나오는 그라데이션 오버레이들 - 입체감 효과 */}
           
@@ -958,7 +993,7 @@ const Room: React.FC<RoomProps> = ({
         if (hasDroppedCeiling && isLeftDropped) {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
-          const upperPartHeight = droppedCeilingHeight;
+          const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
           
           return (
@@ -986,31 +1021,6 @@ const Room: React.FC<RoomProps> = ({
                         ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
                         : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
                     : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
-                ]}
-                material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-              />
-              {/* 메인 영역 상단 서브 프레임 (단내림 높이 부분) */}
-              <BoxWithEdges
-                args={[
-                  frameThickness.left, 
-                  upperPartHeight, // 단내림 높이 만큼
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-                  spaceInfo.installType === 'freestanding' 
-                    ? (spaceInfo.surroundType === 'no-surround' 
-                        ? slotFloorDepth - mmToThreeUnits(20)
-                        : slotFloorDepth)
-                    : mmToThreeUnits(END_PANEL_THICKNESS)
-                ]}
-                position={[
-                  xOffset + frameThickness.left/2, 
-                  upperPartCenterY, // 상단 부분 중심
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-                  spaceInfo.installType === 'freestanding'
-                    ? (spaceInfo.surroundType === 'no-surround'
-                        ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2
-                        : backZ + slotFloorDepth/2)
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
                 ]}
                 material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
@@ -1094,31 +1104,6 @@ const Room: React.FC<RoomProps> = ({
                         ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
                         : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
                     : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
-                ]}
-                material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-              />
-              {/* 메인 영역 상단 서브 프레임 (단내림 높이 부분) */}
-              <BoxWithEdges
-                args={[
-                  frameThickness.right, 
-                  upperPartHeight, // 단내림 높이 만큼
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-                  spaceInfo.installType === 'freestanding' 
-                    ? (spaceInfo.surroundType === 'no-surround' 
-                        ? slotFloorDepth - mmToThreeUnits(20)
-                        : slotFloorDepth)
-                    : mmToThreeUnits(END_PANEL_THICKNESS)
-                ]}
-                position={[
-                  xOffset + width - frameThickness.right/2, 
-                  upperPartCenterY, // 상단 부분 중심
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-                  spaceInfo.installType === 'freestanding'
-                    ? (spaceInfo.surroundType === 'no-surround'
-                        ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2
-                        : backZ + slotFloorDepth/2)
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
@@ -1237,34 +1222,84 @@ const Room: React.FC<RoomProps> = ({
               // 프레임 너비 계산 - 동적 계산
               let droppedFrameWidth, normalFrameWidth;
               
+              // 좌우 공간 축소값 계산 (프레임 또는 이격거리/엔드패널)
+              let leftReduction = 0;
+              let rightReduction = 0;
+              
               if (spaceInfo.surroundType === 'surround') {
-                // 서라운드 모드: 좌우 프레임 고려
-                // 단내림 구간 프레임 = 단내림 너비 - 프레임 두께
-                droppedFrameWidth = droppedWidth - frameThickness.left;
-                normalFrameWidth = frameWidth - droppedFrameWidth;
+                const frameThickness = calculateFrameThickness(spaceInfo);
+                leftReduction = frameThickness.left;
+                rightReduction = frameThickness.right;
               } else {
-                // 노서라운드 모드: 좌우 이격거리 고려
-                // 단내림 구간 프레임 = 단내림 너비 - 이격거리
-                const gapSize = mmToThreeUnits(spaceInfo.gapConfig?.left || 2);
-                droppedFrameWidth = droppedWidth - gapSize;
-                normalFrameWidth = frameWidth - droppedFrameWidth;
+                // 노서라운드: 이격거리 또는 엔드패널
+                if (spaceInfo.installType === 'builtin') {
+                  leftReduction = 2;
+                  rightReduction = 2;
+                } else if (spaceInfo.installType === 'semistanding') {
+                  if (spaceInfo.wallConfig?.left) {
+                    leftReduction = 2;
+                    rightReduction = 20;
+                  } else {
+                    leftReduction = 20;
+                    rightReduction = 2;
+                  }
+                } else {
+                  leftReduction = 20;
+                  rightReduction = 20;
+                }
+              }
+              
+              if (isLeftDropped) {
+                // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
+                // ColumnIndexer 로직과 동일하게 수정
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+                droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
+                normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
+              } else {
+                // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
+                // ColumnIndexer 로직과 동일하게 수정
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+                normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
+                droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
+              }
+              
+              // 각 영역의 시작점 계산 (ColumnIndexer와 동일하게)
+              const internalStartX = -(mmToThreeUnits(spaceInfo.width) / 2) + mmToThreeUnits(leftReduction);
+              
+              let normalStartX, droppedStartX;
+              if (isLeftDropped) {
+                droppedStartX = internalStartX;
+                normalStartX = internalStartX + droppedFrameWidth;
+              } else {
+                normalStartX = internalStartX;
+                droppedStartX = internalStartX + normalFrameWidth;
               }
               
               // 프레임 중심 위치 계산
-              const droppedX = isLeftDropped
-                ? frameStartX + droppedFrameWidth/2
-                : frameEndX - droppedFrameWidth/2;
-              const normalX = isLeftDropped
-                ? frameStartX + droppedFrameWidth + normalFrameWidth/2
-                : frameStartX + normalFrameWidth/2;
+              const droppedX = droppedStartX + droppedFrameWidth/2;
+              const normalX = normalStartX + normalFrameWidth/2;
               
               console.log('🔥 상부 프레임 너비 상세 계산:', {
                 전체너비mm: width / 0.01,
                 frameWidth_mm: frameWidth / 0.01,
                 droppedWidth_mm: droppedWidth / 0.01,
+                leftReduction,
+                rightReduction,
                 메인구간프레임너비_mm: normalFrameWidth / 0.01,
                 단내림구간프레임너비_mm: droppedFrameWidth / 0.01,
-                단내림위치: isLeftDropped ? '왼쪽' : '오른쪽'
+                단내림위치: isLeftDropped ? '왼쪽' : '오른쪽',
+                위치정보: {
+                  internalStartX_mm: internalStartX / 0.01,
+                  normalStartX_mm: normalStartX / 0.01,
+                  droppedStartX_mm: droppedStartX / 0.01,
+                  경계점_mm: (isLeftDropped ? normalStartX : droppedStartX) / 0.01
+                },
+                계산검증: {
+                  '단내림+메인': (droppedFrameWidth + normalFrameWidth) / 0.01,
+                  '전체내부너비': (mmToThreeUnits(spaceInfo.width) - mmToThreeUnits(leftReduction + rightReduction)) / 0.01
+                }
               });
               
               // 단내림 영역과 일반 영역 프레임 렌더링
@@ -1548,56 +1583,128 @@ const Room: React.FC<RoomProps> = ({
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (
-        <group 
-          position={[
-            xOffset + frameThickness.left + mmToThreeUnits(40)/2 - mmToThreeUnits(29), // 왼쪽 프레임과 L자 모양으로 맞물림 (38mm 왼쪽으로)
-            sideFrameCenterY, 
-            // 캐비넷 앞면에서 30mm 뒤로 이동
-            furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
-          ]}
-          rotation={[0, Math.PI / 2, 0]} // Y축 기준 90도 회전
-        >
-          <BoxWithEdges
-            args={[
-              mmToThreeUnits(40), // 오른쪽으로 40mm 나오는 깊이
-              adjustedPanelHeight, // 왼쪽 프레임과 동일한 높이
-              mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+        (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
+        
+        // 단내림 설정 확인
+        const droppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
+        const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
+        
+        // 왼쫝이 단내림 영역인 경우
+        if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
+          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
+          const droppedCenterY = panelStartY + droppedHeight/2;
+          
+          return (
+            <group 
+              position={[
+                xOffset + frameThickness.left + mmToThreeUnits(40)/2 - mmToThreeUnits(29),
+                droppedCenterY, 
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              ]}
+              rotation={[0, Math.PI / 2, 0]}
+            >
+              <BoxWithEdges
+                args={[
+                  mmToThreeUnits(40),
+                  droppedHeight, // 단내림 영역 높이
+                  mmToThreeUnits(END_PANEL_THICKNESS)
+                ]}
+                position={[0, 0, 0]}
+                material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                renderMode={renderMode}
+              />
+            </group>
+          );
+        }
+        
+        // 단내림이 없거나 오른쪽에 있는 경우
+        return (
+          <group 
+            position={[
+              xOffset + frameThickness.left + mmToThreeUnits(40)/2 - mmToThreeUnits(29),
+              sideFrameCenterY, 
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
             ]}
-            position={[0, 0, 0]} // group 내에서 원점에 배치
-            material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-            renderMode={renderMode}
-          />
-        </group>
-      )}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <BoxWithEdges
+              args={[
+                mmToThreeUnits(40),
+                adjustedPanelHeight,
+                mmToThreeUnits(END_PANEL_THICKNESS)
+              ]}
+              position={[0, 0, 0]}
+              material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+              renderMode={renderMode}
+            />
+          </group>
+        );
+      })()}
       
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
-        (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (
-        <group 
-          position={[
-            xOffset + width - frameThickness.right - mmToThreeUnits(40)/2 + mmToThreeUnits(29), // 오른쪽 프레임과 L자 모양으로 맞물림 (29mm 오른쪽으로)
-            sideFrameCenterY, 
-            // 캐비넷 앞면에서 30mm 뒤로 이동
-            furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
-          ]}
-          rotation={[0, Math.PI / 2, 0]} // Y축 기준 90도 회전
-        >
-          <BoxWithEdges
-            args={[
-              mmToThreeUnits(40), // 왼쪽으로 40mm 나오는 깊이
-              adjustedPanelHeight, // 오른쪽 프레임과 동일한 높이
-              mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
+        (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
+        
+        // 단내림 설정 확인
+        const droppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
+        const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
+        
+        // 오른쪽이 단내림 영역인 경우
+        if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
+          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
+          const droppedCenterY = panelStartY + droppedHeight/2;
+          
+          return (
+            <group 
+              position={[
+                xOffset + width - frameThickness.right - mmToThreeUnits(40)/2 + mmToThreeUnits(29),
+                droppedCenterY, 
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              ]}
+              rotation={[0, Math.PI / 2, 0]}
+            >
+              <BoxWithEdges
+                args={[
+                  mmToThreeUnits(40),
+                  droppedHeight, // 단내림 영역 높이
+                  mmToThreeUnits(END_PANEL_THICKNESS)
+                ]}
+                position={[0, 0, 0]}
+                material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                renderMode={renderMode}
+              />
+            </group>
+          );
+        }
+        
+        // 단내림이 없거나 왼쪽에 있는 경우
+        return (
+          <group 
+            position={[
+              xOffset + width - frameThickness.right - mmToThreeUnits(40)/2 + mmToThreeUnits(29),
+              sideFrameCenterY, 
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
             ]}
-            position={[0, 0, 0]} // group 내에서 원점에 배치
-            material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-            renderMode={renderMode}
-          />
-        </group>
-      )}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <BoxWithEdges
+              args={[
+                mmToThreeUnits(40),
+                adjustedPanelHeight,
+                mmToThreeUnits(END_PANEL_THICKNESS)
+              ]}
+              position={[0, 0, 0]}
+              material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+              renderMode={renderMode}
+            />
+          </group>
+        );
+      })()}
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}

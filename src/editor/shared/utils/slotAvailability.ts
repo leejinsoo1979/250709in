@@ -39,14 +39,7 @@ export const isSlotAvailable = (
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
   
-  console.log('🔍 isSlotAvailable 상세 체크:', {
-    slotIndex,
-    isDualFurniture,
-    moduleId,
-    excludeModuleId,
-    columnSlotsLength: columnSlots.length,
-    targetSlots
-  });
+  // 디버그 로그 제거 (성능 문제로 인해)
   
   // 기둥이 있는 슬롯은 150mm 이상의 공간이 있으면 배치 가능
   // (가구 폭이 150mm까지 줄어들 수 있음)
@@ -57,17 +50,12 @@ export const isSlotAvailable = (
       continue;
     }
     
-    console.log(`📊 슬롯 ${targetSlot} 정보:`, {
-      hasColumn: slotInfo.hasColumn,
-      availableWidth: slotInfo.availableWidth,
-      adjustedWidth: slotInfo.adjustedWidth,
-      column: slotInfo.column?.id
-    });
+    // 디버그 로그 제거 (성능 문제로 인해)
     
     if (slotInfo.hasColumn) {
       // 듀얼 가구는 기둥 슬롯에 배치 불가
       if (isDualFurniture) {
-        console.log(`❌ 슬롯 ${targetSlot}에 기둥으로 인해 듀얼 가구 배치 불가`);
+        // 듀얼 가구는 기둥 슬롯에 배치 불가
         return false;
       }
       
@@ -79,13 +67,13 @@ export const isSlotAvailable = (
       //   return false;
       // }
       
-      console.log(`✅ 슬롯 ${targetSlot}에 가구 배치 가능 (기둥 침범 후 크기는 SlotDropZones에서 계산)`);
+      // 가구 배치 가능 (기둥 침범 후 크기는 SlotDropZones에서 계산)
     }
   }
   
   // 기둥이 있는 슬롯인 경우 - 항상 배치 가능으로 처리 (실제 배치는 SlotDropZones에서 처리)
   if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
-    console.log(`✅ 기둥이 있는 슬롯 ${slotIndex} - 배치 가능성 있음 (상세 검사는 SlotDropZones에서)`);
+    // 기둥이 있는 슬롯 - 배치 가능성 있음 (상세 검사는 SlotDropZones에서)
     // 기둥이 있는 슬롯은 여러 가구가 배치될 수 있으므로 항상 true 반환
     // 실제 배치 가능 여부는 SlotDropZones의 findAvailableSpacesInColumnSlot에서 판단
     return true;
@@ -203,5 +191,5 @@ export const debugSlotOccupancy = (placedModules: PlacedModule[], spaceInfo: Spa
     }
   });
   
-  console.log('🔍 슬롯 점유 상태:', occupancyMap.join(' '));
+  // 슬롯 점유 상태 디버그 로그 제거
 }; 

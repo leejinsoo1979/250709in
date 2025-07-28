@@ -34,6 +34,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
   onRemove,
   spaceInfo
 }) => {
+  console.log('🎯 WallAsset 렌더링:', { id, height, position });
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
