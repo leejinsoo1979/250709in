@@ -15,6 +15,8 @@ import CADGrid from './components/elements/CADGrid';
 import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
+import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
+import FurnitureItem from './components/elements/furniture/FurnitureItem';
 
 
 import { useLocation } from 'react-router-dom';
@@ -1164,7 +1166,24 @@ const QuadrantContent: React.FC<{
         isStep2={isStep2}
       />
       
+      {/* 투명 슬롯매쉬 */}
+      <FurniturePlacementPlane spaceInfo={spaceInfo} />
+      
+      {/* 슬롯 드롭존 */}
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
+      
+      {/* 배치된 가구들 */}
+      {placedModules.map((placedModule) => (
+        <FurnitureItem
+          key={placedModule.id}
+          placedModule={placedModule}
+          spaceInfo={spaceInfo}
+          materialConfig={materialConfig}
+          showAll={showAll}
+          showDimensions={showDimensions}
+          isStep2={isStep2}
+        />
+      ))}
     </React.Suspense>
   );
 };

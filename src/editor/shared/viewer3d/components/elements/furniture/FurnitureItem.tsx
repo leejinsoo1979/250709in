@@ -8,7 +8,7 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
-import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -73,8 +73,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let internalSpace = calculateInternalSpace(spaceInfo);
   let zoneSpaceInfo = spaceInfo;
   
+  // 분할창(mainDoorCount)이 설정된 경우도 처리
+  if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
+    // 분할창인 경우, 기본 슬롯 수와 다르면 spaceInfo 조정
+    const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
+    if (spaceInfo.mainDoorCount !== defaultColumnCount) {
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        customColumnCount: spaceInfo.mainDoorCount,
+        columnMode: 'custom' as const
+      };
+      console.log('🎯 [FurnitureItem] 분할창 가구 - 크기 조정:', {
+        mainDoorCount: spaceInfo.mainDoorCount,
+        defaultColumnCount,
+        originalWidth: spaceInfo.width,
+        moduleId: placedModule.moduleId
+      });
+    }
+  }
   // 단내림 영역이 활성화되고 가구가 특정 영역에 속한 경우
-  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+  else if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     
     if (placedModule.zone === 'dropped' && zoneInfo.dropped) {
