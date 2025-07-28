@@ -280,8 +280,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
     
-    // 가구 데이터 조회
-    const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+    // 분할창인 경우 spaceInfo 조정
+    let adjustedSpaceInfo = spaceInfo;
+    if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
+      const defaultColumnCount = Math.max(1, Math.floor(internalSpace.width / 600));
+      if (spaceInfo.mainDoorCount !== defaultColumnCount) {
+        adjustedSpaceInfo = {
+          ...spaceInfo,
+          customColumnCount: spaceInfo.mainDoorCount,
+          columnMode: 'custom' as const
+        };
+        console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
+          mainDoorCount: spaceInfo.mainDoorCount,
+          defaultColumnCount,
+          internalWidth: internalSpace.width
+        });
+      }
+    }
+    
+    // 가구 데이터 조회 (조정된 spaceInfo 사용)
+    const moduleData = getModuleById(dragData.moduleData.id, internalSpace, adjustedSpaceInfo);
     if (!moduleData) {
       return false;
     }
