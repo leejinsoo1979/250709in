@@ -19,6 +19,11 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      external: [
+        // AR 관련 파일들을 빌드에서 제외
+        'src/editor/ar-viewer/ARViewer.tsx',
+        'src/editor/ar-viewer/SimpleARViewer.tsx'
+      ],
       output: {
         manualChunks: {
           // Three.js 관련 라이브러리들을 별도 청크로 분리

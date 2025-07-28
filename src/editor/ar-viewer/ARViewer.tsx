@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { XR, ARButton, useHitTest, Interactive } from '@react-three/xr';
+import { XR, ARButton, Interactive } from '@react-three/xr';
 import { useSearchParams } from 'react-router-dom';
 import { getModuleById } from '@/data/modules';
 import BoxModule from '@/editor/shared/viewer3d/components/modules/BoxModule';
@@ -75,20 +75,21 @@ const PlacedFurniture: React.FC<{
   );
 };
 
-// AR Hit Test 컴포넌트
+// AR Hit Test 컴포넌트 (임시 비활성화)
 const ARHitTest: React.FC<{ data: ARData }> = ({ data }) => {
   const [placed, setPlaced] = useState(false);
   const [position, setPosition] = useState<THREE.Vector3>(new THREE.Vector3());
   const [scale, setScale] = useState(0.5); // 기본 스케일
 
-  useHitTest((hitMatrix) => {
-    if (!placed) {
-      // Hit test 결과를 위치로 변환
-      const position = new THREE.Vector3();
-      position.setFromMatrixPosition(hitMatrix);
-      setPosition(position);
-    }
-  });
+  // useHitTest가 더 이상 지원되지 않으므로 임시로 비활성화
+  // useHitTest((hitMatrix) => {
+  //   if (!placed) {
+  //     // Hit test 결과를 위치로 변환
+  //     const position = new THREE.Vector3();
+  //     position.setFromMatrixPosition(hitMatrix);
+  //     setPosition(position);
+  //   }
+  // });
 
   const handlePlace = () => {
     setPlaced(true);

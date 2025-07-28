@@ -1,0 +1,199 @@
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container h1 {
+  text-align: center;
+  color: var(--theme-text);
+  margin-bottom: 30px;
+}
+
+.testArea {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.gestureArea {
+  width: 600px;
+  height: 400px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.testTarget {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease;
+  cursor: grab;
+  max-width: 400px;
+  text-align: center;
+}
+
+.testTarget:active {
+  cursor: grabbing;
+}
+
+.targetContent h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.targetContent p {
+  margin: 0 0 20px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.targetContent ul {
+  text-align: left;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.targetContent li {
+  margin: 8px 0;
+  color: #555;
+  font-size: 13px;
+}
+
+.infoPanel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.currentState,
+.eventLog {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.currentState h3,
+.eventLog h3 {
+  margin: 0 0 15px 0;
+  color: var(--theme-text);
+  font-size: 18px;
+}
+
+.currentState p {
+  margin: 8px 0;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+}
+
+.logContainer {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.logEntry {
+  padding: 8px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #333;
+  border-left: 3px solid #646cff;
+}
+
+.noEvents {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}
+
+.instructions {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.instructions h3 {
+  margin: 0 0 20px 0;
+  color: var(--theme-text);
+  font-size: 18px;
+}
+
+.instructionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.instruction h4 {
+  margin: 0 0 15px 0;
+  color: var(--theme-text);
+  font-size: 16px;
+}
+
+.instruction ul,
+.instruction ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instruction li {
+  margin: 8px 0;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 터치 디바이스에서 추가 스타일 */
+@media (hover: none) and (pointer: coarse) {
+  .gestureArea {
+    width: 100%;
+    height: 300px;
+  }
+
+  .testTarget {
+    padding: 20px;
+    max-width: 300px;
+  }
+
+  .infoPanel {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .instructionGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .gestureArea {
+    width: 500px;
+    height: 350px;
+  }
+
+  .testTarget {
+    padding: 25px;
+    max-width: 350px;
+  }
+} 

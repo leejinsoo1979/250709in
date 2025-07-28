@@ -1,0 +1,123 @@
+.furnitureRotationControls {
+  position: relative;
+}
+
+.rotationPanel {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #646cff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.rotationDisplay {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.rotationAngle {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  font-family: monospace;
+}
+
+.rotationButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.rotationBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotationBtn:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.rotationBtn:active {
+  transform: scale(0.95);
+}
+
+.rotationBtnLeft {
+  composes: rotationBtn;
+  color: #ff6b6b;
+}
+
+.rotationBtnReset {
+  composes: rotationBtn;
+  color: #4ecdc4;
+}
+
+.rotationBtnRight {
+  composes: rotationBtn;
+  color: #45b7d1;
+}
+
+.rotationGestureArea {
+  width: 100%;
+  height: 60px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  background: rgba(100, 108, 241, 0.1);
+  transition: all 0.2s ease;
+}
+
+.rotationGestureArea:hover {
+  background: rgba(100, 108, 241, 0.2);
+  border-color: #646cff;
+}
+
+.rotationGestureHint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+  font-size: 12px;
+}
+
+.gestureIcon {
+  font-size: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .rotationBtn {
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 20px;
+  }
+
+  .rotationGestureArea {
+    height: 80px;
+  }
+
+  .rotationGestureHint {
+    font-size: 14px;
+  }
+} 

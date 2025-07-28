@@ -12,6 +12,7 @@ import TestDashboard from '@/pages/TestDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
 import FirebaseDebug from '@/components/FirebaseDebug';
 import FirebaseDataDebug from '@/components/debug/FirebaseDataDebug';
+import { TouchTestPage } from '@/components/TouchUI/TouchTestPage';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -80,6 +81,7 @@ function AppContent() {
         {/* 디버그 페이지 */}
         <Route path="/debug/firebase" element={<FirebaseDebug />} />
         <Route path="/debug/data" element={<FirebaseDataDebug />} />
+        <Route path="/touch-test" element={<TouchTestPage />} />
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />

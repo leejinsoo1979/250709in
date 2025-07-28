@@ -1,0 +1,78 @@
+.touchOptimizationExample {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.gestureSection,
+.inputSection,
+.buttonSection,
+.scrollSection {
+  margin-bottom: 40px;
+  padding: 20px;
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+}
+
+.gestureArea {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.gestureTarget {
+  transition: transform 0.1s ease;
+}
+
+.gestureInfo {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.gestureInfo p {
+  margin: 5px 0;
+  font-family: monospace;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.scrollItem {
+  padding: 12px;
+  border-bottom: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.scrollItem:last-child {
+  border-bottom: none;
+}
+
+/* 터치 디바이스에서 추가 스타일 */
+@media (hover: none) and (pointer: coarse) {
+  .gestureArea {
+    min-height: 400px;
+  }
+
+  .buttonGrid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+} 
