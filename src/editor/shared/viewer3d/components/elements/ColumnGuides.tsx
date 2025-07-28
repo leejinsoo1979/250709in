@@ -17,88 +17,72 @@ const ColumnGuides: React.FC = () => {
   const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
   const { theme } = useTheme();
   
-  // 현재 활성 탭 확인 (DOM에서 직접 감지)
-  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA' | 'stepDown'>('slotA');
-  
-  // DOM에서 탭 상태를 감지 (더 정확한 방법)
+  // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
   useEffect(() => {
-    const checkActiveTab = () => {
-      // 더 구체적인 선택자 사용
-      const tabElements = document.querySelectorAll('button[class*="rightPanelTab"]');
-      let foundActiveTab: 'slotA' | 'stepDown' = 'slotA';
-      
-      console.log('🔍 검색된 탭 개수:', tabElements.length);
-      
-      tabElements.forEach((tab, index) => {
-        const isActive = tab.classList.contains('active');
-        const tabText = tab.textContent?.trim();
-        console.log(`🔍 탭 ${index}:`, { text: tabText, isActive, classes: tab.className });
-        
-        if (isActive) {
-          if (tabText === '메인구간' || tabText === '슬롯A') {
-            foundActiveTab = 'slotA';
-          } else if (tabText === '단내림 구간') {
-            foundActiveTab = 'stepDown';
-          }
-        }
-      });
-      
-      setActiveRightPanelTab(foundActiveTab);
-      // UIStore의 activeDroppedCeilingTab도 업데이트
-      setActiveDroppedCeilingTab(foundActiveTab === 'stepDown' ? 'dropped' : 'main');
-      console.log('🔍 최종 활성 탭:', foundActiveTab);
-    };
-    
-    // 초기 체크 (약간 지연시켜 DOM이 완전히 로드된 후 실행)
-    setTimeout(checkActiveTab, 100);
-    
-    // 탭 클릭 이벤트 감지 (더 포괄적인 감지)
-    const observer = new MutationObserver(() => {
-      setTimeout(checkActiveTab, 50); // 약간의 지연으로 DOM 업데이트 완료 후 체크
-    });
-    
-    // 더 넓은 범위에서 감지
-    const tabContainer = document.querySelector('[class*="rightPanelTabs"]') || 
-                        document.querySelector('[class*="rightPanelHeader"]') ||
-                        document.querySelector('[class*="rightPanel"]');
-    
-    if (tabContainer) {
-      observer.observe(tabContainer, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true, 
-        attributeFilter: ['class'] 
-      });
-    }
-    
-    // 클릭 이벤트도 감지
-    const handleClick = () => {
-      setTimeout(checkActiveTab, 100);
-    };
-    
-    document.addEventListener('click', handleClick);
-    
-    return () => {
-      observer.disconnect();
-      document.removeEventListener('click', handleClick);
-    };
-  }, [setActiveDroppedCeilingTab]);
+    // 디버깅 로그
+    console.log('🔍 현재 activeDroppedCeilingTab:', activeDroppedCeilingTab);
+  }, [activeDroppedCeilingTab]);
   
-  // 인덱싱 계산
+  // 단내림 정보 먼저 계산
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+  
+  // 내경 공간 계산 (바닥, 천장 높이 등)
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  
+  // 전체 공간의 인덱싱 계산 (단내림 포함)
   const indexing = calculateSpaceIndexing(spaceInfo);
   const { columnCount, threeUnitBoundaries } = indexing;
   
-  // 단내림 정보
-  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-  const droppedHeight = hasDroppedCeiling && spaceInfo.droppedCeiling 
+  // 단내림 영역의 전체 높이 (외경)
+  const droppedTotalHeight = hasDroppedCeiling && spaceInfo.droppedCeiling 
     ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight 
     : spaceInfo.height;
+    
+  // 단내림 영역의 내부 높이 계산 (바닥마감, 받침대, 상부프레임 제외)
+  const calculateDroppedInternalHeight = () => {
+    if (!hasDroppedCeiling) return internalSpace.height;
+    
+    // 바닥 마감 높이
+    const floorFinishHeight = spaceInfo.hasFloorFinish && spaceInfo.floorFinish 
+      ? spaceInfo.floorFinish.height 
+      : 0;
+    
+    // 받침대(하단 프레임) 높이
+    const baseFrameHeight = spaceInfo.baseConfig?.height || 0;
+    
+    // 상단 프레임 높이
+    const topFrameHeight = spaceInfo.frameSize?.top || 0;
+    
+    // 단내림 영역의 내부 높이 = 단내림 전체 높이 - 바닥마감 - 받침대 높이 - 상부프레임 높이
+    return droppedTotalHeight - floorFinishHeight - baseFrameHeight - topFrameHeight;
+  };
+  
+  const droppedInternalHeight = calculateDroppedInternalHeight();
   const droppedWidth = hasDroppedCeiling && spaceInfo.droppedCeiling 
     ? spaceInfo.droppedCeiling.width 
     : 0;
   const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
   
-  // 영역별 슬롯 정보 계산 - mainDoorCount도 고려
+  // 상부프레임 높이 (중복 선언 제거 - calculateDroppedInternalHeight에서 이미 계산됨)
+  const topFrameHeight = spaceInfo.frameSize?.top || 0;
+  
+  // 디버깅 로그 추가
+  console.log('🏗️ 단내림 정보:', {
+    hasDroppedCeiling,
+    droppedTotalHeight,
+    droppedInternalHeight,
+    'internalSpace.height': internalSpace.height,
+    'internalSpace.startY': internalSpace.startY,
+    'spaceInfo.height': spaceInfo.height,
+    'spaceInfo.droppedCeiling?.dropHeight': spaceInfo.droppedCeiling?.dropHeight,
+    topFrameHeight,
+    '계산된 droppedInternalHeight': droppedInternalHeight,
+    '예상 천장 위치 (droppedTotalHeight - topFrameHeight)': droppedTotalHeight - topFrameHeight,
+    droppedWidth,
+    isLeftDropped
+  });
+  
+  // 영역별 슬롯 정보 계산
   const zoneSlotInfo = React.useMemo(() => {
     return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
   }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
@@ -133,9 +117,6 @@ const ColumnGuides: React.FC = () => {
     return null;
   }
   
-  // 내경 공간 계산 (바닥, 천장 높이 등)
-  const internalSpace = calculateInternalSpace(spaceInfo);
-  
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -166,7 +147,27 @@ const ColumnGuides: React.FC = () => {
   // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
   const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
   const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
-  const droppedCeilingY = hasDroppedCeiling ? floorY + mmToThreeUnits(droppedHeight) : ceilingY;
+  
+  // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상부프레임 높이
+  // 이것이 상부프레임의 하단 위치입니다
+  const droppedCeilingY = hasDroppedCeiling 
+    ? mmToThreeUnits(droppedTotalHeight - topFrameHeight) 
+    : ceilingY;
+  
+  // 디버깅: 높이 계산 확인
+  console.log('📏 높이 계산:', {
+    '전체 높이 (mm)': spaceInfo.height,
+    '단차 (mm)': spaceInfo.droppedCeiling?.dropHeight,
+    '단내림 전체 높이 (mm)': droppedTotalHeight,
+    '상부프레임 (mm)': topFrameHeight,
+    '단내림 천장 위치 (mm)': droppedTotalHeight - topFrameHeight,
+    'Three.js 단위': {
+      floorY,
+      ceilingY,
+      droppedCeilingY,
+      furnitureStartY
+    }
+  });
   
   // 단내림 경계 X 좌표 계산
   let droppedBoundaryX = null;
@@ -220,8 +221,9 @@ const ColumnGuides: React.FC = () => {
                         (!hasDroppedCeiling); // 단내림이 없으면 항상 활성
     
     // 영역별 색상 및 선 굵기 설정
-    const zoneColor = isActiveZone ? guideColor : '#888888'; // 비활성 영역은 회색
-    const zoneLineWidth = isActiveZone ? lineWidth * 1.5 : lineWidth * 0.5; // 활성 영역은 굵게
+    const zoneColor = isActiveZone ? guideColor : '#999999'; // 비활성 영역은 회색
+    const zoneLineWidth = isActiveZone ? lineWidth * 2 : lineWidth; // 활성 영역만 굵게
+    const zoneOpacity = isActiveZone ? 1 : 0.6; // 비활성 영역은 60% 투명도
     
     // 각 슬롯 경계 계산
     const boundaries = [];
@@ -262,6 +264,8 @@ const ColumnGuides: React.FC = () => {
           dashed
           dashSize={0.2}
           gapSize={0.1}
+          opacity={zoneOpacity}
+          transparent
         />
       );
       
@@ -278,19 +282,15 @@ const ColumnGuides: React.FC = () => {
           dashed
           dashSize={0.2}
           gapSize={0.1}
+          opacity={zoneOpacity}
+          transparent
         />
       );
     }
     
     // 각 슬롯 경계의 수직 가이드
     boundaries.forEach((xPos, index) => {
-      // 2D 정면 뷰에서 단내림 영역의 외부 경계선만 스킵
-      if (viewMode === '2D' && view2DDirection === 'front' && zoneType === 'dropped') {
-        // 단내림 영역의 첫 번째(왼쪽 단내림) 또는 마지막(오른쪽 단내림) 경계선 스킵
-        if ((isLeftDropped && index === boundaries.length - 1) || (!isLeftDropped && index === 0)) {
-          return;
-        }
-      }
+      // 모든 경계선을 표시 (스킵 조건 제거)
       
       // 2D 상부뷰에서는 수평선으로 표시
       if (viewMode === '2D' && view2DDirection === 'top') {
@@ -302,10 +302,12 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), frontZ)
             ]}
             color={zoneColor}
-            lineWidth={lineWidth}
+            lineWidth={zoneLineWidth}
             dashed
             dashSize={0.2}
             gapSize={0.1}
+            opacity={zoneOpacity}
+            transparent
           />
         );
       } else {
@@ -319,10 +321,12 @@ const ColumnGuides: React.FC = () => {
               new THREE.Vector3(xPos, ceilingY, backZ)
             ]}
             color={zoneColor}
-            lineWidth={lineWidth}
+            lineWidth={zoneLineWidth}
             dashed
             dashSize={0.2}
             gapSize={0.1}
+            opacity={zoneOpacity}
+            transparent
           />
         );
         
@@ -337,10 +341,12 @@ const ColumnGuides: React.FC = () => {
                 new THREE.Vector3(xPos, floorY, frontZ)
               ]}
               color={zoneColor}
-              lineWidth={lineWidth}
+              lineWidth={zoneLineWidth}
               dashed
               dashSize={0.2}
               gapSize={0.1}
+              opacity={zoneOpacity}
+              transparent
             />
           );
           
@@ -353,10 +359,12 @@ const ColumnGuides: React.FC = () => {
                 new THREE.Vector3(xPos, ceilingY, frontZ)
               ]}
               color={zoneColor}
-              lineWidth={lineWidth}
+              lineWidth={zoneLineWidth}
               dashed
               dashSize={0.2}
               gapSize={0.1}
+              opacity={zoneOpacity}
+              transparent
             />
           );
         }
@@ -376,12 +384,72 @@ const ColumnGuides: React.FC = () => {
     viewMode
   });
 
+  // 투명 메쉬 렌더링 함수
+  const renderTransparentMeshes = (
+    startX: number,
+    width: number,
+    floorY: number,
+    ceilingY: number,
+    isActive: boolean,
+    meshType: 'back' | 'top',
+    zoneType: string
+  ) => {
+    const centerX = mmToThreeUnits(startX + width / 2);
+    const meshWidth = mmToThreeUnits(width);
+    
+    // 활성 상태에 따른 투명도
+    const opacity = isActive ? 0.2 : 0.05;
+    
+    if (meshType === 'back') {
+      // 뒷면 메쉬
+      const height = ceilingY - floorY;
+      const centerY = floorY + height / 2;
+      
+      return (
+        <mesh
+          key={`${zoneType}-back-mesh`}
+          position={[centerX, centerY, backZ]}
+          rotation={[0, 0, 0]}
+        >
+          <planeGeometry args={[meshWidth, height]} />
+          <meshBasicMaterial 
+            color={primaryColor} 
+            transparent 
+            opacity={opacity}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      );
+    } else {
+      // 상부 메쉬
+      const depth = frontZ - backZ;
+      const centerZ = (frontZ + backZ) / 2;
+      
+      return (
+        <mesh
+          key={`${zoneType}-top-mesh`}
+          position={[centerX, ceilingY, centerZ]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[meshWidth, depth]} />
+          <meshBasicMaterial 
+            color={primaryColor} 
+            transparent 
+            opacity={opacity}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      );
+    }
+  };
+
   return (
     <group>
+      {/* 단내림 여부에 따른 가이드 렌더링 */}
       {hasDroppedCeiling && zoneSlotInfo.dropped ? (
         <>
-          {/* 메인구간 탭 선택 시 메인 영역만 표시 */}
-          {activeDroppedCeilingTab === 'main' && renderSlotGuides(
+          {/* 메인 영역 가이드는 항상 표시 */}
+          {renderSlotGuides(
             zoneSlotInfo.normal.startX,
             zoneSlotInfo.normal.width,
             zoneSlotInfo.normal.columnCount,
@@ -390,27 +458,64 @@ const ColumnGuides: React.FC = () => {
             'main'
           )}
           
-          {/* 단내림구간 탭 선택 시 단내림 영역만 표시 - 2D 정면뷰에서는 제외 */}
-          {activeDroppedCeilingTab === 'dropped' && !(viewMode === '2D' && view2DDirection === 'front') && (() => {
-            console.log('🔍 단내림 가이드 렌더링 시도:', {
-              activeDroppedCeilingTab,
-              'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
-              droppedCeilingY,
-              droppedHeight,
-              'condition': activeDroppedCeilingTab === 'dropped'
-            });
-            return renderSlotGuides(
-              zoneSlotInfo.dropped.startX,
-              zoneSlotInfo.dropped.width,
-              zoneSlotInfo.dropped.columnCount,
-              zoneSlotInfo.dropped.columnWidth,
-              droppedCeilingY,
-              'dropped'
-            );
-          })()}
+          {/* 단내림 영역 가이드도 항상 표시 */}
+          {renderSlotGuides(
+            zoneSlotInfo.dropped.startX,
+            zoneSlotInfo.dropped.width,
+            zoneSlotInfo.dropped.columnCount,
+            zoneSlotInfo.dropped.columnWidth,
+            droppedCeilingY,
+            'dropped'
+          )}
+          
+          {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서 표시 */}
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && showDimensions && (
+            <>
+              {/* 메인 영역 뒷면 메쉬 */}
+              {renderTransparentMeshes(
+                zoneSlotInfo.normal.startX,
+                zoneSlotInfo.normal.width,
+                floorY,
+                ceilingY,
+                activeDroppedCeilingTab === 'main',
+                'back',
+                'main'
+              )}
+              {/* 메인 영역 상부 메쉬 - 3D에서만 표시 */}
+              {viewMode === '3D' && renderTransparentMeshes(
+                zoneSlotInfo.normal.startX,
+                zoneSlotInfo.normal.width,
+                floorY,
+                ceilingY,
+                activeDroppedCeilingTab === 'main',
+                'top',
+                'main'
+              )}
+              {/* 단내림 영역 뒷면 메쉬 */}
+              {renderTransparentMeshes(
+                zoneSlotInfo.dropped.startX,
+                zoneSlotInfo.dropped.width,
+                floorY,
+                droppedCeilingY,
+                activeDroppedCeilingTab === 'dropped',
+                'back',
+                'dropped'
+              )}
+              {/* 단내림 영역 상부 메쉬 - 3D에서만 표시 */}
+              {viewMode === '3D' && renderTransparentMeshes(
+                zoneSlotInfo.dropped.startX,
+                zoneSlotInfo.dropped.width,
+                floorY,
+                droppedCeilingY,
+                activeDroppedCeilingTab === 'dropped',
+                'top',
+                'dropped'
+              )}
+            </>
+          )}
         </>
       ) : (
-        /* 단내림이 없는 경우 전체 영역 슬롯 가이드 */
+        /* 단내림이 없는 경우 전체 영역 가이드 */
         <>
           {renderSlotGuides(
             zoneSlotInfo.normal.startX,
@@ -420,13 +525,39 @@ const ColumnGuides: React.FC = () => {
             ceilingY,
             'full'
           )}
+          
+          {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서 표시 */}
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && showDimensions && (
+            <>
+              {/* 뒷면 메쉬 */}
+              {renderTransparentMeshes(
+                zoneSlotInfo.normal.startX,
+                zoneSlotInfo.normal.width,
+                floorY,
+                ceilingY,
+                true,
+                'back',
+                'full'
+              )}
+              {/* 상부 메쉬 - 3D에서만 표시 */}
+              {viewMode === '3D' && renderTransparentMeshes(
+                zoneSlotInfo.normal.startX,
+                zoneSlotInfo.normal.width,
+                floorY,
+                ceilingY,
+                true,
+                'top',
+                'full'
+              )}
+            </>
+          )}
         </>
       )}
       
       {/* 컬럼 인덱스 드롭 타겟 - 영역별로 렌더링 */}
       {hasDroppedCeiling && zoneSlotInfo.dropped ? (
         <>
-          {/* 메인구간 탭 선택 시 메인 영역 드롭 타겟만 표시 */}
+          {/* 메인구간 탭 선택 시 메인 영역 드롭 타겟 */}
           {activeDroppedCeilingTab === 'main' && Array.from({ length: zoneSlotInfo.normal.columnCount }, (_, i) => {
             const x = mmToThreeUnits(
               zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2)
@@ -442,43 +573,39 @@ const ColumnGuides: React.FC = () => {
             );
           })}
           
-          {/* 단내림구간 탭 선택 시 단내림 영역 드롭 타겟만 표시 */}
-          {activeDroppedCeilingTab === 'dropped' && (() => {
-            console.log('🎯 단내림 영역 ColumnDropTarget 생성 시도:', {
-              activeDroppedCeilingTab,
-              'zoneSlotInfo.dropped.columnCount': zoneSlotInfo.dropped.columnCount,
-              furnitureStartY
-            });
-            
-            return Array.from({ length: zoneSlotInfo.dropped.columnCount }, (_, i) => {
-              const x = mmToThreeUnits(
-                zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2)
-              );
-              console.log(`🎯 단내림 ColumnDropTarget ${i}:`, { x, y: furnitureStartY });
-              
-              return (
-                <ColumnDropTarget
+          {/* 단내림구간 탭 선택 시 단내림 영역 드롭 타겟 */}
+          {activeDroppedCeilingTab === 'dropped' && Array.from({ length: zoneSlotInfo.dropped.columnCount }, (_, i) => {
+            const x = mmToThreeUnits(
+              zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2)
+            );
+            return (
+              <ColumnDropTarget
                 key={`dropped-column-${i}`}
                 columnIndex={i}
                 columnWidth={zoneSlotInfo.dropped.columnWidth}
                 position={{ x, y: furnitureStartY, z: 0 }}
                 internalSpace={internalSpace}
+                customHeight={droppedInternalHeight} // 단내림 내부 높이 전달
               />
-              );
-            });
-          })()}
+            );
+          })}
         </>
       ) : (
-        /* 단내림이 없는 경우 기존 방식 */
-        indexing.threeUnitPositions.map((x, i) => (
-          <ColumnDropTarget
-            key={`column-${i}`}
-            columnIndex={i}
-            columnWidth={indexing.columnWidth}
-            position={{ x, y: furnitureStartY, z: 0 }}
-            internalSpace={internalSpace}
-          />
-        ))
+        /* 단내림이 없는 경우 전체 영역 드롭 타겟 */
+        Array.from({ length: zoneSlotInfo.normal.columnCount }, (_, i) => {
+          const x = mmToThreeUnits(
+            zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2)
+          );
+          return (
+            <ColumnDropTarget
+              key={`column-${i}`}
+              columnIndex={i}
+              columnWidth={zoneSlotInfo.normal.columnWidth}
+              position={{ x, y: furnitureStartY, z: 0 }}
+              internalSpace={internalSpace}
+            />
+          );
+        })
       )}
     </group>
   );

@@ -5,6 +5,7 @@ interface ColumnDropTargetProps {
   columnWidth: number;
   position: { x: number; y: number; z: number };
   internalSpace: { width: number; height: number; depth: number };
+  customHeight?: number; // 단내림구간을 위한 커스텀 높이 (mm 단위)
 }
 
 // 드롭 타겟 컴포넌트 (순수 Three.js 투명 메시)
@@ -12,10 +13,11 @@ const ColumnDropTarget: React.FC<ColumnDropTargetProps> = ({
   columnIndex,
   columnWidth,
   position,
-  internalSpace
+  internalSpace,
+  customHeight
 }) => {
-  // 높이는 내경 공간 높이와 동일하게 설정
-  const height = internalSpace.height * 0.01; // mm → Three.js 단위 변환
+  // 높이는 커스텀 높이가 있으면 사용, 없으면 내경 공간 높이 사용
+  const height = customHeight ? customHeight * 0.01 : internalSpace.height * 0.01; // mm → Three.js 단위 변환
   const width = columnWidth * 0.01; // mm → Three.js 단위 변환
   const depth = internalSpace.depth * 0.01;
   

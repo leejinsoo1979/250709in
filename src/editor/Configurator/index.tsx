@@ -60,7 +60,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, setActiveDroppedCeilingTab } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -1543,10 +1543,32 @@ const Configurator: React.FC = () => {
                       <div className={styles.inputWithUnit}>
                         <input
                           type="number"
+                          min="100"
+                          max={(spaceInfo.width || 4800) - 100}
+                          step="10"
                           value={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
-                          readOnly
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            // 빈 값일 때는 업데이트하지 않음 (사용자가 입력 중)
+                            if (inputValue === '') return;
+                            
+                            const mainWidth = parseInt(inputValue);
+                            if (!isNaN(mainWidth)) {
+                              const totalWidth = spaceInfo.width || 4800;
+                              const newDroppedWidth = totalWidth - mainWidth;
+                              // 입력 중에는 느슨한 검증
+                              if (newDroppedWidth >= 0 && mainWidth >= 0) {
+                                handleSpaceInfoUpdate({ 
+                                  droppedCeiling: {
+                                    ...spaceInfo.droppedCeiling,
+                                    enabled: true,
+                                    width: Math.max(100, Math.min(totalWidth - 100, newDroppedWidth))
+                                  }
+                                });
+                              }
+                            }
+                          }}
                           className={`${styles.input} ${styles.inputWithUnitField}`}
-                          style={{ backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
                         />
                         <span className={styles.unit}>mm</span>
                       </div>
@@ -1558,10 +1580,22 @@ const Configurator: React.FC = () => {
                       <div className={styles.inputWithUnit}>
                         <input
                           type="number"
+                          min="1800"
+                          max="3000"
+                          step="10"
                           value={spaceInfo.height || 2400}
-                          readOnly
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            if (inputValue === '') return;
+                            
+                            const newHeight = parseInt(inputValue);
+                            if (!isNaN(newHeight) && newHeight > 0) {
+                              handleSpaceInfoUpdate({ 
+                                height: Math.max(1800, Math.min(3000, newHeight))
+                              });
+                            }
+                          }}
                           className={`${styles.input} ${styles.inputWithUnitField}`}
-                          style={{ backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
                         />
                         <span className={styles.unit}>mm</span>
                       </div>
@@ -1591,24 +1625,28 @@ const Configurator: React.FC = () => {
                           <input
                             type="number"
                             min="100"
-                            max={Math.floor((spaceInfo.width || 4800) * 0.3)}
+                            max={(spaceInfo.width || 4800) - 100}
                             step="10"
                             value={spaceInfo.droppedCeiling?.width || 900}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0;
-                              if (value >= 100 && value <= 2000) {
+                              const inputValue = e.target.value;
+                              if (inputValue === '') return;
+                              
+                              const value = parseInt(inputValue);
+                              if (!isNaN(value) && value > 0) {
+                                const totalWidth = spaceInfo.width || 4800;
                                 handleSpaceInfoUpdate({ 
                                   droppedCeiling: {
                                     ...spaceInfo.droppedCeiling,
                                     enabled: true,
-                                    width: value
+                                    width: Math.max(100, Math.min(totalWidth - 100, value))
                                   }
                                 });
                               }
                             }}
                             onBlur={(e) => {
-                              const maxWidth = Math.floor((spaceInfo.width || 4800) * 0.3);
-                              const value = Math.max(100, Math.min(maxWidth, parseInt(e.target.value) || 900));
+                              const totalWidth = spaceInfo.width || 4800;
+                              const value = Math.max(100, Math.min(totalWidth - 100, parseInt(e.target.value) || 900));
                               handleSpaceInfoUpdate({ 
                                 droppedCeiling: {
                                   ...spaceInfo.droppedCeiling,
@@ -1623,32 +1661,33 @@ const Configurator: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Y축 높이 설정 */}
+                      {/* Y축 단차 설정 */}
                       <div className={styles.inputWrapper}>
-                        <label className={styles.inputLabel}>단내림 구간 높이</label>
+                        <label className={styles.inputLabel}>단차 높이</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="number"
-                            min="50"
-                            max="2400"
+                            min="100"
+                            max="500"
                             step="10"
-                            value={spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                            value={spaceInfo.droppedCeiling?.dropHeight || 200}
                             onChange={(e) => {
-                              const height = parseInt(e.target.value) || 0;
-                              const dropHeight = spaceInfo.height - height;
-                              if (dropHeight >= 100 && dropHeight <= 500) {
+                              const inputValue = e.target.value;
+                              if (inputValue === '') return;
+                              
+                              const dropHeight = parseInt(inputValue);
+                              if (!isNaN(dropHeight) && dropHeight > 0) {
                                 handleSpaceInfoUpdate({ 
                                   droppedCeiling: {
                                     ...spaceInfo.droppedCeiling,
                                     enabled: true,
-                                    dropHeight: dropHeight
+                                    dropHeight: Math.max(100, Math.min(500, dropHeight))
                                   }
                                 });
                               }
                             }}
                             onBlur={(e) => {
-                              const height = parseInt(e.target.value) || 2200;
-                              const dropHeight = Math.max(100, Math.min(500, spaceInfo.height - height));
+                              const dropHeight = Math.max(100, Math.min(500, parseInt(e.target.value) || 200));
                               handleSpaceInfoUpdate({ 
                                 droppedCeiling: {
                                   ...spaceInfo.droppedCeiling,
@@ -1661,6 +1700,23 @@ const Configurator: React.FC = () => {
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 계산된 단내림 구간 높이 표시 */}
+                  <div className={styles.inputGroup}>
+                    <div className={styles.inputRow}>
+                      <label className={styles.inputLabel}>단내림 구간 높이 (계산값)</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="number"
+                          value={spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                          readOnly
+                          className={`${styles.input} ${styles.inputWithUnitField}`}
+                          style={{ backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
+                        />
+                        <span className={styles.unit}>mm</span>
                       </div>
                     </div>
                   </div>
@@ -2442,14 +2498,20 @@ const Configurator: React.FC = () => {
               <div className={styles.tabGroup}>
                 <button
                   className={`${styles.rightPanelTab} ${activeRightPanelTab === 'slotA' ? styles.active : ''}`}
-                  onClick={() => setActiveRightPanelTab('slotA')}
+                  onClick={() => {
+                    setActiveRightPanelTab('slotA');
+                    setActiveDroppedCeilingTab('main');
+                  }}
                 >
                   {showStepDownTab ? '메인구간' : '슬롯A'}
                 </button>
                 {showStepDownTab && (
                   <button
                     className={`${styles.rightPanelTab} ${activeRightPanelTab === 'stepDown' ? styles.active : ''}`}
-                    onClick={() => setActiveRightPanelTab('stepDown')}
+                    onClick={() => {
+                      setActiveRightPanelTab('stepDown');
+                      setActiveDroppedCeilingTab('dropped');
+                    }}
                   >
                     단내림 구간
                   </button>
@@ -2479,6 +2541,7 @@ const Configurator: React.FC = () => {
                       });
                     }, 0);
                     setActiveRightPanelTab('stepDown');
+                    setActiveDroppedCeilingTab('dropped');
                   } else {
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
@@ -2487,6 +2550,7 @@ const Configurator: React.FC = () => {
                       }
                     });
                     setActiveRightPanelTab('slotA');
+                    setActiveDroppedCeilingTab('main');
                   }
                 }}
                 title={showStepDownTab ? "단내림 구간 제거" : "단내림 구간 추가"}
