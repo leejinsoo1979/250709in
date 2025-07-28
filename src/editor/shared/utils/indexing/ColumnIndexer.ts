@@ -115,9 +115,18 @@ export class ColumnIndexer {
       const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       
-      // 듀얼 가구용 위치
+      // 듀얼 가구용 위치 계산
       const dualColumnPositions = [];
       const threeUnitDualPositions = [];
+      
+      // 인접한 두 컬럼의 중심점들 사이의 중점을 계산
+      for (let i = 0; i < columnCount - 1; i++) {
+        const leftColumnCenter = columnPositions[i];
+        const rightColumnCenter = columnPositions[i + 1];
+        const dualCenterPosition = (leftColumnCenter + rightColumnCenter) / 2;
+        dualColumnPositions.push(dualCenterPosition);
+        threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
+      }
       
       // 영역별 정보 추가
       const zones = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
@@ -397,31 +406,34 @@ export class ColumnIndexer {
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
     const internalStartX = -(totalWidth / 2) + frameThickness.left;
     
-    // 각 구간의 내부 너비 계산 (해당 쪽 프레임만 제외)
+    // 각 구간의 외부 너비 (프레임 제외 전)
+    const normalAreaOuterWidth = totalWidth - droppedWidth;
+    const droppedAreaOuterWidth = droppedWidth;
+    
+    // 각 구간의 내부 너비 계산
     let normalAreaInternalWidth: number;
     let droppedAreaInternalWidth: number;
-    
-    if (droppedPosition === 'left') {
-      // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
-      droppedAreaInternalWidth = droppedWidth - frameThickness.left; // 900 - 50 = 850
-      normalAreaInternalWidth = (totalWidth - droppedWidth) - frameThickness.right; // 2700 - 50 = 2650
-    } else {
-      // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
-      normalAreaInternalWidth = (totalWidth - droppedWidth) - frameThickness.left; // 2700 - 50 = 2650
-      droppedAreaInternalWidth = droppedWidth - frameThickness.right; // 900 - 50 = 850
-    }
-    
     let normalStartX: number;
     let droppedStartX: number;
     
     if (droppedPosition === 'left') {
       // 왼쪽 단내림
-      droppedStartX = internalStartX;
-      normalStartX = internalStartX + droppedAreaInternalWidth;
+      // 단내림 구간: 왼쪽 프레임만 제외
+      droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
+      droppedStartX = -(totalWidth / 2) + frameThickness.left;
+      
+      // 메인 구간: 오른쪽 프레임만 제외 (단내림과 메인 사이에는 프레임 없음)
+      normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
+      normalStartX = droppedStartX + droppedAreaInternalWidth;
     } else {
       // 오른쪽 단내림
-      normalStartX = internalStartX;
-      droppedStartX = internalStartX + normalAreaInternalWidth;
+      // 메인 구간: 왼쪽 프레임만 제외
+      normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
+      normalStartX = -(totalWidth / 2) + frameThickness.left;
+      
+      // 단내림 구간: 오른쪽 프레임만 제외 (메인과 단내림 사이에는 프레임 없음)
+      droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
+      droppedStartX = normalStartX + normalAreaInternalWidth;
     }
     
     // 각 영역의 컬럼 수 계산
@@ -471,6 +483,28 @@ export class ColumnIndexer {
     if (droppedColumnWidth > MAX_SLOT_WIDTH) {
       console.error(`⚠️ 단내림 영역 슬롯 너비가 600mm를 초과합니다: ${droppedColumnWidth}mm`);
     }
+    
+    // 디버깅 로그 추가
+    console.log('🎯 단내림 영역별 슬롯 정보:', {
+      droppedPosition,
+      totalWidth,
+      droppedWidth,
+      frameThickness,
+      normalArea: {
+        outerWidth: normalAreaOuterWidth,
+        internalWidth: normalAreaInternalWidth,
+        startX: normalStartX,
+        columnCount: normalColumnCount,
+        columnWidth: normalColumnWidth
+      },
+      droppedArea: {
+        outerWidth: droppedAreaOuterWidth,
+        internalWidth: droppedAreaInternalWidth,
+        startX: droppedStartX,
+        columnCount: droppedColumnCount,
+        columnWidth: droppedColumnWidth
+      }
+    });
     
     return {
       normal: {

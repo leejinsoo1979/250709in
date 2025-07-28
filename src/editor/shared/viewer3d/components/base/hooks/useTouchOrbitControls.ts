@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { useTouchControls } from '@/hooks/useTouchControls';
+import { useTouchControls } from '../../../../../../hooks/useTouchControls';
 
 interface UseTouchOrbitControlsOptions {
   enabled?: boolean;

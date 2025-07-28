@@ -25,6 +25,7 @@ interface RoomProps {
   spaceInfo: SpaceInfo;
   floorColor?: string;
   viewMode?: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode?: 'solid' | 'wireframe';
   materialConfig?: {
     doorColor: string;
@@ -33,6 +34,8 @@ interface RoomProps {
   showAll?: boolean;
   placedModules?: any[]; // 뷰어 모드용 가구 데이터
   showFrame?: boolean; // 프레임 표시 여부
+  showDimensions?: boolean; // 치수 표시 여부
+  isStep2?: boolean; // Step2 여부
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -81,10 +84,14 @@ const Room: React.FC<RoomProps> = ({
   spaceInfo,
   floorColor = '#FF9966',
   viewMode = '3D',
+  view2DDirection,
   materialConfig,
   showAll = true,
   showFrame = true,
-  placedModules
+  placedModules,
+  showDimensions,
+  isStep2,
+  renderMode: renderModeProp
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -93,7 +100,8 @@ const Room: React.FC<RoomProps> = ({
   }
   const { theme } = useTheme();
   const { colors } = useThemeColors();
-  const { renderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
+  const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
   const { highlightedFrame, activeDroppedCeilingTab } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
@@ -2037,16 +2045,17 @@ const Room: React.FC<RoomProps> = ({
             placedModulesCount: placedModules?.length || 0,
             placedModules: placedModules
           })}
-          <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} placedModules={placedModules} />
+          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={placedModules} />
         </>
       ) : (
         // 일반 에디터 모드에서는 props 없이
         <>
           {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
             viewMode,
-            renderMode
+            renderMode,
+            view2DDirection
           })}
-          <PlacedFurnitureContainer viewMode={viewMode} renderMode={renderMode} />
+          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} />
         </>
       )}
     </group>
@@ -2057,9 +2066,13 @@ const Room: React.FC<RoomProps> = ({
 export default React.memo(Room, (prevProps, nextProps) => {
   // 기본 props 비교
   if (prevProps.viewMode !== nextProps.viewMode) return false;
+  if (prevProps.view2DDirection !== nextProps.view2DDirection) return false;
   if (prevProps.renderMode !== nextProps.renderMode) return false;
   if (prevProps.showAll !== nextProps.showAll) return false;
   if (prevProps.floorColor !== nextProps.floorColor) return false;
+  if (prevProps.showFrame !== nextProps.showFrame) return false;
+  if (prevProps.showDimensions !== nextProps.showDimensions) return false;
+  if (prevProps.isStep2 !== nextProps.isStep2) return false;
   
   // spaceInfo 비교 (크기와 재질만 비교, 기둥 제외)
   const prevSpace = prevProps.spaceInfo;

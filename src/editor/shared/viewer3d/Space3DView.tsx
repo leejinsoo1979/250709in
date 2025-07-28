@@ -822,10 +822,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           renderMode={renderMode}
         >
           <React.Suspense fallback={null}>
-            {/* 확실히 작동하는 CAD 그리드 */}
-            {viewMode === '2D' && (
-              <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
-            )}
+            {/* 확실히 작동하는 CAD 그리드 - 2D와 3D 모두에서 작동 */}
+            <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
             
             {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
             
@@ -866,7 +864,18 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
             {/* 기본 요소들 */}
-            <Room spaceInfo={spaceInfo} viewMode={viewMode} materialConfig={materialConfig} showAll={showAll} showFrame={showFrame} />
+            <Room 
+              spaceInfo={spaceInfo} 
+              viewMode={viewMode} 
+              view2DDirection={view2DDirection}
+              renderMode={renderMode}
+              materialConfig={materialConfig} 
+              showAll={showAll} 
+              showFrame={showFrame}
+              showDimensions={showDimensions}
+              showGuides={showGuides}
+              isStep2={isStep2}
+            />
             
             {/* 단내림 공간 렌더링 */}
             <DroppedCeilingSpace spaceInfo={spaceInfo} />
@@ -1172,18 +1181,25 @@ const QuadrantContent: React.FC<{
       {/* 슬롯 드롭존 */}
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
       
-      {/* 배치된 가구들 */}
-      {placedModules.map((placedModule) => (
-        <FurnitureItem
-          key={placedModule.id}
-          placedModule={placedModule}
-          spaceInfo={spaceInfo}
-          materialConfig={materialConfig}
-          showAll={showAll}
-          showDimensions={showDimensions}
-          isStep2={isStep2}
-        />
-      ))}
+      {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
+      {console.log('🎯 QuadrantContent - Room 렌더링:', {
+        viewDirection,
+        spaceInfo: !!spaceInfo,
+        showFrame,
+        placedModulesCount: placedModules?.length || 0
+      })}
+      <Room
+        spaceInfo={spaceInfo}
+        viewMode="2D"
+        view2DDirection={viewDirection}
+        renderMode="solid"
+        showDimensions={showDimensions}
+        showAll={showAll}
+        isStep2={isStep2}
+        showFrame={showFrame}
+        materialConfig={materialConfig}
+        placedModules={placedModules}
+      />
     </React.Suspense>
   );
 };

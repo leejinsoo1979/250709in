@@ -184,16 +184,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const zoneModules = generateDynamicModules(zoneInternalSpace, zoneSpaceInfo);
       
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
-      const baseModuleId = dragData.moduleData.id.replace(/-\d+$/, '');
+      // 원본 모듈의 타입 정보 추출 (예: shelf-single-type2-1 → shelf-single-type2)
+      const originalModuleParts = dragData.moduleData.id.split('-');
+      const moduleType = originalModuleParts.slice(0, -1).join('-'); // 마지막 숫자 부분만 제거
+      
+      // 영역에 맞는 너비의 동일 타입 모듈 찾기
       const moduleData = zoneModules.find(m => {
-        const moduleBaseId = m.id.replace(/-\d+$/, '');
-        return moduleBaseId === baseModuleId;
+        const moduleParts = m.id.split('-');
+        const mType = moduleParts.slice(0, -1).join('-');
+        // 타입이 같고, 너비가 영역의 컬럼 너비와 일치하는 모듈 찾기
+        return mType === moduleType && Math.abs(m.dimensions.width - zoneColumnWidth) < 10;
       });
       
       if (!moduleData) {
         console.log('❌ Zone module not found!', {
-          baseModuleId,
-          availableModules: zoneModules.map(m => m.id)
+          moduleType,
+          zoneColumnWidth,
+          availableModules: zoneModules.map(m => ({ id: m.id, width: m.dimensions.width }))
         });
         return false;
       }

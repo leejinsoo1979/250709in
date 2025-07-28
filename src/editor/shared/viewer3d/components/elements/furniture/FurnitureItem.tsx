@@ -23,6 +23,7 @@ interface FurnitureItemProps {
   isEditMode: boolean;
   isDraggingThis: boolean;
   viewMode: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode: 'solid' | 'wireframe';
   onPointerDown: (e: ThreeEvent<PointerEvent>, id: string) => void;
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
@@ -38,6 +39,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   isEditMode,
   isDraggingThis,
   viewMode,
+  view2DDirection,
   renderMode,
   onPointerDown,
   onPointerMove,
@@ -87,8 +89,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       mainDoorCount: spaceInfo.mainDoorCount,
       defaultColumnCount,
       originalWidth: spaceInfo.width,
-      moduleId: placedModule.moduleId,
-      moduleDataBefore: moduleData
+      moduleId: placedModule.moduleId
     });
   }
   // 단내림 영역이 활성화되고 가구가 특정 영역에 속한 경우

@@ -9,12 +9,14 @@ import FurnitureItem from './FurnitureItem';
 
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode: 'solid' | 'wireframe';
   placedModules?: any[];
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   viewMode,
+  view2DDirection,
   renderMode,
   placedModules: propPlacedModules
 }) => {
@@ -88,6 +90,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             isEditMode={isEditMode}
             isDraggingThis={isDraggingThis}
             viewMode={viewMode}
+            view2DDirection={view2DDirection}
             renderMode={renderMode}
             onPointerDown={dragHandlers.handlePointerDown}
             onPointerMove={dragHandlers.handlePointerMove}

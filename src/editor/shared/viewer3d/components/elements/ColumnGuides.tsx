@@ -206,6 +206,7 @@ const ColumnGuides: React.FC = () => {
       zoneType,
       startX,
       width,
+      endX: startX + width,
       columnCount,
       columnWidth,
       ceilingY,
@@ -240,19 +241,33 @@ const ColumnGuides: React.FC = () => {
       positions.push(mmToThreeUnits(startX + (i * columnWidth) + (columnWidth / 2)));
     }
     
+    // 경계 확인 로그
+    console.log(`📏 ${zoneType} 영역 경계:`, {
+      startX_mm: startX,
+      endX_mm: startX + width,
+      width_mm: width,
+      boundaries_three: [boundaries[0], boundaries[boundaries.length - 1]],
+      expectedEndX_three: mmToThreeUnits(startX + width),
+      actualEndX_three: boundaries[boundaries.length - 1]
+    });
+    
     // 내경 공간의 실제 경계 계산
     const internalStartX = mmToThreeUnits(internalSpace.startX);
     const internalEndX = mmToThreeUnits(internalSpace.startX + internalSpace.width);
     
     // 바닥과 천장 수평 가이드
     if (boundaries.length >= 2) {
+      // 영역별 경계 설정 - 정확한 영역 시작과 끝 사용
+      const zoneStartX = mmToThreeUnits(startX);
+      const zoneEndX = mmToThreeUnits(startX + width);
+      
       // 2D 정면 뷰에서는 내경 범위 내에서만 표시
       const startBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
-        ? Math.max(boundaries[0], internalStartX) 
-        : boundaries[0];
+        ? Math.max(zoneStartX, internalStartX) 
+        : zoneStartX;
       const endBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
-        ? Math.min(boundaries[boundaries.length - 1], internalEndX) 
-        : boundaries[boundaries.length - 1];
+        ? Math.min(zoneEndX, internalEndX) 
+        : zoneEndX;
       
       // 바닥 가이드
       guides.push(
