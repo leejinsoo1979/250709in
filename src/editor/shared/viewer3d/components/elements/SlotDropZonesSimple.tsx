@@ -452,7 +452,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 key="main-zone-floor"
                 position={[centerX, floorY, slotFloorZ]}
               >
-                <boxGeometry args={[width, 0.001, slotFloorDepth]} />
+                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
                 <meshBasicMaterial 
                   color={primaryColor} 
                   transparent 
@@ -472,7 +472,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 key="dropped-zone-floor"
                 position={[centerX, floorY, slotFloorZ]}
               >
-                <boxGeometry args={[width, 0.001, slotFloorDepth]} />
+                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
                 <meshBasicMaterial 
                   color={primaryColor} 
                   transparent 
@@ -495,7 +495,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               key="full-zone-floor"
               position={[centerX, floorY, slotFloorZ]}
             >
-              <boxGeometry args={[width, 0.001, slotFloorDepth]} />
+              <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
               <meshBasicMaterial 
                 color={primaryColor} 
                 transparent 

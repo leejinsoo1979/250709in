@@ -39,7 +39,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   }, [invalidate]);
 
   // 가구 충돌 감지 함수
-  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number) => {
+  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number, targetSlotInfo: any) => {
     const movingModule = placedModules.find(m => m.id === movingModuleId);
     if (!movingModule) return [];
 
@@ -58,6 +58,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     } else {
       // 싱글 가구는 1개 슬롯 차지
       occupiedSlots = [newSlotIndex];
+    }
+
+    // 기둥이 있는 슬롯의 경우 기존 가구와 공존 가능하므로 충돌 감지 제외
+    if (targetSlotInfo && targetSlotInfo.hasColumn) {
+      console.log('🎯 기둥 슬롯 - 충돌 감지 제외');
+      return [];
     }
 
     // 충돌하는 다른 가구들 찾기
@@ -206,8 +212,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
 
 
-      // 충돌 감지 및 충돌한 가구 제거
-      const collidingModules = detectFurnitureCollisions(draggingModuleId, slotIndex);
+      // 충돌 감지 및 충돌한 가구 제거 (기둥 슬롯 제외)
+      const collidingModules = detectFurnitureCollisions(draggingModuleId, slotIndex, targetSlotInfo);
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
       }
@@ -236,10 +242,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           // 위치 조정 (기둥을 피해서 배치)
           if (targetSlotInfo.intrusionDirection === 'from-left') {
             // 기둥이 왼쪽에서 침범: 가구를 오른쪽으로 밀어냄
-            adjustedPosition.x = furnitureBounds.left + (furnitureBounds.width * 0.001) / 2;
+            adjustedPosition.x = furnitureBounds.center;
+            console.log('🔀 왼쪽 침범 - 위치 조정:', {
+              originalX: finalX,
+              adjustedX: adjustedPosition.x,
+              bounds: furnitureBounds
+            });
           } else if (targetSlotInfo.intrusionDirection === 'from-right') {
             // 기둥이 오른쪽에서 침범: 가구를 왼쪽으로 밀어냄
-            adjustedPosition.x = furnitureBounds.right - (furnitureBounds.width * 0.001) / 2;
+            adjustedPosition.x = furnitureBounds.center;
+            console.log('🔁 오른쪽 침범 - 위치 조정:', {
+              originalX: finalX,
+              adjustedX: adjustedPosition.x,
+              bounds: furnitureBounds
+            });
+          } else if (targetSlotInfo.intrusionDirection === 'center') {
+            // 중앙 침범
+            adjustedPosition.x = furnitureBounds.center;
+            console.log('🟡 중앙 침범 - 위치 조정:', {
+              originalX: finalX,
+              adjustedX: adjustedPosition.x,
+              bounds: furnitureBounds
+            });
           }
           
           // 크기 조정
@@ -253,10 +277,23 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
         
         // 기둥 A (150mm) 처리
-        if (columnDepth <= 150) {
-          // 폭만 조정, 깊이는 원래대로
+        if (columnDepth <= 150 && !newAdjustedWidth) {
+          // intrusionDirection이 없는 경우에도 크기 조정
+          const slotWidthM = indexing.columnWidth * 0.01;
+          const originalSlotBounds = {
+            left: finalX - slotWidthM / 2,
+            right: finalX + slotWidthM / 2,
+            center: finalX
+          };
+          
+          const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+          newAdjustedWidth = furnitureBounds.renderWidth;
+          adjustedPosition.x = furnitureBounds.center;
           newCustomDepth = undefined;
-          console.log('🟢 Column A 처리: 폭 조정만');
+          console.log('🟢 Column A 처리: 폭 조정만', {
+            adjustedWidth: newAdjustedWidth,
+            adjustedX: adjustedPosition.x
+          });
         }
       }
       
