@@ -1166,8 +1166,8 @@ const QuadrantContent: React.FC<{
         isStep2={isStep2}
       />
       
-      {/* 투명 슬롯매쉬 */}
-      <FurniturePlacementPlane spaceInfo={spaceInfo} />
+      {/* 투명 슬롯매쉬 - 탑뷰에서는 제외 */}
+      {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
       {/* 슬롯 드롭존 */}
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />

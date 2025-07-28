@@ -529,8 +529,8 @@ const ColumnGuides: React.FC = () => {
                 'back',
                 'main'
               )}
-              {/* 메인 영역 상부 메쉬 - 3D에서만 표시 */}
-              {viewMode === '3D' && renderTransparentMeshes(
+              {/* 메인 영역 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
                 floorY,
@@ -549,8 +549,8 @@ const ColumnGuides: React.FC = () => {
                 'back',
                 'dropped'
               )}
-              {/* 단내림 영역 상부 메쉬 - 3D에서만 표시 */}
-              {viewMode === '3D' && renderTransparentMeshes(
+              {/* 단내림 영역 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.dropped.startX,
                 zoneSlotInfo.dropped.width,
                 floorY,
@@ -587,8 +587,8 @@ const ColumnGuides: React.FC = () => {
                 'back',
                 'full'
               )}
-              {/* 상부 메쉬 - 3D에서만 표시 */}
-              {viewMode === '3D' && renderTransparentMeshes(
+              {/* 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
                 floorY,
