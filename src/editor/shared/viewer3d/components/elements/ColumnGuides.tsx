@@ -33,6 +33,7 @@ const ColumnGuides: React.FC = () => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const { columnCount, threeUnitBoundaries } = indexing;
   
+  
   // 단내림 영역의 전체 높이 (외경)
   const droppedTotalHeight = hasDroppedCeiling && spaceInfo.droppedCeiling 
     ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight 
@@ -112,10 +113,10 @@ const ColumnGuides: React.FC = () => {
   // 1개 컬럼인 경우 가이드 표시 불필요 (단내림 활성화 시에는 표시)
   if (columnCount <= 1 && !hasDroppedCeiling) return null;
   
-  // 2D 뷰에서는 정면 뷰와 상부 뷰에서만 표시
-  if (viewMode === '2D' && view2DDirection !== 'front' && view2DDirection !== 'top') {
-    return null;
-  }
+  // 2D 뷰에서는 모든 방향에서 표시 (4분할창 지원)
+  // if (viewMode === '2D' && view2DDirection !== 'front' && view2DDirection !== 'top') {
+  //   return null;
+  // }
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -210,7 +211,9 @@ const ColumnGuides: React.FC = () => {
       ceilingY,
       floorY,
       backZ,
-      frontZ
+      frontZ,
+      'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
+      'spaceInfo.customColumnCount': spaceInfo.customColumnCount
     });
     
     const guides = [];
@@ -423,7 +426,10 @@ const ColumnGuides: React.FC = () => {
     'zoneSlotInfo.dropped': zoneSlotInfo.dropped,
     'zoneSlotInfo.normal': zoneSlotInfo.normal,
     showDimensions,
-    viewMode
+    viewMode,
+    'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
+    'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
+    'columnCount': columnCount
   });
 
   // 투명 메쉬 렌더링 함수
@@ -511,7 +517,7 @@ const ColumnGuides: React.FC = () => {
           )}
           
           {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서 표시 */}
-          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && showDimensions && (
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
             <>
               {/* 메인 영역 뒷면 메쉬 */}
               {renderTransparentMeshes(
@@ -569,7 +575,7 @@ const ColumnGuides: React.FC = () => {
           )}
           
           {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서 표시 */}
-          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && showDimensions && (
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
             <>
               {/* 뒷면 메쉬 */}
               {renderTransparentMeshes(

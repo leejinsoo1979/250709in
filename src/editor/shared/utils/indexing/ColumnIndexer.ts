@@ -149,8 +149,11 @@ export class ColumnIndexer {
     // 컬럼 수 결정 로직
     let columnCount: number;
     
-    if (spaceInfo.customColumnCount) {
-      // 사용자 지정 컬럼 수가 있으면 우선 사용
+    // mainDoorCount가 설정되어 있으면 최우선 사용 (4분할 창 등)
+    if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+      columnCount = spaceInfo.mainDoorCount;
+    } else if (spaceInfo.customColumnCount) {
+      // 사용자 지정 컬럼 수가 있으면 사용
       columnCount = spaceInfo.customColumnCount;
     } else {
       // 기존 자동 계산 로직
@@ -351,7 +354,16 @@ export class ColumnIndexer {
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-      let columnCount = customColumnCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
+      let columnCount: number;
+      
+      // mainDoorCount가 설정되어 있으면 최우선 사용
+      if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+        columnCount = spaceInfo.mainDoorCount;
+      } else if (customColumnCount) {
+        columnCount = customColumnCount;
+      } else {
+        columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
+      }
       
       // 슬롯 너비가 600mm를 초과하지 않도록 최소 슬롯 개수 보장
       const minRequiredSlots = Math.ceil(internalWidth / MAX_SLOT_WIDTH);

@@ -10,6 +10,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { getSlotIndexFromMousePosition as getSlotIndexFromRaycast } from '../../../../utils/slotRaycast';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 interface UseFurnitureDragProps {
   spaceInfo: SpaceInfo;
@@ -164,10 +165,33 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     );
     
     if (slotIndex !== null) {
-      
       // 현재 드래그 중인 모듈 정보 가져오기
       const currentModule = placedModules.find(m => m.id === draggingModuleId);
       if (!currentModule) return;
+      
+      // 단내림이 활성화된 경우 영역 체크
+      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        const targetX = indexing.threeUnitPositions[slotIndex];
+        const targetXMm = targetX * 100; // Three.js to mm
+        
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        if (zoneInfo.dropped) {
+          const normalEndX = zoneInfo.normal.startX + zoneInfo.normal.width;
+          const droppedEndX = zoneInfo.dropped.startX + zoneInfo.dropped.width;
+          
+          // 메인구간 가구가 단내림 구간으로 이동 차단
+          if (currentModule.zone === 'normal' && targetXMm >= zoneInfo.dropped.startX && targetXMm <= droppedEndX) {
+            console.log('❌ 메인구간 가구는 단내림 구간으로 이동 불가');
+            return;
+          }
+          // 단내림구간 가구가 메인 구간으로 이동 차단
+          else if (currentModule.zone === 'dropped' && targetXMm >= zoneInfo.normal.startX && targetXMm <= normalEndX) {
+            console.log('❌ 단내림구간 가구는 메인 구간으로 이동 불가');
+            return;
+          }
+        }
+      }
 
       const moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData) return;

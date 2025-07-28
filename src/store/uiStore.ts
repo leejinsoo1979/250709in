@@ -91,7 +91,7 @@ const initialUIState = {
   doorsOpen: true,  // 기본값: 문 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
-  showGuides: false, // 기본값: 그리드(가이드) 표시 안함
+  showGuides: true, // 기본값: 그리드(가이드) 표시
   showAxis: true, // 기본값: 축 표시
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | null,

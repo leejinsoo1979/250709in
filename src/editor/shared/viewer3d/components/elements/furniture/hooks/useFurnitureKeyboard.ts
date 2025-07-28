@@ -6,6 +6,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
 interface UseFurnitureKeyboardProps {
   spaceInfo: SpaceInfo;
@@ -17,6 +18,7 @@ export const useFurnitureKeyboard = ({
   const placedModules = useFurnitureStore(state => state.placedModules);
   const removeModule = useFurnitureStore(state => state.removeModule);
   const moveModule = useFurnitureStore(state => state.moveModule);
+  const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const editMode = useFurnitureStore(state => state.editMode);
   const editingModuleId = useFurnitureStore(state => state.editingModuleId);
   const selectedPlacedModuleId = useFurnitureStore(state => state.selectedPlacedModuleId);
@@ -99,15 +101,55 @@ export const useFurnitureKeyboard = ({
               } else {
                 newX = indexing.threeUnitPositions[nextSlot];
               }
-              console.log('⌨️ 키보드로 가구 이동:', { 
-                moduleId: targetModuleId, 
-                direction: 'left', 
-                oldX: editingModule.position.x, 
-                newX,
-                slotIndex: currentSlotIndex,
-                nextSlot
+              
+              // 기둥 슬롯 분석
+              const columnSlots = analyzeColumnSlots(spaceInfo);
+              const targetSlotInfo = columnSlots[nextSlot];
+              
+              let adjustedWidth: number | undefined = undefined;
+              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              let customDepth = editingModule.customDepth;
+              
+              // 기둥이 있는 슬롯인 경우 크기와 위치 조정
+              if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+                const columnDepth = targetSlotInfo.column.depth;
+                
+                // calculateFurnitureBounds를 사용하여 정확한 위치와 크기 계산
+                const slotWidthM = indexing.columnWidth * 0.01;
+                const originalSlotBounds = {
+                  left: newX - slotWidthM / 2,
+                  right: newX + slotWidthM / 2,
+                  center: newX
+                };
+                
+                const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+                
+                // 크기와 위치 조정
+                adjustedWidth = furnitureBounds.renderWidth;
+                adjustedPosition.x = furnitureBounds.center;
+                
+                // Column C (300mm) 특별 처리 - 깊이 조정
+                if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
+                  customDepth = 730 - columnDepth; // 430mm
+                  console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+                }
+                
+                console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+                  slotIndex: nextSlot,
+                  columnDepth,
+                  originalWidth: moduleData.dimensions.width,
+                  adjustedWidth,
+                  adjustedPosition
+                });
+              }
+              
+              // 업데이트
+              updatePlacedModule(targetModuleId, {
+                position: adjustedPosition,
+                slotIndex: nextSlot,
+                customDepth: customDepth,
+                adjustedWidth: adjustedWidth
               });
-              moveModule(targetModuleId, { ...editingModule.position, x: newX });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -133,7 +175,55 @@ export const useFurnitureKeyboard = ({
               } else {
                 newX = indexing.threeUnitPositions[nextSlot];
               }
-              moveModule(targetModuleId, { ...editingModule.position, x: newX });
+              
+              // 기둥 슬롯 분석
+              const columnSlots = analyzeColumnSlots(spaceInfo);
+              const targetSlotInfo = columnSlots[nextSlot];
+              
+              let adjustedWidth: number | undefined = undefined;
+              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              let customDepth = editingModule.customDepth;
+              
+              // 기둥이 있는 슬롯인 경우 크기와 위치 조정
+              if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+                const columnDepth = targetSlotInfo.column.depth;
+                
+                // calculateFurnitureBounds를 사용하여 정확한 위치와 크기 계산
+                const slotWidthM = indexing.columnWidth * 0.01;
+                const originalSlotBounds = {
+                  left: newX - slotWidthM / 2,
+                  right: newX + slotWidthM / 2,
+                  center: newX
+                };
+                
+                const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+                
+                // 크기와 위치 조정
+                adjustedWidth = furnitureBounds.renderWidth;
+                adjustedPosition.x = furnitureBounds.center;
+                
+                // Column C (300mm) 특별 처리 - 깊이 조정
+                if (furnitureBounds.depthAdjustmentNeeded || (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth)) {
+                  customDepth = 730 - columnDepth; // 430mm
+                  console.log('🟣 Column C 깊이 조정:', customDepth, 'mm');
+                }
+                
+                console.log('⌨️ 키보드 이동 - 기둥 슬롯 크기 조정:', {
+                  slotIndex: nextSlot,
+                  columnDepth,
+                  originalWidth: moduleData.dimensions.width,
+                  adjustedWidth,
+                  adjustedPosition
+                });
+              }
+              
+              // 업데이트
+              updatePlacedModule(targetModuleId, {
+                position: adjustedPosition,
+                slotIndex: nextSlot,
+                customDepth: customDepth,
+                adjustedWidth: adjustedWidth
+              });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -172,5 +262,5 @@ export const useFurnitureKeyboard = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [editMode, editingModuleId, selectedPlacedModuleId, placedModules, indexing, removeModule, moveModule, internalSpace, spaceInfo, setEditMode, setEditingModuleId]);
+  }, [editMode, editingModuleId, selectedPlacedModuleId, placedModules, indexing, removeModule, moveModule, updatePlacedModule, internalSpace, spaceInfo, setEditMode, setEditingModuleId]);
 }; 

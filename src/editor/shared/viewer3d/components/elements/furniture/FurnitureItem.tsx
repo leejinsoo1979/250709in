@@ -8,7 +8,7 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -56,7 +56,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 호버 상태 관리
   const [isHovered, setIsHovered] = useState(false);
   
-  // 디버깅 로그는 나중에 adjustedPosition이 계산된 후에 출력합니다
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
@@ -71,10 +70,62 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   };
   
   // 내경 공간 계산
-  const internalSpace = calculateInternalSpace(spaceInfo);
+  let internalSpace = calculateInternalSpace(spaceInfo);
+  let zoneSpaceInfo = spaceInfo;
   
-  // 모듈 데이터 가져오기
-  let moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+  // 단내림 영역이 활성화되고 가구가 특정 영역에 속한 경우
+  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    
+    if (placedModule.zone === 'dropped' && zoneInfo.dropped) {
+      // 단내림 영역용 spaceInfo 생성
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneInfo.dropped.width,
+        customColumnCount: zoneInfo.dropped.columnCount,
+        columnMode: 'custom' as const
+      };
+      
+      // 단내림 영역용 internalSpace 생성
+      internalSpace = {
+        ...internalSpace,
+        width: zoneInfo.dropped.width
+      };
+      
+      console.log('🎯 [FurnitureItem] 단내림 영역 가구 - 크기 조정:', {
+        originalWidth: spaceInfo.width,
+        droppedWidth: zoneInfo.dropped.width,
+        droppedColumnCount: zoneInfo.dropped.columnCount,
+        moduleId: placedModule.moduleId,
+        zone: placedModule.zone
+      });
+    } else if (placedModule.zone === 'normal' && zoneInfo.normal) {
+      // 메인 영역용 spaceInfo 생성
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneInfo.normal.width,
+        customColumnCount: zoneInfo.normal.columnCount,
+        columnMode: 'custom' as const
+      };
+      
+      // 메인 영역용 internalSpace 생성
+      internalSpace = {
+        ...internalSpace,
+        width: zoneInfo.normal.width
+      };
+      
+      console.log('🎯 [FurnitureItem] 메인 영역 가구 - 크기 조정:', {
+        originalWidth: spaceInfo.width,
+        normalWidth: zoneInfo.normal.width,
+        normalColumnCount: zoneInfo.normal.columnCount,
+        moduleId: placedModule.moduleId,
+        zone: placedModule.zone
+      });
+    }
+  }
+  
+  // 모듈 데이터 가져오기 (영역별 spaceInfo 사용)
+  let moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
   
   console.log('🔥 FurnitureItem 렌더링:', {
     placedModuleId: placedModule.id,
@@ -89,7 +140,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
 
-  // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
+  // 가구 위치 및 크기 변경 시 렌더링 업데이트 및 그림자 업데이트
   useEffect(() => {
     invalidate();
     
@@ -109,7 +160,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         invalidate();
       }, 300);
     }
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate, gl]);
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, placedModule.adjustedWidth, invalidate, gl]);
   
   // 드래그 상태가 변경될 때만 렌더링 업데이트 (성능 최적화)
   useEffect(() => {
@@ -147,35 +198,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const actualDepthMm = placedModule.customDepth || actualModuleData.dimensions.depth;
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
-  // customWidth가 있으면 우선 사용 (기둥 C 분할 시 또는 단내림 영역)
-  let furnitureWidthMm = placedModule.customWidth || actualModuleData.dimensions.width;
+  // adjustedWidth가 있으면 우선 사용 (기둥 침범 시 자동 조정된 너비)
+  // 그 다음 customWidth (기둥 C 분할 시 또는 단내림 영역)
+  // 마지막으로 모듈 데이터의 너비 (이미 영역별로 조정됨)
+  let furnitureWidthMm = placedModule.adjustedWidth || placedModule.customWidth || moduleData.dimensions.width;
   
   // 단내림 영역의 경우 너비 확인
-  if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && placedModule.customWidth) {
+  if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
     console.log('📏 단내림 영역 너비 사용:', {
       customWidth: placedModule.customWidth,
-      originalWidth: actualModuleData.dimensions.width,
+      moduleDataWidth: moduleData.dimensions.width,
+      actualModuleDataWidth: actualModuleData.dimensions.width,
       furnitureWidthMm
     });
   }
-  let adjustedPosition = placedModule.position;
+  // adjustedPosition이 이미 저장되어 있으면 사용
+  let adjustedPosition = placedModule.adjustedPosition || placedModule.position;
   let furnitureDepthMm = actualDepthMm; // 기본 깊이
   
-  // customWidth가 유효하지 않으면 기본값 사용
+  // customWidth가 유효하지 않으면 adjustedWidth 사용
   if (placedModule.isSplit && (!placedModule.customWidth || isNaN(placedModule.customWidth) || placedModule.customWidth <= 0)) {
     console.warn('⚠️ 분할 모드이지만 customWidth가 유효하지 않음, adjustedWidth 사용', {
       customWidth: placedModule.customWidth,
       adjustedWidth: placedModule.adjustedWidth,
-      defaultWidth: actualModuleData.dimensions.width
+      moduleDataWidth: moduleData.dimensions.width,
+      actualModuleDataWidth: actualModuleData.dimensions.width
     });
-    // adjustedWidth가 있으면 사용, 없으면 기본값
-    furnitureWidthMm = placedModule.adjustedWidth || actualModuleData.dimensions.width;
+    // adjustedWidth가 있으면 사용, 없으면 영역별로 조정된 모듈 너비 사용
+    furnitureWidthMm = placedModule.adjustedWidth || moduleData.dimensions.width;
   }
   
   console.log('🔍 가구 너비 확인:', {
     moduleId: placedModule.id,
+    zone: placedModule.zone,
     customWidth: placedModule.customWidth,
-    originalWidth: actualModuleData.dimensions.width,
+    moduleDataWidth: moduleData.dimensions.width,
+    actualModuleDataWidth: actualModuleData.dimensions.width,
     furnitureWidthMm,
     isSplit: placedModule.isSplit,
     position: placedModule.position,
@@ -259,6 +317,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     hasSlotInfo: !!slotInfo,
     hasColumn: slotInfo?.hasColumn,
     isSplit: placedModule.isSplit,
+    hasAdjustedWidth: !!placedModule.adjustedWidth,
     shouldCalculate: slotInfo && slotInfo.hasColumn && !placedModule.isSplit
   });
   
@@ -565,6 +624,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           return null;
         })()}
 
+
+        {/* 와이어프레임 모드에서 레이캐스팅을 위한 투명 충돌 메쉬 */}
+        {renderMode === 'wireframe' && (
+          <mesh visible={false}>
+            <boxGeometry args={[width, height, depth]} />
+            <meshBasicMaterial transparent opacity={0} />
+          </mesh>
+        )}
 
         {/* 가구 타입에 따라 다른 컴포넌트 렌더링 */}
         {moduleData.type === 'box' ? (

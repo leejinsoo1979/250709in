@@ -23,12 +23,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const placedModules = propPlacedModules || storePlacedModules;
   const { activePopup } = useUIStore();
   
-  console.log('🔥 PlacedFurnitureContainer 렌더링:', {
-    placedModulesCount: placedModules.length,
-    placedModules: placedModules,
-    isViewerOnly: !!propPlacedModules,
-    spaceInfo: !!spaceInfo
-  });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
