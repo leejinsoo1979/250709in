@@ -45,10 +45,19 @@ export const getModuleById = (
   internalSpace?: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
+  // 먼저 정확한 ID로 찾기
   if (internalSpace) {
     const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
     const found = dynamicModules.find(module => module.id === id);
     if (found) return found;
+    
+    // 정확한 ID로 못 찾으면 기본 ID로 찾기 (크기 정보 제외)
+    const baseId = id.replace(/-\d+$/, ''); // 마지막 숫자 부분 제거
+    const foundByBase = dynamicModules.find(module => {
+      const moduleBaseId = module.id.replace(/-\d+$/, '');
+      return moduleBaseId === baseId;
+    });
+    if (foundByBase) return foundByBase;
   }
   
   return STATIC_MODULES.find(module => module.id === id);

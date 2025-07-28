@@ -656,10 +656,31 @@ export const generateShelvingModules = (
     };
   }
   
+  // 디버깅: 전달받은 spaceInfo 확인
+  console.log('🎯 [generateShelvingModules] Input:', {
+    internalSpace,
+    spaceInfo: spaceInfo ? {
+      width: spaceInfo.width,
+      customColumnCount: spaceInfo.customColumnCount,
+      columnMode: spaceInfo.columnMode
+    } : null,
+    indexingSpaceInfo: {
+      width: indexingSpaceInfo.width,
+      customColumnCount: indexingSpaceInfo.customColumnCount,
+      columnMode: indexingSpaceInfo.columnMode
+    }
+  });
+  
   // 컬럼 계산 로직 가져오기
   const indexing = calculateSpaceIndexing(indexingSpaceInfo);
   const columnWidth = indexing.columnWidth;
   const columnCount = indexing.columnCount;
+  
+  console.log('🎯 [generateShelvingModules] Calculated:', {
+    columnWidth,
+    columnCount,
+    indexingResult: indexing
+  });
   
   const modules: ModuleData[] = [];
   

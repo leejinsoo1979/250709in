@@ -226,18 +226,17 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   };
   
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
-    handleMouseMove(e);
   };
   
   const handleMouseMove = (e: React.MouseEvent | MouseEvent) => {
-    if (!isDragging && e.type !== 'mousedown') return;
+    if (!isDragging) return;
     
-    const rect = (e.currentTarget as HTMLElement)?.getBoundingClientRect() || 
-                 (e.target as HTMLElement)?.closest(`.${styles.sliderTrack}`)?.getBoundingClientRect();
+    const sliderTrack = document.querySelector(`.${styles.sliderTrack}`);
+    if (!sliderTrack) return;
     
-    if (!rect) return;
-    
+    const rect = sliderTrack.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
     const newDoorCount = getDoorCountFromPosition(position);
     
@@ -252,14 +251,22 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   
   React.useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      const handleGlobalMouseMove = (e: MouseEvent) => handleMouseMove(e);
+      const handleGlobalMouseUp = () => handleMouseUp();
+      
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      
+      // 드래그 중 텍스트 선택 방지
+      document.body.style.userSelect = 'none';
+      
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+        document.body.style.userSelect = '';
       };
     }
-  }, [isDragging]);
+  }, [isDragging, value]);
   
   // 값이 범위를 벗어나면 자동 조정
   React.useEffect(() => {
@@ -311,23 +318,18 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     <div className={styles.doorSlider}>
       <div 
         className={styles.sliderTrack}
-        onMouseDown={handleMouseDown}
       >
-        {/* 슬라이더 구간 표시 */}
-        {labels.map((_, index) => {
-          const isActive = index <= labels.findIndex(l => l >= clampedValue);
-          return (
-            <div
-              key={index}
-              className={`${styles.sliderDivider} ${isActive ? styles.active : ''}`}
-            />
-          );
-        })}
+        {/* 활성 트랙 */}
+        <div 
+          className={styles.sliderActiveTrack}
+          style={{ width: `${sliderPosition}%` }}
+        />
         
         {/* 슬라이더 핸들 */}
         <div 
           className={styles.sliderHandle}
           style={{ left: `${sliderPosition}%` }}
+          onMouseDown={handleMouseDown}
         />
       </div>
       
@@ -816,4 +818,5 @@ const RightPanel: React.FC<RightPanelProps> = ({
   );
 };
 
+export { DoorSlider as DoorCountSlider };
 export default RightPanel; 

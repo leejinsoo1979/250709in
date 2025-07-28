@@ -32,13 +32,13 @@
 
 .button {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 50%;
   background: var(--theme-background-tertiary);
   color: var(--theme-text-primary);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -65,10 +65,10 @@
 
 .sliderTrack {
   flex: 1;
-  height: 44px;
+  height: 36px;
   position: relative;
   background: var(--theme-background-tertiary);
-  border-radius: 22px;
+  border-radius: 18px;
   cursor: pointer;
   overflow: hidden;
   touch-action: none;
@@ -102,8 +102,8 @@
 .sliderHandle {
   position: absolute;
   top: 50%;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background: white;
   border: 3px solid var(--theme-primary);
   border-radius: 50%;
@@ -114,8 +114,8 @@
 }
 
 .sliderTrack:active .sliderHandle {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
 }
 

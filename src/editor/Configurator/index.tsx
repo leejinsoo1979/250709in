@@ -15,7 +15,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Header from './components/Header';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
-import RightPanel, { RightPanelTab } from './components/RightPanel';
+import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
 import FileTree from '@/components/FileTree/FileTree';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
@@ -43,6 +43,7 @@ import {
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 
 import styles from './style.module.css';
+import rightPanelStyles from './components/RightPanel.module.css';
 
 const Configurator: React.FC = () => {
   const { user } = useAuth();
@@ -1513,32 +1514,16 @@ const Configurator: React.FC = () => {
                 <h3 className={styles.sectionTitle}>공간 설정</h3>
               </div>
               
-              <div className={styles.inputGroup}>
-                <TouchCompatibleControl
-                  label={`폭 (${SPACE_LIMITS.WIDTH.MIN}mm ~ ${SPACE_LIMITS.WIDTH.MAX}mm)`}
-                  value={spaceInfo?.width || DEFAULT_SPACE_VALUES.WIDTH}
-                  min={SPACE_LIMITS.WIDTH.MIN}
-                  max={SPACE_LIMITS.WIDTH.MAX}
-                  step={10}
-                  unit="mm"
-                  onChange={(value) => handleSpaceInfoUpdate({ width: value })}
-                  disabled={hasSpecialDualFurniture}
-                  type="number"
-                />
-              </div>
+              <WidthControl 
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
+                disabled={hasSpecialDualFurniture}
+              />
               
-              <div className={styles.inputGroup}>
-                <TouchCompatibleControl
-                  label={`높이 (${SPACE_LIMITS.HEIGHT.MIN}mm ~ ${SPACE_LIMITS.HEIGHT.MAX}mm)`}
-                  value={spaceInfo?.height || DEFAULT_SPACE_VALUES.HEIGHT}
-                  min={SPACE_LIMITS.HEIGHT.MIN}
-                  max={SPACE_LIMITS.HEIGHT.MAX}
-                  step={10}
-                  unit="mm"
-                  onChange={(value) => handleSpaceInfoUpdate({ height: value })}
-                  type="number"
-                />
-              </div>
+              <HeightControl 
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
+              />
             </div>
 
             {/* 메인구간 탭에서 단내림이 있을 때 메인공간 사이즈 표시 */}
@@ -1897,66 +1882,132 @@ const Configurator: React.FC = () => {
                 {/* 도어 개수 입력 */}
                 {!spaceInfo.droppedCeiling?.enabled ? (
                 // 단내림이 없을 때 - 기존 도어 개수
-                <TouchCompatibleControl
-                  label="도어 개수"
-                  value={getCurrentColumnCount()}
-                  min={calculateDoorRange(spaceInfo.width || 4800).min}
-                  max={calculateDoorRange(spaceInfo.width || 4800).max}
-                  step={1}
-                  unit="개"
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ customColumnCount: value });
-                  }}
-                  type="number"
-                />
+                <div className={styles.inputGroup}>
+                  <div className={styles.inputRow}>
+                    <label className={styles.inputLabel}>도어 개수</label>
+                    <div className={styles.numberInputGroup}>
+                      <button 
+                        className={styles.numberInputButton}
+                        onClick={() => {
+                          const current = getCurrentColumnCount();
+                          const doorRange = calculateDoorRange(spaceInfo.width || 4800);
+                          if (current > doorRange.min) {
+                            handleSpaceInfoUpdate({ customColumnCount: current - 1 });
+                          }
+                        }}
+                        disabled={getCurrentColumnCount() <= calculateDoorRange(spaceInfo.width || 4800).min}
+                      >
+                        −
+                      </button>
+                      <div className={styles.numberInputValue}>
+                        <input
+                          type="number"
+                          value={getCurrentColumnCount()}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            handleSpaceInfoUpdate({ customColumnCount: value });
+                          }}
+                          style={{ 
+                            width: '60px', 
+                            textAlign: 'center',
+                            border: 'none',
+                            background: 'transparent',
+                            color: 'var(--theme-text)',
+                            fontSize: '14px',
+                            fontWeight: '500'
+                          }}
+                        />
+                      </div>
+                      <button 
+                        className={styles.numberInputButton}
+                        onClick={() => {
+                          const current = getCurrentColumnCount();
+                          const doorRange = calculateDoorRange(spaceInfo.width || 4800);
+                          if (current < doorRange.max) {
+                            handleSpaceInfoUpdate({ customColumnCount: current + 1 });
+                          }
+                        }}
+                        disabled={getCurrentColumnCount() >= calculateDoorRange(spaceInfo.width || 4800).max}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <DoorSlider
+                    value={getCurrentColumnCount()}
+                    onChange={(value) => {
+                      handleSpaceInfoUpdate({ customColumnCount: value });
+                    }}
+                    width={spaceInfo.width || 4800}
+                  />
+                </div>
               ) : (
                 // 단내림이 있을 때 - 기존 구간과 단내림 구간 분리
                 <>
-                  <TouchCompatibleControl
-                    label="메인구간 도어 개수"
-                    value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
-                    min={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
-                    max={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
-                    step={1}
-                    unit="개"
-                    onChange={(value) => {
-                      handleSpaceInfoUpdate({ mainDoorCount: value });
-                    }}
-                    type="number"
-                  />
+                  <div className={styles.inputGroup}>
+                    <div className={styles.inputRow}>
+                      <label className={styles.inputLabel}>메인구간 도어 개수</label>
+                      <div className={styles.numberInputGroup}>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const current = spaceInfo.mainDoorCount || getCurrentColumnCount();
+                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
+                            const doorRange = calculateDoorRange(mainWidth);
+                            if (current > doorRange.min) {
+                              handleSpaceInfoUpdate({ mainDoorCount: current - 1 });
+                            }
+                          }}
+                          disabled={(spaceInfo.mainDoorCount || getCurrentColumnCount()) <= calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
+                        >
+                          −
+                        </button>
+                        <div className={styles.numberInputValue}>
+                          <input
+                            type="number"
+                            value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              handleSpaceInfoUpdate({ mainDoorCount: value });
+                            }}
+                            style={{ 
+                              width: '60px', 
+                              textAlign: 'center',
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--theme-text)',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          />
+                        </div>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const current = spaceInfo.mainDoorCount || getCurrentColumnCount();
+                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
+                            const doorRange = calculateDoorRange(mainWidth);
+                            if (current < doorRange.max) {
+                              handleSpaceInfoUpdate({ mainDoorCount: current + 1 });
+                            }
+                          }}
+                          disabled={(spaceInfo.mainDoorCount || getCurrentColumnCount()) >= calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <DoorSlider
+                      value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                      onChange={(value) => {
+                        handleSpaceInfoUpdate({ mainDoorCount: value });
+                      }}
+                      width={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
+                    />
+                  </div>
                 </>
               )}
 
-              {/* 도어 개수 슬라이더 */}
-              {!spaceInfo.droppedCeiling?.enabled ? (
-                // 단내림이 없을 때 - 터치 최적화 슬라이더
-                <TouchCompatibleControl
-                  label=""
-                  value={getCurrentColumnCount()}
-                  min={calculateDoorRange(spaceInfo.width || 4800).min}
-                  max={calculateDoorRange(spaceInfo.width || 4800).max}
-                  step={1}
-                  unit=""
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ customColumnCount: value });
-                  }}
-                  type="slider"
-                />
-              ) : (
-                // 단내림이 있을 때 - 메인구간 터치 최적화 슬라이더
-                <TouchCompatibleControl
-                  label=""
-                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
-                  min={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
-                  max={calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
-                  step={1}
-                  unit=""
-                  onChange={(value) => {
-                    handleSpaceInfoUpdate({ mainDoorCount: value });
-                  }}
-                  type="slider"
-                />
-              )}
               </div>
             )}
 

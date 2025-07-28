@@ -371,6 +371,48 @@ const ColumnGuides: React.FC = () => {
       }
     });
     
+    // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
+    if (showDimensions && viewMode === '3D') {
+      positions.forEach((xPos, index) => {
+        const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
+        const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
+        
+        guides.push(
+          <Text
+            key={`${zoneType}-slot-size-${index}`}
+            position={[xPos, textY, textZ]}
+            fontSize={0.5}
+            color={zoneColor}
+            anchorX="center"
+            anchorY="middle"
+            rotation={[0, 0, 0]}
+          >
+            {Math.round(columnWidth)}mm
+          </Text>
+        );
+      });
+    }
+    
+    // 2D 정면뷰에서도 텍스트 표시
+    if (showDimensions && viewMode === '2D' && view2DDirection === 'front') {
+      positions.forEach((xPos, index) => {
+        const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
+        
+        guides.push(
+          <Text
+            key={`${zoneType}-slot-size-2d-${index}`}
+            position={[xPos, textY, backZ]}
+            fontSize={0.5}
+            color={zoneColor}
+            anchorX="center"
+            anchorY="middle"
+          >
+            {Math.round(columnWidth)}mm
+          </Text>
+        );
+      });
+    }
+    
     console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
     return guides;
   };

@@ -116,29 +116,41 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       
       if (spaceInfo.droppedCeiling?.enabled && activeZone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        console.log('🎯 [ModuleGallery] Zone info:', {
+          activeZone,
+          zoneInfo,
+          originalWidth: spaceInfo.width,
+          originalColumns: spaceInfo.customColumnCount
+        });
         
         if (activeZone === 'dropped' && zoneInfo.dropped) {
           // 단내림 영역용 spaceInfo 생성
           zoneSpaceInfo = {
             ...spaceInfo,
             width: zoneInfo.dropped.width,
-            customColumnCount: zoneInfo.dropped.columnCount
-          };
-          zoneInternalSpace = {
-            ...zoneInternalSpace,
-            width: zoneInfo.dropped.width
-          };
+            customColumnCount: zoneInfo.dropped.columnCount,
+            columnMode: 'custom' // columnMode도 설정
+          } as SpaceInfo;
+          zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo); // zoneSpaceInfo로 다시 계산
+          console.log('🎯 [ModuleGallery] Dropped zone space:', {
+            zoneWidth: zoneInfo.dropped.width,
+            zoneColumns: zoneInfo.dropped.columnCount,
+            zoneInternalWidth: zoneInternalSpace.width
+          });
         } else if (zoneInfo.normal) {
           // 메인 영역용 spaceInfo 생성
           zoneSpaceInfo = {
             ...spaceInfo,
             width: zoneInfo.normal.width,
-            customColumnCount: zoneInfo.normal.columnCount
-          };
-          zoneInternalSpace = {
-            ...zoneInternalSpace,
-            width: zoneInfo.normal.width
-          };
+            customColumnCount: zoneInfo.normal.columnCount,
+            columnMode: 'custom' // columnMode도 설정
+          } as SpaceInfo;
+          zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo); // zoneSpaceInfo로 다시 계산
+          console.log('🎯 [ModuleGallery] Normal zone space:', {
+            zoneWidth: zoneInfo.normal.width,
+            zoneColumns: zoneInfo.normal.columnCount,
+            zoneInternalWidth: zoneInternalSpace.width
+          });
         }
       }
       
@@ -157,8 +169,33 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       }
       
       // 영역별 모듈 데이터 가져오기
-      const zoneModule = getModuleById(module.id, internalSpace, zoneSpaceInfo);
-      if (!zoneModule) return;
+      // 가구 ID에서 기본 타입 추출 (예: single-4drawer-hanging-583 -> single-4drawer-hanging)
+      const baseModuleId = module.id.replace(/-\d+$/, '');
+      // 영역의 컬럼 폭으로 새로운 ID 생성
+      const zoneModuleId = `${baseModuleId}-${indexing.columnWidth}`;
+      
+      console.log('🎯 [ModuleGallery] Creating zone module:', {
+        originalId: module.id,
+        baseModuleId,
+        zoneModuleId,
+        zoneColumnWidth: indexing.columnWidth
+      });
+      
+      // 영역에 맞는 가구 데이터 직접 생성
+      const zoneModule = {
+        ...module,
+        id: zoneModuleId,
+        dimensions: {
+          ...module.dimensions,
+          width: indexing.columnWidth
+        }
+      };
+      
+      console.log('🎯 [ModuleGallery] Zone module created:', {
+        moduleId: zoneModule.id,
+        width: zoneModule.dimensions.width,
+        expectedColumnWidth: indexing.columnWidth
+      });
       
       // 듀얼/싱글 가구 판별
       const isDualFurniture = module.id.startsWith('dual-');
@@ -184,28 +221,29 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         return;
       }
       
-      // 가구 위치 계산 - 단내림이 있는 경우 영역별 오프셋 적용
+      // 가구 위치 계산
       let positionX: number;
-      if (spaceInfo.droppedCeiling?.enabled && activeZone) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        const zoneStartX = activeZone === 'dropped' && zoneInfo.dropped 
-          ? zoneInfo.dropped.startX 
-          : zoneInfo.normal.startX;
-        
-        // 영역 내에서의 위치 계산
-        if (isDualFurniture && indexing.threeUnitDualPositions) {
-          positionX = (zoneStartX * 0.01) + indexing.threeUnitDualPositions[availableSlotIndex];
-        } else {
-          positionX = (zoneStartX * 0.01) + indexing.threeUnitPositions[availableSlotIndex];
-        }
+      
+      // indexing.threeUnitPositions는 이미 영역의 크기에 맞춰 계산된 절대 위치입니다
+      if (isDualFurniture && indexing.threeUnitDualPositions) {
+        positionX = indexing.threeUnitDualPositions[availableSlotIndex];
       } else {
-        // 단내림이 없는 경우 기존 로직
-        if (isDualFurniture && indexing.threeUnitDualPositions) {
-          positionX = indexing.threeUnitDualPositions[availableSlotIndex];
-        } else {
-          positionX = indexing.threeUnitPositions[availableSlotIndex];
-        }
+        positionX = indexing.threeUnitPositions[availableSlotIndex];
       }
+        
+      
+      console.log('🎯 [ModuleGallery] Position calculation:', {
+        activeZone,
+        positionX,
+        availableSlotIndex,
+        isDualFurniture,
+        indexingInfo: {
+          columnCount: indexing.columnCount,
+          columnWidth: indexing.columnWidth,
+          internalStartX: indexing.internalStartX,
+          threeUnitPositions: indexing.threeUnitPositions
+        }
+      });
       
       // 기본 깊이 계산
       const getDefaultDepth = (moduleData: ModuleData) => {
@@ -222,7 +260,7 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       // 새 모듈 생성
       const newModule = {
         id: placedId,
-        moduleId: module.id,
+        moduleId: zoneModule.id, // module.id가 아니라 zoneModule.id 사용
         position: {
           x: positionX,
           y: 0,
@@ -238,6 +276,14 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         hingePosition: 'right' as 'left' | 'right',
         zone: activeZone // 영역 정보 저장
       };
+      
+      console.log('🎯 [ModuleGallery] New module created:', {
+        originalModuleId: module.id,
+        zoneModuleId: zoneModule.id,
+        width: zoneModule.dimensions.width,
+        position: newModule.position,
+        zone: activeZone
+      });
       
       // 가구 배치
       addModule(newModule);

@@ -717,6 +717,29 @@
   font-weight: 400;
 }
 
+.inputControlWithLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inputControlWithLabel input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  text-align: center;
+  min-width: 80px;
+}
+
+.inputControlWithLabel .inputUnit {
+  font-size: 13px;
+  color: var(--theme-text-muted);
+}
+
 /* 숫자 입력 그룹 */
 .numberInputGroup {
   display: flex;
@@ -764,6 +787,90 @@
 /* 도어 슬라이더 */
 .doorSliderContainer {
   margin-top: 8px;
+}
+
+/* RightPanel DoorSlider 스타일 추가 */
+.sliderTrack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  background: var(--theme-background-secondary);
+  border-radius: 6px;
+  padding: 0 16px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sliderTrack:hover {
+  background: var(--theme-background-secondary);
+}
+
+.sliderDivider {
+  width: 2px;
+  height: 16px;
+  background: var(--theme-border);
+  border-radius: 1px;
+  transition: background 0.2s ease;
+}
+
+.sliderDivider.active {
+  background: var(--theme-primary);
+  height: 20px;
+}
+
+.sliderHandle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--theme-primary);
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  transition: transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sliderHandle:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.sliderHandle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.sliderLabels span {
+  font-size: 11px;
+  color: var(--theme-text-muted, #9ca3af);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sliderLabels span:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+}
+
+.sliderLabels span.active {
+  color: var(--theme-primary);
+  font-weight: 600;
+  background: var(--theme-primary-light);
+  border: 1px solid var(--theme-primary);
 }
 
 .doorSlider {
@@ -1006,61 +1113,78 @@
 
 /* 태블릿 세로 모드 (768px 이하) */
 @media (max-width: 767px) and (orientation: portrait) {
-  /* 사이드바를 하단 서랍으로 */
+  /* 사이드바를 오버레이로 */
   .sidebar {
     position: fixed;
-    bottom: 0;
     left: 0;
-    right: 0;
-    width: 100% !important;
-    height: auto;
-    max-height: 60vh;
-    transform: translateY(calc(100% - 60px));
+    top: 60px;
+    bottom: 0;
+    width: 280px !important;
+    transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 1000;
-    border-top: 1px solid var(--theme-border);
-    border-radius: 24px 24px 0 0;
+    background: var(--theme-background-primary);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
   }
   
   .sidebar.open {
-    transform: translateY(0);
+    transform: translateX(0);
   }
   
-  /* 사이드바 헤더를 드래그 핸들로 */
-  .sidebarHeader::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--theme-border);
-    border-radius: 2px;
+  /* 사이드바 토글 버튼 표시 */
+  .sidebarToggle {
+    display: flex !important;
+    position: fixed;
+    left: 10px;
+    top: 80px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--theme-background-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
   }
   
-  /* 우측 패널을 플로팅 카드로 */
+  /* 우측 패널도 오버레이로 */
   .rightPanel {
     position: fixed;
-    bottom: 70px;
-    right: 16px;
-    left: 16px;
-    width: auto;
-    max-width: 400px;
-    margin: 0 auto;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    max-height: 50vh;
-    overflow-y: auto;
+    right: 0;
+    top: 60px;
+    bottom: 0;
+    width: 320px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+    background: var(--theme-background-primary);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
   }
   
-  /* 뷰어 영역 전체 화면 */
+  .rightPanel.open {
+    transform: translateX(0);
+  }
+  
+  /* 뷰어 영역 전체 화면 - 3D 뷰어의 비율 유지 */
   .viewerArea {
     position: fixed !important;
-    top: 56px;
+    top: 60px;
     left: 0 !important;
     right: 0 !important;
-    bottom: 60px;
+    bottom: 0 !important;
+    background: var(--theme-background-secondary);
+  }
+  
+  /* 3D 캔버스 컨테이너 비율 유지 */
+  .viewerArea > div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    max-width: calc(100vh * 1.5); /* 3:2 비율 유지 */
+    max-height: calc(100vw * 0.67);
   }
   
   /* 좌측 패널 토글 숨김 */
@@ -1070,15 +1194,46 @@
   
   /* 우측 패널 토글 위치 조정 */
   .rightPanelToggle {
+    display: flex !important;
     position: fixed;
-    bottom: 16px;
-    right: 16px;
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
-    background: var(--theme-primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    right: 10px;
+    top: 80px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--theme-background-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+  }
+  
+  /* 뷰어 컨트롤 위치 조정 */
+  .viewerControls {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+  }
+  
+  /* 패널이 열려있을 때 뷰어에 반투명 오버레이 */
+  .viewerArea::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 998;
+  }
+  
+  .viewerArea.dimmed::before {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 

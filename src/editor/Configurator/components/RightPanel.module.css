@@ -437,76 +437,80 @@
 }
 
 .sliderTrack {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 32px;
-  background: var(--theme-background-secondary);
-  border-radius: 6px;
-  padding: 0 16px;
+  height: 6px;
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 3px;
   position: relative;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  margin: 12px 0 8px 0;
 }
 
-.sliderTrack:hover {
-  background: var(--theme-background-secondary);
-}
 
-.sliderDivider {
-  width: 2px;
-  height: 16px;
-  background: var(--theme-border);
-  border-radius: 1px;
-  transition: background 0.2s ease;
-}
-
-.sliderDivider.active {
+.sliderActiveTrack {
+  position: absolute;
+  height: 100%;
   background: var(--theme-primary);
+  border-radius: 3px;
+  left: 0;
+  top: 0;
 }
 
 .sliderHandle {
   position: absolute;
   top: 50%;
-  width: 16px;
+  width: 20px;
   height: 20px;
   background: var(--theme-primary);
-  border-radius: 3px;
-  transform: translateY(-50%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
   cursor: grab;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 4px var(--theme-primary-light);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   z-index: 10;
+  /* 터치 타겟 확대 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .sliderHandle:hover {
-  background: var(--theme-primary-hover);
-  box-shadow: 0 4px 8px var(--theme-primary-light);
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .sliderHandle:active {
   cursor: grabbing;
-  background: var(--theme-primary-hover);
-  box-shadow: 0 2px 4px var(--theme-primary-light);
+  transform: translate(-50%, -50%) scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .sliderLabels {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
-  padding: 0 20px;
+  margin-top: 12px;
+  padding: 0;
+  position: relative;
 }
 
 .sliderLabels span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--theme-text-muted, #9ca3af);
   font-weight: 500;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 2px 8px;
   border-radius: 3px;
   transition: all 0.2s ease;
-  min-width: 20px;
+  min-width: 24px;
   text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sliderLabels span:hover {

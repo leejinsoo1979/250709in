@@ -11,10 +11,10 @@ import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useCanvasEventHandlers } from './hooks/useCanvasEventHandlers'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
-import { useTouchOrbitControls } from './hooks/useTouchOrbitControls'; // 터치 컨트롤
 import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import SceneBackground from './components/SceneBackground'; // 하위 레벨
+import { TouchOrbitControlsSetup } from './components/TouchOrbitControlsSetup'; // 터치 컨트롤
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
 
 
@@ -258,14 +258,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
     };
   }, [viewMode, mounted]);
-  
-  // 터치 컨트롤 적용
-  useTouchOrbitControls(controlsRef, {
-    enabled: isTouchDevice || isMobile || isTablet,
-    enableRotate: true,
-    enableZoom: true,
-    enablePan: true,
-  });
 
   // 로딩 상태
   if (!mounted) {
@@ -434,6 +426,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           screenSpacePanning={true}
           makeDefault
         />
+        
+        {/* 터치 컨트롤 설정 - 터치 디바이스에서만 활성화 */}
+        {(isTouchDevice || isMobile || isTablet) && (
+          <TouchOrbitControlsSetup 
+            controlsRef={controlsRef}
+            enabled={true}
+          />
+        )}
         
         {/* 기본 조명 제거 - Space3DView에서 모든 조명 관리 */}
         {/* 기본 조명이 우리 조명과 충돌하므로 제거 */}

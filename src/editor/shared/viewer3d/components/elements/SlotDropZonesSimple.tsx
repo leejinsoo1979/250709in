@@ -134,11 +134,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const columnIndex = Math.max(0, Math.min(Math.floor(relativeX / zoneColumnWidth), zoneColumnCount - 1));
       
       // 영역별 spaceInfo 생성 (가구 크기 계산용)
+      const zoneWidth = zoneToUse === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped.width : zoneInfo.normal.width;
       const zoneSpaceInfo = {
         ...spaceInfo,
-        width: zoneToUse === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped.width : zoneInfo.normal.width,
-        customColumnCount: zoneColumnCount
+        width: zoneWidth,
+        customColumnCount: zoneColumnCount,
+        columnMode: 'custom' as const // columnMode도 설정
       };
+      
+      console.log('🎯 [SlotDropZones] Zone spaceInfo:', {
+        originalWidth: spaceInfo.width,
+        zoneWidth: zoneWidth,
+        zoneColumnCount: zoneColumnCount,
+        zoneSpaceInfo
+      });
       
       // 영역별 internalSpace 생성
       const zoneInternalSpace = {
@@ -146,18 +155,38 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         width: zoneToUse === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped.width : zoneInfo.normal.width
       };
       
-      // 가구 데이터 조회 (영역별 공간 정보 사용)
-      console.log('🎯 Getting module data with:', {
-        moduleId: dragData.moduleData.id,
-        zoneInternalSpace,
-        zoneSpaceInfo
+      // 가구 데이터 조회 - 영역에 맞게 크기 조정
+      const baseModuleId = dragData.moduleData.id.replace(/-\d+$/, '');
+      const zoneModuleId = `${baseModuleId}-${zoneColumnWidth}`;
+      
+      console.log('🎯 Creating zone module:', {
+        originalId: dragData.moduleData.id,
+        baseModuleId,
+        zoneModuleId,
+        zoneColumnWidth
       });
-      const moduleData = getModuleById(dragData.moduleData.id, zoneInternalSpace, zoneSpaceInfo);
-      console.log('🎯 Module data found:', moduleData);
-      if (!moduleData) {
-        console.log('❌ Module data not found!');
+      
+      // 기존 모듈 데이터를 기반으로 영역에 맞는 가구 데이터 생성
+      const originalModule = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+      if (!originalModule) {
+        console.log('❌ Original module not found!');
         return false;
       }
+      
+      const moduleData = {
+        ...originalModule,
+        id: zoneModuleId,
+        dimensions: {
+          ...originalModule.dimensions,
+          width: zoneColumnWidth
+        }
+      };
+      
+      console.log('🎯 Zone module created:', {
+        moduleId: moduleData.id,
+        width: moduleData.dimensions.width,
+        expectedWidth: zoneColumnWidth
+      });
       
       // 듀얼 가구 여부 판단
       const isDual = Math.abs(moduleData.dimensions.width - (zoneColumnWidth * 2)) < 50;
