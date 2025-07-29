@@ -1,8 +1,75 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useUIStore } from '@/store/uiStore';
+
+// 점선을 수동으로 그리는 컴포넌트
+const ManualDashedBox: React.FC<{
+  width: number;
+  height: number;
+  color: string;
+  dashSize?: number;
+  gapSize?: number;
+}> = ({ width, height, color, dashSize = 0.03, gapSize = 0.02 }) => {
+  const segmentLength = dashSize + gapSize;
+  
+  // 각 변에 대한 점선 세그먼트 생성
+  const createDashedLine = (start: [number, number, number], end: [number, number, number]) => {
+    const segments: Array<[number, number, number][]> = [];
+    const dx = end[0] - start[0];
+    const dy = end[1] - start[1];
+    const dz = end[2] - start[2];
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const numSegments = Math.floor(length / segmentLength);
+    
+    for (let i = 0; i < numSegments; i++) {
+      const t1 = (i * segmentLength) / length;
+      const t2 = Math.min((i * segmentLength + dashSize) / length, 1);
+      
+      if (t2 > t1) {
+        segments.push([
+          [start[0] + dx * t1, start[1] + dy * t1, start[2] + dz * t1],
+          [start[0] + dx * t2, start[1] + dy * t2, start[2] + dz * t2]
+        ]);
+      }
+    }
+    
+    return segments;
+  };
+  
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  
+  // 사각형의 4개 변에 대한 점선 세그먼트
+  const topSegments = createDashedLine([-halfWidth, halfHeight, 0], [halfWidth, halfHeight, 0]);
+  const bottomSegments = createDashedLine([-halfWidth, -halfHeight, 0], [halfWidth, -halfHeight, 0]);
+  const leftSegments = createDashedLine([-halfWidth, -halfHeight, 0], [-halfWidth, halfHeight, 0]);
+  const rightSegments = createDashedLine([halfWidth, -halfHeight, 0], [halfWidth, halfHeight, 0]);
+  
+  const allSegments = [...topSegments, ...bottomSegments, ...leftSegments, ...rightSegments];
+  
+  return (
+    <group>
+      {allSegments.map((segment, index) => {
+        const geometry = new THREE.BufferGeometry().setFromPoints(
+          segment.map(point => new THREE.Vector3(...point))
+        );
+        
+        return (
+          <line key={index} geometry={geometry}>
+            <lineBasicMaterial 
+              color={color} 
+              transparent={true}
+              opacity={0.3}
+            />
+          </line>
+        );
+      })}
+    </group>
+  );
+};
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -165,6 +232,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
+  const { theme } = useTheme(); // 테마 정보 가져오기
+  const { view2DDirection } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
+  
+  // 디버깅용 로그
+  console.log('🔍 BaseFurnitureShell 백패널 렌더링:', {
+    viewMode,
+    view2DDirection,
+    renderMode,
+    shouldShowDashed: viewMode === '2D' && view2DDirection === 'front' && renderMode === 'solid'
+  });
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
@@ -268,14 +345,29 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-      />
+      {viewMode === '2D' && view2DDirection === 'front' && renderMode === 'solid' ? (
+        // 2D 정면뷰에서는 점선으로 표시
+        <group position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}>
+          {/* 수동으로 점선 그리기 - 더 흐리게 */}
+          <ManualDashedBox
+            width={innerWidth + mmToThreeUnits(10)}
+            height={innerHeight + mmToThreeUnits(10)}
+            color={theme?.mode === 'dark' ? "#444444" : "#cccccc"}
+            dashSize={0.03}
+            gapSize={0.02}
+          />
+        </group>
+      ) : (
+        // 3D 모드 또는 다른 2D 뷰에서는 기존대로 실선으로 표시
+        <BoxWithEdges
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+        />
+      )}
       
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}

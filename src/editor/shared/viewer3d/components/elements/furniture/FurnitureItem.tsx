@@ -667,6 +667,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 }
               }}
               isDragging={isDraggingThis}
+              furnitureId={placedModule.id}
               isEditMode={isEditMode}
               color={(isDraggingThis || isEditMode) ? getThemeColor() : undefined}
               internalHeight={furnitureHeightMm}

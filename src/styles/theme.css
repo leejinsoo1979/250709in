@@ -114,6 +114,31 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
+/* 로그인 폼 input 요소는 항상 light 모드 */
+[class*="loginForm"] input,
+[class*="loginForm"] textarea,
+[class*="loginForm"] select,
+.loginForm input,
+.loginForm textarea,
+.loginForm select {
+  background-color: white !important;
+  color: #333 !important;
+  border: 2px solid #e1e8ed !important;
+  -webkit-text-fill-color: #333 !important;
+}
+
+[class*="loginForm"] input:focus,
+[class*="loginForm"] textarea:focus,
+[class*="loginForm"] select:focus,
+.loginForm input:focus,
+.loginForm textarea:focus,
+.loginForm select:focus {
+  border-color: #667eea !important;
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+  background-color: white !important;
+}
+
 .theme-primary-bg {
   background-color: var(--theme-primary) !important;
 }

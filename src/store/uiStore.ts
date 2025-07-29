@@ -57,6 +57,9 @@ interface UIState {
   // 활성 단내림 탭 상태
   activeDroppedCeilingTab: 'main' | 'dropped';
   
+  // 강조된 가구 칸 (가구ID-칸인덱스 형식)
+  highlightedCompartment: string | null;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -81,6 +84,7 @@ interface UIState {
   setWallCreationMode: (isEnabled: boolean) => void;
   setSelectedWallId: (wallId: string | null) => void;
   setFurnitureDragging: (isDragging: boolean) => void;
+  setHighlightedCompartment: (compartmentId: string | null) => void;
   resetUI: () => void;
 }
 
@@ -104,6 +108,7 @@ const initialUIState = {
   selectedWallId: null,  // 기본값: 가벽 선택 없음
   isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
   activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
+  highlightedCompartment: null,  // 기본값: 강조된 칸 없음
 };
 
 export const useUIStore = create<UIState>()(
@@ -197,6 +202,9 @@ export const useUIStore = create<UIState>()(
       
       setFurnitureDragging: (isDragging) =>
         set({ isFurnitureDragging: isDragging }),
+      
+      setHighlightedCompartment: (compartmentId) =>
+        set({ highlightedCompartment: compartmentId }),
       
       resetUI: () =>
         set(initialUIState),

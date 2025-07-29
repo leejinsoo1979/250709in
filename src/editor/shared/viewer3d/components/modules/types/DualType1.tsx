@@ -4,6 +4,7 @@ import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
+import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 
 // 독립적인 엣지 표시를 위한 박스 컴포넌트
@@ -138,7 +139,9 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     getSectionHeights
   } = baseFurniture;
 
-  const { renderMode } = useSpace3DView();
+  const { renderMode, viewMode } = useSpace3DView();
+  const { view2DDirection } = useUIStore();
+  const { theme } = useTheme();
 
   return (
     <group>
@@ -234,13 +237,39 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-      />
+      {viewMode === '2D' && view2DDirection === 'front' ? (
+        // 2D 정면뷰에서는 흐린 점선으로 표시
+        <group position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}>
+          <lineSegments
+            onUpdate={(self) => {
+              if (self.geometry) {
+                self.computeLineDistances();
+              }
+            }}
+          >
+            <edgesGeometry args={[new THREE.BoxGeometry(innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness)]} />
+            <lineDashedMaterial 
+              color={theme?.mode === 'dark' ? "#666666" : "#999999"}
+              transparent={true}
+              opacity={0.5}
+              depthTest={false}
+              linewidth={1}
+              dashSize={0.05}
+              gapSize={0.03}
+              scale={1}
+            />
+          </lineSegments>
+        </group>
+      ) : (
+        // 3D 모드에서는 기존대로 표시
+        <BoxWithEdges
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
+      )}
       
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (

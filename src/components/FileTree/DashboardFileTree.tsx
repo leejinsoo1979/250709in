@@ -314,7 +314,23 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
       </div>
       
       <div className={styles.treeContent}>
-        {selectedProjectId && selectedProject ? (
+        {!user ? (
+          <div className={styles.loginPrompt}>
+            <div className={styles.loginPromptIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <p className={styles.loginPromptText}>로그인이 필요합니다</p>
+            <button 
+              className={styles.loginPromptButton}
+              onClick={() => navigate('/login')}
+            >
+              로그인하기
+            </button>
+          </div>
+        ) : selectedProjectId && selectedProject ? (
           <div>
             {/* 새 폴더 생성 버튼 */}
             <button className={styles.createFolderBtn} onClick={handleCreateFolder}>

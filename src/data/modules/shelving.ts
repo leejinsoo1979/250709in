@@ -513,11 +513,13 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number): ModuleData
   ];
   
   // 우측 섹션 (스타일러장)에 안전선반 적용
+  // 좌측 섹션들의 총 높이와 동일하게 설정
+  const rightSectionHeight = leftDrawerWithFinishHeight + leftHangingHeight; // 600 + (maxHeight - 600) = maxHeight
   const rightBaseSections: SectionConfig[] = [
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: maxHeight // 완전 스타일러장
+      height: rightSectionHeight
     }
   ];
   

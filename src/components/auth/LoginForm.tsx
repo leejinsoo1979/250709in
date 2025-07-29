@@ -23,13 +23,71 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   // 로그인 폼에서는 다크모드를 무시하도록 강제
   useEffect(() => {
+    // 1. document.documentElement에 전역 CSS 변수 오버라이드
+    const root = document.documentElement;
+    const originalValues = {
+      background: getComputedStyle(root).getPropertyValue('--theme-background'),
+      text: getComputedStyle(root).getPropertyValue('--theme-text'),
+      surface: getComputedStyle(root).getPropertyValue('--theme-surface'),
+      mode: getComputedStyle(root).getPropertyValue('--theme-mode')
+    };
+
+    // 로그인 페이지에서는 항상 light 모드 강제
+    root.style.setProperty('--theme-background', '#ffffff', 'important');
+    root.style.setProperty('--theme-text', '#333333', 'important');
+    root.style.setProperty('--theme-surface', '#ffffff', 'important');
+    root.style.setProperty('--theme-mode', 'light', 'important');
+
+    // 2. body 클래스에서 dark 모드 제거
+    const bodyClasses = Array.from(document.body.classList);
+    const darkModeClasses = bodyClasses.filter(c => c.includes('dark'));
+    darkModeClasses.forEach(c => document.body.classList.remove(c));
+
+    // 3. 로그인 폼 영역에 직접 스타일 적용
+    const applyLightModeStyles = () => {
+      const loginForm = document.querySelector(`.${styles.loginForm}`) as HTMLElement;
+      if (loginForm) {
+        loginForm.style.setProperty('--theme-background', '#ffffff', 'important');
+        loginForm.style.setProperty('--theme-text', '#333333', 'important');
+        loginForm.style.setProperty('--theme-surface', '#ffffff', 'important');
+        
+        // 모든 input 요소에 직접 스타일 적용
+        const inputs = loginForm.querySelectorAll('input');
+        inputs.forEach(input => {
+          input.style.backgroundColor = 'white';
+          input.style.color = '#333';
+          input.style.setProperty('background-color', 'white', 'important');
+          input.style.setProperty('color', '#333', 'important');
+          input.style.setProperty('-webkit-text-fill-color', '#333', 'important');
+        });
+      }
+    };
+
+    applyLightModeStyles();
+
+    // 4. MutationObserver로 스타일 변경 감지 및 재적용
+    const observer = new MutationObserver(() => {
+      applyLightModeStyles();
+    });
+
     const loginForm = document.querySelector(`.${styles.loginForm}`) as HTMLElement;
     if (loginForm) {
-      // 다크모드 CSS 변수 오버라이드
-      loginForm.style.setProperty('--theme-background', '#ffffff', 'important');
-      loginForm.style.setProperty('--theme-text', '#333333', 'important');
-      loginForm.style.setProperty('--theme-surface', '#ffffff', 'important');
+      observer.observe(loginForm, {
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        childList: true,
+        subtree: true
+      });
     }
+
+    // 컴포넌트 언마운트 시 원래 값으로 복원
+    return () => {
+      observer.disconnect();
+      root.style.setProperty('--theme-background', originalValues.background);
+      root.style.setProperty('--theme-text', originalValues.text);
+      root.style.setProperty('--theme-surface', originalValues.surface);
+      root.style.setProperty('--theme-mode', originalValues.mode);
+    };
   }, []);
 
   // 로그인 상태 확인 후 자동 리다이렉트

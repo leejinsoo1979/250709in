@@ -43,6 +43,41 @@ const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
 const END_PANEL_THICKNESS = 20; // 20mm로 통일
 
+// 점선 라인 컴포넌트
+const DashedLine: React.FC<{
+  points: [number, number, number][];
+  color: string;
+  dashSize: number;
+  gapSize: number;
+}> = ({ points, color, dashSize, gapSize }) => {
+  const lineRef = useRef<THREE.Line>(null);
+  
+  useEffect(() => {
+    if (lineRef.current) {
+      lineRef.current.computeLineDistances();
+    }
+  }, [points]);
+  
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(points.flat());
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geo;
+  }, [points]);
+  
+  return (
+    <line ref={lineRef} geometry={geometry}>
+      <lineDashedMaterial
+        color={color}
+        dashSize={dashSize}
+        gapSize={gapSize}
+        opacity={0.6}
+        transparent={true}
+      />
+    </line>
+  );
+};
+
 // 2D 모드용 Box with Edges 컴포넌트 - EdgesGeometry 사용으로 일관성 확보
 const BoxWithEdges: React.FC<{
   args: [number, number, number];
@@ -753,18 +788,133 @@ const Room: React.FC<RoomProps> = ({
             );
           }, [])}
           
-          {/* 뒤쪽 외부 벽면 - 투명 처리 */}
-          <mesh
-            position={[xOffset + width/2, panelStartY + height/2, zOffset - 0.01]}
-          >
-            <planeGeometry args={[width, height]} />
-            <meshStandardMaterial 
-              color="#ffffff" 
-              transparent={true}
-              opacity={0.0}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+          {/* 뒤쪽 외부 벽면 - 2D 정면뷰에서는 점선으로 표시 */}
+          {console.log('🔍 백패널 렌더링 조건:', {
+            viewMode,
+            view2DDirection,
+            is2DFront: viewMode === '2D' && view2DDirection === 'front',
+            position: [xOffset + width/2, panelStartY + height/2, zOffset - 0.01]
+          })}
+          {viewMode === '2D' && view2DDirection === 'front' ? (
+            // 2D 정면뷰에서는 점선으로 표시
+            (() => {
+              // 점선을 위한 짧은 선분들 생성
+              const dashLength = 0.3; // 점선 길이
+              const gapLength = 0.15; // 간격 길이
+              const segments = [];
+              
+              // 상단 가로선
+              let currentX = -width/2;
+              while (currentX < width/2) {
+                const endX = Math.min(currentX + dashLength, width/2);
+                segments.push(
+                  <line key={`top-${currentX}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([
+                          currentX, height/2, 0,
+                          endX, height/2, 0
+                        ])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={theme?.mode === 'dark' ? "#666666" : "#999999"} opacity={0.6} transparent />
+                  </line>
+                );
+                currentX += dashLength + gapLength;
+              }
+              
+              // 하단 가로선
+              currentX = -width/2;
+              while (currentX < width/2) {
+                const endX = Math.min(currentX + dashLength, width/2);
+                segments.push(
+                  <line key={`bottom-${currentX}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([
+                          currentX, -height/2, 0,
+                          endX, -height/2, 0
+                        ])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={theme?.mode === 'dark' ? "#666666" : "#999999"} opacity={0.6} transparent />
+                  </line>
+                );
+                currentX += dashLength + gapLength;
+              }
+              
+              // 좌측 세로선
+              let currentY = -height/2;
+              while (currentY < height/2) {
+                const endY = Math.min(currentY + dashLength, height/2);
+                segments.push(
+                  <line key={`left-${currentY}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([
+                          -width/2, currentY, 0,
+                          -width/2, endY, 0
+                        ])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={theme?.mode === 'dark' ? "#666666" : "#999999"} opacity={0.6} transparent />
+                  </line>
+                );
+                currentY += dashLength + gapLength;
+              }
+              
+              // 우측 세로선
+              currentY = -height/2;
+              while (currentY < height/2) {
+                const endY = Math.min(currentY + dashLength, height/2);
+                segments.push(
+                  <line key={`right-${currentY}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([
+                          width/2, currentY, 0,
+                          width/2, endY, 0
+                        ])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={theme?.mode === 'dark' ? "#666666" : "#999999"} opacity={0.6} transparent />
+                  </line>
+                );
+                currentY += dashLength + gapLength;
+              }
+              
+              return (
+                <group position={[xOffset + width/2, panelStartY + height/2, zOffset - 0.01]}>
+                  {segments}
+                </group>
+              );
+            })()
+          ) : (
+            // 3D 모드나 다른 2D 뷰에서는 투명 처리
+            <mesh
+              position={[xOffset + width/2, panelStartY + height/2, zOffset - 0.01]}
+            >
+              <planeGeometry args={[width, height]} />
+              <meshStandardMaterial 
+                color="#ffffff" 
+                transparent={true}
+                opacity={0.0}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          )}
           
           {/* 모서리 음영 라인들 - 벽면이 만나는 모서리에 어두운 선 */}
           

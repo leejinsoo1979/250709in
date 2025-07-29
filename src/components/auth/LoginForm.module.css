@@ -70,6 +70,42 @@
   appearance: none !important;
 }
 
+/* theme.css의 input 스타일 오버라이드 */
+.loginForm :global(input),
+.loginForm :global(textarea),
+.loginForm :global(select) {
+  background-color: white !important;
+  background: white !important;
+  color: #333 !important;
+  border: 2px solid #e1e8ed !important;
+  -webkit-text-fill-color: #333 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* 다크 모드 클래스가 있어도 무시 */
+:global(body[class*="dark"]) .loginForm :global(input),
+:global(body[class*="dark"]) .loginForm :global(textarea),
+:global(body[class*="dark"]) .loginForm :global(select) {
+  background-color: white !important;
+  background: white !important;
+  color: #333 !important;
+  border: 2px solid #e1e8ed !important;
+  -webkit-text-fill-color: #333 !important;
+}
+
+.container :global(input),
+.container :global(textarea),
+.container :global(select) {
+  background-color: white !important;
+  background: white !important;
+  color: #333 !important;
+  border: 2px solid #e1e8ed !important;
+  -webkit-text-fill-color: #333 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
 .container input[type="email"]::placeholder,
 .container input[type="password"]::placeholder,
 .container input[type="text"]::placeholder {

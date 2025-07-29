@@ -86,7 +86,7 @@ const Step2SpaceConfig: React.FC<Step2SpaceConfigProps> = ({ onNext, onPrevious,
                 renderMode={renderMode}
                 showAll={false}
                 showDimensions={true}
-                showFrame={false}
+                showFrame={true}
                 isEmbedded={true}
                 isStep2={true}
                 setViewMode={(mode) => setViewMode(mode)}

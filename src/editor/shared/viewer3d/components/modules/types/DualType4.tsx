@@ -5,6 +5,7 @@ import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../share
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
+import { useUIStore } from '@/store/uiStore';
 
 // 독립적인 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -138,6 +139,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+  const { viewMode, view2DDirection } = useUIStore();
+  const { theme } = useTheme();
 
   return (
     <group>
@@ -233,13 +236,26 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-      />
+      {viewMode === '2D' && view2DDirection === 'front' ? (
+        <lineSegments position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}>
+          <edgesGeometry args={[new THREE.BoxGeometry(innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness)]} />
+          <lineDashedMaterial
+            color={theme?.mode === 'dark' ? "#999999" : "#666666"}
+            dashSize={0.02}
+            gapSize={0.01}
+            opacity={0.5}
+            transparent={true}
+          />
+        </lineSegments>
+      ) : (
+        <BoxWithEdges
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
+      )}
       
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (

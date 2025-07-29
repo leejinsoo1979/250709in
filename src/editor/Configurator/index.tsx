@@ -2608,6 +2608,7 @@ const Configurator: React.FC = () => {
               setViewMode={setViewMode}
               renderMode={renderMode}
               showAll={showAll}
+              showFrame={true}
               svgSize={{ width: 800, height: 600 }}
               activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : undefined}
             />

@@ -30,6 +30,7 @@ interface BoxModuleProps {
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
+  furnitureId?: string; // 가구 ID (칸 강조용)
 }
 
 /**
@@ -55,7 +56,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   slotCenterX,
   adjustedWidth,
   viewMode,
-  renderMode
+  renderMode,
+  furnitureId
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
@@ -256,6 +258,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           material={baseFurniture.material}
           calculateSectionHeight={baseFurniture.calculateSectionHeight}
           renderMode={renderMode || useSpace3DView().renderMode}
+          furnitureId={furnitureId}
         />
       )}
       
