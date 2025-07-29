@@ -178,6 +178,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         addModule(newModule);
         
+        // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
+        window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+        
         // 가구 배치 후 그림자 업데이트 (강화된 접근)
         invalidate();
         

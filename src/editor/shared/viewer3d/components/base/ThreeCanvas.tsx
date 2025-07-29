@@ -170,8 +170,41 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 가구 드래그 이벤트 리스너
   useEffect(() => {
     const handleFurnitureDragStart = () => {
-      console.log('🎯 가구 드래그 시작 - OrbitControls 회전 비활성화');
+      console.log('🎯 가구 드래그 시작 - OrbitControls 회전 비활성화 및 카메라 정면 리셋');
       setIsFurnitureDragging(true);
+      
+      // 카메라를 정면 뷰로 리셋
+      if (controlsRef.current && viewMode === '3D') {
+        const controls = controlsRef.current;
+        
+        // OrbitControls 리셋
+        controls.reset();
+        
+        // 정면 뷰 카메라 위치로 설정
+        if (cameraPosition) {
+          controls.object.position.set(...cameraPosition);
+        } else {
+          controls.object.position.set(...camera.position);
+        }
+        
+        // 카메라 타겟 설정
+        if (cameraTarget) {
+          controls.target.set(...cameraTarget);
+        } else {
+          controls.target.set(...camera.target);
+        }
+        
+        // 카메라 up 벡터 리셋 (정면 뷰)
+        controls.object.up.set(0, 1, 0);
+        
+        // 카메라가 타겟을 바라보도록 설정
+        controls.object.lookAt(controls.target);
+        
+        // 컨트롤 업데이트
+        controls.update();
+        
+        console.log('🎯 카메라 정면 뷰로 리셋 완료');
+      }
     };
 
     const handleFurnitureDragEnd = () => {
@@ -179,14 +212,53 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       setIsFurnitureDragging(false);
     };
 
+    const handleFurniturePlacementComplete = () => {
+      console.log('🎯 가구 배치 완료 - 카메라 정면 리셋');
+      
+      // 카메라를 정면 뷰로 리셋
+      if (controlsRef.current && viewMode === '3D') {
+        const controls = controlsRef.current;
+        
+        // OrbitControls 리셋
+        controls.reset();
+        
+        // 정면 뷰 카메라 위치로 설정
+        if (cameraPosition) {
+          controls.object.position.set(...cameraPosition);
+        } else {
+          controls.object.position.set(...camera.position);
+        }
+        
+        // 카메라 타겟 설정
+        if (cameraTarget) {
+          controls.target.set(...cameraTarget);
+        } else {
+          controls.target.set(...camera.target);
+        }
+        
+        // 카메라 up 벡터 리셋 (정면 뷰)
+        controls.object.up.set(0, 1, 0);
+        
+        // 카메라가 타겟을 바라보도록 설정
+        controls.object.lookAt(controls.target);
+        
+        // 컨트롤 업데이트
+        controls.update();
+        
+        console.log('🎯 카메라 정면 뷰로 리셋 완료 (배치 후)');
+      }
+    };
+
     window.addEventListener('furniture-drag-start', handleFurnitureDragStart);
     window.addEventListener('furniture-drag-end', handleFurnitureDragEnd);
+    window.addEventListener('furniture-placement-complete', handleFurniturePlacementComplete);
 
     return () => {
       window.removeEventListener('furniture-drag-start', handleFurnitureDragStart);
       window.removeEventListener('furniture-drag-end', handleFurnitureDragEnd);
+      window.removeEventListener('furniture-placement-complete', handleFurniturePlacementComplete);
     };
-  }, []);
+  }, [camera, cameraPosition, cameraTarget, viewMode]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
@@ -423,7 +495,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           touchAction: 'none'
         }}
         dpr={[1, 2]}
-        frameloop="always"
+        frameloop="demand"
         gl={{
           powerPreference: 'high-performance',  // 고성능 GPU 사용
           antialias: true,

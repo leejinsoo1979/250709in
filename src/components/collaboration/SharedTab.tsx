@@ -39,13 +39,15 @@ const SharedTab: React.FC<SharedTabProps> = ({ onProjectSelect }) => {
       ]);
 
       if (sharedByMeResult.error) {
-        setError(sharedByMeResult.error);
+        // Firebase 설정이 없을 때는 에러 메시지를 표시하지 않음
+        console.warn('내가 공유한 프로젝트 로드 실패:', sharedByMeResult.error);
       } else {
         setSharedByMe(sharedByMeResult.shares);
       }
 
       if (sharedWithMeResult.error) {
-        setError(sharedWithMeResult.error);
+        // Firebase 설정이 없을 때는 에러 메시지를 표시하지 않음
+        console.warn('공유 프로젝트 로드 실패:', sharedWithMeResult.error);
       } else {
         setSharedWithMe(sharedWithMeResult.shares);
       }
@@ -140,16 +142,9 @@ const SharedTab: React.FC<SharedTabProps> = ({ onProjectSelect }) => {
           </div>
         )}
 
-        {error && (
-          <div className={styles.errorState}>
-            <p className={styles.errorMessage}>{error}</p>
-            <button onClick={loadSharedData} className={styles.retryButton}>
-              다시 시도
-            </button>
-          </div>
-        )}
+        {/* 에러 상태는 표시하지 않음 */}
 
-        {!loading && !error && currentShares.length === 0 && (
+        {!loading && currentShares.length === 0 && (
           <div className={styles.emptyState}>
             <ShareIcon size={48} />
             <h3>
@@ -165,7 +160,7 @@ const SharedTab: React.FC<SharedTabProps> = ({ onProjectSelect }) => {
           </div>
         )}
 
-        {!loading && !error && currentShares.length > 0 && (
+        {!loading && currentShares.length > 0 && (
           <div className={styles.shareGrid}>
             {currentShares.map((share) => (
               <div

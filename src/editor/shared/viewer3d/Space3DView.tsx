@@ -47,10 +47,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
-  // 기둥 위치 업데이트를 16ms(60fps)로 제한하여 성능 개선
+  // 기둥 위치 업데이트를 8ms(120fps)로 제한하여 부드러운 움직임
   const throttledUpdateColumn = useThrottle((id: string, updates: any) => {
     updateColumn(id, updates);
-  }, 16);
+  }, 8);
   
   // 컴포넌트 마운트시 재질 설정 초기화 제거 (Firebase 로드 색상 유지)
   

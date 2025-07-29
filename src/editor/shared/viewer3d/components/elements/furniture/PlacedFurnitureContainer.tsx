@@ -54,24 +54,29 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
   }
 
-  // 커스텀 훅들 사용 (viewer 모드가 아닐 때만)
+  // 커스텀 훅들 사용 - 조건부 호출 제거
   const isViewerOnly = !!propPlacedModules;
-  const selectionState = !isViewerOnly ? useFurnitureSelection() : { dragMode: false, handleFurnitureClick: () => {} };
-  const dragHandlers = !isViewerOnly ? useFurnitureDrag({ 
-    spaceInfo
-  }) : {
-    handlePointerDown: () => {},
-    handlePointerMove: () => {},
-    handlePointerUp: () => {},
-    draggingModuleId: null
-  };
-
-  // 키보드 이벤트 훅 (스마트 건너뛰기 로직 사용)
-  if (!isViewerOnly) {
-    useFurnitureKeyboard({
-      spaceInfo
-    });
-  }
+  
+  // 항상 훅을 호출하되, 결과를 조건부로 사용
+  const selectionStateFromHook = useFurnitureSelection();
+  const dragHandlersFromHook = useFurnitureDrag({ spaceInfo });
+  
+  // 키보드 이벤트 훅 - 항상 호출
+  useFurnitureKeyboard({ spaceInfo });
+  
+  // viewer 모드에 따라 실제 사용할 값 결정
+  const selectionState = !isViewerOnly 
+    ? selectionStateFromHook 
+    : { dragMode: false, handleFurnitureClick: () => {} };
+    
+  const dragHandlers = !isViewerOnly 
+    ? dragHandlersFromHook 
+    : {
+        handlePointerDown: () => {},
+        handlePointerMove: () => {},
+        handlePointerUp: () => {},
+        draggingModuleId: null
+      };
 
   return (
     <group>

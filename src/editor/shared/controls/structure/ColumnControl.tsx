@@ -19,6 +19,32 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
     console.log('🎯 기둥 썸네일 드래그 시작');
   };
 
+  // 더블클릭 핸들러 추가
+  const handleThumbnailDoubleClick = (columnData: any) => {
+    console.log('🎯 기둥 썸네일 더블클릭:', columnData);
+    
+    // 공간 정보 가져오기
+    const spaceInfo = spaceConfig.spaceInfo;
+    if (!spaceInfo) return;
+    
+    // 공간 중앙에 기둥 배치
+    const centerX = 0; // 공간 중앙
+    const centerZ = -(spaceInfo.depth || 1500) * 0.01 / 2 + (columnData.depth * 0.01) / 2; // 뒷벽에 맞닿도록
+    
+    const newColumn: Column = {
+      id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: [centerX, 0, centerZ],
+      width: columnData.width,
+      height: columnData.height || spaceInfo.height || 2400,
+      depth: columnData.depth,
+      color: columnData.color || '#888888',
+      material: columnData.material || 'concrete'
+    };
+    
+    console.log('🏗️ 더블클릭으로 새 기둥 생성:', newColumn);
+    onColumnsChange([...columns, newColumn]);
+  };
+
   const removeColumn = (id: string) => {
     onColumnsChange(columns.filter(col => col.id !== id));
     if (selectedColumnId === id) {
@@ -50,6 +76,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             material="concrete" 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
             title="기둥A"
           />
           <ColumnThumbnail 
@@ -59,6 +86,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             material="concrete" 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
             title="기둥B"
           />
           <ColumnThumbnail 
@@ -68,6 +96,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             material="concrete" 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
             title="기둥C"
           />
           <ColumnThumbnail 
@@ -77,6 +106,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             material="concrete" 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
             title="패널A"
           />
         </div>

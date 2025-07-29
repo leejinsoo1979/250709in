@@ -34,6 +34,16 @@ export const getModulesByCategory = (
   internalSpace: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
+  console.log('🚨 [getModulesByCategory] Called with:', {
+    category,
+    internalSpace,
+    spaceInfo: spaceInfo ? {
+      width: spaceInfo.width,
+      customColumnCount: spaceInfo.customColumnCount,
+      columnMode: spaceInfo.columnMode
+    } : null
+  });
+  
   const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
   const staticModules = STATIC_MODULES;
   

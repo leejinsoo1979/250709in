@@ -286,18 +286,18 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   };
   
   // 위치에서 도어 개수 계산
-  const getDoorCountFromPosition = (position: number) => {
+  const getDoorCountFromPosition = React.useCallback((position: number) => {
     const normalizedPosition = Math.max(0, Math.min(100, position));
     const doorCount = Math.round(minDoors + (normalizedPosition / 100) * (maxDoors - minDoors));
     return Math.max(minDoors, Math.min(maxDoors, doorCount));
-  };
+  }, [minDoors, maxDoors]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
   
-  const handleMouseMove = (e: React.MouseEvent | MouseEvent) => {
+  const handleMouseMove = React.useCallback((e: React.MouseEvent | MouseEvent) => {
     if (!isDragging) return;
     
     const sliderTrack = document.querySelector(`.${styles.sliderTrack}`);
@@ -310,11 +310,11 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     if (newDoorCount !== value) {
       onChange(newDoorCount);
     }
-  };
+  }, [isDragging, value, onChange, getDoorCountFromPosition]);
   
-  const handleMouseUp = () => {
+  const handleMouseUp = React.useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
   
   React.useEffect(() => {
     if (isDragging) {
@@ -333,7 +333,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
         document.body.style.userSelect = '';
       };
     }
-  }, [isDragging, value]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
   
   // 값이 범위를 벗어나면 자동 조정
   React.useEffect(() => {
@@ -417,18 +417,27 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     <div className={styles.doorSlider}>
       <div 
         className={styles.sliderTrack}
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const position = ((e.clientX - rect.left) / rect.width) * 100;
+          const newDoorCount = getDoorCountFromPosition(position);
+          onChange(newDoorCount);
+        }}
       >
         {/* 활성 트랙 */}
         <div 
           className={styles.sliderActiveTrack}
-          style={{ width: `${sliderPosition}%` }}
+          style={{ width: `${sliderPosition}%`, pointerEvents: 'none' }}
         />
         
         {/* 슬라이더 핸들 */}
         <div 
           className={styles.sliderHandle}
           style={{ left: `${sliderPosition}%` }}
-          onMouseDown={handleMouseDown}
+          onMouseDown={(e) => {
+            e.stopPropagation(); // 트랙 클릭 이벤트 방지
+            handleMouseDown(e);
+          }}
         />
       </div>
       

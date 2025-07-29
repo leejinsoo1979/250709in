@@ -35,7 +35,8 @@
 
 /* 좌측 사이드바 */
 .sidebar {
-  width: 255px;
+  width: 220px;
+  min-width: 220px;
   background: var(--theme-surface) !important;
   border-right: 1px solid var(--theme-border) !important;
   display: flex;
@@ -43,6 +44,7 @@
   position: relative;
   z-index: 10;
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 /* 로고 영역 */
@@ -52,7 +54,7 @@
   border-bottom: 1px solid var(--theme-border) !important;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 20px;
   gap: 12px;
   position: relative;
   overflow: hidden;
@@ -107,11 +109,11 @@
 /* 사용자 프로필 영역 */
 .profileSection {
   height: 65px;
-  padding: 0 24px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--theme-border) !important;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .userInfo {
@@ -187,17 +189,18 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 18px;
-  margin: 0 16px 4px 16px;
+  padding: 10px 16px;
+  margin: 0 12px 4px 12px;
   border-radius: 12px;
   cursor: pointer;
   color: var(--theme-text-secondary) !important;
   background: transparent !important;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .navItem::before {
@@ -299,6 +302,8 @@
   display: flex;
   flex-direction: column;
   background: var(--theme-background-secondary) !important;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* 상단 헤더 */
@@ -465,12 +470,16 @@
 
 /* 프로젝트 트리 */
 .projectTree {
-  width: 290px;
+  width: 240px;
+  min-width: 200px;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, margin-left 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease;
   position: relative;
 }
 
@@ -488,11 +497,12 @@
   align-items: center;
   padding: 0 8px;
   gap: 4px;
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .treeToggleButton {
   position: fixed;
-  left: 545px; /* 255px (sidebar) + 290px (tree) */
+  left: 460px; /* 220px (sidebar) + 240px (tree) */
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
@@ -505,7 +515,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: left 0.3s ease;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              background-color 0.2s ease,
+              transform 0.2s ease;
   z-index: 1000;
 }
 
@@ -525,7 +537,7 @@
 }
 
 .projectTree.collapsed .treeToggleButton {
-  left: 255px;
+  left: 220px; /* 사이드바 너비만큼 */
   width: 20px;
   height: 28px;
   background: var(--theme-primary);
@@ -547,12 +559,32 @@
   display: none;
 }
 
+/* 프로필과 팀 메뉴에서는 프로젝트 트리 완전히 숨김 */
+.dashboard[data-menu="profile"] .projectTree,
+.dashboard[data-menu="team"] .projectTree,
+.dashboard[data-menu="shared"] .projectTree {
+  display: none;
+}
+
+/* 프로필과 팀 메뉴에서는 디자인 영역이 전체 너비 사용 */
+.dashboard[data-menu="profile"] .designArea,
+.dashboard[data-menu="team"] .designArea,
+.dashboard[data-menu="shared"] .designArea {
+  margin-left: 0;
+  padding-left: 24px;
+}
+
+.projectTree.collapsed .treeHeader {
+  border-bottom-color: transparent;
+}
+
 .projectTree.collapsed .projectSelectorContainer,
 .projectTree.collapsed .treeContent,
 .projectTree.collapsed .treeHeader > *:not(.treeToggleButton) {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .projectSelectorContainer {
@@ -744,7 +776,7 @@
 /* 프로젝트 내부 뷰에서 폴더와 디자인 카드 통일 */
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard,
 .designGrid.folderView:not(.listView) .designCard {
-  height: 320px !important;
+  height: 280px !important;
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 16px;
@@ -771,29 +803,30 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .folderIconSvg {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   opacity: 0.9;
 }
 
 .folderContent {
-  padding: 0 20px 20px 20px;
-  flex: 1;
+  padding: 12px;
+  height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-top: 1px solid var(--theme-border);
 }
 
 .folderTitle {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--theme-text, #1f2937);
-  margin: 0 0 8px 0;
-  line-height: 1.4;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
 }
 
 /* 모든 folder 관련 스타일 제거 - cardInfo로 통합 */
@@ -923,6 +956,7 @@
   transition: all 0.3s ease;
   z-index: 10;
   border-radius: 0;
+  pointer-events: none; /* 기본적으로 클릭 이벤트 차단 */
 }
 
 /* 오버레이는 폴더 뷰의 디자인 카드에만 적용 */
@@ -930,6 +964,13 @@
 .designCard.forceHover .designCardOverlay {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto; /* 호버 시에만 클릭 이벤트 활성화 */
+}
+
+/* 프로필/팀 메뉴에서는 오버레이 완전히 숨김 */
+.dashboard[data-menu="profile"] .designCardOverlay,
+.dashboard[data-menu="team"] .designCardOverlay {
+  display: none !important;
 }
 
 .overlayButton {
@@ -1023,10 +1064,15 @@
 /* 디자인 영역 */
 .designArea {
   flex: 1;
-  background: var(--theme-surface, #ffffff) !important;
   overflow-y: auto;
-  padding: 4px 24px 24px 24px;
-  transition: margin-left 0.3s ease;
+  padding: 4px 20px 20px 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When tree is collapsed, expand the design area to use full width */
+.projectTree.collapsed ~ .designArea {
+  margin-left: -200px; /* Negative margin to expand into collapsed tree space, leaving space for toggle button */
+  padding-left: 40px; /* More padding to avoid overlapping with toggle button */
 }
 
 /* 메인 영역의 브레드크럼 */
@@ -1043,9 +1089,15 @@
 
 .designGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-  max-width: 1360px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+/* When tree is collapsed, show 5 columns */
+.projectTree.collapsed ~ .designArea .designGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .designGrid.listView {
@@ -1124,11 +1176,13 @@
 .designCard {
   background: var(--theme-surface);
   border: 1px solid var(--theme-border-hover);
-  border-radius: 24px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .designCard:hover {
@@ -1258,18 +1312,21 @@
 }
 
 .cardThumbnail {
-  height: 295px;
+  width: 100%;
+  height: 200px;
   background: var(--theme-background-secondary, #f5f5f5);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 
 .designGrid.folderView:not(.listView) .designCard.newDesign {
   border: 2px solid var(--theme-primary) !important;
   background: var(--theme-background-secondary, #f5f5f5) !important;
+  height: 280px !important;
   position: relative;
   display: flex;
   align-items: center;
@@ -1287,12 +1344,13 @@
 /* 폴더 뷰에서 모든 카드의 썸네일 영역 - 폴더 카드와 동일하게 200px */
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardThumbnail,
 .designGrid.folderView:not(.listView) .designCard .cardThumbnail {
+  width: 100% !important;
   height: 200px !important;
   background: var(--theme-background-secondary, #f8f9fa);
-  margin-bottom: 16px;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
 .designGrid.folderView:not(.listView) .designCard:not(.newDesign) .cardThumbnail {
@@ -1319,16 +1377,18 @@
 /* 프로젝트 내부 뷰와 폴더 뷰에서 카드 정보 영역 통일 */
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardInfo,
 .designGrid.folderView:not(.listView) .designCard .cardInfo {
-  padding: 0 20px 20px 20px !important;
-  border-top: none !important;
+  padding: 12px !important;
+  height: 80px !important;
+  border-top: 1px solid var(--theme-border) !important;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1px;
+  justify-content: space-between;
 }
 
 /* 폴더 뷰에서 디자인 카드의 제목과 메타 정보 */
 .designGrid.folderView:not(.listView) .designCard .cardTitle {
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--theme-text);
   white-space: nowrap;
@@ -1338,7 +1398,7 @@
 }
 
 .designGrid.folderView:not(.listView) .designCard .cardMeta {
-  font-size: 13px;
+  font-size: 10px;
   color: var(--theme-text-secondary, #6b7280);
   margin: 0;
 }
@@ -1352,8 +1412,10 @@
 .designCard.newDesign {
   border: 2px solid var(--theme-primary);
   background: var(--theme-background-secondary, #f5f5f5);
-  height: 320px;
+  height: 280px !important;
+  padding: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -1610,17 +1672,21 @@
 
 /* 모든 카드의 기본 정보 영역 */
 .cardInfo {
-  padding: 16px 20px;
+  padding: 12px;
   background: var(--theme-surface);
   border-top: 1px solid var(--theme-border);
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .cardTitle {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--theme-text);
-  margin-bottom: 4px;
-  line-height: 21px;
+  margin-bottom: 1px;
+  line-height: 14px;
 }
 
 /* 리스트 뷰 제목 스타일 */
@@ -1645,10 +1711,10 @@
 }
 
 .cardDate {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--theme-text-secondary);
   font-weight: 500;
-  line-height: 13.75px;
+  line-height: 12px;
 }
 
 /* 리스트 뷰 날짜 스타일 */
@@ -1722,7 +1788,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 /* 리스트 뷰 사용자 정보 스타일 */
@@ -2253,6 +2319,7 @@
   align-items: center;
   gap: 12px;
   position: relative;
+  margin-left: auto;
 }
 
 /* 뷰 토글 그룹 */

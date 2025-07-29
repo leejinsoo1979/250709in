@@ -645,15 +645,9 @@ export const generateShelvingModules = (
   if (spaceInfo) {
     indexingSpaceInfo = spaceInfo;
   } else {
-    indexingSpaceInfo = {
-      width: 3600,
-      height: 2400,
-      depth: 580,
-      installType: 'built-in',
-      wallConfig: { left: true, right: true },
-      hasFloorFinish: false,
-      surroundType: 'surround'
-    };
+    // 기본값 사용하지 않고 경고만 출력
+    console.error('🚨 [generateShelvingModules] No spaceInfo provided!');
+    return [];
   }
   
   // 디버깅: 전달받은 spaceInfo 확인
@@ -662,13 +656,15 @@ export const generateShelvingModules = (
     spaceInfo: spaceInfo ? {
       width: spaceInfo.width,
       customColumnCount: spaceInfo.customColumnCount,
-      columnMode: spaceInfo.columnMode
+      columnMode: spaceInfo.columnMode,
+      droppedCeiling: spaceInfo.droppedCeiling
     } : null,
     indexingSpaceInfo: {
       width: indexingSpaceInfo.width,
       customColumnCount: indexingSpaceInfo.customColumnCount,
       columnMode: indexingSpaceInfo.columnMode
-    }
+    },
+    usingDefault: !spaceInfo
   });
   
   // 컬럼 계산 로직 가져오기
@@ -681,6 +677,15 @@ export const generateShelvingModules = (
     columnCount,
     indexingResult: indexing
   });
+  
+  // 700mm 컬럼이 계산되면 에러 발생
+  if (columnWidth >= 680 && columnWidth <= 720) {
+    console.error('🚨🚨🚨 [generateShelvingModules] 700mm column calculated!', {
+      spaceInfo,
+      internalSpace,
+      indexing
+    });
+  }
   
   const modules: ModuleData[] = [];
   

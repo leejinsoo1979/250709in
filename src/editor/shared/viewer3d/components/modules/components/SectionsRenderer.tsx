@@ -4,6 +4,8 @@ import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
+import { Html } from '@react-three/drei';
+import { useUIStore } from '@/store/uiStore';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -49,6 +51,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   renderMode,
   calculateSectionHeight
 }) => {
+  // UI 상태에서 치수 표시 여부 가져오기
+  const showDimensions = useUIStore(state => state.showDimensions);
+  const { viewMode } = useSpace3DView();
   
   // sections 기반 내부 구조 렌더링
   const renderSections = () => {

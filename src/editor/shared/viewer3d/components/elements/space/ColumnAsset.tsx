@@ -36,14 +36,24 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
   const [isHovered, setIsHovered] = useState(false);
   const [dragStart, setDragStart] = useState<THREE.Vector3 | null>(null);
   const [pointerDownTime, setPointerDownTime] = useState<number>(0);
   const [hasMoved, setHasMoved] = useState(false);
+  
+  // 캐싱된 canvas 및 rect
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasRectRef = useRef<DOMRect | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  
+  // 드래그 중 임시 위치 (리렌더링 최소화)
+  const tempPositionRef = useRef<[number, number, number]>(position);
+  const lastUpdateTimeRef = useRef<number>(0);
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -54,13 +64,14 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   useEffect(() => {
     if (!isDragging) {
       invalidate();
+      tempPositionRef.current = position; // 위치 동기화
     }
-  }, [position, width, height, depth, invalidate]);
+  }, [position, width, height, depth, isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
 
-  // 기둥 재질 생성
+  // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
   const material = React.useMemo(() => {
     // 선택된 기둥은 연두색으로 표시
     const displayColor = isSelected ? '#4CAF50' : color;
@@ -69,9 +80,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       metalness: 0.1,
       roughness: 0.7,
       transparent: true,
-      opacity: isDragging ? 0.7 : 1.0,
+      opacity: 1.0,
     });
-  }, [color, isDragging, isSelected]);
+  }, [color, isSelected]); // isDragging 제거
 
   // 와이어프레임용 윤곽선 재질
   const wireframeMaterial = React.useMemo(() => {
@@ -156,6 +167,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     // 화면 좌표 저장
     const startScreenX = event.nativeEvent.clientX;
     let moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
+    const updateInterval = 16; // 약 60fps로 제한
+    
+    // 드래그 시작 시 필요한 값들 미리 계산
+    const spaceWidthHalf = (spaceInfo?.width || 3000) * 0.005;
+    const columnHalfWidth = width * 0.005;
+    const minX = -spaceWidthHalf + columnHalfWidth;
+    const maxX = spaceWidthHalf - columnHalfWidth;
+    
+    // Canvas 찾기 (한 번만)
+    if (!canvasRef.current) {
+      canvasRef.current = document.querySelector('canvas');
+    }
     
     // 전역 이벤트 리스너 등록
     const handleGlobalPointerMove = (e: PointerEvent) => {
@@ -163,55 +186,87 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const currentScreenX = e.clientX;
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
-      if (moveDistance > moveThreshold && !hasMoved) {
-        // console.log('🎯 드래그 시작 감지:', moveDistance);
+      if (moveDistance > moveThreshold && !isDraggingRef.current) {
         setHasMoved(true);
         setIsDragging(true);
+        isDraggingRef.current = true;
+        setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
+        
+        // 기둥 드래그 시작 이벤트 발생 (가구와 동일한 이벤트 사용)
+        window.dispatchEvent(new CustomEvent('furniture-drag-start'));
       }
       
-      // 마우스 움직임을 3D 공간 좌표로 변환
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return;
+      // 드래그 중이 아니면 무시
+      if (!isDraggingRef.current) return;
       
-      const rect = canvas.getBoundingClientRect();
+      // 쓰로틀링 - 너무 자주 업데이트하지 않도록
+      const currentTime = Date.now();
+      if (currentTime - lastUpdateTimeRef.current < updateInterval) return;
+      lastUpdateTimeRef.current = currentTime;
+      
+      // 마우스 움직임을 3D 공간 좌표로 변환
+      if (!canvasRef.current) return;
+      
+      // rect를 업데이트 (드래그 시작 시에만)
+      if (!canvasRectRef.current) {
+        canvasRectRef.current = canvasRef.current.getBoundingClientRect();
+      }
+      const rect = canvasRectRef.current;
       const x = e.clientX - rect.left;
       
       // 간단한 X축 이동만 허용 (Y, Z는 고정)
       const normalizedX = (x / rect.width) * 2 - 1;
-      const spaceWidth = (spaceInfo?.width || 3000) * 0.01; // mm를 적절한 단위로 변환
-      const worldX = normalizedX * (spaceWidth / 2);
+      const worldX = normalizedX * spaceWidthHalf;
       
       // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정
-      const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01;
-      const columnDepthM = depth * 0.01; // mm를 Three.js 단위로 변환 
-      const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
+      const newX = Math.max(minX, Math.min(maxX, worldX));
       
-      const boundedPosition: [number, number, number] = [
-        Math.max(-spaceWidth/2 + width*0.01/2, Math.min(spaceWidth/2 - width*0.01/2, worldX)),
-        position[1], // Y 좌표는 고정 (바닥 기준 높이의 절반)
-        zPosition // Z는 뒷벽에 고정
-      ];
+      // 임시 위치 업데이트
+      tempPositionRef.current = [newX, position[1], position[2]];
       
-      
-      if (onPositionChange && !isNaN(boundedPosition[0]) && !isNaN(boundedPosition[1]) && !isNaN(boundedPosition[2])) {
-        onPositionChange(id, boundedPosition);
+      if (onPositionChange && !isNaN(newX)) {
+        // 애니메이션 프레임 취소 및 새로 요청
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        
+        animationFrameRef.current = requestAnimationFrame(() => {
+          onPositionChange(id, tempPositionRef.current);
+          animationFrameRef.current = null;
+        });
       }
     };
     
     const handleGlobalPointerUp = () => {
-      // console.log('🎯 기둥 포인터 업:', id, 'hasMoved:', hasMoved);
+      // 드래그 중이었다면 화면 회전 다시 활성화
+      if (isDraggingRef.current) {
+        setFurnitureDragging(false);
+        
+        // 기둥 드래그 종료 이벤트 발생 (가구와 동일한 이벤트 사용)
+        window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+      }
       
       setIsDragging(false);
+      isDraggingRef.current = false;
       setDragStart(null);
       setHasMoved(false);
       
       // 전역 이벤트 리스너 제거
       document.removeEventListener('pointermove', handleGlobalPointerMove);
       document.removeEventListener('pointerup', handleGlobalPointerUp);
+      
+      // 캐시 초기화
+      canvasRectRef.current = null;
+      
+      // 애니메이션 프레임 취소
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
     };
     
-    // 전역 이벤트 리스너 등록
-    document.addEventListener('pointermove', handleGlobalPointerMove);
+    // 전역 이벤트 리스너 등록 - passive 옵션 추가
+    document.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
     document.addEventListener('pointerup', handleGlobalPointerUp);
   };
 
@@ -419,6 +474,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           onContextMenu={handleContextMenu}
           position={[0, (height * 0.01) / 2, 0]} // 기둥 mesh를 위로 올려서 바닥에 맞춤
           userData={{ isColumn: true, columnId: id }}
+          scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
         >
           <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
         </mesh>
@@ -438,6 +494,9 @@ export default React.memo(ColumnAsset, (prevProps, nextProps) => {
     prevProps.depth === nextProps.depth &&
     prevProps.color === nextProps.color &&
     prevProps.id === nextProps.id &&
-    prevProps.renderMode === nextProps.renderMode
+    prevProps.renderMode === nextProps.renderMode &&
+    prevProps.spaceInfo?.width === nextProps.spaceInfo?.width &&
+    prevProps.spaceInfo?.depth === nextProps.spaceInfo?.depth &&
+    prevProps.spaceInfo?.height === nextProps.spaceInfo?.height
   );
 });

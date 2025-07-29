@@ -259,6 +259,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       addModule(newModule);
       setCurrentDragData(null);
       
+      // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
+      window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+      
       console.log('🎯 Module added successfully');
       return true;
     } else {
@@ -340,6 +343,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     addModule(newModule);
     setCurrentDragData(null);
+    
+    // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
+    window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
     
     return true;
   }, [

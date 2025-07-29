@@ -137,6 +137,7 @@ const SimpleDashboard: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>('all');
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
   const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
+  const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
   const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
   const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
   
@@ -344,6 +345,12 @@ const SimpleDashboard: React.FC = () => {
         setBookmarkedDesigns(new Set(JSON.parse(savedDesignBookmarks)));
       }
       
+      // 폴더 북마크 로드
+      const savedFolderBookmarks = localStorage.getItem(`folder_bookmarks_${user.uid}`);
+      if (savedFolderBookmarks) {
+        setBookmarkedFolders(new Set(JSON.parse(savedFolderBookmarks)));
+      }
+      
       // 휴지통 프로젝트 로드
       const savedTrash = localStorage.getItem(`trash_${user.uid}`);
       if (savedTrash) {
@@ -411,6 +418,22 @@ const SimpleDashboard: React.FC = () => {
     setBookmarkedDesigns(newBookmarks);
     if (user) {
       localStorage.setItem(`design_bookmarks_${user.uid}`, JSON.stringify(Array.from(newBookmarks)));
+    }
+  };
+  
+  // 폴더 북마크 토글 함수
+  const toggleFolderBookmark = (folderId: string) => {
+    const newBookmarks = new Set(bookmarkedFolders);
+    if (newBookmarks.has(folderId)) {
+      newBookmarks.delete(folderId);
+    } else {
+      newBookmarks.add(folderId);
+      // 북마크 추가 시 북마크 메뉴로 이동
+      setActiveMenu('bookmarks');
+    }
+    setBookmarkedFolders(newBookmarks);
+    if (user) {
+      localStorage.setItem(`folder_bookmarks_${user.uid}`, JSON.stringify(Array.from(newBookmarks)));
     }
   };
 
@@ -519,6 +542,30 @@ const SimpleDashboard: React.FC = () => {
             name: designFile.name,
             project: project,
             designFile: designFile
+          });
+        }
+      });
+    });
+    
+    return items;
+  };
+  
+  // 북마크된 폴더들 가져오기
+  const getBookmarkedFolderItems = () => {
+    const items = [];
+    
+    // 모든 프로젝트를 순회하며 북마크된 폴더 찾기
+    allProjects.forEach(project => {
+      const projectFolders = folders[project.id] || [];
+      
+      projectFolders.forEach(folder => {
+        if (bookmarkedFolders.has(folder.id)) {
+          items.push({
+            id: folder.id,
+            type: 'folder',
+            name: folder.name,
+            project: project,
+            children: folder.children
           });
         }
       });
@@ -720,10 +767,15 @@ const SimpleDashboard: React.FC = () => {
       const bookmarkedDesignItems = getBookmarkedDesignItems();
       items.push(...bookmarkedDesignItems);
       
+      // 북마크된 폴더들
+      const bookmarkedFolderItems = getBookmarkedFolderItems();
+      items.push(...bookmarkedFolderItems);
+      
       console.log('📋 북마크 뷰 - 전체 아이템:', {
         totalItems: items.length,
         projectsCount: filteredProjects.length,
-        designsCount: bookmarkedDesignItems.length
+        designsCount: bookmarkedDesignItems.length,
+        foldersCount: bookmarkedFolderItems.length
       });
       
       return items;
@@ -1671,7 +1723,7 @@ const SimpleDashboard: React.FC = () => {
               <StarIcon size={20} />
             </div>
             <span>북마크</span>
-            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedDesigns.size}</span>
+            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedDesigns.size + bookmarkedFolders.size}</span>
           </div>
           
           <div 
@@ -1826,21 +1878,21 @@ const SimpleDashboard: React.FC = () => {
         {/* 서브헤더 */}
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
-            <div></div> {/* 빈 공간 */}
+            {/* 선택된 아이템 개수 표시 (좌측) */}
+            {selectedCards.size > 0 && (
+              <div className={styles.selectionInfo}>
+                <span>{selectedCards.size}개의 항목이 선택됨</span>
+                <button 
+                  className={styles.clearSelectionBtn}
+                  onClick={() => setSelectedCards(new Set())}
+                >
+                  선택 해제
+                </button>
+              </div>
+            )}
             
+            {/* 우측 액션 버튼들 */}
             <div className={styles.subHeaderActions}>
-              {/* 선택된 아이템 개수 표시 */}
-              {selectedCards.size > 0 && (
-                <div className={styles.selectionInfo}>
-                  <span>{selectedCards.size}개의 항목이 선택됨</span>
-                  <button 
-                    className={styles.clearSelectionBtn}
-                    onClick={() => setSelectedCards(new Set())}
-                  >
-                    선택 해제
-                  </button>
-                </div>
-              )}
               {/* 뷰 모드 토글 */}
               <div className={styles.viewToggleGroup}>
                 <button 
@@ -2300,8 +2352,13 @@ const SimpleDashboard: React.FC = () => {
               <ProfileTab />
             )}
             
-            {/* 기존 프로젝트 그리드 (all, trash, bookmarks 메뉴일 때 표시) */}
-            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks') && (
+            {/* 기존 프로젝트 그리드 (all, trash, bookmarks 메뉴일 때만 표시) */}
+            {console.log('🔍 activeMenu 체크:', {
+              activeMenu,
+              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks',
+              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks')
+            })}
+            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks') ? (
               <>
               {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                 <div className={styles.listTableHeader}>
@@ -2350,6 +2407,12 @@ const SimpleDashboard: React.FC = () => {
                   filteredItemsLength: filteredItems.length,
                   sortedItems: sortedItems.map(item => ({ type: item.type, name: item.name })),
                   filteredItems: filteredItems.map(item => ({ type: item.type, name: item.name }))
+                });
+                
+                console.log('🚨 렌더링 조건 체크:', {
+                  filteredItemsLength: filteredItems.length,
+                  filteredItemsEmpty: filteredItems.length === 0,
+                  willRenderCards: filteredItems.length > 0
                 });
                 
                 return filteredItems.length > 0 ? (
@@ -2787,27 +2850,7 @@ const SimpleDashboard: React.FC = () => {
                 );
               })()}
               
-              {selectedProjectId && selectedProject ? (
-                (() => {
-                  if (!selectedProject) {
-                    // 실제로 프로젝트를 찾을 수 없는 경우
-                    return (
-                      <div className={styles.emptyState}>
-                        <div className={styles.emptyStateTitle}>선택된 프로젝트를 찾을 수 없습니다</div>
-                        <button 
-                          onClick={() => setSelectedProjectId(null)}
-                          className={styles.emptyStateButton}
-                        >
-                          모든 프로젝트 보기
-                        </button>
-                      </div>
-                    );
-                  } else {
-                    // 프로젝트는 있지만 표시할 항목이 없는 경우 - 아무것도 표시하지 않음
-                    return null;
-                  }
-                })()
-              ) : user && sortedItems.length === 0 ? (
+              {user && sortedItems.length === 0 ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
@@ -2825,7 +2868,7 @@ const SimpleDashboard: React.FC = () => {
               ) : null}
               </div>
               </>
-            )}
+            ) : null}
           </section>
         </div>
       </main>
@@ -2969,7 +3012,7 @@ const SimpleDashboard: React.FC = () => {
               <ShareIcon size={14} />
               공유하기
             </div>
-            {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design') && (
+            {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
               <div 
                 className={styles.moreMenuItem}
                 onClick={() => {
@@ -2977,6 +3020,8 @@ const SimpleDashboard: React.FC = () => {
                     toggleBookmark(moreMenu.itemId);
                   } else if (moreMenu.itemType === 'design') {
                     toggleDesignBookmark(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'folder') {
+                    toggleFolderBookmark(moreMenu.itemId);
                   }
                   closeMoreMenu();
                 }}
@@ -2984,7 +3029,9 @@ const SimpleDashboard: React.FC = () => {
                 <StarIcon size={14} />
                 {moreMenu.itemType === 'project' 
                   ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                  : (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                  : moreMenu.itemType === 'design' 
+                  ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                  : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
                 }
               </div>
             )}

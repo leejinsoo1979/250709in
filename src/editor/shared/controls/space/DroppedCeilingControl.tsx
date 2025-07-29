@@ -1,5 +1,7 @@
 import React from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import styles from './DroppedCeilingControl.module.css';
 
 interface DroppedCeilingControlProps {
@@ -16,14 +18,30 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handleEnabledToggle = () => {
     if (droppedCeiling?.enabled) {
-      // 비활성화
+      // 비활성화 - 컬럼 수를 기본값으로 리셋
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
+      
+      // 단내림 비활성화 시 현재 메인 도어 개수를 customColumnCount로 이동
+      const currentMainDoorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || defaultColumnCount;
+      
+      console.log('🔧 [DroppedCeilingControl] Disabling dropped ceiling, preserving door count:', {
+        currentMainDoorCount,
+        customColumnCount: spaceInfo.customColumnCount,
+        defaultColumnCount,
+        internalWidth: internalSpace.width
+      });
+      
       setSpaceInfo({
         droppedCeiling: {
           enabled: false,
           position: droppedCeiling.position || 'right',
           width: droppedCeiling.width || 900,
           dropHeight: droppedCeiling.dropHeight || 200
-        }
+        },
+        customColumnCount: currentMainDoorCount,
+        mainDoorCount: undefined,
+        droppedCeilingDoorCount: undefined
       });
     } else {
       // 활성화 - 기존 값이 있으면 유지, 없으면 기본값 사용

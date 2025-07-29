@@ -8,6 +8,7 @@ interface ColumnThumbnailProps {
   color?: string;
   material?: 'concrete' | 'steel' | 'wood';
   onDragStart?: (e: React.DragEvent) => void;
+  onDoubleClick?: (columnData: any) => void;
   title?: string;
 }
 
@@ -18,6 +19,7 @@ const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
   color = '#888888',
   material = 'concrete',
   onDragStart,
+  onDoubleClick,
   title = "기둥"
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
@@ -37,6 +39,20 @@ const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
     onDragStart?.(e);
   };
 
+  // 더블클릭 핸들러 추가
+  const handleDoubleClick = () => {
+    const columnData = {
+      type: 'column',
+      width,
+      height,
+      depth,
+      color,
+      material
+    };
+    
+    onDoubleClick?.(columnData);
+  };
+
   // 사용자가 제공한 기둥 이미지 사용
   const getColumnImagePath = () => {
     // 사용자가 제공한 기둥 이미지 경로
@@ -49,6 +65,7 @@ const ColumnThumbnail: React.FC<ColumnThumbnailProps> = ({
         className={styles.columnThumbnail}
         draggable
         onDragStart={handleDragStart}
+        onDoubleClick={handleDoubleClick}
         title={`${title} - ${material} (${width}×${depth}×${height}mm)`}
       >
         {/* 기둥 이미지만 표시 */}

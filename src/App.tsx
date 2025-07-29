@@ -10,6 +10,10 @@ import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
+import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
+import { GradientLoginForm } from '@/components/auth/GradientLoginForm';
+import { SplitLoginForm } from '@/components/auth/SplitLoginForm';
 import FirebaseDebug from '@/components/FirebaseDebug';
 import FirebaseDataDebug from '@/components/debug/FirebaseDataDebug';
 import { TouchTestPage } from '@/components/TouchUI/TouchTestPage';
@@ -77,7 +81,11 @@ function AppContent() {
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
-        <Route path="/auth" element={<LoginForm />} />
+        <Route path="/auth" element={<SplitLoginForm />} />
+        <Route path="/auth/gradient" element={<GradientLoginForm />} />
+        <Route path="/auth/ultra" element={<UltraModernLoginForm />} />
+        <Route path="/auth/modern" element={<ModernLoginForm />} />
+        <Route path="/auth/classic" element={<LoginForm />} />
         {/* 디버그 페이지 */}
         <Route path="/debug/firebase" element={<FirebaseDebug />} />
         <Route path="/debug/data" element={<FirebaseDataDebug />} />

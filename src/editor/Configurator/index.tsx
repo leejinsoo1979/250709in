@@ -9,6 +9,8 @@ import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFur
 import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // 새로운 컴포넌트들 import
@@ -249,10 +251,13 @@ const Configurator: React.FC = () => {
         // mainDoorCount가 없으면 현재 customColumnCount 사용
         count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
       }
-    } else if (spaceInfo.customColumnCount) {
-      count = spaceInfo.customColumnCount;
-    } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
-      count = derivedSpaceStore.columnCount;
+    } else {
+      // 단내림이 비활성화된 경우 mainDoorCount는 무시하고 customColumnCount 사용
+      if (spaceInfo.customColumnCount) {
+        count = spaceInfo.customColumnCount;
+      } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
+        count = derivedSpaceStore.columnCount;
+      }
     }
     
     // 반드시 400-600mm 범위 안에서만 동작하도록 강제
@@ -964,6 +969,31 @@ const Configurator: React.FC = () => {
     }
   }, [searchParams, basicInfo.title]);
 
+  // 단내림 상태 변경 감지 및 컬럼 수 리셋
+  useEffect(() => {
+    // 이전 상태를 추적하기 위한 ref가 필요하지만, 여기서는 단순히 비활성화될 때 처리
+    if (!spaceInfo.droppedCeiling?.enabled && spaceInfo.customColumnCount) {
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
+      
+      console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
+        currentColumnCount: spaceInfo.customColumnCount,
+        defaultColumnCount,
+        internalWidth: internalSpace.width
+      });
+      
+      // 현재 컬럼 수가 기본값과 다르면 리셋
+      if (spaceInfo.customColumnCount !== defaultColumnCount) {
+        console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
+        setSpaceInfo({
+          customColumnCount: defaultColumnCount,
+          mainDoorCount: undefined,
+          droppedCeilingDoorCount: undefined
+        });
+      }
+    }
+  }, [spaceInfo.droppedCeiling?.enabled]);
+
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id');
@@ -1345,12 +1375,11 @@ const Configurator: React.FC = () => {
       const MAX_SLOT_WIDTH = 600;
       const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
       
-      // 현재 메인 도어 개수가 최소 필요 개수보다 적으면 자동 조정
-      const currentMainDoorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 1;
-      if (currentMainDoorCount < minRequiredSlots) {
-        console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 자동 조정: ${currentMainDoorCount} → ${minRequiredSlots}`);
-        finalUpdates = { ...finalUpdates, mainDoorCount: minRequiredSlots };
-      }
+      // 현재 도어 개수를 유지하되, 최소 필요 개수 이상으로 조정
+      const currentDoorCount = getCurrentColumnCount();
+      const adjustedMainDoorCount = Math.max(minRequiredSlots, currentDoorCount);
+      console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 설정: ${currentDoorCount} → ${adjustedMainDoorCount}`);
+      finalUpdates = { ...finalUpdates, mainDoorCount: adjustedMainDoorCount };
       
       // 단내림 구간 도어개수 기본값 설정
       const droppedFrameThickness = 50;
@@ -1518,7 +1547,7 @@ const Configurator: React.FC = () => {
                 <ModuleGallery 
                   moduleCategory={moduleCategory} 
                   upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
-                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : 'normal'}
+                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : undefined}
                 />
               </div>
             </div>
@@ -2580,7 +2609,7 @@ const Configurator: React.FC = () => {
               renderMode={renderMode}
               showAll={showAll}
               svgSize={{ width: 800, height: 600 }}
-              activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : 'normal'}
+              activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : undefined}
             />
           </div>
 
@@ -2646,12 +2675,14 @@ const Configurator: React.FC = () => {
                     // 단내림 추가 시 배치된 가구 모두 제거
                     clearAllModules();
                     
-                    // 메인구간 도어 개수 계산
+                    // 메인구간 도어 개수 계산 - 현재 도어 개수 유지
                     const totalWidth = spaceInfo.width || 4800;
                     const droppedWidth = 900; // 단내림 기본 폭 (올바른 값)
                     const mainWidth = totalWidth - droppedWidth;
                     const mainRange = calculateDoorRange(mainWidth);
-                    const currentCount = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || mainRange.ideal;
+                    // 현재 도어 개수를 유지하되, 새로운 범위에 맞게 조정
+                    const currentCount = getCurrentColumnCount();
+                    const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
                     
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
@@ -2661,7 +2692,7 @@ const Configurator: React.FC = () => {
                         position: 'right'  // 기본값 설정
                       },
                       droppedCeilingDoorCount: 2,  // 기본값 설정
-                      mainDoorCount: Math.max(mainRange.min, Math.min(mainRange.max, currentCount))  // 메인구간 도어 개수 설정
+                      mainDoorCount: adjustedMainDoorCount  // 현재 도어 개수 유지
                     });
                     // 강제로 3D 뷰 업데이트
                     setTimeout(() => {
@@ -2675,11 +2706,14 @@ const Configurator: React.FC = () => {
                     setActiveRightPanelTab('slotA');
                     setActiveDroppedCeilingTab('main');
                   } else {
+                    // 단내림을 비활성화할 때 도어 개수 설정도 초기화
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
                         ...spaceInfo.droppedCeiling,
                         enabled: false
-                      }
+                      },
+                      mainDoorCount: undefined,
+                      droppedCeilingDoorCount: undefined
                     });
                     setActiveRightPanelTab('slotA');
                     setActiveDroppedCeilingTab('main');

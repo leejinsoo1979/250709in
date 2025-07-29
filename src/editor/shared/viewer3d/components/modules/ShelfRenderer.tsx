@@ -2,6 +2,8 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Text, Line } from '@react-three/drei';
+import { useUIStore } from '@/store/uiStore';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -114,6 +116,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   isTopFinishPanel,
   renderMode,
 }) => {
+  const showDimensions = useUIStore(state => state.showDimensions);
+  const { theme } = useTheme();
+  const { viewMode } = useSpace3DView();
+  
   if (shelfCount <= 0) {
     return null;
   }
@@ -140,24 +146,80 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   
   if (shelfPositions && shelfPositions.length === shelfCount) {
     // 절대 위치 모드: 지정된 위치에 선반 배치
+    return (
+      <group position={[0, yOffset, 0]}>
+        {shelfPositions.map((positionMm, i) => {
+          // 섹션 하단 기준 위치를 Three.js 좌표로 변환
+          const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
           return (
-        <group position={[0, yOffset, 0]}>
-          {shelfPositions.map((positionMm, i) => {
-            // 섹션 하단 기준 위치를 Three.js 좌표로 변환
-            const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
-            return (
-              <BoxWithEdges
-                key={`shelf-${i}`}
-                args={[innerWidth, basicThickness, depth - basicThickness]}
-                position={[0, relativeYPosition, basicThickness/2 + zOffset]}
-                material={material}
-                renderMode={renderMode}
-              />
-            );
-          })}
-        </group>
-      );
+            <BoxWithEdges
+              key={`shelf-${i}`}
+              args={[innerWidth, basicThickness, depth - basicThickness]}
+              position={[0, relativeYPosition, basicThickness/2 + zOffset]}
+              material={material}
+              renderMode={renderMode}
+            />
+          );
+        })}
+        
+        {/* 치수 표시 - showDimensions가 true이고 2D 정면뷰일 때만 표시 */}
+        {showDimensions && viewMode === '2D' && (
+          <group>
+            {(() => {
+              const compartmentHeights: { height: number; centerY: number }[] = [];
+              
+              // 첫 번째 칸 (맨 아래)
+              if (shelfPositions.length > 0) {
+                const firstShelfY = (-innerHeight / 2) + mmToThreeUnits(shelfPositions[0]);
+                const height = shelfPositions[0];
+                compartmentHeights.push({
+                  height,
+                  centerY: (-innerHeight / 2) + mmToThreeUnits(height / 2)
+                });
+              }
+              
+              // 중간 칸들
+              for (let i = 0; i < shelfPositions.length - 1; i++) {
+                const currentShelfY = shelfPositions[i];
+                const nextShelfY = shelfPositions[i + 1];
+                const height = nextShelfY - currentShelfY;
+                const centerY = (-innerHeight / 2) + mmToThreeUnits(currentShelfY + height / 2);
+                compartmentHeights.push({ height, centerY });
+              }
+              
+              // 마지막 칸 (맨 위)
+              if (shelfPositions.length > 0) {
+                const lastShelfPos = shelfPositions[shelfPositions.length - 1];
+                const height = innerHeight / 0.01 - lastShelfPos; // mm 단위로 변환
+                const centerY = (-innerHeight / 2) + mmToThreeUnits(lastShelfPos + height / 2);
+                compartmentHeights.push({ height, centerY });
+              }
+              
+              return compartmentHeights.map((compartment, i) => (
+                <group key={`dimension-${i}`}>
+                  {/* 치수 텍스트 - CleanCAD2D 스타일로 칸 중앙에 표시 */}
+                  <Text
+                    position={[0, compartment.centerY, basicThickness + zOffset + 0.2]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                  >
+                    {Math.round(compartment.height)}
+                  </Text>
+                </group>
+              ));
+            })()}
+          </group>
+        )}
+      </group>
+    );
   }
+  
+  // 치수 표시용 색상 설정 - CleanCAD2D와 동일한 스타일 (맨 위로 이동)
+  const dimensionColor = '#4CAF50'; // 메인 테마 색상
+  const textColor = dimensionColor;
+  const baseFontSize = 0.12; // CleanCAD2D의 기본 폰트 크기
 
   // 기존 균등 분할 모드 (하위 호환성)
   const shelfSpacing = innerHeight / (shelfCount + 1);
@@ -177,6 +239,56 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           />
         );
       })}
+      
+      {/* 치수 표시 - showDimensions가 true이고 2D 정면뷰일 때만 표시 */}
+      {showDimensions && viewMode === '2D' && (
+        <group>
+          {Array.from({ length: shelfCount + 1 }, (_, i) => {
+            // 각 칸의 높이 계산
+            let compartmentHeight: number;
+            let compartmentBottomY: number;
+            let compartmentCenterY: number;
+            
+            if (i === 0) {
+              // 첫 번째 칸 (하단)
+              compartmentBottomY = -innerHeight / 2;
+              const firstShelfY = (-innerHeight / 2) + shelfSpacing;
+              compartmentHeight = firstShelfY - compartmentBottomY;
+              compartmentCenterY = compartmentBottomY + compartmentHeight / 2;
+            } else if (i === shelfCount) {
+              // 마지막 칸 (상단)
+              const lastShelfY = (-innerHeight / 2) + shelfSpacing * shelfCount;
+              compartmentBottomY = lastShelfY;
+              compartmentHeight = (innerHeight / 2) - lastShelfY;
+              compartmentCenterY = compartmentBottomY + compartmentHeight / 2;
+            } else {
+              // 중간 칸들
+              const currentShelfY = (-innerHeight / 2) + shelfSpacing * i;
+              const nextShelfY = (-innerHeight / 2) + shelfSpacing * (i + 1);
+              compartmentBottomY = currentShelfY;
+              compartmentHeight = nextShelfY - currentShelfY;
+              compartmentCenterY = compartmentBottomY + compartmentHeight / 2;
+            }
+            
+            const compartmentHeightMm = Math.round(compartmentHeight / 0.01);
+            
+            return (
+              <group key={`dimension-${i}`}>
+                {/* 치수 텍스트 - CleanCAD2D 스타일로 칸 중앙에 표시 */}
+                <Text
+                  position={[0, compartmentCenterY, basicThickness + zOffset + 0.2]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                >
+                  {compartmentHeightMm}
+                </Text>
+              </group>
+            );
+          })}
+        </group>
+      )}
     </group>
   );
 };

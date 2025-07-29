@@ -109,12 +109,25 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
   const handleDoubleClick = () => {
     if (!isValid) return;
     
+    console.log('🚨 [ModuleGallery] Double click start:', {
+      moduleId: module.id,
+      moduleWidth: module.dimensions.width,
+      activeZone,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      spaceInfo: {
+        width: spaceInfo.width,
+        customColumnCount: spaceInfo.customColumnCount,
+        columnMode: spaceInfo.columnMode
+      }
+    });
+    
     try {
-      // 단내림이 활성화되어 있고 activeZone이 있는 경우 영역별 처리
+      // 단내림이 활성화되어 있고 activeZone이 'dropped'인 경우에만 영역별 처리
+      // 'normal'인 경우는 전체 공간 사용
       let zoneSpaceInfo = spaceInfo;
       let zoneInternalSpace = calculateInternalSpace(spaceInfo);
       
-      if (spaceInfo.droppedCeiling?.enabled && activeZone) {
+      if (spaceInfo.droppedCeiling?.enabled && activeZone === 'dropped') {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
         console.log('🎯 [ModuleGallery] Zone info:', {
           activeZone,
@@ -123,7 +136,7 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
           originalColumns: spaceInfo.customColumnCount
         });
         
-        if (activeZone === 'dropped' && zoneInfo.dropped) {
+        if (zoneInfo.dropped) {
           // 단내림 영역용 spaceInfo 생성
           zoneSpaceInfo = {
             ...spaceInfo,
@@ -137,26 +150,23 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
             zoneColumns: zoneInfo.dropped.columnCount,
             zoneInternalWidth: zoneInternalSpace.width
           });
-        } else if (zoneInfo.normal) {
-          // 메인 영역용 spaceInfo 생성
-          zoneSpaceInfo = {
-            ...spaceInfo,
-            width: zoneInfo.normal.width,
-            customColumnCount: zoneInfo.normal.columnCount,
-            columnMode: 'custom' // columnMode도 설정
-          } as SpaceInfo;
-          zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo); // zoneSpaceInfo로 다시 계산
-          console.log('🎯 [ModuleGallery] Normal zone space:', {
-            zoneWidth: zoneInfo.normal.width,
-            zoneColumns: zoneInfo.normal.columnCount,
-            zoneInternalWidth: zoneInternalSpace.width
-          });
         }
       }
       
       // 영역별 공간으로 인덱싱 계산
       const indexing = calculateSpaceIndexing(zoneSpaceInfo);
       const internalSpace = zoneInternalSpace;
+      
+      console.log('🚨 [ModuleGallery] After zone calculation:', {
+        zoneSpaceInfo: {
+          width: zoneSpaceInfo.width,
+          customColumnCount: zoneSpaceInfo.customColumnCount
+        },
+        indexing: {
+          columnWidth: indexing.columnWidth,
+          columnCount: indexing.columnCount
+        }
+      });
       
       // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
       const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
@@ -169,27 +179,34 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       }
       
       // 영역별 모듈 데이터 가져오기
-      // 가구 ID에서 기본 타입 추출 (예: single-4drawer-hanging-583 -> single-4drawer-hanging)
-      const baseModuleId = module.id.replace(/-\d+$/, '');
-      // 영역의 컬럼 폭으로 새로운 ID 생성
-      const zoneModuleId = `${baseModuleId}-${indexing.columnWidth}`;
+      let moduleToUse = module;
       
-      console.log('🎯 [ModuleGallery] Creating zone module:', {
-        originalId: module.id,
-        baseModuleId,
-        zoneModuleId,
-        zoneColumnWidth: indexing.columnWidth
-      });
+      // 단내림이 활성화되고 activeZone이 'dropped'일 때만 영역별 모듈 생성
+      if (spaceInfo.droppedCeiling?.enabled && activeZone === 'dropped') {
+        // 가구 ID에서 기본 타입 추출 (예: single-4drawer-hanging-583 -> single-4drawer-hanging)
+        const baseModuleId = module.id.replace(/-\d+$/, '');
+        // 영역의 컬럼 폭으로 새로운 ID 생성
+        const zoneModuleId = `${baseModuleId}-${indexing.columnWidth}`;
+        
+        console.log('🎯 [ModuleGallery] Creating zone module:', {
+          originalId: module.id,
+          baseModuleId,
+          zoneModuleId,
+          zoneColumnWidth: indexing.columnWidth
+        });
+        
+        // 영역에 맞는 가구 데이터 직접 생성
+        moduleToUse = {
+          ...module,
+          id: zoneModuleId,
+          dimensions: {
+            ...module.dimensions,
+            width: indexing.columnWidth
+          }
+        };
+      }
       
-      // 영역에 맞는 가구 데이터 직접 생성
-      const zoneModule = {
-        ...module,
-        id: zoneModuleId,
-        dimensions: {
-          ...module.dimensions,
-          width: indexing.columnWidth
-        }
-      };
+      const zoneModule = moduleToUse;
       
       console.log('🎯 [ModuleGallery] Zone module created:', {
         moduleId: zoneModule.id,
@@ -274,19 +291,29 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         isValidInCurrentSpace: true,
         adjustedWidth: zoneModule.dimensions.width,
         hingePosition: 'right' as 'left' | 'right',
-        zone: activeZone // 영역 정보 저장
+        zone: activeZone || undefined // 영역 정보 저장
       };
       
-      console.log('🎯 [ModuleGallery] New module created:', {
+      console.log('🚨 [ModuleGallery] New module created:', {
         originalModuleId: module.id,
+        originalWidth: module.dimensions.width,
         zoneModuleId: zoneModule.id,
-        width: zoneModule.dimensions.width,
+        zoneModuleWidth: zoneModule.dimensions.width,
+        expectedColumnWidth: indexing.columnWidth,
         position: newModule.position,
-        zone: activeZone
+        zone: activeZone,
+        adjustedWidth: newModule.adjustedWidth
       });
       
       // 가구 배치
-      addModule(newModule);
+      console.log('🎯 [ModuleGallery] About to add module:', newModule);
+      try {
+        addModule(newModule);
+        console.log('✅ [ModuleGallery] Module added successfully');
+      } catch (addError) {
+        console.error('❌ [ModuleGallery] Failed to add module:', addError);
+        throw addError;
+      }
       
       // 배치된 가구를 자동으로 선택
       const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
@@ -301,7 +328,13 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       });
       
     } catch (error) {
-      console.error('가구 자동 배치 중 오류 발생:', error);
+      console.error('🚨🚨🚨 [ModuleGallery] 가구 자동 배치 중 오류 발생:', error);
+      console.error('Error details:', {
+        moduleId: module.id,
+        activeZone,
+        spaceInfo,
+        error
+      });
     }
   };
 
@@ -361,6 +394,22 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   // 전체 높이 모듈들만 가져오기 (내경 공간 정보 전달)
   const fullModules = getModulesByCategory('full', internalSpace, spaceInfo);
   
+  console.log('🔍 [ModuleGallery] Debug info:', {
+    spaceInfo: {
+      width: spaceInfo.width,
+      customColumnCount: spaceInfo.customColumnCount,
+      columnMode: spaceInfo.columnMode,
+      droppedCeiling: spaceInfo.droppedCeiling
+    },
+    internalSpace,
+    indexing: {
+      columnWidth: indexing.columnWidth,
+      columnCount: indexing.columnCount
+    },
+    activeZone,
+    fullModules: fullModules.map(m => ({ id: m.id, width: m.dimensions.width }))
+  });
+  
   // 싱글(1컬럼)과 듀얼(2컬럼) 모듈로 분류 (기존 로직 재사용)
   const { singleModules, dualModules } = useMemo(() => {
     // 여백 허용치 축소 (기존 50mm에서 30mm로 감소)
@@ -405,11 +454,23 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     }
     
     // 키큰장인 경우 기존 로직 적용
-    return selectedType === 'all' 
+    const modules = selectedType === 'all' 
       ? [...singleModules, ...dualModules]
       : selectedType === 'single' 
         ? singleModules 
         : dualModules;
+        
+    console.log('🎯 [ModuleGallery] Current modules:', {
+      selectedType,
+      moduleCount: modules.length,
+      modules: modules.map(m => ({ 
+        id: m.id, 
+        width: m.dimensions.width,
+        baseId: m.id.replace(/-\d+$/, '')
+      }))
+    });
+    
+    return modules;
   }, [selectedType, singleModules, dualModules, moduleCategory]);
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
