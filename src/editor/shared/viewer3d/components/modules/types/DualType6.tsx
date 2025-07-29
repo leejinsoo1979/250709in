@@ -245,44 +245,162 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             
             {/* 좌측 섹션 치수 표시 */}
-            {showDimensions && section.type === 'drawer' && (
+            {showDimensions && (section.type === 'drawer' || section.type === 'hanging') && (
               <group>
-                {/* 서랍 섹션 전체 높이 텍스트 */}
-                <Text
-                  position={[
-                    -leftWidth/2 * 0.3 - 0.5, 
-                    sectionCenterY,
-                    viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
-                  ]}
-                  fontSize={0.32}
-                  color="#4CAF50"
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={999}
-                  depthTest={false}
-                >
-                  {Math.round(sectionHeight / 0.01)}
-                </Text>
-                
-                {/* 서랍 섹션 높이 수직선 */}
-                <Line
-                  points={[
-                    [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
-                    [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
-                  ]}
-                  color="#4CAF50"
-                  lineWidth={1}
-                />
-                {/* 수직선 양끝 점 */}
-                <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
-                  <meshBasicMaterial color="#4CAF50" />
-                </mesh>
-                <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
-                  <meshBasicMaterial color="#4CAF50" />
-                </mesh>
+                {section.type === 'drawer' ? (
+                  <>
+                    {/* 서랍 섹션 전체 높이 텍스트 - 중간 가로선반 하단까지 */}
+                    <Text
+                      position={[
+                        -leftWidth/2 * 0.3 - 0.5, 
+                        (sectionCenterY - sectionHeight/2 + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2)) / 2,
+                        viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
+                      ]}
+                      fontSize={0.32}
+                      color="#4CAF50"
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[0, 0, Math.PI / 2]}
+                      renderOrder={999}
+                      depthTest={false}
+                    >
+                      {Math.round(((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2) - (sectionCenterY - sectionHeight/2)) / 0.01)}
+                    </Text>
+                    
+                    {/* 서랍 섹션 높이 수직선 - 중간 가로선반 하단까지 */}
+                    <Line
+                      points={[
+                        [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                        [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                      ]}
+                      color="#4CAF50"
+                      lineWidth={1}
+                    />
+                    {/* 수직선 양끝 점 */}
+                    <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                      <sphereGeometry args={[0.02, 8, 8]} />
+                      <meshBasicMaterial color="#4CAF50" />
+                    </mesh>
+                    <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                      <sphereGeometry args={[0.02, 8, 8]} />
+                      <meshBasicMaterial color="#4CAF50" />
+                    </mesh>
+                  </>
+                ) : section.type === 'hanging' && index === 1 ? (
+                  <>
+                    {/* 상부 옷장 내경 높이 */}
+                    {hasSharedSafetyShelf ? (
+                      <>
+                        {/* 중간 가로선반 상단부터 안전선반 하단까지 */}
+                        <Text
+                          position={[
+                            -leftWidth/2 * 0.3 - 0.5, 
+                            ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2)) / 2,
+                            viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
+                          ]}
+                          fontSize={0.32}
+                          color="#4CAF50"
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={999}
+                          depthTest={false}
+                        >
+                          {Math.round(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2)) / 0.01)}
+                        </Text>
+                        
+                        <Line
+                          points={[
+                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                          ]}
+                          color="#4CAF50"
+                          lineWidth={1}
+                        />
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                        
+                        {/* 안전선반 상단부터 상단 프레임 하단까지 */}
+                        <Text
+                          position={[
+                            -leftWidth/2 * 0.3 - 0.5, 
+                            ((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                            viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
+                          ]}
+                          fontSize={0.32}
+                          color="#4CAF50"
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={999}
+                          depthTest={false}
+                        >
+                          {Math.round(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2)) / 0.01)}
+                        </Text>
+                        
+                        <Line
+                          points={[
+                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                            [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                          ]}
+                          color="#4CAF50"
+                          lineWidth={1}
+                        />
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                      </>
+                    ) : (
+                      <>
+                        {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상단 프레임 하단까지 */}
+                        <Text
+                          position={[
+                            -leftWidth/2 * 0.3 - 0.5, 
+                            sectionCenterY,
+                            viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
+                          ]}
+                          fontSize={0.32}
+                          color="#4CAF50"
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={999}
+                          depthTest={false}
+                        >
+                          {Math.round(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2)) / 0.01)}
+                        </Text>
+                        
+                        <Line
+                          points={[
+                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                            [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                          ]}
+                          color="#4CAF50"
+                          lineWidth={1}
+                        />
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                          <sphereGeometry args={[0.02, 8, 8]} />
+                          <meshBasicMaterial color="#4CAF50" />
+                        </mesh>
+                      </>
+                    )}
+                  </>
+                ) : null}
                 
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
                 {index === 0 && (
@@ -316,11 +434,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     />
                     {/* 수직선 양끝 점 */}
                     <mesh position={[-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
+                      <sphereGeometry args={[0.02, 8, 8]} />
                       <meshBasicMaterial color="#4CAF50" />
                     </mesh>
                     <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
+                      <sphereGeometry args={[0.02, 8, 8]} />
                       <meshBasicMaterial color="#4CAF50" />
                     </mesh>
                   </group>
@@ -391,8 +509,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {/* 중간 세로 칸막이 (바닥부터 중단선반까지만) */}
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <BoxWithEdges
-            args={[basicThickness, mmToThreeUnits(middlePanelHeight + 18), adjustedDepthForShelves - basicThickness]}
-            position={[(leftWidth - rightWidth) / 2, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 18)/2 - mmToThreeUnits(18), basicThickness/2 + shelfZOffset]}
+            args={[basicThickness, mmToThreeUnits(middlePanelHeight), adjustedDepthForShelves - basicThickness]}
+            position={[(leftWidth - rightWidth) / 2, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight)/2 - mmToThreeUnits(18), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
             isDragging={isDragging}
@@ -405,7 +523,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           <>
             <BoxWithEdges
               args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-              position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9), basicThickness/2 + shelfZOffset]}
+              position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
               isDragging={isDragging}
@@ -418,8 +536,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 중단선반 두께 텍스트 */}
                 <Text
                   position={[
-                    -innerWidth/2 * 0.3 - 0.5, 
-                    -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9),
+                    -leftWidth/2 * 0.3 - 0.5, 
+                    -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9),
                     viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
                   ]}
                   fontSize={0.32}
@@ -436,19 +554,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 중단선반 두께 수직선 */}
                 <Line
                   points={[
-                    [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
-                    [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                    [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                    [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
                   ]}
                   color="#4CAF50"
                   lineWidth={1}
                 />
                 {/* 수직선 양끝 점 */}
-                <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
+                <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                  <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color="#4CAF50" />
                 </mesh>
-                <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight + 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
+                <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                  <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color="#4CAF50" />
                 </mesh>
               </group>
@@ -474,7 +592,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 안전선반 두께 텍스트 */}
                 <Text
                   position={[
-                    -innerWidth/2 * 0.3 - 0.5, 
+                    -leftWidth/2 * 0.3 - 0.5, 
                     -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight),
                     viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
                   ]}
@@ -492,24 +610,66 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 안전선반 두께 수직선 */}
                 <Line
                   points={[
-                    [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
-                    [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+                    [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                    [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
                   ]}
                   color="#4CAF50"
                   lineWidth={1}
                 />
                 {/* 수직선 양끝 점 */}
-                <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
+                <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                  <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color="#4CAF50" />
                 </mesh>
-                <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
-                  <sphereGeometry args={[0.03, 8, 8]} />
+                <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+                  <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color="#4CAF50" />
                 </mesh>
               </group>
             )}
           </>
+        )}
+        
+        {/* 상단 프레임 두께 치수 표시 */}
+        {showDimensions && (
+          <group>
+            {/* 상단 프레임 두께 텍스트 */}
+            <Text
+              position={[
+                -leftWidth/2 * 0.3 - 0.5, 
+                height/2 - basicThickness/2,
+                viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5
+              ]}
+              fontSize={0.32}
+              color="#4CAF50"
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={999}
+              depthTest={false}
+            >
+              {Math.round(basicThickness / 0.01)}
+            </Text>
+            
+            {/* 상단 프레임 두께 수직선 */}
+            <Line
+              points={[
+                [-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5],
+                [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]
+              ]}
+              color="#4CAF50"
+              lineWidth={1}
+            />
+            {/* 수직선 양끝 점 */}
+            <mesh position={[-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#4CAF50" />
+            </mesh>
+            <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? basicThickness/2 + shelfZOffset + (adjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + shelfZOffset + 0.5]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshBasicMaterial color="#4CAF50" />
+            </mesh>
+          </group>
         )}
       </>
     );
@@ -566,6 +726,48 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           renderMode={useSpace3DView().renderMode}
           isDragging={isDragging}
         />
+        
+        {/* 우측 하단 가로 치수 표시 - 하부장(서랍영역) 내부에 표시 */}
+        {showDimensions && hasSharedMiddlePanel && middlePanelHeight > 0 && (
+          <group>
+            {/* 가로 내경 수평선 - 중간 칸막이 우측면부터 우측 측판 내측면까지 */}
+            <Line
+              points={[
+                [(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset],
+                [width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]
+              ]}
+              color="#4CAF50"
+              lineWidth={1}
+            />
+            
+            {/* 가로 내경 텍스트 */}
+            <Text
+              position={[
+                ((leftWidth - rightWidth) / 2 + basicThickness/2 + width/2 - basicThickness) / 2, 
+                (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2 - 0.2,
+                viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset
+              ]}
+              fontSize={0.32}
+              color="#4CAF50"
+              anchorX="center"
+              anchorY="top"
+              renderOrder={999}
+              depthTest={false}
+            >
+              {Math.round(((width/2 - basicThickness) - ((leftWidth - rightWidth) / 2 + basicThickness/2)) / 0.01)}
+            </Text>
+            
+            {/* 수평선 양끝 점 */}
+            <mesh position={[(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshBasicMaterial color="#4CAF50" />
+            </mesh>
+            <mesh position={[width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
+              <sphereGeometry args={[0.03, 8, 8]} />
+              <meshBasicMaterial color="#4CAF50" />
+            </mesh>
+          </group>
+        )}
       </>
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
