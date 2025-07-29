@@ -21,6 +21,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // 로그인 폼에서는 다크모드를 무시하도록 강제
+  useEffect(() => {
+    const loginForm = document.querySelector(`.${styles.loginForm}`) as HTMLElement;
+    if (loginForm) {
+      // 다크모드 CSS 변수 오버라이드
+      loginForm.style.setProperty('--theme-background', '#ffffff', 'important');
+      loginForm.style.setProperty('--theme-text', '#333333', 'important');
+      loginForm.style.setProperty('--theme-surface', '#ffffff', 'important');
+    }
+  }, []);
+
   // 로그인 상태 확인 후 자동 리다이렉트
   useEffect(() => {
     if (user && !authLoading) {

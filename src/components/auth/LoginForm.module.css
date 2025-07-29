@@ -7,6 +7,14 @@
   padding: 20px;
   position: relative;
   overflow: hidden;
+  /* 다크모드 완전 차단 */
+  color-scheme: light !important;
+}
+
+/* 로그인 폼 전체 영역에 라이트 모드 강제 */
+.loginForm,
+.loginForm * {
+  color-scheme: light !important;
 }
 
 .loginForm::before {
@@ -43,13 +51,23 @@
   color-scheme: light !important;
 }
 
+/* 모든 input 요소에 대해 강제 라이트 모드 적용 */
+.loginForm input,
+.loginForm input[type="email"],
+.loginForm input[type="password"],
+.loginForm input[type="text"],
+.container input,
 .container input[type="email"],
 .container input[type="password"],
-.container input[type="text"] {
+.container input[type="text"],
+.input {
   background-color: white !important;
+  background: white !important;
   color: #333 !important;
   -webkit-text-fill-color: #333 !important;
   opacity: 1 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
 .container input[type="email"]::placeholder,
@@ -133,21 +151,26 @@
 }
 
 .input {
-  padding: 14px 18px;
-  border: 2px solid #e1e8ed;
-  border-radius: 12px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  padding: 14px 18px !important;
+  border: 2px solid #e1e8ed !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  transition: all 0.3s ease !important;
   background: white !important;
+  background-color: white !important;
   color: #333 !important;
+  -webkit-text-fill-color: #333 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
 .input:focus {
-  outline: none;
-  border-color: #667eea;
+  outline: none !important;
+  border-color: #667eea !important;
   background: white !important;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-  transform: translateY(-1px);
+  background-color: white !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* 비밀번호 래퍼 */

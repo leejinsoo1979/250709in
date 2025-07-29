@@ -1404,6 +1404,101 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={0.5}
               renderOrder={999999}
             />
+            
+            {/* 가구 내경 치수 표시 */}
+            {(() => {
+              const interiorDimY = guideTopY / 2; // 가구 중앙 높이
+              const sectionDimFontSize = baseFontSize * 0.8; // 내경 치수 폰트 크기를 조금 작게
+              
+              // 듀얼 가구의 경우 좌우 섹션 별도 처리
+              if (isDualModule) {
+                const sections = [];
+                
+                // 좌측 섹션
+                if (leftSections && leftSections.length > 0) {
+                  const leftSectionWidth = leftThreeWidth / leftSections.length;
+                  const leftStartX = leftX;
+                  
+                  leftSections.forEach((section, sectionIndex) => {
+                    const sectionLeftX = leftStartX + (sectionIndex * leftSectionWidth);
+                    const sectionCenterX = sectionLeftX + leftSectionWidth / 2;
+                    const sectionWidthMm = Math.round(leftWidth / leftSections.length);
+                    
+                    // 섹션 내경 치수 텍스트
+                    sections.push(
+                      <Text
+                        key={`left-section-dim-${sectionIndex}`}
+                        position={[sectionCenterX, interiorDimY, 0.01]}
+                        fontSize={sectionDimFontSize}
+                        color={dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        renderOrder={999999}
+                      >
+                        {sectionWidthMm}
+                      </Text>
+                    );
+                  });
+                }
+                
+                // 우측 섹션
+                if (rightSections && rightSections.length > 0) {
+                  const rightSectionWidth = rightThreeWidth / rightSections.length;
+                  const rightStartX = leftX + leftThreeWidth;
+                  
+                  rightSections.forEach((section, sectionIndex) => {
+                    const sectionLeftX = rightStartX + (sectionIndex * rightSectionWidth);
+                    const sectionCenterX = sectionLeftX + rightSectionWidth / 2;
+                    const sectionWidthMm = Math.round(rightWidth / rightSections.length);
+                    
+                    // 섹션 내경 치수 텍스트
+                    sections.push(
+                      <Text
+                        key={`right-section-dim-${sectionIndex}`}
+                        position={[sectionCenterX, interiorDimY, 0.01]}
+                        fontSize={sectionDimFontSize}
+                        color={dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        renderOrder={999999}
+                      >
+                        {sectionWidthMm}
+                      </Text>
+                    );
+                  });
+                }
+                
+                return sections;
+              } else {
+                // 싱글 가구의 경우
+                if (leftSections && leftSections.length > 0) {
+                  const sectionWidth = moduleWidth / leftSections.length;
+                  
+                  return leftSections.map((section, sectionIndex) => {
+                    const sectionLeftX = leftX + (sectionIndex * sectionWidth);
+                    const sectionCenterX = sectionLeftX + sectionWidth / 2;
+                    const sectionWidthMm = Math.round(actualWidth / leftSections.length);
+                    
+                    // 섹션 내경 치수 텍스트
+                    return (
+                      <Text
+                        key={`section-dim-${sectionIndex}`}
+                        position={[sectionCenterX, interiorDimY, 0.01]}
+                        fontSize={sectionDimFontSize}
+                        color={dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        renderOrder={999999}
+                      >
+                        {sectionWidthMm}
+                      </Text>
+                    );
+                  });
+                }
+              }
+              
+              return null;
+            })()}
           </group>
         );
       })}

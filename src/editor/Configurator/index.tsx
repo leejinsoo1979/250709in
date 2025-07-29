@@ -19,7 +19,7 @@ import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
 import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
-import FileTree from '@/components/FileTree/FileTree';
+import DashboardFileTree from '@/components/FileTree/DashboardFileTree';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
 
 
@@ -2496,21 +2496,21 @@ const Configurator: React.FC = () => {
             />
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
-              <FileTree 
-                onFileSelect={(file) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', file);
-                  if (file.nodeType === 'design') {
-                    // 디자인 파일 선택 시 해당 프로젝트 로드
-                    console.log('📂 프로젝트 로드 시작:', file.id);
-                    loadProject(file.id);
-                    setIsFileTreeOpen(false); // 파일트리 닫기
-                  }
+              <DashboardFileTree 
+                onFileSelect={(projectId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
+                  // 디자인 파일 선택 시 해당 프로젝트 로드
+                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
+                  setIsFileTreeOpen(false); // 파일트리 닫기
+                  // 페이지 새로고침하여 새 디자인 파일 로드
+                  window.location.reload();
                 }}
                 onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
                   handleNewProject();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
+                onClose={() => setIsFileTreeOpen(false)}
               />
             </div>
           </>
