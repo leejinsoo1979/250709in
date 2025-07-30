@@ -109,6 +109,26 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             onDoubleClick={handleThumbnailDoubleClick}
             title="패널A"
           />
+          <ColumnThumbnail 
+            width={600}
+            height={18}
+            depth={730}
+            material="wood" 
+            color="#8B4513"
+            onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
+            title="패널B"
+          />
+          <ColumnThumbnail 
+            width={120}
+            height={2400}
+            depth={730}
+            material="concrete" 
+            color="#E0E0E0"
+            onDragStart={handleThumbnailDragStart}
+            onDoubleClick={handleThumbnailDoubleClick}
+            title="가벽"
+          />
         </div>
       </div>
 

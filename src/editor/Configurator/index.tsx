@@ -31,8 +31,6 @@ import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/Plac
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
-import WallControl from '@/editor/shared/controls/structure/WallControl';
-import PanelBControl from '@/editor/shared/controls/structure/PanelBControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
 
@@ -1576,11 +1574,6 @@ const Configurator: React.FC = () => {
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
             />
-            <WallControl 
-              walls={spaceInfo.walls || []}
-              onWallsChange={(walls) => setSpaceInfo({ walls })}
-            />
-            <PanelBControl />
           </div>
         );
       case 'etc':
