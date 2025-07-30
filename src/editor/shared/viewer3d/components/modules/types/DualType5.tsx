@@ -733,8 +733,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 가로 내경 수평선 */}
                     <Line
                       points={[
-                        [-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 : rightShelfZOffset - 2.0],
-                        [rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 : rightShelfZOffset - 2.0]
+                        [-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 + 0.1 : rightShelfZOffset + 0.1],
+                        [rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 + 0.1 : rightShelfZOffset + 0.1]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -746,7 +746,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         position={[
                           0 + 0.01, 
                           sectionCenterY + sectionHeight/2 - basicThickness - 1.2 - 0.01,
-                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 - 0.01
+                          rightAdjustedDepthForShelves/2 + 0.1 - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
@@ -761,7 +761,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       position={[
                         0, 
                         sectionCenterY + sectionHeight/2 - basicThickness - 1.2,
-                        viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 : rightShelfZOffset - 2.0
+                        viewMode === '3D' ? rightAdjustedDepthForShelves/2 + 0.1 : rightShelfZOffset + 0.1
                       ]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
@@ -774,11 +774,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 수평선 양끝 점 */}
-                    <mesh position={[-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 : rightShelfZOffset - 2.0]}>
+                    <mesh position={[-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 + 0.1 : rightShelfZOffset + 0.1]}>
                       <sphereGeometry args={[0.03, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 - 2.0 : rightShelfZOffset - 2.0]}>
+                    <mesh position={[rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 + 0.1 : rightShelfZOffset + 0.1]}>
                       <sphereGeometry args={[0.03, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
