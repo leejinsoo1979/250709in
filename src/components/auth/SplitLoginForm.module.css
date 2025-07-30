@@ -322,6 +322,36 @@
   opacity: 0.8;
 }
 
+/* 데모체험 섹션 */
+.demoSection {
+  margin-top: 20px;
+}
+
+.demoButton {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  margin-top: 10px;
+}
+
+.demoButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  background: linear-gradient(135deg, #FF5252 0%, #FF7043 100%);
+}
+
+.demoButton:active {
+  transform: translateY(0);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .container {

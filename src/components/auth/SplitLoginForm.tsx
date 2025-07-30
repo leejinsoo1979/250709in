@@ -218,6 +218,20 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
             </button>
           </div>
 
+          {/* 데모체험 버튼 */}
+          <div className={styles.demoSection}>
+            <div className={styles.divider}>
+              <span>또는</span>
+            </div>
+            <button
+              type="button"
+              className={styles.demoButton}
+              onClick={() => navigate('/configurator')}
+            >
+              🚀 데모체험하기
+            </button>
+          </div>
+
           <p className={styles.signupPrompt}>
             {isSignUp ? '이미 계정이 있으신가요?' : "Don't have an account?"}{' '}
             <a 
