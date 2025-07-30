@@ -154,12 +154,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   // spaceInfo 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const materialConfig = storeSpaceInfo.materialConfig || { doorColor: '#E0E0E0' };
+  const materialConfig = storeSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' };
 
-  // 서랍용 재질 생성 - doorColor 사용
+  // 서랍용 재질 생성 - interiorColor 사용 (내부 재질)
   const drawerMaterial = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(materialConfig.doorColor),
+      color: new THREE.Color(materialConfig.interiorColor),
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
@@ -172,18 +172,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   // 서랍 재질 업데이트
   useEffect(() => {
     if (drawerMaterial) {
-      drawerMaterial.color.set(materialConfig.doorColor);
+      drawerMaterial.color.set(materialConfig.interiorColor);
       drawerMaterial.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
       drawerMaterial.opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0;
       drawerMaterial.needsUpdate = true;
       
       console.log('🎨 DualType5 서랍 재질 업데이트:', {
+        interiorColor: materialConfig.interiorColor,
         doorColor: materialConfig.doorColor,
         transparent: drawerMaterial.transparent,
         opacity: drawerMaterial.opacity
       });
     }
-  }, [drawerMaterial, renderMode, viewMode, materialConfig.doorColor]);
+  }, [drawerMaterial, renderMode, viewMode, materialConfig.interiorColor, materialConfig.doorColor]);
 
   // 좌우 폭 분할 계산 (절대폭 지정)
   const rightAbsoluteWidth = modelConfig.rightAbsoluteWidth;
