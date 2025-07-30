@@ -68,11 +68,21 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
 
   // Firebase 설정 확인
   const isFirebaseConfigured = () => {
-    return !!(
+    const hasConfig = !!(
       import.meta.env.VITE_FIREBASE_API_KEY &&
       import.meta.env.VITE_FIREBASE_AUTH_DOMAIN &&
       import.meta.env.VITE_FIREBASE_PROJECT_ID
     );
+    
+    if (!hasConfig) {
+      console.warn('⚠️ Firebase 환경변수가 설정되지 않았습니다:', {
+        apiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: !!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        projectId: !!import.meta.env.VITE_FIREBASE_PROJECT_ID
+      });
+    }
+    
+    return hasConfig;
   };
 
   // 구글 로그인 처리
@@ -80,24 +90,29 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     setLoading(true);
     setError(null);
 
+    console.log('🔍 구글 로그인 시도...');
+    console.log('🔍 Firebase 설정 상태:', isFirebaseConfigured());
+
     if (!isFirebaseConfigured()) {
-      setError('데모 환경에서는 구글 로그인을 사용할 수 없습니다.');
+      setError('Firebase 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.');
       setLoading(false);
       return;
     }
 
     try {
+      console.log('🔍 signInWithGoogle 호출...');
       const result = await signInWithGoogle();
       
       if (result.error) {
+        console.error('❌ 구글 로그인 실패:', result.error);
         setError(result.error);
       } else if (result.user) {
         console.log('✅ 구글 로그인 성공:', result.user.email);
         onSuccess?.();
       }
     } catch (err) {
-      setError('구글 로그인 중 오류가 발생했습니다.');
-      console.error('구글 로그인 에러:', err);
+      console.error('❌ 구글 로그인 예외 발생:', err);
+      setError('구글 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
