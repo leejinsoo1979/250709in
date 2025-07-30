@@ -25,7 +25,7 @@ interface CleanCAD2DProps {
 const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme } = useUIStore();
   
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
@@ -79,10 +79,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 3D 모드에서는 검정색, 2D 모드에서는 테마 색상 사용
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
-  const dimensionColor = currentViewDirection === '3D' ? '#666666' : primaryColor;  // 연한 회색으로 변경
-  const textColor = currentViewDirection === '3D' ? '#666666' : primaryColor;  // 연한 회색으로 변경
-  const guideColor = currentViewDirection === '3D' ? '#999999' : primaryColor;  // 더 연한 색상
-  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : primaryColor;  // 더 연한 색상
+  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#999999' : primaryColor);  // 다크모드에서 밝은 색
+  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#999999' : primaryColor);  // 다크모드에서 밝은 색
+  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#666666' : primaryColor);  // 다크모드에서 중간 색
+  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#444444' : primaryColor);  // 다크모드에서 어두운 색
   const gridColor = getThemeColorFromCSS('--theme-border', '#e5e7eb');
   
   // 프레임 치수 색상도 테마 색상 사용

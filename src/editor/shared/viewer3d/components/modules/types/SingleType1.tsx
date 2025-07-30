@@ -1,70 +1,11 @@
 import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../shared';
+import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
-
-// 독립적인 엣지 표시를 위한 박스 컴포넌트
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode?: 'solid' | 'wireframe';
-  isDragging?: boolean;
-}> = ({ args, position, material, renderMode = 'solid', isDragging = false }) => {
-  const { viewMode } = useSpace3DView();
-  const { gl } = useThree();
-  const { theme } = useTheme();
-  
-  // Shadow auto-update enabled - manual shadow updates removed
-
-  // 드래그 중일 때는 이미 처리된 재질 그대로 사용
-  const processedMaterial = React.useMemo(() => {
-    // useBaseFurniture에서 이미 드래그 상태 처리가 되어있으므로 그대로 사용
-    return material;
-  }, [material]);
-
-  return (
-    <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <boxGeometry args={args} />
-          <primitive object={processedMaterial} attach="material" />
-        </mesh>
-      )}
-      {/* 윤곽선 렌더링 */}
-      {viewMode === '3D' ? (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
-            depthTest={true}
-            depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
-          />
-        </lineSegments>
-      ) : (
-        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-            <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
-              linewidth={2} 
-            />
-          </lineSegments>
-        )
-      )}
-    </group>
-  );
-};
 
 /**
  * SingleType1 컴포넌트

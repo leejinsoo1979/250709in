@@ -57,6 +57,9 @@ interface UIState {
   // 선택된 패널B ID (선택 상태만, 팝업과는 별개)
   selectedPanelBId: string | null;
   
+  // 2D 뷰 전용 테마 (다크/라이트)
+  view2DTheme: 'dark' | 'light';
+  
   // 가구 드래그 상태
   isFurnitureDragging: boolean;
   
@@ -74,6 +77,7 @@ interface UIState {
   toggleDimensions: () => void;
   toggleGuides: () => void;
   toggleAxis: () => void;
+  toggleView2DTheme: () => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -127,6 +131,7 @@ export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       ...initialUIState,
+      view2DTheme: 'light' as const,  // 기본값: 라이트 모드
       
       setViewMode: (mode) =>
         set({ viewMode: mode }),
@@ -152,6 +157,9 @@ export const useUIStore = create<UIState>()(
       
       toggleAxis: () =>
         set((state) => ({ showAxis: !state.showAxis })),
+      
+      toggleView2DTheme: () =>
+        set((state) => ({ view2DTheme: state.view2DTheme === 'dark' ? 'light' : 'dark' })),
       
       // 가구 팝업 열기 (다른 모든 팝업 닫기)
       openFurniturePopup: (moduleId) =>

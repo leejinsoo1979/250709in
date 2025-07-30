@@ -14,7 +14,7 @@ import ColumnDropTarget from './ColumnDropTarget';
  */
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
+  const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
   const { theme } = useTheme();
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
@@ -225,7 +225,7 @@ const ColumnGuides: React.FC = () => {
                         (!hasDroppedCeiling); // 단내림이 없으면 항상 활성
     
     // 영역별 색상 및 선 굵기 설정
-    const zoneColor = isActiveZone ? guideColor : '#999999'; // 비활성 영역은 회색
+    const zoneColor = isActiveZone ? guideColor : (viewMode === '2D' && view2DTheme === 'dark' ? '#666666' : '#999999'); // 다크모드에서 밝은 회색
     const zoneLineWidth = isActiveZone ? lineWidth * 2 : lineWidth; // 활성 영역만 굵게
     const zoneOpacity = isActiveZone ? 1 : 0.6; // 비활성 영역은 60% 투명도
     

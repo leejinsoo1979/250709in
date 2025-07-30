@@ -25,6 +25,7 @@ const BoxWithEdges: React.FC<{
   onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut }) => {
   const { theme } = useTheme();
+  const { view2DTheme } = useUIStore();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
@@ -89,7 +90,7 @@ const BoxWithEdges: React.FC<{
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
           <lineSegments geometry={edgesGeometry}>
             <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
+              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#666666" : "#444444")} 
               linewidth={0.5} 
             />
           </lineSegments>
@@ -232,8 +233,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D' && renderMode === 'solid') {
-          mat.transparent = true;
-          mat.opacity = 0.2;
+          mat.transparent = false;
+          mat.opacity = 1.0;
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
           mat.transparent = true;

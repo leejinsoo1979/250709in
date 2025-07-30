@@ -87,7 +87,7 @@ const BoxWithEdges: React.FC<{
           <lineSegments>
             <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
             <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#666666")} 
+              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#444444")} 
               linewidth={2} 
             />
           </lineSegments>
@@ -363,7 +363,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   gapHeight={section.gapHeight}
                   material={drawerMaterial}
                   renderMode={useSpace3DView().renderMode}
-                  furnitureId={moduleData.id}
                 />
               );
             }
@@ -393,8 +392,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             {separatorPanel}
             
-            {/* 좌측 섹션 치수 표시 */}
-            {showDimensions && (
+            {/* 좌측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
+            {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
               <>
                 {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
                 {index < allSections.length - 1 && (
@@ -429,7 +428,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
-                      depthTest={false}
                     >
                       {Math.round(basicThickness * 100)}
                     </Text>
@@ -455,8 +453,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 서랍 섹션 높이 표시 */}
-                {section.type === 'drawer' && (
+                {/* 섹션 높이 표시 (모든 섹션 타입) */}
+                {(section.type === 'drawer' || section.type === 'hanging' || section.type === 'shelf') && (
                   <group>
                     {/* 서랍 섹션 전체 높이 텍스트 */}
                     {viewMode === '3D' && (
@@ -488,7 +486,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
-                      depthTest={false}
                     >
                       {Math.round(sectionHeight * 100)}
                     </Text>
@@ -547,7 +544,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
-                      depthTest={false}
                     >
                       {Math.round(basicThickness * 100)}
                     </Text>
@@ -670,8 +666,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 */}
-            {showDimensions && (
+            {/* 우측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
+            {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
               <group>
                 {/* 하부 프레임 두께 텍스트 */}
                 {viewMode === '3D' && (
@@ -679,7 +675,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     position={[
                       -rightWidth/2 * 0.3 - 0.8 + 0.01, 
                       -height/2 + basicThickness/2 - 0.01,
-                      basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 - 0.01
+                      3.01 - 0.01
                     ]}
                     fontSize={baseFontSize}
                     color="rgba(0, 0, 0, 0.3)"
@@ -695,7 +691,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   position={[
                     viewMode === '3D' ? -rightWidth/2 * 0.3 - 0.8 : -rightWidth/2 * 0.3 - 0.5, 
                     -height/2 + basicThickness/2,
-                    viewMode === '3D' ? basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + rightShelfZOffset + 0.5
+                    viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5
                   ]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
@@ -703,7 +699,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   anchorY="middle"
                   rotation={[0, 0, Math.PI / 2]}
                   renderOrder={999}
-                  depthTest={false}
                 >
                   {Math.round(basicThickness * 100)}
                 </Text>
@@ -711,18 +706,18 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {/* 하부 프레임 두께 수직선 */}
                 <Line
                   points={[
-                    [-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + rightShelfZOffset + 0.5],
-                    [-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + rightShelfZOffset + 0.5]
+                    [-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5],
+                    [-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 {/* 수직선 양끝 점 */}
-                <mesh position={[-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + rightShelfZOffset + 0.5]}>
+                <mesh position={[-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5]}>
                   <sphereGeometry args={[0.03, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
-                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? basicThickness/2 + rightShelfZOffset + (rightAdjustedDepthForShelves - basicThickness)/2 + 0.01 : basicThickness/2 + rightShelfZOffset + 0.5]}>
+                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5]}>
                   <sphereGeometry args={[0.03, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
@@ -768,7 +763,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       anchorX="center"
                       anchorY="top"
                       renderOrder={999}
-                      depthTest={false}
                     >
                       {Math.round(rightWidth * 100)}
                     </Text>

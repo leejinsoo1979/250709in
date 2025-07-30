@@ -49,6 +49,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useTheme();
   
+  // UIStore에서 2D 뷰 테마 가져오기
+  const { view2DTheme } = useUIStore();
+  
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
   
@@ -58,11 +61,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마에 따른 배경색 결정
   const getBackgroundColor = useCallback(() => {
     if (viewMode === '2D') {
-      // 2D 모드에서는 테마에 따른 배경색 사용
-      return theme.mode === 'dark' ? '#000000' : '#ffffff';
+      // 2D 모드에서는 2D 전용 테마에 따른 배경색 사용
+      return view2DTheme === 'dark' ? '#000000' : '#ffffff';
     }
     return CANVAS_SETTINGS.BACKGROUND_COLOR;
-  }, [viewMode, theme.mode]);
+  }, [viewMode, view2DTheme]);
   
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
@@ -90,7 +93,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
   useEffect(() => {
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  }, [theme, viewMode, view2DDirection]);
+  }, [theme, viewMode, view2DDirection, view2DTheme]);
   
   // 단내림 설정 변경 시 캔버스 강제 업데이트
   useEffect(() => {
@@ -136,7 +139,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }
       }
     }
-  }, [theme.mode, viewMode, getBackgroundColor]);
+  }, [theme.mode, viewMode, view2DTheme, getBackgroundColor]);
   
   // WebGL 컨텍스트 정리 함수 (더 부드러운 접근)
   const cleanupWebGL = useCallback(() => {
@@ -578,6 +581,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           enableDamping={true}
           dampingFactor={viewMode === '2D' ? 0.1 : 0.05}
           screenSpacePanning={true}
+          zoomToCursor={true}
           makeDefault
         />
         

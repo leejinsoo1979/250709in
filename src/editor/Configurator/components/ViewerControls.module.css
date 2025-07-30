@@ -349,6 +349,37 @@
   background: var(--theme-primary-light);
 }
 
+/* 테마 토글 버튼 */
+.themeToggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.themeToggle:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-primary);
+}
+
+.themeToggle svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.themeToggle:hover svg {
+  transform: rotate(180deg);
+}
+
 /* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */
 
 /* 큰 데스크톱 (1920px 이상) */

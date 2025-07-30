@@ -7,6 +7,7 @@ export { useBaseFurniture } from '../hooks/useBaseFurniture';
 // 공통 컴포넌트들
 export { default as BaseFurnitureShell } from '../components/BaseFurnitureShell';
 export { default as SectionsRenderer } from '../components/SectionsRenderer';
+export { default as BoxWithEdges } from '../components/BoxWithEdges';
 
 // 공통 인터페이스 (재사용을 위해)
 export interface FurnitureTypeProps {
@@ -24,4 +25,6 @@ export interface FurnitureTypeProps {
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm)
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
+  viewMode?: '2D' | '3D';
+  renderMode?: 'solid' | 'wireframe';
 } 

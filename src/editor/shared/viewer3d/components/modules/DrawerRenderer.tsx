@@ -13,6 +13,7 @@ const BoxWithEdges: React.FC<{
   renderMode: 'solid' | 'wireframe';
 }> = ({ args, position, material, renderMode }) => {
   const { theme } = useTheme();
+  const { view2DTheme } = useUIStore();
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍도 동일)
   const createInnerMaterial = (originalMaterial: THREE.Material) => {
     const { viewMode } = useSpace3DView();
@@ -56,7 +57,7 @@ const BoxWithEdges: React.FC<{
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
+            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#666666" : "#444444")} 
             linewidth={0.5}
             transparent={false}
             opacity={1.0}

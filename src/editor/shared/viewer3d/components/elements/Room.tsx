@@ -85,10 +85,13 @@ const BoxWithEdges: React.FC<{
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
   onBeforeRender?: () => void;
-}> = ({ args, position, material, renderMode, onBeforeRender }) => {
+  viewMode?: '2D' | '3D';
+  view2DTheme?: 'dark' | 'light';
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
-  const { viewMode } = useSpace3DView();
+  const { viewMode: contextViewMode } = useSpace3DView();
+  const viewMode = viewModeProp || contextViewMode;
   const { theme } = useTheme();
   
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
@@ -109,7 +112,7 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 모서리 라인 렌더링 - 항상 표시 */}
       <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#888888" : "#666666")} linewidth={0.5} />
+        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#888888" : "#666666")} linewidth={0.5} />
       </lineSegments>
     </group>
   );
@@ -137,7 +140,7 @@ const Room: React.FC<RoomProps> = ({
   const { colors } = useThemeColors();
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
@@ -999,6 +1002,8 @@ const Room: React.FC<RoomProps> = ({
           position={[xOffset + width/2, yOffset + floorFinishHeight/2, extendedZOffset + extendedPanelDepth/2]}
           material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
           renderMode={renderMode}
+          viewMode={viewMode}
+          view2DTheme={view2DTheme}
         />
       )}
       

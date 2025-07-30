@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export type ViewMode = '2D' | '3D';
 export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
@@ -67,7 +68,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorInstallationToggle
 }) => {
   // UIStore에서 2D 뷰 방향 상태 가져오기
-  const { view2DDirection, setView2DDirection } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
+  
+  // 테마 컨텍스트
+  const { theme, toggleTheme } = useTheme();
   
   // QR 코드 생성기 표시 상태
   const [showQRGenerator, setShowQRGenerator] = useState(false);
@@ -263,22 +267,51 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.rightControls}>
         {/* 뷰 방향 선택 - 2D 모드에서만 표시 */}
         {viewMode === '2D' && (
-          <div className={styles.viewDirectionGroup}>
-            {viewDirectionsWithAll.map((direction) => (
-              <button
-                key={direction.id}
-                data-view-direction={direction.id}
-                className={`${styles.viewDirectionButton} ${view2DDirection === direction.id ? styles.active : ''}`}
-                onClick={() => handleViewDirectionChange(direction.id)}
-              >
-                {direction.label}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className={styles.viewDirectionGroup}>
+              {viewDirectionsWithAll.map((direction) => (
+                <button
+                  key={direction.id}
+                  data-view-direction={direction.id}
+                  className={`${styles.viewDirectionButton} ${view2DDirection === direction.id ? styles.active : ''}`}
+                  onClick={() => handleViewDirectionChange(direction.id)}
+                >
+                  {direction.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* 다크모드/라이트모드 토글 - 2D 모드에서만 표시 */}
+            <button
+              className={styles.themeToggle}
+              onClick={toggleView2DTheme}
+              title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            >
+              {view2DTheme === 'dark' ? (
+                // 해 아이콘 (라이트 모드)
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                // 달 아이콘 (다크 모드)
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
+          </>
         )}
         
         {/* AR 버튼 - 3D 모드에서만 표시 */}
-        {viewMode === '3D' && (
+        {/* {viewMode === '3D' && (
           <button
             className={styles.arButton}
             onClick={() => setShowQRGenerator(true)}
@@ -286,19 +319,19 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               {/* 스마트폰 프레임 */}
-              <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/>
+              {/* <rect x="5" y="2" width="14" height="20" rx="2" strokeWidth="2"/> */}
               {/* 스크린 */}
-              <rect x="7" y="4" width="10" height="14" strokeWidth="1" opacity="0.5"/>
+              {/* <rect x="7" y="4" width="10" height="14" strokeWidth="1" opacity="0.5"/> */}
               {/* AR 큐브 */}
-              <path d="M9 10 L9 14 L12 16 L15 14 L15 10 L12 8 L9 10Z" strokeWidth="1.5" fill="none"/>
+              {/* <path d="M9 10 L9 14 L12 16 L15 14 L15 10 L12 8 L9 10Z" strokeWidth="1.5" fill="none"/>
               <path d="M9 10 L12 8 L15 10" strokeWidth="1.5" fill="none"/>
-              <path d="M12 16 L12 12" strokeWidth="1.5" fill="none"/>
+              <path d="M12 16 L12 12" strokeWidth="1.5" fill="none"/> */}
               {/* AR 포인터 */}
-              <circle cx="12" cy="12" r="1" fill="currentColor"/>
-            </svg>
+              {/* <circle cx="12" cy="12" r="1" fill="currentColor"/> */}
+            {/* </svg>
             <span>AR</span>
           </button>
-        )}
+        )} */}
       </div>
       
       {/* QR 코드 생성기 모달 */}

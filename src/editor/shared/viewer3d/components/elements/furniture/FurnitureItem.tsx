@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, Edges } from '@react-three/drei';
+import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../../utils/geometry';
@@ -11,6 +11,8 @@ import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSin
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useUIStore } from '@/store/uiStore';
+import { EditIcon } from '@/components/common/Icons';
+import { getEdgeColor } from '../../../utils/edgeColorUtils';
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -19,6 +21,9 @@ interface FurnitureItemProps {
   isDragMode: boolean;
   isEditMode: boolean;
   isDraggingThis: boolean;
+  viewMode: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
+  renderMode: 'solid' | 'wireframe';
   onPointerDown: (e: ThreeEvent<PointerEvent>, id: string) => void;
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
   onPointerUp: () => void;
@@ -32,6 +37,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   isDragMode,
   isEditMode,
   isDraggingThis,
+  viewMode,
+  view2DDirection,
+  renderMode,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -39,7 +47,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
-  const { isFurnitureDragging } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme } = useUIStore();
+  const [isHovered, setIsHovered] = React.useState(false);
+  
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
+  };
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -340,9 +355,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         onPointerUp={onPointerUp}
         onPointerOver={() => {
           document.body.style.cursor = isDragMode ? 'grab' : (isDraggingThis ? 'grabbing' : 'grab');
+          setIsHovered(true);
         }}
         onPointerOut={() => {
           document.body.style.cursor = 'default';
+          setIsHovered(false);
         }}
       >
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
@@ -365,6 +382,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
             color={furnitureColor}
             internalHeight={furnitureHeightMm}
+            viewMode={viewMode}
+            renderMode={renderMode}
             hasDoor={!isFurnitureDragging && slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false)} // 기둥 침범 시 도어는 별도 렌더링 (드래그 중이 아닐 때만)
             customDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
@@ -390,7 +409,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             </Box>
             <Edges 
-              color={isDraggingThis ? '#00ff00' : isEditMode ? '#ff8800' : isDragMode ? '#ff0000' : '#cccccc'} 
+              color={getEdgeColor({
+                isDragging: isDraggingThis,
+                isEditMode,
+                isDragMode,
+                viewMode,
+                view2DTheme
+              })} 
               threshold={1} 
               scale={1.001}
             />
@@ -432,6 +457,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             )}
           </>
         )}
+        
       </group>
 
       {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) - 드래그 중이 아닐 때만 */}
@@ -459,6 +485,59 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
+      
+      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
+      {showDimensions && viewMode === '3D' && (
+        <Html
+          position={[
+            adjustedPosition.x,
+            furnitureStartY - 1.8, // 원래 위치로 (하부 프레임 아래)
+            furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
+          ]}
+          center
+          style={{
+            userSelect: 'none',
+            pointerEvents: 'auto',
+            zIndex: 100,
+            background: 'transparent'
+          }}
+        >
+          <div
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              border: `2px solid ${getThemeColor()}`,
+              borderRadius: '50%',
+              backgroundColor: '#ffffff',
+              transition: 'all 0.2s ease',
+              opacity: isHovered ? 1 : 0.8,
+              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              // 이미 편집 모드라면 팝업 닫기
+              if (isEditMode) {
+                const closeAllPopups = useUIStore.getState().closeAllPopups;
+                closeAllPopups();
+              } else {
+                // 편집 모드가 아니면 팝업 열기
+                onDoubleClick(e as any, placedModule.id);
+              }
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            title="가구 속성 편집"
+          >
+            <EditIcon color={getThemeColor()} size={18} />
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

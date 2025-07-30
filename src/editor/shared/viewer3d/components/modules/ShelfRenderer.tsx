@@ -14,6 +14,7 @@ const BoxWithEdges: React.FC<{
   renderMode: 'solid' | 'wireframe';
 }> = ({ args, position, material, renderMode }) => {
   const { theme } = useTheme();
+  const { view2DTheme } = useUIStore();
   // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍과 동일)
   const createInnerMaterial = (originalMaterial: THREE.Material) => {
     const { viewMode } = useSpace3DView();
@@ -71,7 +72,7 @@ const BoxWithEdges: React.FC<{
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
+            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#666666" : "#444444")} 
             linewidth={0.5}
             transparent={false}
             opacity={1.0}
@@ -122,10 +123,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   showTopFrameDimension = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
+  const view2DDirection = useUIStore(state => state.view2DDirection);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
   const setHighlightedCompartment = useUIStore(state => state.setHighlightedCompartment);
   const { theme } = useTheme();
   const { viewMode } = useSpace3DView();
+  const mmToThreeUnits = (mm: number) => mm / 100;
   
   
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
@@ -141,9 +144,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   if (shelfCount <= 0) {
     return null;
   }
-
-  // mm를 Three.js 단위로 변환
-  const mmToThreeUnits = (mm: number) => mm * 0.01;
 
   // 절대 위치 모드: 마감 패널 또는 절대 위치 지정
   if (isTopFinishPanel && shelfCount === 1) {
@@ -183,7 +183,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         {/* 치수 표시 - showDimensions가 true이고 상단 마감 패널이 아닐 때 표시 */}
         {/* Type2의 하단 섹션처럼 선반이 1개이고 상단 근처에만 있는 경우는 제외 */}
         {/* 단, 첫 번째 칸의 높이가 100mm 이상이면 표시 */}
-        {showDimensions && !isTopFinishPanel && (
+        {showDimensions && !isTopFinishPanel && !(viewMode === '2D' && view2DDirection === 'top') && (
           <group>
             {(() => {
               const compartmentHeights: Array<{ height: number; centerY: number }> = [];
@@ -270,7 +270,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         position={[
                           -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                           shelfY - 0.01, 
-                          depth/2 + 0.1 - 0.01
+                          (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
@@ -286,7 +286,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         shelfY, 
-                        viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5
+                        viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5
                       ]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
@@ -301,18 +301,18 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 선반 두께 수직선 - 왼쪽으로 이동 */}
                     <Line
                       points={[
-                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5],
-                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]
+                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5],
+                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
                     />
                     {/* 선반 두께 수직선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
@@ -377,7 +377,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     position={[
                       viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                       topFrameY, 
-                      viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5
+                      viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5
                     ]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -391,18 +391,18 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
                   <Line
                     points={[
-                      [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5],
-                      [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]
+                      [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5],
+                      [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]
                     ]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   {/* 상단 프레임 두께 수직선 양끝 점 */}
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
                     <meshBasicMaterial color={dimensionColor} />
                   </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
                     <meshBasicMaterial color={dimensionColor} />
                   </mesh>
@@ -421,8 +421,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     // DualType5 스타일러장 우측의 마지막 칸(상단)은 치수 표시 제외
                     const isDualType5Right = furnitureId && furnitureId.includes('-right-section');
                     
-                    // 안전선반이 있고(칸이 2개 이상) 마지막 칸인 경우
-                    if (isDualType5Right && compartmentHeights.length > 1 && i === compartmentHeights.length - 1) {
+                    // 안전선반이 있고(칸이 3개 이상) 마지막 칸인 경우에만 제외
+                    // 2200mm 높이에서도 치수가 표시되도록 조건 수정
+                    if (isDualType5Right && compartmentHeights.length > 2 && i === compartmentHeights.length - 1) {
                       return null;
                     }
                     // 각 칸의 상단과 하단 Y 좌표 계산
@@ -460,7 +461,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         position={[
                           -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                           compartment.centerY - 0.01, 
-                          depth/2 + 0.1 - 0.01
+                          (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
@@ -476,7 +477,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         compartment.centerY, 
-                        viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.2
+                        viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.2
                       ]}
                       fontSize={baseFontSize}
                       color={isHighlighted ? "#FFD700" : textColor}
@@ -505,18 +506,18 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 수직 연결선 (치수선) - 왼쪽으로 이동 */}
                     <Line
                       points={[
-                        [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15],
-                        [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]
+                        [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15],
+                        [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]
                       ]}
                       color={isHighlighted ? "#FFD700" : dimensionColor}
                       lineWidth={isHighlighted ? 2 : 1}
                     />
                     {/* 수직 연결선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]}>
+                    <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]}>
+                    <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                     </mesh>
@@ -553,7 +554,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       })}
       
       {/* 치수 표시 - showDimensions가 true일 때 표시 */}
-      {showDimensions && (
+      {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
         <group>
           {Array.from({ length: shelfCount + 1 }, (_, i) => {
             // 각 칸의 높이 계산
