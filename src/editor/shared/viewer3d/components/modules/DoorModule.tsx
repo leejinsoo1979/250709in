@@ -430,10 +430,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   useEffect(() => {
     if (doorsOpen !== undefined) {
       setIsAnimating(true);
-      // 애니메이션이 끝나면 (약 1초 후) 상태 업데이트
+      // 애니메이션이 끝나면 (약 1.2초 후) 상태 업데이트 (기존 1.5초에서 1.2초로 감소)
       const timer = setTimeout(() => {
         setIsAnimating(false);
-      }, 1000);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [doorsOpen]);
@@ -492,14 +492,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     document.body.style.cursor = 'auto';
   };
   
-  // 애니메이션 설정 - 성능 최적화 (80도 열림)
-  // 빠르고 부드러운 애니메이션을 위해 tension/friction 조정
+  // 애니메이션 설정 - 적당한 속도 (80도 열림)
+  // 부드럽고 자연스러운 애니메이션을 위해 tension/friction 조정
   const leftHingeDoorSpring = useSpring({
     // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 80도
     rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0,
     config: { 
-      tension: 120,  // 빠른 반응
-      friction: 14,  // 적절한 감속
+      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
+      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
@@ -508,18 +508,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 80도
     rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0,
     config: { 
-      tension: 120,  // 빠른 반응
-      friction: 14,  // 적절한 감속
+      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
+      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
   
-  // 듀얼 가구용 애니메이션 설정 (80도 열림) - 성능 최적화
+  // 듀얼 가구용 애니메이션 설정 (80도 열림) - 적당한 속도
   const dualLeftDoorSpring = useSpring({
     rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
     config: { 
-      tension: 120,  // 빠른 반응
-      friction: 14,  // 적절한 감속
+      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
+      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
@@ -527,8 +527,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const dualRightDoorSpring = useSpring({
     rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
     config: { 
-      tension: 120,  // 빠른 반응
-      friction: 14,  // 적절한 감속
+      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
+      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });

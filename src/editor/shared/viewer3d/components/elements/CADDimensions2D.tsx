@@ -11,17 +11,21 @@ import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/ut
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
+  showDimensions?: boolean;
 }
 
 /**
  * CAD 스타일 2D 치수 표기 컴포넌트
  * 각 뷰포트에 맞는 치수 표시를 위해 뷰 방향별로 다른 치수선 제공
  */
-const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
+const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore } = useUIStore();
   const { theme } = useTheme();
+  
+  // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
+  const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
   
   // CSS 변수에서 실제 테마 색상 가져오기
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {
@@ -79,7 +83,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
   };
 
   // 정면뷰에서만 치수 표시 (다른 뷰에서는 복잡함 방지)
-  if (currentViewDirection !== 'front') {
+  // showDimensions가 false이면 치수 표시하지 않음
+  if (currentViewDirection !== 'front' || !showDimensions) {
     return null;
   }
 

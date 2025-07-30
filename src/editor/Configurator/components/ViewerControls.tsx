@@ -143,7 +143,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
             onClick={() => {
               console.log('🎯 치수 토글 클릭, 현재 상태:', showDimensions);
-              onShowDimensionsToggle();
+              
+              // 치수 토글이 켜져있으면 끄고, showDimensionsText도 함께 끄기
+              if (showDimensions) {
+                onShowDimensionsToggle();
+                if (showDimensionsText) {
+                  onShowDimensionsTextToggle();
+                }
+              } else {
+                // 치수 토글이 꺼져있으면 켜기
+                onShowDimensionsToggle();
+              }
             }}
           >
             <div className={styles.switchHandle}></div>
