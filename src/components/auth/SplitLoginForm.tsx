@@ -228,7 +228,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
               className={styles.demoButton}
               onClick={() => navigate('/configurator')}
             >
-              🚀 데모체험하기
+              데모체험하기
             </button>
           </div>
 
