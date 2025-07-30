@@ -42,6 +42,9 @@ export interface PlacedModule {
   
   // 기둥 포함 슬롯 관련 정보
   columnSlotInfo?: ColumnSlotMetadata; // 기둥이 포함된 슬롯 정보
+  
+  // Column C 듀얼 배치 관련
+  subSlotPosition?: 'left' | 'right'; // Column C에서 서브슬롯 위치
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입

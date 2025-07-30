@@ -8,6 +8,8 @@ import WallAsset from './components/elements/space/WallAsset';
 import ColumnDistanceLabels from './components/elements/space/ColumnDistanceLabels';
 import ColumnGhostPreview from './components/elements/space/ColumnGhostPreview';
 import ColumnCreationMarkers from './components/elements/space/ColumnCreationMarkers';
+import PanelBAsset from './components/elements/space/PanelBAsset';
+import PanelBCreationMarkers from './components/elements/space/PanelBCreationMarkers';
 
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
@@ -41,9 +43,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
-  const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall } = useSpaceConfigStore();
+  const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -155,6 +157,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return;
       }
       
+      // 패널B 드롭 처리
+      if (parsedData.type === 'panelB') {
+        handlePanelBDrop(e, parsedData);
+        return;
+      }
+      
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       if (typeof handleSlotDrop === 'function') {
@@ -238,6 +246,42 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     // 스토어에 가벽 추가
     addWall(newWall);
+  };
+  
+  // 패널B 드롭 핸들러
+  const handlePanelBDrop = (e: React.DragEvent, panelBData: any) => {
+    // 캔버스 중앙에 패널B 배치 (임시)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
+    
+    // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
+    const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
+    const panelDepthM = (panelBData.depth || 730) * 0.01; // panelBData에서 깊이 가져오기
+    const zPosition = -(spaceDepthM / 2) + (panelDepthM / 2); // 뒷벽에 맞닿도록
+    
+    // 패널B 생성 (바닥 기준으로 위치 설정)
+    const newPanelB = {
+      id: `panelB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
+      width: panelBData.width || 600, // panelBData에서 폭 가져오기
+      height: 18, // 18mm 고정
+      depth: panelBData.depth || 730, // panelBData에서 깊이 가져오기
+      color: panelBData.color || '#8B4513',
+      material: panelBData.material || 'wood',
+      orientation: 'horizontal' as const
+    };
+
+    console.log('🪵 패널B 드롭 배치:', {
+      centerX,
+      zPosition,
+      spaceDepthM,
+      panelDepthM,
+      panelB: newPanelB
+    });
+    
+    // 스토어에 패널B 추가
+    const { addPanelB } = useSpaceConfigStore.getState();
+    addPanelB(newPanelB);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -884,7 +928,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 기둥 에셋 렌더링 */}
             {(spaceInfo?.columns || []).map((column) => {
               // 기둥이 단내림 영역에 있는지 확인
-              let columnHeight = column.height;
+              let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
               if (spaceInfo.droppedCeiling?.enabled) {
                 const totalWidth = spaceInfo.width;
                 const droppedWidth = spaceInfo.droppedCeiling.width || 900;
@@ -1014,6 +1058,30 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               );
             })}
             
+            {/* 패널B 렌더링 */}
+            {spaceInfo?.panelBs?.map((panelB) => (
+              <PanelBAsset
+                key={panelB.id}
+                id={panelB.id}
+                position={panelB.position}
+                width={panelB.width}
+                height={panelB.height}
+                depth={panelB.depth}
+                color={panelB.color}
+                renderMode={viewMode === '3D' ? 'solid' : 'wireframe'}
+                onPositionChange={(id, newPos) => updatePanelB(id, { position: newPos })}
+                onRemove={removePanelB}
+                spaceInfo={spaceInfo}
+              />
+            ))}
+            
+            {/* 패널B 생성 마커 */}
+            {isPanelBCreationMode && viewMode === '3D' && (
+              <PanelBCreationMarkers 
+                spaceInfo={spaceInfo}
+              />
+            )}
+            
             {/* 기둥 드래그 시 고스트 프리뷰 */}
             <ColumnGhostPreview spaceInfo={spaceInfo} />
             
@@ -1138,7 +1206,7 @@ const QuadrantContent: React.FC<{
             id={column.id}
             position={column.position}
             width={column.width}
-            height={column.height}
+            height={column.height || spaceInfo.height || 2400}
             depth={column.depth}
             color={column.color}
             spaceInfo={spaceInfo}

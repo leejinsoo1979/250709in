@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
+import { signOutUser } from '@/firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -11,6 +13,7 @@ interface ProfilePopupProps {
 
 const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!isOpen || !user) return null;
 
@@ -122,9 +125,10 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 </div>
                 <ChevronRight size={16} />
               </button>
-              <button className={styles.menuItem} onClick={() => {
+              <button className={styles.menuItem} onClick={async () => {
                 // 로그아웃 처리
-                window.location.href = '/logout';
+                await signOutUser();
+                navigate('/auth');
               }}>
                 <div className={styles.menuLeft}>
                   <LogOut size={18} />

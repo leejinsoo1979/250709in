@@ -506,7 +506,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection }) => {
         if (!moduleData) return null;
         
         // 기둥 슬롯 분석
-        const columnSlots = analyzeColumnSlots(spaceInfo);
+        const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
         const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
         const indexing = calculateSpaceIndexing(spaceInfo);
         

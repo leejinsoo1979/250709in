@@ -32,7 +32,7 @@ export const isSlotAvailable = (
   if (!isDualFurniture && slotIndex >= indexing.columnCount) return false;
   
   // 기둥 포함 슬롯 분석
-  const columnSlots = analyzeColumnSlots(spaceInfo);
+  const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
   
   // 목표 슬롯들 계산
   const targetSlots = isDualFurniture 
@@ -53,21 +53,44 @@ export const isSlotAvailable = (
     // 디버그 로그 제거 (성능 문제로 인해)
     
     if (slotInfo.hasColumn) {
-      // 듀얼 가구는 기둥 슬롯에 배치 불가
-      if (isDualFurniture) {
+      // Column C (300mm) 특별 처리 - 듀얼 가구도 배치 가능 (2개의 싱글로 분할)
+      if (slotInfo.columnType === 'medium' && slotInfo.allowMultipleFurniture) {
+        // Column C는 듀얼 가구를 2개의 싱글로 분할하여 배치 가능
+        if (isDualFurniture) {
+          // Column C 슬롯에 이미 2개의 가구가 있는지 확인
+          const furnitureInSlot = placedModules.filter(m => 
+            m.slotIndex === targetSlot && m.id !== excludeModuleId
+          );
+          
+          if (furnitureInSlot.length >= 2) {
+            return false; // 이미 2개의 가구가 있음
+          }
+          
+          // 듀얼 가구는 배치 가능 (2개의 싱글로 분할됨)
+          return true;
+        } else {
+          // 싱글 가구는 빈 서브슬롯이 있으면 배치 가능
+          const furnitureInSlot = placedModules.filter(m => 
+            m.slotIndex === targetSlot && m.id !== excludeModuleId
+          );
+          
+          if (furnitureInSlot.length >= 2) {
+            return false; // 이미 2개의 가구가 있음
+          }
+          
+          return true; // 빈 서브슬롯이 있음
+        }
+      } else {
+        // 일반 기둥 처리 (기존 로직)
         // 듀얼 가구는 기둥 슬롯에 배치 불가
-        return false;
+        if (isDualFurniture) {
+          return false;
+        }
+        
+        // 싱글 가구는 기둥 침범 후에도 최소 150mm 공간이 있으면 배치 가능
+        // 여기서는 일단 배치 가능하다고 판단하고, 실제 크기 계산은 SlotDropZones에서 처리
+        // 가구 배치 가능 (기둥 침범 후 크기는 SlotDropZones에서 계산)
       }
-      
-      // 싱글 가구는 기둥 침범 후에도 최소 150mm 공간이 있으면 배치 가능
-      // 여기서는 일단 배치 가능하다고 판단하고, 실제 크기 계산은 SlotDropZones에서 처리
-      // const availableWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
-      // if (availableWidth < 150) {
-      //   console.log(`❌ 슬롯 ${targetSlot}의 가용 공간(${availableWidth}mm)이 최소 요구 폭(150mm)보다 작음`);
-      //   return false;
-      // }
-      
-      // 가구 배치 가능 (기둥 침범 후 크기는 SlotDropZones에서 계산)
     }
   }
   

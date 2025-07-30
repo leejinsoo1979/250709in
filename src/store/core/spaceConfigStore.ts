@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
-import { Column, Wall } from '@/types/space';
+import { Column, Wall, PanelB } from '@/types/space';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -60,6 +60,7 @@ export interface SpaceInfo {
   // 구조물 설정 추가
   columns?: Column[];
   walls?: Wall[];
+  panelBs?: PanelB[];
   
   // 단내림 설정 추가
   droppedCeiling?: DroppedCeilingConfig;
@@ -102,6 +103,12 @@ interface SpaceConfigState {
   addWall: (wall: Wall) => void;
   removeWall: (id: string) => void;
   updateWall: (id: string, updates: Partial<Wall>) => void;
+  
+  // 패널B 설정 액션
+  setPanelBs: (panelBs: PanelB[]) => void;
+  addPanelB: (panelB: PanelB) => void;
+  removePanelB: (id: string) => void;
+  updatePanelB: (id: string, updates: Partial<PanelB>) => void;
   
   // 전체 상태 관리
   resetAll: () => void;
@@ -204,7 +211,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
 };
 
 // 초기 상태
-const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'resetAll' | 'markAsSaved'> = {
   isDirty: false,
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
@@ -342,6 +349,45 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         ...state.spaceInfo,
         walls: (state.spaceInfo.walls || []).map(wall => 
           wall.id === id ? { ...wall, ...updates } : wall
+        )
+      },
+      isDirty: true,
+    })),
+  
+  // 패널B 설정 액션들
+  setPanelBs: (panelBs) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        panelBs
+      },
+      isDirty: true,
+    })),
+  
+  addPanelB: (panelB) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        panelBs: [...(state.spaceInfo.panelBs || []), panelB]
+      },
+      isDirty: true,
+    })),
+  
+  removePanelB: (id) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        panelBs: (state.spaceInfo.panelBs || []).filter(panel => panel.id !== id)
+      },
+      isDirty: true,
+    })),
+  
+  updatePanelB: (id, updates) =>
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        panelBs: (state.spaceInfo.panelBs || []).map(panel => 
+          panel.id === id ? { ...panel, ...updates } : panel
         )
       },
       isDirty: true,

@@ -97,6 +97,7 @@ interface ShelfRendererProps {
   isTopFinishPanel?: boolean; // 최상단 마감 패널 여부
   renderMode: 'solid' | 'wireframe'; // 렌더 모드 추가
   furnitureId?: string; // 가구 ID (칸 강조용)
+  showTopFrameDimension?: boolean; // 상단 프레임 치수 표시 여부
 }
 
 /**
@@ -118,6 +119,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   isTopFinishPanel,
   renderMode,
   furnitureId,
+  showTopFrameDimension = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
@@ -126,10 +128,15 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const { viewMode } = useSpace3DView();
   
   
-  // 치수 표시용 색상 설정 - CleanCAD2D와 동일한 스타일
-  const dimensionColor = '#4CAF50'; // 메인 테마 색상
+  // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
+  const getThemeColor = () => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
+  };
+  
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
   const textColor = dimensionColor;
-  const baseFontSize = 0.32; // CleanCAD2D의 기본 폰트 크기 (크기 증가)
+  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
   if (shelfCount <= 0) {
     return null;
@@ -175,29 +182,54 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         
         {/* 치수 표시 - showDimensions가 true이고 상단 마감 패널이 아닐 때 표시 */}
         {/* Type2의 하단 섹션처럼 선반이 1개이고 상단 근처에만 있는 경우는 제외 */}
-        {showDimensions && !isTopFinishPanel && !(shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9) && (
+        {/* 단, 첫 번째 칸의 높이가 100mm 이상이면 표시 */}
+        {showDimensions && !isTopFinishPanel && (
           <group>
             {(() => {
-              const compartmentHeights: { height: number; centerY: number }[] = [];
+              const compartmentHeights: Array<{ height: number; centerY: number }> = [];
               
+              // 첫 번째 칸의 높이를 미리 계산하여 표시 여부 결정
+              let shouldShowDimensions = true;
+              let firstCompartmentHeightMm = 0;
               
               // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
               if (shelfPositions.length > 0) {
                 const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
-                const height = firstShelfBottomMm; // 바닥(0)부터 선반 하단까지
-                const centerY = (-innerHeight / 2) + mmToThreeUnits(height / 2);
-                compartmentHeights.push({
+                firstCompartmentHeightMm = firstShelfBottomMm;
+                
+                // 선반이 1개이고 상단 근처에 있으며, 첫 번째 칸이 100mm 미만인 경우만 제외
+                if (shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9 && firstCompartmentHeightMm < 100) {
+                  shouldShowDimensions = false;
+                }
+                
+                if (shouldShowDimensions) {
+                  const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
+                  const centerY = (-innerHeight / 2) + height / 2;
+                
+                console.log('🔴 절대위치모드 - 첫 번째 칸:', {
+                  shelfPositions_0: shelfPositions[0],
+                  basicThickness,
+                  basicThickness_mm: basicThickness * 100,
+                  firstShelfBottomMm,
                   height,
-                  centerY
+                  height_mm: height * 100,
+                  표시될값: Math.round(height * 100)
                 });
+                
+                  compartmentHeights.push({
+                    height,
+                    centerY
+                  });
+                }
               }
               
               // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
               for (let i = 0; i < shelfPositions.length - 1; i++) {
                 const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
                 const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
-                const height = nextShelfBottomMm - currentShelfTopMm;
-                const centerY = (-innerHeight / 2) + mmToThreeUnits(currentShelfTopMm + height / 2);
+                const heightMm = nextShelfBottomMm - currentShelfTopMm;
+                const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
+                const centerY = (-innerHeight / 2) + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
                 compartmentHeights.push({ height, centerY });
               }
               
@@ -214,8 +246,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   // innerHeight는 섹션의 높이이고, 상단 프레임은 섹션 위에 있음
                   // 프레임 두께를 2번 빼면 정확한 프레임 하단 위치
                   const topFrameBottomMm = (innerHeight / 0.01) - (basicThickness / 0.01) * 2;
-                  const height = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
-                  const centerY = (-innerHeight / 2) + mmToThreeUnits(lastShelfTopMm + height / 2);
+                  const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
+                  const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
+                  const centerY = (-innerHeight / 2) + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
                   compartmentHeights.push({ height, centerY });
                 }
               }
@@ -232,39 +265,56 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
                     {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 */}
+                    {viewMode === '3D' && (
+                      <Text
+                        position={[
+                          -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                          shelfY - 0.01, 
+                          depth/2 + 0.1 - 0.01
+                        ]}
+                        fontSize={baseFontSize}
+                        color="rgba(0, 0, 0, 0.3)"
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={998}
+                      >
+                        {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                      </Text>
+                    )}
                     <Text
                       position={[
-                        -innerWidth/2 * 0.3 - 0.5, 
+                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         shelfY, 
-                        viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5
+                        viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5
                       ]}
                       fontSize={baseFontSize}
-                      color="#4CAF50"
+                      color={dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
                       renderOrder={999}
                     >
-                      {Math.round(basicThickness / 0.01)}
+                      {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                     </Text>
                     
                     {/* 선반 두께 수직선 - 왼쪽으로 이동 */}
                     <Line
                       points={[
-                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5],
-                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]
+                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5],
+                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]
                       ]}
-                      color="#4CAF50"
+                      color={dimensionColor}
                       lineWidth={1}
                     />
                     {/* 선반 두께 수직선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
-                      <meshBasicMaterial color="#4CAF50" />
+                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
-                      <meshBasicMaterial color="#4CAF50" />
+                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
                     </mesh>
                   </group>
                 );
@@ -301,44 +351,69 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               const topFrameTopY = topFrameY + basicThickness / 2; // 상단 프레임의 상단
               const topFrameBottomY = topFrameY - basicThickness / 2; // 상단 프레임의 하단
               
-              shelfThicknessElements.push(
+              // 상단 프레임 치수는 showTopFrameDimension이 true일 때만 표시
+              if (showTopFrameDimension) {
+                shelfThicknessElements.push(
                 <group key="top-frame-thickness">
                   {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 */}
+                  {viewMode === '3D' && (
+                    <Text
+                      position={[
+                        -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                        topFrameY - 0.01, 
+                        depth/2 + 0.1 - 0.01
+                      ]}
+                      fontSize={baseFontSize}
+                      color="rgba(0, 0, 0, 0.3)"
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[0, 0, Math.PI / 2]}
+                      renderOrder={998}
+                    >
+                      {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                    </Text>
+                  )}
                   <Text
                     position={[
-                      -innerWidth/2 * 0.3 - 0.5, 
+                      viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                       topFrameY, 
-                      viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5
+                      viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5
                     ]}
                     fontSize={baseFontSize}
-                    color="#4CAF50"
+                    color={dimensionColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, Math.PI / 2]}
                   >
-                    {Math.round(basicThickness / 0.01)}
+                    {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                   </Text>
                   
                   {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
                   <Line
                     points={[
-                      [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5],
-                      [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]
+                      [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5],
+                      [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]
                     ]}
-                    color="#4CAF50"
+                    color={dimensionColor}
                     lineWidth={1}
                   />
                   {/* 상단 프레임 두께 수직선 양끝 점 */}
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]}>
-                    <sphereGeometry args={[0.03, 8, 8]} />
-                    <meshBasicMaterial color="#4CAF50" />
+                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
                   </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + zOffset + 0.5]}>
-                    <sphereGeometry args={[0.03, 8, 8]} />
-                    <meshBasicMaterial color="#4CAF50" />
+                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + zOffset + 0.5]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
                   </mesh>
                 </group>
-              );
+                );
+              }
+              
+              // shouldShowDimensions가 false면 빈 요소 반환
+              if (!shouldShowDimensions) {
+                return null;
+              }
               
               return (
                 <>
@@ -380,11 +455,28 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     return (
                       <group key={`dimension-${i}`}>
                     {/* 치수 텍스트 - 수직 가이드선 좌측에 표시 */}
+                    {viewMode === '3D' && (
+                      <Text
+                        position={[
+                          -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                          compartment.centerY - 0.01, 
+                          depth/2 + 0.1 - 0.01
+                        ]}
+                        fontSize={baseFontSize}
+                        color="rgba(0, 0, 0, 0.3)"
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={998}
+                      >
+                        {Math.round(compartment.height * 100)}
+                      </Text>
+                    )}
                     <Text
                       position={[
-                        -innerWidth/2 * 0.3 - 0.5, 
+                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         compartment.centerY, 
-                        viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness + zOffset + 0.2
+                        viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.2
                       ]}
                       fontSize={baseFontSize}
                       color={isHighlighted ? "#FFD700" : textColor}
@@ -407,25 +499,25 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         document.body.style.cursor = 'auto';
                       }}
                     >
-                      {Math.round(compartment.height)}
+                      {Math.round(compartment.height * 100)}
                     </Text>
                     
                     {/* 수직 연결선 (치수선) - 왼쪽으로 이동 */}
                     <Line
                       points={[
-                        [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness + zOffset + 0.15],
-                        [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness + zOffset + 0.15]
+                        [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15],
+                        [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]
                       ]}
                       color={isHighlighted ? "#FFD700" : dimensionColor}
                       lineWidth={isHighlighted ? 2 : 1}
                     />
                     {/* 수직 연결선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness + zOffset + 0.15]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
+                    <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? basicThickness/2 + zOffset + (depth - basicThickness)/2 + 0.01 : basicThickness + zOffset + 0.15]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
+                    <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.15]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                     </mesh>
                   </group>
@@ -491,7 +583,21 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               compartmentCenterY = compartmentBottomY + compartmentHeight / 2;
             }
             
-            const compartmentHeightMm = Math.round(compartmentHeight / 0.01);
+            // compartmentHeight를 mm로 변환 (Three.js 단위 * 100)
+            const compartmentHeightMm = Math.round(compartmentHeight * 100);
+            
+            // 디버깅
+            console.log('🟢 균등분할모드 - 칸 높이:', {
+              i,
+              innerHeight,
+              innerHeight_mm: innerHeight * 100,
+              shelfSpacing,
+              shelfSpacing_mm: shelfSpacing * 100,
+              compartmentHeight,
+              compartmentHeight_mm: compartmentHeight * 100,
+              compartmentHeightMm,
+              표시될값: compartmentHeightMm
+            });
             
             // 각 칸의 상단 Y 좌표 계산
             const compartmentTopY = compartmentBottomY + compartmentHeight;
@@ -503,13 +609,34 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             return (
               <group key={`dimension-${i}`}>
                 {/* 치수 텍스트 - CleanCAD2D 스타일로 칸 중앙에 표시 */}
+                {viewMode === '3D' && (
+                  <Text
+                    position={[
+                      -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                      compartmentCenterY - 0.01, 
+                      depth/2 + 0.1 - 0.01
+                    ]}
+                    fontSize={baseFontSize}
+                    color="rgba(0, 0, 0, 0.3)"
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={998}
+                  >
+                    {compartmentHeightMm}
+                  </Text>
+                )}
                 <Text
-                  position={[0, compartmentCenterY, basicThickness + zOffset + 0.2]}
+                  position={[
+                    viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : 0, 
+                    compartmentCenterY, 
+                    viewMode === '3D' ? depth/2 + 0.1 : basicThickness + zOffset + 0.2
+                  ]}
                   fontSize={baseFontSize}
                   color={isHighlighted ? "#FFD700" : textColor}
                   anchorX="center"
                   anchorY="middle"
-                  rotation={[0, 0, -Math.PI / 2]} // 텍스트를 90도 회전하여 세로로 표시
+                  rotation={[0, 0, viewMode === '3D' ? Math.PI / 2 : -Math.PI / 2]} // 3D에서는 270도, 2D에서는 90도 회전
                   onClick={(e: ThreeEvent<MouseEvent>) => {
                     e.stopPropagation();
                     if (compartmentId) {

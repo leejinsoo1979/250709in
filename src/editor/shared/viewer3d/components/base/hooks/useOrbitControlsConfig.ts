@@ -34,8 +34,8 @@ export interface OrbitControlsConfig {
  * - 두 손가락 클릭 후 드래그: 화면 팬 이동
  * 
  * 마우스 컨트롤:
- * - 왼쪽 버튼: 회전 (3D 모드에서만) 
- * - 중간 버튼(휠 클릭): 팬
+ * - 왼쪽 버튼: 객체 선택/이동용 (회전 없음)
+ * - 중간 버튼(휠 클릭): 회전 (3D 모드에서만)
  * - 휠 스크롤: 줌 인/아웃
  * - 오른쪽 버튼: 팬
  * 
@@ -99,8 +99,8 @@ export const useOrbitControlsConfig = (
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
       mouseButtons: {
-        LEFT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 3D 모드에서만 왼쪽 버튼으로 회전
-        MIDDLE: THREE.MOUSE.PAN, // 중간 버튼(휠 클릭)으로 팬 기능
+        LEFT: undefined, // 왼쪽 버튼은 객체 선택/이동용으로만 사용 (회전 없음)
+        MIDDLE: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭)으로 회전 (3D 모드에서만)
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼으로 팬
       },
       touches: {

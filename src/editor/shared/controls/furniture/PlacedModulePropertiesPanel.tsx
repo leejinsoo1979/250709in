@@ -169,11 +169,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     // 슬롯 인덱스가 있으면 기둥 슬롯 분석
     let slotInfo = null;
     if (currentPlacedModule.slotIndex !== undefined) {
-      const columnSlots = analyzeColumnSlots(spaceInfo);
+      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
       slotInfo = columnSlots[currentPlacedModule.slotIndex];
     } else {
       // 슬롯 인덱스가 없으면 위치 기반으로 판단
-      const columnSlots = analyzeColumnSlots(spaceInfo);
+      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
       const indexing = calculateSpaceIndexing(spaceInfo);
       
       // 가구 위치에서 가장 가까운 슬롯 찾기

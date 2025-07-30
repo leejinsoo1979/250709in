@@ -1,0 +1,59 @@
+.container {
+  padding: 16px;
+  background: var(--color-surface);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.thumbnailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.dragging {
+  opacity: 0.5;
+}
+
+/* CSS 변수 정의 (테마 지원) */
+:root {
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f5f5;
+  --color-surface-secondary: #f9f9f9;
+  --color-border: #e0e0e0;
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-primary: #4CAF50;
+  --color-info: #2196F3;
+  --color-info-background: rgba(33, 150, 243, 0.1);
+  --color-info-border: rgba(33, 150, 243, 0.3);
+  --color-info-text: #1976D2;
+}
+
+/* 다크 모드 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #1e1e1e;
+    --color-surface-hover: #2a2a2a;
+    --color-surface-secondary: #252525;
+    --color-border: #333333;
+    --color-text: #ffffff;
+    --color-text-secondary: #aaaaaa;
+    --color-primary: #4CAF50;
+    --color-info: #64B5F6;
+    --color-info-background: rgba(100, 181, 246, 0.1);
+    --color-info-border: rgba(100, 181, 246, 0.3);
+    --color-info-text: #90CAF9;
+  }
+}

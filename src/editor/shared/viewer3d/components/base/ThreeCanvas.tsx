@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -170,82 +171,40 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 가구 드래그 이벤트 리스너
   useEffect(() => {
     const handleFurnitureDragStart = () => {
-      console.log('🎯 가구 드래그 시작 - OrbitControls 회전 비활성화 및 카메라 정면 리셋');
+      console.log('🎯 가구 드래그 시작');
       setIsFurnitureDragging(true);
-      
-      // 카메라를 정면 뷰로 리셋
-      if (controlsRef.current && viewMode === '3D') {
-        const controls = controlsRef.current;
-        
-        // OrbitControls 리셋
-        controls.reset();
-        
-        // 정면 뷰 카메라 위치로 설정
-        if (cameraPosition) {
-          controls.object.position.set(...cameraPosition);
-        } else {
-          controls.object.position.set(...camera.position);
-        }
-        
-        // 카메라 타겟 설정
-        if (cameraTarget) {
-          controls.target.set(...cameraTarget);
-        } else {
-          controls.target.set(...camera.target);
-        }
-        
-        // 카메라 up 벡터 리셋 (정면 뷰)
-        controls.object.up.set(0, 1, 0);
-        
-        // 카메라가 타겟을 바라보도록 설정
-        controls.object.lookAt(controls.target);
-        
-        // 컨트롤 업데이트
-        controls.update();
-        
-        console.log('🎯 카메라 정면 뷰로 리셋 완료');
-      }
+      // 카메라 리셋 기능 제거 - 사용자가 원하는 각도 유지
     };
 
     const handleFurnitureDragEnd = () => {
       console.log('🎯 가구 드래그 종료 - OrbitControls 회전 활성화');
       setIsFurnitureDragging(false);
+      
+      // 카메라 컨트롤 재활성화
+      if (controlsRef.current) {
+        const controls = controlsRef.current;
+        controls.enabled = true;
+        controls.enablePan = true;
+        controls.enableZoom = true;
+        controls.enableRotate = viewMode === '3D';
+        controls.update();
+        console.log('🎯 카메라 컨트롤 재활성화 완료');
+      }
     };
 
     const handleFurniturePlacementComplete = () => {
-      console.log('🎯 가구 배치 완료 - 카메라 정면 리셋');
+      console.log('🎯 가구 배치 완료');
+      // 카메라 리셋 기능 제거 - 사용자가 원하는 각도 유지
       
-      // 카메라를 정면 뷰로 리셋
-      if (controlsRef.current && viewMode === '3D') {
+      // 카메라 컨트롤 재활성화
+      if (controlsRef.current) {
         const controls = controlsRef.current;
-        
-        // OrbitControls 리셋
-        controls.reset();
-        
-        // 정면 뷰 카메라 위치로 설정
-        if (cameraPosition) {
-          controls.object.position.set(...cameraPosition);
-        } else {
-          controls.object.position.set(...camera.position);
-        }
-        
-        // 카메라 타겟 설정
-        if (cameraTarget) {
-          controls.target.set(...cameraTarget);
-        } else {
-          controls.target.set(...camera.target);
-        }
-        
-        // 카메라 up 벡터 리셋 (정면 뷰)
-        controls.object.up.set(0, 1, 0);
-        
-        // 카메라가 타겟을 바라보도록 설정
-        controls.object.lookAt(controls.target);
-        
-        // 컨트롤 업데이트
+        controls.enabled = true;
+        controls.enablePan = true;
+        controls.enableZoom = true;
+        controls.enableRotate = viewMode === '3D';
         controls.update();
-        
-        console.log('🎯 카메라 정면 뷰로 리셋 완료 (배치 후)');
+        console.log('🎯 카메라 컨트롤 재활성화 완료');
       }
     };
 
@@ -495,7 +454,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           touchAction: 'none'
         }}
         dpr={[1, 2]}
-        frameloop="demand"
+        frameloop="always"
         gl={{
           powerPreference: 'high-performance',  // 고성능 GPU 사용
           antialias: true,

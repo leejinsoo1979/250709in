@@ -103,7 +103,7 @@ export const useFurnitureKeyboard = ({
               }
               
               // 기둥 슬롯 분석
-              const columnSlots = analyzeColumnSlots(spaceInfo);
+              const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;
@@ -177,7 +177,7 @@ export const useFurnitureKeyboard = ({
               }
               
               // 기둥 슬롯 분석
-              const columnSlots = analyzeColumnSlots(spaceInfo);
+              const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;

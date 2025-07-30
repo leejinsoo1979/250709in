@@ -216,7 +216,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
-      const columnSlots = analyzeColumnSlots(spaceInfo);
+      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
       const targetSlotInfo = columnSlots[slotIndex];
       
       if (targetSlotInfo && targetSlotInfo.hasColumn) {

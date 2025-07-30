@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSpring, animated } from '@react-spring/three';
 import * as THREE from 'three';
+import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -19,7 +20,10 @@ const BoxWithEdges: React.FC<{
   renderMode: 'solid' | 'wireframe';
   isDragging?: boolean;
   isEditMode?: boolean;
-}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false }) => {
+  onClick?: (event: ThreeEvent<MouseEvent>) => void;
+  onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
+  onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
+}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut }) => {
   const { theme } = useTheme();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
@@ -44,17 +48,11 @@ const BoxWithEdges: React.FC<{
   // 재질을 그대로 사용 (복제하지 않음)
   const processedMaterial = material;
   
-  // 재질 텍스처 확인
+  // 재질 텍스처 확인 (성능 최적화로 로그 제거)
   useEffect(() => {
     if (material && 'map' in material) {
       const mat = material as THREE.MeshStandardMaterial;
-      console.log('🚪 DoorModule BoxWithEdges 재질 상태:', {
-        hasMap: !!mat.map,
-        mapImage: mat.map?.image?.src,
-        color: mat.color?.getHexString(),
-        toneMapped: mat.toneMapped,
-        roughness: mat.roughness
-      });
+      // 로그 제거로 성능 향상
     }
   }, [material]);
   
@@ -68,6 +66,9 @@ const BoxWithEdges: React.FC<{
           receiveShadow={viewMode === '3D' && !isEditMode} 
           castShadow={viewMode === '3D' && !isEditMode}
           renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
+          onClick={onClick}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
         />
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
@@ -183,25 +184,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   }, []); // 의존성 배열 비움 - 한 번만 생성
 
-  // 싱글 가구용 도어 재질 - 한 번만 생성
+  // 싱글 가구용 도어 재질 - 한 번만 생성 (성능 최적화)
   const doorMaterial = useMemo(() => {
-    console.log('🚪 싱글 도어 재질 생성 (한 번만)');
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 한 번만 생성
+  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
   const leftDoorMaterial = useMemo(() => {
-    console.log('🚪 왼쪽 도어 재질 생성 (한 번만)');
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 한 번만 생성
+  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
   const rightDoorMaterial = useMemo(() => {
-    console.log('🚪 오른쪽 도어 재질 생성 (한 번만)');
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 재질 속성 업데이트 (재생성 없이)
+  // 재질 속성 업데이트 (재생성 없이) - 성능 최적화
   useEffect(() => {
     const materials = [doorMaterial, leftDoorMaterial, rightDoorMaterial];
     materials.forEach(mat => {
@@ -254,36 +252,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-    
-    if (isEditMode) {
-      console.log('🚪👻 DoorModule 편집 모드 활성화:', {
-        isEditMode,
-        moduleId: moduleData?.id,
-        opacity: doorMaterial?.opacity,
-        transparent: doorMaterial?.transparent,
-        depthWrite: doorMaterial?.depthWrite,
-        emissive: doorMaterial?.emissive?.getHexString(),
-        color: doorMaterial?.color.getHexString()
-      });
-    }
   }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
 
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 텍스처 적용 함수
+  // 텍스처 적용 함수 (성능 최적화)
   const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
     if (textureUrl && material) {
-      console.log(`🚪 ${doorSide} 도어 텍스처 적용 시작:`, textureUrl);
-      
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(textureUrl)) {
-        console.log(`🚪 ${doorSide} Cabinet Texture 1 감지됨!`);
         applyCabinetTexture1Settings(material);
-        console.log(`🚪 ${doorSide} Cabinet Texture 1 설정 후:`, {
-          color: material.color.getHexString(),
-          toneMapped: material.toneMapped,
-          roughness: material.roughness
-        });
       }
       
       const textureLoader = new THREE.TextureLoader();
@@ -353,19 +331,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       materialConfig
     });
     
-    // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용
+    // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용 (성능 최적화)
     if (!isDragging && !isEditMode) {
       // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
       if (doorMaterial) {
-        console.log('🚪 DoorModule - 싱글 도어 재질 적용');
         applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
       }
       if (leftDoorMaterial) {
-        console.log('🚪 DoorModule - 왼쪽 도어 재질 적용');
         applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
       }
       if (rightDoorMaterial) {
-        console.log('🚪 DoorModule - 오른쪽 도어 재질 적용');
         applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
       }
     }
@@ -445,18 +420,87 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
-  // 도어 열림 상태 계산
-  const shouldOpenDoors = doorsOpen || isEditMode;
+  // 도어 열림 상태 계산 - 성능 최적화
+  const shouldOpenDoors = useMemo(() => doorsOpen || isEditMode, [doorsOpen, isEditMode]);
   
-  // 애니메이션 설정 - 힌지 위치별로 별도 애니메이션 (80도 열림)
-  // 편집 모드에서도 부드러운 애니메이션 적용
+  // 도어 애니메이션 상태 추적
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // 도어 상태 변경 시 애니메이션 시작
+  useEffect(() => {
+    if (doorsOpen !== undefined) {
+      setIsAnimating(true);
+      // 애니메이션이 끝나면 (약 1초 후) 상태 업데이트
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [doorsOpen]);
+  
+  // 애니메이션 중일 때 프레임마다 렌더링
+  useFrame(() => {
+    if (isAnimating && gl) {
+      // 애니메이션 중일 때만 강제 렌더링
+      if ('invalidate' in gl) {
+        (gl as any).invalidate();
+      }
+    }
+  });
+  
+  // 도어 클릭 핸들러
+  const handleDoorClick = (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    
+    console.log('🚪 도어 클릭 이벤트 발생:', {
+      moduleId: moduleData?.id,
+      doorsOpen,
+      isEditMode,
+      eventType: event.type,
+      target: event.target,
+      currentDoorsOpen: doorsOpen,
+      willBeOpen: !doorsOpen
+    });
+    
+    // 도어 상태 토글
+    const { toggleDoors } = useUIStore.getState();
+    toggleDoors();
+    
+    // Three.js 렌더러에 다시 그리기 요청 (react-three-fiber의 invalidate 사용)
+    if (gl) {
+      // invalidate 함수가 있으면 사용, 없으면 직접 렌더
+      if ('invalidate' in gl) {
+        (gl as any).invalidate();
+      }
+    }
+    
+    // 토글 후 상태 확인
+    setTimeout(() => {
+      const newState = useUIStore.getState().doorsOpen;
+      console.log('🚪 도어 상태 토글 완료, 새로운 상태:', newState);
+    }, 100);
+  };
+
+  // 도어 호버 핸들러
+  const handleDoorPointerOver = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handleDoorPointerOut = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    document.body.style.cursor = 'auto';
+  };
+  
+  // 애니메이션 설정 - 성능 최적화 (80도 열림)
+  // 빠르고 부드러운 애니메이션을 위해 tension/friction 조정
   const leftHingeDoorSpring = useSpring({
     // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 80도
     rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0,
     config: { 
-      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
-      friction: 20, // 원래대로 복원 (충분한 감속)
-      clamp: true   // 오버슈팅 방지
+      tension: 120,  // 빠른 반응
+      friction: 14,  // 적절한 감속
+      clamp: true    // 오버슈팅 방지
     },
   });
   
@@ -464,28 +508,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 80도
     rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0,
     config: { 
-      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
-      friction: 20, // 원래대로 복원 (충분한 감속)
-      clamp: true   // 오버슈팅 방지
+      tension: 120,  // 빠른 반응
+      friction: 14,  // 적절한 감속
+      clamp: true    // 오버슈팅 방지
     },
   });
   
-  // 듀얼 가구용 애니메이션 설정 (80도 열림)
+  // 듀얼 가구용 애니메이션 설정 (80도 열림) - 성능 최적화
   const dualLeftDoorSpring = useSpring({
     rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
     config: { 
-      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
-      friction: 20, // 원래대로 복원 (충분한 감속)
-      clamp: true   // 오버슈팅 방지
+      tension: 120,  // 빠른 반응
+      friction: 14,  // 적절한 감속
+      clamp: true    // 오버슈팅 방지
     },
   });
   
   const dualRightDoorSpring = useSpring({
     rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
     config: { 
-      tension: 70,  // 원래대로 복원 (느리고 부드럽게)
-      friction: 20, // 원래대로 복원 (충분한 감속)
-      clamp: true   // 오버슈팅 방지
+      tension: 120,  // 빠른 반응
+      friction: 14,  // 적절한 감속
+      clamp: true    // 오버슈팅 방지
     },
   });
 
@@ -532,6 +576,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 renderMode={renderMode}
                 isDragging={isDragging}
                 isEditMode={isEditMode}
+                onClick={handleDoorClick}
+                onPointerOver={handleDoorPointerOver}
+                onPointerOut={handleDoorPointerOut}
               />
             </group>
           </animated.group>
@@ -549,6 +596,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 renderMode={renderMode}
                 isDragging={isDragging}
                 isEditMode={isEditMode}
+                onClick={handleDoorClick}
+                onPointerOver={handleDoorPointerOver}
+                onPointerOut={handleDoorPointerOut}
               />
             </group>
           </animated.group>
@@ -581,6 +631,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
+              onClick={handleDoorClick}
+              onPointerOver={handleDoorPointerOver}
+              onPointerOut={handleDoorPointerOut}
             />
             {/* 윤곽선 */}
             <lineSegments>

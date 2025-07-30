@@ -2,6 +2,8 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Line, Text } from '@react-three/drei';
+import { useUIStore } from '@/store/uiStore';
 
 // 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -103,6 +105,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   material,
   renderMode,
 }) => {
+  const showDimensions = useUIStore(state => state.showDimensions);
+  const view2DDirection = useUIStore(state => state.view2DDirection);
+  const { viewMode } = useSpace3DView();
+  
+  // 치수 표시용 색상 설정
+  const getThemeColor = () => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
+  };
+  
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
+  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
+  
   if (drawerCount <= 0) {
     return null;
   }
@@ -117,7 +132,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const HANDLE_PLATE_THICKNESS = mmToThreeUnits(20); // 손잡이 판 두께
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
-  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string) => {
+  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false) => {
     const [centerX, centerY, centerZ] = centerPosition;
     
     // 서랍 실제 깊이 계산: 가구 앞면에서 30mm 후퇴, 뒷면에서 17mm 전진 = 총 47mm 감소
@@ -188,6 +203,76 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         />
         
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
+        
+        {/* CAD 기호 (삼각형) 및 서랍 깊이 표시 */}
+        {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
+          <group>
+            {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시 */}
+            {isTopDrawer && (
+              <>
+                {/* 3D 모드일 때 그림자 효과 */}
+                {viewMode === '3D' && (
+                  <Line
+                    points={[
+                      [centerX - mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
+                      [centerX + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
+                      [centerX + mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
+                      [centerX - mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01]
+                    ]}
+                    color="rgba(0, 0, 0, 0.3)"
+                    lineWidth={2}
+                  />
+                )}
+                <Line
+                  points={[
+                    [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
+                    [centerX, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6), centerZ + actualDrawerDepth/2 + 0.1],
+                    [centerX + mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
+                    [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={2}
+                />
+              </>
+            )}
+            
+            {/* 서랍 깊이 표시 - 서랍 전면에 표시 */}
+            <group>
+              {/* 3D 모드일 때 그림자 효과 */}
+              {viewMode === '3D' && (
+                <Text
+                  position={[
+                    centerX + 0.01,
+                    centerY - 0.01,
+                    viewMode === '3D' ? depth/2 + 0.1 - 0.01 : centerZ + actualDrawerDepth/2 + 0.1
+                  ]}
+                  fontSize={baseFontSize}
+                  color="rgba(0, 0, 0, 0.3)"
+                  anchorX="center"
+                  anchorY="middle"
+                  renderOrder={998}
+                >
+                  D{Math.round((actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100)}
+                </Text>
+              )}
+              <Text
+                position={[
+                  centerX,
+                  centerY,
+                  viewMode === '3D' ? depth/2 + 0.1 : centerZ + actualDrawerDepth/2 + 0.1
+                ]}
+                fontSize={baseFontSize}
+                color={dimensionColor}
+                anchorX="center"
+                anchorY="middle"
+                renderOrder={999}
+                depthTest={false}
+              >
+                D{Math.round((actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100)}
+              </Text>
+            </group>
+          </group>
+        )}
       </group>
     );
   };
@@ -212,7 +297,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             mmToThreeUnits(drawerHeight) - basicThickness/2,
             depth - basicThickness,
             [0, drawerCenter, basicThickness/2],
-            `custom-drawer-${i}`
+            `custom-drawer-${i}`,
+            i === drawerHeights.length - 1 // 마지막 인덱스가 최상단 서랍
           );
           
           // 다음 서랍을 위해 Y 위치 업데이트
@@ -236,7 +322,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             drawerHeight - basicThickness/2,
             depth - basicThickness,
             [0, relativeYPosition, basicThickness/2],
-            `drawer-${i}`
+            `drawer-${i}`,
+            i === drawerCount - 1 // 마지막 인덱스가 최상단 서랍
           );
         })}
       </group>

@@ -32,6 +32,7 @@ import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
 import WallControl from '@/editor/shared/controls/structure/WallControl';
+import PanelBControl from '@/editor/shared/controls/structure/PanelBControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
 
@@ -93,6 +94,14 @@ const Configurator: React.FC = () => {
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // D 키로 도어 열기/닫기 토글
+      if (event.key === 'd' || event.key === 'D') {
+        event.preventDefault();
+        console.log('🚪 D 키로 도어 토글 시도');
+        toggleDoors();
+        return;
+      }
+      
       // Ctrl+E 또는 Cmd+E로 선택된 기둥 편집 모달 열기
       if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
         event.preventDefault();
@@ -1567,6 +1576,11 @@ const Configurator: React.FC = () => {
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
             />
+            <WallControl 
+              walls={spaceInfo.walls || []}
+              onWallsChange={(walls) => setSpaceInfo({ walls })}
+            />
+            <PanelBControl />
           </div>
         );
       case 'etc':

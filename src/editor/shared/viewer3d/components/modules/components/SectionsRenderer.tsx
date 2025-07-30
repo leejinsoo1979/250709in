@@ -57,7 +57,17 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
+  const view2DDirection = useUIStore(state => state.view2DDirection);
   const { viewMode } = useSpace3DView();
+  
+  // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
+  const getThemeColor = () => {
+    const computedStyle = getComputedStyle(document.documentElement);
+    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
+  };
+  
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
+  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
   // sections 기반 내부 구조 렌더링
   const renderSections = () => {
@@ -101,11 +111,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       if (section.type === 'open' || section.type === 'drawer') {
         console.log(`📏 Section ${index} (${section.type}):`, {
           calculatedHeight: sectionHeight,
-          calculatedHeightMm: Math.round(sectionHeight / 0.01),
+          calculatedHeightMm: Math.round(sectionHeight * 100),
           totalHeight: height,
-          totalHeightMm: Math.round(height / 0.01),
+          totalHeightMm: Math.round(height * 100),
           availableHeight: height - basicThickness * 2,
-          availableHeightMm: Math.round((height - basicThickness * 2) / 0.01)
+          availableHeightMm: Math.round((height - basicThickness * 2) * 100)
         });
       }
       
@@ -127,6 +137,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 zOffset={shelfZOffset}
                 shelfPositions={section.shelfPositions}
                 isTopFinishPanel={section.isTopFinishPanel}
+                showTopFrameDimension={index === 0}
                 renderMode={renderMode}
                 furnitureId={furnitureId}
               />
@@ -135,25 +146,27 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           break;
           
         case 'hanging':
-          // 옷걸이 구역
-          if (section.count && section.count > 0) {
-            sectionContent = (
-              <ShelfRenderer
-                shelfCount={section.count}
-                innerWidth={innerWidth}
-                innerHeight={sectionHeight}
-                depth={adjustedDepthForShelves}
-                basicThickness={basicThickness}
-                material={material}
-                yOffset={sectionCenterY}
-                zOffset={shelfZOffset}
-                shelfPositions={section.shelfPositions}
-                isTopFinishPanel={section.isTopFinishPanel}
-                renderMode={renderMode}
-                furnitureId={furnitureId}
-              />
-            );
-          }
+          // 옷걸이 구역 - 안전선반이 없어도 ShelfRenderer 호출 (치수 표시를 위해)
+          sectionContent = (
+            <ShelfRenderer
+              shelfCount={section.shelfPositions ? section.shelfPositions.length : 0}
+              innerWidth={innerWidth}
+              innerHeight={sectionHeight}
+              depth={adjustedDepthForShelves}
+              basicThickness={basicThickness}
+              material={material}
+              yOffset={sectionCenterY}
+              zOffset={shelfZOffset}
+              shelfPositions={section.shelfPositions}
+              isTopFinishPanel={section.isTopFinishPanel}
+              showTopFrameDimension={index === 0}
+              renderMode={renderMode}
+              furnitureId={furnitureId}
+              sectionType={section.type}
+              sectionInternalHeight={section.internalHeight}
+              isLastSection={index === allSections.length - 1}
+            />
+          );
           break;
           
         case 'drawer':
@@ -188,26 +201,71 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - 서랍과 오픈(하부장) 섹션 전체 높이 표시 */}
-          {showDimensions && (section.type === 'drawer' || section.type === 'open') && (
+          {/* 섹션 내경 치수 표시 - 서랍과 선반 없는 hanging 섹션 표시 */}
+          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && 
+           ((section.type === 'drawer') || 
+            (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0))) && (
             <group>
               {(() => {
-                // 섹션의 실제 내경 계산
-                let actualInternalHeight = sectionHeight;
-                let bottomY = sectionCenterY - sectionHeight/2;
-                let topY = sectionCenterY + sectionHeight/2;
+                // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
+                let bottomY, topY;
+                let actualInternalHeight;
                 
-                // 첫 번째 섹션이면 하부 프레임 고려
-                if (index === 0) {
-                  // 실제 내경은 하부 프레임 두께를 뺀 값
-                  actualInternalHeight -= basicThickness;
-                  // 하단 가이드선은 바닥 프레임 상단 (원래 위치 유지)
-                  // bottomY += basicThickness;
-                }
-                
-                // 다음 섹션이 있으면 중간 구분 패널 고려 (상단을 패널 하단으로)
-                if (index < allSections.length - 1) {
-                  topY -= basicThickness;
+                // 섹션 타입별로 가이드선 위치 계산
+                if (section.type === 'hanging' || section.type === 'drawer') {
+                  // 섹션의 절대 위치 계산
+                  const sectionBottomY = sectionCenterY - sectionHeight/2;
+                  const sectionTopY = sectionCenterY + sectionHeight/2;
+                  
+                  // 하단 가이드선 위치 결정
+                  if (index === 0) {
+                    // 첫 번째 섹션: 하부 프레임 상단
+                    bottomY = -height/2 + basicThickness;
+                  } else {
+                    // 이전 섹션과의 경계: 중간 구분 패널 상단
+                    bottomY = sectionBottomY + basicThickness;
+                    
+                    // hanging 섹션에서 안전선반이 없는 경우, bottomY를 18mm 아래로 조정
+                    if (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0)) {
+                      // 안전선반이 없으면 18mm(basicThickness) 아래로 연장
+                      bottomY = sectionBottomY;
+                    }
+                  }
+                  
+                  // 디버깅: hanging 섹션의 치수 계산 확인
+                  if (section.type === 'hanging') {
+                    console.log('🔍 Hanging 섹션 치수 계산:', {
+                      index,
+                      sectionType: section.type,
+                      hasShelfPositions: !!(section.shelfPositions && section.shelfPositions.length > 0),
+                      shelfPositions: section.shelfPositions,
+                      sectionBottomY,
+                      sectionTopY,
+                      bottomY,
+                      basicThickness,
+                      basicThickness_mm: basicThickness * 100,
+                      height,
+                      calculatedHeight: section.calculatedHeight,
+                      sectionHeight
+                    });
+                  }
+                  
+                  // 상단 가이드선 위치 결정
+                  if (index === allSections.length - 1) {
+                    // 마지막 섹션: 상부 프레임의 하단면을 가리켜야 함
+                    topY = height/2 - basicThickness;
+                  } else {
+                    // 다음 섹션과의 경계: 중간 구분 패널의 하단면을 가리켜야 함
+                    topY = sectionTopY - basicThickness;
+                  }
+                  
+                  // 실제 내경 계산 (가이드선 사이의 거리)
+                  actualInternalHeight = (topY - bottomY) / 0.01;
+                } else {
+                  // 다른 타입은 기본값 사용
+                  bottomY = sectionCenterY - sectionHeight/2;
+                  topY = sectionCenterY + sectionHeight/2;
+                  actualInternalHeight = sectionHeight / 0.01;
                 }
                 
                 const centerY = (topY + bottomY) / 2;
@@ -215,42 +273,59 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 return (
                   <>
                     {/* 치수 텍스트 - 수직선 좌측에 표시 */}
+                    {viewMode === '3D' && (
+                      <Text
+                        position={[
+                          -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                          centerY - 0.01, 
+                          depth/2 + 0.1 - 0.01
+                        ]}
+                        fontSize={baseFontSize}
+                        color="rgba(0, 0, 0, 0.3)"
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={998}
+                      >
+                        {Math.round(actualInternalHeight)}
+                      </Text>
+                    )}
                     <Text
                       position={[
-                        -innerWidth/2 * 0.3 - 0.5, 
+                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         centerY, 
                         viewMode === '3D' 
-                          ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 
+                          ? depth/2 + 0.1
                           : basicThickness + 0.2
                       ]}
-                      fontSize={0.32}
-                      color="#4CAF50"
+                      fontSize={baseFontSize}
+                      color={dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
                     renderOrder={999}
                     depthTest={false}
                     >
-                      {Math.round(actualInternalHeight / 0.01)}
+                      {Math.round(actualInternalHeight)}
                     </Text>
                     
                     {/* 수직 연결선 - 왼쪽으로 이동 */}
                     <Line
                       points={[
-                        [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness + 0.15],
-                        [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness + 0.15]
+                        [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15],
+                        [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]
                       ]}
-                      color="#4CAF50"
+                      color={dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직 연결선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness + 0.15]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
-                      <meshBasicMaterial color="#4CAF50" />
+                    <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness + 0.15]}>
-                      <sphereGeometry args={[0.03, 8, 8]} />
-                      <meshBasicMaterial color="#4CAF50" />
+                    <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
                     </mesh>
                   </>
                 );
@@ -259,89 +334,184 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && index === 0 && (section.type === 'drawer' || section.type === 'open') && (
+          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === 0 && (section.type === 'drawer' || section.type === 'open') && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
+              {viewMode === '3D' && (
+                <Text
+                  position={[
+                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                    -height/2 + basicThickness/2 - 0.01, 
+                    depth/2 + 0.1 - 0.01
+                  ]}
+                  fontSize={baseFontSize}
+                  color="rgba(0, 0, 0, 0.3)"
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, Math.PI / 2]}
+                  renderOrder={998}
+                >
+                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                </Text>
+              )}
               <Text
                 position={[
-                  -innerWidth/2 * 0.3 - 0.5, 
+                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                   -height/2 + basicThickness/2, 
                   viewMode === '3D' 
-                    ? basicThickness/2 + (depth - basicThickness)/2 + 0.1 
+                    ? depth/2 + 0.1
                     : basicThickness/2 + 0.8
                 ]}
-                fontSize={0.32}
-                color="#4CAF50"
+                fontSize={baseFontSize}
+                color={dimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 2]}
                 renderOrder={999}
                 depthTest={false}
               >
-                {Math.round(basicThickness / 0.01)}
+                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
               </Text>
               
               {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
               <Line
                 points={[
-                  [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5],
-                  [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]
+                  [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
+                  [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
                 ]}
-                color="#4CAF50"
+                color={dimensionColor}
                 lineWidth={1}
               />
               {/* 하단 프레임 두께 수직선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]}>
-                <sphereGeometry args={[0.02, 8, 8]} />
-                <meshBasicMaterial color="#4CAF50" />
+              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
               </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]}>
-                <sphereGeometry args={[0.02, 8, 8]} />
-                <meshBasicMaterial color="#4CAF50" />
+              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
               </mesh>
             </group>
           )}
           
           {/* 중간 구분 패널 두께 표시 */}
-          {showDimensions && hasDividerPanel && (
+          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && hasDividerPanel && (
             <group>
               {/* 중간 패널 두께 텍스트 - 수직선 좌측에 표시 */}
+              {viewMode === '3D' && (
+                <Text
+                  position={[
+                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                    dividerPanelY - 0.01, 
+                    depth/2 + 0.1 - 0.01
+                  ]}
+                  fontSize={baseFontSize}
+                  color="rgba(0, 0, 0, 0.3)"
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, Math.PI / 2]}
+                  renderOrder={998}
+                >
+                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                </Text>
+              )}
               <Text
                 position={[
-                  -innerWidth/2 * 0.3 - 0.5, 
+                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                   dividerPanelY, 
                   viewMode === '3D' 
-                    ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 
+                    ? depth/2 + 0.1 
                     : basicThickness/2 + 0.5
                 ]}
-                fontSize={0.32}
-                color="#4CAF50"
+                fontSize={baseFontSize}
+                color={dimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 2]}
                 renderOrder={999}
                 depthTest={false}
               >
-                {Math.round(basicThickness / 0.01)}
+                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
               </Text>
               
               {/* 수직 연결선 - 왼쪽으로 이동 */}
               <Line
                 points={[
-                  [-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5],
-                  [-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]
+                  [-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
+                  [-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
                 ]}
-                color="#4CAF50"
+                color={dimensionColor}
                 lineWidth={1}
               />
               {/* 수직 연결선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]}>
-                <sphereGeometry args={[0.02, 8, 8]} />
-                <meshBasicMaterial color="#4CAF50" />
+              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
               </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? basicThickness/2 + (depth - basicThickness)/2 + 0.01 : basicThickness/2 + 0.5]}>
-                <sphereGeometry args={[0.02, 8, 8]} />
-                <meshBasicMaterial color="#4CAF50" />
+              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
+              </mesh>
+            </group>
+          )}
+          
+          {/* 마지막 섹션의 상단 프레임 두께 표시 */}
+          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === allSections.length - 1 && (
+            <group>
+              {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
+              {viewMode === '3D' && (
+                <Text
+                  position={[
+                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                    height/2 - basicThickness/2 - 0.01, 
+                    depth/2 + 0.1 - 0.01
+                  ]}
+                  fontSize={baseFontSize}
+                  color="rgba(0, 0, 0, 0.3)"
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, Math.PI / 2]}
+                  renderOrder={998}
+                >
+                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                </Text>
+              )}
+              <Text
+                position={[
+                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
+                  height/2 - basicThickness/2, 
+                  viewMode === '3D' 
+                    ? depth/2 + 0.1 
+                    : basicThickness/2 + 0.8
+                ]}
+                fontSize={baseFontSize}
+                color={dimensionColor}
+                anchorX="center"
+                anchorY="middle"
+                rotation={[0, 0, Math.PI / 2]}
+                renderOrder={999}
+                depthTest={false}
+              >
+                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+              </Text>
+              
+              {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
+              <Line
+                points={[
+                  [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
+                  [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
+                ]}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              {/* 상단 프레임 두께 수직선 양끝 점 */}
+              <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
+              </mesh>
+              <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
               </mesh>
             </group>
           )}
