@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Column } from '@/types/space';
+import { useUIStore } from '@/store/uiStore';
 
 interface ColumnDistanceLabelsProps {
   column: Column;
@@ -19,6 +20,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   const [editingDistance, setEditingDistance] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // UI 상태에서 치수 표시 여부 가져오기
+  const showDimensions = useUIStore(state => state.showDimensions);
   
   // CSS 변수에서 실제 테마 색상 가져오기
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {
@@ -152,8 +156,8 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   //   spaceInfo: {width: spaceInfo?.width, depth: spaceInfo?.depth}
   // });
 
-  // 라벨을 숨기는 경우에만 null 반환
-  if (!showLabels) {
+  // 라벨을 숨기는 경우 또는 showDimensions가 false인 경우 null 반환
+  if (!showLabels || !showDimensions) {
     return null;
   }
 
@@ -753,29 +757,31 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         </group>
       )}
 
-      {/* 기둥 정면 중앙에 깊이 표시 */}
-      <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
-        <Text
-          fontSize={0.4}
-          color="#000000"
-          anchorX="center"
-          anchorY="middle"
-          rotation={[0, 0, 0]}
-        >
-          D {currentColumn.depth}
-        </Text>
-        <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[3.0, 1.0]} />
-          <meshBasicMaterial color={themeColors.background} transparent opacity={0.95} />
-        </mesh>
-        <mesh position={[0, 0, -0.005]}>
-          <planeGeometry args={[3.2, 1.2]} />
-          <meshBasicMaterial color={theme?.mode === 'dark' ? '#555555' : '#cccccc'} transparent opacity={0.8} />
-        </mesh>
-      </group>
+      {/* 기둥 정면 중앙에 깊이 표시 - showDimensions 체크 추가 */}
+      {showDimensions && (
+        <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
+          <Text
+            fontSize={0.4}
+            color="#000000"
+            anchorX="center"
+            anchorY="middle"
+            rotation={[0, 0, 0]}
+          >
+            D {currentColumn.depth}
+          </Text>
+          <mesh position={[0, 0, -0.01]}>
+            <planeGeometry args={[3.0, 1.0]} />
+            <meshBasicMaterial color={themeColors.background} transparent opacity={0.95} />
+          </mesh>
+          <mesh position={[0, 0, -0.005]}>
+            <planeGeometry args={[3.2, 1.2]} />
+            <meshBasicMaterial color={theme?.mode === 'dark' ? '#555555' : '#cccccc'} transparent opacity={0.8} />
+          </mesh>
+        </group>
+      )}
 
-      {/* 정면뷰(2D)에서는 기둥 상단에 가로폭 표시 */}
-      {viewMode === '2D' ? (
+      {/* 정면뷰(2D)에서는 기둥 상단에 가로폭 표시 - showDimensions 체크 추가 */}
+      {viewMode === '2D' && showDimensions ? (
         <group position={[currentColumn.position[0], columnHeightM + 0.8, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
@@ -15,7 +15,7 @@ import ColumnDropTarget from './ColumnDropTarget';
 const ColumnGuides: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
   useEffect(() => {
@@ -225,7 +225,9 @@ const ColumnGuides: React.FC = () => {
                         (!hasDroppedCeiling); // 단내림이 없으면 항상 활성
     
     // 영역별 색상 및 선 굵기 설정
-    const zoneColor = isActiveZone ? guideColor : (viewMode === '2D' && view2DTheme === 'dark' ? '#666666' : '#999999'); // 다크모드에서 밝은 회색
+    const zoneColor = viewMode === '2D' && view2DTheme === 'dark' 
+      ? '#FFFFFF' // 2D 다크모드에서는 항상 흰색
+      : (isActiveZone ? guideColor : '#999999'); // 그 외에는 활성 영역만 강조색
     const zoneLineWidth = isActiveZone ? lineWidth * 2 : lineWidth; // 활성 영역만 굵게
     const zoneOpacity = isActiveZone ? 1 : 0.6; // 비활성 영역은 60% 투명도
     
@@ -416,12 +418,15 @@ const ColumnGuides: React.FC = () => {
       positions.forEach((xPos, index) => {
         const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
         
+        // 2D 다크모드일 때 텍스트 색상 처리
+        const textColor = view2DTheme === 'dark' ? '#FFFFFF' : zoneColor;
+        
         guides.push(
           <Text
             key={`${zoneType}-slot-size-2d-${index}`}
             position={[xPos, textY, backZ]}
             fontSize={0.5}
-            color={zoneColor}
+            color={textColor}
             anchorX="center"
             anchorY="middle"
           >

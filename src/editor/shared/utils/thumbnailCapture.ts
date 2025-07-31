@@ -176,12 +176,12 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
   return null;
 };
 
-// 프로젝트 저장 시 자동 썸네일 캡처 (Blob 반환)
-export const captureProjectThumbnail = async (): Promise<Blob | null> => {
+// 프로젝트 저장 시 자동 썸네일 캡처 (base64 문자열 반환)
+export const captureProjectThumbnail = async (): Promise<string | null> => {
   // 먼저 정면 뷰로 캡처 시도
   const frontViewThumbnail = await captureFrontViewThumbnail();
   if (frontViewThumbnail) {
-    return dataURLToBlob(frontViewThumbnail);
+    return frontViewThumbnail; // 이미 base64 문자열
   }
   
   // 정면 뷰 캡처 실패 시 기존 방식 사용
@@ -217,7 +217,7 @@ export const captureProjectThumbnail = async (): Promise<Blob | null> => {
       
       if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
         console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도)`);
-        return dataURLToBlob(thumbnail);
+        return thumbnail; // base64 문자열 반환
       }
       
       // 실패 시 100ms 대기 후 재시도

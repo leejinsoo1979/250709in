@@ -58,6 +58,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const spaceWidth = mmToThreeUnits(spaceInfo.width);
   const spaceHeight = mmToThreeUnits(spaceInfo.height);
   
+  // 내부 공간 계산
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const internalWidth = mmToThreeUnits(internalSpace.width);
+  const internalHeight = mmToThreeUnits(internalSpace.height);
+  
   // 띄워서 배치일 때 프레임 하단 위치 계산
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
@@ -134,9 +139,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             style={{
               background: dimensionColors.background,
               color: dimensionColors.primary,
-              padding: '4px 8px',
+              padding: '6px 10px',
               borderRadius: '4px',
-              fontSize: '15px',
+              fontSize: '18px',
               fontWeight: 'bold',
               border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
@@ -157,9 +162,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 우측 연장선 */}
@@ -170,9 +173,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 상단 보조 가이드 연장선 (좌측) */}
@@ -193,6 +194,88 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={0.5}
+        />
+      </group>
+      
+      {/* 내부 공간 폭 치수 (상단 안쪽) */}
+      <group>
+        {/* 내부 폭 치수선 */}
+        <Line
+          points={[
+            [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01],
+            [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 좌측 화살표 */}
+        <Line
+          points={createArrow(
+            new THREE.Vector3(mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01),
+            new THREE.Vector3(mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2 + 0.05, dimensionOffsetY - mmToThreeUnits(100), 0.01)
+          )}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 우측 화살표 */}
+        <Line
+          points={createArrow(
+            new THREE.Vector3(spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01),
+            new THREE.Vector3(spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2 - 0.05, dimensionOffsetY - mmToThreeUnits(100), 0.01)
+          )}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 내부 폭 텍스트 */}
+        <Html
+          position={[spaceWidth / 2, dimensionOffsetY - mmToThreeUnits(100) + mmToThreeUnits(50), 0.01]}
+          center
+          transform={false}
+          occlude={false}
+          zIndexRange={[1000, 1001]}
+        >
+          <div
+            style={{
+              background: dimensionColors.background,
+              color: dimensionColors.primary,
+              padding: '10px 15px',
+              borderRadius: '4px',
+              fontSize: '28px',
+              fontWeight: 'bold',
+              border: `2px solid ${dimensionColors.primary}`,
+              fontFamily: 'monospace',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+              pointerEvents: 'none'
+            }}
+          >
+            {internalSpace.width}mm
+          </div>
+        </Html>
+        
+        {/* 좌측 내부 연장선 */}
+        <Line
+          points={[
+            [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={1}
+          dashed={false}
+        />
+        
+        {/* 우측 내부 연장선 */}
+        <Line
+          points={[
+            [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={1}
+          dashed={false}
         />
       </group>
       
@@ -240,9 +323,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             style={{
               background: dimensionColors.background,
               color: dimensionColors.primary,
-              padding: '4px 8px',
+              padding: '8px 12px',
               borderRadius: '4px',
-              fontSize: '15px',
+              fontSize: '24px',
               fontWeight: 'bold',
               border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
@@ -264,9 +347,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 상단 연장선 */}
@@ -277,9 +358,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 좌측 보조 가이드 연장선 (하단) */}
@@ -347,9 +426,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             style={{
               background: dimensionColors.background,
               color: dimensionColors.primary,
-              padding: '4px 8px',
+              padding: '8px 12px',
               borderRadius: '4px',
-              fontSize: '15px',
+              fontSize: '24px',
               fontWeight: 'bold',
               border: `1px solid ${dimensionColors.primary}`,
               fontFamily: 'monospace',
@@ -371,9 +450,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 상단 연장선 */}
@@ -384,9 +461,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
-          dashed
-          dashSize={0.02}
-          gapSize={0.01}
+          dashed={false}
         />
         
         {/* 우측 보조 가이드 연장선 (하단) */}
@@ -407,6 +482,89 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ]}
           color={dimensionColors.primary}
           lineWidth={0.5}
+        />
+      </group>
+      
+      {/* 내부 공간 높이 치수 (좌측 안쪽) */}
+      <group>
+        {/* 내부 높이 치수선 */}
+        <Line
+          points={[
+            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 하단 화살표 */}
+        <Line
+          points={createArrow(
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01),
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + 0.05, 0.01)
+          )}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 상단 화살표 */}
+        <Line
+          points={createArrow(
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01),
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight - 0.05, 0.01)
+          )}
+          color={dimensionColors.primary}
+          lineWidth={2}
+        />
+        
+        {/* 내부 높이 텍스트 */}
+        <Html
+          position={[dimensionOffsetX + mmToThreeUnits(150) - mmToThreeUnits(80), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight / 2, 0.01]}
+          center
+          transform={false}
+          occlude={false}
+          zIndexRange={[1000, 1001]}
+        >
+          <div
+            style={{
+              background: dimensionColors.background,
+              color: dimensionColors.primary,
+              padding: '10px 15px',
+              borderRadius: '4px',
+              fontSize: '28px',
+              fontWeight: 'bold',
+              border: `2px solid ${dimensionColors.primary}`,
+              fontFamily: 'monospace',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              transform: 'rotate(-90deg)'
+            }}
+          >
+            {Math.round(internalHeight / 0.01)}mm
+          </div>
+        </Html>
+        
+        {/* 내부 하단 연장선 */}
+        <Line
+          points={[
+            [0, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={1}
+          dashed={false}
+        />
+        
+        {/* 내부 상단 연장선 */}
+        <Line
+          points={[
+            [0, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01],
+            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
+          ]}
+          color={dimensionColors.primary}
+          lineWidth={1}
+          dashed={false}
         />
       </group>
       
@@ -455,9 +613,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               style={{
                 background: dimensionColors.background,
                 color: dimensionColors.float,
-                padding: '4px 8px',
+                padding: '6px 10px',
                 borderRadius: '4px',
-                fontSize: '14px',
+                fontSize: '16px',
                 fontWeight: 'bold',
                 border: `1px solid ${dimensionColors.float}`,
                 fontFamily: 'monospace',
@@ -479,9 +637,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ]}
             color={dimensionColors.float}
             lineWidth={1}
-            dashed
-            dashSize={0.015}
-            gapSize={0.008}
+            dashed={false}
           />
           
           {/* 상단 연장선 (프레임 하단) */}
@@ -492,9 +648,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ]}
             color={dimensionColors.float}
             lineWidth={1}
-            dashed
-            dashSize={0.015}
-            gapSize={0.008}
+            dashed={false}
           />
         </group>
       )}
@@ -559,6 +713,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         const rightX = furniturePositionX + moduleWidth / 2;
         const dimY = -mmToThreeUnits(100); // 하단 치수선
         
+        // 가구의 상단 Y 좌표 계산
+        const furnitureTopY = floatHeight + mmToThreeUnits(moduleData.dimensions.height);
+        
         return (
           <group key={`module-dim-${index}`}>
             {/* 치수선 */}
@@ -605,9 +762,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 style={{
                   background: dimensionColors.background,
                   color: dimensionColors.furniture,
-                  padding: '3px 6px',
-                  borderRadius: '3px',
-                  fontSize: '15px',
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  fontSize: '18px',
                   fontWeight: 'bold',
                   border: `1px solid ${dimensionColors.furniture}`,
                   fontFamily: 'monospace',
@@ -620,28 +777,43 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               </div>
             </Html>
             
-            {/* 연장선 */}
+            {/* 위쪽 연장선 - 가구 상단에서 위쪽 외부 영역으로 */}
             <Line
               points={[
-                [leftX, 0, 0.01],
+                [leftX, furnitureTopY, 0.01],
+                [leftX, furnitureTopY + mmToThreeUnits(30), 0.01]
+              ]}
+              color={dimensionColors.furniture}
+              lineWidth={1}
+              dashed={false}
+            />
+            <Line
+              points={[
+                [rightX, furnitureTopY, 0.01],
+                [rightX, furnitureTopY + mmToThreeUnits(30), 0.01]
+              ]}
+              color={dimensionColors.furniture}
+              lineWidth={1}
+              dashed={false}
+            />
+            {/* 아래쪽 연장선 - 가구 하단에서 아래쪽 외부 영역으로 */}
+            <Line
+              points={[
+                [leftX, floatHeight, 0.01],
                 [leftX, dimY + mmToThreeUnits(20), 0.01]
               ]}
               color={dimensionColors.furniture}
               lineWidth={1}
-              dashed
-              dashSize={0.015}
-              gapSize={0.008}
+              dashed={false}
             />
             <Line
               points={[
-                [rightX, 0, 0.01],
+                [rightX, floatHeight, 0.01],
                 [rightX, dimY + mmToThreeUnits(20), 0.01]
               ]}
               color={dimensionColors.furniture}
               lineWidth={1}
-              dashed
-              dashSize={0.015}
-              gapSize={0.008}
+              dashed={false}
             />
           </group>
         );
@@ -703,9 +875,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   style={{
                     background: dimensionColors.background,
                     color: dimensionColors.column,
-                    padding: '2px 5px',
+                    padding: '4px 7px',
                     borderRadius: '3px',
-                    fontSize: '15px',
+                    fontSize: '18px',
                     fontWeight: 'bold',
                     border: `1px solid ${dimensionColors.column}`,
                     fontFamily: 'monospace',

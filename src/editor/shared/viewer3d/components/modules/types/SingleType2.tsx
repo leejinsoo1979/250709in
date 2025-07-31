@@ -15,8 +15,11 @@ const BoxWithEdges: React.FC<{
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
   isEditMode?: boolean;
-}> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false }) => {
+  hideEdges?: boolean; // 엣지 숨김 옵션 추가
+  isBackPanel?: boolean; // 백패널 여부 추가
+}> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false, hideEdges = false, isBackPanel = false }) => {
   const { viewMode } = useSpace3DView();
+  const { view2DDirection } = useUIStore(); // view2DDirection 추가
   const { gl } = useThree();
   const { theme } = useTheme();
   
@@ -62,30 +65,33 @@ const BoxWithEdges: React.FC<{
         </mesh>
       )}
       {/* 윤곽선 렌더링 */}
-      {viewMode === '3D' ? (
+      {!hideEdges && (
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
-            depthTest={true}
+            color={
+              viewMode === '3D' 
+                ? "#505050"
+                : renderMode === 'wireframe' 
+                  ? (viewMode === '2D' ? "#ff5500" : (theme?.mode === 'dark' ? "#ffffff" : "#333333")) 
+                  : (theme?.mode === 'dark' ? "#cccccc" : "#444444")
+            }
+            transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+            opacity={
+              isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
+                ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
+                : viewMode === '3D' 
+                  ? 0.9 
+                  : 1
+            }
+            depthTest={viewMode === '3D'}
             depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
+            polygonOffset={viewMode === '3D'}
+            polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
+            polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
+            linewidth={viewMode === '2D' ? 2 : 1} 
           />
         </lineSegments>
-      ) : (
-        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-            <lineBasicMaterial 
-              color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#444444")} 
-              linewidth={2} 
-            />
-          </lineSegments>
-        )
       )}
     </group>
   );
@@ -238,40 +244,16 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      {viewMode === '2D' && view2DDirection === 'front' ? (
-        // 2D 정면뷰에서는 흐린 점선으로 표시
-        <group position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}>
-          <lineSegments
-            onUpdate={(self) => {
-              if (self.geometry) {
-                self.computeLineDistances();
-              }
-            }}
-          >
-            <edgesGeometry args={[new THREE.BoxGeometry(innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness)]} />
-            <lineDashedMaterial 
-              color={theme?.mode === 'dark' ? "#666666" : "#999999"}
-              transparent={true}
-              opacity={0.5}
-              depthTest={false}
-              linewidth={1}
-              dashSize={0.05}
-              gapSize={0.03}
-              scale={1}
-            />
-          </lineSegments>
-        </group>
-      ) : (
-        // 3D 모드에서는 기존대로 표시
-        <BoxWithEdges
-          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-        />
-      )}
+      <BoxWithEdges
+        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+        material={material}
+        renderMode={renderMode}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        hideEdges={false} // 엣지는 표시하되
+        isBackPanel={true} // 백패널임을 표시
+      />
       
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (

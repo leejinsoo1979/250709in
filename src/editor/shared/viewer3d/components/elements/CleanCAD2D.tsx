@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
@@ -38,7 +38,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   });
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
 
   // 편집 상태 관리
@@ -79,11 +79,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 3D 모드에서는 검정색, 2D 모드에서는 테마 색상 사용
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
-  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#999999' : primaryColor);  // 다크모드에서 밝은 색
-  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#999999' : primaryColor);  // 다크모드에서 밝은 색
-  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#666666' : primaryColor);  // 다크모드에서 중간 색
-  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#444444' : primaryColor);  // 다크모드에서 어두운 색
-  const gridColor = getThemeColorFromCSS('--theme-border', '#e5e7eb');
+  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
+  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
+  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : primaryColor);  // 다크모드에서 밝은 회색
+  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : primaryColor);  // 다크모드에서 중간 회색
+  const gridColor = currentViewDirection === '3D' 
+    ? primaryColor  // 3D에서는 테마 색상 사용
+    : getThemeColorFromCSS('--theme-border', '#e5e7eb');  // 2D에서는 border 색상
   
   // 프레임 치수 색상도 테마 색상 사용
   const frameDimensionColor = primaryColor;
@@ -1077,7 +1079,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
           const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
           const cabinetAreaTopY = mmToThreeUnits(floatHeight + bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
-          const topY = spaceHeight; // 최상단
+          
+          // 배치된 가구들의 최대 높이 계산
+          let maxFurnitureTop = cabinetAreaTopY;
+          if (placedModules.length > 0) {
+            placedModules.forEach(module => {
+              const moduleData = getModuleById(module.moduleId);
+              if (moduleData) {
+                const moduleHeight = moduleData.dimensions.height;
+                const moduleBottomY = mmToThreeUnits(floatHeight + bottomFrameHeight);
+                const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
+                if (moduleTopY > maxFurnitureTop) {
+                  maxFurnitureTop = moduleTopY;
+                }
+              }
+            });
+          }
+          
+          const topY = placedModules.length > 0 ? maxFurnitureTop : spaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
           
           return (
             <>
@@ -1317,10 +1336,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const isInMainArea = leftX >= mainAreaLeft && rightX <= mainAreaRight;
         const isInStepDownArea = hasStepDown && !isInMainArea;
         
-        // 가이드라인 높이 계산
-        const guideTopY = isInStepDownArea && spaceInfo.droppedCeiling
-          ? mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight)
-          : mmToThreeUnits(spaceInfo.height);
+        // 가이드라인 높이 계산 - 가구 상단까지만
+        const furnitureHeight = mmToThreeUnits(moduleData.dimensions.height);
+        const guideTopY = furnitureHeight; // 가구 상단까지만 표시
         const guideBottomY = 0;
         
         // 가이드라인은 해당 구간 내에서만 표시
@@ -1328,31 +1346,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         return (
           <group key={`module-guide-${index}`} renderOrder={999999}>
-            {/* 가구 좌측 가이드라인 (점선) - 해당 구간 내에서만 표시 */}
-            {shouldShowGuide && (
-              <Line
-                points={[[leftX, guideBottomY, 0.001], [leftX, guideTopY, 0.001]]}
-                color={gridColor}
-                lineWidth={0.5}
-                dashed
-                dashSize={0.02}
-                gapSize={0.01}
-                renderOrder={999999}
-              />
-            )}
-            
-            {/* 가구 우측 가이드라인 (점선) - 해당 구간 내에서만 표시 */}
-            {shouldShowGuide && (
-              <Line
-                points={[[rightX, guideBottomY, 0.001], [rightX, guideTopY, 0.001]]}
-                color={gridColor}
-                lineWidth={0.5}
-                dashed
-                dashSize={0.02}
-                gapSize={0.01}
-                renderOrder={999999}
-              />
-            )}
             
             {/* 가구 치수선 */}
             <Line
@@ -1918,7 +1911,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const bottomY = 0; // 바닥
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
-            const topY = actualSpaceHeight; // 최상단
+            
+            // 배치된 가구들의 최대 높이 계산 (좌측뷰)
+            let maxFurnitureTop = cabinetAreaTopY;
+            if (placedModules.length > 0) {
+              placedModules.forEach(module => {
+                const moduleData = getModuleById(module.moduleId);
+                if (moduleData) {
+                  const moduleHeight = moduleData.dimensions.height;
+                  const moduleBottomY = mmToThreeUnits(bottomFrameHeight);
+                  const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
+                  if (moduleTopY > maxFurnitureTop) {
+                    maxFurnitureTop = moduleTopY;
+                  }
+                }
+              });
+            }
+            
+            const topY = placedModules.length > 0 ? maxFurnitureTop : actualSpaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
             
             return (
               <>
@@ -2482,7 +2492,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
-            const topY = spaceHeight;
+            
+            // 배치된 가구들의 최대 높이 계산 (우측뷰)
+            let maxFurnitureTop = cabinetAreaTopY;
+            if (placedModules.length > 0) {
+              placedModules.forEach(module => {
+                const moduleData = getModuleById(module.moduleId);
+                if (moduleData) {
+                  const moduleHeight = moduleData.dimensions.height;
+                  const moduleBottomY = mmToThreeUnits(bottomFrameHeight);
+                  const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
+                  if (moduleTopY > maxFurnitureTop) {
+                    maxFurnitureTop = moduleTopY;
+                  }
+                }
+              });
+            }
+            
+            const topY = placedModules.length > 0 ? maxFurnitureTop : spaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
             
             return (
               <>
@@ -3910,7 +3937,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (!moduleData || !moduleData.hasDoor) return null;
           
           const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-          const moduleWidth = mmToThreeUnits(moduleData.dimensions.width);
+          // 기둥에 의해 조정된 너비 사용 (customWidth는 Column C용, adjustedWidth는 일반 기둥용)
+          const actualWidthMm = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+          const moduleWidth = mmToThreeUnits(actualWidthMm);
           const leftX = module.position.x - moduleWidth / 2;
           const rightX = module.position.x + moduleWidth / 2;
           
@@ -4018,7 +4047,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorY="middle"
                       rotation={[-Math.PI / 2, 0, 0]}
                     >
-                      {Math.round((moduleData.dimensions.width - 6) / 2)}
+                      {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
                     <Line
                       points={[[leftDoorLeftX, spaceHeight, leftDoorFrontZ], [leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
@@ -4057,7 +4086,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorY="middle"
                       rotation={[-Math.PI / 2, 0, 0]}
                     >
-                      {Math.round((moduleData.dimensions.width - 6) / 2)}
+                      {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
                     <Line
                       points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ], [rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
@@ -4106,7 +4135,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {moduleData.dimensions.width - 3}
+                    {actualWidthMm - 3}
                   </Text>
                   <Line
                     points={[[leftDoorLeftX, spaceHeight, doorFrontZ], [leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}

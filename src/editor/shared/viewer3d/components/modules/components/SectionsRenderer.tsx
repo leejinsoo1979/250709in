@@ -6,6 +6,7 @@ import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
 import { Html, Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
+import { useViewerTheme } from '../../../context/ViewerThemeContext';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -59,6 +60,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const showDimensions = useUIStore(state => state.showDimensions);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { viewMode } = useSpace3DView();
+  const viewerTheme = useViewerTheme();
   
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -66,7 +68,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (viewerTheme.theme.mode === 'dark' ? '#ffffff' : getThemeColor());
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
   // sections 기반 내부 구조 렌더링
@@ -108,6 +110,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const sectionCenterY = currentYPosition + sectionHeight / 2;
       
       // 디버깅: 섹션 높이 확인
+      if (index === 0) {
+        console.log(`🔍 첫 번째 섹션 정보:`, {
+          index,
+          type: section.type,
+          height: sectionHeight,
+          showDimensions,
+          viewMode,
+          view2DDirection,
+          condition: section.type === 'drawer' || section.type === 'open' || section.type === 'hanging'
+        });
+      }
+      
       if (section.type === 'open' || section.type === 'drawer') {
         console.log(`📏 Section ${index} (${section.type}):`, {
           calculatedHeight: sectionHeight,
@@ -317,6 +331,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
+                      dashed={false}
                     />
                     {/* 수직 연결선 양끝 점 */}
                     <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]}>
@@ -334,7 +349,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === 0 && (section.type === 'drawer' || section.type === 'open') && (
+          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === 0 && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
@@ -381,6 +396,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 ]}
                 color={dimensionColor}
                 lineWidth={1}
+                dashed={false}
               />
               {/* 하단 프레임 두께 수직선 양끝 점 */}
               <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
@@ -442,6 +458,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 ]}
                 color={dimensionColor}
                 lineWidth={1}
+                dashed={false}
               />
               {/* 수직 연결선 양끝 점 */}
               <mesh position={[-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
@@ -503,6 +520,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 ]}
                 color={dimensionColor}
                 lineWidth={1}
+                dashed={false}
               />
               {/* 상단 프레임 두께 수직선 양끝 점 */}
               <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>

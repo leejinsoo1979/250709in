@@ -467,6 +467,21 @@ const Configurator: React.FC = () => {
             } else {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
+              
+              // BroadcastChannel로 디자인 파일 업데이트 알림
+              try {
+                const channel = new BroadcastChannel('project-updates');
+                channel.postMessage({ 
+                  type: 'DESIGN_FILE_UPDATED', 
+                  projectId: currentProjectId,
+                  designFileId: currentDesignFileId,
+                  timestamp: Date.now()
+                });
+                console.log('📡 디자인 파일 업데이트 알림 전송');
+                channel.close();
+              } catch (broadcastError) {
+                console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              }
             }
           } else {
             console.log('💾 [DEBUG] 새 디자인 파일 생성');
@@ -490,6 +505,21 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
+              
+              // BroadcastChannel로 디자인 파일 생성 알림
+              try {
+                const channel = new BroadcastChannel('project-updates');
+                channel.postMessage({ 
+                  type: 'DESIGN_FILE_UPDATED', 
+                  projectId: currentProjectId,
+                  designFileId: designFileId,
+                  timestamp: Date.now()
+                });
+                console.log('📡 새 디자인 파일 생성 알림 전송');
+                channel.close();
+              } catch (broadcastError) {
+                console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              }
               
               // URL 업데이트
               navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileId}`, { replace: true });
@@ -517,36 +547,9 @@ const Configurator: React.FC = () => {
         
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
-        console.log('💾 [DEBUG] 데모 모드 저장 진입');
-        
-        try {
-          const demoProject = {
-            id: currentProjectId,
-            title: basicInfo.title || '데모 프로젝트',
-            projectData: basicInfo,
-            spaceConfig: spaceInfo,
-            furniture: {
-              placedModules: placedModules
-            },
-            thumbnail: thumbnail,
-            savedAt: new Date().toISOString(),
-            furnitureCount: placedModules.length
-          };
-          
-          // 로컬 스토리지에 저장
-          const storageKey = `demoProject_${currentProjectId}`;
-          localStorage.setItem(storageKey, JSON.stringify(demoProject));
-          console.log('💾 [DEBUG] 데모 프로젝트 로컬 저장 완료, key:', storageKey);
-          
-          setSaveStatus('success');
-          console.log('✅ 데모 프로젝트 저장 성공');
-          alert('데모 프로젝트가 로컬에 저장되었습니다!');
-        } catch (demoError) {
-          console.error('💾 [ERROR] 데모 저장 중 예외:', demoError);
-          setSaveStatus('error');
-          alert('데모 프로젝트 저장 중 오류가 발생했습니다: ' + demoError.message);
-        }
-        
+        console.log('💾 [DEBUG] Firebase 인증 필요');
+        setSaveStatus('error');
+        alert('저장하려면 로그인이 필요합니다.');
         setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (outerError) {
@@ -741,47 +744,8 @@ const Configurator: React.FC = () => {
           alert('Firebase 연결 중 오류가 발생했습니다: ' + firebaseError.message);
         }
       } else {
-        console.log('🆕 [DEBUG] 데모 모드로 진행');
-        
-        try {
-          const newProjectId = `demo-${Date.now()}`;
-          console.log('🆕 [DEBUG] 새 데모 프로젝트 ID:', newProjectId);
-          
-          const demoProject = {
-            id: newProjectId,
-            title: 'Untitled',
-            projectData: { title: 'Untitled', location: '' },
-            spaceConfig: defaultSpaceConfig,
-            furniture: {
-              placedModules: []
-            },
-            thumbnail: thumbnail,
-            savedAt: new Date().toISOString(),
-            furnitureCount: 0
-          };
-          
-          // 로컬 스토리지에 저장
-          localStorage.setItem(`demoProject_${newProjectId}`, JSON.stringify(demoProject));
-          console.log('🆕 [DEBUG] 데모 프로젝트 로컬 저장 완료');
-          
-          // 상태 업데이트
-          setBasicInfo({ title: 'Untitled', location: '' });
-          setSpaceInfo(defaultSpaceConfig);
-          setPlacedModules([]);
-          setCurrentProjectId(newProjectId);
-          
-          // derivedSpaceStore 재계산
-          derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-          
-          // URL 업데이트
-          navigate(`/configurator?projectId=${newProjectId}`, { replace: true });
-          
-          console.log('✅ 데모 프로젝트 "Untitled" 생성 완료:', newProjectId);
-          alert('새 데모 프로젝트가 생성되었습니다!');
-        } catch (demoError) {
-          console.error('🆕 [ERROR] 데모 프로젝트 생성 실패:', demoError);
-          alert('데모 프로젝트 생성 중 오류가 발생했습니다: ' + demoError.message);
-        }
+        console.log('🆕 [ERROR] Firebase 인증 필요');
+        alert('새 프로젝트를 생성하려면 로그인이 필요합니다.');
       }
     } catch (outerError) {
       console.error('🆕 [ERROR] handleNewProject 최상위 예외:', outerError);
@@ -860,28 +824,9 @@ const Configurator: React.FC = () => {
             alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
           }
         } else {
-          // 데모 모드: 로컬에 새 이름으로 저장 (기존 로직 유지)
-          const newProjectId = `demo-${Date.now()}`;
-          const demoProject = {
-            id: newProjectId,
-            title: newTitle.trim(),
-            projectData: { ...basicInfo, title: newTitle.trim() },
-            spaceConfig: spaceInfo,
-            furniture: {
-              placedModules: placedModules
-            },
-            thumbnail: thumbnail,
-            savedAt: new Date().toISOString(),
-            furnitureCount: placedModules.length
-          };
-          
-          localStorage.setItem(`demoProject_${newProjectId}`, JSON.stringify(demoProject));
-          setCurrentProjectId(newProjectId);
-          setBasicInfo({ ...basicInfo, title: newTitle.trim() });
-          setSaveStatus('success');
-          
-          console.log('✅ 데모 프로젝트 다른이름으로 저장 성공:', newTitle);
-          alert(`"${newTitle}"로 로컬에 저장되었습니다!`);
+          console.log('💾 [ERROR] Firebase 인증 필요');
+          setSaveStatus('error');
+          alert('저장하려면 로그인이 필요합니다.');
         }
         
         setTimeout(() => setSaveStatus('idle'), 3000);
@@ -926,22 +871,10 @@ const Configurator: React.FC = () => {
 
           console.log('✅ 프로젝트 이름 변경 성공:', newName);
         } else {
-          // 데모 모드: 로컬 업데이트
-          const demoProject = {
-            id: currentProjectId,
-            title: newName,
-            projectData: { ...basicInfo, title: newName },
-            spaceConfig: spaceInfo,
-            furniture: {
-              placedModules: placedModules
-            },
-            thumbnail: generateDefaultThumbnail(spaceInfo, placedModules.length),
-            savedAt: new Date().toISOString(),
-            furnitureCount: placedModules.length
-          };
-          
-          localStorage.setItem(`demoProject_${currentProjectId}`, JSON.stringify(demoProject));
-          console.log('✅ 데모 프로젝트 이름 변경 성공:', newName);
+          console.log('💾 [ERROR] Firebase 인증 필요');
+          // 실패 시 이전 이름으로 복원
+          setBasicInfo({ ...basicInfo, title: oldName });
+          alert('프로젝트 이름을 변경하려면 로그인이 필요합니다.');
         }
       } catch (error) {
         console.error('프로젝트 이름 변경 실패:', error);
@@ -1469,7 +1402,7 @@ const Configurator: React.FC = () => {
 
   // 이전/다음 버튼 핸들러
   const handlePrevious = () => {
-    navigate('/');
+    navigate('/dashboard?step=2');
   };
 
   const handleNext = () => {

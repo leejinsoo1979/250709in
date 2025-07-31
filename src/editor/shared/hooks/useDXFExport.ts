@@ -57,11 +57,15 @@ export const useDXFExport = () => {
           // 모듈 데이터 가져오기
           const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
           
-          // customDepth 디버깅 로그
-          console.log(`🔍 가구 ${module.id} customDepth 확인:`, {
+          // 가구 치수 디버깅 로그
+          console.log(`🔍 가구 ${module.id} DXF 내보내기 치수 확인:`, {
             moduleId: module.moduleId,
             customDepth: module.customDepth,
-            originalDepth: moduleData?.dimensions.depth
+            originalDepth: moduleData?.dimensions.depth,
+            customWidth: module.customWidth,
+            adjustedWidth: module.adjustedWidth,
+            originalWidth: moduleData?.dimensions.width,
+            finalWidth: module.customWidth || module.adjustedWidth || moduleData?.dimensions.width
           });
           
           return {
@@ -75,14 +79,17 @@ export const useDXFExport = () => {
             moduleData: {
               name: moduleData?.name || `모듈-${module.moduleId}`,
               dimensions: {
-                width: moduleData?.dimensions.width || 400,
+                // 기둥에 의해 조정된 너비 우선 사용 (customWidth는 Column C용, adjustedWidth는 일반 기둥용)
+                width: module.customWidth || module.adjustedWidth || moduleData?.dimensions.width || 400,
                 height: moduleData?.dimensions.height || 400,
                 depth: module.customDepth || moduleData?.dimensions.depth || 300
               }
             },
             rotation: module.rotation,
             slotIndex: module.slotIndex, // 슬롯 인덱스 정보 추가
-            isDualSlot: module.isDualSlot // 듀얼 슬롯 여부 추가
+            isDualSlot: module.isDualSlot, // 듀얼 슬롯 여부 추가
+            adjustedWidth: module.adjustedWidth, // 조정된 너비 추가
+            customWidth: module.customWidth // Column C용 커스텀 너비 추가
           };
         })
       };

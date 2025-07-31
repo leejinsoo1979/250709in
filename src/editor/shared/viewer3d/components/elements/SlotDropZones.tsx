@@ -93,7 +93,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   }, [spaceInfo, columns, placedModules]);
 
   // 가구 충돌 감지 함수 (새 가구 배치용)
-  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal') => {
+  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false) => {
+    // Column C 슬롯인 경우 충돌 검사 건너뛰기
+    if (skipColumnC) {
+      const slotInfo = columnSlots[newSlotIndex];
+      if (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) {
+        console.log('🔵 Column C 슬롯 - 충돌 검사 건너뛰기');
+        return []; // Column C는 2개 가구 배치 가능
+      }
+    }
+    
     // 새 가구가 차지할 슬롯들 계산
     let occupiedSlots: number[] = [];
     if (isDualFurniture) {
@@ -290,7 +299,6 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     // 기본 가구 깊이 계산 함수 (미리 정의)
     const getDefaultDepth = (moduleData: ModuleData | undefined) => {
-      
       if (moduleData?.defaultDepth) {
         const result = Math.min(moduleData.defaultDepth, spaceInfo.depth);
         return result;
@@ -342,7 +350,23 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     const currentCustomDepth = currentPlacedModule?.customDepth;
     
     // 기본 깊이 설정 - 사용자 설정이 있으면 우선 사용
-    let customDepth = currentCustomDepth || getDefaultDepth(actualModuleData);
+    // Column C 첫 번째 가구인 경우 특별 처리
+    const isColumnCSlot = targetSlotInfo?.columnType === 'medium' && targetSlotInfo?.allowMultipleFurniture;
+    const isFirstFurnitureInColumnC = isColumnCSlot && placedModules.filter(m => m.slotIndex === globalSlotIndex).length === 0;
+    
+    let customDepth;
+    if (isFirstFurnitureInColumnC) {
+      // Column C 첫 번째 가구는 원래 깊이 사용
+      customDepth = currentCustomDepth || actualModuleData.defaultDepth || actualModuleData.dimensions.depth || 600;
+      console.log('🔵 Column C 첫 번째 가구 깊이 설정:', {
+        currentCustomDepth,
+        defaultDepth: actualModuleData.defaultDepth,
+        dimensionsDepth: actualModuleData.dimensions.depth,
+        finalCustomDepth: customDepth
+      });
+    } else {
+      customDepth = currentCustomDepth || getDefaultDepth(actualModuleData);
+    }
     
     // 단내림 영역의 경우 높이 제한
     let effectiveHeight = actualModuleData.dimensions.height;
@@ -374,7 +398,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         targetSlotInfo,
         slotIndex,
         spaceInfo,
-        placedModules
+        placedModules,
+        customDepth // 원래 깊이 전달
       );
       
       console.log('🏗️ 기둥 슬롯의 사용 가능한 공간:', {
@@ -383,20 +408,90 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         spaces: availableSpaces.map(s => ({
           type: s.type,
           position: s.position,
-          maxWidth: s.maxWidth
+          maxWidth: s.maxWidth,
+          customDepth: s.customDepth
         }))
       });
       
-      // 여러 공간이 있으면 첫 번째 빈 공간에 배치 (추후 사용자 선택 UI 추가 가능)
-      if (availableSpaces.length > 0) {
-        // 가장 적합한 공간 선택 (가장 넓은 공간 우선)
-        const bestSpace = availableSpaces.reduce((prev, curr) => 
-          curr.maxWidth > prev.maxWidth ? curr : prev
-        );
+      // 비어있는 공간만 필터링
+      const emptySpaces = availableSpaces.filter(s => !s.isOccupied);
+      
+      console.log('🎯 빈 공간 필터링:', {
+        전체공간: availableSpaces.length,
+        빈공간: emptySpaces.length,
+        공간상태: availableSpaces.map(s => ({
+          type: s.type,
+          isOccupied: s.isOccupied,
+          position: s.position.x.toFixed(3)
+        }))
+      });
+      
+      // 빈 공간이 있으면 배치
+      if (emptySpaces.length > 0) {
+        // 가장 적합한 공간 선택
+        // Column C의 경우: 비어있는 첫 번째 서브슬롯 선택 (left -> right 순서)
+        // 일반 기둥의 경우: 가장 넓은 공간 선택
+        let bestSpace;
+        
+        if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture) {
+          // Column C: 깊이 기반 배치 - full 타입을 우선 선택 (첫 번째 가구)
+          if (emptySpaces.length > 0) {
+            // full 타입(첫 번째 가구)을 우선 선택, 없으면 front 타입(기둥 앞) 선택
+            bestSpace = emptySpaces.find(s => s.type === 'full') || emptySpaces[0];
+            console.log('🔵 Column C 빈 공간 선택:', {
+              선택된타입: bestSpace.type,
+              위치: bestSpace.position,
+              maxWidth: bestSpace.maxWidth,
+              customDepth: bestSpace.customDepth,
+              빈공간수: emptySpaces.length,
+              빈공간타입들: emptySpaces.map(s => s.type)
+            });
+          } else {
+            // 모든 공간이 차있으면 배치 불가
+            console.warn('⚠️ Column C 모든 공간이 차있음');
+            showAlert('이 슬롯에는 더 이상 가구를 배치할 공간이 없습니다.', { title: '배치 불가' });
+            return false;
+          }
+        } else {
+          // 일반 기둥: 가장 넓은 공간 선택
+          bestSpace = emptySpaces.reduce((prev, curr) => 
+            curr.maxWidth > prev.maxWidth ? curr : prev
+          );
+        }
         
         // 첫 번째 모듈이면 도어 있게, 이후 모듈은 도어 없게
-        const existingModulesInSlot = placedModules.filter(m => m.slotIndex === slotIndex);
-        const shouldHaveDoor = existingModulesInSlot.length === 0;
+        // Column C의 경우 깊이 기반 배치로 도어 여부 결정
+        let existingModulesInSlot: typeof placedModules;
+        let shouldHaveDoor: boolean;
+        
+        if (targetSlotInfo.columnType === 'medium') {
+          // Column C 깊이 기반 배치
+          existingModulesInSlot = placedModules.filter(m => m.slotIndex === slotIndex);
+          
+          if (bestSpace.type === 'front') {
+            // 기둥 앞 배치 가구는 도어 없음
+            shouldHaveDoor = false;
+          } else {
+            // 첫 번째 가구는 도어 있음
+            shouldHaveDoor = existingModulesInSlot.length === 0;
+          }
+          
+          console.log('🔵 Column C 깊이 기반 배치:', {
+            slotIndex,
+            bestSpaceType: bestSpace.type,
+            위치: {
+              x: bestSpace.position.x.toFixed(3),
+              z: bestSpace.position.z.toFixed(3)
+            },
+            existingModulesCount: existingModulesInSlot.length,
+            shouldHaveDoor,
+            customDepth: bestSpace.customDepth
+          });
+        } else {
+          // 일반 슬롯의 경우 - 기존 로직
+          existingModulesInSlot = placedModules.filter(m => m.slotIndex === slotIndex);
+          shouldHaveDoor = existingModulesInSlot.length === 0;
+        }
         
         console.log('✅ 선택된 배치 공간:', {
           type: bestSpace.type,
@@ -413,9 +508,31 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           z: bestSpace.position.z 
         };
         let adjustedFurnitureWidth: number;
-        // 150mm 공간에도 배치 가능하도록 자동 크기 조정
-        // 사용 가능한 공간이 150mm 이상이면 그 공간에 맞게 가구 크기 조정
-        if (bestSpace.maxWidth >= 150) {
+        // Column C의 경우 깊이 기반 배치
+        if (targetSlotInfo.columnType === 'medium') {
+          if (bestSpace.type === 'front') {
+            // 기둥 앞 배치 - 전체 슬롯 너비 사용
+            adjustedFurnitureWidth = bestSpace.maxWidth;
+            console.log('🔵 Column C 기둥 앞 배치:', {
+              originalWidth: actualModuleData.dimensions.width,
+              adjustedWidth: adjustedFurnitureWidth,
+              customDepth: bestSpace.customDepth,
+              position: {
+                x: bestSpace.position.x.toFixed(3),
+                z: bestSpace.position.z.toFixed(3)
+              }
+            });
+          } else {
+            // 첫 번째 가구 - 기둥 반대편 배치
+            adjustedFurnitureWidth = bestSpace.maxWidth;
+            console.log('🔵 Column C 첫 번째 가구 배치:', {
+              originalWidth: actualModuleData.dimensions.width,
+              adjustedWidth: adjustedFurnitureWidth,
+              position: `x=${bestSpace.position.x.toFixed(3)}`
+            });
+          }
+        } else if (bestSpace.maxWidth >= 150) {
+          // 일반 기둥의 경우 공간에 맞게 조정
           adjustedFurnitureWidth = Math.min(bestSpace.maxWidth, actualModuleData.dimensions.width);
           console.log('✅ 가구 크기 자동 조정:', {
             originalWidth: actualModuleData.dimensions.width,
@@ -433,26 +550,29 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         let customWidthForSplit: number | undefined;
         
         if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.column) {
-          // 분할 배치에서도 깊이 조정 적용
-          if (bestSpace.type === 'left' || bestSpace.type === 'right') {
-            // 시나리오 D: 좌우 분할 배치 - 정상 깊이, 커스텀 너비 사용
-            finalCustomDepth = customDepth;
-            // customWidth 유효성 검증 추가
-            customWidthForSplit = bestSpace.maxWidth && bestSpace.maxWidth > 0 
-              ? bestSpace.maxWidth 
-              : adjustedFurnitureWidth; // fallback으로 조정된 가구 너비 사용
+          if (bestSpace.type === 'front') {
+            // 기둥 앞 배치 - 깊이 조정
+            finalCustomDepth = bestSpace.customDepth || Math.max(200, 730 - targetSlotInfo.column.depth);
+            customWidthForSplit = adjustedFurnitureWidth;
+          } else if (bestSpace.type === 'full') {
+            // 첫 번째 가구 - 정상 깊이 유지
+            finalCustomDepth = bestSpace.customDepth || customDepth;
+            customWidthForSplit = adjustedFurnitureWidth;
           } else {
-            // 시나리오 C: 단일 배치 - 깊이 조정
-            finalCustomDepth = Math.max(200, 730 - targetSlotInfo.column.depth);
+            // 기타 경우 - 정상 깊이 (또는 bestSpace에서 제공한 깊이)
+            finalCustomDepth = bestSpace.customDepth || customDepth;
+            customWidthForSplit = adjustedFurnitureWidth;
           }
           
           console.log('🟣 Column C 깊이 처리:', {
             columnDepth: targetSlotInfo.column.depth,
             spaceType: bestSpace.type,
             originalDepth: customDepth,
+            bestSpaceCustomDepth: bestSpace.customDepth,
             finalDepth: finalCustomDepth,
             isDepthAdjusted: finalCustomDepth !== customDepth,
-            customWidth: customWidthForSplit
+            customWidth: customWidthForSplit,
+            existingFurnitureCount: existingModulesInSlot.length
           });
         }
         
@@ -489,6 +609,21 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         };
         
         // 모듈 추가
+        console.log('🎯 Column C 가구 추가:', {
+          slotIndex,
+          서브슬롯타입: bestSpace.type,
+          위치: {
+            x: newModule.position.x.toFixed(3),
+            y: newModule.position.y.toFixed(3),
+            z: newModule.position.z.toFixed(3)
+          },
+          너비: newModule.adjustedWidth,
+          customWidth: newModule.customWidth,
+          moduleId: newModule.moduleId,
+          도어: newModule.hasDoor,
+          isSplit: newModule.isSplit
+        });
+        
         addModule(newModule);
         setCurrentDragData(null);
         

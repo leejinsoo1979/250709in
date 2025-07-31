@@ -1,88 +1,12 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { ThreeEvent } from '@react-three/fiber';
+import BoxWithEdges from './components/BoxWithEdges';
 
-// 엣지 표시를 위한 박스 컴포넌트
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode: 'solid' | 'wireframe';
-}> = ({ args, position, material, renderMode }) => {
-  const { theme } = useTheme();
-  const { view2DTheme } = useUIStore();
-  // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍과 동일)
-  const createInnerMaterial = (originalMaterial: THREE.Material) => {
-    const { viewMode } = useSpace3DView();
-    
-    if (originalMaterial instanceof THREE.MeshStandardMaterial) {
-      // console.log('📚 ShelfRenderer - 원본 텍스처:', originalMaterial.map);
-      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
-      return originalMaterial;
-    }
-    return material;
-  };
-
-  const innerMaterial = createInnerMaterial(material);
-  const { viewMode } = useSpace3DView();
-
-  return (
-    <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <boxGeometry args={args} />
-          {viewMode === '2D' ? (
-            <meshStandardMaterial 
-              map={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.map : null}
-              color={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.color : new THREE.Color('#FFFFFF')}
-              transparent={true}
-              opacity={0.5}
-              metalness={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.metalness : 0.0}
-              roughness={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.roughness : 0.6}
-              toneMapped={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.toneMapped : true}
-              envMapIntensity={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.envMapIntensity : 1.0}
-              emissive={innerMaterial instanceof THREE.MeshStandardMaterial ? innerMaterial.emissive : new THREE.Color(0x000000)}
-            />
-          ) : (
-            <primitive object={innerMaterial} attach="material" />
-          )}
-        </mesh>
-      )}
-      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
-      {viewMode === '3D' ? (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
-            depthTest={true}
-            depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
-          />
-        </lineSegments>
-      ) : (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#666666" : "#444444")} 
-            linewidth={0.5}
-            transparent={false}
-            opacity={1.0}
-            depthTest={false}
-          />
-        </lineSegments>
-      )}
-    </group>
-  );
-};
 
 interface ShelfRendererProps {
   shelfCount: number;
@@ -124,9 +48,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const view2DDirection = useUIStore(state => state.view2DDirection);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
   const setHighlightedCompartment = useUIStore(state => state.setHighlightedCompartment);
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   const { viewMode } = useSpace3DView();
   const mmToThreeUnits = (mm: number) => mm / 100;
   
@@ -137,7 +62,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : getThemeColor());
   const textColor = dimensionColor;
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
@@ -306,6 +231,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
+                      dashed={false}
                     />
                     {/* 선반 두께 수직선 양끝 점 */}
                     <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
@@ -396,6 +322,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     ]}
                     color={dimensionColor}
                     lineWidth={1}
+                    dashed={false}
                   />
                   {/* 상단 프레임 두께 수직선 양끝 점 */}
                   <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
@@ -511,6 +438,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       ]}
                       color={isHighlighted ? "#FFD700" : dimensionColor}
                       lineWidth={isHighlighted ? 2 : 1}
+                      dashed={false}
                     />
                     {/* 수직 연결선 양끝 점 */}
                     <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>

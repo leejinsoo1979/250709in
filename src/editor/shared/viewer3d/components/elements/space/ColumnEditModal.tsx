@@ -57,6 +57,12 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     updateColumn(column.id, { material });
   };
 
+  const handleBackPanelFinishChange = (hasBackPanelFinish: boolean) => {
+    const updated = { ...editedColumn, hasBackPanelFinish };
+    setEditedColumn(updated);
+    updateColumn(column.id, { hasBackPanelFinish });
+  };
+
   const handleDelete = () => {
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       removeColumn(column.id);
@@ -311,6 +317,17 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                   <option value="steel">철골</option>
                   <option value="wood">목재</option>
                 </select>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={editedColumn.hasBackPanelFinish || false}
+                    onChange={(e) => handleBackPanelFinishChange(e.target.checked)}
+                  />
+                  뒷면 패널 마감
+                </label>
               </div>
             </div>
           </div>

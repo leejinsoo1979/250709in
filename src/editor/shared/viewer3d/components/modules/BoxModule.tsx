@@ -12,6 +12,7 @@ import DualType2 from './types/DualType2';
 import DualType4 from './types/DualType4';
 import DualType5 from './types/DualType5';
 import DualType6 from './types/DualType6';
+import UpperCabinet from './types/UpperCabinet';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -31,6 +32,13 @@ interface BoxModuleProps {
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   furnitureId?: string; // 가구 ID (칸 강조용)
+  // 이벤트 핸들러 추가
+  onPointerDown?: (e: any) => void;
+  onPointerMove?: (e: any) => void;
+  onPointerUp?: (e: any) => void;
+  onPointerOver?: () => void;
+  onPointerOut?: () => void;
+  onDoubleClick?: (e: any) => void;
 }
 
 /**
@@ -57,7 +65,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   adjustedWidth,
   viewMode,
   renderMode,
-  furnitureId
+  furnitureId,
+  // 이벤트 핸들러들
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerOver,
+  onPointerOut,
+  onDoubleClick
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
@@ -90,6 +105,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        // 이벤트 핸들러들 전달
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
       />
     );
   }
@@ -111,6 +133,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        // 이벤트 핸들러들 전달
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
       />
     );
   }
@@ -132,6 +161,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        // 이벤트 핸들러들 전달
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
       />
     );
   }
@@ -216,6 +252,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        // 이벤트 핸들러들 전달
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
       />
     );
   }
@@ -237,6 +280,35 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        // 이벤트 핸들러들 전달
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
+      />
+    );
+  }
+
+  // === 상부장 타입들 ===
+  if (moduleData.id.includes('upper-cabinet-')) {
+    return (
+      <UpperCabinet
+        moduleData={moduleData}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        internalHeight={internalHeight}
+        hasDoor={hasDoor}
+        customDepth={customDepth}
+        hingePosition={hingePosition}
+        spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0}
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth}
       />
     );
   }

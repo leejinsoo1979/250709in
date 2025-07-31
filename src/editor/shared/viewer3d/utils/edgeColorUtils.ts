@@ -8,6 +8,7 @@ interface EdgeColorOptions {
   isDragMode?: boolean;
   viewMode?: '2D' | '3D';
   view2DTheme?: 'dark' | 'light';
+  renderMode?: 'solid' | 'wireframe';
 }
 
 /**
@@ -21,7 +22,8 @@ export function getEdgeColor(options: EdgeColorOptions): string {
     isEditMode = false,
     isDragMode = false,
     viewMode = '3D',
-    view2DTheme = 'light'
+    view2DTheme = 'light',
+    renderMode = 'solid'
   } = options;
 
   // 우선순위에 따른 색상 결정
@@ -30,16 +32,21 @@ export function getEdgeColor(options: EdgeColorOptions): string {
   }
   
   if (isEditMode) {
-    return '#ff8800'; // 편집 모드: 주황색
+    return '#ff5500'; // 편집 모드: 주황색
   }
   
   if (isDragMode) {
     return '#ff0000'; // 드래그 모드: 빨간색
   }
   
-  // 2D 다크모드일 때 밝은 회색
+  // 2D 와이어프레임 모드: 주황색
+  if (viewMode === '2D' && renderMode === 'wireframe') {
+    return '#ff5500';
+  }
+  
+  // 2D 다크모드일 때 더 밝은 회색으로 변경
   if (viewMode === '2D' && view2DTheme === 'dark') {
-    return '#666666';
+    return '#999999'; // 더 밝게 변경하여 가시성 향상
   }
   
   // 기본 색상

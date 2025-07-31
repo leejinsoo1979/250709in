@@ -27,6 +27,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
+  // 상부장 타입들
+  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
+  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
+  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
 };
 
 // 모듈 타입 정의
@@ -476,6 +480,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-\d+$/, ''); // 폭 정보 제거
+    
+    // 상부장의 경우 특별 처리
+    if (moduleKey.includes('upper-cabinet')) {
+      // 상부장 타입별 fallback 설정
+      if (moduleKey.includes('shelf')) {
+        return FURNITURE_ICONS['upper-cabinet-shelf'] || FURNITURE_ICONS['single-2hanging']; // 선반형은 2단옷장으로 대체
+      } else if (moduleKey.includes('open')) {
+        return FURNITURE_ICONS['upper-cabinet-open'] || FURNITURE_ICONS['single-2hanging']; // 오픈형도 2단옷장으로 대체
+      } else if (moduleKey.includes('mixed')) {
+        return FURNITURE_ICONS['upper-cabinet-mixed'] || FURNITURE_ICONS['single-2drawer-hanging']; // 혼합형은 서랍+옷장으로 대체
+      }
+    }
+    
     return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
   };
 

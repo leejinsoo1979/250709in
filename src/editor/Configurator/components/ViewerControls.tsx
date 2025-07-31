@@ -237,6 +237,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               data-view-mode={mode.id}
               className={`${styles.viewModeButton} ${viewMode === mode.id ? styles.active : ''}`}
               onClick={() => onViewModeChange(mode.id)}
+              title={mode.id === '3D' ? '3D 모드 - 휠 버튼 드래그: 회전' : '2D 모드'}
             >
               {mode.label}
             </button>

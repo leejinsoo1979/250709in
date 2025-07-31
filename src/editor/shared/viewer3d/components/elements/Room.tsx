@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react'
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { 
@@ -92,7 +92,7 @@ const BoxWithEdges: React.FC<{
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode: contextViewMode } = useSpace3DView();
   const viewMode = viewModeProp || contextViewMode;
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
   useEffect(() => {
@@ -112,7 +112,12 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 모서리 라인 렌더링 - 항상 표시 */}
       <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#888888" : "#666666")} linewidth={0.5} />
+        <lineBasicMaterial 
+          color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")} 
+          linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
+          opacity={1.0}
+          transparent={false}
+        />
       </lineSegments>
     </group>
   );
@@ -136,7 +141,7 @@ const Room: React.FC<RoomProps> = ({
   if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number') {
     return null;
   }
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
@@ -276,14 +281,24 @@ const Room: React.FC<RoomProps> = ({
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
   const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
-    const frameColor = materialConfig?.doorColor || '#E0E0E0'; // Changed default from #FFFFFF to light gray
+    // 2D 다크모드에서는 더 밝은 색상 사용
+    const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
+    
+    // 2D에서 베이스프레임은 연두색으로 표시
+    let frameColor = materialConfig?.doorColor || defaultColor;
+    if (viewMode === '2D' && frameType === 'base') {
+      frameColor = '#7FFF00'; // 연두색 (Chartreuse)
+    }
+    
     const isHighlighted = frameType && highlightedFrame === frameType;
     
     console.log(`🎨 Creating frame material for ${frameType}:`, {
       frameType,
       frameColor,
       doorTexture: materialConfig?.doorTexture,
-      isHighlighted
+      isHighlighted,
+      viewMode,
+      view2DTheme
     });
     
     const material = new THREE.MeshStandardMaterial({
@@ -293,7 +308,7 @@ const Room: React.FC<RoomProps> = ({
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(isHighlighted ? 0x220000 : 0x000000),  // 강조 시 레드 자체발광 추가
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted,  // 강조 시에도 투명하게
-      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : isHighlighted ? 0.6 : 1.0,  // 강조 시 60% 투명도
+      opacity: renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D에서 80% 투명도로 변경
     });
 
     // 프레임 텍스처 적용 (강조되지 않은 경우에만)
@@ -332,7 +347,7 @@ const Room: React.FC<RoomProps> = ({
     }
     
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
@@ -791,15 +806,15 @@ const Room: React.FC<RoomProps> = ({
             );
           }, [])}
           
-          {/* 뒤쪽 외부 벽면 - 2D 정면뷰에서는 점선으로 표시 */}
+          {/* 뒤쪽 외부 벽면 */}
           {console.log('🔍 백패널 렌더링 조건:', {
             viewMode,
             view2DDirection,
             is2DFront: viewMode === '2D' && view2DDirection === 'front',
             position: [xOffset + width/2, panelStartY + height/2, zOffset - 0.01]
           })}
-          {viewMode === '2D' && view2DDirection === 'front' ? (
-            // 2D 정면뷰에서는 점선으로 표시
+          {false ? (
+            // 사용하지 않음
             (() => {
               // 점선을 위한 짧은 선분들 생성
               const dashLength = 0.3; // 점선 길이

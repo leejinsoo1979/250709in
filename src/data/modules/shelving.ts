@@ -617,6 +617,107 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number): ModuleData
 };
 
 // ============================================================================
+// 상부장 가구 생성 함수
+// ============================================================================
+
+/**
+ * 상부장 기본형 - 선반 2단
+ */
+const createUpperCabinet1 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `upper-cabinet-shelf-${columnWidth}`,
+    `상부장 선반형 ${columnWidth}mm`,
+    columnWidth,
+    600, // 상부장 기본 높이 600mm
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#e8f5e9', // 연한 초록색
+    `상부장 선반 2단형 | 폭 ${columnWidth}mm`
+  );
+  
+  return {
+    ...base,
+    category: 'upper' as 'full', // 나중에 'upper'로 변경 예정
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 2단 선반
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 상부장 오픈형 - 선반 없음
+ */
+const createUpperCabinet2 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `upper-cabinet-open-${columnWidth}`,
+    `상부장 오픈형 ${columnWidth}mm`,
+    columnWidth,
+    600,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#fff3e0', // 연한 주황색
+    `상부장 오픈형 | 폭 ${columnWidth}mm`
+  );
+  
+  return {
+    ...base,
+    category: 'upper' as 'full',
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 상부장 혼합형 - 상단 오픈 + 하단 선반
+ */
+const createUpperCabinet3 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `upper-cabinet-mixed-${columnWidth}`,
+    `상부장 혼합형 ${columnWidth}mm`,
+    columnWidth,
+    600,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#f3e5f5', // 연한 보라색
+    `상부장 혼합형 (오픈+선반) | 폭 ${columnWidth}mm`
+  );
+  
+  return {
+    ...base,
+    category: 'upper' as 'full',
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 50,
+          count: 1
+        },
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 50
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
 
@@ -706,6 +807,11 @@ export const generateShelvingModules = (
     modules.push(createDualType5(dualColumnWidth, maxHeight));
     modules.push(createDualType6(dualColumnWidth, maxHeight));
   }
+  
+  // === 상부장 가구 생성 ===
+  modules.push(createUpperCabinet1(columnWidth));
+  modules.push(createUpperCabinet2(columnWidth));
+  modules.push(createUpperCabinet3(columnWidth));
   
   return modules;
 };

@@ -3,6 +3,8 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { usePDFExport, type ViewType } from '@/editor/shared/hooks/usePDFExport';
+import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
+import { useUIStore } from '@/store/uiStore';
 import styles from './ExportPanel.module.css';
 
 interface DrawingTypeInfo {
@@ -68,6 +70,13 @@ const ExportPanel: React.FC = () => {
     message: string;
     filename?: string;
   } | null>(null);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [capturedViews, setCapturedViews] = useState<{
+    top?: string;
+    front?: string;
+    side?: string;
+    door?: string;
+  }>({});
 
   // 도면 타입 선택/해제 핸들러
   const handleDrawingTypeToggle = (drawingType: DrawingType) => {
@@ -164,6 +173,71 @@ const ExportPanel: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  // 뷰 캡처 함수
+  const captureViews = async () => {
+    const { viewMode, view2DDirection, setViewMode, setView2DDirection, setRenderMode } = useUIStore.getState();
+    
+    // 현재 상태 저장
+    const originalViewMode = viewMode;
+    const originalView2DDirection = view2DDirection;
+    
+    const captures: typeof capturedViews = {};
+    
+    try {
+      // 상부뷰 캡처
+      setViewMode('2D');
+      setView2DDirection('top');
+      setRenderMode('wireframe');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const topCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
+      if (topCanvas) captures.top = topCanvas.toDataURL();
+      
+      // 정면뷰 캡처
+      setView2DDirection('front');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const frontCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
+      if (frontCanvas) captures.front = frontCanvas.toDataURL();
+      
+      // 측면뷰 캡처
+      setView2DDirection('left');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const sideCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
+      if (sideCanvas) captures.side = sideCanvas.toDataURL();
+      
+      // 도어뷰 캡처 (3D 정면)
+      setViewMode('3D');
+      setRenderMode('solid');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const doorCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
+      if (doorCanvas) captures.door = doorCanvas.toDataURL();
+      
+      setCapturedViews(captures);
+      
+      // 원래 상태로 복원
+      setViewMode(originalViewMode);
+      setView2DDirection(originalView2DDirection);
+      
+    } catch (error) {
+      console.error('뷰 캡처 실패:', error);
+      // 원래 상태로 복원
+      setViewMode(originalViewMode);
+      setView2DDirection(originalView2DDirection);
+    }
+  };
+
+  // PDF 미리보기 실행
+  const handlePDFPreview = async () => {
+    if (!spaceInfo || !canExportPDF(spaceInfo, placedModules)) {
+      return;
+    }
+    
+    // 뷰 캡처
+    await captureViews();
+    
+    // 미리보기 표시
+    setShowPDFPreview(true);
   };
 
   // PDF 내보내기 실행
@@ -378,6 +452,13 @@ const ExportPanel: React.FC = () => {
 
           <div className={styles.actions}>
             <button
+              className={`${styles.exportButton} ${styles.secondary} ${!isPDFExportEnabled ? styles.disabled : ''}`}
+              onClick={handlePDFPreview}
+              disabled={!isPDFExportEnabled || isPDFExporting}
+            >
+              PDF 미리보기
+            </button>
+            <button
               className={`${styles.exportButton} ${!isPDFExportEnabled ? styles.disabled : ''}`}
               onClick={handleExportPDF}
               disabled={!isPDFExportEnabled || isPDFExporting}
@@ -439,6 +520,13 @@ const ExportPanel: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* PDF 미리보기 */}
+      <PDFTemplatePreview 
+        isOpen={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        capturedViews={capturedViews}
+      />
     </div>
   );
 };

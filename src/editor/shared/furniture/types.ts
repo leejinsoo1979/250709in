@@ -12,6 +12,8 @@ export interface ColumnSlotMetadata {
   originalDualSlots?: number[]; // 원래 점유 슬롯 (듀얼 변환 시)
   actualSlots?: number[]; // 실제 점유 슬롯
   doorWidth?: number; // 기둥 커버용 도어 너비 (mm)
+  spaceType?: 'full' | 'front'; // Column C의 공간 타입
+  moduleOrder?: number; // 이 슬롯에서 몇 번째 모듈인지
 }
 
 // 배치된 모듈 타입

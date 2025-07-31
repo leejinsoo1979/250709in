@@ -20,6 +20,7 @@ interface ColumnAssetProps {
   onPositionChange?: (id: string, newPosition: [number, number, number]) => void;
   onRemove?: (id: string) => void;
   spaceInfo?: any;
+  hasBackPanelFinish?: boolean;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -32,7 +33,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   renderMode = 'solid',
   onPositionChange,
   onRemove,
-  spaceInfo
+  spaceInfo,
+  hasBackPanelFinish = false
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -461,23 +463,41 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </group>
       ) : (
         // 3D 솔리드 모드: 일반 메시
-        <mesh
-          ref={meshRef}
-          material={material}
-          receiveShadow={viewMode === '3D'}
-          castShadow={viewMode === '3D'}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
-          onPointerDown={handlePointerDown}
-          onPointerEnter={() => setIsHovered(true)}
-          onPointerLeave={() => setIsHovered(false)}
-          onContextMenu={handleContextMenu}
-          position={[0, (height * 0.01) / 2, 0]} // 기둥 mesh를 위로 올려서 바닥에 맞춤
-          userData={{ isColumn: true, columnId: id }}
-          scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
-        >
-          <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
-        </mesh>
+        <>
+          <mesh
+            ref={meshRef}
+            material={material}
+            receiveShadow={viewMode === '3D'}
+            castShadow={viewMode === '3D'}
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            onPointerDown={handlePointerDown}
+            onPointerEnter={() => setIsHovered(true)}
+            onPointerLeave={() => setIsHovered(false)}
+            onContextMenu={handleContextMenu}
+            position={[0, (height * 0.01) / 2, 0]} // 기둥 mesh를 위로 올려서 바닥에 맞춤
+            userData={{ isColumn: true, columnId: id }}
+            scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
+          >
+            <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
+          </mesh>
+          
+          {/* 뒷면 패널 마감 */}
+          {hasBackPanelFinish && (
+            <mesh
+              position={[0, (height * 0.01) / 2, -(depth * 0.01) / 2 - 0.009]} // 기둥 뒷면에서 18mm(0.018) 뒤에 위치
+              receiveShadow={viewMode === '3D'}
+              castShadow={viewMode === '3D'}
+            >
+              <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
+              <meshStandardMaterial 
+                color="#F5F5DC" 
+                roughness={0.6}
+                metalness={0.0}
+              />
+            </mesh>
+          )}
+        </>
       )}
     </group>
   );
@@ -495,6 +515,7 @@ export default React.memo(ColumnAsset, (prevProps, nextProps) => {
     prevProps.color === nextProps.color &&
     prevProps.id === nextProps.id &&
     prevProps.renderMode === nextProps.renderMode &&
+    prevProps.hasBackPanelFinish === nextProps.hasBackPanelFinish &&
     prevProps.spaceInfo?.width === nextProps.spaceInfo?.width &&
     prevProps.spaceInfo?.depth === nextProps.spaceInfo?.depth &&
     prevProps.spaceInfo?.height === nextProps.spaceInfo?.height

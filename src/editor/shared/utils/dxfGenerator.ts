@@ -62,6 +62,15 @@ export const generateDXF = (data: DXFExportData): string => {
   // DXF Writer 초기화
   const dxf = new DxfWriter();
   
+  // 레이어 추가
+  dxf.addLayer('0', 7, 'CONTINUOUS'); // 기본 레이어 (흰색)
+  dxf.addLayer('FURNITURE', 3, 'CONTINUOUS'); // 가구 레이어 (녹색)
+  dxf.addLayer('DIMENSIONS', 1, 'CONTINUOUS'); // 치수 레이어 (빨간색)
+  dxf.addLayer('TEXT', 5, 'CONTINUOUS'); // 텍스트 레이어 (파란색)
+  
+  // 현재 레이어 설정
+  dxf.setCurrentLayerName('0');
+  
   // 도면 타입별로 다른 그리기 함수 호출
   switch (drawingType) {
     case 'front':
@@ -138,6 +147,7 @@ const drawFrontSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
   // 좌측 전체 높이 치수선 추가
   const leftDimensionX = -100; // 공간 외곽선에서 왼쪽으로 100mm 떨어진 위치
   
+  dxf.setCurrentLayerName('DIMENSIONS');
   // 치수선 (세로선)
   dxf.addLine(point3d(leftDimensionX, 0), point3d(leftDimensionX, spaceInfo.height));
   
@@ -417,12 +427,17 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       slotPositionMm, // Three.js 기준 mm 위치 (중앙 기준)
       dxfXPosition,   // DXF 기준 위치 (왼쪽 하단 기준)
       spaceWidth: spaceInfo.width,
-      dimensions
+      dimensions,
+      customWidth: (module as any).customWidth,
+      adjustedWidth: (module as any).adjustedWidth,
+      finalWidth: dimensions.width
     });
     
     // 가구 사각형 (정면도 기준: dxfXPosition 사용)
     const x1 = dxfXPosition - (dimensions.width / 2); // 중심점에서 좌측 끝
-    const y1 = position.y * 10; // Y 좌표 (바닥에서의 높이, Three.js -> mm 변환)
+    // Y 좌표: 내경 바닥 위치 계산
+    const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
+    const y1 = baseFrameHeight; // 하부 프레임 위의 가구 바닥
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.height; // 상단
     
@@ -436,6 +451,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     });
     
     // 가구 외곽선 그리기 (정면도 - 완전한 2D 단면)
+    dxf.setCurrentLayerName('FURNITURE');
     dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 하단
     dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 우측
     dxf.addLine(point3d(x2, y2), point3d(x1, y2)); // 상단
@@ -500,6 +516,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const centerY = y1 + dimensions.height / 2;
     
     const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
+    dxf.setCurrentLayerName('TEXT');
     dxf.addText(
       point3d(centerX, centerY),
       Math.min(dimensions.height / 4, 50), // 높이에 비례한 텍스트 크기
@@ -547,6 +564,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     if (dimensions.height > 100) {
       const dimensionX = x2 + 50; // 가구 우측 끝에서 50mm 떨어진 위치
       
+      dxf.setCurrentLayerName('DIMENSIONS');
       // 치수선
       dxf.addLine(point3d(dimensionX, y1), point3d(dimensionX, y2));
       
@@ -555,6 +573,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       dxf.addLine(point3d(dimensionX - 20, y2), point3d(dimensionX + 20, y2));
       
       // 높이 치수 텍스트
+      dxf.setCurrentLayerName('TEXT');
       dxf.addText(
         point3d(dimensionX + 30, centerY),
         20,

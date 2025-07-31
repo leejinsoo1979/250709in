@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
+import { ViewerThemeProvider } from './context/ViewerThemeContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
 import ColumnAsset from './components/elements/space/ColumnAsset';
@@ -19,6 +20,7 @@ import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
+import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 
 
 import { useLocation } from 'react-router-dom';
@@ -45,7 +47,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -508,8 +510,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
-      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
-        <div 
+      <ViewerThemeProvider viewMode={viewMode}>
+        <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
+          <div 
           style={{ 
             width: '100%', 
             height: '100%', 
@@ -841,14 +844,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               </svg>
             </button>
           </div>
-        </div>
-      </Space3DViewProvider>
+          </div>
+        </Space3DViewProvider>
+      </ViewerThemeProvider>
     );
   }
 
   return (
-    <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
-      <div 
+    <ViewerThemeProvider viewMode={viewMode}>
+      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
+        <div 
         style={{ 
           width: '100%', 
           height: '100%', 
@@ -965,16 +970,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     width={column.width} // mm 단위 그대로 전달
                     height={columnHeight}
                     depth={column.depth}
-                  color={column.color}
-                  spaceInfo={spaceInfo}
-                  renderMode={renderMode}
-                  onPositionChange={(id, newPosition) => {
-                    throttledUpdateColumn(id, { position: newPosition });
-                  }}
-                  onRemove={(id) => {
-                    removeColumn(id);
-                  }}
-                />
+                    color={column.color}
+                    hasBackPanelFinish={column.hasBackPanelFinish}
+                    spaceInfo={spaceInfo}
+                    renderMode={renderMode}
+                    onPositionChange={(id, newPosition) => {
+                      throttledUpdateColumn(id, { position: newPosition });
+                    }}
+                    onRemove={(id) => {
+                      removeColumn(id);
+                    }}
+                  />
                 {/* 기둥 벽면 간격 라벨 (2D 모드에서 기둥 편집 모달이 열렸을 때만 표시) */}
                 {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
                   <ColumnDistanceLabels
@@ -1102,6 +1108,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
             <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} activeZone={activeZone} />
+            
+            {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
+            <InternalDimensionDisplay />
           </React.Suspense>
         </ThreeCanvas>
 
@@ -1117,10 +1126,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               right: '10px',
               width: '36px',
               height: '36px',
-              backgroundColor: theme.mode === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
-              border: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+              backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
+              border: `1px solid ${view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
               borderRadius: '4px',
-              color: theme.mode === 'dark' ? '#ffffff' : '#000000',
+              color: view2DTheme === 'dark' ? '#ffffff' : '#000000',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -1131,13 +1140,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
-              e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+              e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
+              e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
               e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
-              e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+              e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
+              e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
             title="4분할 뷰로 보기"
@@ -1151,8 +1160,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </button>
         )}
 
-      </div>
-    </Space3DViewProvider>
+        </div>
+      </Space3DViewProvider>
+    </ViewerThemeProvider>
   );
 };
 
@@ -1209,6 +1219,7 @@ const QuadrantContent: React.FC<{
             height={column.height || spaceInfo.height || 2400}
             depth={column.depth}
             color={column.color}
+            hasBackPanelFinish={column.hasBackPanelFinish}
             spaceInfo={spaceInfo}
             renderMode="solid"
             onPositionChange={(id, newPosition) => {

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { shaderMaterial } from '@react-three/drei';
 import { extend } from '@react-three/fiber';
 import { useUIStore } from '@/store/uiStore';
@@ -19,7 +19,7 @@ interface CADGridProps {
 const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', enabled = true, showAxis = true }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   
   // 카메라 거리에 따른 동적 그리드 스케일 계산
@@ -435,7 +435,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           />
         </bufferGeometry>
         <lineBasicMaterial 
-          color={viewMode === '2D' && view2DTheme === 'dark' ? '#444444' : (theme.mode === 'dark' ? '#444444' : '#dddddd')} 
+          color={viewMode === '2D' && view2DTheme === 'dark' ? '#444444' : '#dddddd'} 
           opacity={0.3}
           transparent
           depthTest={false}
@@ -454,7 +454,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
           />
         </bufferGeometry>
         <lineBasicMaterial 
-          color={viewMode === '2D' && view2DTheme === 'dark' ? '#555555' : (theme.mode === 'dark' ? '#555555' : '#bbbbbb')} 
+          color={viewMode === '2D' && view2DTheme === 'dark' ? '#555555' : '#bbbbbb'} 
           opacity={0.4}
           transparent
           depthTest={false}
@@ -502,7 +502,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       {/* 원점 표시 */}
       <mesh position={[0, 0, 0.01]} renderOrder={-995}>
         <sphereGeometry args={[0.05]} />
-        <meshBasicMaterial color={viewMode === '2D' && view2DTheme === 'dark' ? '#888888' : (theme.mode === 'dark' ? '#888888' : '#666666')} />
+        <meshBasicMaterial color={gridColors.origin} />
       </mesh>
     </group>
   );

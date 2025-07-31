@@ -1,40 +1,42 @@
 import React from 'react';
+import { ModuleData } from '@/data/modules/shelving';
+import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import DoorModule from '../DoorModule';
 
 /**
- * DualType1 컴포넌트
- * - 2단 서랍 + 옷장 복합형 (dual-2drawer-hanging)
- * - ID 패턴: dual-2drawer-hanging-*
- * - 구조: 하단 2단서랍 + 상단 옷장 (듀얼 타입)
- * - 특징: 표준 sections 기반, 안전선반 적용 가능
+ * 상부장 컴포넌트
+ * - 상부장 선반형, 오픈형, 혼합형을 모두 처리
+ * - 공통 렌더링 로직 사용
  */
-const DualType1: React.FC<FurnitureTypeProps> = ({
+const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   moduleData,
   color,
+  isDragging = false,
+  isEditMode = false,
   internalHeight,
-  hasDoor,
+  hasDoor = false,
   customDepth,
   hingePosition = 'right',
   spaceInfo,
-  isDragging = false,
-  isEditMode = false,
   doorWidth,
   doorXOffset = 0,
   originalSlotWidth,
-  slotCenterX
+  slotCenterX,
+  adjustedWidth
 }) => {
-  // 공통 로직 사용
+  const { renderMode } = useSpace3DView();
+  
+  // 공통 가구 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
     customDepth,
     isDragging,
-    isEditMode
+    isEditMode,
+    adjustedWidth
   });
-
-  const { renderMode } = useSpace3DView();
 
   return (
     <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
@@ -51,11 +53,10 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           material={baseFurniture.material}
           calculateSectionHeight={baseFurniture.calculateSectionHeight}
           renderMode={renderMode}
-          furnitureId={moduleData.id}
         />
       )}
       
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
+      {/* 도어 렌더링 */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -63,10 +64,10 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
-          doorXOffset={0} // 도어 위치 고정 (커버 방식)
-          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          doorXOffset={0}
           originalSlotWidth={originalSlotWidth}
-          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
+          slotCenterX={slotCenterX}
+          moduleData={moduleData}
           isDragging={isDragging}
           isEditMode={isEditMode}
         />
@@ -75,4 +76,4 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   );
 };
 
-export default DualType1;
+export default UpperCabinet;

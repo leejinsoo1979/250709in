@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, Suspense } from 'react
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
@@ -47,7 +47,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   isSplitView = false
 }) => {
   // 테마 컨텍스트
-  const { theme } = useTheme();
+  const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마 가져오기
   const { view2DTheme } = useUIStore();
@@ -577,7 +577,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           mouseButtons={controlsConfig.mouseButtons}
           touches={controlsConfig.touches}
           panSpeed={1.0}
-          zoomSpeed={viewMode === '2D' ? 0.15 : 0.8}
+          zoomSpeed={viewMode === '2D' ? 0.15 : 1.5}
           enableDamping={true}
           dampingFactor={viewMode === '2D' ? 0.1 : 0.05}
           screenSpacePanning={true}

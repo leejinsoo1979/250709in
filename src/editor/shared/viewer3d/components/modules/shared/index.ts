@@ -27,4 +27,11 @@ export interface FurnitureTypeProps {
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
+  // 이벤트 핸들러 추가
+  onPointerDown?: (e: any) => void;
+  onPointerMove?: (e: any) => void;
+  onPointerUp?: (e: any) => void;
+  onPointerOver?: () => void;
+  onPointerOut?: () => void;
+  onDoubleClick?: (e: any) => void;
 } 

@@ -1,0 +1,1163 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullContainer {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  background-color: #1a1a1a;
+}
+
+/* 좌측 뷰 메뉴 */
+.viewMenu {
+  width: 250px;
+  background-color: #222;
+  border-right: 1px solid #444;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.menuTitle {
+  color: #fff;
+  font-size: 18px;
+  margin: 0 0 20px 0;
+  font-weight: 600;
+}
+
+.viewGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.viewMenuItem {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: grab;
+  transition: all 0.2s;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.viewMenuItem:hover {
+  border-color: #00ffcc;
+  transform: translateY(-2px);
+}
+
+.viewMenuItem:active {
+  cursor: grabbing;
+  border-color: #ff6600;
+  transform: scale(0.95);
+}
+
+.viewItemContent {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.viewItemContent img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1);
+}
+
+.viewItemPlaceholder {
+  color: #666;
+  font-size: 10px;
+  text-align: center;
+}
+
+.viewItemLabel {
+  display: block;
+  color: #ccc;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 메인 컨테이너 */
+.mainContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.contentWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.container {
+  width: 90vw;
+  height: 90vh;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  background-color: #fff;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 확대/축소 컨트롤 */
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.zoomBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.zoomBtn:hover {
+  background-color: #e0e0e0;
+}
+
+.zoomValue {
+  font-size: 14px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
+}
+
+.paperSelect {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.generateButton {
+  padding: 8px 20px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.generateButton:hover {
+  background-color: #059669;
+}
+
+.generateButton:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.closeButton {
+  padding: 8px 16px;
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #4b5563;
+}
+
+.previewContainer {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.previewContent {
+  background-color: #f5f5f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  position: relative;
+  margin: 0 auto;
+}
+
+
+/* 상단 좌측 인포 영역 */
+.infoArea {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 300px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  padding: 20px;
+  z-index: 100;
+}
+
+.logoSection {
+  margin-bottom: 15px;
+}
+
+.specsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 좌측 정보 패널 */
+.infoPanel {
+  width: 390px;
+  padding: 0;
+  background-color: #262626;
+  border-right: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 상단 info 섹션 */
+.infoSection {
+  height: 178px;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.logoArea {
+  margin-bottom: 15px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #00ffcc;
+  margin: 0 0 5px 0;
+  letter-spacing: 2px;
+}
+
+.projectTitle {
+  font-size: 16px;
+  font-weight: normal;
+  color: #ffffff;
+  margin: 0;
+}
+
+.projectSpecs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.specItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.label {
+  color: #888;
+  font-weight: normal;
+}
+
+.value {
+  color: #00ffcc;
+  font-weight: 500;
+}
+
+/* 디테일 섹션 */
+.detailSection {
+  height: 178px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.detailViews {
+  display: flex;
+  height: 100%;
+}
+
+.detailView {
+  flex: 1;
+  height: 100%;
+  border: 1px solid #444;
+  background-color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.detailView:first-child {
+  border-right: none;
+}
+
+.detailContent {
+  color: #666;
+  font-size: 14px;
+  text-transform: lowercase;
+}
+
+/* 메인 도면 영역 */
+.drawingArea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  background-color: transparent;
+  overflow: hidden;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 0, 0, 0.05) 19px,
+      rgba(0, 0, 0, 0.05) 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 0, 0, 0.05) 19px,
+      rgba(0, 0, 0, 0.05) 20px
+    );
+}
+
+
+.viewPlaceholder {
+  color: #666;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+/* 드래그 가능한 뷰 스타일 */
+.draggableView {
+  border: 2px solid #007AFF;
+  background-color: rgba(0, 122, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  user-select: none;
+  transition: all 0.2s;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+.draggableView.selected {
+  border-color: #0051D5;
+  border-width: 3px;
+  background-color: rgba(0, 122, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+}
+
+/* 선택된 카드에 리사이즈 가능함을 보여주는 외곽선 */
+.draggableView.selected::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 1px dashed rgba(0, 122, 255, 0.3);
+  pointer-events: none;
+}
+
+.draggableView::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 30%, rgba(0, 122, 255, 0.1) 50%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.draggableView:hover {
+  border-color: #0051D5;
+  background-color: rgba(0, 122, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+
+/* 더블클릭 힌트는 이미지가 없을 때만 표시 */
+.draggableView:not(:has(img)):hover::after {
+  content: '더블클릭하여 편집';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.draggableView:hover::before {
+  opacity: 1;
+}
+
+.draggableView.dragging {
+  border-color: #FF9500;
+  background-color: rgba(255, 149, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(255, 149, 0, 0.3);
+  opacity: 0.9;
+  z-index: 10;
+  transform: scale(1.02);
+}
+
+.draggableView.resizing {
+  border-color: #FF9500;
+  border-width: 3px;
+  background-color: rgba(255, 149, 0, 0.05);
+  cursor: nwse-resize;
+  box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.3);
+}
+
+/* 이미지가 없을 때 뷰 라벨만 보이는 경우 */
+.draggableView:not(:has(img)) .viewLabel {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.draggableView img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0.8;
+  filter: contrast(1.1);
+}
+
+.viewLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #007AFF;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  z-index: 1;
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 용지 방향 선택 버튼 */
+.orientationButtons {
+  display: flex;
+  gap: 4px;
+  background-color: #f0f0f0;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.orientButton {
+  padding: 6px 10px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.orientButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.orientButton.active {
+  background-color: #fff;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.orientButton svg {
+  display: block;
+}
+
+/* 뷰 컨트롤 버튼 */
+.viewControls {
+  position: absolute;
+  top: -35px;
+  right: 0;
+  display: flex;
+  gap: 5px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 5px;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.scaleBtn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #444;
+  background-color: #2a2a2a;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.scaleBtn:hover {
+  background-color: #444;
+  border-color: #00ffcc;
+}
+
+.scaleValue {
+  color: #fff;
+  font-size: 12px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.deleteBtn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ff4444;
+  background-color: #2a2a2a;
+  color: #ff4444;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-left: 5px;
+}
+
+.deleteBtn:hover {
+  background-color: #ff4444;
+  color: #fff;
+}
+
+/* 리사이즈 핸들 */
+.resizeHandle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #007AFF;
+  z-index: 11;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.resizeHandle:hover {
+  background-color: #0051D5;
+  transform: scale(1.5);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* 클릭 영역 확대를 위한 가상 요소 */
+.resizeHandle::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  cursor: inherit;
+}
+
+/* 각 방향 핸들 */
+.resizeHandle.nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.resizeHandle.n {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: n-resize;
+  width: 40px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.resizeHandle.ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.resizeHandle.w {
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%);
+  cursor: w-resize;
+  width: 12px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.resizeHandle.e {
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%);
+  cursor: e-resize;
+  width: 12px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.resizeHandle.sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.resizeHandle.s {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: s-resize;
+  width: 40px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.resizeHandle.se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.resizeHandle.n:hover,
+.resizeHandle.s:hover {
+  transform: translateX(-50%) scale(1.2, 1.5);
+}
+
+.resizeHandle.w:hover,
+.resizeHandle.e:hover {
+  transform: translateY(-50%) scale(1.5, 1.2);
+}
+
+.resizeHandle.nw:hover,
+.resizeHandle.ne:hover,
+.resizeHandle.sw:hover,
+.resizeHandle.se:hover {
+  transform: scale(1.5);
+}
+
+/* 페이지 추가 카드 */
+.addPageCard {
+  background-color: #2a2a2a;
+  border: 2px dashed #555;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.addPageCard:hover {
+  border-color: #007AFF;
+  background-color: #333;
+  transform: translateY(-2px);
+}
+
+.addPageIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.addPageCard:hover .addPageIcon {
+  color: #007AFF;
+}
+
+.addPageText {
+  color: #666;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.addPageCard:hover .addPageText {
+  color: #007AFF;
+}
+
+/* 페이지 네비게이션 */
+.pageNavigation {
+  height: 140px;
+  background-color: #1f1f1f;
+  border-top: 1px solid #333;
+  padding: 10px 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* 커스텀 스크롤바 */
+.pageNavigation::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pageNavigation::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.pageNavigation::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.pageNavigation::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.pageNavTitle {
+  display: none;
+}
+
+.pageList {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  height: 100%;
+  align-items: center;
+}
+
+.pageItemWrapper {
+  position: relative;
+  height: 100%;
+}
+
+.pageItem {
+  background-color: #2a2a2a;
+  border: 2px solid #444;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 100px;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.pageItem:hover {
+  border-color: #666;
+  transform: translateY(-2px);
+}
+
+.pageItem.active {
+  border-color: #007AFF;
+  background-color: #333;
+}
+
+.pageNumber {
+  color: #888;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.pageThumbnail {
+  width: 100%;
+  height: calc(100% - 20px);
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pagePreview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.miniView {
+  position: absolute;
+  background-color: #007AFF;
+  opacity: 0.6;
+  border: 1px solid #0051D5;
+}
+
+.emptyPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: 11px;
+}
+
+.deletePageBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.pageItemWrapper:hover .deletePageBtn {
+  display: flex;
+}
+
+.deletePageBtn:hover {
+  background-color: #ff4444;
+  transform: scale(1.1);
+}
+
+/* 스냅 가이드 라인 */
+.snapLineVertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #ff6600;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0.8;
+}
+
+.snapLineHorizontal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #ff6600;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0.8;
+}
+
+/* 정렬 가이드라인 */
+.alignmentGuideVertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #00ffcc;
+  pointer-events: none;
+  z-index: 19;
+  opacity: 0.6;
+}
+
+.alignmentGuideHorizontal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #00ffcc;
+  pointer-events: none;
+  z-index: 19;
+  opacity: 0.6;
+}
+
+/* 뷰어 오버레이 */
+.viewerOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.viewerContainer {
+  width: 90vw;
+  height: 90vh;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.viewerHeader {
+  background-color: #222;
+  padding: 16px 24px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.viewerHeader h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.viewerControls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.viewModeButtons,
+.view2DButtons,
+.renderModeButtons {
+  display: flex;
+  gap: 4px;
+  background-color: #333;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.viewModeButtons button,
+.view2DButtons button,
+.renderModeButtons button {
+  padding: 6px 12px;
+  background-color: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.viewModeButtons button:hover,
+.view2DButtons button:hover,
+.renderModeButtons button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+}
+
+.viewModeButtons button.active,
+.view2DButtons button.active,
+.renderModeButtons button.active {
+  background-color: #007AFF;
+  color: #fff;
+}
+
+.viewerContent {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: #0a0a0a;
+}
+
+.viewerFooter {
+  background-color: #222;
+  padding: 16px 24px;
+  border-top: 1px solid #444;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.captureButton {
+  padding: 10px 24px;
+  background-color: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.captureButton:hover {
+  background-color: #0051D5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.cancelButton {
+  padding: 10px 24px;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background-color: #555;
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: #1f2937;
+  }
+  
+  .header {
+    background-color: #111827;
+    border-bottom-color: #374151;
+  }
+  
+  .header h2 {
+    color: #f3f4f6;
+  }
+  
+  .paperSelect {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+  
+  .previewContent {
+    background-color: #111827;
+  }
+  
+  .templateHeader {
+    border-bottom-color: #374151;
+  }
+  
+  .projectInfo h3 {
+    color: #f3f4f6;
+  }
+  
+  .specs {
+    color: #9ca3af;
+  }
+  
+  .viewItem {
+    border-color: #374151;
+  }
+  
+  .viewItem h4 {
+    background-color: #1f2937;
+    border-bottom-color: #374151;
+    color: #f3f4f6;
+  }
+  
+  .viewContent {
+    background-color: #111827;
+  }
+  
+  .templateFooter {
+    border-top-color: #374151;
+    color: #9ca3af;
+  }
+}

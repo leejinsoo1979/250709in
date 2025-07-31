@@ -64,6 +64,20 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
+    console.log('🟢 addModule 호출:', {
+      id: module.id,
+      position: {
+        x: module.position.x.toFixed(3),
+        y: module.position.y.toFixed(3),
+        z: module.position.z.toFixed(3)
+      },
+      customDepth: module.customDepth,
+      customWidth: module.customWidth,
+      adjustedWidth: module.adjustedWidth,
+      slotIndex: module.slotIndex,
+      isSplit: module.isSplit,
+      spaceType: module.columnSlotInfo?.spaceType
+    });
     set((state) => ({
       placedModules: [...state.placedModules, module]
     }));

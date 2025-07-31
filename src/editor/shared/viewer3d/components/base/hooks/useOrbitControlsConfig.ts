@@ -100,7 +100,7 @@ export const useOrbitControlsConfig = (
       maxDistance: calculateDynamicDistances.maxDistance,
       mouseButtons: {
         LEFT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 왼쪽 버튼으로 회전 (3D 모드에서만)
-        MIDDLE: THREE.MOUSE.PAN, // 중간 버튼(휠 클릭)으로 팬
+        MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭): 2D에서는 팬, 3D에서는 회전
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼으로 팬
       },
       touches: {

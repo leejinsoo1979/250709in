@@ -94,11 +94,29 @@ export const isSlotAvailable = (
     }
   }
   
-  // 기둥이 있는 슬롯인 경우 - 항상 배치 가능으로 처리 (실제 배치는 SlotDropZones에서 처리)
-  if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
-    // 기둥이 있는 슬롯 - 배치 가능성 있음 (상세 검사는 SlotDropZones에서)
-    // 기둥이 있는 슬롯은 여러 가구가 배치될 수 있으므로 항상 true 반환
-    // 실제 배치 가능 여부는 SlotDropZones의 findAvailableSpacesInColumnSlot에서 판단
+  // Column C가 있는 슬롯인 경우 특별 처리
+  const hasColumnC = targetSlots.some(slot => {
+    const slotInfo = columnSlots[slot];
+    return slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture;
+  });
+  
+  if (hasColumnC) {
+    // Column C 슬롯 - 3개까지 가구 배치 가능 (첫 번째 1개 + 기둥 앞 2개)
+    const targetSlot = targetSlots[0]; // 단일 슬롯만 확인
+    const furnitureInSlot = placedModules.filter(m => 
+      m.slotIndex === targetSlot && m.id !== excludeModuleId
+    );
+    
+    console.log('🔵 Column C 슬롯 가용성 확인:', {
+      slotIndex: targetSlot,
+      기존가구수: furnitureInSlot.length,
+      isDualFurniture,
+      배치가능: furnitureInSlot.length < 3
+    });
+    
+    return furnitureInSlot.length < 3; // 3개 미만이면 배치 가능
+  } else if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
+    // 일반 기둥이 있는 슬롯 - 기존 로직
     return true;
   } else {
     // 기둥이 없는 슬롯에서는 기존 로직 사용

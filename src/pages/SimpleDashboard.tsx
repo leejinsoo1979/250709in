@@ -156,6 +156,25 @@ const SimpleDashboard: React.FC = () => {
   // 프로젝트별 디자인 파일들 (projectId -> DesignFileSummary[])
   const [projectDesignFiles, setProjectDesignFiles] = useState<{[projectId: string]: any[]}>({});
 
+  // 로컬 스토리지에서 데모 프로젝트 삭제
+  const cleanupDemoProjects = useCallback(() => {
+    console.log('🧹 로컬 스토리지 데모 프로젝트 정리 시작');
+    
+    const keys = Object.keys(localStorage);
+    let deletedCount = 0;
+    
+    keys.forEach(key => {
+      // demo 관련 항목 삭제
+      if (key.includes('demo') || key.includes('Demo') || key.includes('demoProject')) {
+        console.log('삭제:', key);
+        localStorage.removeItem(key);
+        deletedCount++;
+      }
+    });
+    
+    console.log(`🧹 총 ${deletedCount}개의 데모 프로젝트 관련 항목 삭제됨`);
+  }, []);
+
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async () => {
     if (!user) {
@@ -250,8 +269,11 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user]);
 
-  // 컴포넌트 마운트 시 Firebase 프로젝트 로드
+  // 컴포넌트 마운트 시 데모 프로젝트 정리 및 Firebase 프로젝트 로드
   useEffect(() => {
+    // 컴포넌트 마운트 시 항상 데모 프로젝트 정리
+    cleanupDemoProjects();
+    
     if (user) {
       loadFirebaseProjects();
     }
@@ -288,6 +310,12 @@ const SimpleDashboard: React.FC = () => {
       if (user) {
         console.log('🔄 윈도우 포커스 - 프로젝트 데이터 새로고침');
         loadFirebaseProjects();
+        
+        // 선택된 프로젝트가 있으면 디자인 파일도 새로고침
+        if (selectedProjectId) {
+          console.log('🔄 윈도우 포커스 - 디자인 파일 새로고침:', selectedProjectId);
+          loadDesignFilesForProject(selectedProjectId);
+        }
       }
     };
 
@@ -295,12 +323,12 @@ const SimpleDashboard: React.FC = () => {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [user]); // loadFirebaseProjects 의존성 제거
+  }, [user, selectedProjectId, loadDesignFilesForProject]); // 의존성 추가
 
   // 메뉴 변경 시 파일트리 자동 접기/펼치기
   useEffect(() => {
     if (activeMenu === 'all') {
-      // 모든 프로젝트 메뉴일 때는 파일트리 펼치기
+      // 전체 프로젝트 메뉴일 때는 파일트리 펼치기
       setIsFileTreeCollapsed(false);
     } else {
       // 다른 메뉴일 때는 파일트리 접기
@@ -315,9 +343,20 @@ const SimpleDashboard: React.FC = () => {
     const handleProjectUpdate = (event: MessageEvent) => {
       console.log('📡 프로젝트 업데이트 알림 수신:', event.data);
       
-      if (event.data.type === 'PROJECT_SAVED' || event.data.type === 'PROJECT_CREATED') {
+      if (event.data.type === 'PROJECT_SAVED' || event.data.type === 'PROJECT_CREATED' || event.data.type === 'DESIGN_FILE_UPDATED') {
         console.log('🔄 프로젝트 목록 새로고침 중...');
         loadFirebaseProjects();
+        
+        // 디자인 파일이 업데이트된 경우, 해당 프로젝트의 디자인 파일도 새로고침
+        if (event.data.type === 'DESIGN_FILE_UPDATED' && event.data.projectId) {
+          console.log('🔄 디자인 파일 새로고침:', event.data.projectId);
+          loadDesignFilesForProject(event.data.projectId);
+        }
+        // 현재 선택된 프로젝트의 디자인 파일도 새로고침
+        else if (selectedProjectId) {
+          console.log('🔄 선택된 프로젝트의 디자인 파일 새로고침:', selectedProjectId);
+          loadDesignFilesForProject(selectedProjectId);
+        }
       }
     };
 
@@ -327,7 +366,7 @@ const SimpleDashboard: React.FC = () => {
       channel.removeEventListener('message', handleProjectUpdate);
       channel.close();
     };
-  }, []); // 의존성 배열 비움 - 한 번만 설정
+  }, [selectedProjectId, loadDesignFilesForProject]); // 의존성 배열 비움 - 한 번만 설정
 
 
   // 북마크 및 휴지통 데이터 로드
@@ -530,7 +569,7 @@ const SimpleDashboard: React.FC = () => {
   const getBookmarkedDesignItems = () => {
     const items = [];
     
-    // 모든 프로젝트를 순회하며 북마크된 디자인 파일 찾기
+    // 전체 프로젝트를 순회하며 북마크된 디자인 파일 찾기
     allProjects.forEach(project => {
       const designFiles = projectDesignFiles[project.id] || [];
       
@@ -554,7 +593,7 @@ const SimpleDashboard: React.FC = () => {
   const getBookmarkedFolderItems = () => {
     const items = [];
     
-    // 모든 프로젝트를 순회하며 북마크된 폴더 찾기
+    // 전체 프로젝트를 순회하며 북마크된 폴더 찾기
     allProjects.forEach(project => {
       const projectFolders = folders[project.id] || [];
       
@@ -1701,13 +1740,13 @@ const SimpleDashboard: React.FC = () => {
             onClick={() => {
               setActiveMenu('all');
               setSelectedProjectId(null);
-              setBreadcrumbPath(['모든 프로젝트']);
+              setBreadcrumbPath(['전체 프로젝트']);
             }}
           >
             <div className={styles.navItemIcon}>
               <FolderIcon size={20} />
             </div>
-            <span>모든 프로젝트</span>
+            <span>전체 프로젝트</span>
             <span className={styles.navItemCount}>{allProjects.length}</span>
           </div>
           
@@ -1993,7 +2032,8 @@ const SimpleDashboard: React.FC = () => {
         </div>
 
         <div className={styles.content}>
-          {/* 프로젝트 트리 */}
+          {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 */}
+          {activeMenu === 'all' && (
           <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.treeHeader}>
               <button 
@@ -2113,7 +2153,7 @@ const SimpleDashboard: React.FC = () => {
                           </div>
                           
                           {/* 폴더 내부 파일들 */}
-                          {folder.expanded && folder.children && folder.children.length > 0 && (
+                          {folder.expanded && folder.children && folder.children.length > 0 ? (
                             <div className={styles.folderChildren}>
                               {folder.children.map(child => (
                                 <div 
@@ -2192,7 +2232,7 @@ const SimpleDashboard: React.FC = () => {
                                 </div>
                               ))}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       ))}
                       
@@ -2321,12 +2361,14 @@ const SimpleDashboard: React.FC = () => {
               )}
             </div>
           </aside>
+          )}
 
           {/* 프로젝트 카드 영역 */}
           <section className={styles.designArea}>
             {/* 파일 경로 (브레드크럼) */}
             <div className={styles.breadcrumb}>
-              {breadcrumbPath.map((item, index) => (
+              {activeMenu === 'bookmarks' && <h2 className={styles.pageTitle}>북마크</h2>}
+              {activeMenu === 'all' && breadcrumbPath.map((item, index) => (
                 <React.Fragment key={index}>
                   <span 
                     className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}

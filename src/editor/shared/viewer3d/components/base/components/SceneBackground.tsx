@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Color } from 'three';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 
 interface SceneBackgroundProps {
@@ -10,11 +10,10 @@ interface SceneBackgroundProps {
 
 const SceneBackground: React.FC<SceneBackgroundProps> = ({ viewMode }) => {
   const { scene, gl } = useThree();
-  const { theme } = useTheme();
-  const { view2DTheme } = useUIStore();
+  const { theme } = useViewerTheme();
   
   useEffect(() => {
-    const backgroundColor = viewMode === '2D' && view2DTheme === 'dark' 
+    const backgroundColor = viewMode === '2D' && theme.mode === 'dark' 
       ? '#121212' 
       : viewMode === '2D' 
         ? '#ffffff' 
@@ -29,10 +28,9 @@ const SceneBackground: React.FC<SceneBackgroundProps> = ({ viewMode }) => {
     console.log('🎨 배경색 업데이트:', {
       viewMode,
       themeMode: theme.mode,
-      view2DTheme,
       backgroundColor
     });
-  }, [scene, gl, viewMode, theme.mode, view2DTheme]);
+  }, [scene, gl, viewMode, theme.mode]);
   
   return null;
 };

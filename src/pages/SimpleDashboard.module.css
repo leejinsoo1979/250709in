@@ -478,15 +478,18 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.3s ease;
   position: relative;
+  overflow: hidden;
 }
 
 .projectTree.collapsed {
   width: 0;
-  overflow: hidden;
-  border-right: none;
+  min-width: 0;
+  border-right-color: transparent;
 }
 
 .treeHeader {
@@ -846,6 +849,7 @@
   margin-left: 20px;
   border-left: 1px solid var(--theme-border);
   padding-left: 8px;
+  min-height: 0;
 }
 
 .childItem {
@@ -1071,8 +1075,8 @@
 
 /* When tree is collapsed, expand the design area to use full width */
 .projectTree.collapsed ~ .designArea {
-  margin-left: -200px; /* Negative margin to expand into collapsed tree space, leaving space for toggle button */
-  padding-left: 40px; /* More padding to avoid overlapping with toggle button */
+  margin-left: 0;
+  padding-left: 20px; /* Normal padding */
 }
 
 /* 메인 영역의 브레드크럼 */
@@ -1085,6 +1089,14 @@
   gap: 8px;
   margin-bottom: 20px;
   padding: 0 4px;
+}
+
+.pageTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-primary);
+  margin: 0;
+  padding: 4px 8px;
 }
 
 .designGrid {

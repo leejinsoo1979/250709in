@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import BoxWithEdges from './BoxWithEdges';
 
 // 점선을 수동으로 그리는 컴포넌트
 const ManualDashedBox: React.FC<{
@@ -71,107 +72,6 @@ const ManualDashedBox: React.FC<{
   );
 };
 
-// 엣지 표시를 위한 박스 컴포넌트
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode: 'solid' | 'wireframe';
-  isInternalSurface?: boolean; // 내부 표면 여부
-  isDragging?: boolean; // 드래그 상태
-}> = ({ args, position, material, renderMode, isInternalSurface = false, isDragging = false }) => {
-  const { theme } = useTheme();
-  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
-  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
-  
-  const { viewMode } = useSpace3DView();
-  const { gl } = useThree();
-  
-  // BoxWithEdges 컴포넌트의 그림자 업데이트 - 빈도 제한
-  useEffect(() => {
-    if (viewMode === '3D' && gl && gl.shadowMap && !gl.shadowMap.autoUpdate) {
-      const timeoutId = setTimeout(() => {
-        if (gl.shadowMap) {
-          gl.shadowMap.needsUpdate = true;
-        }
-      }, 50); // 50ms 디바운스
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [viewMode, gl]);
-  
-  // 재질은 그대로 사용 (useBaseFurniture에서 이미 투명도 처리됨)
-  const processedMaterial = material;
-  
-  // 재질 텍스처 확인
-  useEffect(() => {
-    if (material && 'map' in material) {
-      const mat = material as THREE.MeshStandardMaterial;
-      console.log('🪑 BaseFurnitureShell BoxWithEdges 재질 상태:', {
-        hasMap: !!mat.map,
-        mapImage: mat.map?.image?.src,
-        color: mat.color?.getHexString(),
-        toneMapped: mat.toneMapped,
-        roughness: mat.roughness,
-        isInternalSurface
-      });
-    }
-  }, [material, isInternalSurface]);
-
-  return (
-    <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh 
-          geometry={geometry} 
-          material={processedMaterial}
-          receiveShadow={viewMode === '3D'} 
-          castShadow={viewMode === '3D'}
-          renderOrder={isInternalSurface ? 1 : 0}
-        />
-      )}
-      {/* 와이어프레임 모드에서도 레이캐스팅을 위한 메시 필요 */}
-      {renderMode === 'wireframe' && (
-        <mesh 
-          geometry={geometry}
-        >
-          <meshBasicMaterial transparent opacity={0.0} />
-        </mesh>
-      )}
-      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
-      {viewMode === '3D' ? (
-        <lineSegments 
-          geometry={edgesGeometry}
-          renderOrder={999}
-        >
-          <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
-            depthTest={true}
-            depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
-          />
-        </lineSegments>
-      ) : (
-        <lineSegments 
-          geometry={edgesGeometry}
-          renderOrder={1000}
-        >
-          <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (theme?.mode === 'dark' ? "#cccccc" : "#888888")} 
-            linewidth={1}
-            depthTest={false}
-            transparent={false}
-            opacity={1.0}
-          />
-        </lineSegments>
-      )}
-    </group>
-  );
-};
 
 // BaseFurnitureShell Props 인터페이스
 interface BaseFurnitureShellProps {
@@ -248,81 +148,55 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   return (
     <group>
-      {/* 좌우 측면 판재 */}
-      {isMultiSectionFurniture() ? (
-        // 다중 섹션: 섹션별 분할 측면 패널
-        <>
-          {getSectionHeights().map((sectionHeight: number, index: number) => {
-            let currentYPosition = -height/2 + basicThickness;
-            
-            // 현재 섹션까지의 Y 위치 계산
-            for (let i = 0; i < index; i++) {
-              currentYPosition += getSectionHeights()[i];
-            }
-            
-            const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness; // 18mm 아래로 내려서 바닥면부터 시작
-            
-            return (
-              <React.Fragment key={`side-panels-${index}`}>
-                {/* 왼쪽 측면 판재 - 섹션별로 분할 */}
+      {/* 좌우 측면 판재 - 항상 통짜로 렌더링 */}
+      <>
+        {/* 왼쪽 측면 판재 */}
+        <BoxWithEdges
+          args={[basicThickness, height, depth]}
+          position={[-width/2 + basicThickness/2, 0, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
+        
+        {/* 오른쪽 측면 판재 */}
+        <BoxWithEdges
+          args={[basicThickness, height, depth]}
+          position={[width/2 - basicThickness/2, 0, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
+        
+        {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
+        {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
+          <>
+            {getSectionHeights().map((sectionHeight: number, index: number) => {
+              if (index >= getSectionHeights().length - 1) return null;
+              
+              let currentYPosition = -height/2 + basicThickness;
+              
+              // 현재 섹션까지의 Y 위치 계산
+              for (let i = 0; i <= index; i++) {
+                currentYPosition += getSectionHeights()[i];
+              }
+              
+              const dividerY = currentYPosition - basicThickness/2;
+              
+              return (
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
-                  position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
+                  key={`divider-${index}`}
+                  args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                  position={[0, dividerY, basicThickness/2 + shelfZOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
-                  isEditMode={isEditMode}
                 />
-                
-                {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
-                <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
-                  position={[width/2 - basicThickness/2, sectionCenterY, 0]}
-                  material={material}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                />
-                
-                {/* 중간 구분 패널 (마지막 섹션 제외) */}
-                {index < getSectionHeights().length - 1 && (
-                  <BoxWithEdges
-                    args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
-                    material={material}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </>
-      ) : (
-        // 단일 섹션: 기존 통짜 측면 패널
-        <>
-          {/* 왼쪽 측면 판재 */}
-          <BoxWithEdges
-            args={[basicThickness, height, depth]}
-            position={[-width/2 + basicThickness/2, 0, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-          />
-          
-          {/* 오른쪽 측면 판재 */}
-          <BoxWithEdges
-            args={[basicThickness, height, depth]}
-            position={[width/2 - basicThickness/2, 0, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-          />
-        </>
-      )}
+              );
+            })}
+          </>
+        )}
+      </>
       
       {/* 상단 판재 */}
       <BoxWithEdges
@@ -331,7 +205,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
-        isEditMode={isEditMode}
       />
       
       {/* 하단 판재 */}
@@ -341,33 +214,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
-        isEditMode={isEditMode}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      {viewMode === '2D' && view2DDirection === 'front' && renderMode === 'solid' ? (
-        // 2D 정면뷰에서는 점선으로 표시
-        <group position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}>
-          {/* 수동으로 점선 그리기 - 더 흐리게 */}
-          <ManualDashedBox
-            width={innerWidth + mmToThreeUnits(10)}
-            height={innerHeight + mmToThreeUnits(10)}
-            color={theme?.mode === 'dark' ? "#444444" : "#cccccc"}
-            dashSize={0.03}
-            gapSize={0.02}
-          />
-        </group>
-      ) : (
-        // 3D 모드 또는 다른 2D 뷰에서는 기존대로 실선으로 표시
-        <BoxWithEdges
-          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-        />
-      )}
+      <BoxWithEdges
+        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+        material={material}
+        renderMode={renderMode}
+        isDragging={isDragging}
+        isBackPanel={true} // 백패널임을 표시
+      />
       
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}

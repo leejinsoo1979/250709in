@@ -13,6 +13,7 @@ import DoorModule from '../../modules/DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { EditIcon } from '@/components/common/Icons';
 import { getEdgeColor } from '../../../utils/edgeColorUtils';
+import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResize';
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -131,9 +132,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
-  let furnitureWidthMm = placedModule.adjustedWidth || actualModuleData.dimensions.width;
+  // customWidth는 Column C 분할 배치 시 사용, adjustedWidth는 일반 기둥 침범 시 사용
+  let furnitureWidthMm = placedModule.customWidth || placedModule.adjustedWidth || actualModuleData.dimensions.width;
   let adjustedPosition = placedModule.position;
   let adjustedDepthMm = actualModuleData.dimensions.depth;
+  
+  // Column C 가구 너비 디버깅
+  if (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) {
+    console.log('🟦 FurnitureItem Column C 너비 확인:', {
+      moduleId: placedModule.id,
+      customWidth: placedModule.customWidth,
+      adjustedWidth: placedModule.adjustedWidth,
+      originalWidth: actualModuleData.dimensions.width,
+      finalWidth: furnitureWidthMm,
+      position: {
+        x: placedModule.position.x.toFixed(3),
+        z: placedModule.position.z.toFixed(3)
+      }
+    });
+  }
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -291,6 +308,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData.dimensions.depth ? adjustedDepthMm : actualModuleData.dimensions.depth);
   const depth = mmToThreeUnits(actualDepthMm);
   
+  // Column C 깊이 디버깅
+  if (isColumnC && slotInfo) {
+    console.log('🟪 FurnitureItem Column C 깊이 확인:', {
+      moduleId: placedModule.id,
+      placedModuleCustomDepth: placedModule.customDepth,
+      adjustedDepthMm,
+      actualModuleDepth: actualModuleData.dimensions.depth,
+      finalActualDepthMm: actualDepthMm,
+      slotIndex: placedModule.slotIndex,
+      isSplit: placedModule.isSplit,
+      spaceType: placedModule.columnSlotInfo?.spaceType
+    });
+  }
+  
 
   // 도어 두께 (20mm)
   const doorThicknessMm = 20;
@@ -325,6 +356,44 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
          });
    }
 
+  // Column C 기둥 앞 가구인지 확인
+  const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
+  
+  // Column C 크기 조절 훅 사용 (기둥 앞 가구일 때만)
+  const columnCResize = useColumnCResize(
+    placedModule,
+    isColumnCFront,
+    slotInfo?.column?.depth || 300,
+    indexing.columnWidth // 동적으로 실제 슬롯 너비 사용
+  );
+
+  // Column C 전용 이벤트 핸들러 래핑
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (isColumnCFront && !isDragMode) {
+      // Column C 기둥 앞 가구는 리사이즈 모드
+      columnCResize.handlePointerDown(e);
+    } else {
+      // 일반 가구는 드래그 모드
+      onPointerDown(e, placedModule.id);
+    }
+  };
+
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+    if (columnCResize.isResizing) {
+      columnCResize.handlePointerMove(e);
+    } else {
+      onPointerMove(e);
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (columnCResize.isResizing) {
+      columnCResize.handlePointerUp();
+    } else {
+      onPointerUp();
+    }
+  };
+
   // 위치 변경 로깅 (adjustedPosition 계산 후)
   useEffect(() => {
     console.log('📍 FurnitureItem 위치 변경:', {
@@ -350,15 +419,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         ]}
         rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         onDoubleClick={(e) => onDoubleClick(e, placedModule.id)}
-        onPointerDown={(e) => onPointerDown(e, placedModule.id)}
-        onPointerMove={(e) => onPointerMove(e)}
-        onPointerUp={onPointerUp}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
         onPointerOver={() => {
-          document.body.style.cursor = isDragMode ? 'grab' : (isDraggingThis ? 'grabbing' : 'grab');
+          if (isColumnCFront && !isDragMode) {
+            document.body.style.cursor = columnCResize.isResizing ? 'crosshair' : 'move';
+          } else {
+            document.body.style.cursor = isDragMode ? 'grab' : (isDraggingThis ? 'grabbing' : 'grab');
+          }
           setIsHovered(true);
         }}
         onPointerOut={() => {
-          document.body.style.cursor = 'default';
+          if (!columnCResize.isResizing) {
+            document.body.style.cursor = 'default';
+          }
           setIsHovered(false);
         }}
       >
@@ -409,15 +484,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             </Box>
             <Edges 
-              color={getEdgeColor({
+              color={columnCResize.isResizing ? '#ff6600' : getEdgeColor({
                 isDragging: isDraggingThis,
                 isEditMode,
                 isDragMode,
                 viewMode,
-                view2DTheme
+                view2DTheme,
+                renderMode
               })} 
               threshold={1} 
               scale={1.001}
+              linewidth={columnCResize.isResizing ? 3 : 1}
             />
             
             {/* 편집 모드일 때 안내 텍스트 */}
@@ -456,6 +533,62 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             )}
           </>
+        )}
+        
+        {/* Column C 기둥 앞 가구 리사이즈 안내 표시 */}
+        {isColumnCFront && isHovered && !isDragMode && !columnCResize.isResizing && (
+          <Html
+            position={[0, height/2 + 0.5, depth/2 + 0.1]}
+            center
+            style={{
+              userSelect: 'none',
+              pointerEvents: 'none',
+              zIndex: 1000
+            }}
+          >
+            <div
+              style={{
+                background: 'rgba(255, 102, 0, 0.9)',
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}
+            >
+              ↔️ 드래그하여 크기 조절
+            </div>
+          </Html>
+        )}
+        
+        {/* Column C 리사이즈 방향 표시 */}
+        {columnCResize.isResizing && columnCResize.resizeDirection && (
+          <Html
+            position={[0, 0, depth/2 + 0.1]}
+            center
+            style={{
+              userSelect: 'none',
+              pointerEvents: 'none',
+              zIndex: 1000
+            }}
+          >
+            <div
+              style={{
+                background: 'rgba(255, 102, 0, 0.9)',
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}
+            >
+              {columnCResize.resizeDirection === 'horizontal' ? '↔️ 너비 조절' : '↕️ 깊이 조절'}
+            </div>
+          </Html>
         )}
         
       </group>

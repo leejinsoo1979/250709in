@@ -1,73 +1,11 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
+import BoxWithEdges from './components/BoxWithEdges';
 
-// 엣지 표시를 위한 박스 컴포넌트
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode: 'solid' | 'wireframe';
-}> = ({ args, position, material, renderMode }) => {
-  const { theme } = useTheme();
-  const { view2DTheme } = useUIStore();
-  // 진짜 물리적 그림자를 위한 원래 재질 사용 (서랍도 동일)
-  const createInnerMaterial = (originalMaterial: THREE.Material) => {
-    const { viewMode } = useSpace3DView();
-    
-    if (originalMaterial instanceof THREE.MeshStandardMaterial) {
-      // console.log('🗃️ DrawerRenderer - 원본 텍스처:', originalMaterial.map);
-      // 복제하지 말고 원본 재질을 그대로 사용 (텍스처 유지)
-      return originalMaterial;
-    }
-    return material;
-  };
-
-  const innerMaterial = createInnerMaterial(material);
-  const { viewMode } = useSpace3DView();
-
-  return (
-    <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <boxGeometry args={args} />
-          <primitive object={innerMaterial} attach="material" />
-        </mesh>
-      )}
-      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
-      {viewMode === '3D' ? (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color="#505050"
-            transparent={true}
-            opacity={0.9}
-            depthTest={true}
-            depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
-          />
-        </lineSegments>
-      ) : (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color={renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (viewMode === '2D' && view2DTheme === 'dark' ? "#666666" : "#444444")} 
-            linewidth={0.5}
-            transparent={false}
-            opacity={1.0}
-            depthTest={false}
-          />
-        </lineSegments>
-      )}
-    </group>
-  );
-};
 
 interface DrawerRendererProps {
   drawerCount: number;
@@ -208,33 +146,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {/* CAD 기호 (삼각형) 및 서랍 깊이 표시 */}
         {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
           <group>
-            {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시 */}
-            {isTopDrawer && (
-              <>
-                {/* 3D 모드일 때 그림자 효과 */}
-                {viewMode === '3D' && (
-                  <Line
-                    points={[
-                      [centerX - mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
-                      [centerX + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
-                      [centerX + mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01],
-                      [centerX - mmToThreeUnits(30) + 0.01, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30) - 0.01, centerZ + actualDrawerDepth/2 + 0.1 - 0.01]
-                    ]}
-                    color="rgba(0, 0, 0, 0.3)"
-                    lineWidth={2}
-                  />
-                )}
-                <Line
-                  points={[
-                    [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
-                    [centerX, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6), centerZ + actualDrawerDepth/2 + 0.1],
-                    [centerX + mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
-                    [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1]
-                  ]}
-                  color={dimensionColor}
-                  lineWidth={2}
-                />
-              </>
+            {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시, 2D 모드에서만 */}
+            {isTopDrawer && viewMode === '2D' && (
+              <Line
+                points={[
+                  [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
+                  [centerX, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6), centerZ + actualDrawerDepth/2 + 0.1],
+                  [centerX + mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
+                  [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1]
+                ]}
+                color="#FF0000"
+                lineWidth={1}
+                dashed={false}
+              />
             )}
             
             {/* 서랍 깊이 표시 - 서랍 전면에 표시 */}
@@ -263,7 +187,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   viewMode === '3D' ? depth/2 + 0.1 : centerZ + actualDrawerDepth/2 + 0.1
                 ]}
                 fontSize={baseFontSize}
-                color={dimensionColor}
+                color="#008B8B"
                 anchorX="center"
                 anchorY="middle"
                 renderOrder={999}
