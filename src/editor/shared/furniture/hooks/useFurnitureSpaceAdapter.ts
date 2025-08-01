@@ -33,7 +33,73 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
-        // 🔧 저장된 slotIndex를 우선 사용, 없을 경우에만 위치에서 계산
+        // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
+        if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
+          
+          if (!zoneInfo.dropped && module.zone === 'dropped') {
+            // 단내림이 제거된 경우 단내림 영역 가구 제거
+            return;
+          }
+          
+          // 영역별 처리
+          const targetZone = module.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+          const zoneSpaceInfo = {
+            ...newSpaceInfo,
+            width: targetZone.width,
+            customColumnCount: targetZone.columnCount
+          };
+          const zoneInternalSpace = {
+            ...calculateInternalSpace(newSpaceInfo),
+            width: targetZone.width,
+            startX: targetZone.startX
+          };
+          
+          // 영역별 모듈 데이터 가져오기
+          const moduleData = getModuleById(module.moduleId, zoneInternalSpace, zoneSpaceInfo);
+          if (!moduleData) {
+            updatedModules.push({
+              ...module,
+              isValidInCurrentSpace: false
+            });
+            return;
+          }
+          
+          // 영역 내에서 위치 재계산
+          const slotIndex = module.slotIndex || 0;
+          if (slotIndex >= targetZone.columnCount) {
+            updatedModules.push({
+              ...module,
+              isValidInCurrentSpace: false
+            });
+            return;
+          }
+          
+          const isDual = module.moduleId.startsWith('dual-');
+          const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
+                      (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
+          
+          // 영역에 맞는 새로운 moduleId 생성
+          let newModuleId = module.moduleId;
+          if (moduleData.isDynamic) {
+            // 모듈 타입 추출 (예: single-4drawer-hanging-600 → single-4drawer-hanging)
+            const moduleType = module.moduleId.split('-').slice(0, -1).join('-');
+            const targetWidth = isDual ? targetZone.columnWidth * 2 : targetZone.columnWidth;
+            newModuleId = `${moduleType}-${targetWidth}`;
+          }
+          
+          updatedModules.push({
+            ...module,
+            moduleId: newModuleId,
+            position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
+            isValidInCurrentSpace: true,
+            adjustedWidth: targetZone.columnWidth,
+            customWidth: targetZone.columnWidth
+          });
+          return;
+        }
+        
+        // zone 정보가 없는 기존 가구들을 위한 폴백 로직
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
         

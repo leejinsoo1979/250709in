@@ -3,13 +3,20 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import styles from './PDFTemplatePreview.module.css';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
+import { renderViewToSVG, svgToCanvas } from '@/editor/shared/utils/svgRenderer';
+import { generateVectorDataFromConfig, convertToSVG } from '@/editor/shared/utils/vectorExtractor';
+import 'svg2pdf.js';
+import { Settings, ChevronDown, Edit3 } from 'lucide-react';
+import SettingsPanel from '@/components/common/SettingsPanel';
+import * as fabric from 'fabric';
 
 // 용지 규격 타입
-type PaperSize = 'A3' | 'A4' | 'A2';
+type PaperSize = 'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'A5';
 type Orientation = 'landscape' | 'portrait';
 
 interface PaperDimensions {
@@ -21,9 +28,12 @@ interface PaperDimensions {
 
 // 용지 규격 정의 (가로 방향 기준)
 const PAPER_SIZES_BASE: Record<PaperSize, PaperDimensions> = {
+  A5: { width: 210, height: 148, displayWidth: 630, displayHeight: 444 },
   A4: { width: 297, height: 210, displayWidth: 891, displayHeight: 630 },
   A3: { width: 420, height: 297, displayWidth: 1260, displayHeight: 891 },
-  A2: { width: 594, height: 420, displayWidth: 1782, displayHeight: 1260 }
+  A2: { width: 594, height: 420, displayWidth: 1782, displayHeight: 1260 },
+  A1: { width: 841, height: 594, displayWidth: 2523, displayHeight: 1782 },
+  A0: { width: 1189, height: 841, displayWidth: 3567, displayHeight: 2523 }
 };
 
 // 방향에 따른 용지 크기 계산
@@ -65,6 +75,7 @@ interface ViewPosition {
   width: number;
   height: number;
   scale: number;
+  viewConfig?: any; // 뷰 설정 저장
 }
 
 interface ViewMenuItem {
@@ -87,17 +98,25 @@ const AVAILABLE_VIEWS: ViewMenuItem[] = [
   { id: 'section', label: 'Section A-A' }
 ];
 
-const SNAP_THRESHOLD = 10; // 스냅이 작동하는 거리 (픽셀)
-const GRID_SIZE = 20; // 그리드 크기
+// Available text elements for dragging
+const AVAILABLE_TEXT_ITEMS: ViewMenuItem[] = [
+  { id: 'info', label: '프로젝트 정보' },
+  { id: 'title', label: '제목' },
+  { id: 'specs', label: '사양' },
+  { id: 'notes', label: '메모' }
+];
+
+// const SNAP_THRESHOLD = 10; // 스냅이 작동하는 거리 (픽셀) - 비활성화
+// const GRID_SIZE = 20; // 그리드 크기 - 비활성화
 
 const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose, capturedViews }) => {
   const [selectedPaperSize, setSelectedPaperSize] = useState<PaperSize>('A3');
   const [orientation, setOrientation] = useState<Orientation>('landscape');
   const [isGenerating, setIsGenerating] = useState(false);
+  const paperColor = '#ffffff'; // 용지 색상은 항상 흰색
   const [draggingView, setDraggingView] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewPositions, setViewPositions] = useState<ViewPosition[]>([]);
-  const [snapLines, setSnapLines] = useState<{ x?: number; y?: number }>({});
   const [isDraggingFromMenu, setIsDraggingFromMenu] = useState(false);
   const [draggedMenuItem, setDraggedMenuItem] = useState<ViewMenuItem | null>(null);
   const [selectedView, setSelectedView] = useState<string | null>(null);
@@ -117,14 +136,46 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const [localCapturedViews, setLocalCapturedViews] = useState<{
     [key: string]: string;
   }>({});
-  const previewRef = useRef<HTMLDivElement>(null);
-  const drawingAreaRef = useRef<HTMLDivElement>(null);
-  const viewerContainerRef = useRef<HTMLDivElement>(null);
+  const [editingInfo, setEditingInfo] = useState<string | null>(null); // 편집 중인 정보 카드 ID
+  const [activeTab, setActiveTab] = useState<'views' | 'elements' | 'text'>('views'); // 좌측 탭 상태
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false); // 설정 패널 상태
+  const [previewMode, setPreviewMode] = useState<'raster' | 'vector'>('vector'); // 프리뷰 모드
+  const [showZoomDropdown, setShowZoomDropdown] = useState(false); // 줌 드롭다운 표시 상태
+  const [isZoomDropdownOpen, setIsZoomDropdownOpen] = useState(false); // 줌 드롭다운 상태
+  const [showExportPopup, setShowExportPopup] = useState(false); // 내보내기 팝업 표시 상태
+  const [selectedExportFormat, setSelectedExportFormat] = useState<'pdf' | 'png' | 'jpg' | 'dxf'>('pdf'); // 선택된 내보내기 형식
+  const [isPaperSizeDropdownOpen, setIsPaperSizeDropdownOpen] = useState(false); // 용지 사이즈 드롭다운 상태
+  const [designSubTab, setDesignSubTab] = useState<'layout' | 'viewconfig'>('layout'); // 디자인 탭의 서브 탭 상태
+  const [elementsSubTab, setElementsSubTab] = useState<'shapes' | 'lines' | 'symbols' | 'balloons' | 'frames'>('shapes'); // 요소 탭의 서브 탭 상태
+  const [designScrollState, setDesignScrollState] = useState({ canScrollLeft: false, canScrollRight: false });
+  const [elementsScrollState, setElementsScrollState] = useState({ canScrollLeft: false, canScrollRight: false });
+  // Fabric.js 캔버스 참조
+  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   
+  // 스크롤 컨테이너 ref
+  const designTabRef = useRef<HTMLDivElement>(null);
+  const elementsTabRef = useRef<HTMLDivElement>(null);
+  
+  // 스토어 훅을 먼저 선언
   const { title } = useProjectStore();
   const { spaceInfo, materialConfig } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { viewMode, view2DDirection, setViewMode, setView2DDirection, renderMode, setRenderMode } = useUIStore();
+  const uiStore = useUIStore();
+  const { viewMode, view2DDirection, setViewMode, setView2DDirection, renderMode, setRenderMode, view2DTheme } = uiStore;
+  const { theme } = useTheme();
+  
+  // 스토어 값을 사용하는 상태 선언
+  const [infoTexts, setInfoTexts] = useState<{ [key: string]: string }>({
+    title: title || 'Untitled Project',
+    size: `W${spaceInfo?.width || 0} × D${spaceInfo?.depth || 0} × H${spaceInfo?.height || 0}`,
+    door: materialConfig?.door?.name || '18.5T_PET',
+    body: materialConfig?.body?.name || '18.5T_LPM',
+    notes: ''
+  });
+  const previewRef = useRef<HTMLDivElement>(null);
+  const drawingAreaRef = useRef<HTMLDivElement>(null);
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   const paperDimensions = useMemo(() => 
     getPaperDimensions(selectedPaperSize, orientation), 
@@ -189,26 +240,46 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     try {
       // 잠시 대기하여 렌더링이 완료되도록 함
       await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 뷰어 내부의 canvas 찾기
+      
+      // 뷰어 컨테이너 내의 캔버스를 찾기
       const canvas = viewerContainerRef.current.querySelector('canvas');
       if (!canvas) {
-        console.error('Canvas not found in viewer');
+        console.error('Canvas not found in viewer container');
         return;
       }
 
-      // Canvas를 이미지로 변환
-      const dataUrl = canvas.toDataURL('image/png');
+      // 고품질 캡처를 위한 옵션 설정
+      const options = {
+        scale: 3, // 3배 해상도로 캡처
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true,
+        allowTaint: false,
+        onclone: (clonedDoc: Document) => {
+          // 클론된 문서에서 캔버스 찾기
+          const clonedCanvas = clonedDoc.querySelector('canvas');
+          if (clonedCanvas && canvas instanceof HTMLCanvasElement) {
+            // 원본 캔버스의 컨텍스트를 클론된 캔버스에 복사
+            const ctx = clonedCanvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(canvas, 0, 0);
+            }
+          }
+        }
+      };
+
+      // html2canvas로 캡처
+      const capturedCanvas = await html2canvas(viewerContainerRef.current, options);
+      const imgData = capturedCanvas.toDataURL('image/png');
       
-      // 캡처한 이미지를 해당 뷰에 저장
       const viewType = viewerOverlay.viewType;
       const viewId = viewerOverlay.viewId;
       
       if (viewType && viewId) {
-        // 로컬 캡처 뷰 업데이트
+        // 캡처된 이미지를 로컬 상태에 저장
         setLocalCapturedViews(prev => ({
           ...prev,
-          [`${viewId}_${viewType}`]: dataUrl
+          [`${viewId}_${viewType}`]: imgData
         }));
         
         console.log('View captured successfully:', viewType);
@@ -225,7 +296,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const handleViewScale = (viewId: string, delta: number) => {
     setViewPositions(prev => prev.map(view => 
       view.id === viewId 
-        ? { ...view, scale: Math.max(0.5, Math.min(2, view.scale + delta)) }
+        ? { ...view, scale: Math.max(0.3, Math.min(3, view.scale + delta)) }
         : view
     ));
   };
@@ -258,7 +329,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     });
   };
 
-  // 정렬 가이드라인 찾기
+  // 정렬 가이드라인 찾기 (시각적 가이드만, 스냅 없음)
   const findAlignmentGuides = (view: ViewPosition, excludeId: string) => {
     const guides = { vertical: [] as number[], horizontal: [] as number[] };
     const threshold = 5;
@@ -304,6 +375,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     newPages.push([]);
     setPages(newPages);
     setCurrentPage(newPages.length - 1);
+    
+    // 스크롤을 끝으로 이동
+    setTimeout(() => {
+      const pageListContainer = document.querySelector(`.${styles.pageListContainer}`);
+      if (pageListContainer) {
+        pageListContainer.scrollLeft = pageListContainer.scrollWidth;
+      }
+    }, 100);
   };
 
   // 페이지 변경
@@ -337,72 +416,18 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     setPreviewScale(prev => Math.max(0.5, Math.min(2, prev + delta)));
   };
 
-  // 스냅 위치 계산 함수
-  const calculateSnapPosition = (value: number, gridSize: number): number => {
-    return Math.round(value / gridSize) * gridSize;
-  };
-
-  // 다른 뷰들과의 정렬 스냅 검사
-  const checkAlignmentSnap = (
-    targetX: number, 
-    targetY: number, 
-    targetWidth: number, 
-    targetHeight: number,
-    viewId: string
-  ): { x: number; y: number; snapX?: number; snapY?: number } => {
-    let finalX = targetX;
-    let finalY = targetY;
-    let snapX: number | undefined;
-    let snapY: number | undefined;
-
-    viewPositions.forEach(view => {
-      if (view.id === viewId) return;
-
-      // 좌측 정렬
-      if (Math.abs(targetX - view.x) < SNAP_THRESHOLD) {
-        finalX = view.x;
-        snapX = view.x;
-      }
-      // 우측 정렬
-      if (Math.abs(targetX + targetWidth - (view.x + view.width)) < SNAP_THRESHOLD) {
-        finalX = view.x + view.width - targetWidth;
-        snapX = view.x + view.width;
-      }
-      // 중앙 정렬 (수평)
-      if (Math.abs(targetX + targetWidth / 2 - (view.x + view.width / 2)) < SNAP_THRESHOLD) {
-        finalX = view.x + view.width / 2 - targetWidth / 2;
-        snapX = view.x + view.width / 2;
-      }
-
-      // 상단 정렬
-      if (Math.abs(targetY - view.y) < SNAP_THRESHOLD) {
-        finalY = view.y;
-        snapY = view.y;
-      }
-      // 하단 정렬
-      if (Math.abs(targetY + targetHeight - (view.y + view.height)) < SNAP_THRESHOLD) {
-        finalY = view.y + view.height - targetHeight;
-        snapY = view.y + view.height;
-      }
-      // 중앙 정렬 (수직)
-      if (Math.abs(targetY + targetHeight / 2 - (view.y + view.height / 2)) < SNAP_THRESHOLD) {
-        finalY = view.y + view.height / 2 - targetHeight / 2;
-        snapY = view.y + view.height / 2;
-      }
-    });
-
-    return { x: finalX, y: finalY, snapX, snapY };
-  };
+  // 스냅 관련 함수들 제거됨
 
   // 드래그 중
   const handleMouseMove = (e: MouseEvent) => {
     // 리사이징 중인 경우
     if (isResizing && resizingView) {
-      const view = viewPositions.find(v => v.id === resizingView);
-      if (!view) return;
-      
-      const deltaX = (e.clientX - resizeStart.x) / scale;
-      const deltaY = (e.clientY - resizeStart.y) / scale;
+      requestAnimationFrame(() => {
+        const view = viewPositions.find(v => v.id === resizingView);
+        if (!view) return;
+        
+        const deltaX = (e.clientX - resizeStart.x) / scale;
+        const deltaY = (e.clientY - resizeStart.y) / scale;
       const aspectRatio = resizeStart.width / resizeStart.height;
       
       let newWidth = view.width * view.scale;
@@ -494,20 +519,28 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         newHeight = paperDimensions.displayHeight - newY;
       }
       
+      // 정렬 가이드 업데이트 (시각적 표시만)
       const updatedView = {
         ...view,
         x: newX,
         y: newY,
         width: newWidth / view.scale,
-        height: newHeight / view.scale
+        height: newHeight / view.scale,
+        scale: view.scale
       };
-      
       const guides = findAlignmentGuides(updatedView, resizingView);
       setAlignmentGuides(guides);
       
       setViewPositions(prev => prev.map(v => 
-        v.id === resizingView ? updatedView : v
+        v.id === resizingView ? {
+          ...view,
+          x: newX,
+          y: newY,
+          width: newWidth / view.scale,
+          height: newHeight / view.scale
+        } : v
       ));
+      });
       return;
     }
 
@@ -522,54 +555,32 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     
     if (!draggingView) return;
     
-    const currentView = viewPositions.find(v => v.id === draggingView);
-    if (!currentView) return;
+    requestAnimationFrame(() => {
+      const currentView = viewPositions.find(v => v.id === draggingView);
+      if (!currentView) return;
 
-    let newX = (e.clientX - dragOffset.x) / scale;
-    let newY = (e.clientY - dragOffset.y) / scale;
-    
-    // 그리드 스냅
-    const gridX = calculateSnapPosition(newX, GRID_SIZE);
-    const gridY = calculateSnapPosition(newY, GRID_SIZE);
-    
-    // 그리드에 가까우면 스냅
-    if (Math.abs(newX - gridX) < SNAP_THRESHOLD) {
-      newX = gridX;
-    }
-    if (Math.abs(newY - gridY) < SNAP_THRESHOLD) {
-      newY = gridY;
-    }
-
-    // 다른 뷰와의 정렬 스냅
-    const { x: alignedX, y: alignedY, snapX, snapY } = checkAlignmentSnap(
-      newX, 
-      newY, 
-      currentView.width * currentView.scale, 
-      currentView.height * currentView.scale,
-      draggingView
-    );
-
-    // 스냅 라인 업데이트
-    setSnapLines({ x: snapX, y: snapY });
-    
-    // 정렬 가이드 업데이트
-    const updatedView = {
-      ...currentView,
-      x: alignedX,
-      y: alignedY
-    };
-    const guides = findAlignmentGuides(updatedView, draggingView);
-    setAlignmentGuides(guides);
-    
-    // 경계 체크
-    const finalX = Math.max(0, Math.min(paperDimensions.displayWidth - currentView.width, alignedX));
-    const finalY = Math.max(0, Math.min(paperDimensions.displayHeight - currentView.height, alignedY));
-    
-    setViewPositions(prev => prev.map(view => 
-      view.id === draggingView 
-        ? { ...view, x: finalX, y: finalY }
-        : view
-    ));
+      const newX = (e.clientX - dragOffset.x) / scale;
+      const newY = (e.clientY - dragOffset.y) / scale;
+      
+      // 경계 체크만 수행 (스냅 제거)
+      const finalX = Math.max(0, Math.min(paperDimensions.displayWidth - currentView.width * currentView.scale, newX));
+      const finalY = Math.max(0, Math.min(paperDimensions.displayHeight - currentView.height * currentView.scale, newY));
+      
+      // 정렬 가이드 업데이트 (시각적 표시만)
+      const updatedView = {
+        ...currentView,
+        x: finalX,
+        y: finalY
+      };
+      const guides = findAlignmentGuides(updatedView, draggingView);
+      setAlignmentGuides(guides);
+      
+      setViewPositions(prev => prev.map(view => 
+        view.id === draggingView 
+          ? { ...view, x: finalX, y: finalY }
+          : view
+      ));
+    });
   };
 
   // 드래그 종료
@@ -577,7 +588,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     if (isResizing) {
       setIsResizing(false);
       setResizingView(null);
-      setAlignmentGuides({ vertical: [], horizontal: [] });
+      setAlignmentGuides({ vertical: [], horizontal: [] }); // 가이드라인 제거
       return;
     }
 
@@ -591,8 +602,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       if (x >= 0 && y >= 0 && x <= paperDimensions.displayWidth && y <= paperDimensions.displayHeight) {
         const newView: ViewPosition = {
           id: `${draggedMenuItem.id}_${Date.now()}`,
-          x: calculateSnapPosition(x - 100, GRID_SIZE), // 중앙 정렬을 위해 오프셋
-          y: calculateSnapPosition(y - 75, GRID_SIZE),
+          x: x - 100, // 중앙 정렬을 위해 오프셋 (스냅 제거)
+          y: y - 75,
           width: 200,
           height: 150,
           scale: 1
@@ -606,7 +617,6 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     
     setDraggingView(null);
     setDragPreviewPos(null);
-    setSnapLines({}); // 스냅 라인 제거
     setAlignmentGuides({ vertical: [], horizontal: [] }); // 가이드라인 제거
   };
 
@@ -622,6 +632,52 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     }
   }, [draggingView, isDraggingFromMenu, isResizing, dragOffset, scale, resizeStart]);
 
+  // Fabric.js 캔버스 초기화
+  useEffect(() => {
+    if (!canvasContainerRef.current) return;
+
+    // 캔버스 생성
+    const canvas = new fabric.Canvas('fabric-canvas', {
+      width: paperDimensions.displayWidth,
+      height: paperDimensions.displayHeight,
+      backgroundColor: paperColor,
+      selection: true,
+      preserveObjectStacking: true,
+    });
+
+    fabricCanvasRef.current = canvas;
+
+    // 키보드 이벤트 핸들러
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+          activeObjects.forEach(obj => canvas.remove(obj));
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      canvas.dispose();
+    };
+  }, [paperDimensions.displayWidth, paperDimensions.displayHeight, paperColor]);
+
+  // 캔버스 크기 업데이트
+  useEffect(() => {
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.setDimensions({
+        width: paperDimensions.displayWidth,
+        height: paperDimensions.displayHeight
+      });
+      fabricCanvasRef.current.renderAll();
+    }
+  }, [paperDimensions.displayWidth, paperDimensions.displayHeight]);
+
   // 뷰 위치가 변경될 때마다 현재 페이지에 저장
   useEffect(() => {
     const newPages = [...pages];
@@ -629,21 +685,272 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     setPages(newPages);
   }, [viewPositions]);
 
-  // 휠 이벤트 리스너
+  // 스크롤 상태 확인
+  const checkScrollState = () => {
+    if (designTabRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = designTabRef.current;
+      setDesignScrollState({
+        canScrollLeft: scrollLeft > 0,
+        canScrollRight: scrollLeft < scrollWidth - clientWidth - 1
+      });
+    }
+    if (elementsTabRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = elementsTabRef.current;
+      setElementsScrollState({
+        canScrollLeft: scrollLeft > 0,
+        canScrollRight: scrollLeft < scrollWidth - clientWidth - 1
+      });
+    }
+  };
+
+  // 스크롤 상태 모니터링
+  useEffect(() => {
+    checkScrollState();
+
+    const handleScroll = () => {
+      checkScrollState();
+    };
+
+    const designTab = designTabRef.current;
+    const elementsTab = elementsTabRef.current;
+
+    if (designTab) {
+      designTab.addEventListener('scroll', handleScroll);
+    }
+    if (elementsTab) {
+      elementsTab.addEventListener('scroll', handleScroll);
+    }
+
+    window.addEventListener('resize', checkScrollState);
+
+    return () => {
+      if (designTab) {
+        designTab.removeEventListener('scroll', handleScroll);
+      }
+      if (elementsTab) {
+        elementsTab.removeEventListener('scroll', handleScroll);
+      }
+      window.removeEventListener('resize', checkScrollState);
+    };
+  }, []);
+
+  // 스크롤 핸들러
+  const handleDesignScroll = (direction: 'left' | 'right') => {
+    if (designTabRef.current) {
+      const scrollAmount = direction === 'left' ? -100 : 100;
+      designTabRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleElementsScroll = (direction: 'left' | 'right') => {
+    if (elementsTabRef.current) {
+      const scrollAmount = direction === 'left' ? -100 : 100;
+      elementsTabRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  // 도형 클릭 핸들러
+  const handleShapeClick = (svgContent: string, shapeType: string) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    // SVG를 Fabric.js 객체로 변환
+    fabric.loadSVGFromString(svgContent, (objects, options) => {
+      const obj = fabric.util.groupSVGElements(objects, options);
+      obj.set({
+        left: centerX - 40,
+        top: centerY - 40,
+        scaleX: 3.5,
+        scaleY: 3.5,
+        fill: '#333333',
+        stroke: '#333333',
+        strokeWidth: 0
+      });
+      
+      canvas.add(obj);
+      canvas.setActiveObject(obj);
+      canvas.renderAll();
+    });
+  };
+
+  // 선 클릭 핸들러
+  const handleLineClick = (lineType: string) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    let line;
+    switch (lineType) {
+      case 'horizontal':
+        line = new fabric.Line([centerX - 100, centerY, centerX + 100, centerY], {
+          stroke: '#333333',
+          strokeWidth: 2,
+          strokeDashArray: null
+        });
+        break;
+      case 'vertical':
+        line = new fabric.Line([centerX, centerY - 100, centerX, centerY + 100], {
+          stroke: '#333333',
+          strokeWidth: 2,
+          strokeDashArray: null
+        });
+        break;
+      case 'diagonal1':
+        line = new fabric.Line([centerX - 100, centerY - 100, centerX + 100, centerY + 100], {
+          stroke: '#333333',
+          strokeWidth: 2,
+          strokeDashArray: null
+        });
+        break;
+      case 'diagonal2':
+        line = new fabric.Line([centerX - 100, centerY + 100, centerX + 100, centerY - 100], {
+          stroke: '#333333',
+          strokeWidth: 2,
+          strokeDashArray: null
+        });
+        break;
+    }
+
+    if (line) {
+      canvas.add(line);
+      canvas.setActiveObject(line);
+      canvas.renderAll();
+    }
+  };
+
+  // 텍스트 클릭 핸들러
+  const handleTextClick = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    const text = new fabric.IText('텍스트를 입력하세요', {
+      left: centerX - 100,
+      top: centerY,
+      fontFamily: 'Arial',
+      fontSize: 20,
+      fill: '#333333'
+    });
+
+    canvas.add(text);
+    canvas.setActiveObject(text);
+    text.enterEditing();
+    canvas.renderAll();
+  };
+
+  // 심볼 클릭 핸들러
+  const handleSymbolClick = (symbol: string) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    const text = new fabric.Text(symbol, {
+      left: centerX - 20,
+      top: centerY - 20,
+      fontFamily: 'Arial',
+      fontSize: 40,
+      fill: '#333333'
+    });
+
+    canvas.add(text);
+    canvas.setActiveObject(text);
+    canvas.renderAll();
+  };
+
+  // 캔버스 클릭 핸들러
+  const handleCanvasClick = () => {
+    if (fabricCanvasRef.current) {
+      fabricCanvasRef.current.discardActiveObject();
+      fabricCanvasRef.current.renderAll();
+    }
+  };
+
+
+  // 휠 이벤트 리스너 - 프리뷰 컨테이너에만 적용
   useEffect(() => {
     const handleWheelEvent = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        setPreviewScale(prev => Math.max(0.5, Math.min(2, prev + delta)));
+      // 프리뷰 컨테이너 내부에서만 동작
+      const target = e.target as HTMLElement;
+      const previewContainer = previewRef.current;
+      
+      if (previewContainer && previewContainer.contains(target)) {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          setPreviewScale(prev => Math.max(0.5, Math.min(2, prev + delta)));
+        } else {
+          // Ctrl/Cmd 키가 눌리지 않았을 때도 기본 스크롤 동작 방지
+          e.preventDefault();
+        }
       }
     };
 
-    document.addEventListener('wheel', handleWheelEvent, { passive: false });
+    // 캡처 단계에서 이벤트 처리
+    document.addEventListener('wheel', handleWheelEvent, { passive: false, capture: true });
     return () => {
-      document.removeEventListener('wheel', handleWheelEvent);
+      document.removeEventListener('wheel', handleWheelEvent, { capture: true });
     };
   }, []);
+
+  // 줌 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`.${styles.zoomPresetDropdown}`)) {
+        setIsZoomDropdownOpen(false);
+      }
+    };
+
+    if (isZoomDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [isZoomDropdownOpen]);
+
+  // 내보내기 팝업 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`.${styles.exportButtonWrapper}`)) {
+        setShowExportPopup(false);
+      }
+    };
+
+    if (showExportPopup) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [showExportPopup]);
+
+  // 용지 사이즈 드롭다운 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`.${styles.paperSizeDropdown}`)) {
+        setIsPaperSizeDropdownOpen(false);
+      }
+    };
+
+    if (isPaperSizeDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [isPaperSizeDropdownOpen]);
 
 
   // Early return must come after all hooks
@@ -661,17 +968,122 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         format: [paperDimensions.width, paperDimensions.height]
       });
 
-      // 미리보기 캡처
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        logging: false
-      });
+      // 배경색 설정
+      pdf.setFillColor(paperColor);
+      pdf.rect(0, 0, paperDimensions.width, paperDimensions.height, 'F');
 
-      const imgData = canvas.toDataURL('image/png');
-      
-      // PDF에 이미지 추가
-      pdf.addImage(imgData, 'PNG', 0, 0, paperDimensions.width, paperDimensions.height);
+      // 각 뷰 위치에 대해 벡터 렌더링
+      for (const view of viewPositions) {
+        // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
+        const viewType = view.id.split('_')[0];
+        
+        // 뷰 크기를 mm 단위로 변환
+        const viewWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
+        const viewHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
+        const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
+        const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
+
+        try {
+          // 뷰 설정 생성
+          const viewConfig = {
+            viewMode: '2D' as const,
+            view2DDirection: viewType as 'front' | 'top' | 'left' | 'right',
+            renderMode: renderMode,
+            showDimensions: uiStore.showDimensionsText,
+            showGuides: uiStore.showGuides,
+            showAxis: uiStore.showAxis,
+            showAll: uiStore.showAll,
+            spaceInfo: spaceInfo,
+            placedModules: placedModules
+          };
+
+          // 벡터 데이터 생성
+          const vectorData = generateVectorDataFromConfig(
+            viewConfig,
+            view.width * view.scale,
+            view.height * view.scale
+          );
+          
+          // SVG로 변환
+          const svgString = convertToSVG(vectorData);
+          
+          // SVG를 PDF에 추가
+          const svgElement = new DOMParser().parseFromString(svgString, 'image/svg+xml').documentElement;
+          
+          // svg2pdf 라이브러리를 사용하여 SVG를 PDF에 벡터로 추가
+          (pdf as any).svg(svgElement, {
+            x: viewXMm,
+            y: viewYMm,
+            width: viewWidthMm,
+            height: viewHeightMm
+          });
+
+        } catch (err) {
+          console.error('벡터 렌더링 실패, 이미지 폴백 시도:', err);
+          
+          // 벡터 렌더링 실패 시 이미지 폴백
+          const localImage = localCapturedViews[`${view.id}_${viewType}`];
+          if (localImage) {
+            try {
+              pdf.addImage(localImage, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+            } catch (imgErr) {
+              console.error('이미지 추가도 실패:', imgErr);
+            }
+          }
+        }
+      }
+
+      // 텍스트 아이템 렌더링
+      for (const view of viewPositions) {
+        const viewType = view.id.split('_')[0];
+        const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
+        
+        if (isTextItem) {
+          const textXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
+          const textYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
+          const textWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
+          const textHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
+          
+          // 배경 박스
+          pdf.setFillColor('#2a2a2a');
+          pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'F');
+          
+          if (viewType === 'info') {
+            pdf.setTextColor('#00ffcc');
+            pdf.setFontSize(18);
+            pdf.text('INSHOW', textXMm + 5, textYMm + 10);
+            
+            pdf.setTextColor('#ffffff');
+            pdf.setFontSize(14);
+            pdf.text(infoTexts.title, textXMm + 5, textYMm + 20);
+            
+            pdf.setFontSize(10);
+            pdf.setTextColor('#888888');
+            pdf.text('Size:', textXMm + 5, textYMm + 30);
+            pdf.setTextColor('#00ffcc');
+            pdf.text(infoTexts.size, textXMm + 20, textYMm + 30);
+            
+            pdf.setTextColor('#888888');
+            pdf.text('Door:', textXMm + 5, textYMm + 37);
+            pdf.setTextColor('#00ffcc');
+            pdf.text(infoTexts.door, textXMm + 20, textYMm + 37);
+            
+            pdf.setTextColor('#888888');
+            pdf.text('Body:', textXMm + 5, textYMm + 44);
+            pdf.setTextColor('#00ffcc');
+            pdf.text(infoTexts.body, textXMm + 20, textYMm + 44);
+          } else if (viewType === 'title') {
+            pdf.setTextColor('#ffffff');
+            pdf.setFontSize(16);
+            pdf.text(infoTexts.title, textXMm + 5, textYMm + textHeightMm / 2);
+          } else if (viewType === 'notes' && infoTexts.notes) {
+            pdf.setTextColor('#cccccc');
+            pdf.setFontSize(10);
+            const lines = pdf.splitTextToSize(infoTexts.notes, textWidthMm - 10);
+            pdf.text(lines, textXMm + 5, textYMm + 10);
+          }
+        }
+      }
       
       // PDF 다운로드
       const fileName = `${title || 'furniture-design'}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -684,101 +1096,732 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     }
   };
 
-  return (
-    <div className={styles.overlay}>
-      <div className={styles.fullContainer}>
-        {/* 좌측 뷰 메뉴 */}
-        <div className={styles.viewMenu}>
-          <h3 className={styles.menuTitle}>Views</h3>
-          <div className={styles.viewGrid}>
-            {AVAILABLE_VIEWS.map(view => (
-              <div
-                key={view.id}
-                className={styles.viewMenuItem}
-                onMouseDown={(e) => handleMenuItemDragStart(view, e)}
-              >
-                <div className={styles.viewItemContent}>
-                  {capturedViews[view.id as keyof typeof capturedViews] ? (
-                    <img 
-                      src={capturedViews[view.id as keyof typeof capturedViews]} 
-                      alt={view.label} 
-                      draggable={false}
-                    />
-                  ) : (
-                    <div className={styles.viewItemPlaceholder}>{view.label}</div>
-                  )}
-                </div>
-                <span className={styles.viewItemLabel}>{view.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+  if (!isOpen) return null;
 
-        {/* 메인 컨테이너 */}
-        <div className={styles.mainContainer}>
-          <div className={styles.contentWrapper}>
-          <div className={styles.header}>
-            <h2>PDF 미리보기</h2>
-            <div className={styles.controls}>
-              <div className={styles.zoomControls}>
-                <button 
-                  className={styles.zoomBtn}
-                  onClick={() => handleZoom(-0.1)}
-                  title="축소"
-                >
-                  −
-                </button>
-                <span className={styles.zoomValue}>{(previewScale * 100).toFixed(0)}%</span>
-                <button 
-                  className={styles.zoomBtn}
-                  onClick={() => handleZoom(0.1)}
-                  title="확대"
-                >
-                  +
-                </button>
-              </div>
-              <select 
-                value={selectedPaperSize} 
-                onChange={(e) => setSelectedPaperSize(e.target.value as PaperSize)}
-                className={styles.paperSelect}
-              >
-                <option value="A4">A4</option>
-                <option value="A3">A3</option>
-                <option value="A2">A2</option>
-              </select>
-              
-              <div className={styles.orientationButtons}>
+  return (
+    <div className={`${styles.overlay} ${theme.mode === 'dark' ? styles.darkTheme : styles.lightTheme}`}>
+      <div className={styles.fullContainer}>
+        {/* 헤더를 최상단으로 이동 */}
+        <div className={styles.header}>
+          <h2>도면 에디터</h2>
+          <div className={styles.controls}>
+            {/* 확대/축소 컨트롤 - 슬라이더 방식 */}
+            <div className={styles.zoomControls}>
               <button 
-                className={`${styles.orientButton} ${orientation === 'landscape' ? styles.active : ''}`}
-                onClick={() => setOrientation('landscape')}
-                title="가로"
+                className={styles.zoomBtn}
+                onClick={() => handleZoom(-0.1)}
+                title="축소 (Ctrl+-)"
               >
-                <svg width="20" height="14" viewBox="0 0 20 14" fill="currentColor">
-                  <rect x="0" y="0" width="20" height="14" />
-                </svg>
+                −
               </button>
+              <input
+                type="range"
+                min="25"
+                max="200"
+                value={previewScale * 100}
+                onChange={(e) => {
+                  const newScale = parseInt(e.target.value) / 100;
+                  setPreviewScale(newScale);
+                }}
+                className={styles.zoomSlider}
+                title="확대/축소"
+              />
+              <span className={styles.zoomValue}>{(previewScale * 100).toFixed(0)}%</span>
               <button 
-                className={`${styles.orientButton} ${orientation === 'portrait' ? styles.active : ''}`}
-                onClick={() => setOrientation('portrait')}
-                title="세로"
+                className={styles.zoomBtn}
+                onClick={() => handleZoom(0.1)}
+                title="확대 (Ctrl++)"
               >
-                <svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor">
-                  <rect x="0" y="0" width="14" height="20" />
-                </svg>
+                +
               </button>
-              </div>
               
+              {/* 화면 크기 드롭다운 */}
+              <div className={styles.zoomPresetDropdown}>
+                <button 
+                  className={styles.zoomPresetButton}
+                  onClick={() => setIsZoomDropdownOpen(!isZoomDropdownOpen)}
+                  title="화면 크기 프리셋"
+                >
+                  <ChevronDown size={16} />
+                </button>
+                {isZoomDropdownOpen && (
+                  <div className={styles.zoomPresetMenu}>
+                    <button onClick={() => { setPreviewScale(0.25); setIsZoomDropdownOpen(false); }}>25%</button>
+                    <button onClick={() => { setPreviewScale(0.5); setIsZoomDropdownOpen(false); }}>50%</button>
+                    <button onClick={() => { setPreviewScale(0.75); setIsZoomDropdownOpen(false); }}>75%</button>
+                    <button onClick={() => { setPreviewScale(1); setIsZoomDropdownOpen(false); }}>100%</button>
+                    <button onClick={() => { setPreviewScale(1.25); setIsZoomDropdownOpen(false); }}>125%</button>
+                    <button onClick={() => { setPreviewScale(1.5); setIsZoomDropdownOpen(false); }}>150%</button>
+                    <button onClick={() => { setPreviewScale(2); setIsZoomDropdownOpen(false); }}>200%</button>
+                    <div className={styles.zoomPresetDivider}></div>
+                    <button onClick={() => { 
+                      // 화면에 맞춤 로직
+                      const container = document.querySelector(`.${styles.previewContainer}`);
+                      if (container) {
+                        const containerWidth = container.clientWidth - 80; // 패딩 고려
+                        const containerHeight = container.clientHeight - 80;
+                        const templateWidth = paperDimensions.displayWidth;
+                        const templateHeight = paperDimensions.displayHeight;
+                        const scaleX = containerWidth / templateWidth;
+                        const scaleY = containerHeight / templateHeight;
+                        setPreviewScale(Math.min(scaleX, scaleY, 2));
+                      }
+                      setIsZoomDropdownOpen(false);
+                    }}>화면에 맞춤</button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className={styles.paperSizeContainer}>
+              <label className={styles.paperSizeLabel}>용지사이즈:</label>
+              <div className={styles.paperSizeDropdown}>
+                <button 
+                  className={styles.paperSizeButton}
+                  onClick={() => setIsPaperSizeDropdownOpen(!isPaperSizeDropdownOpen)}
+                  title="용지 크기 선택"
+                >
+                  {selectedPaperSize}
+                  <ChevronDown size={16} />
+                </button>
+                {isPaperSizeDropdownOpen && (
+                  <div className={styles.paperSizeMenu}>
+                    {(['A5', 'A4', 'A3', 'A2', 'A1', 'A0'] as PaperSize[]).map((size) => (
+                      <button 
+                        key={size}
+                        className={selectedPaperSize === size ? styles.selected : ''}
+                        onClick={() => { 
+                          setSelectedPaperSize(size); 
+                          setIsPaperSizeDropdownOpen(false); 
+                        }}
+                      >
+                        {size}
+                        <span className={styles.paperDimensions}>
+                          {orientation === 'landscape' 
+                            ? `${PAPER_SIZES_BASE[size].width} × ${PAPER_SIZES_BASE[size].height} mm`
+                            : `${PAPER_SIZES_BASE[size].height} × ${PAPER_SIZES_BASE[size].width} mm`
+                          }
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className={styles.orientationButtons}>
+            <button 
+              className={`${styles.orientButton} ${orientation === 'landscape' ? styles.active : ''}`}
+              onClick={() => setOrientation('landscape')}
+              title="가로 방향"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="20.5" cy="12" r="1" fill="currentColor" opacity="0.5"/>
+              </svg>
+            </button>
+            <button 
+              className={`${styles.orientButton} ${orientation === 'portrait' ? styles.active : ''}`}
+              onClick={() => setOrientation('portrait')}
+              title="세로 방향"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="7" y="4" width="10" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="12" cy="20.5" r="1" fill="currentColor" opacity="0.5"/>
+              </svg>
+            </button>
+            </div>
+            
+            {/* 캔버스 에디터 버튼 */}
+            <button 
+              className={styles.actionButton}
+              onClick={() => setShowCanvasEditor(true)}
+              title="캔버스 에디터"
+            >
+              <Edit3 size={20} />
+            </button>
+
+            {/* 설정 버튼 */}
+            <button 
+              className={styles.actionButton}
+              onClick={() => setIsSettingsPanelOpen(true)}
+              title="설정"
+            >
+              <Settings size={20} />
+            </button>
+            
+            <div className={styles.exportButtonWrapper}>
               <button 
-                onClick={handleGeneratePDF} 
+                onClick={() => setShowExportPopup(!showExportPopup)} 
                 className={styles.generateButton}
                 disabled={isGenerating}
               >
-                {isGenerating ? 'PDF 생성 중...' : 'PDF 다운로드'}
+                {isGenerating ? (
+                  '내보내는 중...'
+                ) : (
+                  <>
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      style={{ marginRight: '6px' }}
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    내보내기
+                  </>
+                )}
               </button>
-              <button onClick={onClose} className={styles.closeButton}>닫기</button>
+              
+              {/* 내보내기 팝업 */}
+              {showExportPopup && (
+                <div className={styles.exportPopup}>
+                  <div className={styles.exportPopupHeader}>
+                    <h4>파일 형식 선택</h4>
+                    <button 
+                      className={styles.exportPopupClose}
+                      onClick={() => setShowExportPopup(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className={styles.exportFormatList}>
+                    <div 
+                      className={`${styles.exportFormatItem} ${selectedExportFormat === 'pdf' ? styles.selected : ''}`}
+                      onClick={() => setSelectedExportFormat('pdf')}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 12v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M10 12h2.5c.8 0 1.5.7 1.5 1.5S13.3 15 12.5 15H10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>PDF 문서</span>
+                      <small>벡터 형식, 인쇄 품질</small>
+                    </div>
+                    <div 
+                      className={`${styles.exportFormatItem} ${selectedExportFormat === 'png' ? styles.selected : ''}`}
+                      onClick={() => setSelectedExportFormat('png')}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        <polyline points="21 15 16 10 5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>PNG 이미지</span>
+                      <small>투명 배경 지원</small>
+                    </div>
+                    <div 
+                      className={`${styles.exportFormatItem} ${selectedExportFormat === 'jpg' ? styles.selected : ''}`}
+                      onClick={() => setSelectedExportFormat('jpg')}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        <polyline points="21 15 16 10 5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>JPG 이미지</span>
+                      <small>작은 파일 크기</small>
+                    </div>
+                    <div 
+                      className={`${styles.exportFormatItem} ${selectedExportFormat === 'dxf' ? styles.selected : ''}`}
+                      onClick={() => setSelectedExportFormat('dxf')}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 10v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2 10h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 4v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M7 10V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M17 10V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>DXF 파일</span>
+                      <small>CAD 프로그램용</small>
+                    </div>
+                  </div>
+                  <div className={styles.exportPopupFooter}>
+                    <button 
+                      className={styles.exportButton}
+                      onClick={() => {
+                        setShowExportPopup(false);
+                        if (selectedExportFormat === 'pdf') {
+                          handleGeneratePDF();
+                        } else {
+                          // TODO: 다른 형식 내보내기 구현
+                          alert(`${selectedExportFormat.toUpperCase()} 형식 내보내기는 준비 중입니다.`);
+                        }
+                      }}
+                    >
+                      내보내기
+                    </button>
+                    <button 
+                      className={styles.cancelButton}
+                      onClick={() => setShowExportPopup(false)}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+            <button onClick={onClose} className={styles.closeButton}>나가기</button>
+          </div>
+        </div>
+
+        {/* 하단 컨테이너 - 사이드바와 메인 컨텐츠 */}
+        <div className={styles.bottomContainer}>
+          {/* 좌측 사이드바 */}
+          <div className={styles.sidebar}>
+          {/* 세로 탭 버튼들 */}
+          <div className={styles.tabButtons}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'views' ? styles.active : ''}`}
+              onClick={() => setActiveTab('views')}
+              title="디자인"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="8" y="8" width="4" height="4" rx="1" fill="currentColor"/>
+                <rect x="8" y="14" width="8" height="2" rx="1" fill="currentColor"/>
+              </svg>
+              <span className={styles.tabLabel}>디자인</span>
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'elements' ? styles.active : ''}`}
+              onClick={() => setActiveTab('elements')}
+              title="요소"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="9" cy="9" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="12" y="12" width="8" height="8" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+              <span className={styles.tabLabel}>요소</span>
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'text' ? styles.active : ''}`}
+              onClick={() => setActiveTab('text')}
+              title="텍스트"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7V4h16v3M12 4v16m-2 0h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className={styles.tabLabel}>텍스트</span>
+            </button>
           </div>
 
+          {/* 탭 컨텐츠 */}
+          <div className={styles.tabContent}>
+            {activeTab === 'views' && (
+              <>
+                <h3 className={styles.menuTitle}>디자인</h3>
+                {/* 서브 탭 */}
+                <div className={styles.subTabContainer}>
+                  <button
+                    className={`${styles.subTab} ${designSubTab === 'layout' ? styles.active : ''}`}
+                    onClick={() => setDesignSubTab('layout')}
+                  >
+                    레이아웃
+                  </button>
+                  <button
+                    className={`${styles.subTab} ${designSubTab === 'viewconfig' ? styles.active : ''}`}
+                    onClick={() => setDesignSubTab('viewconfig')}
+                  >
+                    뷰구성
+                  </button>
+                </div>
+                {designSubTab === 'layout' && (
+                  <div className={styles.viewGrid}>
+                    {AVAILABLE_VIEWS.map(view => (
+                      <div
+                        key={view.id}
+                        className={styles.viewMenuItem}
+                        onMouseDown={(e) => handleMenuItemDragStart(view, e)}
+                      >
+                        <div className={styles.viewItemContent}>
+                          {capturedViews[view.id as keyof typeof capturedViews] ? (
+                            <img 
+                              src={capturedViews[view.id as keyof typeof capturedViews]} 
+                              alt={view.label} 
+                              draggable={false}
+                            />
+                          ) : (
+                            <div className={styles.viewItemPlaceholder}>{view.label}</div>
+                          )}
+                        </div>
+                        <span className={styles.viewItemLabel}>{view.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {designSubTab === 'viewconfig' && (
+                  <div className={styles.viewConfigContent}>
+                    <p className={styles.placeholderText}>뷰 구성 옵션이 여기에 표시됩니다.</p>
+                  </div>
+                )}
+              </>
+            )}
+            {activeTab === 'elements' && (
+              <>
+                <h3 className={styles.menuTitle}>요소</h3>
+                {/* 서브 탭 */}
+                <div className={styles.subTabScrollContainer}>
+                  <button 
+                    className={`${styles.scrollButton} ${styles.left} ${!elementsScrollState.canScrollLeft ? styles.disabled : ''}`}
+                    onClick={() => handleElementsScroll('left')}
+                  >
+                    ‹
+                  </button>
+                  <div className={styles.subTabWrapper} ref={elementsTabRef}>
+                    <button
+                      className={`${styles.subTab} ${elementsSubTab === 'shapes' ? styles.active : ''}`}
+                      onClick={() => setElementsSubTab('shapes')}
+                    >
+                      도형
+                    </button>
+                    <button
+                      className={`${styles.subTab} ${elementsSubTab === 'lines' ? styles.active : ''}`}
+                      onClick={() => setElementsSubTab('lines')}
+                    >
+                      선
+                    </button>
+                    <button
+                      className={`${styles.subTab} ${elementsSubTab === 'symbols' ? styles.active : ''}`}
+                      onClick={() => setElementsSubTab('symbols')}
+                    >
+                      기호
+                    </button>
+                    <button
+                      className={`${styles.subTab} ${elementsSubTab === 'balloons' ? styles.active : ''}`}
+                      onClick={() => setElementsSubTab('balloons')}
+                    >
+                      말풍선
+                    </button>
+                    <button
+                      className={`${styles.subTab} ${elementsSubTab === 'frames' ? styles.active : ''}`}
+                      onClick={() => setElementsSubTab('frames')}
+                    >
+                      프레임
+                    </button>
+                  </div>
+                  <button 
+                    className={`${styles.scrollButton} ${styles.right} ${!elementsScrollState.canScrollRight ? styles.disabled : ''}`}
+                    onClick={() => handleElementsScroll('right')}
+                  >
+                    ›
+                  </button>
+                </div>
+                {elementsSubTab === 'shapes' && (
+                  <div className={styles.shapeGrid}>
+                    {/* 첫 번째 줄 */}
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<rect x="2" y="2" width="20" height="20" fill="currentColor" />',
+                        'rectangle'
+                      )}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <ellipse cx="12" cy="12" rx="10" ry="6" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 22,20 2,20" fill="currentColor" />
+                      </svg>
+                    </div>
+                    
+                    {/* 두 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,12 8,6 22,6 22,18 8,18" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,12 8,6 16,6 22,12 16,18 8,18" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12,3 Q7,3 7,8 Q7,10 9,10 Q9,8 11,8 Q11,10 12,10 Q13,10 15,10 Q17,10 17,8 Q17,3 12,3 Q17,3 17,8 Q17,13 12,13 Q7,13 7,8" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12,2 A10,10 0 0,1 12,22 A10,10 0 0,1 12,2" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 세 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <ellipse cx="12" cy="14" rx="8" ry="6" fill="currentColor" />
+                        <polygon points="8,18 8,22 10,20" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12,4 C7,4 3,8 3,12 C3,16 7,20 12,20 C17,20 21,16 21,12 C21,8 17,4 12,4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,12 9,6 22,10 15,16" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 14,10 22,10 16,14 18,22 12,18 6,22 8,14 2,10 10,10" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="4,4 20,4 16,20 8,20" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 네 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M6,4 L18,4 Q22,4 22,8 L22,16 Q22,20 18,20 L6,20 Q2,20 2,16 L2,8 Q2,4 6,4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="4,6 20,6 16,18 8,18" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 15,7 20,7 16,11 18,16 12,13 6,16 8,11 4,7 9,7" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 12,22 2,17 22,17" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="3,3 21,3 17,12 21,21 3,21 7,12" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 다섯 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,22 12,2 22,22" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="6,2 18,2 22,12 18,22 6,22 2,12" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="4" y="4" width="16" height="16" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" />
+                        <rect x="8" y="18" width="8" height="4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 16,8 22,8 18,13 20,20 12,16 4,20 6,13 2,8 8,8" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 여섯 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <circle cx="12" cy="12" r="6" fill="white" />
+                        <circle cx="12" cy="12" r="3" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="3,3 9,3 12,6 15,3 21,3 21,9 18,12 21,15 21,21 15,21 12,18 9,21 3,21 3,15 6,12 3,9" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="10" y="2" width="4" height="20" fill="currentColor" />
+                        <rect x="2" y="10" width="20" height="4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 17,7 22,12 17,17 12,22 7,17 2,12 7,7" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="5,3 19,3 21,12 19,21 5,21 3,12" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 일곱 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,3 8,3 12,7 16,3 22,3 22,9 18,12 22,15 22,21 16,21 12,17 8,21 2,21 2,15 6,12 2,9" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="7,2 17,2 22,12 17,22 7,22 2,12" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <path d="M12,2 A10,10 0 0,1 12,22 Z" fill="white" opacity="0.3" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 16,6 20,6 20,10 24,12 20,14 20,18 16,18 12,22 8,18 4,18 4,14 0,12 4,10 4,6 8,6" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 22,12 12,22 2,12" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 여덟 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="2,12 7,7 12,12 17,7 22,12 17,17 12,12 7,17" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="4,2 20,2 22,8 18,22 6,22 2,8" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="5,2 12,5 19,2 22,9 19,16 22,22 16,19 12,22 8,19 2,22 5,16 2,9" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="3" y="3" width="18" height="18" fill="currentColor" />
+                        <rect x="6" y="6" width="12" height="12" fill="white" />
+                        <rect x="9" y="9" width="6" height="6" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 14,9 22,8 17,14 20,21 12,18 4,21 7,14 2,8 10,9" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* 아홉 번째 줄 */}
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="12,2 16,8 22,12 16,16 12,22 8,16 2,12 8,8" fill="currentColor" />
+                        <polygon points="12,6 14,10 18,12 14,14 12,18 10,14 6,12 10,10" fill="white" />
+                      </svg>
+                    </div>
+                    <div className={styles.shapeItem}>
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <polygon points="3,2 21,2 18,12 21,22 3,22 6,12" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                {elementsSubTab === 'lines' && (
+                  <div className={styles.viewGrid}>
+                    <div className={styles.shapeItem} onClick={() => handleLineClick('horizontal')}>━</div>
+                    <div className={styles.shapeItem} onClick={() => handleLineClick('vertical')}>┃</div>
+                    <div className={styles.shapeItem} onClick={() => handleLineClick('diagonal1')}>╱</div>
+                    <div className={styles.shapeItem} onClick={() => handleLineClick('diagonal2')}>╲</div>
+                  </div>
+                )}
+                {elementsSubTab === 'symbols' && (
+                  <div className={styles.viewGrid}>
+                    <div className={styles.shapeItem} onClick={() => handleSymbolClick('★')}>★</div>
+                    <div className={styles.shapeItem} onClick={() => handleSymbolClick('♥')}>♥</div>
+                    <div className={styles.shapeItem} onClick={() => handleSymbolClick('♦')}>♦</div>
+                    <div className={styles.shapeItem} onClick={() => handleSymbolClick('♣')}>♣</div>
+                  </div>
+                )}
+                {elementsSubTab === 'balloons' && (
+                  <div className={styles.viewConfigContent}>
+                    <p className={styles.placeholderText}>말풍선이 여기에 표시됩니다.</p>
+                  </div>
+                )}
+                {elementsSubTab === 'frames' && (
+                  <div className={styles.viewConfigContent}>
+                    <p className={styles.placeholderText}>프레임이 여기에 표시됩니다.</p>
+                  </div>
+                )}
+              </>
+            )}
+            {activeTab === 'text' && (
+              <>
+                <h3 className={styles.menuTitle}>텍스트</h3>
+                <div className={styles.viewGrid}>
+                  <div
+                    className={styles.viewMenuItem}
+                    onClick={handleTextClick}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className={styles.viewItemContent}>
+                      <div className={styles.viewItemPlaceholder}>T</div>
+                    </div>
+                    <span className={styles.viewItemLabel}>텍스트 추가</span>
+                  </div>
+                  {AVAILABLE_TEXT_ITEMS.map(item => (
+                    <div
+                      key={item.id}
+                      className={styles.viewMenuItem}
+                      onMouseDown={(e) => handleMenuItemDragStart(item, e)}
+                    >
+                      <div className={styles.viewItemContent}>
+                        <div className={styles.viewItemPlaceholder}>{item.label}</div>
+                      </div>
+                      <span className={styles.viewItemLabel}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+          {/* 메인 컨테이너 */}
+          <div className={styles.mainContainer}>
+            <div className={styles.contentWrapper}>
           <div className={styles.previewContainer}>
             <div 
               ref={previewRef}
@@ -787,32 +1830,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 width: `${paperDimensions.displayWidth}px`,
                 height: `${paperDimensions.displayHeight}px`,
                 transform: `scale(${scale})`,
-                transformOrigin: 'top center',
-                marginTop: '20px'
+                transformOrigin: 'center center',
+                marginTop: '20px',
+                backgroundColor: paperColor
               }}
             >
-              {/* 상단 좌측 인포 영역 */}
-              <div className={styles.infoArea}>
-                <div className={styles.logoSection}>
-                  <h1 className={styles.logo}>INSHOW</h1>
-                  <h2 className={styles.projectTitle}>{title || '6 거실장'}</h2>
-                </div>
-                <div className={styles.specsList}>
-                  <div className={styles.specItem}>
-                    <span className={styles.label}>Size:</span>
-                    <span className={styles.value}>W{spaceInfo.width} × D{spaceInfo.depth} × H{spaceInfo.height}</span>
-                  </div>
-                  <div className={styles.specItem}>
-                    <span className={styles.label}>Door:</span>
-                    <span className={styles.value}>{materialConfig?.door?.name || '18.5T_PET'}</span>
-                  </div>
-                  <div className={styles.specItem}>
-                    <span className={styles.label}>Body:</span>
-                    <span className={styles.value}>{materialConfig?.body?.name || '18.5T_LPM'}</span>
-                  </div>
-                </div>
-              </div>
-
               {/* 메인 도면 영역 - 드래그 가능한 뷰들 */}
               <div 
                 className={styles.drawingArea} 
@@ -820,23 +1842,15 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
                     setSelectedView(null);
+                    handleCanvasClick();
                   }
                 }}
+                style={{ position: 'relative' }}
               >
-                {/* 스냅 가이드 라인 */}
-                {snapLines.x !== undefined && (
-                  <div 
-                    className={styles.snapLineVertical}
-                    style={{ left: `${snapLines.x}px` }}
-                  />
-                )}
-                {snapLines.y !== undefined && (
-                  <div 
-                    className={styles.snapLineHorizontal}
-                    style={{ top: `${snapLines.y}px` }}
-                  />
-                )}
-                
+                {/* Fabric.js 캔버스 */}
+                <div ref={canvasContainerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+                  <canvas id="fabric-canvas" />
+                </div>
                 {/* 정렬 가이드라인 */}
                 {alignmentGuides.vertical.map((x, index) => (
                   <div
@@ -852,14 +1866,16 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     style={{ top: `${y}px` }}
                   />
                 ))}
+
                 
                 {viewPositions.map(view => {
                   // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
                   const viewType = view.id.split('_')[0];
-                  const viewInfo = AVAILABLE_VIEWS.find(v => v.id === viewType);
+                  const viewInfo = AVAILABLE_VIEWS.find(v => v.id === viewType) || AVAILABLE_TEXT_ITEMS.find(v => v.id === viewType);
                   // 로컬 캡처된 이미지가 있으면 사용, 없으면 기본 캡처 이미지 사용
                   const localImage = localCapturedViews[`${view.id}_${viewType}`];
                   const viewImage = localImage || capturedViews[viewType as keyof typeof capturedViews];
+                  const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
 
                   return (
                     <div
@@ -874,7 +1890,15 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         cursor: draggingView === view.id ? 'grabbing' : 'grab'
                       }}
                       onMouseDown={(e) => handleViewMouseDown(view.id, e)}
-                      onDoubleClick={() => handleViewDoubleClick(view.id, viewType)}
+                      onDoubleClick={() => !isTextItem && handleViewDoubleClick(view.id, viewType)}
+                      onWheel={(e) => {
+                        if (selectedView === view.id) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                          handleViewScale(view.id, delta);
+                        }
+                      }}
                     >
                       {/* 리사이즈 핸들 */}
                       {selectedView === view.id && (
@@ -894,7 +1918,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         <div className={styles.viewControls}>
                           <button 
                             className={styles.scaleBtn}
-                            onClick={() => handleViewScale(view.id, -0.1)}
+                            onClick={() => handleViewScale(view.id, -0.2)}
                             onMouseDown={(e) => e.stopPropagation()}
                           >
                             -
@@ -902,7 +1926,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                           <span className={styles.scaleValue}>{(view.scale * 100).toFixed(0)}%</span>
                           <button 
                             className={styles.scaleBtn}
-                            onClick={() => handleViewScale(view.id, 0.1)}
+                            onClick={() => handleViewScale(view.id, 0.2)}
                             onMouseDown={(e) => e.stopPropagation()}
                           >
                             +
@@ -917,9 +1941,127 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         </div>
                       )}
                       
-                      <div className={styles.viewLabel}>{viewInfo?.label || viewType}</div>
-                      {viewImage && (
-                        <img src={viewImage} alt={viewInfo?.label} draggable={false} />
+                      {isTextItem ? (
+                        <div className={styles.textItemContent}>
+                          {viewType === 'info' && (
+                            <div className={styles.infoContent}>
+                              <h3 className={styles.infoTitle}>INSHOW</h3>
+                              {editingInfo === `${view.id}_title` ? (
+                                <input
+                                  type="text"
+                                  value={infoTexts.title}
+                                  onChange={(e) => setInfoTexts({ ...infoTexts, title: e.target.value })}
+                                  onBlur={() => setEditingInfo(null)}
+                                  onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
+                                  className={styles.textInput}
+                                  autoFocus
+                                />
+                              ) : (
+                                <p onClick={() => setEditingInfo(`${view.id}_title`)}>{infoTexts.title}</p>
+                              )}
+                              <div className={styles.infoSpecs}>
+                                <div className={styles.infoSpecItem}>
+                                  <span>Size:</span>
+                                  {editingInfo === `${view.id}_size` ? (
+                                    <input
+                                      type="text"
+                                      value={infoTexts.size}
+                                      onChange={(e) => setInfoTexts({ ...infoTexts, size: e.target.value })}
+                                      onBlur={() => setEditingInfo(null)}
+                                      onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
+                                      className={styles.textInput}
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span onClick={() => setEditingInfo(`${view.id}_size`)}>{infoTexts.size}</span>
+                                  )}
+                                </div>
+                                <div className={styles.infoSpecItem}>
+                                  <span>Door:</span>
+                                  {editingInfo === `${view.id}_door` ? (
+                                    <input
+                                      type="text"
+                                      value={infoTexts.door}
+                                      onChange={(e) => setInfoTexts({ ...infoTexts, door: e.target.value })}
+                                      onBlur={() => setEditingInfo(null)}
+                                      onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
+                                      className={styles.textInput}
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span onClick={() => setEditingInfo(`${view.id}_door`)}>{infoTexts.door}</span>
+                                  )}
+                                </div>
+                                <div className={styles.infoSpecItem}>
+                                  <span>Body:</span>
+                                  {editingInfo === `${view.id}_body` ? (
+                                    <input
+                                      type="text"
+                                      value={infoTexts.body}
+                                      onChange={(e) => setInfoTexts({ ...infoTexts, body: e.target.value })}
+                                      onBlur={() => setEditingInfo(null)}
+                                      onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
+                                      className={styles.textInput}
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span onClick={() => setEditingInfo(`${view.id}_body`)}>{infoTexts.body}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {viewType === 'title' && (
+                            <div className={styles.titleContent}>
+                              {editingInfo === view.id ? (
+                                <input
+                                  type="text"
+                                  value={infoTexts.title}
+                                  onChange={(e) => setInfoTexts({ ...infoTexts, title: e.target.value })}
+                                  onBlur={() => setEditingInfo(null)}
+                                  onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
+                                  className={styles.textInput}
+                                  autoFocus
+                                />
+                              ) : (
+                                <h2 onClick={() => setEditingInfo(view.id)}>{infoTexts.title}</h2>
+                              )}
+                            </div>
+                          )}
+                          {viewType === 'specs' && (
+                            <div className={styles.specsContent}>
+                              <h3>Specifications</h3>
+                              <p>Size: {infoTexts.size}</p>
+                              <p>Door: {infoTexts.door}</p>
+                              <p>Body: {infoTexts.body}</p>
+                            </div>
+                          )}
+                          {viewType === 'notes' && (
+                            <div className={styles.notesContent}>
+                              {editingInfo === view.id ? (
+                                <textarea
+                                  value={infoTexts.notes || ''}
+                                  onChange={(e) => setInfoTexts({ ...infoTexts, notes: e.target.value })}
+                                  onBlur={() => setEditingInfo(null)}
+                                  className={styles.textAreaInput}
+                                  placeholder="메모를 입력하세요..."
+                                  autoFocus
+                                />
+                              ) : (
+                                <p onClick={() => setEditingInfo(view.id)}>
+                                  {infoTexts.notes || '메모를 입력하세요...'}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <div className={styles.viewLabel}>{viewInfo?.label || viewType}</div>
+                          {viewImage && (
+                            <img src={viewImage} alt={viewInfo?.label} draggable={false} />
+                          )}
+                        </>
                       )}
                     </div>
                   );
@@ -929,73 +2071,76 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           </div>
           </div>
           
-          {/* 하단 페이지 네비게이션 */}
-          <div className={styles.pageNavigation}>
-            <h3 className={styles.pageNavTitle}>페이지</h3>
-            <div className={styles.pageList}>
-              {pages.map((page, index) => (
-                <div key={index} className={styles.pageItemWrapper}>
-                  <div 
-                    className={`${styles.pageItem} ${currentPage === index ? styles.active : ''}`}
-                    onClick={() => handlePageChange(index)}
-                  >
-                    <div className={styles.pageNumber}>{index + 1}</div>
-                    <div className={styles.pageThumbnail}>
-                      {page.length > 0 ? (
-                        <div className={styles.pagePreview}>
-                          {page.slice(0, 3).map((view, viewIndex) => (
-                            <div 
-                              key={viewIndex} 
-                              className={styles.miniView}
-                              style={{
-                                left: `${(view.x / paperDimensions.displayWidth) * 100}%`,
-                                top: `${(view.y / paperDimensions.displayHeight) * 100}%`,
-                                width: `${(view.width / paperDimensions.displayWidth) * 100}%`,
-                                height: `${(view.height / paperDimensions.displayHeight) * 100}%`
-                              }}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className={styles.emptyPage}>빈 페이지</div>
-                      )}
-                    </div>
-                  </div>
-                  {pages.length > 1 && (
-                    <button 
-                      className={styles.deletePageBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeletePage(index);
-                      }}
-                      title="페이지 삭제"
+          {/* 하단 페이지 미리보기 패널 */}
+          <div className={styles.pagePreviewPanel}>
+            <div className={styles.pageListContainer}>
+              <div className={styles.pageList}>
+                {pages.map((page, index) => (
+                  <div key={index} className={styles.pageItemWrapper}>
+                    <div 
+                      className={`${styles.pageItem} ${currentPage === index ? styles.active : ''}`}
+                      onClick={() => handlePageChange(index)}
                     >
-                      ×
-                    </button>
-                  )}
+                      <div className={styles.pageNumber}>페이지 {index + 1}</div>
+                      <div className={styles.pageThumbnail}>
+                        {page.length > 0 ? (
+                          <div className={styles.pagePreview}>
+                            {page.slice(0, 3).map((view, viewIndex) => (
+                              <div 
+                                key={viewIndex} 
+                                className={styles.miniView}
+                                style={{
+                                  left: `${(view.x / paperDimensions.displayWidth) * 100}%`,
+                                  top: `${(view.y / paperDimensions.displayHeight) * 100}%`,
+                                  width: `${(view.width / paperDimensions.displayWidth) * 100}%`,
+                                  height: `${(view.height / paperDimensions.displayHeight) * 100}%`
+                                }}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className={styles.emptyPage}>빈 페이지</div>
+                        )}
+                      </div>
+                    </div>
+                    {pages.length > 1 && (
+                      <button 
+                        className={styles.deletePageBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePage(index);
+                        }}
+                        title="페이지 삭제"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                {/* 페이지 추가 카드 */}
+                <div 
+                  className={styles.addPageCard}
+                  onClick={handleAddPage}
+                  title="페이지 추가"
+                >
+                  <div className={styles.addPageIcon}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div className={styles.addPageText}>페이지 추가</div>
                 </div>
-              ))}
-              
-              {/* 페이지 추가 카드 */}
-              <div 
-                className={styles.addPageCard}
-                onClick={handleAddPage}
-                title="페이지 추가"
-              >
-                <div className={styles.addPageIcon}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <span className={styles.addPageText}>페이지 추가</span>
               </div>
             </div>
           </div>
         </div>
+        </div>
+      </div>
 
-        {/* 드래그 프리뷰 */}
-        {isDraggingFromMenu && draggedMenuItem && dragPreviewPos && (
+      {/* 드래그 프리뷰 */}
+      {isDraggingFromMenu && draggedMenuItem && dragPreviewPos && (
           <div
             style={{
               position: 'fixed',
@@ -1016,76 +2161,204 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           >
             {draggedMenuItem.label}
           </div>
-        )}
+      )}
 
-        {/* 뷰어 오버레이 */}
-        {viewerOverlay.isOpen && (
-          <div className={styles.viewerOverlay}>
+      {/* 뷰어 오버레이 */}
+      {viewerOverlay.isOpen && (
+          <div className={`${styles.viewerOverlay} ${theme.mode === 'dark' ? styles.darkTheme : styles.lightTheme}`}>
             <div className={styles.viewerContainer}>
               <div className={styles.viewerHeader}>
-                <h3>뷰 편집 - {viewerOverlay.viewType?.toUpperCase()}</h3>
-                <div className={styles.viewerControls}>
-                  {/* 뷰 모드 선택 */}
-                  <div className={styles.viewModeButtons}>
+                <h3>도면 편집기 - {viewerOverlay.viewType?.toUpperCase()}</h3>
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setViewerOverlay({ isOpen: false, viewId: null, viewType: null })}
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* 서브헤더 - 가구 에디터의 모든 컨트롤 */}
+              <div className={styles.viewerSubHeader}>
+                <div className={styles.leftControls}>
+                  {/* 치수 표시 토글 */}
+                  <div className={styles.toggleGroup}>
+                    <span 
+                      className={`${styles.toggleLabel} ${styles.clickable}`}
+                      onClick={() => {
+                        // 토글이 꺼져있으면 켜고 모든 항목 체크
+                        if (!uiStore.showDimensions) {
+                          uiStore.setShowDimensions(true);
+                          // 모든 항목이 체크되어 있지 않으면 체크
+                          if (!uiStore.showAll) uiStore.setShowAll(true);
+                          if (!uiStore.showDimensionsText) uiStore.setShowDimensionsText(true);
+                          if (!uiStore.showGuides) uiStore.setShowGuides(true);
+                          if (!uiStore.showAxis) uiStore.setShowAxis(true);
+                          return;
+                        }
+                        
+                        // 토글이 켜져있을 때: 토글을 끄지 않고 모든 체크박스 해제
+                        const anyChecked = uiStore.showAll || uiStore.showDimensionsText || uiStore.showGuides || uiStore.showAxis;
+                        
+                        if (anyChecked) {
+                          // 하나라도 체크되어 있으면 모두 체크 해제
+                          if (uiStore.showAll) uiStore.setShowAll(false);
+                          if (uiStore.showDimensionsText) uiStore.setShowDimensionsText(false);
+                          if (uiStore.showGuides) uiStore.setShowGuides(false);
+                          if (uiStore.showAxis) uiStore.setShowAxis(false);
+                        } else {
+                          // 모두 체크 해제되어 있으면 토글 OFF
+                          uiStore.setShowDimensions(false);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {uiStore.showDimensions ? 'ON' : 'OFF'}
+                    </span>
+                    <button 
+                      className={`${styles.switch} ${uiStore.showDimensions ? styles.on : styles.off}`}
+                      onClick={() => {
+                        // 치수 토글이 켜져있으면 끄고, showDimensionsText도 함께 끄기
+                        if (uiStore.showDimensions) {
+                          uiStore.setShowDimensions(false);
+                          if (uiStore.showDimensionsText) {
+                            uiStore.setShowDimensionsText(false);
+                          }
+                        } else {
+                          // 치수 토글이 꺼져있으면 켜기
+                          uiStore.setShowDimensions(true);
+                        }
+                      }}
+                    >
+                      <div className={styles.switchHandle}></div>
+                    </button>
+                  </div>
+
+                  {/* 체크박스 옵션들 */}
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={uiStore.showDimensions && uiStore.showAll}
+                        onChange={(e) => uiStore.setShowAll(e.target.checked)}
+                        className={styles.checkbox}
+                      />
+                      <span className={styles.checkmark}></span>
+                      가이드
+                    </label>
+
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={uiStore.showDimensions && uiStore.showDimensionsText}
+                        onChange={(e) => uiStore.setShowDimensionsText(e.target.checked)}
+                        className={styles.checkbox}
+                      />
+                      <span className={styles.checkmark}></span>
+                      치수
+                    </label>
+
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={uiStore.showDimensions && uiStore.showGuides}
+                        onChange={(e) => uiStore.setShowGuides(e.target.checked)}
+                        className={styles.checkbox}
+                      />
+                      <span className={styles.checkmark}></span>
+                      그리드
+                    </label>
+
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={uiStore.showDimensions && uiStore.showAxis}
+                        onChange={(e) => uiStore.setShowAxis(e.target.checked)}
+                        className={styles.checkbox}
+                      />
+                      <span className={styles.checkmark}></span>
+                      축
+                    </label>
+                  </div>
+                </div>
+
+                <div className={styles.centerControls}>
+                  {/* 렌더 모드 */}
+                  <div className={styles.renderModeGroup}>
                     <button
-                      className={viewMode === '3D' ? styles.active : ''}
+                      className={`${styles.renderModeButton} ${renderMode === 'solid' ? styles.active : ''}`}
+                      onClick={() => setRenderMode('solid')}
+                    >
+                      Solid
+                    </button>
+                    <button
+                      className={`${styles.renderModeButton} ${renderMode === 'wireframe' ? styles.active : ''}`}
+                      onClick={() => setRenderMode('wireframe')}
+                    >
+                      Wireframe
+                    </button>
+                  </div>
+
+                  {/* 뷰 모드 */}
+                  <div className={styles.viewModeGroup}>
+                    <button
+                      className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
                       onClick={() => setViewMode('3D')}
                     >
                       3D
                     </button>
                     <button
-                      className={viewMode === '2D' ? styles.active : ''}
+                      className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
                       onClick={() => setViewMode('2D')}
                     >
                       2D
                     </button>
                   </div>
+                </div>
 
+                <div className={styles.rightControls}>
                   {/* 2D 방향 선택 */}
                   {viewMode === '2D' && (
-                    <div className={styles.view2DButtons}>
+                    <>
+                      <div className={styles.viewDirectionGroup}>
+                        {['front', 'top', 'left', 'right'].map((direction) => (
+                          <button
+                            key={direction}
+                            className={`${styles.viewDirectionButton} ${view2DDirection === direction ? styles.active : ''}`}
+                            onClick={() => setView2DDirection(direction as any)}
+                          >
+                            {direction}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* 다크모드/라이트모드 토글 - 2D 모드에서만 표시 */}
                       <button
-                        className={view2DDirection === 'front' ? styles.active : ''}
-                        onClick={() => setView2DDirection('front')}
+                        className={styles.themeToggle}
+                        onClick={() => uiStore.toggleView2DTheme()}
+                        title={uiStore.view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
                       >
-                        정면
+                        {uiStore.view2DTheme === 'dark' ? (
+                          // 해 아이콘 (라이트 모드)
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="5" />
+                            <line x1="12" y1="1" x2="12" y2="3" />
+                            <line x1="12" y1="21" x2="12" y2="23" />
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                            <line x1="1" y1="12" x2="3" y2="12" />
+                            <line x1="21" y1="12" x2="23" y2="12" />
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                          </svg>
+                        ) : (
+                          // 달 아이콘 (다크 모드)
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                          </svg>
+                        )}
                       </button>
-                      <button
-                        className={view2DDirection === 'top' ? styles.active : ''}
-                        onClick={() => setView2DDirection('top')}
-                      >
-                        상부
-                      </button>
-                      <button
-                        className={view2DDirection === 'left' ? styles.active : ''}
-                        onClick={() => setView2DDirection('left')}
-                      >
-                        좌측
-                      </button>
-                      <button
-                        className={view2DDirection === 'right' ? styles.active : ''}
-                        onClick={() => setView2DDirection('right')}
-                      >
-                        우측
-                      </button>
-                    </div>
+                    </>
                   )}
-
-                  {/* 렌더 모드 선택 */}
-                  <div className={styles.renderModeButtons}>
-                    <button
-                      className={renderMode === 'solid' ? styles.active : ''}
-                      onClick={() => setRenderMode('solid')}
-                    >
-                      솔리드
-                    </button>
-                    <button
-                      className={renderMode === 'wireframe' ? styles.active : ''}
-                      onClick={() => setRenderMode('wireframe')}
-                    >
-                      와이어프레임
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -1095,9 +2368,12 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   spaceInfo={spaceInfo}
                   viewMode={viewMode}
                   renderMode={renderMode}
-                  showDimensions={true}
-                  showAll={true}
+                  showDimensions={uiStore.showDimensions}
+                  showAll={uiStore.showAll}
                   showFrame={true}
+                  showDimensionsText={uiStore.showDimensionsText}
+                  showGuides={uiStore.showGuides}
+                  showAxis={uiStore.showAxis}
                 />
               </div>
 
@@ -1118,8 +2394,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               </div>
             </div>
           </div>
-        )}
-      </div>
+      )}
+      
+      {/* 설정 패널 */}
+      <SettingsPanel 
+        isOpen={isSettingsPanelOpen}
+        onClose={() => setIsSettingsPanelOpen(false)}
+      />
+
     </div>
   );
 };

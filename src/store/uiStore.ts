@@ -30,6 +30,12 @@ interface UIState {
   // 축 표시 상태
   showAxis: boolean;
   
+  // 가이드 표시 상태 (showAll 체크박스용)
+  showAll: boolean;
+  
+  // 렌더링 모드 (solid 또는 wireframe)
+  renderMode: 'solid' | 'wireframe';
+  
   // 활성 팝업 상태 (가구, 가구 편집, 기둥, 기둥 편집, 가벽, 가벽 편집, 패널B, 패널B 편집 모달 중 하나만 활성화)
   activePopup: {
     type: 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null;
@@ -75,9 +81,20 @@ interface UIState {
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
   toggleDimensions: () => void;
+  toggleDimensionsText: () => void;
   toggleGuides: () => void;
   toggleAxis: () => void;
   toggleView2DTheme: () => void;
+  toggleAll: () => void;
+  
+  // setter 함수들 추가
+  setShowDimensions: (show: boolean) => void;
+  setShowDimensionsText: (show: boolean) => void;
+  setShowGuides: (show: boolean) => void;
+  setShowAxis: (show: boolean) => void;
+  setShowAll: (show: boolean) => void;
+  setRenderMode: (mode: 'solid' | 'wireframe') => void;
+  setView2DTheme: (theme: 'dark' | 'light') => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -111,6 +128,8 @@ const initialUIState = {
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: true, // 기본값: 그리드(가이드) 표시
   showAxis: true, // 기본값: 축 표시
+  showAll: true, // 기본값: 모든 가이드 표시
+  renderMode: 'solid' as const, // 기본값: 솔리드 렌더링
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null,
     id: null
@@ -160,6 +179,31 @@ export const useUIStore = create<UIState>()(
       
       toggleView2DTheme: () =>
         set((state) => ({ view2DTheme: state.view2DTheme === 'dark' ? 'light' : 'dark' })),
+      
+      toggleAll: () =>
+        set((state) => ({ showAll: !state.showAll })),
+      
+      // setter 함수들 구현
+      setShowDimensions: (show) =>
+        set({ showDimensions: show }),
+      
+      setShowDimensionsText: (show) =>
+        set({ showDimensionsText: show }),
+      
+      setShowGuides: (show) =>
+        set({ showGuides: show }),
+      
+      setShowAxis: (show) =>
+        set({ showAxis: show }),
+      
+      setShowAll: (show) =>
+        set({ showAll: show }),
+      
+      setRenderMode: (mode) =>
+        set({ renderMode: mode }),
+      
+      setView2DTheme: (theme) =>
+        set({ view2DTheme: theme }),
       
       // 가구 팝업 열기 (다른 모든 팝업 닫기)
       openFurniturePopup: (moduleId) =>

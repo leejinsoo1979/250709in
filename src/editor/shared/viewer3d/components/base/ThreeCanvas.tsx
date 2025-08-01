@@ -9,7 +9,6 @@ import { useUIStore } from '@/store/uiStore';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
-import { useCanvasEventHandlers } from './hooks/useCanvasEventHandlers'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
@@ -106,7 +105,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);
-  const eventHandlers = useCanvasEventHandlers();
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
   // viewMode 변경 시 그림자 설정 업데이트
@@ -444,9 +442,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           bottom: 0,
           touchAction: 'none'
         }}
-        onDrop={eventHandlers.handleDrop}
-        onDragOver={eventHandlers.handleDragOver}
-        onDragLeave={eventHandlers.handleDragLeave}
       >
         <Canvas
         key={canvasKey}

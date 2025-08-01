@@ -42,7 +42,9 @@ export const getSlotIndexFromMousePosition = (
     if (intersects.length > 0) {
       // 가장 가까운 교차점의 슬롯 인덱스 반환
       const intersectedObject = intersects[0].object;
-      const slotIndex = intersectedObject.userData?.slotIndex;
+      
+      // globalSlotIndex가 있으면 우선 사용 (단내림 영역 지원)
+      const slotIndex = intersectedObject.userData?.globalSlotIndex ?? intersectedObject.userData?.slotIndex;
       
       // 유효한 슬롯 인덱스인지 확인
       const indexing = calculateSpaceIndexing(spaceInfo);

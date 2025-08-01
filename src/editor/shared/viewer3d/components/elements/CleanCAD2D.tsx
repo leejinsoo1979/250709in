@@ -1268,8 +1268,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
       
 
-      {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시) */}
-      {placedModules.length > 0 && placedModules.map((module, index) => {
+      {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
+      {placedModules.length > 0 && currentViewDirection !== 'top' && placedModules.map((module, index) => {
         const moduleData = getModuleById(
           module.moduleId,
           { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -1283,8 +1283,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
         const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
         
-        // 기둥에 의해 조정된 너비와 위치 사용
-        const actualWidth = module.adjustedWidth || moduleData.dimensions.width;
+        // 커버도어는 columnSlotInfo.doorWidth 사용, 일반 가구는 조정된 너비 사용
+        const isCoverDoor = module.columnSlotInfo?.doorWidth !== undefined;
+        const actualWidth = isCoverDoor 
+          ? module.columnSlotInfo.doorWidth 
+          : (module.adjustedWidth || moduleData.dimensions.width);
         const moduleWidth = mmToThreeUnits(actualWidth);
         // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
         const actualPositionX = module.adjustedPosition?.x || module.position.x;
@@ -1402,8 +1405,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 기둥별 치수선 (가구와 동일한 스타일) */}
-      {spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
+      {/* 기둥별 치수선 (가구와 동일한 스타일, 탑뷰가 아닐 때만) */}
+      {spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
         const leftX = column.position[0] - columnWidthM / 2;
         const rightX = column.position[0] + columnWidthM / 2;

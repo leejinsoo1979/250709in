@@ -33,6 +33,7 @@ import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
+import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 
 import { 
   WidthControl,
@@ -78,6 +79,13 @@ const Configurator: React.FC = () => {
   const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
+  const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
+  const [capturedViews, setCapturedViews] = useState<{
+    top?: string;
+    front?: string;
+    side?: string;
+    door?: string;
+  }>({});
 
   // 기존 공간 변경 로직 복구
   const [previousSpaceInfo, setPreviousSpaceInfo] = useState(() => {
@@ -1021,9 +1029,27 @@ const Configurator: React.FC = () => {
       delete prevWithoutMaterial.materialConfig;
       delete currentWithoutMaterial.materialConfig;
       
-      // materialConfig를 제외한 나머지 속성이 변경된 경우에만 가구 업데이트
-      if (JSON.stringify(prevWithoutMaterial) !== JSON.stringify(currentWithoutMaterial)) {
-        console.log('🔄 공간이 변경되었습니다. 가구 재배치 실행 중...');
+      // 공간의 실제 구조가 변경된 경우에만 가구 업데이트
+      // (너비, 높이, 깊이, 컬럼 수, 단내림 설정 등)
+      const hasStructuralChange = 
+        prevWithoutMaterial.width !== currentWithoutMaterial.width ||
+        prevWithoutMaterial.height !== currentWithoutMaterial.height ||
+        prevWithoutMaterial.depth !== currentWithoutMaterial.depth ||
+        prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount ||
+        JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling) ||
+        prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount ||
+        prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount ||
+        JSON.stringify(prevWithoutMaterial.frameSize) !== JSON.stringify(currentWithoutMaterial.frameSize) ||
+        JSON.stringify(prevWithoutMaterial.gapConfig) !== JSON.stringify(currentWithoutMaterial.gapConfig) ||
+        JSON.stringify(prevWithoutMaterial.baseConfig) !== JSON.stringify(currentWithoutMaterial.baseConfig) ||
+        prevWithoutMaterial.surroundType !== currentWithoutMaterial.surroundType ||
+        prevWithoutMaterial.installType !== currentWithoutMaterial.installType ||
+        JSON.stringify(prevWithoutMaterial.wallConfig) !== JSON.stringify(currentWithoutMaterial.wallConfig) ||
+        prevWithoutMaterial.hasFloorFinish !== currentWithoutMaterial.hasFloorFinish ||
+        JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish);
+      
+      if (hasStructuralChange) {
+        console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...');
         updateFurnitureForNewSpace(previousSpaceInfo, spaceInfo);
       }
       
@@ -1419,8 +1445,8 @@ const Configurator: React.FC = () => {
   };
 
   const handleConvert = () => {
-    console.log('컨버팅 패널 열기');
-    setIsConvertPanelOpen(true);
+    console.log('도면 편집기 열기');
+    setShowPDFPreview(true);
   };
 
   const handleLogout = () => {
@@ -2689,6 +2715,13 @@ const Configurator: React.FC = () => {
       <ConvertModal
         isOpen={isConvertPanelOpen}
         onClose={() => setIsConvertPanelOpen(false)}
+      />
+      
+      {/* PDF 템플릿 미리보기 */}
+      <PDFTemplatePreview
+        isOpen={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        capturedViews={capturedViews}
       />
 
     </div>

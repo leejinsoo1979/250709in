@@ -193,26 +193,90 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
       }
 
-      const moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
-      if (!moduleData) return;
-
-      // 듀얼/싱글 가구 판별
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      const columnWidth = indexing.columnWidth;
-      const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+      // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
+      let moduleData;
+      let indexing;
+      let isDualFurniture;
+      
+      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        
+        // 영역별 spaceInfo와 internalSpace 생성
+        const zoneSpaceInfo = {
+          ...spaceInfo,
+          width: targetZone.width,
+          customColumnCount: targetZone.columnCount,
+          columnMode: 'custom' as const
+        };
+        const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+        
+        moduleData = getModuleById(currentModule.moduleId, zoneInternalSpace, zoneSpaceInfo);
+        if (!moduleData) return;
+        
+        indexing = calculateSpaceIndexing(zoneSpaceInfo);
+        isDualFurniture = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+      } else {
+        // 단내림이 없는 경우 기존 로직
+        moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
+        if (!moduleData) return;
+        
+        indexing = calculateSpaceIndexing(spaceInfo);
+        const columnWidth = indexing.columnWidth;
+        isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+      }
 
       // 슬롯 가용성 검사 (자기 자신 제외)
 
-      // 최종 위치 계산
+      // 최종 위치 계산 - 영역별 처리
       let finalX: number;
-      if (isDualFurniture) {
-        if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
-          finalX = indexing.threeUnitDualPositions[slotIndex];
+      
+      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        
+        // 영역 내 슬롯 인덱스로 변환
+        const globalIndexing = calculateSpaceIndexing(spaceInfo);
+        const targetXMm = globalIndexing.threeUnitPositions[slotIndex] * 100; // Three.js to mm
+        
+        // 영역 내 로컬 슬롯 인덱스 계산
+        let zoneSlotIndex;
+        if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
+          zoneSlotIndex = Math.floor((targetXMm - zoneInfo.dropped.startX) / zoneInfo.dropped.columnWidth);
+          
+          if (isDualFurniture && zoneSlotIndex < targetZone.columnCount - 1) {
+            // 듀얼 가구: 두 슬롯의 중간점
+            const leftSlotX = targetZone.startX + (zoneSlotIndex * targetZone.columnWidth) + (targetZone.columnWidth / 2);
+            const rightSlotX = targetZone.startX + ((zoneSlotIndex + 1) * targetZone.columnWidth) + (targetZone.columnWidth / 2);
+            finalX = ((leftSlotX + rightSlotX) / 2) * 0.01; // mm to Three.js units
+          } else {
+            // 싱글 가구
+            finalX = (targetZone.startX + (zoneSlotIndex * targetZone.columnWidth) + (targetZone.columnWidth / 2)) * 0.01;
+          }
         } else {
-          return; // 듀얼 위치가 없으면 이동하지 않음
+          zoneSlotIndex = Math.floor((targetXMm - zoneInfo.normal.startX) / zoneInfo.normal.columnWidth);
+          
+          if (isDualFurniture && zoneSlotIndex < targetZone.columnCount - 1) {
+            // 듀얼 가구: 두 슬롯의 중간점
+            const leftSlotX = targetZone.startX + (zoneSlotIndex * targetZone.columnWidth) + (targetZone.columnWidth / 2);
+            const rightSlotX = targetZone.startX + ((zoneSlotIndex + 1) * targetZone.columnWidth) + (targetZone.columnWidth / 2);
+            finalX = ((leftSlotX + rightSlotX) / 2) * 0.01; // mm to Three.js units
+          } else {
+            // 싱글 가구
+            finalX = (targetZone.startX + (zoneSlotIndex * targetZone.columnWidth) + (targetZone.columnWidth / 2)) * 0.01;
+          }
         }
       } else {
-        finalX = indexing.threeUnitPositions[slotIndex];
+        // 단내림이 없는 경우 기존 로직
+        if (isDualFurniture) {
+          if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
+            finalX = indexing.threeUnitDualPositions[slotIndex];
+          } else {
+            return; // 듀얼 위치가 없으면 이동하지 않음
+          }
+        } else {
+          finalX = indexing.threeUnitPositions[slotIndex];
+        }
       }
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
@@ -321,12 +385,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
       }
       
-      // 모듈 업데이트
+      // 모듈 업데이트 - zone 정보 유지
       updatePlacedModule(draggingModuleId, {
         position: adjustedPosition,
         customDepth: newCustomDepth,
         adjustedWidth: newAdjustedWidth,
-        slotIndex: slotIndex
+        slotIndex: slotIndex,
+        zone: currentModule.zone, // zone 정보 유지
+        customWidth: currentModule.customWidth // customWidth 정보도 유지
       });
       invalidate();
       if (gl && gl.shadowMap) {

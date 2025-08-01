@@ -129,23 +129,28 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
   // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
+    console.log('🎯 [Space3DView] handleDrop 호출됨!');
     e.preventDefault();
     e.stopPropagation();
     
     // Canvas 요소 찾기
     const canvas = e.currentTarget.querySelector('canvas');
     if (!canvas) {
+      console.log('❌ [Space3DView] Canvas 요소를 찾을 수 없음');
       return;
     }
 
     // 드래그 데이터 확인
     const dragData = e.dataTransfer.getData('application/json');
+    console.log('🎯 [Space3DView] Drag data:', dragData);
     if (!dragData) {
+      console.log('❌ [Space3DView] Drag data가 없음');
       return;
     }
 
     try {
       const parsedData = JSON.parse(dragData);
+      console.log('🎯 [Space3DView] Parsed drag data:', parsedData);
       
       // 기둥 드롭 처리
       if (parsedData.type === 'column') {
@@ -168,13 +173,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
       if (typeof handleSlotDrop === 'function') {
-        // activeZone이 있을 때만 전달
-        if (activeZone) {
-          console.log('🎯 Space3DView handleDrop - activeZone:', activeZone);
-          handleSlotDrop(e.nativeEvent, canvas, activeZone);
-        } else {
-          handleSlotDrop(e.nativeEvent, canvas);
-        }
+        console.log('🎯 Space3DView handleDrop - activeZone:', activeZone);
+        // activeZone은 항상 전달 (undefined일 수도 있음)
+        const result = handleSlotDrop(e.nativeEvent, canvas, activeZone);
+        console.log('🎯 Space3DView handleDrop - result:', result);
       }
     } catch (error) {
       console.error('드롭 데이터 파싱 오류:', error);
@@ -287,6 +289,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   };
   
   const handleDragOver = (e: React.DragEvent) => {
+    console.log('🎯 [Space3DView] handleDragOver 호출됨!');
     e.preventDefault(); // 드롭 허용
   };
   

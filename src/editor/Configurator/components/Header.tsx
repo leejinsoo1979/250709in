@@ -306,7 +306,7 @@ const Header: React.FC<HeaderProps> = ({
 
           {onConvert && (
             <button className={styles.convertButton} onClick={onConvert}>
-              컨버팅
+              도면 편집기
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <polyline points="9,18 15,12 9,6" stroke="currentColor" strokeWidth="2"/>
               </svg>
