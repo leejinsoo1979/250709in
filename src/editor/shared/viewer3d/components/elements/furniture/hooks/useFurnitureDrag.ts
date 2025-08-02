@@ -203,19 +203,36 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
         
         // 영역별 spaceInfo와 internalSpace 생성
+        // 단내림 영역별 외경 너비 계산 (프레임 포함)
+        const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+        let zoneOuterWidth: number;
+        
+        if (currentModule.zone === 'dropped') {
+          // 단내림 영역의 외경 너비
+          zoneOuterWidth = droppedCeilingWidth;
+        } else {
+          // 메인 영역의 외경 너비
+          zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
+        }
+        
         const zoneSpaceInfo = {
           ...spaceInfo,
-          width: targetZone.width,
-          customColumnCount: targetZone.columnCount,
-          columnMode: 'custom' as const
+          zone: currentModule.zone  // zone 정보 추가
         };
         const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
         
         moduleData = getModuleById(currentModule.moduleId, zoneInternalSpace, zoneSpaceInfo);
         if (!moduleData) return;
         
-        indexing = calculateSpaceIndexing(zoneSpaceInfo);
-        isDualFurniture = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+        // zone별 indexing은 targetZone 정보를 직접 사용
+        indexing = {
+          columnCount: targetZone.columnCount,
+          columnWidth: targetZone.columnWidth,
+          threeUnitPositions: [],
+          threeUnitDualPositions: {},
+          threeUnitBoundaries: []
+        };
+        isDualFurniture = Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
       } else {
         // 단내림이 없는 경우 기존 로직
         moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
@@ -416,7 +433,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         adjustedWidth: currentModule.zone && indexing ? (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth) : newAdjustedWidth,
         slotIndex: finalSlotIndex,
         zone: currentModule.zone, // zone 정보 유지
-        customWidth: indexing ? indexing.columnWidth : currentModule.customWidth // zone의 columnWidth로 업데이트
+        customWidth: indexing ? (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth) : currentModule.customWidth // zone의 columnWidth로 업데이트
       });
       invalidate();
       if (gl && gl.shadowMap) {

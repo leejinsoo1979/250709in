@@ -136,11 +136,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { view2DDirection } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   
   // 디버깅용 로그
-  console.log('🔍 BaseFurnitureShell 백패널 렌더링:', {
-    viewMode,
-    view2DDirection,
-    renderMode,
-    shouldShowDashed: viewMode === '2D' && view2DDirection === 'front' && renderMode === 'solid'
+  console.log('🔍 BaseFurnitureShell 렌더링:', {
+    width: width * 100 + 'mm',
+    innerWidth: innerWidth * 100 + 'mm',
+    basicThickness: basicThickness * 100 + 'mm',
+    '계산식': `${width * 100} - ${basicThickness * 100 * 2} = ${innerWidth * 100}`,
+    '측면패널_좌': `x: ${(-innerWidth/2 - basicThickness/2) * 100}mm`,
+    '측면패널_우': `x: ${(innerWidth/2 + basicThickness/2) * 100}mm`,
+    '전체너비': `${((innerWidth/2 + basicThickness/2) - (-innerWidth/2 - basicThickness/2)) * 100}mm`
   });
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
@@ -153,7 +156,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 왼쪽 측면 판재 */}
         <BoxWithEdges
           args={[basicThickness, height, depth]}
-          position={[-width/2 + basicThickness/2, 0, 0]}
+          position={[-innerWidth/2 - basicThickness/2, 0, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -162,7 +165,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 오른쪽 측면 판재 */}
         <BoxWithEdges
           args={[basicThickness, height, depth]}
-          position={[width/2 - basicThickness/2, 0, 0]}
+          position={[innerWidth/2 + basicThickness/2, 0, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}

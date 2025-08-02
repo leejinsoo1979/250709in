@@ -16,7 +16,7 @@ import {
   calculateBaseFrameHeight,
   calculateInternalSpace
 } from '../../utils/geometry';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -744,9 +744,18 @@ const Room: React.FC<RoomProps> = ({
                 {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
                 <mesh
                   position={[
-                    isLeftDropped 
-                      ? xOffset + droppedAreaWidth  // 왼쪽 단내림: 단내림 너비 위치
-                      : xOffset + normalAreaWidth,   // 오른쪽 단내림: 메인 너비 위치
+                    (() => {
+                      // ColumnIndexer의 계산과 동일하게 처리
+                      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      
+                      if (isLeftDropped) {
+                        // 왼쪽 단내림: 단내림 끝 = 메인 시작
+                        return mmToThreeUnits(zoneInfo.normal.startX);
+                      } else {
+                        // 오른쪽 단내림: 메인 끝 = 단내림 시작
+                        return mmToThreeUnits(zoneInfo.dropped.startX);
+                      }
+                    })(),
                     panelStartY + height - droppedCeilingHeight/2, 
                     extendedZOffset + extendedPanelDepth/2
                   ]}

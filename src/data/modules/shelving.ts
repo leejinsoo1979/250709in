@@ -1,5 +1,5 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 // ============================================================================
 // 타입 정의 (기존과 동일)
@@ -756,13 +756,36 @@ export const generateShelvingModules = (
     return [];
   }
   
+  // 단내림 구간인지 확인하고 zoneSlotInfo 사용
+  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
   
-  // 컬럼 계산 로직 가져오기
-  const indexing = calculateSpaceIndexing(indexingSpaceInfo);
-  // 가구 생성 시에는 슬롯과 동일한 너비 계산 방식 사용 (Math.floor)
-  const columnWidth = Math.floor(indexing.internalWidth / indexing.columnCount);
-  const columnCount = indexing.columnCount;
+  let columnWidth: number;
+  let columnCount: number;
   
+  // 단내림이 활성화되고 zone 정보가 전달된 경우
+  if (indexingSpaceInfo.droppedCeiling?.enabled && indexingSpaceInfo.zone) {
+    const zone = indexingSpaceInfo.zone;
+    if (zone === 'dropped' && zoneSlotInfo.dropped) {
+      columnWidth = zoneSlotInfo.dropped.columnWidth;
+      columnCount = zoneSlotInfo.dropped.columnCount;
+    } else {
+      columnWidth = zoneSlotInfo.normal.columnWidth;
+      columnCount = zoneSlotInfo.normal.columnCount;
+    }
+  } else {
+    // 단내림이 없는 경우 일반 계산
+    columnWidth = zoneSlotInfo.normal.columnWidth;
+    columnCount = zoneSlotInfo.normal.columnCount;
+  }
+  
+  
+  console.log('🎯 [generateShelvingModules] 계산 결과:', {
+    zone: indexingSpaceInfo.zone,
+    columnWidth,
+    columnCount,
+    zoneSlotInfo,
+    droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled
+  });
   
   // 700mm 컬럼이 계산되면 에러 발생
   if (columnWidth >= 680 && columnWidth <= 720) {

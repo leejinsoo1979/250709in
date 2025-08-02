@@ -101,13 +101,14 @@ export const useBaseFurniture = (
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
   
-  // console.log('🔧 useBaseFurniture 폭 결정:', {
-  //   originalWidth: moduleData.dimensions.width + 'mm',
-  //   adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
-  //   actualWidthMm: actualWidthMm + 'mm',
-  //   finalWidth: width.toFixed(3) + ' (Three.js units)',
-  //   logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'
-  // });
+  console.log('🔧 useBaseFurniture 폭 결정:', {
+    moduleId: moduleData.id,
+    originalWidth: moduleData.dimensions.width + 'mm',
+    adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
+    actualWidthMm: actualWidthMm + 'mm',
+    finalWidth: width.toFixed(3) + ' (Three.js units)',
+    logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'
+  });
   
   // 내경 치수 계산
   const innerWidth = width - basicThickness * 2;

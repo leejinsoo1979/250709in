@@ -68,6 +68,9 @@ export interface SpaceInfo {
   // 도어 개수 설정 (단내림 활성화 시 사용)
   mainDoorCount?: number;              // 메인 구간 도어 개수
   droppedCeilingDoorCount?: number;    // 단내림 구간 도어 개수
+  
+  // 영역 정보 (단내림 구간에서 사용)
+  zone?: 'normal' | 'dropped';         // 현재 영역
 }
 
 // 단내림 설정 인터페이스

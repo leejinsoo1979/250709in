@@ -5,7 +5,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { calculateInternalSpace } from '../../utils/geometry';
+import { calculateInternalSpace, calculateFrameThickness } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
 
 /**
@@ -85,7 +85,37 @@ const ColumnGuides: React.FC = () => {
   
   // 영역별 슬롯 정보 계산
   const zoneSlotInfo = React.useMemo(() => {
-    return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const info = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    
+    // 전체 내경 정보와 비교
+    const fullIndexing = calculateSpaceIndexing(spaceInfo);
+    
+    console.log('🔍 ColumnGuides - 슬롯 정보 비교:', {
+      전체인덱싱: {
+        내경시작X: fullIndexing.internalStartX,
+        내경너비: fullIndexing.internalWidth,
+        슬롯너비: fullIndexing.columnWidth
+      },
+      영역별정보: {
+        메인: {
+          시작X: info.normal.startX,
+          너비: info.normal.width,
+          끝X: info.normal.startX + info.normal.width,
+          슬롯너비: info.normal.columnWidth
+        },
+        단내림: info.dropped ? {
+          시작X: info.dropped.startX,
+          너비: info.dropped.width,
+          끝X: info.dropped.startX + info.dropped.width,
+          슬롯너비: info.dropped.columnWidth
+        } : null
+      },
+      갭체크: info.dropped ? {
+        '메인끝-단내림시작': (info.dropped.startX - (info.normal.startX + info.normal.width))
+      } : null
+    });
+    
+    return info;
   }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
   
   // 디버깅 로그 추가
@@ -193,6 +223,9 @@ const ColumnGuides: React.FC = () => {
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;
   
+  // 프레임 두께 계산
+  const frameThickness = calculateFrameThickness(spaceInfo);
+  
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (
     startX: number,
@@ -214,7 +247,9 @@ const ColumnGuides: React.FC = () => {
       backZ,
       frontZ,
       'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
-      'spaceInfo.customColumnCount': spaceInfo.customColumnCount
+      'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
+      'hasDroppedCeiling': hasDroppedCeiling,
+      'spaceInfo.surroundType': spaceInfo.surroundType
     });
     
     const guides = [];
@@ -234,13 +269,25 @@ const ColumnGuides: React.FC = () => {
     // 각 슬롯 경계 계산
     const boundaries = [];
     for (let i = 0; i <= columnCount; i++) {
-      boundaries.push(mmToThreeUnits(startX + (i * columnWidth)));
+      if (i === columnCount) {
+        // 마지막 경계는 정확히 영역의 끝에 맞춤 (반올림 오차 보정)
+        boundaries.push(mmToThreeUnits(startX + width));
+      } else {
+        boundaries.push(mmToThreeUnits(startX + (i * columnWidth)));
+      }
     }
     
     // 슬롯 중심 위치 계산
     const positions = [];
     for (let i = 0; i < columnCount; i++) {
-      positions.push(mmToThreeUnits(startX + (i * columnWidth) + (columnWidth / 2)));
+      if (i === columnCount - 1) {
+        // 마지막 슬롯의 중심은 이전 경계와 영역 끝 사이의 중심
+        const lastSlotStart = startX + (i * columnWidth);
+        const lastSlotEnd = startX + width;
+        positions.push(mmToThreeUnits((lastSlotStart + lastSlotEnd) / 2));
+      } else {
+        positions.push(mmToThreeUnits(startX + (i * columnWidth) + (columnWidth / 2)));
+      }
     }
     
     // 경계 확인 로그
@@ -250,7 +297,9 @@ const ColumnGuides: React.FC = () => {
       width_mm: width,
       boundaries_three: [boundaries[0], boundaries[boundaries.length - 1]],
       expectedEndX_three: mmToThreeUnits(startX + width),
-      actualEndX_three: boundaries[boundaries.length - 1]
+      actualEndX_three: boundaries[boundaries.length - 1],
+      '반올림오차_mm': width - (columnWidth * columnCount),
+      '마지막슬롯너비_mm': (columnCount > 0) ? (startX + width) - (startX + (columnCount - 1) * columnWidth) : 0
     });
     
     // 내경 공간의 실제 경계 계산
@@ -263,11 +312,22 @@ const ColumnGuides: React.FC = () => {
       const zoneStartX = mmToThreeUnits(startX);
       const zoneEndX = mmToThreeUnits(startX + width);
       
-      // 2D 정면 뷰에서는 내경 범위 내에서만 표시
-      const startBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
+      console.log(`📐 ${zoneType} 수평 가이드 범위:`, {
+        시작X_mm: startX,
+        끝X_mm: startX + width,
+        시작X_three: zoneStartX,
+        끝X_three: zoneEndX,
+        내경시작_three: internalStartX,
+        내경끝_three: internalEndX,
+        프레임정보: spaceInfo.frameSize
+      });
+      
+      // 2D 정면 뷰에서도 단내림이 있는 경우 각 영역의 실제 경계 사용
+      // 단내림이 없는 경우에만 내경 범위로 클리핑
+      const startBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
         ? Math.max(zoneStartX, internalStartX) 
         : zoneStartX;
-      const endBoundaryX = viewMode === '2D' && view2DDirection === 'front' 
+      const endBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
         ? Math.min(zoneEndX, internalEndX) 
         : zoneEndX;
       
