@@ -78,10 +78,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
     }
     
-    // 영역별 spaceInfo 생성 - 전체 spaceInfo에 zone 정보만 추가
+    // 영역별 spaceInfo 생성 - 단내림 구간의 경우 높이도 조정
     zoneSpaceInfo = {
       ...spaceInfo,
-      zone: placedModule.zone  // zone 정보 추가
+      zone: placedModule.zone  // zone 정보만 추가 (높이는 calculateInternalSpace에서 처리)
     };
     
     internalSpace = {
@@ -221,6 +221,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 단내림 구간에서는 customHeight 사용
   let furnitureHeightMm = placedModule.customHeight || actualModuleData.dimensions.height;
   
+  // 단내림 구간 높이 디버깅
+  if (placedModule.zone === 'dropped') {
+    console.log('📏 단내림 구간 가구 높이 (초기):', {
+      moduleId: placedModule.id,
+      customHeight: placedModule.customHeight,
+      originalHeight: actualModuleData.dimensions.height,
+      finalHeight: furnitureHeightMm,
+      zone: placedModule.zone
+    });
+  }
+  
   // Column C 가구 너비 디버깅
   if (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) {
     console.log('🟦 FurnitureItem Column C 너비 확인:', {
@@ -242,10 +253,44 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    originalSlotWidthMm = isDualFurniture ? (targetZone.columnWidth * 2) : targetZone.columnWidth;
+    
+    // 마지막 슬롯의 경우 실제 남은 너비 사용
+    if (isLastSlot && !isDualFurniture) {
+      const usedWidth = targetZone.columnWidth * (targetZone.columnCount - 1);
+      originalSlotWidthMm = targetZone.width - usedWidth;
+    } else if (isDualFurniture && placedModule.slotIndex === targetZone.columnCount - 2) {
+      // 마지막-1 슬롯의 듀얼 가구인 경우
+      const normalSlotWidth = targetZone.columnWidth;
+      const lastSlotStart = targetZone.startX + ((targetZone.columnCount - 1) * targetZone.columnWidth);
+      const lastSlotEnd = targetZone.startX + targetZone.width;
+      const lastSlotWidth = lastSlotEnd - lastSlotStart;
+      originalSlotWidthMm = normalSlotWidth + lastSlotWidth;
+    } else {
+      originalSlotWidthMm = isDualFurniture ? (targetZone.columnWidth * 2) : targetZone.columnWidth;
+    }
     
   } else {
-    originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
+    // 단내림이 없는 경우도 마지막 슬롯 처리
+    if (isLastSlot && !isDualFurniture) {
+      const usedWidth = indexing.columnWidth * (indexing.columnCount - 1);
+      const totalWidth = indexing.totalWidth;
+      originalSlotWidthMm = totalWidth - usedWidth;
+    } else {
+      originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
+    }
+  }
+  
+  // 도어 크기 디버깅
+  if (placedModule.hasDoor && isLastSlot) {
+    console.log('🚪 도어 크기 계산:', {
+      zone: placedModule.zone,
+      slotIndex: placedModule.slotIndex,
+      isLastSlot,
+      isDualFurniture,
+      originalSlotWidthMm,
+      furnitureWidthMm,
+      difference: originalSlotWidthMm - furnitureWidthMm
+    });
   }
   
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
@@ -429,15 +474,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 높이 계산: 받침대 설정에 따라 조정
   // 단내림 구간에서는 위에서 이미 계산된 furnitureHeightMm 사용
   if (!placedModule.customHeight) {
+    // internalSpace.height가 이미 zone에 맞게 계산되었음
     furnitureHeightMm = internalSpace.height;
+    
     if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
       // 띄워서 배치일 때: 내경 높이에서 띄움 높이를 뺌
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-      furnitureHeightMm = internalSpace.height - floatHeightMm;
+      furnitureHeightMm = furnitureHeightMm - floatHeightMm;
     }
   }
   
   const height = mmToThreeUnits(furnitureHeightMm);
+  
+  // 단내림 구간 최종 높이 디버깅
+  if (placedModule.zone === 'dropped') {
+    console.log('📏 단내림 구간 가구 높이 (최종):', {
+      moduleId: placedModule.id,
+      furnitureHeightMm,
+      internalSpaceHeight: internalSpace.height,
+      droppedCeilingHeight: spaceInfo.droppedCeiling?.height,
+      안전선반임계값: 2300,
+      안전선반적용여부: furnitureHeightMm > 2300
+    });
+  }
   
   // 깊이 계산: customDepth 우선, 기둥 충돌로 조정된 깊이, 기본 깊이 순
   const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData.dimensions.depth ? adjustedDepthMm : actualModuleData.dimensions.depth);
