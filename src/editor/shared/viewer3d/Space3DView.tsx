@@ -289,7 +289,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   };
   
   const handleDragOver = (e: React.DragEvent) => {
-    console.log('🎯 [Space3DView] handleDragOver 호출됨!');
     e.preventDefault(); // 드롭 허용
   };
   
@@ -573,6 +572,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
                 showAxis={showAxis}
@@ -647,6 +647,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
                 showAxis={showAxis}
@@ -721,6 +722,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
                 showAxis={showAxis}
@@ -795,6 +797,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
                 showAxis={showAxis}
@@ -1176,12 +1179,13 @@ const QuadrantContent: React.FC<{
   materialConfig: any;
   showAll: boolean;
   showFrame: boolean;
+  activeZone?: 'normal' | 'dropped';
   showDimensions: boolean;
   showGuides: boolean;
   showAxis: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn }) => {
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1262,7 +1266,7 @@ const QuadrantContent: React.FC<{
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} activeZone={activeZone} />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🎯 QuadrantContent - Room 렌더링:', {

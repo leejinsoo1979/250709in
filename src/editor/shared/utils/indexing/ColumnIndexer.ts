@@ -169,7 +169,7 @@ export class ColumnIndexer {
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
     }
     
-    // 각 컬럼의 너비 (균등 분할) - Math.floor 사용하여 내경 초과 방지
+    // 각 컬럼의 너비 (균등 분할) - 정수값으로 계산
     const columnWidth = Math.floor(internalWidth / columnCount);
     
     // 여유 공간 계산 (내경 너비 - 실제 사용 너비)
@@ -244,6 +244,7 @@ export class ColumnIndexer {
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
     }
+    
     
     return {
       columnCount,            // 슬롯(컬럼) 개수
@@ -459,7 +460,6 @@ export class ColumnIndexer {
     // 단내림 영역 컬럼 수
     if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
       droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
-      console.log('🎯 단내림 컬럼 수 (설정값):', droppedColumnCount);
     } else {
       droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaInternalWidth);
       console.log('🎯 단내림 컬럼 수 (자동계산):', droppedColumnCount, 'from width:', droppedAreaInternalWidth);
@@ -484,27 +484,6 @@ export class ColumnIndexer {
       console.error(`⚠️ 단내림 영역 슬롯 너비가 600mm를 초과합니다: ${droppedColumnWidth}mm`);
     }
     
-    // 디버깅 로그 추가
-    console.log('🎯 단내림 영역별 슬롯 정보:', {
-      droppedPosition,
-      totalWidth,
-      droppedWidth,
-      frameThickness,
-      normalArea: {
-        outerWidth: normalAreaOuterWidth,
-        internalWidth: normalAreaInternalWidth,
-        startX: normalStartX,
-        columnCount: normalColumnCount,
-        columnWidth: normalColumnWidth
-      },
-      droppedArea: {
-        outerWidth: droppedAreaOuterWidth,
-        internalWidth: droppedAreaInternalWidth,
-        startX: droppedStartX,
-        columnCount: droppedColumnCount,
-        columnWidth: droppedColumnWidth
-      }
-    });
     
     return {
       normal: {

@@ -13,7 +13,8 @@ export const getSlotIndexFromMousePosition = (
   canvasElement: HTMLCanvasElement,
   camera: THREE.Camera,
   scene: THREE.Scene,
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  activeZone?: 'normal' | 'dropped'
 ): number | null => {
   try {
     // 캔버스 경계 정보
@@ -28,10 +29,14 @@ export const getSlotIndexFromMousePosition = (
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
     
-    // 씬에서 슬롯 콜라이더들 찾기
+    // 씬에서 슬롯 콜라이더들 찾기 - activeZone이 있으면 해당 zone의 콜라이더만 선택
     const slotColliders: THREE.Object3D[] = [];
     scene.traverse((child) => {
       if (child.userData?.type === 'slot-collider') {
+        // activeZone이 지정된 경우 해당 zone의 콜라이더만 선택
+        if (activeZone && child.userData?.zone !== activeZone) {
+          return;
+        }
         slotColliders.push(child);
       }
     });
@@ -43,12 +48,16 @@ export const getSlotIndexFromMousePosition = (
       // 가장 가까운 교차점의 슬롯 인덱스 반환
       const intersectedObject = intersects[0].object;
       
-      // globalSlotIndex가 있으면 우선 사용 (단내림 영역 지원)
-      const slotIndex = intersectedObject.userData?.globalSlotIndex ?? intersectedObject.userData?.slotIndex;
+      // 단내림 구간의 경우 zone 내부의 로컬 인덱스를 반환
+      const slotIndex = intersectedObject.userData?.slotIndex;
       
       // 유효한 슬롯 인덱스인지 확인
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      if (typeof slotIndex === 'number' && slotIndex >= 0 && slotIndex < indexing.columnCount) {
+      if (typeof slotIndex === 'number' && slotIndex >= 0) {
+        console.log('🎯 Raycast found slot:', {
+          slotIndex,
+          zone: intersectedObject.userData?.zone,
+          activeZone
+        });
         return slotIndex;
       }
     }

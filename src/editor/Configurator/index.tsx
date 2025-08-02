@@ -64,7 +64,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, setActiveDroppedCeilingTab } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -1513,7 +1513,7 @@ const Configurator: React.FC = () => {
                 <ModuleGallery 
                   moduleCategory={moduleCategory} 
                   upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
-                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : undefined}
+                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal') : undefined}
                 />
               </div>
             </div>
@@ -2576,7 +2576,7 @@ const Configurator: React.FC = () => {
               showAll={showAll}
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
-              activeZone={spaceInfo.droppedCeiling?.enabled ? (activeRightPanelTab === 'stepDown' ? 'dropped' : 'normal') : undefined}
+              activeZone={spaceInfo.droppedCeiling?.enabled ? (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal') : undefined}
             />
           </div>
 

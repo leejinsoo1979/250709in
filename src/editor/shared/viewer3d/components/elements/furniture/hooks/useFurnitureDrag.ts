@@ -385,14 +385,38 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
       }
       
-      // 모듈 업데이트 - zone 정보 유지
+      // 모듈 업데이트 - zone 정보 유지 및 moduleId 업데이트
+      let updatedModuleId = currentModule.moduleId;
+      
+      // zone이 있고 moduleData가 dynamic인 경우 moduleId 재생성
+      if (currentModule.zone && moduleData.isDynamic && indexing) {
+        const moduleType = currentModule.moduleId.split('-').slice(0, -1).join('-');
+        const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        updatedModuleId = `${moduleType}-${targetWidth}`;
+      }
+      
+      // zone이 있는 경우 zone 로컬 슬롯 인덱스 사용
+      let finalSlotIndex = slotIndex;
+      if (currentModule.zone && spaceInfo.droppedCeiling?.enabled) {
+        const globalIndexing = calculateSpaceIndexing(spaceInfo);
+        const targetXMm = globalIndexing.threeUnitPositions[slotIndex] * 100; // Three.js to mm
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
+          finalSlotIndex = Math.floor((targetXMm - zoneInfo.dropped.startX) / zoneInfo.dropped.columnWidth);
+        } else if (currentModule.zone === 'normal') {
+          finalSlotIndex = Math.floor((targetXMm - zoneInfo.normal.startX) / zoneInfo.normal.columnWidth);
+        }
+      }
+      
       updatePlacedModule(draggingModuleId, {
+        moduleId: updatedModuleId,
         position: adjustedPosition,
         customDepth: newCustomDepth,
-        adjustedWidth: newAdjustedWidth,
-        slotIndex: slotIndex,
+        adjustedWidth: currentModule.zone && indexing ? (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth) : newAdjustedWidth,
+        slotIndex: finalSlotIndex,
         zone: currentModule.zone, // zone 정보 유지
-        customWidth: currentModule.customWidth // customWidth 정보도 유지
+        customWidth: indexing ? indexing.columnWidth : currentModule.customWidth // zone의 columnWidth로 업데이트
       });
       invalidate();
       if (gl && gl.shadowMap) {

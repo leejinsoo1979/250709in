@@ -8,8 +8,8 @@ export const CAMERA_SETTINGS = {
   MAX_DISTANCE: 200, // 60→200으로 큰 공간 지원
   POLAR_ANGLE_MIN: Math.PI / 2 - Math.PI / 18, // 90도 - 10도 = 80도 (상하 10도 제한)
   POLAR_ANGLE_MAX: Math.PI / 2 + Math.PI / 18, // 90도 + 10도 = 100도 (상하 10도 제한)
-  AZIMUTH_ANGLE_MIN: -Math.PI / 12, // -15도 (좌우 15도 제한)
-  AZIMUTH_ANGLE_MAX: Math.PI / 12, // +15도 (좌우 15도 제한)
+  AZIMUTH_ANGLE_MIN: -Math.PI / 6, // -30도 (좌우 30도 제한)
+  AZIMUTH_ANGLE_MAX: Math.PI / 6, // +30도 (좌우 30도 제한)
 } as const;
 
 export const CANVAS_SETTINGS = {

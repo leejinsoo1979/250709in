@@ -634,38 +634,90 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
   // Fabric.js 캔버스 초기화
   useEffect(() => {
-    if (!canvasContainerRef.current) return;
-
-    // 캔버스 생성
-    const canvas = new fabric.Canvas('fabric-canvas', {
-      width: paperDimensions.displayWidth,
-      height: paperDimensions.displayHeight,
-      backgroundColor: paperColor,
-      selection: true,
-      preserveObjectStacking: true,
-    });
-
-    fabricCanvasRef.current = canvas;
-
-    // 키보드 이벤트 핸들러
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        const activeObjects = canvas.getActiveObjects();
-        if (activeObjects.length > 0) {
-          activeObjects.forEach(obj => canvas.remove(obj));
-          canvas.discardActiveObject();
-          canvas.renderAll();
-        }
+    // DOM이 완전히 렌더링된 후 실행
+    const timer = setTimeout(() => {
+      if (!canvasContainerRef.current) {
+        console.error('캔버스 컨테이너가 없습니다.');
+        return;
       }
-    };
 
-    document.addEventListener('keydown', handleKeyDown);
+      console.log('Fabric.js 초기화 시작...', {
+        displayWidth: paperDimensions.displayWidth,
+        displayHeight: paperDimensions.displayHeight,
+        paperColor: paperColor
+      });
+
+      // 이미 캔버스가 있으면 재사용
+      let canvas = fabricCanvasRef.current;
+      
+      if (!canvas) {
+        // 캔버스 엘리먼트가 있는지 확인
+        const canvasElement = document.getElementById('fabric-canvas') as HTMLCanvasElement;
+        if (!canvasElement) {
+          console.error('fabric-canvas 엘리먼트를 찾을 수 없습니다.');
+          return;
+        }
+
+        try {
+          // 캔버스 생성
+          canvas = new fabric.Canvas('fabric-canvas', {
+            width: paperDimensions.displayWidth,
+            height: paperDimensions.displayHeight,
+            backgroundColor: paperColor,
+            selection: true,
+            preserveObjectStacking: true,
+            renderOnAddRemove: true
+          });
+
+          fabricCanvasRef.current = canvas;
+          
+          // 캔버스가 제대로 생성되었는지 확인
+          canvas.renderAll();
+          
+          console.log('Fabric.js 캔버스 초기화 완료', {
+            canvas: canvas,
+            width: canvas.width,
+            height: canvas.height,
+            backgroundColor: canvas.backgroundColor,
+            element: canvas.getElement()
+          });
+        } catch (error) {
+          console.error('Fabric.js 캔버스 생성 오류:', error);
+        }
+      } else {
+        // 기존 캔버스 크기 업데이트
+        canvas.setWidth(paperDimensions.displayWidth);
+        canvas.setHeight(paperDimensions.displayHeight);
+        canvas.backgroundColor = paperColor;
+        canvas.renderAll();
+        console.log('Fabric.js 캔버스 업데이트됨');
+      }
+      // 키보드 이벤트 핸들러
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (!canvas) return;
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          const activeObjects = canvas.getActiveObjects();
+          if (activeObjects.length > 0) {
+            activeObjects.forEach(obj => canvas.remove(obj));
+            canvas.discardActiveObject();
+            canvas.renderAll();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+
+      // cleanup 함수에서 이벤트 제거
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }, 100); // 100ms 지연
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      canvas.dispose();
+      clearTimeout(timer);
+      // canvas.dispose(); // 이것을 제거하여 캔버스가 삭제되지 않도록 함
     };
-  }, [paperDimensions.displayWidth, paperDimensions.displayHeight, paperColor]);
+  }, []); // 초기화는 한 번만
 
   // 캔버스 크기 업데이트
   useEffect(() => {
@@ -751,14 +803,32 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
   // 도형 클릭 핸들러
   const handleShapeClick = (svgContent: string, shapeType: string) => {
-    if (!fabricCanvasRef.current) return;
+    console.log('도형 클릭됨:', shapeType);
+    
+    if (!fabricCanvasRef.current) {
+      console.error('Fabric.js 캔버스가 초기화되지 않았습니다.');
+      return;
+    }
 
     const canvas = fabricCanvasRef.current;
+    console.log('캔버스 상태:', {
+      width: canvas.width,
+      height: canvas.height,
+      objects: canvas.getObjects().length
+    });
+    
     const centerX = canvas.width! / 2;
     const centerY = canvas.height! / 2;
 
     // SVG를 Fabric.js 객체로 변환
     fabric.loadSVGFromString(svgContent, (objects, options) => {
+      console.log('SVG 로드됨:', { objects: objects.length, options });
+      
+      if (objects.length === 0) {
+        console.error('SVG 객체를 생성할 수 없습니다.');
+        return;
+      }
+      
       const obj = fabric.util.groupSVGElements(objects, options);
       obj.set({
         left: centerX - 40,
@@ -770,15 +840,26 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         strokeWidth: 0
       });
       
+      console.log('도형 추가 전 객체 수:', canvas.getObjects().length);
       canvas.add(obj);
+      console.log('도형 추가 후 객체 수:', canvas.getObjects().length);
+      
       canvas.setActiveObject(obj);
       canvas.renderAll();
+      console.log('도형이 캔버스에 추가되었습니다.');
+    }, (error) => {
+      console.error('SVG 로드 에러:', error);
     });
   };
 
   // 선 클릭 핸들러
   const handleLineClick = (lineType: string) => {
-    if (!fabricCanvasRef.current) return;
+    console.log('선 클릭됨:', lineType);
+    
+    if (!fabricCanvasRef.current) {
+      console.error('Fabric.js 캔버스가 초기화되지 않았습니다.');
+      return;
+    }
 
     const canvas = fabricCanvasRef.current;
     const centerX = canvas.width! / 2;
@@ -864,6 +945,197 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     canvas.add(text);
     canvas.setActiveObject(text);
     canvas.renderAll();
+  };
+
+  // 말풍선 클릭 핸들러
+  const handleBalloonClick = (direction: string) => {
+    console.log('말풍선 클릭됨:', direction);
+    
+    if (!fabricCanvasRef.current) {
+      console.error('Fabric.js 캔버스가 초기화되지 않았습니다.');
+      return;
+    }
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    // 말풍선 그룹 생성
+    const balloonGroup = new fabric.Group([], {
+      left: centerX - 100,
+      top: centerY - 50
+    });
+
+    // 말풍선 본체
+    const rect = new fabric.Rect({
+      left: 0,
+      top: 0,
+      width: 200,
+      height: 100,
+      rx: 10,
+      ry: 10,
+      fill: '#ffffff',
+      stroke: '#333333',
+      strokeWidth: 2
+    });
+    balloonGroup.addWithUpdate(rect);
+
+    // 말풍선 꼬리
+    let triangle;
+    switch (direction) {
+      case 'left':
+        triangle = new fabric.Triangle({
+          left: -10,
+          top: 40,
+          width: 20,
+          height: 20,
+          angle: -90,
+          fill: '#ffffff',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+      case 'right':
+        triangle = new fabric.Triangle({
+          left: 190,
+          top: 40,
+          width: 20,
+          height: 20,
+          angle: 90,
+          fill: '#ffffff',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+      case 'top':
+        triangle = new fabric.Triangle({
+          left: 90,
+          top: -10,
+          width: 20,
+          height: 20,
+          angle: 0,
+          fill: '#ffffff',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+      case 'bottom':
+        triangle = new fabric.Triangle({
+          left: 90,
+          top: 90,
+          width: 20,
+          height: 20,
+          angle: 180,
+          fill: '#ffffff',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+    }
+    
+    if (triangle) {
+      balloonGroup.addWithUpdate(triangle);
+    }
+
+    // 텍스트 추가
+    const text = new fabric.IText('텍스트를 입력하세요', {
+      left: 10,
+      top: 35,
+      fontFamily: 'Arial',
+      fontSize: 16,
+      fill: '#333333'
+    });
+    balloonGroup.addWithUpdate(text);
+
+    canvas.add(balloonGroup);
+    canvas.setActiveObject(balloonGroup);
+    canvas.renderAll();
+    console.log('말풍선이 추가되었습니다.');
+  };
+
+  // 프레임 클릭 핸들러
+  const handleFrameClick = (frameType: string) => {
+    console.log('프레임 클릭됨:', frameType);
+    
+    if (!fabricCanvasRef.current) {
+      console.error('Fabric.js 캔버스가 초기화되지 않았습니다.');
+      return;
+    }
+
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+
+    let frame;
+    switch (frameType) {
+      case 'simple':
+        frame = new fabric.Rect({
+          left: centerX - 100,
+          top: centerY - 75,
+          width: 200,
+          height: 150,
+          fill: 'transparent',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+      case 'double':
+        const outerFrame = new fabric.Rect({
+          left: 0,
+          top: 0,
+          width: 200,
+          height: 150,
+          fill: 'transparent',
+          stroke: '#333333',
+          strokeWidth: 1
+        });
+        const innerFrame = new fabric.Rect({
+          left: 10,
+          top: 10,
+          width: 180,
+          height: 130,
+          fill: 'transparent',
+          stroke: '#333333',
+          strokeWidth: 1
+        });
+        frame = new fabric.Group([outerFrame, innerFrame], {
+          left: centerX - 100,
+          top: centerY - 75
+        });
+        break;
+      case 'dashed':
+        frame = new fabric.Rect({
+          left: centerX - 100,
+          top: centerY - 75,
+          width: 200,
+          height: 150,
+          fill: 'transparent',
+          stroke: '#333333',
+          strokeWidth: 2,
+          strokeDashArray: [8, 4]
+        });
+        break;
+      case 'rounded':
+        frame = new fabric.Rect({
+          left: centerX - 100,
+          top: centerY - 75,
+          width: 200,
+          height: 150,
+          rx: 10,
+          ry: 10,
+          fill: 'transparent',
+          stroke: '#333333',
+          strokeWidth: 2
+        });
+        break;
+    }
+
+    if (frame) {
+      canvas.add(frame);
+      canvas.setActiveObject(frame);
+      canvas.renderAll();
+      console.log('프레임이 추가되었습니다.');
+    }
   };
 
   // 캔버스 클릭 핸들러
@@ -1527,34 +1799,70 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         <rect x="2" y="2" width="20" height="20" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" />',
+                        'rounded-rectangle'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<circle cx="12" cy="12" r="10" fill="currentColor" />',
+                        'circle'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <circle cx="12" cy="12" r="10" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<ellipse cx="12" cy="12" rx="10" ry="6" fill="currentColor" />',
+                        'ellipse'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <ellipse cx="12" cy="12" rx="10" ry="6" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<polygon points="12,2 22,20 2,20" fill="currentColor" />',
+                        'triangle'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <polygon points="12,2 22,20 2,20" fill="currentColor" />
                       </svg>
                     </div>
                     
                     {/* 두 번째 줄 */}
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<polygon points="2,12 8,6 22,6 22,18 8,18" fill="currentColor" />',
+                        'pentagon'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <polygon points="2,12 8,6 22,6 22,18 8,18" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<polygon points="2,12 8,6 16,6 22,12 16,18 8,18" fill="currentColor" />',
+                        'hexagon'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <polygon points="2,12 8,6 16,6 22,12 16,18 8,18" fill="currentColor" />
                       </svg>
@@ -1569,7 +1877,13 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         <path d="M12,2 A10,10 0 0,1 12,22 A10,10 0 0,1 12,2" fill="currentColor" />
                       </svg>
                     </div>
-                    <div className={styles.shapeItem}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleShapeClick(
+                        '<polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="currentColor" />',
+                        'star'
+                      )}
+                    >
                       <svg viewBox="0 0 24 24" width="24" height="24">
                         <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="currentColor" />
                       </svg>
@@ -1776,13 +2090,76 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   </div>
                 )}
                 {elementsSubTab === 'balloons' && (
-                  <div className={styles.viewConfigContent}>
-                    <p className={styles.placeholderText}>말풍선이 여기에 표시됩니다.</p>
+                  <div className={styles.shapeGrid}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleBalloonClick('left')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M4,4 L20,4 Q22,4 22,6 L22,14 Q22,16 20,16 L8,16 L4,20 L4,16 Q2,16 2,14 L2,6 Q2,4 4,4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleBalloonClick('right')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M4,4 L20,4 Q22,4 22,6 L22,14 Q22,16 20,16 L20,20 L16,16 L4,16 Q2,16 2,14 L2,6 Q2,4 4,4" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleBalloonClick('top')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M4,8 L20,8 Q22,8 22,10 L22,18 Q22,20 20,20 L4,20 Q2,20 2,18 L2,10 Q2,8 4,8 M12,8 L8,4 L16,4 Z" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleBalloonClick('bottom')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M4,4 L20,4 Q22,4 22,6 L22,14 Q22,16 20,16 L4,16 Q2,16 2,14 L2,6 Q2,4 4,4 M12,16 L8,20 L16,20 Z" fill="currentColor" />
+                      </svg>
+                    </div>
                   </div>
                 )}
                 {elementsSubTab === 'frames' && (
-                  <div className={styles.viewConfigContent}>
-                    <p className={styles.placeholderText}>프레임이 여기에 표시됩니다.</p>
+                  <div className={styles.shapeGrid}>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleFrameClick('simple')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleFrameClick('double')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1" />
+                        <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleFrameClick('dashed')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+                      </svg>
+                    </div>
+                    <div 
+                      className={styles.shapeItem}
+                      onClick={() => handleFrameClick('rounded')}
+                    >
+                      <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="2" y="2" width="20" height="20" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </div>
                   </div>
                 )}
               </>
@@ -1848,8 +2225,25 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 style={{ position: 'relative' }}
               >
                 {/* Fabric.js 캔버스 */}
-                <div ref={canvasContainerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                  <canvas id="fabric-canvas" />
+                <div 
+                  ref={canvasContainerRef} 
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    width: paperDimensions.displayWidth, 
+                    height: paperDimensions.displayHeight, 
+                    zIndex: 1 
+                  }}
+                >
+                  <canvas 
+                    id="fabric-canvas" 
+                    style={{ 
+                      position: 'absolute',
+                      top: 0,
+                      left: 0
+                    }}
+                  />
                 </div>
                 {/* 정렬 가이드라인 */}
                 {alignmentGuides.vertical.map((x, index) => (

@@ -736,6 +736,9 @@ export const generateShelvingModules = (
 ): ModuleData[] => {
   let { height: maxHeight } = internalSpace;
   
+  // 단내림 구간의 경우 internalSpace.height가 이미 조정되어 있음
+  // (SlotDropZonesSimple에서 처리됨)
+  
   // 띄워서 배치인 경우 가용 높이에서 띄움 높이를 차감
   if (spaceInfo?.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
     const floatHeight = spaceInfo.baseConfig.floatHeight || 0;
@@ -753,33 +756,13 @@ export const generateShelvingModules = (
     return [];
   }
   
-  // 디버깅: 전달받은 spaceInfo 확인
-  console.log('🎯 [generateShelvingModules] Input:', {
-    internalSpace,
-    spaceInfo: spaceInfo ? {
-      width: spaceInfo.width,
-      customColumnCount: spaceInfo.customColumnCount,
-      columnMode: spaceInfo.columnMode,
-      droppedCeiling: spaceInfo.droppedCeiling
-    } : null,
-    indexingSpaceInfo: {
-      width: indexingSpaceInfo.width,
-      customColumnCount: indexingSpaceInfo.customColumnCount,
-      columnMode: indexingSpaceInfo.columnMode
-    },
-    usingDefault: !spaceInfo
-  });
   
   // 컬럼 계산 로직 가져오기
   const indexing = calculateSpaceIndexing(indexingSpaceInfo);
-  const columnWidth = indexing.columnWidth;
+  // 가구 생성 시에는 슬롯과 동일한 너비 계산 방식 사용 (Math.floor)
+  const columnWidth = Math.floor(indexing.internalWidth / indexing.columnCount);
   const columnCount = indexing.columnCount;
   
-  console.log('🎯 [generateShelvingModules] Calculated:', {
-    columnWidth,
-    columnCount,
-    indexingResult: indexing
-  });
   
   // 700mm 컬럼이 계산되면 에러 발생
   if (columnWidth >= 680 && columnWidth <= 720) {
@@ -806,6 +789,17 @@ export const generateShelvingModules = (
     modules.push(createDualType4(dualColumnWidth, maxHeight));
     modules.push(createDualType5(dualColumnWidth, maxHeight));
     modules.push(createDualType6(dualColumnWidth, maxHeight));
+  } else {
+    // 단내림 구간 디버깅 - 듀얼 가구가 생성되지 않는 이유 확인
+    if (spaceInfo?.droppedCeiling?.enabled) {
+      console.warn('🚨 단내림 구간 듀얼 가구 미생성:', {
+        columnCount,
+        columnWidth,
+        internalWidth: indexing.internalWidth,
+        spaceWidth: spaceInfo.width,
+        customColumnCount: spaceInfo.customColumnCount
+      });
+    }
   }
   
   // === 상부장 가구 생성 ===
