@@ -115,6 +115,7 @@ interface DoorModuleProps {
   moduleData?: any; // 실제 듀얼캐비넷 분할 정보를 위한 모듈 데이터
   isDragging?: boolean; // 드래그 상태
   isEditMode?: boolean; // 편집 모드 여부
+  slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -128,7 +129,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   slotCenterX,
   moduleData,
   isDragging = false,
-  isEditMode = false
+  isEditMode = false,
+  slotWidths
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -356,14 +358,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
-  const columnWidth = indexing.columnWidth;
   
-  // 도어 크기는 항상 원래 슬롯 크기 사용 (기둥 침범과 무관)
-  // moduleWidth는 기둥 침범 시 줄어든 캐비넷 너비이므로 절대 사용하면 안됨
+  // 도어 크기는 항상 FurnitureItem에서 전달받은 originalSlotWidth 사용
+  // originalSlotWidth는 이미 zone별 실제 슬롯 너비가 반영되어 있음
   const actualDoorWidth = originalSlotWidth || indexing.columnWidth; // 원래 슬롯 너비만 사용
   
-  // 듀얼 가구인지 확인 (원래 슬롯 크기 기준)
-  const isDualFurniture = Math.abs(actualDoorWidth - (columnWidth * 2)) < 50;
+  // 듀얼 가구인지 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
+  const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
+    Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
+  
+  // 도어 모듈 디버깅
+  console.log('🚪 DoorModule 렌더링:', {
+    moduleWidth,
+    originalSlotWidth,
+    actualDoorWidth,
+    isDualFurniture,
+    indexingColumnWidth: indexing.columnWidth,
+    slotCenterX,
+    moduleDataId: moduleData?.id,
+    isDynamic: moduleData?.isDynamic,
+    spaceInfoZone: (spaceInfo as any).zone,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+  });
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -374,7 +390,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // === 문 높이 계산 ===
   // 문 높이 = 전체 공간 높이 - 바닥재 높이 (내경 공간 높이)
-  const fullSpaceHeight = spaceInfo.height;
+  let fullSpaceHeight = spaceInfo.height;
+  
+  // 단내림 구간인 경우 높이 조정
+  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+    const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+    fullSpaceHeight = spaceInfo.height - dropHeight;
+    console.log('🚪📏 단내림 도어 높이 조정:', {
+      originalHeight: spaceInfo.height,
+      dropHeight,
+      adjustedHeight: fullSpaceHeight,
+      zone: (spaceInfo as any).zone
+    });
+  }
+  
   const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
   const actualDoorHeight = fullSpaceHeight - floorHeight;
   const doorHeight = mmToThreeUnits(actualDoorHeight - 30); // 30mm 줄임 (기존 20mm에서 10mm 추가)
@@ -402,6 +431,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
     const topFrameHeight = spaceInfo.frameSize?.top || 50;
     doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+  }
+  
+  // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)
+  // 단내림 구간에서는 높이만 줄어들고, 하단 위치는 메인 구간과 동일하게 유지
+  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+    console.log('🚪📍 단내림 도어 위치:', {
+      doorYPosition,
+      doorHeight: actualDoorHeight - 30,
+      zone: 'dropped',
+      note: '하단이 메인구간과 정렬됨'
+    });
   }
   
   // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
@@ -541,24 +581,46 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
 
   if (isDualFurniture) {
-    // 듀얼 가구: 도어 크기는 기존 방식 (슬롯사이즈 - 3mm), 위치만 실제 캐비넷과 맞춤
+    // 듀얼 가구: 개별 슬롯 너비에서 각각 3mm씩 빼기
     const totalWidth = actualDoorWidth; // 원래 슬롯 크기 사용
-    const doorWidth = (totalWidth - 3) / 2; // 기존 방식: (슬롯사이즈 - 3mm) / 2
-    const doorWidthUnits = mmToThreeUnits(doorWidth);
     
-    // 도어는 항상 균등분할 (캐비넷이 비대칭이어도 도어는 대칭)
-    const innerWidth = mmToThreeUnits(totalWidth); // 전체 내경 너비
-    const leftXOffset = -innerWidth / 4;  // 전체 너비의 1/4 왼쪽
-    const rightXOffset = innerWidth / 4;  // 전체 너비의 1/4 오른쪽
+    let leftDoorWidth: number;
+    let rightDoorWidth: number;
+    
+    if (slotWidths && slotWidths.length >= 2) {
+      // 개별 슬롯 너비가 제공된 경우
+      leftDoorWidth = slotWidths[0] - 3;
+      rightDoorWidth = slotWidths[1] - 3;
+    } else {
+      // fallback: 균등분할
+      const doorWidth = (totalWidth - 6) / 2;
+      leftDoorWidth = doorWidth;
+      rightDoorWidth = doorWidth;
+    }
+    
+    const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
+    const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
+    
+    // 도어 위치 계산 (개별 슬롯 너비 기반)
+    const leftSlotWidth = slotWidths?.[0] || totalWidth / 2;
+    const rightSlotWidth = slotWidths?.[1] || totalWidth / 2;
+    
+    const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
+    const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
+    
+    const leftXOffset = mmToThreeUnits(leftSlotCenter);
+    const rightXOffset = mmToThreeUnits(rightSlotCenter);
     
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
-    const leftHingeX = leftXOffset + (-doorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
-    const rightHingeX = rightXOffset + (doorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
+    const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
+    const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
-    console.log('🚪 듀얼 도어 위치 (균등분할):', {
+    console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
-      doorWidth,
-      mode: '균등분할 (도어는 항상 대칭)',
+      slotWidths,
+      leftDoorWidth,
+      rightDoorWidth,
+      mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
       leftXOffset: leftXOffset.toFixed(3),
       rightXOffset: rightXOffset.toFixed(3),
       leftHingeX: leftHingeX.toFixed(3),
@@ -571,10 +633,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
-            <group position={[doorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
+            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
-                args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
+                args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
                 position={[0, 0, 0]}
                 material={leftDoorMaterial}
                 renderMode={renderMode}
@@ -591,8 +653,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
                     // 첫 번째 대각선 (위에서 아래로)
-                    const start1 = [doorWidthUnits / 2, -doorHeight / 2, 0];
-                    const end1 = [-doorWidthUnits / 2, 0, 0];
+                    const start1 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0];
+                    const end1 = [-leftDoorWidthUnits / 2, 0, 0];
                     const segments1 = [];
                     
                     // 선분의 총 길이 계산
@@ -664,8 +726,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     }
                     
                     // 두 번째 대각선 (아래에서 위로)
-                    const start2 = [-doorWidthUnits / 2, 0, 0];
-                    const end2 = [doorWidthUnits / 2, doorHeight / 2, 0];
+                    const start2 = [-leftDoorWidthUnits / 2, 0, 0];
+                    const end2 = [leftDoorWidthUnits / 2, doorHeight / 2, 0];
                     const segments2 = [];
                     
                     const dx2 = end2[0] - start2[0];
@@ -740,10 +802,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
-            <group position={[-doorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
+            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
-                args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
+                args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
                 position={[0, 0, 0]}
                 material={rightDoorMaterial}
                 renderMode={renderMode}
@@ -760,8 +822,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
                     // 첫 번째 대각선 (위에서 아래로)
-                    const start1 = [-doorWidthUnits / 2, -doorHeight / 2, 0];
-                    const end1 = [doorWidthUnits / 2, 0, 0];
+                    const start1 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];
+                    const end1 = [rightDoorWidthUnits / 2, 0, 0];
                     const segments1 = [];
                     
                     // 선분의 총 길이 계산
@@ -833,8 +895,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     }
                     
                     // 두 번째 대각선 (아래에서 위로)
-                    const start2 = [doorWidthUnits / 2, 0, 0];
-                    const end2 = [-doorWidthUnits / 2, doorHeight / 2, 0];
+                    const start2 = [rightDoorWidthUnits / 2, 0, 0];
+                    const end2 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];
                     const segments2 = [];
                     
                     const dx2 = end2[0] - start2[0];
@@ -912,6 +974,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 문의 폭 = 원래 슬롯 전체 폭 - 3mm (갭)
     const doorWidth = actualDoorWidth - 3; // 슬롯사이즈 - 3mm
     const doorWidthUnits = mmToThreeUnits(doorWidth);
+    
+    console.log('🚪 싱글 도어 크기:', {
+      actualDoorWidth,
+      doorWidth,
+      originalSlotWidth,
+      fallbackColumnWidth: indexing.columnWidth,
+      moduleDataId: moduleData?.id
+    });
     
     // 힌지 위치에 따른 회전축 오프셋 계산
     const hingeAxisOffset = hingePosition === 'left' 

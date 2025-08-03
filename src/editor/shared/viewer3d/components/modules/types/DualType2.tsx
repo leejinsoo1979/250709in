@@ -26,7 +26,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   doorWidth,
   originalSlotWidth,
-  slotCenterX
+  slotCenterX,
+  slotWidths
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -187,6 +188,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
           slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
+          slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
         />

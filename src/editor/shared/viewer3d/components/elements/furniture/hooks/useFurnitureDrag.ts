@@ -20,7 +20,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const moveModule = useFurnitureStore(state => state.moveModule);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
-  const removeModule = useFurnitureStore(state => state.removeModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { setFurnitureDragging, activeDroppedCeilingTab } = useUIStore();
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
@@ -101,12 +100,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     return collidingModules;
   }, [placedModules, internalSpace, spaceInfo]);
 
-  // 충돌한 가구들 제거
-  const removeCollidingFurniture = useCallback((collidingModuleIds: string[]) => {
-    collidingModuleIds.forEach(moduleId => {
-      removeModule(moduleId);
-    });
-  }, [removeModule]);
 
 
 
@@ -379,12 +372,26 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
 
 
-      // 충돌 감지 및 충돌한 가구 제거 (기둥 슬롯 제외)
+      // 충돌 감지 (기둥 슬롯 제외)
       // 단내림 구간에서는 로컬 슬롯 인덱스 사용
       const collisionCheckIndex = currentModule.zone ? slotIndex : globalSlotIndex;
+      
+      // 듀얼 가구가 차지할 슬롯 범위 로그
+      if (isDualFurniture) {
+        console.log('🎯 듀얼 가구 이동 시도:', {
+          moduleId: currentModule.moduleId,
+          fromSlot: currentModule.slotIndex,
+          toSlot: collisionCheckIndex,
+          occupiedSlots: [collisionCheckIndex, collisionCheckIndex + 1],
+          zone: currentModule.zone
+        });
+      }
+      
       const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo);
       if (collidingModules.length > 0) {
-        removeCollidingFurniture(collidingModules);
+        // 충돌하는 가구가 있으면 이동 취소
+        console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
+        return;
       }
 
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth와 adjustedWidth 계산

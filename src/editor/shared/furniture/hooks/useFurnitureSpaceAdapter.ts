@@ -175,7 +175,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         
         // 듀얼 가구의 경우 추가 검증: 다음 슬롯도 유효해야 함
-        if (isDualModule && (slotIndex + 1) >= newIndexing.columnCount) {
+        // zone이 있는 경우 해당 zone의 columnCount 확인
+        let maxColumnCount = newIndexing.columnCount;
+        if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
+          if (module.zone === 'dropped' && zoneInfo.dropped) {
+            maxColumnCount = zoneInfo.dropped.columnCount;
+          } else if (module.zone === 'normal') {
+            maxColumnCount = zoneInfo.normal.columnCount;
+          }
+        }
+        
+        if (isDualModule && (slotIndex + 1) >= maxColumnCount) {
           // 듀얼 가구를 싱글로 변환 시도
           newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
           isDualModule = false;

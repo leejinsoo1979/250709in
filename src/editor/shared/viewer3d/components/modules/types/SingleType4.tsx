@@ -20,7 +20,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   spaceInfo,
   isDragging = false,
   isEditMode = false,
-  doorWidth
+  doorWidth,
+  originalSlotWidth,
+  slotCenterX
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -79,6 +81,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           moduleData={moduleData}
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={slotCenterX || 0}
         />
       )}
     </BaseFurnitureShell>

@@ -353,19 +353,49 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
       
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
-      const zoneExistingModules = placedModules.filter(m => m.zone === zoneToUse);
+      // 단내림이 없을 때는 모든 가구를 확인해야 함
+      const zoneExistingModules = spaceInfo.droppedCeiling?.enabled 
+        ? placedModules.filter(m => m.zone === zoneToUse)
+        : placedModules;
+      
       const hasSlotConflict = zoneExistingModules.some(m => {
         if (isDual) {
           // 듀얼 가구는 2개 슬롯 차지
-          return m.slotIndex === zoneSlotIndex || m.slotIndex === zoneSlotIndex + 1 ||
+          const conflict = m.slotIndex === zoneSlotIndex || m.slotIndex === zoneSlotIndex + 1 ||
                  (m.isDualSlot && (m.slotIndex === zoneSlotIndex - 1));
+          if (conflict) {
+            console.log('🚫 듀얼 가구 슬롯 충돌:', {
+              배치하려는가구: { slotIndex: zoneSlotIndex, occupiedSlots: [zoneSlotIndex, zoneSlotIndex + 1] },
+              기존가구: { 
+                id: m.id, 
+                slotIndex: m.slotIndex, 
+                isDualSlot: m.isDualSlot,
+                occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+              }
+            });
+          }
+          return conflict;
         } else {
           // 싱글 가구는 1개 슬롯
-          return m.slotIndex === zoneSlotIndex;
+          const conflict = m.slotIndex === zoneSlotIndex || 
+                          (m.isDualSlot && (m.slotIndex === zoneSlotIndex || m.slotIndex === zoneSlotIndex - 1));
+          if (conflict) {
+            console.log('🚫 싱글 가구 슬롯 충돌:', {
+              배치하려는가구: { slotIndex: zoneSlotIndex },
+              기존가구: { 
+                id: m.id, 
+                slotIndex: m.slotIndex, 
+                isDualSlot: m.isDualSlot,
+                occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+              }
+            });
+          }
+          return conflict;
         }
       });
       
       if (hasSlotConflict) {
+        console.log('❌ 슬롯 충돌로 배치 불가');
         return false;
       }
       
@@ -723,7 +753,65 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       zone: activeZone || undefined // 단내림 영역 정보 추가
     };
     
+    // 듀얼 가구 배치 시 슬롯 점유 상태 로그
+    console.log('🎯 가구 배치 완료:', {
+      id: placedId,
+      moduleId: newModule.moduleId,
+      isDual,
+      isDualSlot: newModule.isDualSlot,
+      slotIndex,
+      occupiedSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
+      zone: activeZone,
+      position: finalX,
+      width: moduleData.dimensions.width,
+      customWidth
+    });
+    
+    // 배치 전 기존 가구 상태 확인
+    console.log('📋 배치 전 가구 목록:', placedModules.map(m => ({
+      id: m.id.slice(-2),
+      slotIndex: m.slotIndex,
+      isDualSlot: m.isDualSlot,
+      zone: m.zone,
+      moduleId: m.moduleId
+    })));
+    
     addModule(newModule);
+    
+    // 전체 슬롯 점유 상태 시각화
+    const updatedModules = [...placedModules, newModule];
+    const targetZone = activeZone || 'normal';
+    const slotOccupancy: string[] = new Array(zoneTargetIndexing.columnCount).fill('[ ]');
+    
+    // 현재 영역의 가구만 필터링 (zone이 없는 경우 normal로 간주)
+    const zoneModules = updatedModules.filter(m => {
+      if (spaceInfo.droppedCeiling?.enabled) {
+        return (m.zone || 'normal') === targetZone;
+      }
+      return true; // 단내림이 없으면 모든 가구 표시
+    });
+    
+    console.log(`🔍 ${targetZone} 영역 가구 목록:`, zoneModules.map(m => ({
+      id: m.id.slice(-2),
+      moduleId: m.moduleId,
+      slotIndex: m.slotIndex,
+      isDualSlot: m.isDualSlot,
+      zone: m.zone
+    })));
+    
+    zoneModules.forEach(m => {
+      if (m.isDualSlot && m.slotIndex !== undefined) {
+        slotOccupancy[m.slotIndex] = `[${m.id.slice(-2)}`;
+        if (m.slotIndex + 1 < slotOccupancy.length) {
+          slotOccupancy[m.slotIndex + 1] = `${m.id.slice(-2)}]`;
+        }
+      } else if (m.slotIndex !== undefined) {
+        slotOccupancy[m.slotIndex] = `[${m.id.slice(-2)}]`;
+      }
+    });
+    
+    console.log(`📊 ${targetZone} 영역 슬롯 점유 상태 (총 ${zoneTargetIndexing.columnCount}개):`, slotOccupancy.join(''));
+    
     setCurrentDragData(null);
     
     // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
@@ -820,8 +908,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 return m.slotIndex === slotIndex || m.slotIndex === slotIndex + 1 ||
                        (m.isDualSlot && (m.slotIndex === slotIndex - 1));
               } else {
-                // 싱글 가구는 1개 슬롯
-                return m.slotIndex === slotIndex;
+                // 싱글 가구는 1개 슬롯 차지하지만, 듀얼 가구가 차지한 슬롯도 확인해야 함
+                return m.slotIndex === slotIndex || 
+                       (m.isDualSlot && (m.slotIndex === slotIndex || m.slotIndex === slotIndex - 1));
               }
             });
             return !hasConflict;

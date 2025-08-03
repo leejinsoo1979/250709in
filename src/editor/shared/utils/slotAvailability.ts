@@ -149,6 +149,18 @@ export const isSlotAvailable = (
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
         
         if (hasOverlap) {
+          console.log('🚫 슬롯 충돌 감지 (isSlotAvailable):', {
+            targetSlots,
+            existingModule: {
+              id: placedModule.id,
+              moduleId: placedModule.moduleId,
+              slotIndex: moduleSlot,
+              isDual: isModuleDual,
+              occupiedSlots: moduleSlots
+            },
+            isDualFurniture,
+            conflict: true
+          });
           return false; // 충돌 발견
         }
       }

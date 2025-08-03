@@ -777,8 +777,8 @@ export const generateShelvingModules = (
     zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
     
     // 단내림이 활성화되고 zone 정보가 전달된 경우
-    if (indexingSpaceInfo.droppedCeiling?.enabled && indexingSpaceInfo.zone) {
-      const zone = indexingSpaceInfo.zone;
+    if (indexingSpaceInfo.droppedCeiling?.enabled && (indexingSpaceInfo as any).zone) {
+      const zone = (indexingSpaceInfo as any).zone;
       if (zone === 'dropped' && zoneSlotInfo.dropped) {
         columnWidth = zoneSlotInfo.dropped.columnWidth;
         columnCount = zoneSlotInfo.dropped.columnCount;
@@ -798,7 +798,7 @@ export const generateShelvingModules = (
   
   
   console.log('🎯 [generateShelvingModules] 계산 결과:', {
-    zone: indexingSpaceInfo.zone,
+    zone: (indexingSpaceInfo as any).zone,
     columnWidth,
     columnCount,
     slotWidths,
@@ -821,7 +821,7 @@ export const generateShelvingModules = (
   const modules: ModuleData[] = [];
   
   console.log('🎯 슬롯 너비 정보:', {
-    zone: indexingSpaceInfo.zone,
+    zone: (indexingSpaceInfo as any).zone,
     columnWidth,
     columnCount,
     slotWidths,
@@ -835,8 +835,28 @@ export const generateShelvingModules = (
   modules.push(createSingleType4(columnWidth, maxHeight));
   
   // === 듀얼 가구 생성 ===
-  const dualWidth = columnWidth * 2;
-  if (dualWidth <= internalSpace.width) {
+  // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
+  let dualWidth: number;
+  if (slotWidths && slotWidths.length >= 2) {
+    // 실제 슬롯 너비들의 합계 사용 (예: 441 + 442 = 883)
+    dualWidth = slotWidths[0] + slotWidths[1];
+  } else {
+    // 기본값: 평균 너비의 2배
+    dualWidth = columnWidth * 2;
+  }
+  
+  console.log('🎯 듀얼 가구 생성 체크:', {
+    dualWidth,
+    internalSpaceWidth: internalSpace.width,
+    willCreateDual: dualWidth <= internalSpace.width,
+    zone: (indexingSpaceInfo as any).zone
+  });
+  
+  // 단내림 구간이어도 듀얼 가구는 갤러리에 표시해야 함
+  // 실제 배치 가능 여부는 ModuleGallery의 isModuleValid에서 체크
+  const isDroppedZone = (indexingSpaceInfo as any).zone === 'dropped';
+  
+  if (dualWidth <= internalSpace.width || isDroppedZone) {
     modules.push(createDualType1(dualWidth, maxHeight));
     modules.push(createDualType2(dualWidth, maxHeight));
     modules.push(createDualType4(dualWidth, maxHeight));

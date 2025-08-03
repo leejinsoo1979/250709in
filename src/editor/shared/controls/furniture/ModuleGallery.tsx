@@ -648,6 +648,22 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 유효성 검사 (간단 버전)
   const isModuleValid = (module: ModuleData): boolean => {
+    // 듀얼 가구인지 확인
+    const isDualModule = module.id.includes('dual-');
+    
+    // 단내림 구간에서 듀얼 가구는 실제 배치 가능성 체크
+    if (activeDroppedCeilingTab === 'dropped' && isDualModule) {
+      // 단내림 구간에서는 듀얼 가구가 2개 슬롯을 차지할 수 있는지 확인
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      if (zoneInfo.dropped) {
+        // 단내림 구간에 최소 2개의 슬롯이 있는지 확인
+        return zoneInfo.dropped.columnCount >= 2 &&
+               module.dimensions.height <= zoneInternalSpace.height && 
+               module.dimensions.depth <= zoneInternalSpace.depth;
+      }
+    }
+    
+    // 일반적인 유효성 검사
     return module.dimensions.width <= zoneInternalSpace.width && 
            module.dimensions.height <= zoneInternalSpace.height && 
            module.dimensions.depth <= zoneInternalSpace.depth;

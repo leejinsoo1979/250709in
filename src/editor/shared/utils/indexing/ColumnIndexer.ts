@@ -191,6 +191,14 @@ export class ColumnIndexer {
         }
       }
       
+      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해)
+      const baseWidth = Math.floor(internalWidth / columnCount);
+      const remainder = internalWidth % columnCount;
+      const slotWidths: number[] = [];
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+      }
+      
       return {
         columnCount,
         columnPositions,
@@ -200,6 +208,7 @@ export class ColumnIndexer {
         dualColumnPositions,
         threeUnitDualPositions,
         columnWidth,
+        slotWidths,  // 전체 영역의 slotWidths 추가
         internalWidth,
         internalStartX,
         threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(columnWidth),

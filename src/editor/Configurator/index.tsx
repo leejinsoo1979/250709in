@@ -1058,7 +1058,17 @@ const Configurator: React.FC = () => {
         JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish);
       
       if (hasStructuralChange) {
-        console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...');
+        console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
+          width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
+          height: prevWithoutMaterial.height !== currentWithoutMaterial.height,
+          depth: prevWithoutMaterial.depth !== currentWithoutMaterial.depth,
+          customColumnCount: prevWithoutMaterial.customColumnCount !== currentWithoutMaterial.customColumnCount,
+          droppedCeiling: JSON.stringify(prevWithoutMaterial.droppedCeiling) !== JSON.stringify(currentWithoutMaterial.droppedCeiling),
+          mainDoorCount: prevWithoutMaterial.mainDoorCount !== currentWithoutMaterial.mainDoorCount,
+          droppedCeilingDoorCount: prevWithoutMaterial.droppedCeilingDoorCount !== currentWithoutMaterial.droppedCeilingDoorCount,
+          prevDroppedCeiling: prevWithoutMaterial.droppedCeiling,
+          currentDroppedCeiling: currentWithoutMaterial.droppedCeiling
+        });
         updateFurnitureForNewSpace(previousSpaceInfo, spaceInfo);
       }
       
