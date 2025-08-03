@@ -22,7 +22,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const removeModule = useFurnitureStore(state => state.removeModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
-  const { setFurnitureDragging } = useUIStore();
+  const { setFurnitureDragging, activeDroppedCeilingTab } = useUIStore();
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
   const isDragging = useRef(false);
@@ -161,7 +161,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       canvas,
       camera,
       scene,
-      spaceInfo
+      spaceInfo,
+      spaceInfo.droppedCeiling?.enabled ? activeDroppedCeilingTab : undefined
     );
     
     if (slotIndex !== null) {
@@ -430,10 +431,23 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         moduleId: updatedModuleId,
         position: adjustedPosition,
         customDepth: newCustomDepth,
-        adjustedWidth: currentModule.zone && indexing ? (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth) : newAdjustedWidth,
+        adjustedWidth: newAdjustedWidth || currentModule.adjustedWidth,
         slotIndex: finalSlotIndex,
         zone: currentModule.zone, // zone 정보 유지
-        customWidth: indexing ? (isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth) : currentModule.customWidth // zone의 columnWidth로 업데이트
+        customWidth: (() => {
+          // 실제 슬롯 너비를 사용하여 customWidth 계산
+          if (indexing && indexing.slotWidths) {
+            if (isDualFurniture && finalSlotIndex < indexing.slotWidths.length - 1) {
+              // 듀얼 가구: 두 슬롯의 실제 너비 합계
+              return indexing.slotWidths[finalSlotIndex] + indexing.slotWidths[finalSlotIndex + 1];
+            } else {
+              // 싱글 가구: 해당 슬롯의 실제 너비
+              return indexing.slotWidths[finalSlotIndex] || indexing.columnWidth;
+            }
+          }
+          // fallback: 기존 customWidth 유지
+          return currentModule.customWidth;
+        })()
       });
       invalidate();
       if (gl && gl.shadowMap) {

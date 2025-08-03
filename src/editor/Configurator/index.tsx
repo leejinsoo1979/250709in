@@ -100,6 +100,12 @@ const Configurator: React.FC = () => {
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // input 필드에 포커스가 있으면 키보드 단축키 무시
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
       // D 키로 도어 열기/닫기 토글
       if (event.key === 'd' || event.key === 'D') {
         event.preventDefault();
@@ -299,6 +305,9 @@ const Configurator: React.FC = () => {
     module.moduleId.includes('dual-2drawer-styler') || 
     module.moduleId.includes('dual-4drawer-pantshanger')
   );
+  
+  console.log('🔧 Configurator - hasSpecialDualFurniture:', hasSpecialDualFurniture);
+  console.log('🔧 Configurator - placedModules:', placedModules);
 
   // 배치된 가구 중 도어가 있는 가구가 있는지 확인
   const hasDoorsInstalled = placedModules.some(module => module.hasDoor);
@@ -1065,6 +1074,15 @@ const Configurator: React.FC = () => {
       derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
     }
   }, [spaceInfo, derivedSpaceStore]);
+
+  // 단내림이 활성화된 경우 showStepDownTab 설정
+  useEffect(() => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      setShowStepDownTab(true);
+      // activeDroppedCeilingTab은 이미 'main'으로 초기화되어 있음
+      console.log('🔧 단내림 활성화 감지 - showStepDownTab 설정');
+    }
+  }, [spaceInfo.droppedCeiling?.enabled]);
 
 
 

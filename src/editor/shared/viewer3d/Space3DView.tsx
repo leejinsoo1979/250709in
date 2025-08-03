@@ -28,8 +28,8 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
-import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget } from './components/base/utils/threeUtils';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
@@ -41,7 +41,7 @@ import { useThrottle } from '@/editor/shared/hooks/useThrottle';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone = 'normal' } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -172,14 +172,80 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       
       // 기존 가구 드롭 처리
       const handleSlotDrop = window.handleSlotDrop;
+      console.log('🎯 Space3DView - window.handleSlotDrop 확인:', {
+        hasHandleSlotDrop: !!handleSlotDrop,
+        typeofHandleSlotDrop: typeof handleSlotDrop,
+        activeZone
+      });
+      
       if (typeof handleSlotDrop === 'function') {
         console.log('🎯 Space3DView handleDrop - activeZone:', activeZone);
-        // activeZone은 항상 전달 (undefined일 수도 있음)
-        const result = handleSlotDrop(e.nativeEvent, canvas, activeZone);
-        console.log('🎯 Space3DView handleDrop - result:', result);
+        try {
+          // activeZone은 항상 전달 (undefined일 수도 있음)
+          const result = handleSlotDrop(e.nativeEvent, canvas, activeZone);
+          console.log('🎯 Space3DView handleDrop - result:', result);
+        } catch (error) {
+          console.error('❌ handleSlotDrop 실행 중 에러:', error);
+          console.error('에러 스택:', error.stack);
+        }
+      } else {
+        console.error('❌ window.handleSlotDrop이 없습니다! 기본 가구 배치 처리를 시도합니다.');
+        
+        // 간단한 폴백 처리
+        const rect = canvas.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        console.log('🎯 간단한 가구 배치 시도:', {
+          mouseX: x,
+          mouseY: y,
+          moduleData: parsedData.moduleData
+        });
+        
+        // 첫 번째 빈 슬롯에 배치
+        const placedModules = useFurnitureStore.getState().placedModules;
+        const addModule = useFurnitureStore.getState().addModule;
+        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        // 첫 번째 빈 슬롯 찾기
+        let availableSlot = -1;
+        for (let i = 0; i < indexing.columnCount; i++) {
+          const isOccupied = placedModules.some(m => m.slotIndex === i);
+          if (!isOccupied) {
+            availableSlot = i;
+            break;
+          }
+        }
+        
+        if (availableSlot >= 0) {
+          const customWidth = indexing.slotWidths?.[availableSlot] || indexing.columnWidth;
+          const newModule = {
+            id: `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            moduleId: parsedData.moduleData.id,
+            position: { 
+              x: indexing.threeUnitPositions[availableSlot], 
+              y: 0, 
+              z: 0 
+            },
+            rotation: 0,
+            hasDoor: false,
+            customDepth: Math.min(580, spaceInfo.depth * 0.9),
+            slotIndex: availableSlot,
+            isDualSlot: parsedData.moduleData.id.startsWith('dual-'),
+            isValidInCurrentSpace: true,
+            adjustedWidth: parsedData.moduleData.dimensions.width,
+            hingePosition: 'right' as const,
+            customWidth: customWidth
+          };
+          
+          addModule(newModule);
+          console.log('✅ 폴백 가구 배치 성공:', newModule);
+        }
       }
     } catch (error) {
       console.error('드롭 데이터 파싱 오류:', error);
+      console.error('에러 스택:', error.stack);
     }
   };
 
@@ -931,6 +997,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               showDimensions={showDimensions}
               showGuides={showGuides}
               isStep2={isStep2}
+              activeZone={activeZone}
             />
             
             {/* 단내림 공간 렌더링 */}
@@ -1286,6 +1353,7 @@ const QuadrantContent: React.FC<{
         showFrame={showFrame}
         materialConfig={materialConfig}
         placedModules={placedModules}
+        activeZone={activeZone}
       />
     </React.Suspense>
   );

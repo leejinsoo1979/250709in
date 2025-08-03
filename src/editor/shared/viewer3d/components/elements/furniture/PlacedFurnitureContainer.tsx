@@ -12,16 +12,19 @@ interface PlacedFurnitureContainerProps {
   view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode: 'solid' | 'wireframe';
   placedModules?: any[];
+  activeZone?: 'normal' | 'dropped';
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   viewMode,
   view2DDirection,
   renderMode,
-  placedModules: propPlacedModules
+  placedModules: propPlacedModules,
+  activeZone
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
+  // activeZone 필터링 제거 - 모든 가구 표시
   const placedModules = propPlacedModules || storePlacedModules;
   const { activePopup } = useUIStore();
   

@@ -56,7 +56,7 @@ const PlacedFurnitureList: React.FC = () => {
               <div className={styles.infoContainer}>
                 <div className={styles.name}>{moduleData.name}</div>
                 <div className={styles.dimensions}>
-                  {moduleData.dimensions.width} × {moduleData.dimensions.height} × {placedModule.customDepth || moduleData.dimensions.depth}mm
+                  {placedModule.customWidth || moduleData.dimensions.width} × {moduleData.dimensions.height} × {placedModule.customDepth || moduleData.dimensions.depth}mm
                 </div>
               </div>
               

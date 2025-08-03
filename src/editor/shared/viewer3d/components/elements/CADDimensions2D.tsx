@@ -673,9 +673,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         let furnitureWidthMm = moduleData.dimensions.width;
         let furniturePositionX = module.position.x;
         
+        // 듀얼 가구인지 확인 (FurnitureItem.tsx와 동일한 로직)
+        const isDualFurniture = module.isDualSlot !== undefined 
+          ? module.isDualSlot 
+          : moduleData.id.includes('dual-');
+        
+        // slotWidths가 있고 slotIndex가 유효하면 실제 슬롯 너비 사용
+        if (indexing.slotWidths && module.slotIndex !== undefined && indexing.slotWidths[module.slotIndex]) {
+          if (isDualFurniture && module.slotIndex < indexing.slotWidths.length - 1) {
+            // 듀얼 가구: 두 슬롯의 실제 너비 합계
+            furnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
+          } else {
+            // 싱글 가구: 해당 슬롯의 실제 너비
+            furnitureWidthMm = indexing.slotWidths[module.slotIndex];
+          }
+        }
+        
         if (slotInfo && slotInfo.hasColumn) {
-          // 듀얼 가구인지 확인
-          const isDualFurniture = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
           const originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
           
           // 슬롯 중심 위치 계산

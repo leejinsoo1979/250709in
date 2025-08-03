@@ -143,7 +143,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     '계산식': `${width * 100} - ${basicThickness * 100 * 2} = ${innerWidth * 100}`,
     '측면패널_좌': `x: ${(-innerWidth/2 - basicThickness/2) * 100}mm`,
     '측면패널_우': `x: ${(innerWidth/2 + basicThickness/2) * 100}mm`,
-    '전체너비': `${((innerWidth/2 + basicThickness/2) - (-innerWidth/2 - basicThickness/2)) * 100}mm`
+    '전체너비': `${((innerWidth/2 + basicThickness/2) - (-innerWidth/2 - basicThickness/2)) * 100}mm`,
+    isDragging,
+    isEditMode,
+    renderMode,
+    viewMode
   });
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거

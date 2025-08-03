@@ -233,7 +233,8 @@ const ColumnGuides: React.FC = () => {
     columnCount: number,
     columnWidth: number,
     ceilingY: number,
-    zoneType: string
+    zoneType: string,
+    slotWidths?: number[]
   ) => {
     console.log('📐 renderSlotGuides 호출됨:', {
       zoneType,
@@ -268,26 +269,33 @@ const ColumnGuides: React.FC = () => {
     
     // 각 슬롯 경계 계산
     const boundaries = [];
-    for (let i = 0; i <= columnCount; i++) {
-      if (i === columnCount) {
-        // 마지막 경계는 정확히 영역의 끝에 맞춤 (반올림 오차 보정)
-        boundaries.push(mmToThreeUnits(startX + width));
-      } else {
-        boundaries.push(mmToThreeUnits(startX + (i * columnWidth)));
+    let currentX = startX;
+    boundaries.push(mmToThreeUnits(currentX));
+    
+    // slotWidths가 있으면 사용, 없으면 균등 분할
+    if (slotWidths && slotWidths.length === columnCount) {
+      for (let i = 0; i < columnCount; i++) {
+        currentX += slotWidths[i];
+        boundaries.push(mmToThreeUnits(currentX));
+      }
+    } else {
+      // 기존 로직 유지 (호환성)
+      for (let i = 1; i <= columnCount; i++) {
+        if (i === columnCount) {
+          boundaries.push(mmToThreeUnits(startX + width));
+        } else {
+          boundaries.push(mmToThreeUnits(startX + (i * columnWidth)));
+        }
       }
     }
     
     // 슬롯 중심 위치 계산
     const positions = [];
     for (let i = 0; i < columnCount; i++) {
-      if (i === columnCount - 1) {
-        // 마지막 슬롯의 중심은 이전 경계와 영역 끝 사이의 중심
-        const lastSlotStart = startX + (i * columnWidth);
-        const lastSlotEnd = startX + width;
-        positions.push(mmToThreeUnits((lastSlotStart + lastSlotEnd) / 2));
-      } else {
-        positions.push(mmToThreeUnits(startX + (i * columnWidth) + (columnWidth / 2)));
-      }
+      const slotStart = boundaries[i];
+      const slotEnd = boundaries[i + 1];
+      const slotCenter = (slotStart + slotEnd) / 2;
+      positions.push(slotCenter);
     }
     
     // 경계 확인 로그
@@ -457,6 +465,9 @@ const ColumnGuides: React.FC = () => {
         const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
         const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
         
+        // 실제 슬롯 너비 계산
+        const actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        
         guides.push(
           <Text
             key={`${zoneType}-slot-size-${index}`}
@@ -467,7 +478,7 @@ const ColumnGuides: React.FC = () => {
             anchorY="middle"
             rotation={[0, 0, 0]}
           >
-            {Math.round(columnWidth)}mm
+            {Math.round(actualWidth)}mm
           </Text>
         );
       });
@@ -481,6 +492,9 @@ const ColumnGuides: React.FC = () => {
         // 2D 다크모드일 때 텍스트 색상 처리
         const textColor = view2DTheme === 'dark' ? '#FFFFFF' : zoneColor;
         
+        // 실제 슬롯 너비 계산
+        const actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        
         guides.push(
           <Text
             key={`${zoneType}-slot-size-2d-${index}`}
@@ -490,7 +504,7 @@ const ColumnGuides: React.FC = () => {
             anchorX="center"
             anchorY="middle"
           >
-            {Math.round(columnWidth)}mm
+            {Math.round(actualWidth)}mm
           </Text>
         );
       });
@@ -529,7 +543,7 @@ const ColumnGuides: React.FC = () => {
     const opacity = isActive ? 0.2 : 0.05;
     
     if (meshType === 'back') {
-      // 뒷면 메쉬
+      // 뒷면 메쉬 - 가이드 점선과 정확히 일치
       const height = ceilingY - floorY;
       const centerY = floorY + height / 2;
       
@@ -583,7 +597,8 @@ const ColumnGuides: React.FC = () => {
             zoneSlotInfo.normal.columnCount,
             zoneSlotInfo.normal.columnWidth,
             ceilingY,
-            'main'
+            'main',
+            zoneSlotInfo.normal.slotWidths
           )}
           
           {/* 단내림 영역 가이드도 항상 표시 */}
@@ -593,7 +608,8 @@ const ColumnGuides: React.FC = () => {
             zoneSlotInfo.dropped.columnCount,
             zoneSlotInfo.dropped.columnWidth,
             droppedCeilingY,
-            'dropped'
+            'dropped',
+            zoneSlotInfo.dropped.slotWidths
           )}
           
           {/* 투명 메쉬들 - 3D 모드와 2D 뷰에서 표시 (탑뷰에서는 제외) */}
@@ -651,7 +667,8 @@ const ColumnGuides: React.FC = () => {
             zoneSlotInfo.normal.columnCount,
             zoneSlotInfo.normal.columnWidth,
             ceilingY,
-            'full'
+            'full',
+            zoneSlotInfo.normal.slotWidths
           )}
           
           {/* 투명 메쉬들 - 3D 모드와 2D 뷰에서 표시 (탑뷰에서는 제외) */}
@@ -687,15 +704,28 @@ const ColumnGuides: React.FC = () => {
         <>
           {/* 메인구간 탭 선택 시 메인 영역 드롭 타겟 */}
           {activeDroppedCeilingTab === 'main' && Array.from({ length: zoneSlotInfo.normal.columnCount }, (_, i) => {
-            const x = mmToThreeUnits(
-              zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2)
-            );
+            // 실제 슬롯 너비를 사용한 위치 계산
+            let slotCenterX: number;
+            if (zoneSlotInfo.normal.slotWidths) {
+              let currentX = zoneSlotInfo.normal.startX;
+              for (let j = 0; j < i; j++) {
+                currentX += zoneSlotInfo.normal.slotWidths[j];
+              }
+              const slotStart = currentX;
+              const slotEnd = slotStart + zoneSlotInfo.normal.slotWidths[i];
+              slotCenterX = (slotStart + slotEnd) / 2;
+            } else {
+              slotCenterX = zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2);
+            }
+            
+            const actualWidth = zoneSlotInfo.normal.slotWidths?.[i] || zoneSlotInfo.normal.columnWidth;
+            
             return (
               <ColumnDropTarget
                 key={`main-column-${i}`}
                 columnIndex={i}
-                columnWidth={zoneSlotInfo.normal.columnWidth}
-                position={{ x, y: furnitureStartY, z: 0 }}
+                columnWidth={actualWidth}
+                position={{ x: mmToThreeUnits(slotCenterX), y: furnitureStartY, z: 0 }}
                 internalSpace={internalSpace}
               />
             );
@@ -703,15 +733,28 @@ const ColumnGuides: React.FC = () => {
           
           {/* 단내림구간 탭 선택 시 단내림 영역 드롭 타겟 */}
           {activeDroppedCeilingTab === 'dropped' && Array.from({ length: zoneSlotInfo.dropped.columnCount }, (_, i) => {
-            const x = mmToThreeUnits(
-              zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2)
-            );
+            // 실제 슬롯 너비를 사용한 위치 계산
+            let slotCenterX: number;
+            if (zoneSlotInfo.dropped.slotWidths) {
+              let currentX = zoneSlotInfo.dropped.startX;
+              for (let j = 0; j < i; j++) {
+                currentX += zoneSlotInfo.dropped.slotWidths[j];
+              }
+              const slotStart = currentX;
+              const slotEnd = slotStart + zoneSlotInfo.dropped.slotWidths[i];
+              slotCenterX = (slotStart + slotEnd) / 2;
+            } else {
+              slotCenterX = zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2);
+            }
+            
+            const actualWidth = zoneSlotInfo.dropped.slotWidths?.[i] || zoneSlotInfo.dropped.columnWidth;
+            
             return (
               <ColumnDropTarget
                 key={`dropped-column-${i}`}
                 columnIndex={i}
-                columnWidth={zoneSlotInfo.dropped.columnWidth}
-                position={{ x, y: furnitureStartY, z: 0 }}
+                columnWidth={actualWidth}
+                position={{ x: mmToThreeUnits(slotCenterX), y: furnitureStartY, z: 0 }}
                 internalSpace={internalSpace}
                 customHeight={droppedInternalHeight} // 단내림 내부 높이 전달
               />
@@ -721,15 +764,28 @@ const ColumnGuides: React.FC = () => {
       ) : (
         /* 단내림이 없는 경우 전체 영역 드롭 타겟 */
         Array.from({ length: zoneSlotInfo.normal.columnCount }, (_, i) => {
-          const x = mmToThreeUnits(
-            zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2)
-          );
+          // 실제 슬롯 너비를 사용한 위치 계산
+          let slotCenterX: number;
+          if (zoneSlotInfo.normal.slotWidths) {
+            let currentX = zoneSlotInfo.normal.startX;
+            for (let j = 0; j < i; j++) {
+              currentX += zoneSlotInfo.normal.slotWidths[j];
+            }
+            const slotStart = currentX;
+            const slotEnd = slotStart + zoneSlotInfo.normal.slotWidths[i];
+            slotCenterX = (slotStart + slotEnd) / 2;
+          } else {
+            slotCenterX = zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2);
+          }
+          
+          const actualWidth = zoneSlotInfo.normal.slotWidths?.[i] || zoneSlotInfo.normal.columnWidth;
+          
           return (
             <ColumnDropTarget
               key={`column-${i}`}
               columnIndex={i}
-              columnWidth={zoneSlotInfo.normal.columnWidth}
-              position={{ x, y: furnitureStartY, z: 0 }}
+              columnWidth={actualWidth}
+              position={{ x: mmToThreeUnits(slotCenterX), y: furnitureStartY, z: 0 }}
               internalSpace={internalSpace}
             />
           );

@@ -14,6 +14,7 @@ export interface SpaceIndexingResult {
   dualColumnPositions: number[];  // 듀얼가구용 두 컬럼 경계 중심의 mm 단위 X좌표 배열
   threeUnitDualPositions: number[]; // 듀얼가구용 두 컬럼 경계 중심의 Three.js 단위 X좌표 배열
   columnWidth: number;            // 각 슬롯의 너비 (mm)
+  slotWidths?: number[];          // 각 슬롯의 실제 너비 배열 (mm)
   internalWidth: number;          // 내경 너비 (mm)
   internalStartX: number;         // 내경 시작 X좌표 (mm)
   threeUnitColumnWidth: number;   // Three.js 단위 슬롯 너비
@@ -23,12 +24,18 @@ export interface SpaceIndexingResult {
       width: number;
       columnCount: number;
       columnWidth: number;
+      slotWidths?: number[];
+      threeUnitPositions?: number[];
+      threeUnitDualPositions?: number[];
     };
     dropped: {
       startX: number;
       width: number;
       columnCount: number;
       columnWidth: number;
+      slotWidths?: number[];
+      threeUnitPositions?: number[];
+      threeUnitDualPositions?: number[];
     } | null;
   };
 }
@@ -131,6 +138,59 @@ export class ColumnIndexer {
       // 영역별 정보 추가
       const zones = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
+      // zones에 threeUnitPositions 추가
+      if (zones.normal) {
+        // 메인 영역 슬롯 위치 계산 - 실제 슬롯 너비 사용
+        zones.normal.threeUnitPositions = [];
+        zones.normal.threeUnitDualPositions = [];
+        
+        let currentX = zones.normal.startX;
+        for (let i = 0; i < zones.normal.columnCount; i++) {
+          const slotWidth = zones.normal.slotWidths?.[i] || zones.normal.columnWidth;
+          const slotCenterX = currentX + (slotWidth / 2);
+          zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
+          
+          console.log(`🎯 Normal Zone Slot ${i}:`, {
+            startX: currentX,
+            width: slotWidth,
+            centerX: slotCenterX,
+            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX)
+          });
+          
+          currentX += slotWidth;
+        }
+        
+        // 듀얼 위치 계산 - 실제 슬롯 위치 사용
+        for (let i = 0; i < zones.normal.columnCount - 1; i++) {
+          const leftSlotThreeUnits = zones.normal.threeUnitPositions[i];
+          const rightSlotThreeUnits = zones.normal.threeUnitPositions[i + 1];
+          const dualCenter = (SpaceCalculator.threeUnitsToMm(leftSlotThreeUnits) + SpaceCalculator.threeUnitsToMm(rightSlotThreeUnits)) / 2;
+          zones.normal.threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenter));
+        }
+      }
+      
+      if (zones.dropped) {
+        // 단내림 영역 슬롯 위치 계산 - 실제 슬롯 너비 사용
+        zones.dropped.threeUnitPositions = [];
+        zones.dropped.threeUnitDualPositions = [];
+        
+        let currentX = zones.dropped.startX;
+        for (let i = 0; i < zones.dropped.columnCount; i++) {
+          const slotWidth = zones.dropped.slotWidths?.[i] || zones.dropped.columnWidth;
+          const slotCenterX = currentX + (slotWidth / 2);
+          zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
+          currentX += slotWidth;
+        }
+        
+        // 듀얼 위치 계산 - 실제 슬롯 위치 사용
+        for (let i = 0; i < zones.dropped.columnCount - 1; i++) {
+          const leftSlotThreeUnits = zones.dropped.threeUnitPositions[i];
+          const rightSlotThreeUnits = zones.dropped.threeUnitPositions[i + 1];
+          const dualCenter = (SpaceCalculator.threeUnitsToMm(leftSlotThreeUnits) + SpaceCalculator.threeUnitsToMm(rightSlotThreeUnits)) / 2;
+          zones.dropped.threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenter));
+        }
+      }
+      
       return {
         columnCount,
         columnPositions,
@@ -169,57 +229,54 @@ export class ColumnIndexer {
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
     }
     
-    // 각 컬럼의 너비 (균등 분할) - 정수값으로 계산
-    const columnWidth = Math.floor(internalWidth / columnCount);
+    // 각 컬럼의 너비 계산 - 나머지를 앞쪽 슬롯에 분배
+    const baseWidth = Math.floor(internalWidth / columnCount);
+    const remainder = internalWidth % columnCount;
     
-    // 여유 공간 계산 (내경 너비 - 실제 사용 너비)
-    const remainingSpace = internalWidth - (columnWidth * columnCount);
+    // 슬롯별 실제 너비 배열 생성
+    const slotWidths: number[] = [];
+    for (let i = 0; i < columnCount; i++) {
+      // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
+      slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+    }
     
-    // 여유 공간을 좌우에 균등 배분
-    const leftPadding = Math.floor(remainingSpace / 2);
+    // 호환성을 위한 평균 너비
+    const columnWidth = baseWidth;
+    
+    // 좌우 패딩은 0 (모든 공간을 슬롯에 할당)
+    const leftPadding = 0;
     
     // 내경의 시작 X좌표 (Three.js 좌표계, 중앙이 0)
     // 전체 공간이 중앙 정렬되므로 (-전체폭/2 + 좌측여백)가 내경 시작점
     let internalStartX;
     if (spaceInfo.surroundType === 'no-surround') {
-      let leftReduction = 0;
-      
-      // 노서라운드: 프레임 없음, 벽 유무에 따라 이격거리 또는 엔드패널
-      if (spaceInfo.installType === 'builtin') {
-        // 양쪽벽: 2mm 이격거리
-        leftReduction = 2;
-      } else if (spaceInfo.installType === 'semistanding') {
-        // 한쪽벽: 벽 있는 쪽 2mm, 벽 없는 쪽 20mm
-        if (spaceInfo.wallConfig?.left) {
-          leftReduction = 2;  // 좌측벽 있음: 2mm 이격거리
-        } else {
-          leftReduction = 20; // 좌측벽 없음: 20mm 엔드패널
-        }
-      } else {
-        // 벽없음(freestanding): 20mm 엔드패널
-        leftReduction = 20;
-      }
-      
-      internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
+      // 노서라운드: 전체 너비의 중앙에서 왼쪽 갭만큼 이동한 위치가 시작점
+      const leftGap = spaceInfo.gapConfig?.left || 0;
+      internalStartX = -(totalWidth / 2) + leftGap + leftPadding;
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
     }
     
-    // 각 컬럼 경계의 위치 계산 (시작부터 끝까지)
+    // 각 컬럼 경계의 위치 계산 (실제 슬롯 너비 사용)
     const columnBoundaries = [];
-    for (let i = 0; i <= columnCount; i++) {
-      const boundary = internalStartX + (i * columnWidth);
-      columnBoundaries.push(boundary);
+    let currentX = internalStartX;
+    columnBoundaries.push(currentX);
+    
+    for (let i = 0; i < columnCount; i++) {
+      currentX += slotWidths[i];
+      columnBoundaries.push(currentX);
     }
     
-    // 각 슬롯(컬럼)의 중심 위치 계산
+    // 각 슬롯(컬럼)의 중심 위치 계산 - 실제 너비 기반
     const columnPositions = [];
     for (let i = 0; i < columnCount; i++) {
       // 각 컬럼의 시작 위치
       const columnStart = columnBoundaries[i];
+      // 각 컬럼의 끝 위치
+      const columnEnd = columnBoundaries[i + 1];
       // 각 컬럼의 중심 위치
-      const columnCenter = columnStart + (columnWidth / 2);
+      const columnCenter = (columnStart + columnEnd) / 2;
       columnPositions.push(columnCenter);
     }
     
@@ -227,20 +284,24 @@ export class ColumnIndexer {
     const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
     const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
     
-    // 노서라운드 모드에서 디버깅 로그 (개발 모드에서만 출력)
-    // if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && import.meta.env.DEV) {
-    //   console.log(`🎯 [가구위치] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경시작X=${internalStartX}, 첫번째컬럼=${threeUnitPositions[0]?.toFixed(3)}`);
-    // }
+    // 노서라운드 모드에서 디버깅 로그
+    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
+      console.log(`🎯 [가구위치] 노서라운드 모드 - 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm:`, {
+        totalWidth,
+        internalWidth,
+        internalStartX,
+        '첫번째슬롯위치': threeUnitPositions[0]?.toFixed(3),
+        '마지막슬롯위치': threeUnitPositions[threeUnitPositions.length - 1]?.toFixed(3)
+      });
+    }
     
     // 듀얼가구용 두 컬럼 경계 중심 위치 계산 추가
     const dualColumnPositions = [];
     const threeUnitDualPositions = [];
     
-    // 인접한 두 컬럼의 중심점들 사이의 중점을 계산 (첫 번째 컬럼 중심과 두 번째 컬럼 중심 사이, 두 번째와 세 번째 사이, ...)
-    for (let i = 0; i < columnCount - 1; i++) {
-      const leftColumnCenter = columnPositions[i];     // 왼쪽 컬럼의 중심
-      const rightColumnCenter = columnPositions[i + 1]; // 오른쪽 컬럼의 중심
-      const dualCenterPosition = (leftColumnCenter + rightColumnCenter) / 2; // 두 컬럼 중심의 중점
+    // 인접한 두 컬럼의 경계 위치를 사용 (컬럼 경계가 듀얼 가구의 중심)
+    for (let i = 1; i < columnCount; i++) {
+      const dualCenterPosition = columnBoundaries[i]; // 컬럼 경계가 듀얼 가구의 중심
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
     }
@@ -255,6 +316,7 @@ export class ColumnIndexer {
       dualColumnPositions,    // 듀얼가구용 두 컬럼 경계 중심의 mm 단위 X좌표 배열
       threeUnitDualPositions, // 듀얼가구용 두 컬럼 경계 중심의 Three.js 단위 X좌표 배열
       columnWidth,            // 각 슬롯의 너비 (mm)
+      slotWidths,             // 각 슬롯의 실제 너비 배열 (mm)
       internalWidth,          // 내경 너비 (mm)
       internalStartX,         // 내경 시작 X좌표 (mm)
       threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(columnWidth) // Three.js 단위 슬롯 너비
@@ -384,15 +446,30 @@ export class ColumnIndexer {
       
       const columnWidth = Math.floor(internalWidth / columnCount);
       
-      // 프레임을 고려한 내부 시작점
-      const internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
+      // 프레임을 고려한 내부 시작점 (노서라운드의 경우 gapConfig 사용)
+      let internalStartX: number;
+      if (spaceInfo.surroundType === 'no-surround') {
+        const leftGap = spaceInfo.gapConfig?.left || 0;
+        internalStartX = -(spaceInfo.width / 2) + leftGap;
+      } else {
+        internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
+      }
+      
+      // 슬롯별 실제 너비 배열 생성
+      const baseWidth = Math.floor(internalWidth / columnCount);
+      const remainder = internalWidth % columnCount;
+      const slotWidths: number[] = [];
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+      }
       
       return {
         normal: {
           startX: internalStartX,
           width: internalWidth,
           columnCount,
-          columnWidth
+          columnWidth,
+          slotWidths
         },
         dropped: null
       };
@@ -405,7 +482,16 @@ export class ColumnIndexer {
     
     // 전체 내부 너비 (프레임 제외)
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-    const internalStartX = -(totalWidth / 2) + frameThickness.left;
+    
+    // 시작 위치 계산 (노서라운드의 경우 gapConfig 사용)
+    let internalStartX: number;
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드: 전체 너비의 중앙에서 왼쪽 갭만큼 이동한 위치가 시작점
+      const leftGap = spaceInfo.gapConfig?.left || 0;
+      internalStartX = -(totalWidth / 2) + leftGap;
+    } else {
+      internalStartX = -(totalWidth / 2) + frameThickness.left;
+    }
     
     // 각 구간의 외부 너비 (프레임 제외 전)
     const normalAreaOuterWidth = totalWidth - droppedWidth;
@@ -422,7 +508,7 @@ export class ColumnIndexer {
       if (spaceInfo.surroundType === 'surround') {
         // 서라운드: 구간 사이에 프레임 없음, 바로 연결
         droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
-        droppedStartX = -(totalWidth / 2) + frameThickness.left;
+        droppedStartX = internalStartX; // 수정된 internalStartX 사용
         normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
         
@@ -437,9 +523,9 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 단내림 경계에서는 갭 없이 바로 연결
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
-        droppedStartX = -(totalWidth / 2) + frameThickness.left;
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
+        droppedAreaInternalWidth = droppedAreaOuterWidth - (spaceInfo.gapConfig?.left || 0);
+        droppedStartX = internalStartX; // 수정된 internalStartX 사용
+        normalAreaInternalWidth = normalAreaOuterWidth - (spaceInfo.gapConfig?.right || 0);
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -455,7 +541,7 @@ export class ColumnIndexer {
       if (spaceInfo.surroundType === 'surround') {
         // 서라운드: 구간 사이에 프레임 없음, 바로 연결
         normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
-        normalStartX = -(totalWidth / 2) + frameThickness.left;
+        normalStartX = internalStartX; // 수정된 internalStartX 사용
         droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
         droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
         
@@ -470,9 +556,9 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 단내림 경계에서는 갭 없이 바로 연결
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
-        normalStartX = -(totalWidth / 2) + frameThickness.left;
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
+        normalAreaInternalWidth = normalAreaOuterWidth - (spaceInfo.gapConfig?.left || 0);
+        normalStartX = internalStartX; // 수정된 internalStartX 사용
+        droppedAreaInternalWidth = droppedAreaOuterWidth - (spaceInfo.gapConfig?.right || 0);
         droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
@@ -519,9 +605,28 @@ export class ColumnIndexer {
       console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
     }
     
-    // 각 영역의 컬럼 너비 계산 (600mm 제한 확인)
-    const normalColumnWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
-    const droppedColumnWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
+    // 각 영역의 컬럼 너비 계산 - 나머지를 앞쪽 슬롯에 분배
+    const normalBaseWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
+    const normalRemainder = normalAreaInternalWidth % normalColumnCount;
+    
+    const droppedBaseWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
+    const droppedRemainder = droppedAreaInternalWidth % droppedColumnCount;
+    
+    // 슬롯별 실제 너비 배열 생성
+    const normalSlotWidths: number[] = [];
+    for (let i = 0; i < normalColumnCount; i++) {
+      // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
+      normalSlotWidths.push(i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth);
+    }
+    
+    const droppedSlotWidths: number[] = [];
+    for (let i = 0; i < droppedColumnCount; i++) {
+      droppedSlotWidths.push(i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth);
+    }
+    
+    // 호환성을 위한 평균 너비 (기존 코드용)
+    const normalColumnWidth = normalBaseWidth;
+    const droppedColumnWidth = droppedBaseWidth;
     
     // 실제 사용되는 너비 (반올림 오차 포함)
     const normalUsedWidth = normalColumnWidth * normalColumnCount;
@@ -608,13 +713,15 @@ export class ColumnIndexer {
         startX: normalStartX,
         width: normalAreaInternalWidth,
         columnCount: normalColumnCount,
-        columnWidth: normalColumnWidth
+        columnWidth: normalColumnWidth,
+        slotWidths: normalSlotWidths
       },
       dropped: {
         startX: droppedStartX,
         width: droppedAreaInternalWidth,
         columnCount: droppedColumnCount,
-        columnWidth: droppedColumnWidth
+        columnWidth: droppedColumnWidth,
+        slotWidths: droppedSlotWidths
       }
     };
   }

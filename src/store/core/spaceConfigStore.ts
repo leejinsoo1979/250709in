@@ -65,6 +65,9 @@ export interface SpaceInfo {
   // 단내림 설정 추가
   droppedCeiling?: DroppedCeilingConfig;
   
+  // 단내림 영역 구분 (임시 속성, 가구 생성시에만 사용)
+  zone?: 'normal' | 'dropped';
+  
   // 도어 개수 설정 (단내림 활성화 시 사용)
   mainDoorCount?: number;              // 메인 구간 도어 개수
   droppedCeilingDoorCount?: number;    // 단내림 구간 도어 개수

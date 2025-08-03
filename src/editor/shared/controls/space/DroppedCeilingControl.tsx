@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import styles from './DroppedCeilingControl.module.css';
@@ -14,6 +15,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
   onToggle
 }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
+  const { placedModules, removeModule } = useFurnitureStore();
   const droppedCeiling = spaceInfo.droppedCeiling;
 
   const handleEnabledToggle = () => {
@@ -30,6 +32,24 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
         customColumnCount: spaceInfo.customColumnCount,
         defaultColumnCount,
         internalWidth: internalSpace.width
+      });
+      
+      // 모든 가구들 제거 (메인 구간과 단내림 구간 모두)
+      const modulesToRemove = placedModules.filter(module => {
+        // 단내림이 활성화되어 있었다면 모든 가구 제거
+        return true;
+      });
+      
+      console.log('🗑️ [DroppedCeilingControl] Removing ALL furniture (main + dropped areas):', {
+        totalModules: placedModules.length,
+        modulesToRemove: modulesToRemove.length,
+        mainAreaModules: modulesToRemove.filter(m => m.columnSlotInfo?.spaceType === 'main').length,
+        droppedAreaModules: modulesToRemove.filter(m => m.columnSlotInfo?.spaceType === 'dropped').length
+      });
+      
+      // 모든 가구들 제거
+      modulesToRemove.forEach(module => {
+        removeModule(module.id);
       });
       
       setSpaceInfo({

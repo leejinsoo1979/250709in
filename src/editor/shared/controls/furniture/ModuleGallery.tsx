@@ -349,6 +349,16 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       // 고유 ID 생성
       const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      // 실제 슬롯 너비 계산
+      let customWidth;
+      if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[availableSlotIndex] !== undefined) {
+        customWidth = indexing.slotWidths[availableSlotIndex] + (indexing.slotWidths[availableSlotIndex + 1] || indexing.slotWidths[availableSlotIndex]);
+      } else if (indexing.slotWidths && indexing.slotWidths[availableSlotIndex] !== undefined) {
+        customWidth = indexing.slotWidths[availableSlotIndex];
+      } else {
+        customWidth = indexing.columnWidth;
+      }
+
       // 새 모듈 생성
       const newModule = {
         id: placedId,
@@ -366,7 +376,8 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         isValidInCurrentSpace: true,
         adjustedWidth: zoneModule.dimensions.width,
         hingePosition: 'right' as 'left' | 'right',
-        zone: activeZone || undefined // 영역 정보 저장
+        zone: activeZone || undefined, // 영역 정보 저장
+        customWidth: customWidth // 실제 슬롯 너비 추가
       };
       
       console.log('🚨 [ModuleGallery] New module created:', {
@@ -467,7 +478,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   const columnWidth = indexing.columnWidth;
   
   // 전체 높이 모듈들만 가져오기 (내경 공간 정보 전달)
-  const fullModules = getModulesByCategory('full', internalSpace, spaceInfo);
+  // activeZone이 있으면 zone 정보를 추가한 spaceInfo 전달
+  const zoneSpaceInfo = activeZone ? { ...spaceInfo, zone: activeZone } : spaceInfo;
+  const fullModules = getModulesByCategory('full', internalSpace, zoneSpaceInfo);
   
   console.log('🔍 [ModuleGallery] Debug info:', {
     spaceInfo: {

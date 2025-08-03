@@ -200,4 +200,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       };
     });
   }
-})); 
+}));
+
+// Development mode에서 디버깅을 위해 store를 window에 노출
+if (process.env.NODE_ENV === 'development') {
+  (window as any).__furnitureStore = useFurnitureStore;
+}
+
+export default useFurnitureStore; 

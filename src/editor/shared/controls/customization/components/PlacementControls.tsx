@@ -5,8 +5,8 @@ import styles from '../../styles/common.module.css';
 
 interface PlacementControlsProps {
   baseConfig?: BaseConfig;
-  baseHeight: string | number;
-  floatHeight: string | number;
+  baseHeight: string;
+  floatHeight: string;
   onPlacementTypeChange: (placementType: 'ground' | 'float') => void;
   onHeightChange: (value: string) => void;
   onFloatHeightChange: (value: string) => void;
@@ -14,6 +14,7 @@ interface PlacementControlsProps {
   onFloatHeightBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onFloatKeyDown: (e: React.KeyboardEvent) => void;
+  disabled?: boolean;
 }
 
 const PlacementControls: React.FC<PlacementControlsProps> = ({
@@ -26,7 +27,8 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
   onHeightBlur,
   onFloatHeightBlur,
   onKeyDown,
-  onFloatKeyDown
+  onFloatKeyDown,
+  disabled = false
 }) => {
   const { setHighlightedFrame } = useUIStore();
   const isFloor = baseConfig?.type === 'floor' || !baseConfig;
@@ -58,19 +60,29 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
         <div className={styles.section}>
           <span className={styles.label}>받침대 높이 (mm)</span>
           <p className={styles.description}>
-            받침대는 바닥마감재 위에 적용되며, 기본값은 65mm입니다. (50-100mm)
+            받침대는 바닥마감재 위에 적용되며, 기본값은 65mm입니다. (50-500mm)
           </p>
           <div className={styles.inputWrapper}>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
                 value={baseHeight}
-                onChange={(e) => onHeightChange(e.target.value)}
+                onChange={(e) => {
+                  console.log('🔧 PlacementControls - input onChange 호출됨:', e.target.value);
+                  onHeightChange(e.target.value);
+                }}
+                onInput={(e) => {
+                  console.log('🔧 PlacementControls - input onInput 호출됨:', e.currentTarget.value);
+                }}
+                onClick={(e) => {
+                  console.log('🔧 PlacementControls - input onClick 호출됨, disabled:', disabled);
+                }}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 onKeyDown={onKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
                 placeholder="65"
+                disabled={disabled}
               />
               <span className={styles.unit}>mm</span>
             </div>
@@ -89,12 +101,14 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
             <button
               className={`${styles.button} ${isGround ? styles.buttonActive : ''}`}
               onClick={() => onPlacementTypeChange('ground')}
+              disabled={disabled}
             >
               바닥에 배치
             </button>
             <button
               className={`${styles.button} ${isFloat ? styles.buttonActive : ''}`}
               onClick={() => onPlacementTypeChange('float')}
+              disabled={disabled}
             >
               띄워서 배치
             </button>
@@ -117,6 +131,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
                 onKeyDown={onFloatKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
                 placeholder="60"
+                disabled={disabled}
               />
               <span className={styles.unit}>mm</span>
             </div>

@@ -1283,11 +1283,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
         const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
         
-        // 커버도어는 columnSlotInfo.doorWidth 사용, 일반 가구는 조정된 너비 사용
+        // 커버도어는 columnSlotInfo.doorWidth 사용, 일반 가구는 실제 슬롯 너비(customWidth) 사용
         const isCoverDoor = module.columnSlotInfo?.doorWidth !== undefined;
         const actualWidth = isCoverDoor 
           ? module.columnSlotInfo.doorWidth 
-          : (module.adjustedWidth || moduleData.dimensions.width);
+          : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
         const moduleWidth = mmToThreeUnits(actualWidth);
         // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
         const actualPositionX = module.adjustedPosition?.x || module.position.x;

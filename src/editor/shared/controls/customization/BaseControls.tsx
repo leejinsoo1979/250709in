@@ -12,19 +12,21 @@ interface BaseControlsProps {
 
 const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
   
-  // 로컬 상태들
-  const [baseHeight, setBaseHeight] = useState<string | number>(() => 
-    spaceInfo.baseConfig?.height?.toString() || '65'
+  console.log('🔧 BaseControls - disabled 상태:', disabled);
+  
+  // 로컬 상태들 - 항상 string으로 관리
+  const [baseHeight, setBaseHeight] = useState<string>(
+    String(spaceInfo.baseConfig?.height || 65)
   );
-  const [floatHeight, setFloatHeight] = useState<string | number>(() => 
-    spaceInfo.baseConfig?.floatHeight?.toString() || '60'
+  const [floatHeight, setFloatHeight] = useState<string>(
+    String(spaceInfo.baseConfig?.floatHeight || 60)
   );
 
   // baseConfig 변경 시 로컬 상태 동기화
   useEffect(() => {
     if (spaceInfo.baseConfig) {
-      setBaseHeight(spaceInfo.baseConfig.height);
-      setFloatHeight(spaceInfo.baseConfig.floatHeight || 60);
+      setBaseHeight(String(spaceInfo.baseConfig.height));
+      setFloatHeight(String(spaceInfo.baseConfig.floatHeight || 60));
     }
   }, [spaceInfo.baseConfig]);
 
@@ -73,26 +75,43 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
   // 높이 입력 처리
   const handleHeightChange = (value: string) => {
+    console.log('🔧 BaseControls - handleHeightChange 호출됨:', value);
+    
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
+      console.log('🔧 BaseControls - 입력값 검증 통과:', value);
       setBaseHeight(value);
       
+      // 빈 문자열이면 업데이트하지 않음 (사용자가 입력 중)
+      if (value === '') {
+        return;
+      }
+      
       // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (value && !isNaN(Number(value)) && spaceInfo.baseConfig) {
+      if (!isNaN(Number(value))) {
         let validatedValue = parseInt(value);
         
-        // 범위 검증
-        if (validatedValue < 50) validatedValue = 50;
-        if (validatedValue > 100) validatedValue = 100;
+        // 범위 검증은 blur 시에만 적용
+        // 여기서는 store에 그대로 저장
+        
+        // baseConfig가 없으면 기본값으로 생성
+        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+        
+        console.log('🔧 BaseControls - store 업데이트:', {
+          현재값: currentBaseConfig.height,
+          새값: validatedValue
+        });
         
         // 즉시 store 업데이트
         onUpdate({
           baseConfig: {
-            ...spaceInfo.baseConfig,
+            ...currentBaseConfig,
             height: validatedValue,
           },
         });
       }
+    } else {
+      console.log('🔧 BaseControls - 입력값 검증 실패:', value);
     }
   };
 
@@ -102,18 +121,24 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     if (value === '' || /^\d+$/.test(value)) {
       setFloatHeight(value);
       
+      // 빈 문자열이면 업데이트하지 않음 (사용자가 입력 중)
+      if (value === '') {
+        return;
+      }
+      
       // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (value && !isNaN(Number(value)) && spaceInfo.baseConfig) {
+      if (!isNaN(Number(value))) {
         let validatedValue = parseInt(value);
         
-        // 범위 검증
-        if (validatedValue < 0) validatedValue = 0;
-        if (validatedValue > 200) validatedValue = 200;
+        // 범위 검증은 blur 시에만 적용
+        
+        // baseConfig가 없으면 기본값으로 생성
+        const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 0, floatHeight: 60 };
         
         // 즉시 store 업데이트
         onUpdate({
           baseConfig: {
-            ...spaceInfo.baseConfig,
+            ...currentBaseConfig,
             floatHeight: validatedValue,
           },
         });
@@ -138,9 +163,9 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       value = 50;
     }
 
-    // 최대값 (100mm) 보장
-    if (value > 100) {
-      value = 100;
+    // 최대값 (500mm) 보장
+    if (value > 500) {
+      value = 500;
     }
 
     // 로컬 상태 업데이트
@@ -213,6 +238,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       <BaseTypeSelector
         baseConfig={spaceInfo.baseConfig}
         onBaseTypeChange={handleBaseTypeChange}
+        disabled={disabled}
       />
 
       {/* 배치 설정 및 높이 조절 */}
@@ -227,6 +253,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         onFloatHeightBlur={handleFloatHeightBlur}
         onKeyDown={handleKeyDown}
         onFloatKeyDown={handleFloatKeyDown}
+        disabled={disabled}
       />
 
       {/* 컬럼 수 설정 */}

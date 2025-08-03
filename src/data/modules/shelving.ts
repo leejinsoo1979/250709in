@@ -761,6 +761,7 @@ export const generateShelvingModules = (
   
   let columnWidth: number;
   let columnCount: number;
+  let slotWidths: number[] | undefined;
   
   // 단내림이 활성화되고 zone 정보가 전달된 경우
   if (indexingSpaceInfo.droppedCeiling?.enabled && indexingSpaceInfo.zone) {
@@ -768,14 +769,17 @@ export const generateShelvingModules = (
     if (zone === 'dropped' && zoneSlotInfo.dropped) {
       columnWidth = zoneSlotInfo.dropped.columnWidth;
       columnCount = zoneSlotInfo.dropped.columnCount;
+      slotWidths = zoneSlotInfo.dropped.slotWidths;
     } else {
       columnWidth = zoneSlotInfo.normal.columnWidth;
       columnCount = zoneSlotInfo.normal.columnCount;
+      slotWidths = zoneSlotInfo.normal.slotWidths;
     }
   } else {
     // 단내림이 없는 경우 일반 계산
     columnWidth = zoneSlotInfo.normal.columnWidth;
     columnCount = zoneSlotInfo.normal.columnCount;
+    slotWidths = zoneSlotInfo.normal.slotWidths;
   }
   
   
@@ -792,33 +796,72 @@ export const generateShelvingModules = (
     console.error('🚨🚨🚨 [generateShelvingModules] 700mm column calculated!', {
       spaceInfo,
       internalSpace,
-      indexing
+      columnWidth,
+      columnCount,
+      zoneSlotInfo
     });
   }
   
   const modules: ModuleData[] = [];
   
+  console.log('🎯 슬롯 너비 정보:', {
+    zone: indexingSpaceInfo.zone,
+    columnWidth,
+    columnCount,
+    slotWidths
+  });
+  
   // === 싱글 가구 생성 ===
-  modules.push(createSingleType1(columnWidth, maxHeight));
-  modules.push(createSingleType2(columnWidth, maxHeight));
-  modules.push(createSingleType4(columnWidth, maxHeight));
+  // 실제 슬롯 너비별로 가구 생성
+  if (slotWidths && slotWidths.length > 0) {
+    // 고유한 슬롯 너비들만 추출 (중복 제거)
+    const uniqueWidths = [...new Set(slotWidths)];
+    
+    // 각 고유한 너비에 대해 가구 생성
+    for (const width of uniqueWidths) {
+      modules.push(createSingleType1(width, maxHeight));
+      modules.push(createSingleType2(width, maxHeight));
+      modules.push(createSingleType4(width, maxHeight));
+    }
+  } else {
+    // fallback: slotWidths가 없으면 평균 너비 사용
+    modules.push(createSingleType1(columnWidth, maxHeight));
+    modules.push(createSingleType2(columnWidth, maxHeight));
+    modules.push(createSingleType4(columnWidth, maxHeight));
+  }
   
   // === 듀얼 가구 생성 (컬럼이 2개 이상인 경우) ===
   if (columnCount >= 2) {
-    const dualColumnWidth = columnWidth * 2;
+    // 듀얼 가구용 실제 너비 계산
+    const dualWidths = new Set<number>();
     
-    modules.push(createDualType1(dualColumnWidth, maxHeight));
-    modules.push(createDualType2(dualColumnWidth, maxHeight));
-    modules.push(createDualType4(dualColumnWidth, maxHeight));
-    modules.push(createDualType5(dualColumnWidth, maxHeight));
-    modules.push(createDualType6(dualColumnWidth, maxHeight));
+    if (slotWidths && slotWidths.length >= 2) {
+      // 인접한 두 슬롯의 너비를 합산
+      for (let i = 0; i < slotWidths.length - 1; i++) {
+        const dualWidth = slotWidths[i] + slotWidths[i + 1];
+        dualWidths.add(dualWidth);
+      }
+    } else {
+      // fallback: 평균 너비의 2배 사용
+      dualWidths.add(columnWidth * 2);
+    }
+    
+    // 각 고유한 듀얼 너비에 대해 가구 생성
+    for (const dualWidth of dualWidths) {
+      modules.push(createDualType1(dualWidth, maxHeight));
+      modules.push(createDualType2(dualWidth, maxHeight));
+      modules.push(createDualType4(dualWidth, maxHeight));
+      modules.push(createDualType5(dualWidth, maxHeight));
+      modules.push(createDualType6(dualWidth, maxHeight));
+    }
   } else {
     // 단내림 구간 디버깅 - 듀얼 가구가 생성되지 않는 이유 확인
     if (spaceInfo?.droppedCeiling?.enabled) {
       console.warn('🚨 단내림 구간 듀얼 가구 미생성:', {
         columnCount,
         columnWidth,
-        internalWidth: indexing.internalWidth,
+        zone: indexingSpaceInfo.zone,
+        zoneSlotInfo,
         spaceWidth: spaceInfo.width,
         customColumnCount: spaceInfo.customColumnCount
       });
@@ -826,9 +869,22 @@ export const generateShelvingModules = (
   }
   
   // === 상부장 가구 생성 ===
-  modules.push(createUpperCabinet1(columnWidth));
-  modules.push(createUpperCabinet2(columnWidth));
-  modules.push(createUpperCabinet3(columnWidth));
+  if (slotWidths && slotWidths.length > 0) {
+    // 고유한 슬롯 너비들만 추출 (중복 제거)
+    const uniqueWidths = [...new Set(slotWidths)];
+    
+    // 각 고유한 너비에 대해 상부장 생성
+    for (const width of uniqueWidths) {
+      modules.push(createUpperCabinet1(width));
+      modules.push(createUpperCabinet2(width));
+      modules.push(createUpperCabinet3(width));
+    }
+  } else {
+    // fallback: slotWidths가 없으면 평균 너비 사용
+    modules.push(createUpperCabinet1(columnWidth));
+    modules.push(createUpperCabinet2(columnWidth));
+    modules.push(createUpperCabinet3(columnWidth));
+  }
   
   return modules;
 };

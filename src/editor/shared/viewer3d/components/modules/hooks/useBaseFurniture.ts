@@ -107,7 +107,10 @@ export const useBaseFurniture = (
     adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
     actualWidthMm: actualWidthMm + 'mm',
     finalWidth: width.toFixed(3) + ' (Three.js units)',
-    logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'
+    logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용',
+    isDragging,
+    isEditMode,
+    호출스택: new Error().stack?.split('\n').slice(1, 4).join(' → ')
   });
   
   // 내경 치수 계산
