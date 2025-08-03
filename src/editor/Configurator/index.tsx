@@ -1531,7 +1531,6 @@ const Configurator: React.FC = () => {
                 <ModuleGallery 
                   moduleCategory={moduleCategory} 
                   upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
-                  activeZone={spaceInfo.droppedCeiling?.enabled ? (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal') : undefined}
                 />
               </div>
             </div>
@@ -2594,7 +2593,7 @@ const Configurator: React.FC = () => {
               showAll={showAll}
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
-              activeZone={spaceInfo.droppedCeiling?.enabled ? (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal') : undefined}
+              activeZone={activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal'}
             />
           </div>
 

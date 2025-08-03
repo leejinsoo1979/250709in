@@ -5,6 +5,22 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import styles from './PlacedFurnitureList.module.css';
 
+// 가구 썸네일 이미지 경로
+const getImagePath = (filename: string) => {
+  return `${import.meta.env.BASE_URL}images/furniture-thumbnails/${filename}`;
+};
+
+const FURNITURE_ICONS: Record<string, string> = {
+  'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
+  'single-2hanging': getImagePath('single-2hanging.png'), 
+  'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
+  'dual-2drawer-hanging': getImagePath('dual-2drawer-hanging.png'),
+  'dual-2hanging': getImagePath('dual-2hanging.png'),
+  'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
+  'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
+  'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
+};
+
 const PlacedFurnitureList: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
@@ -34,11 +50,32 @@ const PlacedFurnitureList: React.FC = () => {
       <div className={styles.listContainer}>
         {placedModules.map((placedModule) => {
           // 모듈 데이터 가져오기
-          const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
-          if (!moduleData) return null;
+          console.log('📋 [PlacedFurnitureList] 배치된 가구:', {
+            id: placedModule.id,
+            moduleId: placedModule.moduleId,
+            customWidth: placedModule.customWidth,
+            slotIndex: placedModule.slotIndex
+          });
+          
+          // customWidth가 있으면 해당 너비로 모듈 ID 생성
+          let targetModuleId = placedModule.moduleId;
+          if (placedModule.customWidth) {
+            const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+            targetModuleId = `${baseType}-${placedModule.customWidth}`;
+          }
+          
+          const moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
+          if (!moduleData) {
+            console.error('❌ [PlacedFurnitureList] 모듈을 찾을 수 없음:', placedModule.moduleId);
+            return null;
+          }
           
           // 선택 상태 확인
           const isSelected = selectedPlacedModuleId === placedModule.moduleId;
+          
+          // 가구 ID에서 기본 타입 추출 (너비 정보 제거)
+          const baseModuleType = placedModule.moduleId.replace(/-\d+$/, '');
+          const iconPath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
           
           return (
             <div 
@@ -47,14 +84,24 @@ const PlacedFurnitureList: React.FC = () => {
               onClick={() => setSelectedPlacedModuleId(isSelected ? null : placedModule.moduleId)}
             >
               <div className={styles.previewContainer}>
-                <div 
+                <img 
+                  src={iconPath} 
+                  alt={moduleData.name}
                   className={styles.preview}
-                  style={{ backgroundColor: moduleData.color }}
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    img.src = getImagePath('single-2drawer-hanging.png');
+                  }}
                 />
               </div>
               
               <div className={styles.infoContainer}>
-                <div className={styles.name}>{moduleData.name}</div>
+                <div className={styles.name}>
+                  {/* customWidth가 있고 moduleData 너비와 다르면 customWidth 표시 */}
+                  {placedModule.customWidth && placedModule.customWidth !== moduleData.dimensions.width
+                    ? moduleData.name.replace(/\d+mm/, `${placedModule.customWidth}mm`)
+                    : moduleData.name}
+                </div>
                 <div className={styles.dimensions}>
                   {placedModule.customWidth || moduleData.dimensions.width} × {moduleData.dimensions.height} × {placedModule.customDepth || moduleData.dimensions.depth}mm
                 </div>

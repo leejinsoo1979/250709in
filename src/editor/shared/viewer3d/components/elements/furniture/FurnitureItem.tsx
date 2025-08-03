@@ -78,24 +78,69 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
     }
     
-    // 영역별 spaceInfo 생성 - 단내림 구간의 경우 높이도 조정
+    // 영역별 spaceInfo 생성
     zoneSpaceInfo = {
       ...spaceInfo,
-      zone: placedModule.zone  // zone 정보만 추가 (높이는 calculateInternalSpace에서 처리)
+      width: zoneOuterWidth,  // zone의 외경 너비
+      zone: placedModule.zone  // zone 정보 추가
     };
     
-    internalSpace = {
-      ...calculateInternalSpace(zoneSpaceInfo),
-      startX: targetZone.startX
-    };
+    internalSpace = calculateInternalSpace(zoneSpaceInfo);
+    internalSpace.startX = targetZone.startX;
+    
+    // calculateInternalSpace에서 이미 zone === 'dropped'일 때 높이를 조정하므로
+    // 여기서는 추가 조정하지 않음
+    if (placedModule.zone === 'dropped') {
+      console.log('🏗️ [FurnitureItem] 단내림 구간 내경 공간:', {
+        zone: placedModule.zone,
+        internalHeight: internalSpace.height,
+        dropHeight: spaceInfo.droppedCeiling?.dropHeight || 200,
+        customHeight: placedModule.customHeight
+      });
+    }
   }
   
   // 모듈 데이터 가져오기 - zone별 spaceInfo 사용
-  let moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
+  console.log('🔍 [FurnitureItem] getModuleById 호출:', {
+    moduleId: placedModule.moduleId,
+    customWidth: placedModule.customWidth,
+    zone: placedModule.zone,
+    internalSpace: internalSpace
+  });
+  
+  // customWidth가 있으면 해당 너비로 모듈 ID 생성
+  let targetModuleId = placedModule.moduleId;
+  if (placedModule.customWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
+    // moduleId에 이미 너비가 포함되어 있지 않은 경우에만 추가
+    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+    targetModuleId = `${baseType}-${placedModule.customWidth}`;
+    console.log('🔧 [FurnitureItem] ModuleID 수정:', {
+      original: placedModule.moduleId,
+      customWidth: placedModule.customWidth,
+      newTargetModuleId: targetModuleId
+    });
+  }
+  
+  let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   if (!moduleData) {
+    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음:', placedModule.moduleId);
     return null; // 모듈 데이터가 없으면 렌더링하지 않음
   }
+  
+  console.log('✅ [FurnitureItem] 찾은 모듈:', {
+    targetModuleId: targetModuleId,
+    originalModuleId: placedModule.moduleId,
+    moduleId: moduleData.id,
+    moduleWidth: moduleData.dimensions.width,
+    moduleHeight: moduleData.dimensions.height,
+    customWidth: placedModule.customWidth,
+    expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
+    placedModuleId: placedModule.moduleId,
+    idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
+    zone: placedModule.zone,
+    internalSpaceHeight: internalSpace.height
+  });
 
   // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
   useEffect(() => {
@@ -183,32 +228,47 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
-  let furnitureWidthMm;
+  let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
   
-  // slotWidths가 있고 slotIndex가 유효하면 실제 슬롯 너비 사용
-  if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-    if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
-      // 듀얼 가구: 두 슬롯의 실제 너비 합계
-      furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
-    } else {
-      // 싱글 가구: 해당 슬롯의 실제 너비
-      furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex];
-    }
-  } else if (placedModule.customWidth) {
-    // customWidth가 있으면 사용
+  // customWidth가 명시적으로 설정되어 있으면 최우선 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
+  if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     furnitureWidthMm = placedModule.customWidth;
-  } else if (placedModule.adjustedWidth) {
-    // adjustedWidth가 있으면 사용
+    console.log('📐 customWidth 사용:', furnitureWidthMm);
+  } else if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+    // adjustedWidth가 있으면 사용 (기둥 침범 케이스)
     furnitureWidthMm = placedModule.adjustedWidth;
+    console.log('📐 adjustedWidth 사용:', furnitureWidthMm);
   } else {
-    // 기본값: 모듈의 기본 너비
-    furnitureWidthMm = actualModuleData.dimensions.width;
+    // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
+    console.log('📐 기본 너비 사용:', furnitureWidthMm);
   }
   
-  // 듀얼 가구 너비 검증 - 제거 (customWidth를 항상 신뢰)
+  // 슬롯 가이드와의 크기 비교 로그
+  if (indexing.slotWidths && placedModule.slotIndex !== undefined) {
+    const slotGuideWidth = isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1
+      ? indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1]
+      : indexing.slotWidths[placedModule.slotIndex];
+    
+    console.log('📏 FurnitureItem 크기 비교:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      'slotGuideWidth(mm)': slotGuideWidth,
+      'furnitureWidth(mm)': furnitureWidthMm,
+      'difference(mm)': Math.abs(slotGuideWidth - furnitureWidthMm),
+      'difference(Three.js)': Math.abs(slotGuideWidth - furnitureWidthMm) * 0.01,
+      'customWidth': placedModule.customWidth,
+      'adjustedWidth': placedModule.adjustedWidth,
+      'moduleWidth': actualModuleData.dimensions.width,
+      'isDualSlot': isDualFurniture,
+      'widthSource': placedModule.customWidth !== undefined && placedModule.customWidth !== null ? 'customWidth' : 
+                    placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null ? 'adjustedWidth' : 'moduleDefault'
+    });
+  }
+  
   // 디버깅용 로그 추가
   console.log('🎯 가구 너비 결정:', {
     moduleId: placedModule.id,
+    placedModuleId: placedModule.moduleId,
     slotIndex: placedModule.slotIndex,
     zone: placedModule.zone,
     isDualFurniture,
@@ -220,10 +280,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     실제슬롯너비배열: indexing.slotWidths,
     실제슬롯너비: indexing.slotWidths?.[placedModule.slotIndex],
     계산방법: (() => {
-      if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-        return `slotWidths 사용 (${indexing.slotWidths[placedModule.slotIndex]}mm)`;
-      } else if (placedModule.customWidth) {
+      if (placedModule.customWidth) {
         return `customWidth 사용 (${placedModule.customWidth}mm)`;
+      } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
+        return `slotWidths 사용 (${indexing.slotWidths[placedModule.slotIndex]}mm)`;
       } else if (placedModule.adjustedWidth) {
         return `adjustedWidth 사용 (${placedModule.adjustedWidth}mm)`;
       } else {
@@ -251,15 +311,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let adjustedDepthMm = actualModuleData.dimensions.depth;
   
   
-  // 단내림 구간에서는 customHeight 사용
-  let furnitureHeightMm = placedModule.customHeight || actualModuleData.dimensions.height;
+  // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
+  let furnitureHeightMm = actualModuleData.dimensions.height;
   
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
     console.log('📏 단내림 구간 가구 높이 (초기):', {
       moduleId: placedModule.id,
       customHeight: placedModule.customHeight,
-      originalHeight: actualModuleData.dimensions.height,
+      moduleHeight: actualModuleData.dimensions.height,
+      internalSpaceHeight: internalSpace.height,
       finalHeight: furnitureHeightMm,
       zone: placedModule.zone
     });
@@ -428,11 +489,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
     
     // 모든 기둥에 대해 폭 조정 방식 적용 (기둥 C 포함)
+    // 단, customWidth가 이미 설정되어 있으면 폭은 변경하지 않고 위치만 조정
     if (columnProcessingMethod === 'width-adjustment') {
       // Column C의 경우 서브슬롯 위치 사용
       if (isColumnC && slotInfo.subSlots && placedModule.subSlotPosition) {
         const subSlot = slotInfo.subSlots[placedModule.subSlotPosition];
-        furnitureWidthMm = subSlot.availableWidth;
+        // customWidth가 없을 때만 폭 조정
+        if (placedModule.customWidth === undefined || placedModule.customWidth === null) {
+          furnitureWidthMm = subSlot.availableWidth;
+        }
         adjustedPosition = {
           ...placedModule.position,
           x: subSlot.center
@@ -442,11 +507,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           subSlotPosition: placedModule.subSlotPosition,
           width: furnitureWidthMm,
           center: subSlot.center,
-          originalPosition: placedModule.position.x
+          originalPosition: placedModule.position.x,
+          customWidth: placedModule.customWidth,
+          widthOverridden: placedModule.customWidth === undefined || placedModule.customWidth === null
         });
       } else {
         // 일반 폭 조정 방식: 가구 크기와 위치 조정
-        furnitureWidthMm = furnitureBounds.renderWidth;
+        // customWidth가 없을 때만 폭 조정
+        if (placedModule.customWidth === undefined || placedModule.customWidth === null) {
+          furnitureWidthMm = furnitureBounds.renderWidth;
+        }
         adjustedPosition = {
           ...placedModule.position,
           x: furnitureBounds.center
@@ -498,18 +568,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 치수를 Three.js 단위로 변환
   const width = mmToThreeUnits(furnitureWidthMm);
   
-  // 가구 높이 계산: 받침대 설정에 따라 조정
-  // 단내림 구간에서는 위에서 이미 계산된 furnitureHeightMm 사용
-  if (!placedModule.customHeight) {
-    // internalSpace.height가 이미 zone에 맞게 계산되었음
-    furnitureHeightMm = internalSpace.height;
-    
-    if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
-      // 띄워서 배치일 때: 내경 높이에서 띄움 높이를 뺌
-      const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-      furnitureHeightMm = furnitureHeightMm - floatHeightMm;
-    }
-  }
+  // 가구 높이 계산: actualModuleData.dimensions.height가 이미 올바른 높이를 가지고 있음
+  // generateShelvingModules에서 internalSpace.height를 기반으로 가구를 생성했기 때문
+  // 추가 조정 불필요
   
   const height = mmToThreeUnits(furnitureHeightMm);
   
@@ -685,14 +746,40 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             />
             {/* 가구 너비 디버깅 */}
             {(() => {
-              console.log('🎨 BoxModule에 전달되는 너비:', {
+              const slotWidthMm = (() => {
+                if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && indexing.zones) {
+                  const targetZone = placedModule.zone === 'dropped' && indexing.zones.dropped ? indexing.zones.dropped : indexing.zones.normal;
+                  return targetZone.slotWidths?.[placedModule.slotIndex] || targetZone.columnWidth;
+                }
+                return indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth;
+              })();
+              
+              const expectedThreeUnits = mmToThreeUnits(slotWidthMm);
+              const actualThreeUnits = mmToThreeUnits(furnitureWidthMm);
+              
+              console.log('🎨 BoxModule 너비 비교:', {
                 moduleId: placedModule.id,
                 slotIndex: placedModule.slotIndex,
-                furnitureWidthMm,
-                adjustedWidth: furnitureWidthMm,
-                moduleDataWidth: actualModuleData.dimensions.width,
-                슬롯표시너비: indexing.slotWidths?.[placedModule.slotIndex],
-                차이: (indexing.slotWidths?.[placedModule.slotIndex] || 0) - furnitureWidthMm
+                zone: placedModule.zone,
+                '슬롯너비_mm': slotWidthMm,
+                '가구너비_mm': furnitureWidthMm,
+                '차이_mm': slotWidthMm - furnitureWidthMm,
+                '슬롯너비_three': expectedThreeUnits.toFixed(4),
+                '가구너비_three': actualThreeUnits.toFixed(4),
+                '차이_three': (expectedThreeUnits - actualThreeUnits).toFixed(4),
+                customWidth: placedModule.customWidth,
+                adjustedWidth: placedModule.adjustedWidth,
+                계산방법: (() => {
+                  if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
+                    return 'slotWidths 배열 사용';
+                  } else if (placedModule.customWidth) {
+                    return 'customWidth 사용';
+                  } else if (placedModule.adjustedWidth) {
+                    return 'adjustedWidth 사용';
+                  } else {
+                    return '기본 모듈 너비 사용';
+                  }
+                })()
               });
               return null;
             })()}

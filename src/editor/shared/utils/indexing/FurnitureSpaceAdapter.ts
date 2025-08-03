@@ -119,14 +119,8 @@ export class FurnitureSpaceAdapter {
         const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
                     (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
         
-        // 영역에 맞는 새로운 moduleId 생성
-        let newModuleId = module.moduleId;
-        if (moduleData.isDynamic) {
-          // 모듈 타입 추출 (예: single-4drawer-hanging-600 → single-4drawer-hanging)
-          const moduleType = module.moduleId.split('-').slice(0, -1).join('-');
-          const targetWidth = isDual ? targetZone.columnWidth * 2 : targetZone.columnWidth;
-          newModuleId = `${moduleType}-${targetWidth}`;
-        }
+        // 영역에 맞는 새로운 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
+        const newModuleId = module.moduleId;
         
         validFurniture.push({
           ...module,
@@ -212,9 +206,7 @@ export class FurnitureSpaceAdapter {
             
             validFurniture.push({
               ...module,
-              moduleId: moduleData.isDynamic 
-                ? `single-${moduleData.type}-${singleWidth}`
-                : singleModuleId,
+              moduleId: singleModuleId,
               position: {
                 x: SpaceCalculator.mmToThreeUnits(newX),
                 y: module.position.y,
@@ -232,19 +224,9 @@ export class FurnitureSpaceAdapter {
           return;
         }
         
-        // 영역별 크기 조정된 moduleId 생성
-        let adjustedModuleId = module.moduleId;
-        let adjustedWidth = moduleFitWidth;
-        
-        if (moduleData.isDynamic) {
-          if (isDualFurniture) {
-            adjustedWidth = zoneColumnWidth * 2;
-            adjustedModuleId = `dual-${moduleData.type}-${adjustedWidth}`;
-          } else {
-            adjustedWidth = zoneColumnWidth;
-            adjustedModuleId = `single-${moduleData.type}-${adjustedWidth}`;
-          }
-        }
+        // 영역별 크기 조정된 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
+        const adjustedModuleId = module.moduleId;
+        const adjustedWidth = isDualFurniture ? zoneColumnWidth * 2 : zoneColumnWidth;
         
         // 새 위치 계산 (영역별)
         const baseX = zone === 'normal' 

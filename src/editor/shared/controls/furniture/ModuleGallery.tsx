@@ -9,6 +9,7 @@ import { getModuleById } from '@/data/modules';
 import styles from './ModuleGallery.module.css';
 import Button from '@/components/common/Button';
 import { useAlert } from '@/hooks/useAlert';
+import { useUIStore } from '@/store/uiStore';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -43,17 +44,14 @@ interface ThumbnailItemProps {
   isValid: boolean;
 }
 
-interface ThumbnailItemPropsExtended extends ThumbnailItemProps {
-  activeZone?: 'normal' | 'dropped';
-}
-
-const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath, isValid, activeZone }) => {
+const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const { showAlert, AlertComponent } = useAlert();
+  const { activeDroppedCeilingTab } = useUIStore();
 
   // 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
@@ -66,19 +64,21 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
     let indexing = calculateSpaceIndexing(spaceInfo);
     let targetZone: 'normal' | 'dropped' = 'normal';
     let adjustedDimensions = { ...module.dimensions };
+    let dragModuleId = module.id; // 드래그에 사용할 모듈 ID
     
-    // 단내림이 활성화되어 있고 activeZone이 설정된 경우
-    if (spaceInfo.droppedCeiling?.enabled && activeZone) {
-      targetZone = activeZone;
+    // 단내림이 활성화되어 있는 경우
+    if (spaceInfo.droppedCeiling?.enabled) {
+      targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
-      if (activeZone === 'dropped' && zoneInfo.dropped) {
-        // 단내림 영역의 슬롯 너비 사용
+      if (targetZone === 'dropped' && zoneInfo.dropped) {
+        // 단내림 영역의 개별 슬롯 너비 사용
+        const droppedSlotWidths = zoneInfo.dropped.slotWidths || [];
         const droppedColumnWidth = zoneInfo.dropped.columnWidth;
         
         // 특수 듀얼 가구 체크
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                     module.id.includes('dual-4drawer-pantshanger-');
+        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
+                                     module.id.includes('dual-4drawer-pantshanger');
         
         if (isSpecialDualFurniture && droppedColumnWidth < 550) {
           showAlert('단내림 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
@@ -89,15 +89,31 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         // 동적 가구인 경우 크기 조정
         if (module.isDynamic) {
           const isDualFurniture = module.dimensions.width > droppedColumnWidth * 1.5;
-          adjustedDimensions.width = isDualFurniture ? droppedColumnWidth * 2 : droppedColumnWidth;
+          
+          // 첫 번째 슬롯의 실제 너비 사용
+          if (droppedSlotWidths.length > 0) {
+            if (isDualFurniture && droppedSlotWidths.length >= 2) {
+              adjustedDimensions.width = droppedSlotWidths[0] + droppedSlotWidths[1];
+            } else {
+              adjustedDimensions.width = droppedSlotWidths[0];
+            }
+          } else {
+            // fallback: 평균 너비 사용
+            adjustedDimensions.width = isDualFurniture ? droppedColumnWidth * 2 : droppedColumnWidth;
+          }
+          
+          // 정확한 너비를 포함한 모듈 ID 생성
+          const baseType = module.id.replace(/-\d+$/, '');
+          dragModuleId = `${baseType}-${Math.round(adjustedDimensions.width)}`;
         }
-      } else if (activeZone === 'normal' && zoneInfo.normal) {
-        // 메인 영역의 슬롯 너비 사용
+      } else if (targetZone === 'normal' && zoneInfo.normal) {
+        // 메인 영역의 개별 슬롯 너비 사용
+        const normalSlotWidths = zoneInfo.normal.slotWidths || [];
         const normalColumnWidth = zoneInfo.normal.columnWidth;
         
         // 특수 듀얼 가구 체크
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                     module.id.includes('dual-4drawer-pantshanger-');
+        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
+                                     module.id.includes('dual-4drawer-pantshanger');
         
         if (isSpecialDualFurniture && normalColumnWidth < 550) {
           showAlert('메인 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
@@ -108,18 +124,42 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         // 동적 가구인 경우 크기 조정
         if (module.isDynamic) {
           const isDualFurniture = module.dimensions.width > normalColumnWidth * 1.5;
-          adjustedDimensions.width = isDualFurniture ? normalColumnWidth * 2 : normalColumnWidth;
+          
+          // 첫 번째 슬롯의 실제 너비 사용
+          if (normalSlotWidths.length > 0) {
+            if (isDualFurniture && normalSlotWidths.length >= 2) {
+              adjustedDimensions.width = normalSlotWidths[0] + normalSlotWidths[1];
+            } else {
+              adjustedDimensions.width = normalSlotWidths[0];
+            }
+          } else {
+            // fallback: 평균 너비 사용
+            adjustedDimensions.width = isDualFurniture ? normalColumnWidth * 2 : normalColumnWidth;
+          }
+          
+          // 정확한 너비를 포함한 모듈 ID 생성
+          const baseType = module.id.replace(/-\d+$/, '');
+          dragModuleId = `${baseType}-${Math.round(adjustedDimensions.width)}`;
         }
       }
     } else {
       // 단내림이 없는 경우 기존 로직
-      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                   module.id.includes('dual-4drawer-pantshanger-');
+      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
+                                   module.id.includes('dual-4drawer-pantshanger');
       
       if (isSpecialDualFurniture && indexing.columnWidth < 550) {
         showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
         e.preventDefault();
         return;
+      }
+      
+      // 동적 가구인 경우 정확한 너비로 ID 생성
+      if (module.isDynamic) {
+        const isDualFurniture = module.id.startsWith('dual-');
+        const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        const baseType = module.id.replace(/-\d+$/, '');
+        dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+        adjustedDimensions.width = targetWidth;
       }
     }
 
@@ -131,7 +171,7 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       type: 'furniture',
       zone: targetZone,
       moduleData: {
-        id: module.id,
+        id: dragModuleId, // 조정된 ID 사용
         name: module.name,
         dimensions: adjustedDimensions, // 조정된 크기 사용
         originalDimensions: module.dimensions, // 원본 크기도 저장
@@ -147,9 +187,12 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
     e.dataTransfer.effectAllowed = 'copy';
     
     console.log('🎯 [ModuleGallery] Drag started:', {
-      moduleId: module.id,
+      originalModuleId: module.id,
+      dragModuleId: dragModuleId,
       dragData,
-      zone: targetZone
+      zone: targetZone,
+      adjustedWidth: adjustedDimensions.width,
+      isDynamic: module.isDynamic
     });
 
     // 전역 드래그 상태 설정
@@ -186,17 +229,18 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       // 단내림이 활성화되어 있는 경우 영역별 처리
       let zoneSpaceInfo = spaceInfo;
       let zoneInternalSpace = calculateInternalSpace(spaceInfo);
+      const targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
       
-      if (spaceInfo.droppedCeiling?.enabled && activeZone) {
+      if (spaceInfo.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
         console.log('🎯 [ModuleGallery] Zone info:', {
-          activeZone,
+          targetZone,
           zoneInfo,
           originalWidth: spaceInfo.width,
           originalColumns: spaceInfo.customColumnCount
         });
         
-        if (activeZone === 'dropped' && zoneInfo.dropped) {
+        if (targetZone === 'dropped' && zoneInfo.dropped) {
           // 단내림 영역용 spaceInfo 생성
           zoneSpaceInfo = {
             ...spaceInfo,
@@ -210,7 +254,7 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
             zoneColumns: zoneInfo.dropped.columnCount,
             zoneInternalWidth: zoneInternalSpace.width
           });
-        } else if (activeZone === 'normal' && zoneInfo.normal) {
+        } else if (targetZone === 'normal' && zoneInfo.normal) {
           // 메인 영역용 spaceInfo 생성
           zoneSpaceInfo = {
             ...spaceInfo,
@@ -243,8 +287,8 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       });
       
       // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
-      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler-') || 
-                                   module.id.includes('dual-4drawer-pantshanger-');
+      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
+                                   module.id.includes('dual-4drawer-pantshanger');
       
       // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
       if (isSpecialDualFurniture && indexing.columnWidth < 550) {
@@ -252,40 +296,29 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         return;
       }
       
-      // 영역별 모듈 데이터 가져오기
-      let moduleToUse = module;
+      // 동적 크기 조정이 필요한 가구인지 확인
+      const isDynamicFurniture = module.isDynamic || module.id.includes('single-') || module.id.includes('dual-');
       
-      // 단내림이 활성화되고 activeZone이 설정된 경우 영역별 모듈 생성
-      if (spaceInfo.droppedCeiling?.enabled && activeZone) {
-        // 가구 ID에서 기본 타입 추출 (예: single-4drawer-hanging-583 -> single-4drawer-hanging)
-        const baseModuleId = module.id.replace(/-\d+$/, '');
-        // 영역의 컬럼 폭으로 새로운 ID 생성
-        const zoneModuleId = `${baseModuleId}-${indexing.columnWidth}`;
-        
-        console.log('🎯 [ModuleGallery] Creating zone module:', {
-          activeZone,
-          originalId: module.id,
-          baseModuleId,
-          zoneModuleId,
-          zoneColumnWidth: indexing.columnWidth
-        });
-        
-        // 영역에 맞는 가구 데이터 직접 생성
-        moduleToUse = {
-          ...module,
-          id: zoneModuleId,
-          dimensions: {
-            ...module.dimensions,
-            width: indexing.columnWidth
-          }
-        };
+      // 영역에 맞는 실제 너비 계산
+      let actualWidth = module.dimensions.width;
+      if (isDynamicFurniture) {
+        const isDualFurniture = module.id.startsWith('dual-');
+        actualWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
       }
       
-      const zoneModule = moduleToUse;
+      console.log('🎯 [ModuleGallery] Dynamic width calculation:', {
+        targetZone,
+        originalId: module.id,
+        originalWidth: module.dimensions.width,
+        isDynamicFurniture,
+        actualWidth,
+        indexingColumnWidth: indexing.columnWidth
+      });
       
-      console.log('🎯 [ModuleGallery] Zone module created:', {
-        moduleId: zoneModule.id,
-        width: zoneModule.dimensions.width,
+      console.log('🎯 [ModuleGallery] Using original module with dynamic width:', {
+        moduleId: module.id,
+        originalWidth: module.dimensions.width,
+        actualWidth,
         expectedColumnWidth: indexing.columnWidth
       });
       
@@ -351,18 +384,35 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
       
       // 실제 슬롯 너비 계산
       let customWidth;
+      let targetModuleId = module.id;
+      
       if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[availableSlotIndex] !== undefined) {
         customWidth = indexing.slotWidths[availableSlotIndex] + (indexing.slotWidths[availableSlotIndex + 1] || indexing.slotWidths[availableSlotIndex]);
+        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성
+        const moduleBaseType = module.id.replace(/-\d+$/, '');
+        targetModuleId = `${moduleBaseType}-${customWidth}`;
       } else if (indexing.slotWidths && indexing.slotWidths[availableSlotIndex] !== undefined) {
         customWidth = indexing.slotWidths[availableSlotIndex];
+        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성
+        const moduleBaseType = module.id.replace(/-\d+$/, '');
+        targetModuleId = `${moduleBaseType}-${customWidth}`;
       } else {
         customWidth = indexing.columnWidth;
       }
+      
+      console.log('🎯 [ModuleGallery] Target module ID with exact width:', {
+        originalId: module.id,
+        targetModuleId,
+        customWidth,
+        isDualFurniture,
+        slotIndex: availableSlotIndex,
+        slotWidths: indexing.slotWidths
+      });
 
       // 새 모듈 생성
       const newModule = {
         id: placedId,
-        moduleId: zoneModule.id, // module.id가 아니라 zoneModule.id 사용
+        moduleId: targetModuleId, // 정확한 너비의 모듈 ID 사용
         position: {
           x: positionX,
           y: 0,
@@ -370,24 +420,23 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
         },
         rotation: 0,
         hasDoor: false,
-        customDepth: getDefaultDepth(zoneModule),
+        customDepth: getDefaultDepth(module),
         slotIndex: availableSlotIndex,
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true,
-        adjustedWidth: zoneModule.dimensions.width,
+        adjustedWidth: actualWidth, // 계산된 실제 너비 사용
         hingePosition: 'right' as 'left' | 'right',
-        zone: activeZone || undefined, // 영역 정보 저장
+        zone: targetZone || undefined, // 영역 정보 저장
         customWidth: customWidth // 실제 슬롯 너비 추가
       };
       
       console.log('🚨 [ModuleGallery] New module created:', {
-        originalModuleId: module.id,
+        moduleId: module.id,
         originalWidth: module.dimensions.width,
-        zoneModuleId: zoneModule.id,
-        zoneModuleWidth: zoneModule.dimensions.width,
+        actualWidth: actualWidth,
         expectedColumnWidth: indexing.columnWidth,
         position: newModule.position,
-        zone: activeZone,
+        zone: targetZone,
         adjustedWidth: newModule.adjustedWidth
       });
       
@@ -458,51 +507,78 @@ const ThumbnailItem: React.FC<ThumbnailItemPropsExtended> = ({ module, iconPath,
 interface ModuleGalleryProps {
   moduleCategory?: 'tall' | 'upperlower';
   upperLowerTab?: 'upper' | 'lower';
-  activeZone?: 'normal' | 'dropped';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper', activeZone }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper' }) => {
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
+  const { activeDroppedCeilingTab } = useUIStore();
 
-  // 내경 공간 계산
-  const internalSpace = calculateInternalSpace(spaceInfo);
+  // 단내림이 활성화되어 있고 단내림 탭이 선택된 경우 영역별 공간 정보 사용
+  let zoneSpaceInfo = spaceInfo;
+  let zoneInternalSpace = calculateInternalSpace(spaceInfo);
   
-  // 인덱싱 정보 계산 (컬럼 정보)
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  if (spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped') {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (zoneInfo.dropped) {
+      // 단내림 구간용 spaceInfo 생성
+      zoneSpaceInfo = {
+        ...spaceInfo,
+        width: zoneInfo.dropped.width,
+        customColumnCount: zoneInfo.dropped.columnCount,
+        columnMode: 'custom' as const,
+        zone: 'dropped' as const
+      } as SpaceInfo;
+      zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+    }
+  }
+  
+  // 인덱싱 정보 계산 (컬럼 정보) - 영역별 공간 정보 사용
+  const indexing = calculateSpaceIndexing(zoneSpaceInfo);
   
   // 단일 컬럼의 너비 계산
   const columnWidth = indexing.columnWidth;
   
-  // 전체 높이 모듈들만 가져오기 (내경 공간 정보 전달)
-  // activeZone이 있으면 zone 정보를 추가한 spaceInfo 전달
-  const zoneSpaceInfo = activeZone ? { ...spaceInfo, zone: activeZone } : spaceInfo;
-  const fullModules = getModulesByCategory('full', internalSpace, zoneSpaceInfo);
+  // 전체 높이 모듈들만 가져오기 (내경 공간 정보 전달) - 영역별 공간 정보 사용
+  const fullModules = getModulesByCategory('full', zoneInternalSpace, zoneSpaceInfo);
   
   console.log('🔍 [ModuleGallery] Debug info:', {
-    spaceInfo: {
+    activeDroppedCeilingTab,
+    originalSpaceInfo: {
       width: spaceInfo.width,
       customColumnCount: spaceInfo.customColumnCount,
       columnMode: spaceInfo.columnMode,
       droppedCeiling: spaceInfo.droppedCeiling
     },
-    internalSpace,
+    zoneSpaceInfo: {
+      width: zoneSpaceInfo.width,
+      customColumnCount: zoneSpaceInfo.customColumnCount,
+      zone: (zoneSpaceInfo as any).zone
+    },
+    internalSpace: zoneInternalSpace,
     indexing: {
       columnWidth: indexing.columnWidth,
-      columnCount: indexing.columnCount
+      columnCount: indexing.columnCount,
+      slotWidths: indexing.slotWidths
     },
-    activeZone,
     fullModules: fullModules.map(m => ({ id: m.id, width: m.dimensions.width }))
   });
   
-  // 싱글(1컬럼)과 듀얼(2컬럼) 모듈로 분류 (기존 로직 재사용)
+  // 단내림 구간 선택시 추가 디버깅
+  if (activeDroppedCeilingTab === 'dropped') {
+    console.log('🚨🚨🚨 단내림 구간 갤러리:', {
+      zoneSlotWidths: indexing.slotWidths,
+      zoneColumnWidth: indexing.columnWidth,
+      expectedWidths: indexing.slotWidths ? [...new Set(indexing.slotWidths)] : [],
+      actualModuleWidths: fullModules.map(m => m.dimensions.width).filter((v, i, a) => a.indexOf(v) === i)
+    });
+  }
+  
+  // 싱글(1컬럼)과 듀얼(2컬럼) 모듈로 분류 (동적 크기 조정을 위해 ID 기반 분류)
   const { singleModules, dualModules } = useMemo(() => {
-    // 여백 허용치 축소 (기존 50mm에서 30mm로 감소)
-    const MARGIN_TOLERANCE = 30;
-    
     // 컬럼이 1개인 경우 모두 싱글로 처리
     if (indexing.columnCount <= 1) {
       return {
@@ -511,28 +587,18 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       };
     }
     
-    // 일반적인 컬럼 계산 로직
+    // ID 기반으로 싱글/듀얼 분류
     return fullModules.reduce((acc, module) => {
-      const moduleWidth = module.dimensions.width;
-      
-      // 싱글 컬럼 모듈 판단 (1컬럼 너비 ± 여백 허용치)
-      if (Math.abs(moduleWidth - columnWidth) <= MARGIN_TOLERANCE) {
-        acc.singleModules.push(module);
-      } 
-      // 듀얼 컬럼 모듈 판단 (2컬럼 너비 ± 여백 허용치)
-      else if (Math.abs(moduleWidth - (columnWidth * 2)) <= MARGIN_TOLERANCE) {
+      // ID에 'dual-'이 포함되면 듀얼, 아니면 싱글
+      if (module.id.includes('dual-')) {
         acc.dualModules.push(module);
-      } 
-      // 그 외 케이스는 가장 가까운 컬럼 수에 할당
-      else if (moduleWidth < (columnWidth * 1.5)) {
-        acc.singleModules.push(module);
       } else {
-        acc.dualModules.push(module);
+        acc.singleModules.push(module);
       }
       
       return acc;
     }, { singleModules: [] as ModuleData[], dualModules: [] as ModuleData[] });
-  }, [fullModules, columnWidth, indexing.columnCount]);
+  }, [fullModules, indexing.columnCount]);
 
   // 현재 선택된 탭에 따른 모듈 목록 (moduleCategory 필터링 추가)
   const currentModules = useMemo(() => {
@@ -582,9 +648,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 유효성 검사 (간단 버전)
   const isModuleValid = (module: ModuleData): boolean => {
-    return module.dimensions.width <= internalSpace.width && 
-           module.dimensions.height <= internalSpace.height && 
-           module.dimensions.depth <= internalSpace.depth;
+    return module.dimensions.width <= zoneInternalSpace.width && 
+           module.dimensions.height <= zoneInternalSpace.height && 
+           module.dimensions.depth <= zoneInternalSpace.depth;
   };
 
   // cn 유틸 함수 추가
@@ -629,7 +695,6 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
                 module={module}
                 iconPath={iconPath}
                 isValid={isValid}
-                activeZone={activeZone}
               />
             );
           })

@@ -234,8 +234,8 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `하단 2단 서랍장 + 상단 옷장 (안전선반 포함) | 폭 ${columnWidth}mm`
-      : `하단 2단 서랍장 + 상단 옷장 | 폭 ${columnWidth}mm`,
+      ? `하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
+      : `하단 2단 서랍장 + 상단 옷장`,
     FURNITURE_SPECS.DEFAULT_DEPTH // 서랍+옷장 복합형 기본 깊이
   );
   
@@ -282,8 +282,8 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `하단 짧은옷장 + 상단 긴옷장 (안전선반 포함) | 폭 ${columnWidth}mm`
-      : `하단 짧은옷장 + 상단 긴옷장 | 폭 ${columnWidth}mm`
+      ? `하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
+      : `하단 짧은옷장 + 상단 긴옷장`
   );
   
   return {
@@ -324,13 +324,13 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   const base = createFurnitureBase(
     `single-4drawer-hanging-${columnWidth}`,
     `4단서랍+옷장 ${columnWidth}mm`,
-    columnWidth,
+    columnWidth, // columnWidth 사용 (500mm 대신)
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `4단 서랍장 + 옷장 복합형 (안전선반 포함) | 폭 ${columnWidth}mm`
-      : `4단 서랍장 + 옷장 복합형 | 폭 ${columnWidth}mm`
+      ? `4단 서랍장 + 옷장 복합형 (안전선반 포함)`
+      : `4단 서랍장 + 옷장 복합형`
   );
   
   return {
@@ -381,8 +381,8 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number): ModuleData
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE1,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `듀얼 하단 2단 서랍장 + 상단 옷장 (안전선반 포함) | 폭 ${dualColumnWidth}mm`
-      : `듀얼 하단 2단 서랍장 + 상단 옷장 | 폭 ${dualColumnWidth}mm`
+      ? `듀얼 하단 2단 서랍장 + 상단 옷장 (안전선반 포함)`
+      : `듀얼 하단 2단 서랍장 + 상단 옷장`
   );
   
   return {
@@ -428,8 +428,8 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number): ModuleData
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `듀얼 하단 짧은옷장 + 상단 긴옷장 (안전선반 포함) | 폭 ${dualColumnWidth}mm`
-      : `듀얼 하단 짧은옷장 + 상단 긴옷장 | 폭 ${dualColumnWidth}mm`
+      ? `듀얼 하단 짧은옷장 + 상단 긴옷장 (안전선반 포함)`
+      : `듀얼 하단 짧은옷장 + 상단 긴옷장`
   );
   
   return {
@@ -470,13 +470,13 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number): ModuleData
   const base = createFurnitureBase(
     `dual-4drawer-hanging-${dualColumnWidth}`,
     `듀얼 4단서랍+옷장 ${dualColumnWidth}mm`,
-    dualColumnWidth,
+    dualColumnWidth, // dualColumnWidth 사용 (1000mm 대신)
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE4,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `듀얼 4단 서랍장 + 옷장 복합형 (안전선반 포함) | 폭 ${dualColumnWidth}mm`
-      : `듀얼 4단 서랍장 + 옷장 복합형 | 폭 ${dualColumnWidth}mm`
+      ? `듀얼 4단 서랍장 + 옷장 복합형 (안전선반 포함)`
+      : `듀얼 4단 서랍장 + 옷장 복합형`
   );
   
   return {
@@ -535,8 +535,8 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number): ModuleData
     600, // 좌측 서랍+옷장 기본 깊이 (customDepth로 변경 가능)
     FURNITURE_SPECS.COLORS.STYLER,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `좌측 서랍+옷장 + 우측 스타일러장 (안전선반 포함) | 폭 ${dualColumnWidth}mm`
-      : `좌측 서랍+옷장 + 우측 스타일러장 | 폭 ${dualColumnWidth}mm`,
+      ? `좌측 서랍+옷장 + 우측 스타일러장 (안전선반 포함)`
+      : `좌측 서랍+옷장 + 우측 스타일러장`,
     600
   );
   
@@ -570,8 +570,8 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number): ModuleData
     FURNITURE_SPECS.DEFAULT_DEPTH,
     FURNITURE_SPECS.COLORS.PANTSHANGER,
     maxHeight > FURNITURE_SPECS.SAFETY_SHELF_THRESHOLD 
-      ? `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 (통합 안전선반) | 폭 ${dualColumnWidth}mm`
-      : `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 | 폭 ${dualColumnWidth}mm`
+      ? `좌측 4단서랍+옷장 + 우측 바지걸이+옷장 (통합 안전선반)`
+      : `좌측 4단서랍+옷장 + 우측 바지걸이+옷장`
   );
   
   return {
@@ -631,7 +631,7 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
     600, // 상부장 기본 높이 600mm
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#e8f5e9', // 연한 초록색
-    `상부장 선반 2단형 | 폭 ${columnWidth}mm`
+    `상부장 선반 2단형`
   );
   
   return {
@@ -662,7 +662,7 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
     600,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#fff3e0', // 연한 주황색
-    `상부장 오픈형 | 폭 ${columnWidth}mm`
+    `상부장 오픈형`
   );
   
   return {
@@ -692,7 +692,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
     600,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#f3e5f5', // 연한 보라색
-    `상부장 혼합형 (오픈+선반) | 폭 ${columnWidth}mm`
+    `상부장 혼합형 (오픈+선반)`
   );
   
   return {
@@ -756,30 +756,44 @@ export const generateShelvingModules = (
     return [];
   }
   
-  // 단내림 구간인지 확인하고 zoneSlotInfo 사용
-  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
-  
+  // _tempSlotWidths가 있으면 우선 사용 (getModuleById에서 특정 너비로 검색하는 경우)
   let columnWidth: number;
   let columnCount: number;
   let slotWidths: number[] | undefined;
+  let zoneSlotInfo: any = null; // 디버깅용으로 여기서 선언
   
-  // 단내림이 활성화되고 zone 정보가 전달된 경우
-  if (indexingSpaceInfo.droppedCeiling?.enabled && indexingSpaceInfo.zone) {
-    const zone = indexingSpaceInfo.zone;
-    if (zone === 'dropped' && zoneSlotInfo.dropped) {
-      columnWidth = zoneSlotInfo.dropped.columnWidth;
-      columnCount = zoneSlotInfo.dropped.columnCount;
-      slotWidths = zoneSlotInfo.dropped.slotWidths;
+  if (indexingSpaceInfo && '_tempSlotWidths' in indexingSpaceInfo && indexingSpaceInfo._tempSlotWidths) {
+    slotWidths = indexingSpaceInfo._tempSlotWidths as number[];
+    columnWidth = slotWidths[0];
+    columnCount = slotWidths.length;
+    
+    console.log('🎯 [generateShelvingModules] _tempSlotWidths 사용:', {
+      slotWidths,
+      columnWidth,
+      columnCount
+    });
+  } else {
+    // 단내림 구간인지 확인하고 zoneSlotInfo 사용
+    zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
+    
+    // 단내림이 활성화되고 zone 정보가 전달된 경우
+    if (indexingSpaceInfo.droppedCeiling?.enabled && indexingSpaceInfo.zone) {
+      const zone = indexingSpaceInfo.zone;
+      if (zone === 'dropped' && zoneSlotInfo.dropped) {
+        columnWidth = zoneSlotInfo.dropped.columnWidth;
+        columnCount = zoneSlotInfo.dropped.columnCount;
+        slotWidths = zoneSlotInfo.dropped.slotWidths;
+      } else {
+        columnWidth = zoneSlotInfo.normal.columnWidth;
+        columnCount = zoneSlotInfo.normal.columnCount;
+        slotWidths = zoneSlotInfo.normal.slotWidths;
+      }
     } else {
+      // 단내림이 없는 경우 일반 계산
       columnWidth = zoneSlotInfo.normal.columnWidth;
       columnCount = zoneSlotInfo.normal.columnCount;
       slotWidths = zoneSlotInfo.normal.slotWidths;
     }
-  } else {
-    // 단내림이 없는 경우 일반 계산
-    columnWidth = zoneSlotInfo.normal.columnWidth;
-    columnCount = zoneSlotInfo.normal.columnCount;
-    slotWidths = zoneSlotInfo.normal.slotWidths;
   }
   
   
@@ -787,8 +801,10 @@ export const generateShelvingModules = (
     zone: indexingSpaceInfo.zone,
     columnWidth,
     columnCount,
+    slotWidths,
     zoneSlotInfo,
-    droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled
+    droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
+    internalSpaceWidth: internalSpace.width
   });
   
   // 700mm 컬럼이 계산되면 에러 발생
@@ -808,83 +824,30 @@ export const generateShelvingModules = (
     zone: indexingSpaceInfo.zone,
     columnWidth,
     columnCount,
-    slotWidths
+    slotWidths,
+    uniqueWidths: slotWidths ? [...new Set(slotWidths)] : []
   });
   
+  // 갤러리 표시용으로는 평균 너비의 가구만 생성 (중복 방지)
   // === 싱글 가구 생성 ===
-  // 실제 슬롯 너비별로 가구 생성
-  if (slotWidths && slotWidths.length > 0) {
-    // 고유한 슬롯 너비들만 추출 (중복 제거)
-    const uniqueWidths = [...new Set(slotWidths)];
-    
-    // 각 고유한 너비에 대해 가구 생성
-    for (const width of uniqueWidths) {
-      modules.push(createSingleType1(width, maxHeight));
-      modules.push(createSingleType2(width, maxHeight));
-      modules.push(createSingleType4(width, maxHeight));
-    }
-  } else {
-    // fallback: slotWidths가 없으면 평균 너비 사용
-    modules.push(createSingleType1(columnWidth, maxHeight));
-    modules.push(createSingleType2(columnWidth, maxHeight));
-    modules.push(createSingleType4(columnWidth, maxHeight));
-  }
+  modules.push(createSingleType1(columnWidth, maxHeight));
+  modules.push(createSingleType2(columnWidth, maxHeight));
+  modules.push(createSingleType4(columnWidth, maxHeight));
   
-  // === 듀얼 가구 생성 (컬럼이 2개 이상인 경우) ===
-  if (columnCount >= 2) {
-    // 듀얼 가구용 실제 너비 계산
-    const dualWidths = new Set<number>();
-    
-    if (slotWidths && slotWidths.length >= 2) {
-      // 인접한 두 슬롯의 너비를 합산
-      for (let i = 0; i < slotWidths.length - 1; i++) {
-        const dualWidth = slotWidths[i] + slotWidths[i + 1];
-        dualWidths.add(dualWidth);
-      }
-    } else {
-      // fallback: 평균 너비의 2배 사용
-      dualWidths.add(columnWidth * 2);
-    }
-    
-    // 각 고유한 듀얼 너비에 대해 가구 생성
-    for (const dualWidth of dualWidths) {
-      modules.push(createDualType1(dualWidth, maxHeight));
-      modules.push(createDualType2(dualWidth, maxHeight));
-      modules.push(createDualType4(dualWidth, maxHeight));
-      modules.push(createDualType5(dualWidth, maxHeight));
-      modules.push(createDualType6(dualWidth, maxHeight));
-    }
-  } else {
-    // 단내림 구간 디버깅 - 듀얼 가구가 생성되지 않는 이유 확인
-    if (spaceInfo?.droppedCeiling?.enabled) {
-      console.warn('🚨 단내림 구간 듀얼 가구 미생성:', {
-        columnCount,
-        columnWidth,
-        zone: indexingSpaceInfo.zone,
-        zoneSlotInfo,
-        spaceWidth: spaceInfo.width,
-        customColumnCount: spaceInfo.customColumnCount
-      });
-    }
+  // === 듀얼 가구 생성 ===
+  const dualWidth = columnWidth * 2;
+  if (dualWidth <= internalSpace.width) {
+    modules.push(createDualType1(dualWidth, maxHeight));
+    modules.push(createDualType2(dualWidth, maxHeight));
+    modules.push(createDualType4(dualWidth, maxHeight));
+    modules.push(createDualType5(dualWidth, maxHeight));
+    modules.push(createDualType6(dualWidth, maxHeight));
   }
   
   // === 상부장 가구 생성 ===
-  if (slotWidths && slotWidths.length > 0) {
-    // 고유한 슬롯 너비들만 추출 (중복 제거)
-    const uniqueWidths = [...new Set(slotWidths)];
-    
-    // 각 고유한 너비에 대해 상부장 생성
-    for (const width of uniqueWidths) {
-      modules.push(createUpperCabinet1(width));
-      modules.push(createUpperCabinet2(width));
-      modules.push(createUpperCabinet3(width));
-    }
-  } else {
-    // fallback: slotWidths가 없으면 평균 너비 사용
-    modules.push(createUpperCabinet1(columnWidth));
-    modules.push(createUpperCabinet2(columnWidth));
-    modules.push(createUpperCabinet3(columnWidth));
-  }
+  modules.push(createUpperCabinet1(columnWidth));
+  modules.push(createUpperCabinet2(columnWidth));
+  modules.push(createUpperCabinet3(columnWidth));
   
   return modules;
 };

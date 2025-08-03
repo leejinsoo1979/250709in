@@ -53,6 +53,7 @@ export interface SpaceInfo {
   
   // 컬럼 수 사용자 지정 속성
   customColumnCount?: number;
+  columnMode?: 'auto' | 'custom';
   
   // 재질 설정 추가
   materialConfig?: MaterialConfig;
@@ -65,15 +66,15 @@ export interface SpaceInfo {
   // 단내림 설정 추가
   droppedCeiling?: DroppedCeilingConfig;
   
-  // 단내림 영역 구분 (임시 속성, 가구 생성시에만 사용)
-  zone?: 'normal' | 'dropped';
-  
   // 도어 개수 설정 (단내림 활성화 시 사용)
   mainDoorCount?: number;              // 메인 구간 도어 개수
   droppedCeilingDoorCount?: number;    // 단내림 구간 도어 개수
   
   // 영역 정보 (단내림 구간에서 사용)
   zone?: 'normal' | 'dropped';         // 현재 영역
+  
+  // 임시 슬롯 너비 (getModuleById에서 특정 너비로 검색할 때 사용)
+  _tempSlotWidths?: number[];
 }
 
 // 단내림 설정 인터페이스

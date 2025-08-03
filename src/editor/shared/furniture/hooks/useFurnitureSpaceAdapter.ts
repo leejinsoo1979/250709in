@@ -79,14 +79,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
                       (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
           
-          // 영역에 맞는 새로운 moduleId 생성
-          let newModuleId = module.moduleId;
-          if (moduleData.isDynamic) {
-            // 모듈 타입 추출 (예: single-4drawer-hanging-600 → single-4drawer-hanging)
-            const moduleType = module.moduleId.split('-').slice(0, -1).join('-');
-            const targetWidth = isDual ? targetZone.columnWidth * 2 : targetZone.columnWidth;
-            newModuleId = `${moduleType}-${targetWidth}`;
-          }
+          // 영역에 맞는 새로운 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
+          const newModuleId = module.moduleId;
           
           updatedModules.push({
             ...module,

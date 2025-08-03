@@ -97,13 +97,8 @@ export const getSlotIndexFromMousePosition = (
  * 가구가 듀얼 가구인지 판별하는 유틸리티
  */
 export const isDualFurniture = (moduleId: string, spaceInfo: SpaceInfo): boolean => {
-  const internalSpace = calculateInternalSpace(spaceInfo);
-  const indexing = calculateSpaceIndexing(spaceInfo);
-  const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
-  
-  if (!moduleData) return false;
-  
-  return Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+  // 동적 크기 조정 시스템에서는 ID로 듀얼 여부를 판단
+  return moduleId.includes('dual-');
 };
 
 /**

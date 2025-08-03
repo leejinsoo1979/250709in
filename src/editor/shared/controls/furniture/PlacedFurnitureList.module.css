@@ -100,4 +100,81 @@
 
 .removeButton:hover {
   background-color: #dc2626;
+}
+
+.emptyMessage {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.5;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 2px dashed #ddd;
+}
+
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.itemContainer {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.itemContainer:hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 2px 4px var(--theme-primary-light);
+}
+
+.itemContainer.selected {
+  border-color: var(--theme-primary);
+  background-color: var(--theme-primary-light);
+}
+
+.previewContainer {
+  width: 48px;
+  height: 48px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.infoContainer {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.dimensions {
+  font-size: 11px;
+  color: #666;
+}
+
+.actionsContainer {
+  margin-left: auto;
 } 

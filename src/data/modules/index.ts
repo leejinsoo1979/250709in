@@ -55,19 +55,50 @@ export const getModuleById = (
   internalSpace?: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
-  // 먼저 정확한 ID로 찾기
+  // ID에서 너비 추출 (예: single-2drawer-hanging-442 → 442)
+  const widthMatch = id.match(/-(\d+)$/);
+  const requestedWidth = widthMatch ? parseInt(widthMatch[1]) : null;
+  
+  console.log('🔍 [getModuleById] 모듈 검색:', {
+    id,
+    requestedWidth,
+    hasInternalSpace: !!internalSpace
+  });
+  
+  // ID로 직접 찾기
   if (internalSpace) {
-    const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
-    const found = dynamicModules.find(module => module.id === id);
-    if (found) return found;
+    // 요청된 너비가 있으면 해당 너비를 포함한 모듈 생성을 위해 spaceInfo 수정
+    let modifiedSpaceInfo = spaceInfo;
+    if (requestedWidth && spaceInfo) {
+      // 임시로 슬롯 너비 정보를 추가
+      const baseType = id.replace(/-\d+$/, '');
+      const isDual = baseType.includes('dual-');
+      
+      if (isDual) {
+        // 듀얼 가구의 경우 두 개의 슬롯 너비를 역산
+        const singleWidth = Math.floor(requestedWidth / 2);
+        modifiedSpaceInfo = {
+          ...spaceInfo,
+          _tempSlotWidths: [singleWidth, requestedWidth - singleWidth]
+        };
+      } else {
+        // 싱글 가구의 경우
+        modifiedSpaceInfo = {
+          ...spaceInfo,
+          _tempSlotWidths: [requestedWidth]
+        };
+      }
+    }
     
-    // 정확한 ID로 못 찾으면 기본 ID로 찾기 (크기 정보 제외)
-    const baseId = id.replace(/-\d+$/, ''); // 마지막 숫자 부분 제거
-    const foundByBase = dynamicModules.find(module => {
-      const moduleBaseId = module.id.replace(/-\d+$/, '');
-      return moduleBaseId === baseId;
-    });
-    if (foundByBase) return foundByBase;
+    const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
+    const found = dynamicModules.find(module => module.id === id);
+    if (found) {
+      console.log('✅ [getModuleById] 모듈 찾음:', {
+        id: found.id,
+        width: found.dimensions.width
+      });
+      return found;
+    }
   }
   
   return STATIC_MODULES.find(module => module.id === id);

@@ -5,18 +5,35 @@ import { useUIStore } from '@/store/uiStore';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
+import { calculateSpaceIndexing } from '../../utils/indexing';
 import styles from './PlacedModulePropertiesPanel.module.css';
+
+// 가구 썸네일 이미지 경로
+const getImagePath = (filename: string) => {
+  return `${import.meta.env.BASE_URL}images/furniture-thumbnails/${filename}`;
+};
+
+const FURNITURE_ICONS: Record<string, string> = {
+  'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
+  'single-2hanging': getImagePath('single-2hanging.png'), 
+  'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
+  'dual-2drawer-hanging': getImagePath('dual-2drawer-hanging.png'),
+  'dual-2hanging': getImagePath('dual-2hanging.png'),
+  'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
+  'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
+  'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
+};
 
 // 가구 이미지 매핑 함수
 const getFurnitureImagePath = (moduleId: string) => {
-  // moduleId에서 실제 이미지 파일명 추출
-  // 예: "dual-2drawer-hanging-1200" → "dual-2drawer-hanging.png"
-  const imageName = moduleId.split('-').slice(0, -1).join('-') + '.png';
-  const path = `${import.meta.env.BASE_URL}images/furniture-thumbnails/${imageName}`;
+  // moduleId에서 너비 정보 제거하여 기본 타입 추출
+  const baseModuleType = moduleId.replace(/-\d+$/, '');
+  const imagePath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
+  
   if (import.meta.env.DEV) {
-    console.log(`🖼️ [가구 팝업 이미지] ${moduleId} → ${imageName} → ${path}`);
+    console.log(`🖼️ [가구 팝업 이미지] ${moduleId} → ${baseModuleType} → ${imagePath}`);
   }
-  return path;
+  return imagePath;
 };
 
 const PlacedModulePropertiesPanel: React.FC = () => {
@@ -159,7 +176,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 모듈 데이터 가져오기 (조건부 렌더링 전에 미리 계산)
   const moduleData = currentPlacedModule 
-    ? getModuleById(currentPlacedModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) 
+    ? (() => {
+        // customWidth가 있으면 해당 너비로 모듈 ID 생성
+        let targetModuleId = currentPlacedModule.moduleId;
+        if (currentPlacedModule.customWidth) {
+          const baseType = currentPlacedModule.moduleId.replace(/-\d+$/, '');
+          targetModuleId = `${baseType}-${currentPlacedModule.customWidth}`;
+        }
+        return getModuleById(targetModuleId, calculateInternalSpace(spaceInfo), spaceInfo);
+      })()
     : null;
 
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
@@ -425,7 +450,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
             
             <div className={styles.moduleDetails}>
-              <h4 className={styles.moduleName}>{moduleData.name}</h4>
+              <h4 className={styles.moduleName}>
+                {customWidth && customWidth !== moduleData.dimensions.width
+                  ? moduleData.name.replace(/\d+mm/, `${customWidth}mm`)
+                  : moduleData.name}
+              </h4>
               
               <div className={styles.property}>
                 <span className={styles.propertyLabel}>크기:</span>
