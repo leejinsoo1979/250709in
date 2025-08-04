@@ -654,7 +654,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       )}
       
       {/* 배치된 가구 치수 */}
-      {placedModules.map((module, index) => {
+      {React.useMemo(() => placedModules.map((module, index) => {
         const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(
           module.moduleId,
@@ -665,7 +665,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         if (!moduleData) return null;
         
         // 기둥 슬롯 분석
-        const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+        const columnSlots = analyzeColumnSlots(spaceInfo);
         const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
         const indexing = calculateSpaceIndexing(spaceInfo);
         
@@ -678,20 +678,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ? module.isDualSlot 
           : moduleData.id.includes('dual-');
         
-        // slotWidths가 있고 slotIndex가 유효하면 실제 슬롯 너비 사용
-        if (indexing.slotWidths && module.slotIndex !== undefined && indexing.slotWidths[module.slotIndex]) {
-          if (isDualFurniture && module.slotIndex < indexing.slotWidths.length - 1) {
-            // 듀얼 가구: 두 슬롯의 실제 너비 합계
-            furnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
-          } else {
-            // 싱글 가구: 해당 슬롯의 실제 너비
-            furnitureWidthMm = indexing.slotWidths[module.slotIndex];
-          }
+        // 초기값 설정 (나중에 기둥 침범 체크에서 재계산됨)
+        if (module.customWidth !== undefined && module.customWidth !== null) {
+          // customWidth가 명시적으로 설정되어 있으면 사용
+          furnitureWidthMm = module.customWidth;
         }
         
+        // 기둥 침범 시 가구 크기와 위치 재계산
         if (slotInfo && slotInfo.hasColumn) {
-          const originalSlotWidthMm = isDualFurniture ? (indexing.columnWidth * 2) : indexing.columnWidth;
-          
           // 슬롯 중심 위치 계산
           let originalSlotCenterX: number;
           if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
@@ -712,14 +706,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
           furnitureWidthMm = furnitureBounds.renderWidth;
           furniturePositionX = furnitureBounds.center;
-        }
-        
-        // adjustedPosition이 있으면 우선 사용
-        if (module.adjustedPosition) {
-          furniturePositionX = module.adjustedPosition.x;
-        }
-        if (module.adjustedWidth) {
-          furnitureWidthMm = module.adjustedWidth;
+          
+          console.log('📐 [CADDimensions2D] 기둥 침범 가구 치수 업데이트:', {
+            moduleId: module.moduleId,
+            slotIndex: module.slotIndex,
+            hasColumn: slotInfo.hasColumn,
+            originalWidth: moduleData.dimensions.width,
+            adjustedWidth: module.adjustedWidth,
+            calculatedWidth: furnitureBounds.renderWidth,
+            finalWidth: furnitureWidthMm,
+            intrusionDirection: slotInfo.intrusionDirection,
+            columnType: slotInfo.columnType
+          });
         }
         
         const moduleWidth = mmToThreeUnits(furnitureWidthMm);
@@ -831,7 +829,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
           </group>
         );
-      })}
+      }), [placedModules, spaceInfo.columns])}
       
       
       {/* 컬럼 치수 표시 */}

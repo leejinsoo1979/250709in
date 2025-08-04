@@ -172,8 +172,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
   const columnSlots = React.useMemo(() => {
-    return analyzeColumnSlots(spaceInfo, placedModules);
-  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
+    return analyzeColumnSlots(spaceInfo);
+  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex]);
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
@@ -193,7 +193,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     indexing = calculateSpaceIndexing(zoneSpaceInfo);
   }
   
-  const slotInfo = placedModule.slotIndex !== undefined ? columnSlots[placedModule.slotIndex] : undefined;
+  // 단내림이 있을 때 zone별 인덱스 계산
+  let effectiveSlotIndex = placedModule.slotIndex;
+  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && placedModule.slotIndex !== undefined) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    
+    // zone별로 전체 인덱스 계산
+    if (placedModule.zone === 'dropped' && zoneInfo.normal) {
+      // dropped zone의 경우 normal zone의 슬롯 수를 더해줘야 함
+      effectiveSlotIndex = (zoneInfo.normal.columnCount || 0) + placedModule.slotIndex;
+    }
+    // normal zone은 그대로 사용
+    
+    console.log('🔍 단내림 zone별 슬롯 인덱스 계산:', {
+      zone: placedModule.zone,
+      localSlotIndex: placedModule.slotIndex,
+      effectiveSlotIndex,
+      normalSlotCount: zoneInfo.normal?.columnCount,
+      droppedSlotCount: zoneInfo.dropped?.columnCount,
+      columnSlotsLength: columnSlots.length
+    });
+  }
+  
+  const slotInfo = effectiveSlotIndex !== undefined ? columnSlots[effectiveSlotIndex] : undefined;
   const isColumnC = (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) || false;
   
   // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만, 기둥 C가 아닐 때만)
@@ -229,21 +251,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     : actualModuleData.id.includes('dual-');
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
-  // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
-  // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
   
-  // customWidth가 명시적으로 설정되어 있으면 최우선 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
-  if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
-    furnitureWidthMm = placedModule.customWidth;
-    console.log('📐 customWidth 사용:', furnitureWidthMm);
-  } else if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
-    // adjustedWidth가 있으면 사용 (기둥 침범 케이스)
-    furnitureWidthMm = placedModule.adjustedWidth;
-    console.log('📐 adjustedWidth 사용:', furnitureWidthMm);
+  // 드래그 중일 때는 항상 저장된 크기 사용
+  if (isDraggingThis || isFurnitureDragging) {
+    // 드래그 중에는 기존 크기 유지
+    if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+      furnitureWidthMm = placedModule.adjustedWidth;
+    } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+      furnitureWidthMm = placedModule.customWidth;
+    }
+    console.log('🖱️ 드래그 중 - 기존 크기 유지:', furnitureWidthMm);
   } else {
-    // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
-    console.log('📐 기본 너비 사용:', furnitureWidthMm);
+    // 드래그 중이 아닐 때만 크기 조정
+    if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+      // adjustedWidth가 명시적으로 설정된 경우
+      furnitureWidthMm = placedModule.adjustedWidth;
+      console.log('📐 adjustedWidth 사용:', furnitureWidthMm);
+    } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+      // customWidth가 명시적으로 설정되어 있으면 사용 (슬롯 맞춤 너비)
+      furnitureWidthMm = placedModule.customWidth;
+      console.log('📐 customWidth 사용:', furnitureWidthMm);
+    } else {
+      // 기본값은 모듈 원래 크기
+      console.log('📐 기본 너비 사용:', furnitureWidthMm);
+    }
+  }
+  
+  // 기둥 정보가 있으면 추가 확인
+  if (placedModule.columnSlotInfo?.hasColumn) {
+    console.log('🏛️ [FurnitureItem] 기둥 침범 가구:', {
+      moduleId: placedModule.moduleId,
+      originalWidth: actualModuleData.dimensions.width,
+      adjustedWidth: placedModule.adjustedWidth,
+      columnSlotInfo: placedModule.columnSlotInfo,
+      최종너비: furnitureWidthMm
+    });
   }
   
   // 슬롯 가이드와의 크기 비교 로그
@@ -268,34 +311,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // 디버깅용 로그 추가
-  console.log('🎯 가구 너비 결정:', {
-    moduleId: placedModule.id,
-    placedModuleId: placedModule.moduleId,
-    slotIndex: placedModule.slotIndex,
-    zone: placedModule.zone,
-    isDualFurniture,
-    customWidth: placedModule.customWidth,
-    adjustedWidth: placedModule.adjustedWidth,
-    moduleWidth: actualModuleData.dimensions.width,
-    finalWidth: furnitureWidthMm,
-    평균슬롯너비: indexing.columnWidth,
-    실제슬롯너비배열: indexing.slotWidths,
-    실제슬롯너비: indexing.slotWidths?.[placedModule.slotIndex],
-    계산방법: (() => {
-      if (placedModule.customWidth) {
-        return `customWidth 사용 (${placedModule.customWidth}mm)`;
-      } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-        return `slotWidths 사용 (${indexing.slotWidths[placedModule.slotIndex]}mm)`;
-      } else if (placedModule.adjustedWidth) {
-        return `adjustedWidth 사용 (${placedModule.adjustedWidth}mm)`;
-      } else {
-        return `기본 모듈 너비 사용 (${actualModuleData.dimensions.width}mm)`;
-      }
-    })()
-  });
-  
-  // 마지막 슬롯인지 확인
+  // 마지막 슬롯인지 확인 (먼저 계산)
   let isLastSlot = false;
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
@@ -305,12 +321,36 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
   }
   
-  // adjustedPosition 계산 - 마지막 슬롯의 경우 원본 슬롯 중심 사용
-  let adjustedPosition = placedModule.position;
-  if (isLastSlot && !isFurnitureDragging) {
-    // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
-    adjustedPosition = { ...placedModule.position };
+  // 디버깅용 로그 추가
+  // 기둥 침범으로 인한 너비 변경 확인
+  let widthChangeReason = '기본 모듈 너비';
+  if (slotInfo?.hasColumn && !isFurnitureDragging && !isLastSlot) {
+    widthChangeReason = '기둥 침범으로 조정됨';
+  } else if (placedModule.adjustedWidth) {
+    widthChangeReason = 'adjustedWidth 사용';
+  } else if (placedModule.customWidth) {
+    widthChangeReason = 'customWidth 사용';
   }
+  
+  console.log('🎯 가구 너비 결정:', {
+    moduleId: placedModule.id,
+    placedModuleId: placedModule.moduleId,
+    slotIndex: placedModule.slotIndex,
+    zone: placedModule.zone,
+    isDualFurniture,
+    기둥침범: slotInfo?.hasColumn || false,
+    customWidth: placedModule.customWidth,
+    adjustedWidth: placedModule.adjustedWidth,
+    moduleWidth: actualModuleData.dimensions.width,
+    finalWidth: furnitureWidthMm,
+    widthChangeReason,
+    평균슬롯너비: indexing.columnWidth,
+    실제슬롯너비배열: indexing.slotWidths,
+    실제슬롯너비: indexing.slotWidths?.[placedModule.slotIndex]
+  })
+  
+  // adjustedPosition 초기화 - 나중에 기둥 침범 여부에 따라 조정됨
+  let adjustedPosition = { ...placedModule.position };
   let adjustedDepthMm = actualModuleData.dimensions.depth;
   
   
@@ -536,7 +576,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // threeUnitPositions가 이미 올바른 위치를 가지고 있음
   
   // 마지막 슬롯은 기둥 처리 제외
-  if (!isFurnitureDragging && !isLastSlot && slotInfo && slotInfo.hasColumn && slotInfo.column) {
+  // 드래그 중일 때는 기둥 처리 건너뛰기
+  if (!isFurnitureDragging && !isDraggingThis && !isLastSlot && slotInfo) {
+    if (slotInfo.hasColumn && slotInfo.column) {
     // 기둥 타입에 따른 처리 방식 확인
     const columnProcessingMethod = slotInfo.columnProcessingMethod || 'width-adjustment';
     
@@ -565,14 +607,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // Column C의 경우 서브슬롯 위치 사용
       if (isColumnC && slotInfo.subSlots && placedModule.subSlotPosition) {
         const subSlot = slotInfo.subSlots[placedModule.subSlotPosition];
-        // customWidth가 없을 때만 폭 조정
-        if (placedModule.customWidth === undefined || placedModule.customWidth === null) {
-          furnitureWidthMm = subSlot.availableWidth;
-        }
-        adjustedPosition = {
-          ...placedModule.position,
-          x: subSlot.center
-        };
+        // Column C에서도 기둥 침범 시 항상 가구 너비 조정
+        furnitureWidthMm = subSlot.availableWidth;
+        // Column C에서도 가구 위치는 원래 위치 유지
+        adjustedPosition = placedModule.position;
         
         console.log('🔵 Column C 서브슬롯 위치 적용:', {
           subSlotPosition: placedModule.subSlotPosition,
@@ -583,15 +621,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           widthOverridden: placedModule.customWidth === undefined || placedModule.customWidth === null
         });
       } else {
-        // 일반 폭 조정 방식: 가구 크기와 위치 조정
-        // customWidth가 없을 때만 폭 조정
-        if (placedModule.customWidth === undefined || placedModule.customWidth === null) {
-          furnitureWidthMm = furnitureBounds.renderWidth;
-        }
+        // 일반 폭 조정 방식: 기둥 침범 시 가구 크기 및 위치 조정
+        furnitureWidthMm = furnitureBounds.renderWidth;
+        // 기둥 침범 시 가구 위치를 남은 공간 중심으로 이동
         adjustedPosition = {
-          ...placedModule.position,
-          x: furnitureBounds.center
+          x: furnitureBounds.center,
+          y: placedModule.position.y,
+          z: placedModule.position.z
         };
+        
+        console.log('🔧 기둥 침범으로 가구 너비 및 위치 조정:', {
+          원래너비: actualModuleData.dimensions.width,
+          조정된너비: furnitureWidthMm,
+          원래위치: placedModule.position.x,
+          조정된위치: adjustedPosition.x,
+          슬롯인덱스: placedModule.slotIndex,
+          furnitureBounds: {
+            center: furnitureBounds.center,
+            renderWidth: furnitureBounds.renderWidth
+          }
+        });
       }
       
       console.log('🪑 폭 조정 방식 - 가구 크기 및 위치 조정:', {
@@ -633,6 +682,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           계산식: `${slotDepth} - ${columnDepth} = ${adjustedDepthMm}`
         });
       }
+    }
+    } else {
+      // 기둥이 없거나 슬롯에서 벗어난 경우 - 원래 크기와 위치로 복원
+      console.log('🔄 기둥이 없음 - 원래 크기와 위치로 복원:', {
+        slotIndex: placedModule.slotIndex,
+        hasColumn: slotInfo?.hasColumn,
+        원래너비: actualModuleData.dimensions.width,
+        원래위치: placedModule.position.x
+      });
+      
+      // 원래 크기로 복원
+      furnitureWidthMm = placedModule.customWidth || actualModuleData.dimensions.width;
+      
+      // 원래 위치로 복원 (슬롯 중심 위치 사용)
+      adjustedPosition = {
+        x: originalSlotCenterX,
+        y: placedModule.position.y,
+        z: placedModule.position.z
+      };
     }
   }
   

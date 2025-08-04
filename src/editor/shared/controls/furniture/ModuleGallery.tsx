@@ -50,6 +50,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const addModule = useFurnitureStore(state => state.addModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
+  const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
   const { activeDroppedCeilingTab } = useUIStore();
 
@@ -228,6 +230,97 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     
     // 전역 드래그 상태 초기화
     setCurrentDragData(null);
+  };
+  
+  // 클릭 핸들러 - Click & Place 기능
+  const handleClick = () => {
+    if (!isValid) return;
+    
+    // 이미 선택된 가구를 다시 클릭하면 비활성화
+    if (selectedFurnitureId === module.id) {
+      setSelectedFurnitureId(null);
+      setFurniturePlacementMode(false);
+      setCurrentDragData(null);
+      return;
+    }
+    
+    // 영역별 인덱싱 계산
+    let indexing = calculateSpaceIndexing(spaceInfo);
+    let targetZone: 'normal' | 'dropped' = 'normal';
+    let adjustedDimensions = { ...module.dimensions };
+    let dragModuleId = module.id;
+    
+    // 단내림이 활성화되어 있는 경우
+    if (spaceInfo.droppedCeiling?.enabled) {
+      targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      
+      if (targetZone === 'dropped' && zoneInfo.dropped) {
+        // 단내림 영역의 개별 슬롯 너비 사용
+        const droppedSlotWidths = zoneInfo.dropped.slotWidths || [];
+        const droppedColumnWidth = zoneInfo.dropped.columnWidth;
+        
+        // 특수 듀얼 가구 체크
+        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
+                                     module.id.includes('dual-4drawer-pantshanger');
+        
+        if (isSpecialDualFurniture && droppedSlotWidths.length >= 2) {
+          const dualWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
+          if (dualWidth < 694) {
+            showAlert('단내림 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
+            return;
+          }
+        }
+        
+        // 동적 가구인 경우 크기 조정
+        if (module.isDynamic) {
+          const isDualFurniture = module.dimensions.width > droppedColumnWidth * 1.5;
+          
+          if (droppedSlotWidths.length > 0) {
+            if (isDualFurniture && droppedSlotWidths.length >= 2) {
+              const targetWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
+              const baseType = module.id.replace(/-\d+$/, '');
+              dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+              adjustedDimensions.width = targetWidth;
+            } else if (!isDualFurniture && droppedSlotWidths.length > 0) {
+              const targetWidth = droppedSlotWidths[0];
+              const baseType = module.id.replace(/-\d+$/, '');
+              dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+              adjustedDimensions.width = targetWidth;
+            }
+          }
+        }
+      }
+    }
+    
+    // 가구 선택 상태 설정
+    setSelectedFurnitureId(module.id);
+    setFurniturePlacementMode(true);
+    
+    // Click & Place를 위한 데이터 설정
+    const clickPlaceData = {
+      type: 'furniture',
+      zone: targetZone,
+      moduleData: {
+        id: dragModuleId,
+        name: module.name,
+        dimensions: adjustedDimensions,
+        originalDimensions: module.dimensions,
+        type: module.type || 'default',
+        color: module.color,
+        hasDoor: module.hasDoor || false,
+        isDynamic: module.isDynamic
+      }
+    };
+    
+    setCurrentDragData(clickPlaceData);
+    
+    console.log('🎯 [ModuleGallery] Click & Place activated:', {
+      moduleId: module.id,
+      adjustedId: dragModuleId,
+      zone: targetZone,
+      data: clickPlaceData
+    });
   };
 
   // 더블클릭 시 자동 배치 핸들러
@@ -506,12 +599,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   return (
     <>
       <div 
-        className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''}`}
+        className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''} ${selectedFurnitureId === module.id ? styles.selected : ''}`}
         draggable={isValid}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onClick={handleClick}
         onDoubleClick={handleDoubleClick}
-        title={isValid ? `드래그하여 배치 또는 더블클릭으로 자동 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
+        title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
         <div className={styles.thumbnailImage}>
           <img 

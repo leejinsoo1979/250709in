@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import Step1BasicInfo from './Step1BasicInfo';
-import Step2SpaceConfig from './Step2SpaceConfig';
-import Step3Confirmation from './Step3Confirmation';
+import Step2SpaceAndCustomization from './Step2SpaceAndCustomization';
 import styles from './StepContainer.module.css';
 
 interface StepContainerProps {
   onClose?: () => void;
 }
 
-export type StepType = 1 | 2 | 3;
+export type StepType = 1 | 2;
 
 const StepContainer: React.FC<StepContainerProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       setCurrentStep((prev) => (prev + 1) as StepType);
     }
   };
@@ -40,15 +39,7 @@ const StepContainer: React.FC<StepContainerProps> = ({ onClose }) => {
         );
       case 2:
         return (
-          <Step2SpaceConfig
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            onClose={handleClose}
-          />
-        );
-      case 3:
-        return (
-          <Step3Confirmation
+          <Step2SpaceAndCustomization
             onPrevious={handlePrevious}
             onClose={handleClose}
           />

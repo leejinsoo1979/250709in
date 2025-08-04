@@ -49,7 +49,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마 가져오기
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, isFurnitureDragging } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -69,7 +69,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  const [isFurnitureDragging, setIsFurnitureDragging] = useState(false);
+  // isFurnitureDragging 상태는 UIStore에서 가져옴
   
   // 캔버스 참조 저장
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -172,14 +172,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 가구 드래그 이벤트 리스너
   useEffect(() => {
     const handleFurnitureDragStart = () => {
-      console.log('🎯 가구 드래그 시작');
-      setIsFurnitureDragging(true);
-      // 카메라 리셋 기능 제거 - 사용자가 원하는 각도 유지
+      console.log('🎯 가구/기둥 드래그 시작 - 카메라 회전 비활성화');
+      // UIStore에서 isFurnitureDragging 상태 관리
     };
 
     const handleFurnitureDragEnd = () => {
-      console.log('🎯 가구 드래그 종료 - OrbitControls 회전 활성화');
-      setIsFurnitureDragging(false);
+      console.log('🎯 가구/기둥 드래그 종료 - OrbitControls 회전 활성화');
       
       // 카메라 컨트롤 재활성화
       if (controlsRef.current) {
@@ -220,67 +218,71 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [camera, cameraPosition, cameraTarget, viewMode]);
 
+  // 카메라 리셋 함수
+  const resetCamera = useCallback(() => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current;
+      
+      console.log('🎯 카메라 리셋 전 상태:', {
+        currentPosition: controls.object.position.toArray(),
+        currentTarget: controls.target.toArray(),
+        cameraPosition,
+        cameraTarget,
+        cameraConfig: camera
+      });
+      
+      // OrbitControls 리셋
+      controls.reset();
+      
+      // 전달받은 카메라 위치로 재설정
+      if (cameraPosition) {
+        controls.object.position.set(...cameraPosition);
+      } else {
+        controls.object.position.set(...camera.position);
+      }
+      
+      if (cameraTarget) {
+        controls.target.set(...cameraTarget);
+      } else {
+        controls.target.set(...camera.target);
+      }
+      
+      // 카메라 up 벡터도 리셋
+      if (cameraUp) {
+        controls.object.up.set(...cameraUp);
+      } else if (camera.up) {
+        controls.object.up.set(...camera.up);
+      } else {
+        controls.object.up.set(0, 1, 0);
+      }
+      
+      if (camera.is2DMode && camera.zoom) {
+        controls.object.zoom = camera.zoom;
+        controls.object.updateProjectionMatrix();
+      }
+      
+      // 카메라가 타겟을 바라보도록 설정
+      controls.object.lookAt(controls.target);
+      
+      // 컨트롤 업데이트
+      controls.update();
+      
+      console.log('🎯 카메라 위치 리셋 완료', {
+        newPosition: controls.object.position.toArray(),
+        newTarget: controls.target.toArray(),
+        newUp: controls.object.up.toArray(),
+        zoom: controls.object.zoom
+      });
+    }
+  }, [camera, cameraPosition, cameraTarget, cameraUp]);
+
   // 스페이스바로 카메라 리셋
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault(); // 페이지 스크롤 방지
-        
-        if (controlsRef.current) {
-          const controls = controlsRef.current;
-          
-          console.log('🎯 카메라 리셋 전 상태:', {
-            currentPosition: controls.object.position.toArray(),
-            currentTarget: controls.target.toArray(),
-            cameraPosition,
-            cameraTarget,
-            cameraConfig: camera
-          });
-          
-          // OrbitControls 리셋
-          controls.reset();
-          
-          // 전달받은 카메라 위치로 재설정
-          if (cameraPosition) {
-            controls.object.position.set(...cameraPosition);
-          } else {
-            controls.object.position.set(...camera.position);
-          }
-          
-          if (cameraTarget) {
-            controls.target.set(...cameraTarget);
-          } else {
-            controls.target.set(...camera.target);
-          }
-          
-          // 카메라 up 벡터도 리셋
-          if (cameraUp) {
-            controls.object.up.set(...cameraUp);
-          } else if (camera.up) {
-            controls.object.up.set(...camera.up);
-          } else {
-            controls.object.up.set(0, 1, 0);
-          }
-          
-          if (camera.is2DMode && camera.zoom) {
-            controls.object.zoom = camera.zoom;
-            controls.object.updateProjectionMatrix();
-          }
-          
-          // 카메라가 타겟을 바라보도록 설정
-          controls.object.lookAt(controls.target);
-          
-          // 컨트롤 업데이트
-          controls.update();
-          
-          console.log('🎯 카메라 위치 리셋 완료', {
-            newPosition: controls.object.position.toArray(),
-            newTarget: controls.target.toArray(),
-            newUp: controls.object.up.toArray(),
-            zoom: controls.object.zoom
-          });
-        }
+        resetCamera();
       }
     };
 
@@ -289,7 +291,29 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [camera, cameraPosition, cameraTarget, cameraUp]);
+  }, [resetCamera]);
+
+  // 기둥 드래그 관련 이벤트 처리
+  useEffect(() => {
+    // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋
+    const handleResetCameraForColumn = () => {
+      console.log('🎯 3D 모드에서 기둥 드래그 시작 - 카메라 리셋');
+      resetCamera();
+    };
+    
+    const handleColumnDragEnd = () => {
+      console.log('🎯 기둥 드래그 종료');
+      // 드래그 종료 시에는 특별한 처리 없음
+    };
+
+    window.addEventListener('reset-camera-for-column', handleResetCameraForColumn);
+    window.addEventListener('column-drag-end', handleColumnDragEnd);
+    
+    return () => {
+      window.removeEventListener('reset-camera-for-column', handleResetCameraForColumn);
+      window.removeEventListener('column-drag-end', handleColumnDragEnd);
+    };
+  }, [resetCamera]);
   
   // ViewMode가 변경될 때 캔버스 재생성 - 제거
   // 불필요한 재생성은 React Three Fiber 컨텍스트 문제를 유발

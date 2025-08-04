@@ -55,7 +55,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -104,6 +104,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 클릭 처리 - 기둥 선택만
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    event.nativeEvent.stopPropagation();
+    event.nativeEvent.preventDefault();
     
     // console.log('🎯 기둥 클릭 이벤트 발생:', id);
     
@@ -135,6 +137,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 더블 클릭 처리 - 편집 모달 열기
   const handleDoubleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    event.nativeEvent.stopPropagation();
+    event.nativeEvent.preventDefault();
     
     // console.log('🎯 기둥 더블클릭 이벤트 발생:', id);
     
@@ -159,6 +163,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 포인터 다운 처리
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
+    event.nativeEvent.stopPropagation();
+    event.nativeEvent.preventDefault();
     
     // console.log('🎯 기둥 포인터 다운:', id);
     
@@ -193,6 +199,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         setIsDragging(true);
         isDraggingRef.current = true;
         setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
+        
+        // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋 이벤트 발생
+        if (uiViewMode === '3D') {
+          window.dispatchEvent(new CustomEvent('reset-camera-for-column'));
+        }
         
         // 기둥 드래그 시작 이벤트 발생 (가구와 동일한 이벤트 사용)
         window.dispatchEvent(new CustomEvent('furniture-drag-start'));
@@ -244,7 +255,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       if (isDraggingRef.current) {
         setFurnitureDragging(false);
         
-        // 기둥 드래그 종료 이벤트 발생 (가구와 동일한 이벤트 사용)
+        // 기둥 드래그 종료 이벤트 발생
+        window.dispatchEvent(new CustomEvent('column-drag-end'));
         window.dispatchEvent(new CustomEvent('furniture-drag-end'));
       }
       
@@ -275,6 +287,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 우클릭으로 삭제
   const handleContextMenu = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    event.nativeEvent.stopPropagation();
+    event.nativeEvent.preventDefault();
     // console.log('🎯 기둥 우클릭 - 삭제 확인');
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       onRemove?.(id);

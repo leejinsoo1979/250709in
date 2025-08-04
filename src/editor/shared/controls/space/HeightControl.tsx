@@ -9,6 +9,7 @@ interface HeightControlProps {
 
 const HeightControl: React.FC<HeightControlProps> = ({ spaceInfo, onUpdate }) => {
   const [error, setError] = useState<string>();
+  const [isFocused, setIsFocused] = useState<boolean>(false);
   
   // 안전한 기본값 제공
   const safeHeight = spaceInfo?.height || DEFAULT_SPACE_VALUES.HEIGHT;
@@ -86,14 +87,22 @@ const HeightControl: React.FC<HeightControlProps> = ({ spaceInfo, onUpdate }) =>
   };
 
   return (
-    <div className={styles.inputWrapper}>
-      <label className={styles.inputLabel}>높이 ({SPACE_LIMITS.HEIGHT.MIN}mm ~ {SPACE_LIMITS.HEIGHT.MAX}mm)</label>
+    <div className={styles.inputWrapper} style={{ position: 'relative' }}>
+      {isFocused && (
+        <label className={styles.inputLabel} style={{ position: 'absolute', bottom: '-20px', fontSize: '11px', color: '#5b21b6', zIndex: 10 }}>
+          {SPACE_LIMITS.HEIGHT.MIN}~{SPACE_LIMITS.HEIGHT.MAX}mm
+        </label>
+      )}
       <div className={styles.inputWithUnit}>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => handleInputChange(e.target.value)}
-          onBlur={handleInputBlur}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            handleInputBlur();
+          }}
           onKeyDown={handleKeyDown}
           className={`${styles.input} ${styles.inputWithUnitField} ${error ? styles.inputError : ''}`}
           placeholder={`${SPACE_LIMITS.HEIGHT.MIN}-${SPACE_LIMITS.HEIGHT.MAX}`}

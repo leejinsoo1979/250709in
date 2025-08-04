@@ -123,21 +123,31 @@
   display: flex;
   align-items: center;
   padding: 12px;
-  border: 1px solid #e5e7eb;
+  border: 2px solid transparent;
   border-radius: 6px;
   background-color: white;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .itemContainer:hover {
-  border-color: var(--theme-primary);
-  box-shadow: 0 2px 4px var(--theme-primary-light);
+  border-color: rgba(0, 255, 204, 0.3);
 }
 
 .itemContainer.selected {
   border-color: var(--theme-primary);
+  background-color: white;
+}
+
+.itemContainer.selected::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
   background-color: var(--theme-primary-light);
+  opacity: 0.1;
+  pointer-events: none;
 }
 
 .previewContainer {

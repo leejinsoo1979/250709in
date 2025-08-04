@@ -25,6 +25,17 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   // 현재 모듈이 선택되었는지 확인
   const isSelected = selectedModuleForPlacement?.moduleData?.id === module.id;
   
+  // 디버깅용 로그 - 선택 상태가 변경될 때만
+  React.useEffect(() => {
+    if (isSelected || selectedModuleForPlacement?.moduleData?.id === module.id) {
+      console.log('🔍 [ModuleItem] Selection changed:', {
+        moduleId: module.id,
+        isSelected,
+        selectedModuleId: selectedModuleForPlacement?.moduleData?.id
+      });
+    }
+  }, [isSelected]);
+  
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
   const isValid = validation.isValid;
@@ -159,9 +170,15 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       draggable={isValid || needsWarning}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '드래그하여 배치하세요')}
+      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : isSelected ? '선택됨 - 슬롯을 클릭하여 배치하세요' : '클릭하여 선택하거나 드래그하여 배치하세요')}
       style={{ 
-        cursor: (isValid || needsWarning) ? 'grab' : 'not-allowed'
+        cursor: (isValid || needsWarning) ? (isSelected ? 'pointer' : 'grab') : 'not-allowed',
+        // 선택된 경우 인라인 스타일로도 강조 (CSS 파일 문제 디버깅용)
+        ...(isSelected ? {
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)'
+        } : {})
       }}
     >
       <div className={styles.modulePreview}>
@@ -169,17 +186,39 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
           className={styles.moduleBox}
           style={{ 
             backgroundColor: (isValid || needsWarning) ? module.color : '#ccc',
-            aspectRatio: `${module.dimensions.width} / ${module.dimensions.height}`
+            aspectRatio: `${module.dimensions.width} / ${module.dimensions.height}`,
+            // 선택된 경우 밝기 증가
+            filter: isSelected ? 'brightness(1.2)' : 'none',
+            transition: 'filter 0.2s ease'
           }}
         />
         {!isValid && !needsWarning && <div className={styles.invalidIcon}>✕</div>}
         {needsWarning && <div className={styles.warningIcon}>⚠️</div>}
         {isDynamic && <div className={styles.dynamicIcon}>⚡</div>}
+        {isSelected && <div className={styles.selectedIcon} style={{
+          position: 'absolute',
+          top: '-2px',
+          right: '-2px',
+          width: '20px',
+          height: '20px',
+          backgroundColor: '#10b981',
+          color: 'white',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          zIndex: 10
+        }}>✓</div>}
       </div>
       
       <div className={styles.moduleInfo}>
-        <div className={`${styles.moduleName} ${!isValid ? styles.moduleNameDisabled : ''}`}>
-          {module.name}
+        <div className={`${styles.moduleName} ${!isValid ? styles.moduleNameDisabled : ''}`} style={{
+          fontWeight: isSelected ? 600 : 500,
+          color: isSelected ? '#10b981' : undefined
+        }}>
+          {module.name} {isSelected && '(선택됨)'}
         </div>
         <div className={styles.moduleDimensions}>
           {module.dimensions.width} × {module.dimensions.height} × {module.defaultDepth || module.dimensions.depth}mm

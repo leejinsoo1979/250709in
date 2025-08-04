@@ -736,6 +736,43 @@ export class ColumnIndexer {
   }
 
   /**
+   * 내경 너비에 따른 컬럼 제한 계산
+   * @param internalWidth 내경 너비 (mm)
+   * @returns 컬럼 제한 정보
+   */
+  static getColumnLimits(internalWidth: number): { minColumns: number; maxColumns: number } {
+    // 최소 컬럼 수는 1개
+    const minColumns = 1;
+    
+    // 내경 너비에 따른 최대 컬럼 수 계산
+    let maxColumns = 1;
+    
+    if (internalWidth >= 600) {
+      maxColumns = 2;
+    }
+    if (internalWidth >= 900) {
+      maxColumns = 3;
+    }
+    if (internalWidth >= 1200) {
+      maxColumns = 4;
+    }
+    if (internalWidth >= 1500) {
+      maxColumns = 5;
+    }
+    if (internalWidth >= 1800) {
+      maxColumns = 6;
+    }
+    if (internalWidth >= 2100) {
+      maxColumns = 7;
+    }
+    if (internalWidth >= 2400) {
+      maxColumns = 8;
+    }
+    
+    return { minColumns, maxColumns };
+  }
+
+  /**
    * 주어진 위치가 어떤 영역에 속하는지와 해당 영역의 슬롯 인덱스 찾기
    */
   static findZoneAndSlotFromPosition(

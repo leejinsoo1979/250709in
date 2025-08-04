@@ -10,6 +10,7 @@ interface WidthControlProps {
 
 const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
   const [error, setError] = useState<string>();
+  const [isFocused, setIsFocused] = useState<boolean>(false);
   
   // 안전한 기본값 제공
   const safeWidth = spaceInfo?.width || DEFAULT_SPACE_VALUES.WIDTH;
@@ -87,20 +88,26 @@ const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabl
   };
 
   return (
-    <div className={styles.inputWrapper}>
-      <label className={`${styles.inputLabel} ${disabled ? styles.disabledLabel : ''}`}>
-        폭 ({SPACE_LIMITS.WIDTH.MIN}mm ~ {SPACE_LIMITS.WIDTH.MAX}mm)
-        {disabled && <span className={styles.disabledText}> (스타일러장, 바지걸이장 배치시 수정불가)</span>}
-      </label>
+    <div className={styles.inputWrapper} style={{ position: 'relative' }}>
+      {isFocused && (
+        <label className={`${styles.inputLabel} ${disabled ? styles.disabledLabel : ''}`} style={{ position: 'absolute', bottom: '-20px', fontSize: '11px', color: '#5b21b6', zIndex: 10 }}>
+          {SPACE_LIMITS.WIDTH.MIN}~{SPACE_LIMITS.WIDTH.MAX}mm
+          {disabled && <span className={styles.disabledText}> (수정불가)</span>}
+        </label>
+      )}
       <div className={styles.inputWithUnit}>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => handleInputChange(e.target.value)}
-          onBlur={handleInputBlur}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            handleInputBlur();
+          }}
           onKeyDown={handleKeyDown}
           className={`${styles.input} ${styles.inputWithUnitField} ${error ? styles.inputError : ''}`}
-                      placeholder={`${SPACE_LIMITS.WIDTH.MIN}-${SPACE_LIMITS.WIDTH.MAX}`}
+          placeholder={`${SPACE_LIMITS.WIDTH.MIN}-${SPACE_LIMITS.WIDTH.MAX}`}
           disabled={disabled}
         />
         <span className={styles.unit}>mm</span>

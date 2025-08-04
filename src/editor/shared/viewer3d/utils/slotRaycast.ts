@@ -13,8 +13,7 @@ export const getSlotIndexFromMousePosition = (
   canvasElement: HTMLCanvasElement,
   camera: THREE.Camera,
   scene: THREE.Scene,
-  spaceInfo: SpaceInfo,
-  activeZone?: 'normal' | 'dropped'
+  spaceInfo: SpaceInfo
 ): number | null => {
   try {
     // 캔버스 경계 정보
@@ -29,10 +28,12 @@ export const getSlotIndexFromMousePosition = (
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
     
-    // 씬에서 슬롯 콜라이더들 찾기 - activeZone이 있으면 해당 zone의 콜라이더만 선택
+    // 씬에서 슬롯 콜라이더들 찾기
     const slotColliders: THREE.Object3D[] = [];
     let totalSceneObjects = 0;
     let objectsWithUserData = 0;
+    let droppedZoneColliders = 0;
+    let normalZoneColliders = 0;
     
     scene.traverse((child) => {
       totalSceneObjects++;
@@ -43,16 +44,20 @@ export const getSlotIndexFromMousePosition = (
           console.log('🔍 Found slot collider candidate:', {
             userData: child.userData,
             type: child.type,
-            visible: child.visible
+            visible: child.visible,
+            position: child.position
           });
+          
+          // 영역별 콜라이더 카운트
+          if (child.userData.zone === 'dropped') {
+            droppedZoneColliders++;
+          } else if (child.userData.zone === 'normal') {
+            normalZoneColliders++;
+          }
         }
       }
       
       if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
-        // activeZone이 지정된 경우 해당 zone의 콜라이더만 선택
-        if (activeZone && child.userData?.zone !== activeZone) {
-          return;
-        }
         slotColliders.push(child);
       }
     });
@@ -61,11 +66,36 @@ export const getSlotIndexFromMousePosition = (
       totalSceneObjects,
       objectsWithUserData,
       slotCollidersFound: slotColliders.length,
-      activeZone
+      droppedZoneColliders,
+      normalZoneColliders,
+      slotColliderDetails: slotColliders.map(c => ({
+        slotIndex: c.userData?.slotIndex,
+        zone: c.userData?.zone,
+        isSlotCollider: c.userData?.isSlotCollider,
+        type: c.userData?.type,
+        position: c.position
+      })),
+      spaceInfo: {
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+        droppedCeilingPosition: spaceInfo.droppedCeiling?.position
+      }
     });
     
     // 슬롯 콜라이더들과 교차점 검사
-    const intersects = raycaster.intersectObjects(slotColliders);
+    const intersects = raycaster.intersectObjects(slotColliders, true); // recursive를 true로 설정
+    
+    console.log('🎯 Raycast intersections:', {
+      intersectCount: intersects.length,
+      slotCollidersChecked: slotColliders.length,
+      intersections: intersects.map(i => ({
+        slotIndex: i.object.userData?.slotIndex,
+        zone: i.object.userData?.zone,
+        distance: i.distance,
+        point: i.point,
+        objectType: i.object.type
+      }))
+    });
     
     if (intersects.length > 0) {
       // 가장 가까운 교차점의 슬롯 인덱스 반환
@@ -79,7 +109,9 @@ export const getSlotIndexFromMousePosition = (
         console.log('🎯 Raycast found slot:', {
           slotIndex,
           zone: intersectedObject.userData?.zone,
-          activeZone
+          allUserData: intersectedObject.userData,
+          objectName: intersectedObject.name,
+          objectType: intersectedObject.type
         });
         return slotIndex;
       }
@@ -151,9 +183,24 @@ export const calculateFurniturePosition = (
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
   // 단내림이 활성화되고 영역이 지정된 경우
-  if (spaceInfo.droppedCeiling?.enabled && zone && indexing.zones) {
+  if (spaceInfo.droppedCeiling?.enabled && zone) {
+    // zones가 없으면 null 반환
+    if (!indexing.zones) {
+      console.error('❌ calculateFurniturePosition: indexing.zones is null for dropped ceiling');
+      return null;
+    }
+    
     const zoneIndexing = zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
-    if (!zoneIndexing || !zoneIndexing.threeUnitPositions) return null;
+    if (!zoneIndexing || !zoneIndexing.threeUnitPositions) {
+      console.error('❌ calculateFurniturePosition: zoneIndexing is null or missing positions', {
+        zone,
+        zoneIndexing,
+        hasZones: !!indexing.zones,
+        hasNormal: !!indexing.zones?.normal,
+        hasDropped: !!indexing.zones?.dropped
+      });
+      return null;
+    }
     
     if (isDual && slotIndex < zoneIndexing.threeUnitPositions.length - 1) {
       // 듀얼 가구: threeUnitDualPositions 사용

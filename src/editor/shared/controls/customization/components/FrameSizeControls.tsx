@@ -58,20 +58,6 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
     return (
       <div className={styles.section}>
         <span className={styles.label}>프레임 설정</span>
-        <div className={styles.description}>
-          벽이 있는 쪽은 40~100mm 범위에서 조정 가능하며, 벽이 없는 쪽은 20mm 엔드패널로 고정됩니다.
-        </div>
-        {surroundFrameWidth && (
-          <div className={styles.infoBox} style={{ marginBottom: '12px' }}>
-            <span>프레임 폭 내경: <strong>{surroundFrameWidth}mm</strong></span>
-            <span className={styles.infoDetail}>
-              (전체 폭 {spaceWidth}mm - 좌측 프레임 {!hasLeftWall ? END_PANEL_WIDTH : frameSize.left}mm - 우측 프레임 {!hasRightWall ? END_PANEL_WIDTH : frameSize.right}mm)
-            </span>
-            <span className={styles.infoDetail} style={{ marginTop: '4px' }}>
-              슬롯 수: <strong>{columnInfo.columnCount}개</strong> / 슬롯당 너비: <strong>{columnInfo.columnWidth}mm</strong>
-            </span>
-          </div>
-        )}
         <div className={styles.inputGroup} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>좌측 (40~100)</label>
@@ -131,30 +117,6 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   return (
     <div className={styles.section}>
       <span className={styles.label}>프레임 설정</span>
-      <p className={styles.description}>
-        {hasLeftWall && hasRightWall ? (
-          <>노서라운드에서는 좌우 프레임이 제거되고, 선택한 이격거리({gapSize}mm)에 따라 
-          상/하단 프레임 폭이 자동 계산됩니다.</>
-        ) : (
-          <>노서라운드에서 벽이 없는 쪽은 {END_PANEL_WIDTH}mm 엔드패널로 고정되며,
-          벽이 있는 쪽은 이격거리({gapSize}mm)가 적용됩니다.</>
-        )}
-      </p>
-      {noSurroundFrameWidth && (
-        <div className={styles.infoBox} style={{ marginBottom: '12px' }}>
-          <span>프레임 폭 내경: <strong>{noSurroundFrameWidth}mm</strong></span>
-          <span className={styles.infoDetail}>
-            (전체 폭 {spaceWidth}mm 
-            {!hasLeftWall && ` - 좌측 엔드패널 ${END_PANEL_WIDTH}mm`}
-            {hasLeftWall && ` - 좌측 이격거리 ${gapSize}mm`}
-            {!hasRightWall && ` - 우측 엔드패널 ${END_PANEL_WIDTH}mm`}
-            {hasRightWall && ` - 우측 이격거리 ${gapSize}mm`})
-          </span>
-          <span className={styles.infoDetail} style={{ marginTop: '4px' }}>
-            슬롯 수: <strong>{columnInfo.columnCount}개</strong> / 슬롯당 너비: <strong>{columnInfo.columnWidth}mm</strong>
-          </span>
-        </div>
-      )}
       <div className={styles.inputGroup}>
         <div className={styles.inputWrapper}>
           <label className={styles.inputLabel}>상단 (10~200)</label>

@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
 import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -1350,7 +1351,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
-      {placedModules.length > 0 && currentViewDirection !== 'top' && placedModules.map((module, index) => {
+      {React.useMemo(() => {
+        if (placedModules.length === 0 || currentViewDirection === 'top') return null;
+        
+        return placedModules.map((module, index) => {
         const moduleData = getModuleById(
           module.moduleId,
           { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -1364,14 +1368,55 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
         const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
         
-        // 커버도어는 columnSlotInfo.doorWidth 사용, 일반 가구는 실제 슬롯 너비(customWidth) 사용
+        // 기둥 슬롯 분석
+        const columnSlots = analyzeColumnSlots(spaceInfo);
+        const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        // 기본 너비 설정
+        let actualWidth = module.customWidth || moduleData.dimensions.width;
+        let actualPositionX = module.position.x;
+        
+        // 기둥 침범 시 가구 크기와 위치 재계산
+        if (slotInfo && slotInfo.hasColumn) {
+          // 슬롯 중심 위치 계산
+          let originalSlotCenterX: number;
+          if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+            originalSlotCenterX = indexing.threeUnitPositions[module.slotIndex];
+          } else {
+            originalSlotCenterX = module.position.x;
+          }
+          
+          // 슬롯 경계 계산
+          const slotWidthM = indexing.columnWidth * 0.01;
+          const originalSlotBounds = {
+            left: originalSlotCenterX - slotWidthM / 2,
+            right: originalSlotCenterX + slotWidthM / 2,
+            center: originalSlotCenterX
+          };
+          
+          // 가구 경계 계산
+          const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+          actualWidth = furnitureBounds.renderWidth;
+          actualPositionX = furnitureBounds.center;
+          
+          console.log('📐 [CleanCAD2D] 기둥 침범 가구 치수 업데이트:', {
+            moduleId: module.moduleId,
+            slotIndex: module.slotIndex,
+            hasColumn: slotInfo.hasColumn,
+            originalWidth: moduleData.dimensions.width,
+            adjustedWidth: module.adjustedWidth,
+            calculatedWidth: furnitureBounds.renderWidth,
+            finalWidth: actualWidth
+          });
+        }
+        
+        // 커버도어는 columnSlotInfo.doorWidth 사용
         const isCoverDoor = module.columnSlotInfo?.doorWidth !== undefined;
-        const actualWidth = isCoverDoor 
-          ? module.columnSlotInfo.doorWidth 
-          : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+        if (isCoverDoor) {
+          actualWidth = module.columnSlotInfo.doorWidth;
+        }
         const moduleWidth = mmToThreeUnits(actualWidth);
-        // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
-        const actualPositionX = module.adjustedPosition?.x || module.position.x;
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
         const dimY = topDimensionY - mmToThreeUnits(120); // 상단 전체 치수 아래 위치 (간격 증가)
@@ -1484,7 +1529,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
           </group>
         );
-      })}
+      });
+      }, [placedModules, spaceInfo.columns])}
       
       {/* 기둥별 치수선 (가구와 동일한 스타일, 탑뷰가 아닐 때만) */}
       {spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {

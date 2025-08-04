@@ -9,6 +9,7 @@ interface FurnitureDataState {
   // 선택 상태 (FurnitureSelectionProvider에서 이전)
   selectedLibraryModuleId: string | null;
   selectedPlacedModuleId: string | null;
+  selectedFurnitureId: string | null; // Click & Place를 위한 선택된 가구 ID
   
   // UI 상태 (FurnitureUIProvider에서 이전)
   isFurniturePlacementMode: boolean;
@@ -35,6 +36,7 @@ interface FurnitureDataState {
   // 선택 상태 액션들 (FurnitureSelectionProvider와 동일한 인터페이스)
   setSelectedLibraryModuleId: (id: string | null) => void;
   setSelectedPlacedModuleId: (id: string | null) => void;
+  setSelectedFurnitureId: (id: string | null) => void;
   clearAllSelections: () => void;
   
   // UI 상태 액션들 (FurnitureUIProvider와 동일한 인터페이스)
@@ -60,6 +62,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 선택 상태 초기값 (FurnitureSelectionProvider와 동일)
   selectedLibraryModuleId: null,
   selectedPlacedModuleId: null,
+  selectedFurnitureId: null,
 
   // UI 상태 초기값 (FurnitureUIProvider와 동일)
   isFurniturePlacementMode: false,
@@ -150,10 +153,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set({ selectedPlacedModuleId: id });
   },
 
+  setSelectedFurnitureId: (id: string | null) => {
+    set({ selectedFurnitureId: id });
+  },
+
   clearAllSelections: () => {
     set({ 
       selectedLibraryModuleId: null,
-      selectedPlacedModuleId: null 
+      selectedPlacedModuleId: null,
+      selectedFurnitureId: null 
     });
   },
 

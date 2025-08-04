@@ -125,6 +125,18 @@
   opacity: 1;
 }
 
+/* 선택된 상태 */
+.thumbnailItem.selected {
+  border-color: var(--theme-primary);
+  border-width: 3px;
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
+}
+
+.thumbnailItem.selected:hover {
+  transform: none;
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
+}
+
 /* 비활성화 상태 */
 .thumbnailItem.disabled {
   opacity: 0.5;

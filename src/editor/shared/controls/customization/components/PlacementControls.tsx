@@ -58,10 +58,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 받침대 있음 - 높이 설정 */}
       {isFloor && (
         <div className={styles.section}>
-          <span className={styles.label}>받침대 높이 (mm)</span>
-          <p className={styles.description}>
-            받침대는 바닥마감재 위에 적용되며, 기본값은 65mm입니다. (50-500mm)
-          </p>
+          <span className={styles.label}>받침대 높이</span>
           <div className={styles.inputWrapper}>
             <div className={styles.inputWithUnit}>
               <input
@@ -87,9 +84,6 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               <span className={styles.unit}>mm</span>
             </div>
           </div>
-          <p className={styles.description}>
-            받침대는 바닥마감재 위에서부터 {baseHeight}mm 길이로 설치됩니다.
-          </p>
         </div>
       )}
 
@@ -119,7 +113,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 받침대 없음 + 띄워서 배치 - 띄움 높이 설정 */}
       {isStand && isFloat && (
         <div className={styles.section}>
-          <span className={styles.label}>띄움 높이 (mm)</span>
+          <span className={styles.label}>띄움 높이</span>
           <div className={styles.inputWrapper}>
             <div className={styles.inputWithUnit}>
               <input
@@ -136,9 +130,6 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
               <span className={styles.unit}>mm</span>
             </div>
           </div>
-          <p className={styles.description}>
-            바닥으로부터 {floatHeight}mm 높이가 띄워집니다.
-          </p>
         </div>
       )}
     </>

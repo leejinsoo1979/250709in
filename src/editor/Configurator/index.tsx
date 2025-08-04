@@ -1586,16 +1586,28 @@ const Configurator: React.FC = () => {
                 <h3 className={styles.sectionTitle}>공간 설정</h3>
               </div>
               
-              <WidthControl 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
-              />
-              
-              <HeightControl 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-              />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                  <div style={{ flex: 1 }}>
+                    <WidthControl 
+                      spaceInfo={spaceInfo}
+                      onUpdate={handleSpaceInfoUpdate}
+                      disabled={hasSpecialDualFurniture}
+                    />
+                  </div>
+                </div>
+                
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                  <div style={{ flex: 1 }}>
+                    <HeightControl 
+                      spaceInfo={spaceInfo}
+                      onUpdate={handleSpaceInfoUpdate}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
@@ -1707,12 +1719,11 @@ const Configurator: React.FC = () => {
                   <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
                 </div>
                 
-                <div className={styles.inputGroup}>
-                  <div className={styles.inputGroupTwoColumns}>
+                <div style={{ display: 'flex', gap: '12px' }}>
                     {/* 메인구간 폭 */}
-                    <div className={styles.inputWrapper}>
-                      <label className={styles.inputLabel}>메인구간 폭</label>
-                      <div className={styles.inputWithUnit}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
                           min="100"
@@ -1778,9 +1789,9 @@ const Configurator: React.FC = () => {
                     </div>
                     
                     {/* 메인구간 높이 */}
-                    <div className={styles.inputWrapper}>
-                      <label className={styles.inputLabel}>메인구간 높이</label>
-                      <div className={styles.inputWithUnit}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
                           defaultValue={spaceInfo.height || 2400}
@@ -1845,7 +1856,6 @@ const Configurator: React.FC = () => {
                         <span className={styles.unit}>mm</span>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -1858,12 +1868,11 @@ const Configurator: React.FC = () => {
                   <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
                 </div>
                 
-                <div className={styles.inputGroup}>
-                  <div className={styles.inputGroupTwoColumns}>
+                <div style={{ display: 'flex', gap: '12px' }}>
                     {/* 단내림 구간 폭 */}
-                    <div className={styles.inputWrapper}>
-                      <label className={styles.inputLabel}>단내림 구간 폭</label>
-                      <div className={styles.inputWithUnit}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
                           min="100"
@@ -1928,9 +1937,9 @@ const Configurator: React.FC = () => {
                     </div>
                     
                     {/* 단내림 구간 높이 */}
-                    <div className={styles.inputWrapper}>
-                      <label className={styles.inputLabel}>단내림 구간 높이</label>
-                      <div className={styles.inputWithUnit}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
                           min="1800"
@@ -1995,7 +2004,6 @@ const Configurator: React.FC = () => {
                         <span className={styles.unit}>mm</span>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -2014,60 +2022,10 @@ const Configurator: React.FC = () => {
                   customColumnCount: spaceInfo.customColumnCount
                 })}
                 
-                {/* 도어 개수 입력 */}
+                {/* 도어 개수 입력 - 제거 */}
                 {!spaceInfo.droppedCeiling?.enabled ? (
-                // 단내림이 없을 때 - 기존 도어 개수
+                // 단내림이 없을 때 - 컬럼 개수만 표시
                 <div className={styles.inputGroup}>
-                  <div className={styles.inputRow}>
-                    <label className={styles.inputLabel}>도어 개수</label>
-                    <div className={styles.numberInputGroup}>
-                      <button 
-                        className={styles.numberInputButton}
-                        onClick={() => {
-                          const current = getCurrentColumnCount();
-                          const doorRange = calculateDoorRange(spaceInfo.width || 4800);
-                          if (current > doorRange.min) {
-                            handleSpaceInfoUpdate({ customColumnCount: current - 1 });
-                          }
-                        }}
-                        disabled={getCurrentColumnCount() <= calculateDoorRange(spaceInfo.width || 4800).min}
-                      >
-                        −
-                      </button>
-                      <div className={styles.numberInputValue}>
-                        <input
-                          type="number"
-                          value={getCurrentColumnCount()}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value) || 1;
-                            handleSpaceInfoUpdate({ customColumnCount: value });
-                          }}
-                          style={{ 
-                            width: '60px', 
-                            textAlign: 'center',
-                            border: 'none',
-                            background: 'transparent',
-                            color: 'var(--theme-text)',
-                            fontSize: '14px',
-                            fontWeight: '500'
-                          }}
-                        />
-                      </div>
-                      <button 
-                        className={styles.numberInputButton}
-                        onClick={() => {
-                          const current = getCurrentColumnCount();
-                          const doorRange = calculateDoorRange(spaceInfo.width || 4800);
-                          if (current < doorRange.max) {
-                            handleSpaceInfoUpdate({ customColumnCount: current + 1 });
-                          }
-                        }}
-                        disabled={getCurrentColumnCount() >= calculateDoorRange(spaceInfo.width || 4800).max}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
                   <DoorSlider
                     value={getCurrentColumnCount()}
                     onChange={(value) => {
@@ -2077,61 +2035,9 @@ const Configurator: React.FC = () => {
                   />
                 </div>
               ) : (
-                // 단내림이 있을 때 - 기존 구간과 단내림 구간 분리
-                <>
+                // 단내림이 있을 때 - 도어 개수 입력 숨김
+                <div>
                   <div className={styles.inputGroup}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>메인구간 도어 개수</label>
-                      <div className={styles.numberInputGroup}>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const current = spaceInfo.mainDoorCount || getCurrentColumnCount();
-                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
-                            const doorRange = calculateDoorRange(mainWidth);
-                            if (current > doorRange.min) {
-                              handleSpaceInfoUpdate({ mainDoorCount: current - 1 });
-                            }
-                          }}
-                          disabled={(spaceInfo.mainDoorCount || getCurrentColumnCount()) <= calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).min}
-                        >
-                          −
-                        </button>
-                        <div className={styles.numberInputValue}>
-                          <input
-                            type="number"
-                            value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value) || 1;
-                              handleSpaceInfoUpdate({ mainDoorCount: value });
-                            }}
-                            style={{ 
-                              width: '60px', 
-                              textAlign: 'center',
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'var(--theme-text)',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
-                          />
-                        </div>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const current = spaceInfo.mainDoorCount || getCurrentColumnCount();
-                            const mainWidth = (spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900);
-                            const doorRange = calculateDoorRange(mainWidth);
-                            if (current < doorRange.max) {
-                              handleSpaceInfoUpdate({ mainDoorCount: current + 1 });
-                            }
-                          }}
-                          disabled={(spaceInfo.mainDoorCount || getCurrentColumnCount()) >= calculateDoorRange((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)).max}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
                     <DoorSlider
                       value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
                       onChange={(value) => {
@@ -2143,87 +2049,6 @@ const Configurator: React.FC = () => {
                   
                   {/* 단내림구간 도어 개수 */}
                   <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>단내림구간 도어 개수</label>
-                      <div className={styles.numberInputGroup}>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const MAX_SLOT_WIDTH = 600;
-                            const MIN_SLOT_WIDTH = 400;
-                            const doorRange = {
-                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
-                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
-                            };
-                            const current = spaceInfo.droppedCeilingDoorCount || doorRange.min;
-                            if (current > doorRange.min) {
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current - 1 });
-                            }
-                          }}
-                          disabled={(() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || minValue;
-                            return currentValue <= minValue;
-                          })()}
-                        >
-                          −
-                        </button>
-                        <div className={styles.numberInputValue}>
-                          <input
-                            type="number"
-                            value={spaceInfo.droppedCeilingDoorCount || 1}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value) || 1;
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                            }}
-                            style={{ 
-                              width: '60px', 
-                              textAlign: 'center',
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'var(--theme-text)',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
-                          />
-                        </div>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const MAX_SLOT_WIDTH = 600;
-                            const MIN_SLOT_WIDTH = 400;
-                            const doorRange = {
-                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
-                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
-                            };
-                            const current = spaceInfo.droppedCeilingDoorCount || doorRange.min;
-                            if (current < doorRange.max) {
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current + 1 });
-                            }
-                          }}
-                          disabled={(() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
-                            const maxValue = Math.max(1, Math.floor(internalWidth / 400));
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || minValue;
-                            return currentValue >= maxValue;
-                          })()}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
                     <DoorSlider
                       value={spaceInfo.droppedCeilingDoorCount || 1}
                       onChange={(value) => {
@@ -2232,7 +2057,7 @@ const Configurator: React.FC = () => {
                       width={spaceInfo.droppedCeiling?.width || 900}
                     />
                   </div>
-                </>
+                </div>
               )}
 
               </div>

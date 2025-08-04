@@ -568,9 +568,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     };
   };
 
-  // 전환 애니메이션 처리 함수
+  // 현재 활성화된 섬네일 추적
+  const [activeQuadrant, setActiveQuadrant] = React.useState<'front' | 'top' | 'left' | 'right' | null>(null);
+  
+  // 전환 애니메이션 처리 함수 - 전체화면 확장 버튼 클릭 시에만 사용
   const handleQuadrantExpand = (direction: 'front' | 'top' | 'left' | 'right') => {
-    // 즉시 뷰 변경하여 깜빡임 방지
+    // 전체화면으로 전환
     setView2DDirection(direction);
     setUIViewMode('2D');
   };
@@ -618,11 +621,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             transform: 'translateX(-50%)'
           }} />
           {/* 좌측 상단: 정면 뷰 */}
-          <div style={{ 
-            position: 'relative', 
-            overflow: 'hidden', 
-            backgroundColor: '#121212'
-          }}>
+          <div 
+            onClick={() => setActiveQuadrant(activeQuadrant === 'front' ? null : 'front')}
+            style={{ 
+              position: 'relative', 
+              overflow: 'hidden', 
+              backgroundColor: '#121212',
+              border: activeQuadrant === 'front' ? '3px solid #00ffcc' : '1px solid transparent',
+              transition: 'border 0.3s ease',
+              boxSizing: 'border-box',
+              cursor: 'pointer'
+            }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('front').position}
               cameraTarget={getOptimizedCameraForView('front').target}
@@ -693,11 +702,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 상단: 상부 뷰 */}
-          <div style={{ 
-            position: 'relative', 
-            overflow: 'hidden', 
-            backgroundColor: '#121212'
-          }}>
+          <div 
+            onClick={() => setActiveQuadrant(activeQuadrant === 'top' ? null : 'top')}
+            style={{ 
+              position: 'relative', 
+              overflow: 'hidden', 
+              backgroundColor: '#121212',
+              border: activeQuadrant === 'top' ? '3px solid #00ffcc' : '1px solid transparent',
+              transition: 'border 0.3s ease',
+              boxSizing: 'border-box',
+              cursor: 'pointer'
+            }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('top').position}
               cameraTarget={getOptimizedCameraForView('top').target}
@@ -768,11 +783,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 좌측 하단: 좌측면 뷰 */}
-          <div style={{ 
-            position: 'relative', 
-            overflow: 'hidden', 
-            backgroundColor: '#121212'
-          }}>
+          <div 
+            onClick={() => setActiveQuadrant(activeQuadrant === 'left' ? null : 'left')}
+            style={{ 
+              position: 'relative', 
+              overflow: 'hidden', 
+              backgroundColor: '#121212',
+              border: activeQuadrant === 'left' ? '3px solid #00ffcc' : '1px solid transparent',
+              transition: 'border 0.3s ease',
+              boxSizing: 'border-box',
+              cursor: 'pointer'
+            }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('left').position}
               cameraTarget={getOptimizedCameraForView('left').target}
@@ -843,11 +864,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 하단: 우측면 뷰 */}
-          <div style={{ 
-            position: 'relative', 
-            overflow: 'hidden', 
-            backgroundColor: '#121212'
-          }}>
+          <div 
+            onClick={() => setActiveQuadrant(activeQuadrant === 'right' ? null : 'right')}
+            style={{ 
+              position: 'relative', 
+              overflow: 'hidden', 
+              backgroundColor: '#121212',
+              border: activeQuadrant === 'right' ? '3px solid #00ffcc' : '1px solid transparent',
+              transition: 'border 0.3s ease',
+              boxSizing: 'border-box',
+              cursor: 'pointer'
+            }}>
             <ThreeCanvas 
               cameraPosition={getOptimizedCameraForView('right').position}
               cameraTarget={getOptimizedCameraForView('right').target}
@@ -1180,7 +1207,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} activeZone={activeZone} />
+            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
             
             {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
             <InternalDimensionDisplay />
@@ -1333,7 +1360,7 @@ const QuadrantContent: React.FC<{
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} activeZone={activeZone} />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🎯 QuadrantContent - Room 렌더링:', {

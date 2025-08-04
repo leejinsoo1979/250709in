@@ -164,10 +164,48 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   const columns = spaceInfo.columns || [];
   const slotInfos: ColumnSlotInfo[] = [];
   
-  // 각 슬롯에 대해 기둥 포함 여부 확인
-  for (let slotIndex = 0; slotIndex < indexing.columnCount; slotIndex++) {
-    const slotStartX = indexing.threeUnitPositions[slotIndex] - (indexing.columnWidth * 0.01) / 2;
-    const slotEndX = indexing.threeUnitPositions[slotIndex] + (indexing.columnWidth * 0.01) / 2;
+  // 단내림이 있는 경우 zone별로 처리
+  if (spaceInfo.droppedCeiling?.enabled) {
+    const { ColumnIndexer } = require('./indexing');
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    
+    // 전체 슬롯 수 = normal zone + dropped zone
+    const totalSlotCount = (zoneInfo.normal?.columnCount || 0) + (zoneInfo.dropped?.columnCount || 0);
+    
+    // 각 슬롯에 대해 기둥 포함 여부 확인 (전체 슬롯 인덱스 기준)
+    for (let globalSlotIndex = 0; globalSlotIndex < totalSlotCount; globalSlotIndex++) {
+      // 어느 zone에 속하는지 확인
+      let zone: 'normal' | 'dropped';
+      let localSlotIndex: number;
+      let targetZone: any;
+      
+      if (globalSlotIndex < (zoneInfo.normal?.columnCount || 0)) {
+        zone = 'normal';
+        localSlotIndex = globalSlotIndex;
+        targetZone = zoneInfo.normal;
+      } else {
+        zone = 'dropped';
+        localSlotIndex = globalSlotIndex - (zoneInfo.normal?.columnCount || 0);
+        targetZone = zoneInfo.dropped;
+      }
+      
+      if (!targetZone || !targetZone.threeUnitPositions || localSlotIndex >= targetZone.columnCount) {
+        // zone 정보가 없으면 기본 슬롯 정보 추가
+        slotInfos.push({
+          slotIndex: globalSlotIndex,
+          hasColumn: false,
+          columnPosition: 'edge',
+          availableWidth: indexing.columnWidth,
+          doorWidth: targetZone.columnWidth - 3,
+          needsMullion: false
+        });
+        continue;
+      }
+      
+      const slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
+      const slotWidthM = targetZone.columnWidth * 0.01;
+      const slotStartX = slotCenterX - slotWidthM / 2;
+      const slotEndX = slotCenterX + slotWidthM / 2;
     
     // 이 슬롯에 포함된 기둥 찾기
     const columnInSlot = columns.find(column => {
@@ -181,11 +219,11 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     if (!columnInSlot) {
       // 기둥이 없는 일반 슬롯
       slotInfos.push({
-        slotIndex,
+        slotIndex: globalSlotIndex,
         hasColumn: false,
         columnPosition: 'edge',
-        availableWidth: indexing.columnWidth,
-        doorWidth: indexing.columnWidth - 3, // 기본 3mm 갭
+        availableWidth: targetZone.columnWidth,
+        doorWidth: targetZone.columnWidth - 3, // 기본 3mm 갭
         needsMullion: false
       });
       continue;
@@ -207,11 +245,12 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     // 기둥 침범 방향 분석
     const analyzeIntrusionDirection = () => {
       const columnWidthMm = columnInSlot.width;
-      const slotWidthMm = indexing.columnWidth;
+      const slotWidthMm = targetZone.columnWidth;
       const margin = 2; // 최소 이격거리 2mm
       
       console.log('🏛️ 기둥 침범 방향 분석:', {
-        slotIndex,
+        slotIndex: globalSlotIndex,
+        zone,
         columnLeftX: columnLeftX.toFixed(3),
         columnRightX: columnRightX.toFixed(3),
         slotStartX: slotStartX.toFixed(3),
@@ -283,8 +322,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     // 실제 배치 가능한 크기를 calculateFurnitureBounds로 정확히 계산
     let actualRenderWidth = intrusionAnalysis.adjustedWidth;
     try {
-      const slotWidthM = indexing.columnWidth * 0.01;
-      const slotCenterX = indexing.threeUnitPositions[slotIndex];
+      const slotWidthM = targetZone.columnWidth * 0.01;
+      const slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
       
       const originalSlotBounds = {
         left: slotCenterX - slotWidthM / 2,
@@ -293,7 +332,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       };
       
       const tempSlotInfo = {
-        slotIndex,
+        slotIndex: globalSlotIndex,
         hasColumn: true,
         column: columnInSlot,
         columnPosition,
@@ -307,7 +346,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       actualRenderWidth = furnitureBounds.renderWidth;
       
       console.log('🔍 실제 배치 크기 미리 계산:', {
-        slotIndex,
+        slotIndex: globalSlotIndex,
+        zone,
         originalAdjustedWidth: intrusionAnalysis.adjustedWidth,
         actualRenderWidth,
         improvement: actualRenderWidth > intrusionAnalysis.adjustedWidth ? '개선됨' : '동일/악화'
@@ -325,7 +365,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     let subSlots: ColumnSlotInfo['subSlots'];
     
     const DEPTH_THRESHOLD = 500; // 500mm 기준
-    const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
+    const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, targetZone.columnWidth, slotStartX, slotEndX);
     columnType = depthAnalysis.columnType;
     
     // 기둥 C(300mm)는 깊이 기반 분할 배치
@@ -343,7 +383,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       };
       
       console.log('🔵 기둥 C 감지 - 깊이 기반 분할 배치:', {
-        slotIndex,
+        slotIndex: globalSlotIndex,
+        zone,
         columnDepth: columnInSlot.depth,
         allowMultipleFurniture: true,
         adjustedDepth: adjustedDepth + 'mm',
@@ -358,7 +399,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     }
     
     console.log('🔍 기둥 처리 방식 결정:', {
-      slotIndex,
+      slotIndex: globalSlotIndex,
+      zone,
       columnDepth: columnInSlot.depth,
       columnType,
       columnProcessingMethod,
@@ -366,7 +408,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     });
 
     console.log('🏛️ 슬롯 분석 완료:', {
-      slotIndex,
+      slotIndex: globalSlotIndex,
+      zone,
       hasColumn: true,
       columnPosition,
       availableWidth: intrusionAnalysis.availableWidth,
@@ -375,18 +418,18 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       intrusionDirection: intrusionAnalysis.intrusionDirection,
       furniturePosition: intrusionAnalysis.furniturePosition,
       adjustedWidth: intrusionAnalysis.adjustedWidth,
-      doorWidth: indexing.columnWidth - 3,
+      doorWidth: targetZone.columnWidth - 3,
       columnType,
       hasDepthAnalysis: columnType !== undefined
     });
     
     slotInfos.push({
-      slotIndex,
+      slotIndex: globalSlotIndex,
       hasColumn: true,
       column: columnInSlot,
       columnPosition,
       availableWidth,
-      doorWidth: indexing.columnWidth - 3, // 도어는 항상 원래 슬롯 크기 유지
+      doorWidth: targetZone.columnWidth - 3, // 도어는 항상 원래 슬롯 크기 유지
       needsMullion,
       mullionSide,
       intrusionDirection: intrusionAnalysis.intrusionDirection,
@@ -398,6 +441,244 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       splitPlacement,
       allowMultipleFurniture
     });
+    }
+    return slotInfos;
+  } else {
+    // 단내림이 없는 경우 - 기존 로직 유지
+    for (let slotIndex = 0; slotIndex < indexing.columnCount; slotIndex++) {
+      const slotStartX = indexing.threeUnitPositions[slotIndex] - (indexing.columnWidth * 0.01) / 2;
+      const slotEndX = indexing.threeUnitPositions[slotIndex] + (indexing.columnWidth * 0.01) / 2;
+      
+      // 이 슬롯에 포함된 기둥 찾기
+      const columnInSlot = columns.find(column => {
+        const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
+        const columnRightX = column.position[0] + (column.width * 0.01) / 2;
+        
+        // 기둥이 슬롯 영역과 겹치는지 확인
+        return (columnLeftX < slotEndX && columnRightX > slotStartX);
+      });
+      
+      if (!columnInSlot) {
+        // 기둥이 없는 일반 슬롯
+        slotInfos.push({
+          slotIndex,
+          hasColumn: false,
+          columnPosition: 'edge',
+          availableWidth: indexing.columnWidth,
+          doorWidth: indexing.columnWidth - 3, // 기본 3mm 갭
+          needsMullion: false
+        });
+        continue;
+      }
+      
+      // 기둥이 있는 슬롯 처리
+      const columnLeftX = columnInSlot.position[0] - (columnInSlot.width * 0.01) / 2;
+      const columnRightX = columnInSlot.position[0] + (columnInSlot.width * 0.01) / 2;
+      
+      // 기둥이 슬롯 끝선에 정확히 일치하는지 확인 (허용 오차 5mm)
+      const tolerance = 0.05; // 5mm를 Three.js 단위로 변환
+      const isAtLeftEdge = Math.abs(columnLeftX - slotStartX) < tolerance;
+      const isAtRightEdge = Math.abs(columnRightX - slotEndX) < tolerance;
+      
+      // 기둥과 슬롯 경계 간의 실제 거리 계산
+      const leftGap = (columnLeftX - slotStartX) * 100; // mm 단위로 변환
+      const rightGap = (slotEndX - columnRightX) * 100; // mm 단위로 변환
+      
+      // 기둥 침범 방향 분석
+      const analyzeIntrusionDirection = () => {
+        const columnWidthMm = columnInSlot.width;
+        const slotWidthMm = indexing.columnWidth;
+        const margin = 2; // 최소 이격거리 2mm
+        
+        console.log('🏛️ 기둥 침범 방향 분석:', {
+          slotIndex,
+          columnLeftX: columnLeftX.toFixed(3),
+          columnRightX: columnRightX.toFixed(3),
+          slotStartX: slotStartX.toFixed(3),
+          slotEndX: slotEndX.toFixed(3),
+          leftGap: leftGap.toFixed(1) + 'mm',
+          rightGap: rightGap.toFixed(1) + 'mm',
+          columnWidthMm,
+          slotWidthMm
+        });
+        
+        // 기둥이 슬롯을 완전히 차지하는 경우
+        if (columnWidthMm >= slotWidthMm - margin) {
+          console.log('🏛️ 기둥이 슬롯을 완전히 차지함');
+          return {
+            availableWidth: 0,
+            intrusionDirection: 'center' as const,
+            furniturePosition: 'center' as const,
+            adjustedWidth: 0
+          };
+        }
+        
+        // 기둥이 슬롯과 겹치면 무조건 침범으로 처리
+        // 왼쪽 공간이 더 작으면 왼쪽에서 침범
+        if (leftGap <= rightGap) {
+          const rightSpace = Math.max(0, rightGap - margin);
+          console.log('🏛️ 기둥이 왼쪽 영역 침범 → 오른쪽 공간 사용:', {
+            leftGap: leftGap.toFixed(1) + 'mm',
+            rightGap: rightGap.toFixed(1) + 'mm',
+            rightSpace: rightSpace.toFixed(1) + 'mm'
+          });
+          return {
+            availableWidth: rightSpace,
+            intrusionDirection: 'from-left' as const,
+            furniturePosition: 'right-aligned' as const,
+            adjustedWidth: rightSpace
+          };
+        } 
+        // 오른쪽 공간이 더 작으면 오른쪽에서 침범
+        else {
+          const leftSpace = Math.max(0, leftGap - margin);
+          console.log('🏛️ 기둥이 오른쪽 영역 침범 → 왼쪽 공간 사용:', {
+            leftGap: leftGap.toFixed(1) + 'mm',
+            rightGap: rightGap.toFixed(1) + 'mm',
+            leftSpace: leftSpace.toFixed(1) + 'mm'
+          });
+          return {
+            availableWidth: leftSpace,
+            intrusionDirection: 'from-right' as const,
+            furniturePosition: 'left-aligned' as const,
+            adjustedWidth: leftSpace
+          };
+        }
+      };
+      
+      const intrusionAnalysis = analyzeIntrusionDirection();
+      const availableWidth = intrusionAnalysis.availableWidth;
+      const needsMullion = leftGap > 10 && rightGap > 10 && availableWidth > 0;
+      
+      let mullionSide: 'left' | 'right' | undefined;
+      if (needsMullion) {
+        mullionSide = leftGap > rightGap ? 'right' : 'left';
+      }
+      
+      // 기둥 위치 분류 (기둥이 슬롯과 겹치면 무조건 침범으로 간주)
+      let columnPosition: 'edge' | 'middle';
+      // 기둥이 슬롯과 겹치는 순간 edge로 분류 (침범 상황)
+      columnPosition = 'edge';
+      
+      // 실제 배치 가능한 크기를 calculateFurnitureBounds로 정확히 계산
+      let actualRenderWidth = intrusionAnalysis.adjustedWidth;
+      try {
+        const slotWidthM = indexing.columnWidth * 0.01;
+        const slotCenterX = indexing.threeUnitPositions[slotIndex];
+        
+        const originalSlotBounds = {
+          left: slotCenterX - slotWidthM / 2,
+          right: slotCenterX + slotWidthM / 2,
+          center: slotCenterX
+        };
+        
+        const tempSlotInfo = {
+          slotIndex,
+          hasColumn: true,
+          column: columnInSlot,
+          columnPosition,
+          availableWidth,
+          intrusionDirection: intrusionAnalysis.intrusionDirection,
+          furniturePosition: intrusionAnalysis.furniturePosition,
+          adjustedWidth: intrusionAnalysis.adjustedWidth
+        } as ColumnSlotInfo;
+        
+        const furnitureBounds = calculateFurnitureBounds(tempSlotInfo, originalSlotBounds, spaceInfo);
+        actualRenderWidth = furnitureBounds.renderWidth;
+        
+        console.log('🔍 실제 배치 크기 미리 계산:', {
+          slotIndex,
+          originalAdjustedWidth: intrusionAnalysis.adjustedWidth,
+          actualRenderWidth,
+          improvement: actualRenderWidth > intrusionAnalysis.adjustedWidth ? '개선됨' : '동일/악화'
+        });
+      } catch (error) {
+        console.warn('⚠️ 실제 배치 크기 미리 계산 실패:', error);
+      }
+      
+      // 기둥 타입에 따른 처리 방식 결정
+      let columnType: 'deep' | 'shallow' | 'medium' | undefined;
+      let columnProcessingMethod: 'width-adjustment' | 'depth-adjustment' | undefined;
+      let depthAdjustment: ColumnSlotInfo['depthAdjustment'];
+      let splitPlacement: ColumnSlotInfo['splitPlacement'];
+      let allowMultipleFurniture = false;
+      let subSlots: ColumnSlotInfo['subSlots'];
+      
+      const DEPTH_THRESHOLD = 500; // 500mm 기준
+      const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
+      columnType = depthAnalysis.columnType;
+      
+      // 기둥 C(300mm)는 깊이 기반 분할 배치
+      if (columnType === 'medium') {
+        columnProcessingMethod = 'depth-adjustment';
+        allowMultipleFurniture = true; // 기둥 C는 1슬롯에 2개 가구 배치 가능
+        
+        // Column C의 경우 깊이 기반 배치 정보 설정
+        const adjustedDepth = 730 - columnInSlot.depth;
+        depthAdjustment = {
+          canPlaceSingle: true,
+          canPlaceDual: false, // 깊이 기반에서는 듀얼 불가
+          adjustedDepth: adjustedDepth,
+          minDepthMet: adjustedDepth >= 200
+        };
+        
+        console.log('🔵 기둥 C 감지 - 깊이 기반 분할 배치:', {
+          slotIndex,
+          columnDepth: columnInSlot.depth,
+          allowMultipleFurniture: true,
+          adjustedDepth: adjustedDepth + 'mm',
+          침범방향: intrusionAnalysis.intrusionDirection
+        });
+      } else if (columnType === 'shallow') {
+        columnProcessingMethod = 'depth-adjustment';
+        depthAdjustment = depthAnalysis.depthAdjustment;
+        splitPlacement = depthAnalysis.splitPlacement;
+      } else {
+        columnProcessingMethod = 'width-adjustment';
+      }
+      
+      console.log('🔍 기둥 처리 방식 결정:', {
+        slotIndex,
+        columnDepth: columnInSlot.depth,
+        columnType,
+        columnProcessingMethod,
+        allowMultipleFurniture
+      });
+
+      console.log('🏛️ 슬롯 분석 완료:', {
+        slotIndex,
+        hasColumn: true,
+        columnPosition,
+        availableWidth: intrusionAnalysis.availableWidth,
+        actualRenderWidth,
+        배치가능여부: actualRenderWidth >= 150 ? '✅ 배치 가능' : '❌ 배치 불가',
+        intrusionDirection: intrusionAnalysis.intrusionDirection,
+        furniturePosition: intrusionAnalysis.furniturePosition,
+        adjustedWidth: intrusionAnalysis.adjustedWidth,
+        doorWidth: indexing.columnWidth - 3,
+        columnType,
+        hasDepthAnalysis: columnType !== undefined
+      });
+      
+      slotInfos.push({
+        slotIndex,
+        hasColumn: true,
+        column: columnInSlot,
+        columnPosition,
+        availableWidth,
+        doorWidth: indexing.columnWidth - 3, // 도어는 항상 원래 슬롯 크기 유지
+        needsMullion,
+        mullionSide,
+        intrusionDirection: intrusionAnalysis.intrusionDirection,
+        furniturePosition: intrusionAnalysis.furniturePosition,
+        adjustedWidth: actualRenderWidth, // 실제 렌더링 가능한 크기로 업데이트
+        columnType,
+        columnProcessingMethod,
+        depthAdjustment,
+        splitPlacement,
+        allowMultipleFurniture
+      });
+    }
   }
   
   return slotInfos;
@@ -838,6 +1119,10 @@ export const calculateFurnitureBounds = (
         });
       }
       
+      // 슬롯 경계를 절대 벗어나지 않도록 제한
+      furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
+      furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
+      
       // 슬롯 경계 내에서 최소 크기 보장 체크
       if (furnitureRight - furnitureLeft < minFurnitureWidth) {
         console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
@@ -845,13 +1130,15 @@ export const calculateFurnitureBounds = (
           minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
         });
         
-        // 최소 크기를 만족할 수 없으면 슬롯 경계에 맞춰 조정
-        furnitureLeft = furnitureRight - minFurnitureWidth;
-        if (furnitureLeft < originalSlotBounds.left) {
-          // 그래도 슬롯을 벗어나면 배치 불가 -> 최소 크기로 고정
+        // 오른쪽 경계는 슬롯 경계로 고정하고, 최소 크기 확보
+        furnitureRight = originalSlotBounds.right;
+        furnitureLeft = Math.max(furnitureRight - minFurnitureWidth, originalSlotBounds.left);
+        
+        // 그래도 최소 크기를 확보할 수 없으면 슬롯 전체를 사용
+        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
           furnitureLeft = originalSlotBounds.left;
-          furnitureRight = originalSlotBounds.left + minFurnitureWidth;
-          console.log('🚨 슬롯 경계 초과로 최소 크기 강제 적용');
+          furnitureRight = originalSlotBounds.right;
+          console.log('🚨 슬롯이 너무 작아 전체 슬롯 사용');
         }
       }
       
@@ -894,6 +1181,10 @@ export const calculateFurnitureBounds = (
         });
       }
       
+      // 슬롯 경계를 절대 벗어나지 않도록 제한
+      furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
+      furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
+      
       // 슬롯 경계 내에서 최소 크기 보장 체크
       if (furnitureRight - furnitureLeft < minFurnitureWidth) {
         console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
@@ -901,13 +1192,15 @@ export const calculateFurnitureBounds = (
           minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
         });
         
-        // 최소 크기를 만족할 수 없으면 슬롯 경계에 맞춰 조정
-        furnitureRight = furnitureLeft + minFurnitureWidth;
-        if (furnitureRight > originalSlotBounds.right) {
-          // 그래도 슬롯을 벗어나면 배치 불가 -> 최소 크기로 고정
+        // 왼쪽 경계는 슬롯 경계로 고정하고, 최소 크기 확보
+        furnitureLeft = originalSlotBounds.left;
+        furnitureRight = Math.min(furnitureLeft + minFurnitureWidth, originalSlotBounds.right);
+        
+        // 그래도 최소 크기를 확보할 수 없으면 슬롯 전체를 사용
+        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
+          furnitureLeft = originalSlotBounds.left;
           furnitureRight = originalSlotBounds.right;
-          furnitureLeft = originalSlotBounds.right - minFurnitureWidth;
-          console.log('🚨 슬롯 경계 초과로 최소 크기 강제 적용');
+          console.log('🚨 슬롯이 너무 작아 전체 슬롯 사용');
         }
       }
       
@@ -941,6 +1234,9 @@ export const calculateFurnitureBounds = (
         furnitureLeft = originalSlotBounds.left;
         furnitureRight = Math.min(columnLeftX - margin, originalSlotBounds.right);
         
+        // 슬롯 경계 제한
+        furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
+        
         // 최소 크기 보장
         if (furnitureRight - furnitureLeft < minFurnitureWidth) {
           furnitureRight = Math.min(furnitureLeft + minFurnitureWidth, originalSlotBounds.right);
@@ -948,6 +1244,9 @@ export const calculateFurnitureBounds = (
       } else if (slotInfo.furniturePosition === 'right-aligned') {
         furnitureLeft = Math.max(columnRightX + margin, originalSlotBounds.left);
         furnitureRight = originalSlotBounds.right;
+        
+        // 슬롯 경계 제한
+        furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
         
         // 최소 크기 보장
         if (furnitureRight - furnitureLeft < minFurnitureWidth) {
@@ -994,8 +1293,19 @@ export const calculateFurnitureBounds = (
       furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
   }
   
-  // 가구 중심 계산 (침범 방향에 따라 자연스럽게 한쪽으로 치우쳐짐)
-  const newCenter = (furnitureLeft + furnitureRight) / 2;
+  // 가구 중심 계산
+  let newCenter = (furnitureLeft + furnitureRight) / 2;
+  
+  // 가구 중심이 슬롯 경계를 벗어나지 않도록 추가 제한
+  const halfWidth = (furnitureRight - furnitureLeft) / 2;
+  const slotCenterMin = originalSlotBounds.left + halfWidth;
+  const slotCenterMax = originalSlotBounds.right - halfWidth;
+  
+  newCenter = Math.max(slotCenterMin, Math.min(slotCenterMax, newCenter));
+  
+  // 중심 조정에 따라 가구 경계 재계산
+  furnitureLeft = newCenter - halfWidth;
+  furnitureRight = newCenter + halfWidth;
   
   const totalWidth = (furnitureRight - furnitureLeft) * 100; // mm 단위
   const finalRenderWidth = Math.max(totalWidth, 150); // 최소 150mm 보장

@@ -257,27 +257,19 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 듀얼/싱글 가구 판별
     const isDual = isDualFurniture(dragData.moduleData.id, spaceInfo);
     
-    // 기둥 슬롯 정보 먼저 확인 - 영역별 슬롯 인덱스 사용
-    // 단내림 영역의 경우 실제 전체 슬롯 인덱스로 변환 필요
-    let globalSlotIndex = slotIndex;
-    if (zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      const zoneInfo = zoneSlotInfo;
-      if (zoneInfo.dropped) {
-        // 단내림 영역의 슬롯은 normal 영역 뒤에 오므로 전체 인덱스 조정
-        globalSlotIndex = zoneInfo.normal.columnCount + zoneSlotIndex;
-      }
-    }
-    const targetSlotInfo = columnSlots[globalSlotIndex];
+    // 기둥 슬롯 정보 확인 - 각 영역의 columnSlots 사용
+    const targetSlotInfo = columnSlots[zoneSlotIndex];
     
     console.log('🎯 드롭 시도:', {
       slotIndex,
       zoneSlotIndex,
-      globalSlotIndex,
       zone,
       hasColumn: targetSlotInfo?.hasColumn,
       columnId: targetSlotInfo?.column?.id,
       isDual,
-      moduleId: dragData.moduleData.id
+      moduleId: dragData.moduleData.id,
+      columnSlots_length: columnSlots.length,
+      targetSlotInfo
     });
     
     // 모든 슬롯에 대해 기본 가용성 검사 수행 (기둥 유무 관계없이)
@@ -352,7 +344,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 기본 깊이 설정 - 사용자 설정이 있으면 우선 사용
     // Column C 첫 번째 가구인 경우 특별 처리
     const isColumnCSlot = targetSlotInfo?.columnType === 'medium' && targetSlotInfo?.allowMultipleFurniture;
-    const isFirstFurnitureInColumnC = isColumnCSlot && placedModules.filter(m => m.slotIndex === globalSlotIndex).length === 0;
+    const isFirstFurnitureInColumnC = isColumnCSlot && placedModules.filter(m => m.slotIndex === zoneSlotIndex).length === 0;
     
     let customDepth;
     if (isFirstFurnitureInColumnC) {
@@ -396,14 +388,14 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       // 기둥 슬롯에서 사용 가능한 공간들 찾기
       const availableSpaces = findAvailableSpacesInColumnSlot(
         targetSlotInfo,
-        slotIndex,
+        zoneSlotIndex,
         spaceInfo,
         placedModules,
         customDepth // 원래 깊이 전달
       );
       
       console.log('🏗️ 기둥 슬롯의 사용 가능한 공간:', {
-        slotIndex,
+        zoneSlotIndex,
         spacesCount: availableSpaces.length,
         spaces: availableSpaces.map(s => ({
           type: s.type,
@@ -600,8 +592,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             needsMullion: targetSlotInfo.needsMullion,
             mullionSide: targetSlotInfo.mullionSide,
             wasConvertedFromDual: actualModuleId !== dragData.moduleData.id,
-            originalDualSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
-            actualSlots: actualIsDual ? [slotIndex, slotIndex + 1] : [slotIndex],
+            originalDualSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
+            actualSlots: actualIsDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
             doorWidth: actualModuleData.dimensions.width - 3, // 기본값: 가구 너비 - 3mm
             spaceType: bestSpace.type, // 'left', 'right', 'front'
             moduleOrder: existingModulesInSlot.length // 이 슬롯에서 몇 번째 모듈인지
@@ -697,7 +689,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         // 기둥A (150mm): 깊이 조정 가능
         columnProcessingMethod = 'depth-adjustment';
         console.log('🏛️ 기둥A 처리 모드:', {
-          slotIndex,
+          zoneSlotIndex,
           columnDepth: columnDepth + 'mm',
           method: '깊이 조정 (가구가 얕아짐)'
         });
@@ -705,7 +697,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         // 기둥C (300mm): 폭 조정만
         columnProcessingMethod = 'width-adjustment';
         console.log('🏛️ 기둥C 처리 모드:', {
-          slotIndex,
+          zoneSlotIndex,
           columnDepth: columnDepth + 'mm',
           method: '폭 조정 (가구가 좁아짐)'
         });
@@ -713,7 +705,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         // 기둥B (730mm): 폭 조정만
         columnProcessingMethod = 'width-adjustment';
         console.log('🏛️ 기둥B 처리 모드:', {
-          slotIndex,
+          zoneSlotIndex,
           columnDepth: columnDepth + 'mm',
           method: '폭 조정 (가구가 좁아짐)'
         });
@@ -741,7 +733,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         columnPosition: targetSlotInfo.column?.position,
         intrusionDirection: targetSlotInfo.intrusionDirection,
         availableWidth: targetSlotInfo.availableWidth,
-        slotIndex,
+        zoneSlotIndex,
+        zone,
         originalSlotBounds
       });
       
