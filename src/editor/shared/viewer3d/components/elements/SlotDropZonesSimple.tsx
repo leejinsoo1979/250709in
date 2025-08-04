@@ -1651,6 +1651,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 드래그 중인 가구의 모듈 데이터 가져오기
         let moduleData;
+        let targetModuleId = currentDragData.moduleData.id; // 기본값 설정
         
         // 단내림이 활성화된 경우 영역별 모듈 생성
         let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
@@ -1727,7 +1728,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
           }
           
-          const targetModuleId = `${baseType}-${targetWidth}`;
+          targetModuleId = `${baseType}-${targetWidth}`;
+          console.log('🎯 [Ghost Preview] 모듈 ID 생성:', {
+            baseType,
+            targetWidth,
+            targetModuleId,
+            originalId: currentDragData.moduleData.id,
+            effectiveZone,
+            localIndex
+          });
+          
           moduleData = getModuleById(targetModuleId, zoneInternalSpace, zoneSpaceInfo);
           
           console.log('🔍 [Ghost Preview] 단내림 구간 미리보기 모듈 조회:', {
@@ -1763,8 +1773,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
         
         if (!moduleData) {
-          console.error('❌ [Ghost Preview] 미리보기 모듈을 찾을 수 없음');
-          return null;
+          console.error('❌ [Ghost Preview] 미리보기 모듈을 찾을 수 없음:', {
+            targetModuleId,
+            effectiveZone,
+            zoneInternalSpace,
+            baseType,
+            targetWidth,
+            originalModuleId: currentDragData.moduleData.id
+          });
+          // 폴백: 원래 모듈 사용
+          moduleData = currentDragData.moduleData;
         }
         
         // 미리보기 위치 계산 - 실제 배치와 동일한 로직 사용
