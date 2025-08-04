@@ -1067,6 +1067,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // zone 정보 저장
         detectedZone = colliderUserData?.zone || 'normal';
         
+        console.log('🔍 Zone 감지:', {
+          slotIndex,
+          detectedZone,
+          colliderUserData,
+          activeZone
+        });
+        
         // activeZone이 설정된 경우에만 zone 체크
         if (activeZone && colliderUserData?.zone !== activeZone) {
           setHoveredSlotIndex(null);
@@ -1615,7 +1622,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
           
           // zone이 일치하는지도 체크
-          const zoneMatches = (!hoveredZone || hoveredZone === slotZone);
+          // hoveredZone이 null이면 zone 체크를 하지 않음 (모든 영역 허용)
+          // hoveredZone이 있으면 해당 zone과 일치하는지 체크
+          const zoneMatches = !hoveredZone || hoveredZone === slotZone;
           
           if (isDual) {
             // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
@@ -1647,6 +1656,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
         // activeZone이 없어도 slotZone 정보로 영역 판단
         const effectiveZone = activeZone || slotZone;
+        
+        console.log('🔥 고스트 생성 디버그:', {
+          slotIndex,
+          slotLocalIndex,
+          hoveredSlotIndex,
+          hoveredZone,
+          activeZone,
+          slotZone,
+          effectiveZone,
+          shouldRenderGhost,
+          hasDroppedCeiling,
+          hasZoneSlotInfo: !!zoneSlotInfo
+        });
+        
         if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 영역별 외경 너비 계산 (프레임 포함)
           const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
