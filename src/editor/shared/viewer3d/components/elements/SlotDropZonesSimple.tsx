@@ -1060,7 +1060,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           ?.userData;
         
         
-        if (colliderUserData?.zone !== activeZone) {
+        // activeZone이 설정된 경우에만 zone 체크
+        if (activeZone && colliderUserData?.zone !== activeZone) {
           setHoveredSlotIndex(null);
           return;
         }
@@ -1596,13 +1597,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
         if (hoveredSlotIndex !== null && currentDragData) {
+          // zone 정보가 있는 경우 로컬 인덱스로 비교
+          const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
+          
           if (isDual) {
             // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = slotIndex === hoveredSlotIndex;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex;
           } else {
             // 싱글 가구: 현재 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = slotIndex === hoveredSlotIndex;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex;
           }
+          
+          console.log('🎯 고스트 렌더링 체크:', {
+            hoveredSlotIndex,
+            slotIndex,
+            slotLocalIndex,
+            compareIndex,
+            isZoneData,
+            slotZone,
+            shouldRenderGhost
+          });
         }
         
         if (!shouldRenderGhost || !currentDragData) return null;
