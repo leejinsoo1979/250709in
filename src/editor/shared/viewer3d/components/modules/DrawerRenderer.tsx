@@ -68,7 +68,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const drawerZOffset = mmToThreeUnits(0);
   
   // 서랍 구조 상수
-  const HANDLE_PLATE_THICKNESS = mmToThreeUnits(20); // 손잡이 판 두께
+  // 손잡이 판 두께(특수 패널 두께) - 20mm
+  const SPECIAL_PANEL_THICKNESS = 20; // mm
+  const HANDLE_PLATE_THICKNESS = mmToThreeUnits(SPECIAL_PANEL_THICKNESS);
+  // 서랍 옆면(앞, 뒤, 좌, 우) 두께 상수 (15mm)
+  const DRAWER_SIDE_THICKNESS = mmToThreeUnits(15); // mm 단위 변환 일관 적용
+  // 서랍 바닥 두께 상수 (9mm)
+  const DRAWER_BOTTOM_THICKNESS = mmToThreeUnits(9); // mm 단위 변환 일관 적용
+  
+  // TopSupportPanel 기본 설정: 앞쪽 85mm 잘라내고, 뒤쪽은 백패널 공간 피하기
+  const topSupportPanelDepth = depth - mmToThreeUnits(85 + 17 + 9); // 가구depth - (85+17+9) = depth - 111mm
+  const topSupportPanelY = innerHeight / 2 - basicThickness - mmToThreeUnits(9); // 내경 상단에서 18+9mm 아래
+  
+  // TopSupportPanel Z축 위치: 모듈 앞면에서 85mm 뒤로 시작
+  const topSupportPanelZ = depth/2 - topSupportPanelDepth/2 - mmToThreeUnits(85); // 앞쪽 85mm 후퇴
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false) => {
