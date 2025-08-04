@@ -107,6 +107,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
           <FurnitureItem
             key={placedModule.id}
             placedModule={placedModule}
+            placedModules={placedModules}
             spaceInfo={spaceInfo}
             furnitureStartY={furnitureStartY}
             isDragMode={isDragMode}

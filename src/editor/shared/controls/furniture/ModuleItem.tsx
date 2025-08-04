@@ -14,11 +14,16 @@ interface ModuleItemProps {
 const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const setSelectedModuleForPlacement = useFurnitureStore(state => state.setSelectedModuleForPlacement);
+  const selectedModuleForPlacement = useFurnitureStore(state => state.selectedModuleForPlacement);
   const { openFurniturePopup } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
   
   // 도어 상태 관리 (기본값: false - 도어 없음)
   const [hasDoor, setHasDoor] = useState<boolean>(false);
+  
+  // 현재 모듈이 선택되었는지 확인
+  const isSelected = selectedModuleForPlacement?.moduleData?.id === module.id;
   
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
@@ -29,7 +34,20 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   // 도어 버튼 클릭 핸들러
   const handleDoorToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // 이벤트 버블링 방지
-    setHasDoor(!hasDoor);
+    const newHasDoor = !hasDoor;
+    setHasDoor(newHasDoor);
+    
+    // 선택된 모듈의 도어 상태도 업데이트
+    if (isSelected && selectedModuleForPlacement) {
+      const updatedData = {
+        ...selectedModuleForPlacement,
+        moduleData: {
+          ...selectedModuleForPlacement.moduleData,
+          hasDoor: newHasDoor
+        }
+      };
+      setSelectedModuleForPlacement(updatedData);
+    }
   };
 
   // 간단한 드래그 아이콘 생성
@@ -90,7 +108,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     setCurrentDragData(null);
   };
 
-  // 클릭 핸들러 - 속성 패널 열기로 변경
+  // 클릭 핸들러 - 클릭-앤-플레이스 모드로 변경
   const handleClick = () => {
     if (!isValid && !needsWarning) {
       alert(`이 모듈은 현재 내경 공간에 맞지 않습니다.\n내경 공간: ${internalSpace.width}×${internalSpace.height}×${internalSpace.depth}mm\n모듈 크기: ${module.dimensions.width}×${module.dimensions.height}×${module.defaultDepth || module.dimensions.depth}mm`);
@@ -102,15 +120,41 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       return;
     }
     
-    // 속성 패널 열기
-    openFurniturePopup(module.id);
+    // 클릭-앤-플레이스 데이터 설정
+    const clickData = {
+      type: 'furniture' as const,
+      moduleData: {
+        id: module.id,
+        name: module.name,
+        dimensions: module.dimensions,
+        type: module.type || 'default',
+        color: module.color,
+        hasDoor: hasDoor,
+        needsWarning: needsWarning
+      }
+    };
+    
+    // 이미 선택된 모듈을 다시 클릭하면 선택 해제
+    if (isSelected) {
+      console.log('🚫 [ModuleItem] Deselecting module:', module.id);
+      setSelectedModuleForPlacement(null);
+      setFurniturePlacementMode(false);
+    } else {
+      // 새로운 모듈 선택
+      console.log('✅ [ModuleItem] Selecting module:', {
+        moduleId: module.id,
+        clickData
+      });
+      setSelectedModuleForPlacement(clickData);
+      setFurniturePlacementMode(true);
+    }
   };
 
   return (
     <div
       ref={itemRef}
       key={module.id}
-      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
+      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''} ${isSelected ? styles.moduleItemSelected : ''}`}
       onClick={handleClick}
       draggable={isValid || needsWarning}
       onDragStart={handleDragStart}

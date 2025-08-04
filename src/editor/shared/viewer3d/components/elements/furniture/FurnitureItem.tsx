@@ -17,6 +17,7 @@ import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResi
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
+  placedModules: PlacedModule[]; // 추가
   spaceInfo: SpaceInfo;
   furnitureStartY: number;
   isDragMode: boolean;
@@ -33,6 +34,7 @@ interface FurnitureItemProps {
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
   placedModule,
+  placedModules,
   spaceInfo,
   furnitureStartY,
   isDragMode,
@@ -170,8 +172,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
   const columnSlots = React.useMemo(() => {
-    return analyzeColumnSlots(spaceInfo);
-  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex]);
+    return analyzeColumnSlots(spaceInfo, placedModules);
+  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;

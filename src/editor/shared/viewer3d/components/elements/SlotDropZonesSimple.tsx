@@ -40,6 +40,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const addModule = useFurnitureStore(state => state.addModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const selectedModuleForPlacement = useFurnitureStore(state => state.selectedModuleForPlacement);
+  const clearSelectedModuleForPlacement = useFurnitureStore(state => state.clearSelectedModuleForPlacement);
+  const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
   
   // Three.js 컨텍스트 접근
@@ -191,8 +194,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     }
     
-    if (!currentDragData) {
-      console.log('❌ No currentDragData available');
+    // 클릭-앤-플레이스 모드와 드래그 모드 모두 지원
+    const activeModuleData = currentDragData || selectedModuleForPlacement;
+    
+    if (!activeModuleData) {
+      console.log('❌ No currentDragData or selectedModuleForPlacement available');
       return false;
     }
     
@@ -204,8 +210,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (!dragDataString) {
         console.log('❌ No drag data string from dataTransfer');
-        // Fallback to currentDragData if HTML5 drag data is not available
-        dragData = currentDragData;
+        // Fallback to activeModuleData (currentDragData or selectedModuleForPlacement)
+        dragData = activeModuleData;
       } else {
         dragData = JSON.parse(dragDataString);
       }
@@ -213,8 +219,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('📦 Parsed drag data:', dragData);
     } catch (error) {
       console.error('Error parsing drag data:', error);
-      // Fallback to currentDragData
-      dragData = currentDragData;
+      // Fallback to activeModuleData
+      dragData = activeModuleData;
     }
     
     if (!dragData || dragData.type !== 'furniture') {
@@ -673,7 +679,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       addModule(newModule);
-      setCurrentDragData(null);
+      // 드래그 모드인 경우에만 currentDragData 초기화
+      if (currentDragData) {
+        setCurrentDragData(null);
+      }
       
       // 전체 슬롯 점유 상태 디버깅
       setTimeout(() => {
@@ -714,7 +723,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         };
         
         addModule(newModule);
-        setCurrentDragData(null);
+        // 드래그 모드인 경우에만 currentDragData 초기화
+        if (currentDragData) {
+          setCurrentDragData(null);
+        }
         window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
         return true;
       }
@@ -980,7 +992,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     console.log(`📊 ${targetZone} 영역 슬롯 점유 상태 (총 ${zoneTargetIndexing.columnCount}개):`, slotOccupancy.join(''));
     
-    setCurrentDragData(null);
+    // 드래그 모드인 경우에만 currentDragData 초기화
+    if (currentDragData) {
+      setCurrentDragData(null);
+    }
     
     // 전체 슬롯 점유 상태 디버깅
     setTimeout(() => {
@@ -992,7 +1007,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     return true;
   }, [
-    currentDragData, 
+    currentDragData,
+    selectedModuleForPlacement,
     camera,
     scene,
     spaceInfo,
@@ -1020,9 +1036,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     };
   }, [handleSlotDrop, activeZone]);
   
-  // 간단한 드래그오버 이벤트 핸들러
+  // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
-    if (!currentDragData) {
+    // 드래그 데이터나 선택된 모듈이 없으면 반환
+    if (!currentDragData && !selectedModuleForPlacement) {
       return;
     }
 
@@ -1083,11 +1100,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       } else {
         // 단내림이 없는 경우 normal zone
         detectedZone = 'normal';
+        console.log('🔍 단내림 없음 - normal zone 설정:', {
+          slotIndex,
+          detectedZone,
+          hoveredSlotIndex,
+          hoveredZone
+        });
       }
       
-      if (currentDragData) {
+      // 현재 활성 모듈 확인 (드래그 중이거나 선택된 모듈)
+      const activeModuleData = currentDragData || selectedModuleForPlacement;
+      
+      if (activeModuleData) {
         // isDualFurniture 함수는 너비를 기대하지만, 더 정확한 방법은 moduleId 확인
-        const isDual = currentDragData.moduleData.id.startsWith('dual-');
+        const isDual = activeModuleData.moduleData.id.startsWith('dual-');
         
         // 단내림 구간일 경우 영역별 가구 확인
         const isAvailable = (() => {
@@ -1173,7 +1199,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             return !hasConflict;
           } else {
             // 단내림이 없는 경우 기존 로직 사용
-            return isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, currentDragData.moduleData.id);
+            return isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, activeModuleData.moduleData.id);
           }
         })();
         
@@ -1193,11 +1219,113 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const handleDragLeave = () => {
       setHoveredSlotIndex(null);
     };
+    
+    // 마우스 이동 핸들러 (클릭-앤-플레이스 모드용)
+    const handleMouseMove = (e: MouseEvent) => {
+      // 선택된 모듈이 있을 때만 처리
+      if (!selectedModuleForPlacement) return;
+      
+      console.log('🖱️ [Click-and-Place] Mouse move:', {
+        selectedModule: selectedModuleForPlacement.moduleData.id,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        target: e.target
+      });
+      
+      const canvas = e.target as HTMLCanvasElement;
+      if (!canvas || canvas.tagName !== 'CANVAS') {
+        console.log('❌ [Click-and-Place] Target is not canvas:', e.target);
+        return;
+      }
 
-    const canvasContainer = document.querySelector('canvas')?.parentElement;
-    if (canvasContainer) {
+      const slotIndex = getSlotIndexFromRaycast(
+        e.clientX, 
+        e.clientY, 
+        canvas,
+        camera,
+        scene,
+        spaceInfo
+      );
+      
+      console.log('🎯 [Click-and-Place] Slot index from raycast:', slotIndex);
+      
+      if (slotIndex === null) {
+        setHoveredSlotIndex(null);
+        setHoveredZone(null);
+        return;
+      }
+
+      // 레이캐스트로 zone 정보 가져오기
+      let detectedZone: 'normal' | 'dropped' | null = null;
+      
+      // 단내림이 활성화된 경우 영역별 처리
+      if (spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        const allColliders = scene.children
+          .flatMap(child => child.children || [child])
+          .filter(obj => obj.userData?.isSlotCollider);
+        
+        const colliderUserData = allColliders
+          .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
+          ?.userData;
+        
+        detectedZone = colliderUserData?.zone || 'normal';
+        
+        // activeZone이 설정된 경우에만 zone 체크
+        if (activeZone && colliderUserData?.zone !== activeZone) {
+          setHoveredSlotIndex(null);
+          setHoveredZone(null);
+          return;
+        }
+      } else {
+        // 단내림이 없는 경우 normal zone
+        detectedZone = 'normal';
+      }
+      
+      // 슬롯 가용성 체크
+      const isDual = selectedModuleForPlacement.moduleData.id.startsWith('dual-');
+      const isAvailable = isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, selectedModuleForPlacement.moduleData.id);
+      
+      if (isAvailable) {
+        console.log('✅ [Click-and-Place] Setting hovered slot:', {
+          slotIndex,
+          detectedZone,
+          isDual
+        });
+        setHoveredSlotIndex(slotIndex);
+        setHoveredZone(detectedZone);
+      } else {
+        console.log('❌ [Click-and-Place] Slot not available:', {
+          slotIndex,
+          isDual
+        });
+        setHoveredSlotIndex(null);
+        setHoveredZone(null);
+      }
+    };
+    
+    const handleMouseLeave = () => {
+      if (selectedModuleForPlacement) {
+        setHoveredSlotIndex(null);
+        setHoveredZone(null);
+      }
+    };
+
+    const canvas = document.querySelector('canvas');
+    const canvasContainer = canvas?.parentElement;
+    
+    if (canvasContainer && currentDragData) {
+      // 드래그 이벤트
       canvasContainer.addEventListener('dragover', handleDragOver);
       canvasContainer.addEventListener('dragleave', handleDragLeave);
+    }
+    
+    if (canvas && selectedModuleForPlacement) {
+      // 마우스 이벤트 (클릭-앤-플레이스용) - canvas에 직접 등록
+      console.log('🎮 [Click-and-Place] Adding mouse event listeners to canvas');
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
@@ -1205,8 +1333,95 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         canvasContainer.removeEventListener('dragover', handleDragOver);
         canvasContainer.removeEventListener('dragleave', handleDragLeave);
       }
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mouseleave', handleMouseLeave);
+      }
     };
-  }, [currentDragData, camera, scene, spaceInfo, placedModules]);
+  }, [currentDragData, selectedModuleForPlacement, camera, scene, spaceInfo, placedModules, activeZone]);
+  
+  // 클릭 핸들러 (클릭-앤-플레이스 모드용)
+  const handleSlotClick = useCallback((e: MouseEvent) => {
+    // 선택된 모듈이 없으면 무시
+    if (!selectedModuleForPlacement) return;
+    
+    const canvas = e.target as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    // 클릭 위치에서 슬롯 인덱스 가져오기
+    const slotIndex = getSlotIndexFromRaycast(
+      e.clientX,
+      e.clientY,
+      canvas,
+      camera,
+      scene,
+      spaceInfo
+    );
+    
+    if (slotIndex === null) return;
+    
+    // 가짜 드래그 이벤트 생성하여 기존 handleSlotDrop 재사용
+    const fakeDragEvent = {
+      preventDefault: () => {},
+      clientX: e.clientX,
+      clientY: e.clientY,
+      dataTransfer: {
+        getData: (type: string) => {
+          if (type === 'application/json') {
+            return JSON.stringify(selectedModuleForPlacement);
+          }
+          return selectedModuleForPlacement.moduleData.id;
+        },
+        setData: () => {},
+        effectAllowed: 'copy' as const
+      }
+    } as unknown as DragEvent;
+    
+    const result = handleSlotDrop(fakeDragEvent, canvas, activeZone);
+    
+    if (result) {
+      // 배치 성공 시 선택 상태 초기화
+      clearSelectedModuleForPlacement();
+      setFurniturePlacementMode(false);
+    }
+  }, [selectedModuleForPlacement, handleSlotDrop, camera, scene, spaceInfo, activeZone, clearSelectedModuleForPlacement, setFurniturePlacementMode]);
+  
+  // 클릭 이벤트 리스너 등록
+  useEffect(() => {
+    if (!selectedModuleForPlacement) return;
+    
+    const canvasContainer = document.querySelector('canvas')?.parentElement;
+    if (!canvasContainer) return;
+    
+    const canvas = canvasContainer.querySelector('canvas');
+    if (!canvas) return;
+    
+    canvas.addEventListener('click', handleSlotClick);
+    
+    return () => {
+      canvas.removeEventListener('click', handleSlotClick);
+    };
+  }, [selectedModuleForPlacement, handleSlotClick]);
+  
+  // ESC 키 핸들러 (선택 취소)
+  useEffect(() => {
+    if (!selectedModuleForPlacement) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        clearSelectedModuleForPlacement();
+        setFurniturePlacementMode(false);
+        setHoveredSlotIndex(null);
+        setHoveredZone(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedModuleForPlacement, clearSelectedModuleForPlacement, setFurniturePlacementMode]);
   
   // 단내림 정보 가져오기
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
@@ -1337,7 +1552,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // slotData가 객체인지 숫자인지 확인
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
-        const slotZone = isZoneData ? slotData.zone : activeZone;
+        // 단내림이 없는 경우 slotZone을 'normal'로 설정
+        const slotZone = isZoneData ? slotData.zone : (activeZone || 'normal');
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
         // 앞쪽에서 20mm 줄이기
         const reducedDepth = slotDimensions.depth - mmToThreeUnits(20);
@@ -1383,7 +1599,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               slotIndex: slotLocalIndex,  // 영역 내 로컬 인덱스 (항상 0부터 시작)
               isSlotCollider: true,
               type: 'slot-collider',
-              zone: slotZone,  // 영역 정보 추가
+              zone: slotZone || 'normal',  // 영역 정보 추가 - null인 경우 'normal'로 설정
               globalSlotIndex: slotZone === 'dropped' && zoneSlotInfo?.dropped 
                 ? slotLocalIndex + zoneSlotInfo.normal.columnCount  // 단내림 영역은 메인 영역 이후 인덱스
                 : slotLocalIndex  // 메인 영역 또는 단내림 없는 경우
@@ -1602,22 +1818,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       })()}
       
       {/* 가구 미리보기 */}
-      {hoveredSlotIndex !== null && currentDragData && zoneSlotPositions.map((slotData, slotIndex) => {
+      {console.log('👻 [Ghost] Rendering conditions:', {
+        hoveredSlotIndex,
+        hasCurrentDragData: !!currentDragData,
+        hasSelectedModule: !!selectedModuleForPlacement,
+        zoneSlotPositionsLength: zoneSlotPositions.length
+      })}
+      {hoveredSlotIndex !== null && (currentDragData || selectedModuleForPlacement) && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인하여 위치 추출
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
-        const slotZone = isZoneData ? slotData.zone : activeZone;
+        // 단내림이 없는 경우 slotZone을 'normal'로 설정
+        const slotZone = isZoneData ? slotData.zone : (activeZone || 'normal');
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
+        
+        // 현재 활성 모듈 가져오기 (드래그 중이거나 선택된 모듈)
+        const activeModuleData = currentDragData || selectedModuleForPlacement;
         
         // 현재 드래그 중인 가구가 듀얼인지 확인
         let isDual = false;
-        if (currentDragData) {
-          isDual = currentDragData.moduleData.id.startsWith('dual-');
+        if (activeModuleData) {
+          isDual = activeModuleData.moduleData.id.startsWith('dual-');
         }
         
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
-        if (hoveredSlotIndex !== null && currentDragData) {
+        if (hoveredSlotIndex !== null && activeModuleData) {
           // zone 정보가 있는 경우 로컬 인덱스로 비교
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
           
@@ -1643,15 +1869,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             compareIndex,
             isZoneData,
             zoneMatches,
-            shouldRenderGhost
+            shouldRenderGhost,
+            hasDroppedCeiling,
+            activeZone,
+            activeModuleData: {
+              id: activeModuleData.moduleData.id,
+              isDual
+            }
           });
         }
         
-        if (!shouldRenderGhost || !currentDragData) return null;
+        if (!shouldRenderGhost || !activeModuleData) return null;
         
-        // 드래그 중인 가구의 모듈 데이터 가져오기
+        // 활성 가구의 모듈 데이터 가져오기
         let moduleData;
-        let targetModuleId = currentDragData.moduleData.id; // 기본값 설정
+        let targetModuleId = activeModuleData.moduleData.id; // 기본값 설정
         
         // 단내림이 활성화된 경우 영역별 모듈 생성
         let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
@@ -1709,7 +1941,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
           
           // 슬롯 너비에 기반한 모듈 ID 생성
-          const baseType = currentDragData.moduleData.id.replace(/-\d+$/, '');
+          const baseType = activeModuleData.moduleData.id.replace(/-\d+$/, '');
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
@@ -1733,7 +1965,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             baseType,
             targetWidth,
             targetModuleId,
-            originalId: currentDragData.moduleData.id,
+            originalId: activeModuleData.moduleData.id,
             effectiveZone,
             localIndex
           });
@@ -1769,7 +2001,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
         } else {
-          moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
+          moduleData = getModuleById(activeModuleData.moduleData.id, internalSpace, spaceInfo);
         }
         
         if (!moduleData) {
@@ -1779,10 +2011,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             zoneInternalSpace,
             baseType,
             targetWidth,
-            originalModuleId: currentDragData.moduleData.id
+            originalModuleId: activeModuleData.moduleData.id
           });
           // 폴백: 원래 모듈 사용
-          moduleData = currentDragData.moduleData;
+          moduleData = activeModuleData.moduleData;
         }
         
         // 미리보기 위치 계산 - 실제 배치와 동일한 로직 사용
@@ -1797,37 +2029,56 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const startX = mmToThreeUnits(zoneInfo.startX);
           const columnWidth = mmToThreeUnits(zoneInfo.columnWidth);
           
-          if (isDual && slotIndex < zoneInfo.columnCount - 1) {
+          // 로컬 인덱스 사용
+          const localIdx = slotLocalIndex;
+          
+          if (isDual && localIdx < zoneInfo.columnCount - 1) {
             // 듀얼 가구
             let leftSlotX, rightSlotX;
             
             // 마지막-1 슬롯이 듀얼인 경우 마지막 슬롯의 실제 너비 고려
-            if (slotIndex === zoneInfo.columnCount - 2) {
-              leftSlotX = startX + (slotIndex * columnWidth) + (columnWidth / 2);
-              const lastSlotStart = startX + ((slotIndex + 1) * columnWidth);
+            if (localIdx === zoneInfo.columnCount - 2) {
+              leftSlotX = startX + (localIdx * columnWidth) + (columnWidth / 2);
+              const lastSlotStart = startX + ((localIdx + 1) * columnWidth);
               const lastSlotEnd = startX + mmToThreeUnits(zoneInfo.width);
               rightSlotX = (lastSlotStart + lastSlotEnd) / 2;
             } else {
-              leftSlotX = startX + (slotIndex * columnWidth) + (columnWidth / 2);
-              rightSlotX = startX + ((slotIndex + 1) * columnWidth) + (columnWidth / 2);
+              leftSlotX = startX + (localIdx * columnWidth) + (columnWidth / 2);
+              rightSlotX = startX + ((localIdx + 1) * columnWidth) + (columnWidth / 2);
             }
             previewX = (leftSlotX + rightSlotX) / 2;
           } else {
             // 싱글 가구
-            if (slotIndex === zoneInfo.columnCount - 1) {
+            if (localIdx === zoneInfo.columnCount - 1) {
               // 마지막 슬롯: 실제 남은 공간의 중앙
-              const lastSlotStart = startX + (slotIndex * columnWidth);
+              const lastSlotStart = startX + (localIdx * columnWidth);
               const lastSlotEnd = startX + mmToThreeUnits(zoneInfo.width);
               previewX = (lastSlotStart + lastSlotEnd) / 2;
             } else {
-              previewX = startX + (slotIndex * columnWidth) + (columnWidth / 2);
+              previewX = startX + (localIdx * columnWidth) + (columnWidth / 2);
             }
           }
-        } else if (isDual && slotIndex === hoveredSlotIndex) {
-          // 일반 구간 - indexing의 threeUnitDualPositions 사용
-          if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
-            previewX = indexing.threeUnitDualPositions[slotIndex];
+        } else {
+          // 단내림이 없는 일반 구간
+          if (isDual && slotIndex === hoveredSlotIndex) {
+            // 듀얼 가구 - indexing의 threeUnitDualPositions 사용
+            if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
+              previewX = indexing.threeUnitDualPositions[slotIndex];
+            }
+          } else {
+            // 싱글 가구는 이미 slotX에 올바른 위치가 설정되어 있음
+            previewX = slotX;
           }
+          
+          console.log('🎯 [Normal Ghost] 일반 구간 고스트 위치:', {
+            isDual,
+            slotIndex,
+            hoveredSlotIndex,
+            previewX,
+            slotX,
+            threeUnitDualPositions: indexing.threeUnitDualPositions,
+            dualPosition: indexing.threeUnitDualPositions?.[slotIndex]
+          });
         }
         
         const customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);

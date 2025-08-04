@@ -117,6 +117,18 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         let adjustedPosition = { x: finalX, y: 0, z: 0 };
         let adjustedDepth = customDepth;
         
+        // 디버그 로그 추가
+        console.log('🔍 가구 배치 전 기둥 슬롯 정보:', {
+          slotIndex: dropPosition.column,
+          targetSlotInfo: targetSlotInfo ? {
+            hasColumn: targetSlotInfo.hasColumn,
+            columnType: targetSlotInfo.columnType,
+            columnDepth: targetSlotInfo.column?.depth,
+            columnWidth: targetSlotInfo.column?.width,
+            availableWidth: targetSlotInfo.availableWidth
+          } : 'No column info'
+        });
+        
         // 기둥이 있는 슬롯에 배치하는 경우
         if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
           const columnDepth = targetSlotInfo.column.depth;
@@ -234,6 +246,12 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             // 크기와 위치 조정
             adjustedWidth = furnitureBounds.renderWidth;
             adjustedPosition.x = furnitureBounds.center;
+            
+            console.log('🎯 기둥 A 폭 조정 적용:', {
+              originalWidth: indexing.columnWidth,
+              adjustedWidth: adjustedWidth,
+              furnitureBounds: furnitureBounds
+            });
             
             // 공간이 부족한 경우 배치 취소
             if (adjustedWidth < 150) {

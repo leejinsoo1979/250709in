@@ -734,6 +734,17 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         center: finalX
       };
       
+      console.log('🔍 calculateFurnitureBounds 호출 전 targetSlotInfo:', {
+        hasColumn: targetSlotInfo.hasColumn,
+        columnDepth: targetSlotInfo.column?.depth,
+        columnWidth: targetSlotInfo.column?.width,
+        columnPosition: targetSlotInfo.column?.position,
+        intrusionDirection: targetSlotInfo.intrusionDirection,
+        availableWidth: targetSlotInfo.availableWidth,
+        slotIndex,
+        originalSlotBounds
+      });
+      
       const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
       
       // Column C의 경우 150mm 이상 침범 시 특별 처리
@@ -1425,11 +1436,27 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
           // zoneSlotInfo는 이미 위에서 계산됨
           
-          // 현재 활성 영역의 슬롯 정보 가져오기
+          // 마우스 위치에 따라 동적으로 영역 결정
           let zoneInfo = null;
           let activeZone: 'normal' | 'dropped' = 'normal';
           
-          if (hasDroppedCeiling && zoneSlotInfo.dropped) {
+          if (hasDroppedCeiling && zoneSlotInfo.dropped && hoveredSlotIndex !== null) {
+            // hoveredSlotIndex가 어느 영역에 속하는지 확인
+            const droppedSlotCount = zoneSlotInfo.dropped.columnCount;
+            const normalSlotCount = zoneSlotInfo.normal.columnCount;
+            
+            // 전체 슬롯에서 단내림 영역 슬롯인지 확인
+            if (hoveredSlotIndex < droppedSlotCount) {
+              // 단내림 영역
+              zoneInfo = zoneSlotInfo.dropped;
+              activeZone = 'dropped';
+            } else if (hoveredSlotIndex < droppedSlotCount + normalSlotCount) {
+              // 메인 영역 (인덱스 조정 필요)
+              zoneInfo = zoneSlotInfo.normal;
+              activeZone = 'normal';
+            }
+          } else if (hasDroppedCeiling && zoneSlotInfo.dropped) {
+            // hoveredSlotIndex가 없을 때는 activeDroppedCeilingTab 기준으로
             if (activeDroppedCeilingTab === 'main') {
               zoneInfo = zoneSlotInfo.normal;
               activeZone = 'normal';
@@ -1439,15 +1466,27 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             }
           }
           
-          // 영역별 슬롯 위치 배열 생성
+          // 영역별 슬롯 위치 배열 생성 - 모든 영역의 슬롯 포함
           const slotPositions = [];
-          if (zoneInfo) {
-            for (let i = 0; i < zoneInfo.columnCount; i++) {
-              const slotCenterMm = zoneInfo.startX + (i * zoneInfo.columnWidth) + (zoneInfo.columnWidth / 2);
+          if (hasDroppedCeiling && zoneSlotInfo.dropped && zoneSlotInfo.normal) {
+            // 단내림 영역 슬롯 추가
+            for (let i = 0; i < zoneSlotInfo.dropped.columnCount; i++) {
+              const slotCenterMm = zoneSlotInfo.dropped.startX + (i * zoneSlotInfo.dropped.columnWidth) + (zoneSlotInfo.dropped.columnWidth / 2);
               slotPositions.push({
                 index: i,
                 x: mmToThreeUnits(slotCenterMm),
-                width: zoneInfo.columnWidth
+                width: zoneSlotInfo.dropped.columnWidth,
+                zone: 'dropped'
+              });
+            }
+            // 메인 영역 슬롯 추가
+            for (let i = 0; i < zoneSlotInfo.normal.columnCount; i++) {
+              const slotCenterMm = zoneSlotInfo.normal.startX + (i * zoneSlotInfo.normal.columnWidth) + (zoneSlotInfo.normal.columnWidth / 2);
+              slotPositions.push({
+                index: i + zoneSlotInfo.dropped.columnCount, // 전체 인덱스
+                x: mmToThreeUnits(slotCenterMm),
+                width: zoneSlotInfo.normal.columnWidth,
+                zone: 'normal'
               });
             }
           } else {
@@ -1456,7 +1495,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
               slotPositions.push({
                 index: i,
                 x: x,
-                width: indexing.columnWidth
+                width: indexing.columnWidth,
+                zone: 'normal'
               });
             });
           }
