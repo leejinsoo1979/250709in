@@ -1676,10 +1676,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           let zoneSpaceInfo;
           
           if (effectiveZone === 'dropped') {
-            // 단내림 영역용 spaceInfo
+            // 단내림 영역용 spaceInfo - 높이도 조정
+            const droppedHeight = spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0);
             zoneSpaceInfo = {
               ...spaceInfo,
               width: droppedCeilingWidth,  // 단내림 영역의 외경 너비
+              height: droppedHeight,  // 단내림 영역의 높이
               zone: 'dropped' as const
             };
           } else {
@@ -1712,14 +1714,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             : zoneSlotInfo.normal;
           
           let targetWidth;
-          if (isDual && hoveredSlotIndex < targetZone.columnCount - 1) {
+          // 로컬 인덱스 사용 (hoveredSlotIndex는 이미 로컬 인덱스)
+          const localIndex = slotLocalIndex;
+          
+          if (isDual && localIndex < targetZone.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
-            const slot1Width = targetZone.slotWidths?.[hoveredSlotIndex] || targetZone.columnWidth;
-            const slot2Width = targetZone.slotWidths?.[hoveredSlotIndex + 1] || targetZone.columnWidth;
+            const slot1Width = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
+            const slot2Width = targetZone.slotWidths?.[localIndex + 1] || targetZone.columnWidth;
             targetWidth = slot1Width + slot2Width;
           } else {
             // 싱글 가구: 해당 슬롯의 너비
-            targetWidth = targetZone.slotWidths?.[hoveredSlotIndex] || targetZone.columnWidth;
+            targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
           }
           
           const targetModuleId = `${baseType}-${targetWidth}`;
@@ -1732,6 +1737,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             targetModuleId,
             moduleFound: !!moduleData,
             moduleHeight: moduleData?.dimensions.height,
+            hoveredSlotIndex,
+            localIndex,
+            slotLocalIndex,
+            targetZone: {
+              columnCount: targetZone.columnCount,
+              columnWidth: targetZone.columnWidth,
+              slotWidths: targetZone.slotWidths
+            },
             zoneSpaceInfo: {
               width: zoneSpaceInfo.width,
               height: zoneSpaceInfo.height,

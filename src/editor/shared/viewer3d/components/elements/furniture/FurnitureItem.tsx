@@ -809,6 +809,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={zoneSpaceInfo}
+              doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={0} // 기둥 침범과 무관하게 가구 본체와 동일한 위치
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
