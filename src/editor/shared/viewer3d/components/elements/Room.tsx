@@ -619,8 +619,8 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            // 단내림이 없는 경우 기존 렌더링
-            if (!hasDroppedCeiling) {
+            // 단내림이 없거나 왼쪽에 있는 경우 전체 높이로 렌더링
+            if (!hasDroppedCeiling || !isRightDropped) {
               return (
               <mesh
                 position={[width/2 + 0.001, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}

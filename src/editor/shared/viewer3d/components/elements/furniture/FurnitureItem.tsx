@@ -429,8 +429,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         columnCount: targetZoneInfo.columnCount,
         width: targetZoneInfo.width
       } : null,
-      isDroppedZone: placedModule.zone === 'dropped'
+      isDroppedZone: placedModule.zone === 'dropped',
+      customWidth: placedModule.customWidth,
+      adjustedWidth: placedModule.adjustedWidth,
+      actualModuleWidth: actualModuleData?.dimensions?.width,
+      moduleIdFromPlaced: placedModule.moduleId
     });
+    
+    // 도어 너비가 가구 너비와 크게 차이나는 경우 보정
+    // 단내림 추가 후 슬롯 너비가 변경되었을 때 발생하는 문제 해결
+    const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
+    if (widthDifference > 20 && !isEditMode && !isDragging) {
+      console.warn('⚠️ 도어와 가구 너비 불일치 감지:', {
+        originalSlotWidthMm,
+        furnitureWidthMm,
+        difference: widthDifference,
+        '보정여부': '가구 너비로 도어 너비 보정'
+      });
+      // 가구 너비를 기준으로 도어 너비 보정
+      originalSlotWidthMm = furnitureWidthMm;
+    }
   }
   
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)

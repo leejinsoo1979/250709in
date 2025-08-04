@@ -3,6 +3,14 @@ import styles from './RightPanel.module.css';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+
+// Window 인터페이스 확장
+declare global {
+  interface Window {
+    handleSpaceInfoUpdate?: (updates: any) => void;
+  }
+}
 
 export type RightPanelTab = 'placement' | 'module';
 
@@ -559,7 +567,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const { spaceInfo } = useSpaceConfigStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['brand', 'price', 'material', 'space', 'mainSpace', 'layout', 'floor', 'frame'])
+    new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layout', 'floor', 'frame'])
   );
   
   // 초기 렌더링 시 UIStore 동기화
@@ -781,10 +789,100 @@ const RightPanel: React.FC<RightPanelProps> = ({
               )}
             </FormControl>
 
-            {/* 메인공간 사이즈 - 단내림 활성화되고 메인구간 탭일 때만 표시 */}
+            {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
+            <FormControl
+              label="단내림"
+              expanded={expandedSections.has('droppedCeiling')}
+              onToggle={() => toggleSection('droppedCeiling')}
+            >
+              {/* 단내림 있음/없음 토글 */}
+              <ToggleGroup
+                options={[
+                  { id: 'no', label: '없음' },
+                  { id: 'yes', label: '있음' }
+                ]}
+                selected={spaceInfo.droppedCeiling?.enabled ? 'yes' : 'no'}
+                onChange={(value) => {
+                  const isEnabled = value === 'yes';
+                  if (isEnabled) {
+                    // 단내림 활성화
+                    onInstallTypeChange && onInstallTypeChange(installType); // 설치 타입 유지
+                    const droppedWidth = 900; // 기본 단내림 폭
+                    const droppedHeight = 200; // 기본 단내림 높이
+                    
+                    // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
+                    const frameThickness = 50;
+                    const droppedInternalWidth = droppedWidth - frameThickness;
+                    const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+                    
+                    console.log('🎯 단내림 활성화 시 도어개수 계산:', {
+                      droppedWidth,
+                      frameThickness,
+                      droppedInternalWidth,
+                      droppedDoorCount,
+                      계산식: `Math.ceil(${droppedInternalWidth} / 600) = ${Math.ceil(droppedInternalWidth / 600)}`
+                    });
+                    
+                    const updates: any = {
+                      droppedCeiling: {
+                        enabled: true,
+                        width: droppedWidth,
+                        dropHeight: droppedHeight,
+                        position: 'right' // 기본 위치
+                      },
+                      droppedCeilingDoorCount: droppedDoorCount // 계산된 도어 개수로 설정
+                    };
+                    // spaceConfigStore 업데이트 호출
+                    if (window.handleSpaceInfoUpdate) {
+                      window.handleSpaceInfoUpdate(updates);
+                    }
+                  } else {
+                    // 단내림 비활성화
+                    const updates: any = {
+                      droppedCeiling: {
+                        ...spaceInfo.droppedCeiling,
+                        enabled: false
+                      },
+                      mainDoorCount: undefined,
+                      droppedCeilingDoorCount: undefined
+                    };
+                    if (window.handleSpaceInfoUpdate) {
+                      window.handleSpaceInfoUpdate(updates);
+                    }
+                  }
+                }}
+              />
+              
+              {/* 단내림이 활성화된 경우 위치 선택 */}
+              {spaceInfo.droppedCeiling?.enabled && (
+                <div style={{ marginTop: '16px' }}>
+                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>단내림 위치</div>
+                  <ToggleGroup
+                    options={[
+                      { id: 'left', label: '좌측' },
+                      { id: 'right', label: '우측' }
+                    ]}
+                    selected={spaceInfo.droppedCeiling?.position || 'right'}
+                    onChange={(position) => {
+                      const updates: any = {
+                        droppedCeiling: {
+                          ...spaceInfo.droppedCeiling,
+                          position: position as 'left' | 'right'
+                        }
+                      };
+                      if (window.handleSpaceInfoUpdate) {
+                        window.handleSpaceInfoUpdate(updates);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </FormControl>
+
+            {/* 메인구간 사이즈 - 단내림 활성화되고 메인구간 탭일 때만 표시 */}
             {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && (
               <FormControl
-                label="메인공간 사이즈"
+                label="메인구간 사이즈"
                 expanded={expandedSections.has('mainSpace')}
                 onToggle={() => toggleSection('mainSpace')}
               >
@@ -887,7 +985,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       <div className={styles.inputField}>
                         <input
                           type="number"
-                          value={spaceInfo.droppedCeilingDoorCount || 0}
+                          value={(() => {
+                            const value = spaceInfo.droppedCeilingDoorCount || 0;
+                            console.log('🎯 단내림 구간 도어개수 표시:', {
+                              droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
+                              표시값: value,
+                              spaceInfo전체: spaceInfo
+                            });
+                            return value;
+                          })()}
                           readOnly
                           style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
                         />

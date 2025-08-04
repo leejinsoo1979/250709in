@@ -68,8 +68,7 @@ const Configurator: React.FC = () => {
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
-  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA' | 'stepDown'>('slotA');
-  const [showStepDownTab, setShowStepDownTab] = useState(false);
+  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upperlower'>('tall'); // 키큰장/상하부장 토글
@@ -1085,14 +1084,14 @@ const Configurator: React.FC = () => {
     }
   }, [spaceInfo, derivedSpaceStore]);
 
-  // 단내림이 활성화된 경우 showStepDownTab 설정
+  // RightPanel에서 사용할 수 있도록 window 객체에 추가
   useEffect(() => {
-    if (spaceInfo.droppedCeiling?.enabled) {
-      setShowStepDownTab(true);
-      // activeDroppedCeilingTab은 이미 'main'으로 초기화되어 있음
-      console.log('🔧 단내림 활성화 감지 - showStepDownTab 설정');
-    }
-  }, [spaceInfo.droppedCeiling?.enabled]);
+    (window as any).handleSpaceInfoUpdate = handleSpaceInfoUpdate;
+    
+    return () => {
+      delete (window as any).handleSpaceInfoUpdate;
+    };
+  }, []);
 
 
 
@@ -1380,7 +1379,7 @@ const Configurator: React.FC = () => {
       const droppedInternalWidth = droppedWidth - droppedFrameThickness;
       const droppedMinSlots = Math.max(1, Math.ceil(droppedInternalWidth / MAX_SLOT_WIDTH));
       const droppedMaxSlots = Math.max(droppedMinSlots, Math.floor(droppedInternalWidth / 400));
-      const droppedDefaultCount = Math.max(droppedMinSlots, Math.min(droppedMaxSlots, 2));
+      const droppedDefaultCount = droppedMinSlots;
       
       console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
         droppedWidth,
@@ -1578,11 +1577,8 @@ const Configurator: React.FC = () => {
 
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
-    switch (activeRightPanelTab) {
-      case 'slotA':
-      case 'stepDown':
-        return (
-          <div className={styles.spaceControls}>
+    return (
+      <div className={styles.spaceControls}>
             {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -1602,12 +1598,113 @@ const Configurator: React.FC = () => {
               />
             </div>
 
-            {/* 메인구간 탭에서 단내림이 있을 때 메인공간 사이즈 표시 */}
-            {activeRightPanelTab === 'slotA' && spaceInfo.droppedCeiling?.enabled && (
+            {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>단내림</h3>
+              </div>
+              
+              <div className={styles.toggleButtonGroup}>
+                <button
+                  className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+                  onClick={() => {
+                    // 단내림 비활성화
+                    clearAllModules(); // 가구 제거
+                    handleSpaceInfoUpdate({ 
+                      droppedCeiling: {
+                        ...spaceInfo.droppedCeiling,
+                        enabled: false
+                      },
+                      mainDoorCount: undefined,
+                      droppedCeilingDoorCount: undefined
+                    });
+                    setActiveRightPanelTab('slotA');
+                  }}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+                  onClick={() => {
+                    if (!spaceInfo.droppedCeiling?.enabled) {
+                      // 단내림 활성화
+                      clearAllModules(); // 가구 제거
+                      
+                      const totalWidth = spaceInfo.width || 4800;
+                      const droppedWidth = 900; // 단내림 기본 폭
+                      const mainWidth = totalWidth - droppedWidth;
+                      const mainRange = calculateDoorRange(mainWidth);
+                      const currentCount = getCurrentColumnCount();
+                      const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+                      
+                      // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
+                      const frameThickness = 50;
+                      const droppedInternalWidth = droppedWidth - frameThickness;
+                      const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+                      
+                      handleSpaceInfoUpdate({ 
+                        droppedCeiling: {
+                          enabled: true,
+                          width: droppedWidth,
+                          dropHeight: 200,
+                          position: 'right'
+                        },
+                        droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
+                        mainDoorCount: adjustedMainDoorCount
+                      });
+                      setActiveRightPanelTab('slotA');
+                    }
+                  }}
+                >
+                  있음
+                </button>
+              </div>
+              
+              {/* 단내림이 활성화된 경우 위치 선택 */}
+              {spaceInfo.droppedCeiling?.enabled && (
+                <div style={{ marginTop: '16px' }}>
+                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
+                  <div className={styles.toggleButtonGroup}>
+                    <button
+                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
+                      onClick={() => {
+                        handleSpaceInfoUpdate({ 
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            position: 'left'
+                          }
+                        });
+                      }}
+                    >
+                      좌측
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
+                      onClick={() => {
+                        handleSpaceInfoUpdate({ 
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            position: 'right'
+                          }
+                        });
+                      }}
+                    >
+                      우측
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
+            {spaceInfo.droppedCeiling?.enabled && (
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>메인공간 사이즈</h3>
+                  <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
                 </div>
                 
                 <div className={styles.inputGroup}>
@@ -1685,19 +1782,211 @@ const Configurator: React.FC = () => {
                       <label className={styles.inputLabel}>메인구간 높이</label>
                       <div className={styles.inputWithUnit}>
                         <input
-                          type="number"
-                          min="1800"
-                          max="3000"
-                          step="10"
-                          value={spaceInfo.height || 2400}
+                          type="text"
+                          defaultValue={spaceInfo.height || 2400}
+                          key={`main-height-${spaceInfo.height || 2400}`}
                           onChange={(e) => {
-                            const inputValue = e.target.value;
-                            if (inputValue === '') return;
+                            // 숫자와 빈 문자열만 허용
+                            const value = e.target.value;
+                            if (value === '' || /^\d+$/.test(value)) {
+                              // 로컴 상태만 업데이트 (입력 중에는 스토어 업데이트 안 함)
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              // 빈 값인 경우 기존 값으로 되돌림
+                              e.target.value = (spaceInfo.height || 2400).toString();
+                              return;
+                            }
                             
-                            const newHeight = parseInt(inputValue);
-                            if (!isNaN(newHeight) && newHeight > 0) {
+                            const numValue = parseInt(value);
+                            const minValue = 1800;
+                            const maxValue = 3000;
+                            
+                            // 범위 검증
+                            if (numValue < minValue) {
+                              e.target.value = minValue.toString();
+                              handleSpaceInfoUpdate({ height: minValue });
+                            } else if (numValue > maxValue) {
+                              e.target.value = maxValue.toString();
+                              handleSpaceInfoUpdate({ height: maxValue });
+                            } else {
+                              handleSpaceInfoUpdate({ height: numValue });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              (e.target as HTMLInputElement).blur();
+                            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              
+                              const currentValue = parseInt(e.target.value) || (spaceInfo.height || 2400);
+                              const minValue = 1800;
+                              const maxValue = 3000;
+                              
+                              let newValue;
+                              if (e.key === 'ArrowUp') {
+                                newValue = Math.min(currentValue + 1, maxValue);
+                              } else {
+                                newValue = Math.max(currentValue - 1, minValue);
+                              }
+                              
+                              if (newValue !== currentValue) {
+                                e.target.value = newValue.toString();
+                                handleSpaceInfoUpdate({ height: newValue });
+                              }
+                            }
+                          }}
+                          className={`${styles.input} ${styles.inputWithUnitField}`}
+                          placeholder="1800-3000"
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 */}
+            {spaceInfo.droppedCeiling?.enabled && (
+              <div className={styles.configSection}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionDot}></span>
+                  <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
+                </div>
+                
+                <div className={styles.inputGroup}>
+                  <div className={styles.inputGroupTwoColumns}>
+                    {/* 단내림 구간 폭 */}
+                    <div className={styles.inputWrapper}>
+                      <label className={styles.inputLabel}>단내림 구간 폭</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          min="100"
+                          max={(spaceInfo.width || 4800) - 100}
+                          step="10"
+                          defaultValue={spaceInfo.droppedCeiling?.width || 900}
+                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const inputValue = e.target.value;
+                            const totalWidth = spaceInfo.width || 4800;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            
+                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                              e.target.value = currentDroppedWidth.toString();
+                              return;
+                            }
+                            
+                            const droppedWidth = parseInt(inputValue);
+                            const mainWidth = totalWidth - droppedWidth;
+                            
+                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
+                            if (droppedWidth < 100) {
+                              e.target.value = '100';
                               handleSpaceInfoUpdate({ 
-                                height: Math.max(1800, Math.min(3000, newHeight))
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: 100
+                                }
+                              });
+                            } else if (droppedWidth > totalWidth - 100) {
+                              e.target.value = (totalWidth - 100).toString();
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: totalWidth - 100
+                                }
+                              });
+                            } else {
+                              // 유효한 값이면 그대로 적용
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  width: droppedWidth
+                                }
+                              });
+                            }
+                          }}
+                          className={`${styles.input} ${styles.inputWithUnitField}`}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                    
+                    {/* 단내림 구간 높이 */}
+                    <div className={styles.inputWrapper}>
+                      <label className={styles.inputLabel}>단내림 구간 높이</label>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          min="1800"
+                          max="2900"
+                          step="10"
+                          defaultValue={(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                          key={`dropped-height-${(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const inputValue = e.target.value;
+                            const totalHeight = spaceInfo.height || 2400;
+                            const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
+                            
+                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                              e.target.value = currentDroppedHeight.toString();
+                              return;
+                            }
+                            
+                            const droppedHeight = parseInt(inputValue);
+                            const newDropHeight = totalHeight - droppedHeight;
+                            
+                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정 (단차 높이는 100~500mm)
+                            if (newDropHeight < 100) {
+                              const validDroppedHeight = totalHeight - 100;
+                              e.target.value = validDroppedHeight.toString();
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  dropHeight: 100
+                                }
+                              });
+                            } else if (newDropHeight > 500) {
+                              const validDroppedHeight = totalHeight - 500;
+                              e.target.value = validDroppedHeight.toString();
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  dropHeight: 500
+                                }
+                              });
+                            } else {
+                              // 유효한 값이면 그대로 적용
+                              handleSpaceInfoUpdate({ 
+                                droppedCeiling: {
+                                  ...spaceInfo.droppedCeiling,
+                                  enabled: true,
+                                  dropHeight: newDropHeight
+                                }
                               });
                             }
                           }}
@@ -1711,347 +2000,9 @@ const Configurator: React.FC = () => {
               </div>
             )}
 
-            {/* 단내림 구간일 때만 표시 */}
-            {activeRightPanelTab === 'stepDown' && (
-              <>
-                {/* 단내림 설정 */}
-                <div className={styles.configSection}>
-                  <div className={styles.sectionHeader}>
-                    <span className={styles.sectionDot}></span>
-                    <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
-                  </div>
-                  
-                  <div className={styles.inputGroup}>
-                    {/* X축 폭과 Y축 높이를 한 줄에 배치 */}
-                    <div className={styles.inputGroupTwoColumns}>
-                      {/* X축 폭 설정 */}
-                      <div className={styles.inputWrapper}>
-                        <label className={styles.inputLabel}>단내림 구간 폭</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text"
-                            min="100"
-                            max={(spaceInfo.width || 4800) - 100}
-                            step="10"
-                            defaultValue={spaceInfo.droppedCeiling?.width || 900}
-                            key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const inputValue = e.target.value;
-                              const totalWidth = spaceInfo.width || 4800;
-                              const currentWidth = spaceInfo.droppedCeiling?.width || 900;
-                              
-                              // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
-                              if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                                e.target.value = currentWidth.toString();
-                                return;
-                              }
-                              
-                              const value = parseInt(inputValue);
-                              
-                              // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
-                              if (value < 100) {
-                                e.target.value = '100';
-                                handleSpaceInfoUpdate({ 
-                                  droppedCeiling: {
-                                    ...spaceInfo.droppedCeiling,
-                                    enabled: true,
-                                    width: 100
-                                  }
-                                });
-                              } else if (value > totalWidth - 100) {
-                                const maxValue = totalWidth - 100;
-                                e.target.value = maxValue.toString();
-                                handleSpaceInfoUpdate({ 
-                                  droppedCeiling: {
-                                    ...spaceInfo.droppedCeiling,
-                                    enabled: true,
-                                    width: maxValue
-                                  }
-                                });
-                              } else {
-                                // 유효한 값이면 그대로 적용하고, 도어 개수도 업데이트
-                                const range = calculateDoorRange(value);
-                                const currentDoorCount = spaceInfo.droppedCeilingDoorCount || 0;
-                                
-                                // 현재 도어 개수가 범위를 벗어나면 조정
-                                let newDoorCount = currentDoorCount;
-                                if (currentDoorCount < range.min || currentDoorCount === 0) {
-                                  newDoorCount = range.min;
-                                } else if (currentDoorCount > range.max) {
-                                  newDoorCount = range.max;
-                                }
-                                
-                                handleSpaceInfoUpdate({ 
-                                  droppedCeiling: {
-                                    ...spaceInfo.droppedCeiling,
-                                    enabled: true,
-                                    width: value
-                                  }
-                                });
-                              }
-                            }}
-                            className={`${styles.input} ${styles.inputWithUnitField}`}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                      
-                      {/* Y축 단차 설정 */}
-                      <div className={styles.inputWrapper}>
-                        <label className={styles.inputLabel}>단차 높이</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="number"
-                            min="100"
-                            max="500"
-                            step="10"
-                            value={spaceInfo.droppedCeiling?.dropHeight || 200}
-                            onChange={(e) => {
-                              const inputValue = e.target.value;
-                              if (inputValue === '') return;
-                              
-                              const dropHeight = parseInt(inputValue);
-                              if (!isNaN(dropHeight) && dropHeight > 0) {
-                                handleSpaceInfoUpdate({ 
-                                  droppedCeiling: {
-                                    ...spaceInfo.droppedCeiling,
-                                    enabled: true,
-                                    dropHeight: Math.max(100, Math.min(500, dropHeight))
-                                  }
-                                });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              const dropHeight = Math.max(100, Math.min(500, parseInt(e.target.value) || 200));
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  dropHeight: dropHeight
-                                }
-                              });
-                            }}
-                            className={`${styles.input} ${styles.inputWithUnitField}`}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* 계산된 단내림 구간 높이 표시 */}
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>단내림 구간 높이 (계산값)</label>
-                      <div className={styles.inputWithUnit}>
-                        <input
-                          type="number"
-                          value={spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-                          readOnly
-                          className={`${styles.input} ${styles.inputWithUnitField}`}
-                          style={{ backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* 단내림 위치 설정 */}
-                <div className={styles.configSection}>
-                  <div className={styles.sectionHeader}>
-                    <span className={styles.sectionDot}></span>
-                    <h3 className={styles.sectionTitle}>단내림 위치</h3>
-                  </div>
-                  
-                  <div className={styles.toggleButtonGroup}>
-                    <button
-                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
-                      onClick={() => {
-                        handleSpaceInfoUpdate({ 
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            position: 'left'
-                          }
-                        });
-                      }}
-                    >
-                      좌측
-                    </button>
-                    <button
-                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
-                      onClick={() => {
-                        handleSpaceInfoUpdate({ 
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            position: 'right'
-                          }
-                        });
-                      }}
-                    >
-                      우측
-                    </button>
-                  </div>
-                </div>
-                
-                {/* 단내림 구간 도어 개수 설정 */}
-                <div className={styles.configSection}>
-                  <div className={styles.sectionHeader}>
-                    <span className={styles.sectionDot}></span>
-                    <h3 className={styles.sectionTitle}>레이아웃</h3>
-                  </div>
-                  
-                  {/* 단내림 구간 도어 개수 입력 */}
-                  <div className={styles.inputGroup}>
-                    <div className={styles.inputRow}>
-                      <label className={styles.inputLabel}>단내림 구간 도어 개수</label>
-                      <div className={styles.numberInputGroup}>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const current = spaceInfo.droppedCeilingDoorCount || 1;
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const MAX_SLOT_WIDTH = 600;
-                            const MIN_SLOT_WIDTH = 400;
-                            const doorRange = {
-                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
-                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
-                            };
-                            if (current > doorRange.min) {
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current - 1 });
-                            }
-                          }}
-                          disabled={(() => {
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || 1;
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
-                            return currentValue <= minValue;
-                          })()}
-                        >
-                          −
-                        </button>
-                        <div className={styles.numberInputValue}>
-                          {(() => {
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const MAX_SLOT_WIDTH = 600;
-                            const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
-                            const finalValue = spaceInfo.droppedCeilingDoorCount || calculatedMin;
-                            
-                            console.log('🔍 단내림 구간 도어개수 입력필드:', {
-                              droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
-                              droppedCeiling: spaceInfo.droppedCeiling,
-                              droppedWidth,
-                              internalWidth,
-                              calculatedMin,
-                              finalValue
-                            });
-                            
-                            return null;
-                          })()}
-                          <input
-                            type="number"
-                            value={(() => {
-                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                              const frameThickness = 50;
-                              const internalWidth = droppedWidth - frameThickness;
-                              const MAX_SLOT_WIDTH = 600;
-                              const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
-                              
-                              // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 설정되어 있으면 사용
-                              if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount !== undefined) {
-                                return spaceInfo.droppedCeilingDoorCount;
-                              }
-                              // 그렇지 않으면 1개를 기본값으로 사용 (스타일러장/바지걸이장 배치를 위해)
-                              return 1;
-                            })()}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value) || 1;
-                              console.log('🔍 단내림 구간 도어개수 변경:', {
-                                inputValue: e.target.value,
-                                parsedValue: value,
-                                previousValue: spaceInfo.droppedCeilingDoorCount
-                              });
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                            }}
-                            style={{ 
-                              width: '60px', 
-                              textAlign: 'center',
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'var(--theme-text)',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
-                          />
-                        </div>
-                        <button 
-                          className={styles.numberInputButton}
-                          onClick={() => {
-                            const current = spaceInfo.droppedCeilingDoorCount || 1;
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const MAX_SLOT_WIDTH = 600;
-                            const MIN_SLOT_WIDTH = 400;
-                            const doorRange = {
-                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
-                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
-                            };
-                            if (current < doorRange.max) {
-                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current + 1 });
-                            }
-                          }}
-                          disabled={(() => {
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || 1;
-                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const frameThickness = 50;
-                            const internalWidth = droppedWidth - frameThickness;
-                            const maxValue = Math.max(1, Math.floor(internalWidth / 400));
-                            return currentValue >= maxValue;
-                          })()}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <DoorSlider
-                      value={(() => {
-                        // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 설정되어 있으면 사용
-                        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount !== undefined) {
-                          return spaceInfo.droppedCeilingDoorCount;
-                        }
-                        // 그렇지 않으면 1개를 기본값으로 사용 (스타일러장/바지걸이장 배치를 위해)
-                        return 1;
-                      })()}
-                      onChange={(value) => {
-                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                      }}
-                      width={spaceInfo.droppedCeiling?.width || 900}
-                    />
-                  </div>
-                  
 
-                </div>
-              </>
-            )}
-
-            {/* 슬롯A 탭일 때만 레이아웃 표시 */}
-            {activeRightPanelTab === 'slotA' && (
-              <div className={styles.configSection}>
+            {/* 레이아웃 표시 */}
+            <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>레이아웃</h3>
@@ -2189,11 +2140,102 @@ const Configurator: React.FC = () => {
                       width={spaceInfo.width || 4800}
                     />
                   </div>
+                  
+                  {/* 단내림구간 도어 개수 */}
+                  <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
+                    <div className={styles.inputRow}>
+                      <label className={styles.inputLabel}>단내림구간 도어 개수</label>
+                      <div className={styles.numberInputGroup}>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const MAX_SLOT_WIDTH = 600;
+                            const MIN_SLOT_WIDTH = 400;
+                            const doorRange = {
+                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
+                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
+                            };
+                            const current = spaceInfo.droppedCeilingDoorCount || doorRange.min;
+                            if (current > doorRange.min) {
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current - 1 });
+                            }
+                          }}
+                          disabled={(() => {
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || minValue;
+                            return currentValue <= minValue;
+                          })()}
+                        >
+                          −
+                        </button>
+                        <div className={styles.numberInputValue}>
+                          <input
+                            type="number"
+                            value={spaceInfo.droppedCeilingDoorCount || 1}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                            }}
+                            style={{ 
+                              width: '60px', 
+                              textAlign: 'center',
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--theme-text)',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          />
+                        </div>
+                        <button 
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const MAX_SLOT_WIDTH = 600;
+                            const MIN_SLOT_WIDTH = 400;
+                            const doorRange = {
+                              min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
+                              max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
+                            };
+                            const current = spaceInfo.droppedCeilingDoorCount || doorRange.min;
+                            if (current < doorRange.max) {
+                              handleSpaceInfoUpdate({ droppedCeilingDoorCount: current + 1 });
+                            }
+                          }}
+                          disabled={(() => {
+                            const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const frameThickness = 50;
+                            const internalWidth = droppedWidth - frameThickness;
+                            const minValue = Math.max(1, Math.ceil(internalWidth / 600));
+                            const maxValue = Math.max(1, Math.floor(internalWidth / 400));
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || minValue;
+                            return currentValue >= maxValue;
+                          })()}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <DoorSlider
+                      value={spaceInfo.droppedCeilingDoorCount || 1}
+                      onChange={(value) => {
+                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                      }}
+                      width={spaceInfo.droppedCeiling?.width || 900}
+                    />
+                  </div>
                 </>
               )}
 
               </div>
-            )}
 
             {/* 공간 유형 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
@@ -2418,10 +2460,7 @@ const Configurator: React.FC = () => {
             </div>
 
           </div>
-        );
-      default:
-        return null;
-    }
+    );
   };
 
   if (loading) {
@@ -2586,7 +2625,7 @@ const Configurator: React.FC = () => {
               showAll={showAll}
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
-              activeZone={activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal'}
+              activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
             />
           </div>
 
@@ -2624,82 +2663,11 @@ const Configurator: React.FC = () => {
             <div className={styles.rightPanelTabs}>
               <div className={styles.tabGroup}>
                 <button
-                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'slotA' ? styles.active : ''}`}
-                  onClick={() => {
-                    setActiveRightPanelTab('slotA');
-                    setActiveDroppedCeilingTab('main');
-                  }}
+                  className={`${styles.rightPanelTab} ${styles.active}`}
                 >
-                  {showStepDownTab ? '메인구간' : '슬롯A'}
+                  배치 속성
                 </button>
-                {showStepDownTab && (
-                  <button
-                    className={`${styles.rightPanelTab} ${activeRightPanelTab === 'stepDown' ? styles.active : ''}`}
-                    onClick={() => {
-                      setActiveRightPanelTab('stepDown');
-                      setActiveDroppedCeilingTab('dropped');
-                    }}
-                  >
-                    단내림 구간
-                  </button>
-                )}
               </div>
-              <button
-                className={`${styles.addTabButton} ${showStepDownTab ? styles.active : ''}`}
-                onClick={() => {
-                  setShowStepDownTab(!showStepDownTab);
-                  if (!showStepDownTab) {
-                    // 단내림 추가 시 배치된 가구 모두 제거
-                    clearAllModules();
-                    
-                    // 메인구간 도어 개수 계산 - 현재 도어 개수 유지
-                    const totalWidth = spaceInfo.width || 4800;
-                    const droppedWidth = 900; // 단내림 기본 폭 (올바른 값)
-                    const mainWidth = totalWidth - droppedWidth;
-                    const mainRange = calculateDoorRange(mainWidth);
-                    // 현재 도어 개수를 유지하되, 새로운 범위에 맞게 조정
-                    const currentCount = getCurrentColumnCount();
-                    const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-                    
-                    handleSpaceInfoUpdate({ 
-                      droppedCeiling: {
-                        enabled: true,
-                        width: droppedWidth,  // 기본값 설정
-                        dropHeight: 200,  // 기본값 설정 (높이 2200mm = 2400mm - 200mm)
-                        position: 'right'  // 기본값 설정
-                      },
-                      droppedCeilingDoorCount: 2,  // 기본값 설정
-                      mainDoorCount: adjustedMainDoorCount  // 현재 도어 개수 유지
-                    });
-                    // 강제로 3D 뷰 업데이트
-                    setTimeout(() => {
-                      handleSpaceInfoUpdate({ 
-                        droppedCeiling: {
-                          ...spaceInfo.droppedCeiling,
-                          enabled: true
-                        }
-                      });
-                    }, 0);
-                    setActiveRightPanelTab('slotA');
-                    setActiveDroppedCeilingTab('main');
-                  } else {
-                    // 단내림을 비활성화할 때 도어 개수 설정도 초기화
-                    handleSpaceInfoUpdate({ 
-                      droppedCeiling: {
-                        ...spaceInfo.droppedCeiling,
-                        enabled: false
-                      },
-                      mainDoorCount: undefined,
-                      droppedCeilingDoorCount: undefined
-                    });
-                    setActiveRightPanelTab('slotA');
-                    setActiveDroppedCeilingTab('main');
-                  }
-                }}
-                title={showStepDownTab ? "단내림 구간 제거" : "단내림 구간 추가"}
-              >
-                {showStepDownTab ? '−' : '+'}
-              </button>
             </div>
           </div>
           {/* 패널 컨텐츠 */}

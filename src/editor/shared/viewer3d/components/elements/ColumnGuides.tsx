@@ -256,16 +256,15 @@ const ColumnGuides: React.FC = () => {
     const guides = [];
     
     // 활성 탭에 따른 강조 여부 결정
-    const isActiveZone = (zoneType === 'main' && activeDroppedCeilingTab === 'main') ||
-                        (zoneType === 'dropped' && activeDroppedCeilingTab === 'dropped') ||
-                        (!hasDroppedCeiling); // 단내림이 없으면 항상 활성
+    // activeZone이 전달되지 않으면 모든 영역이 활성화됨
+    const isActiveZone = true; // 모든 영역을 활성화 상태로 표시
     
-    // 영역별 색상 및 선 굵기 설정
+    // 영역별 색상 및 선 굵기 설정 - 모든 영역 동일하게
     const zoneColor = viewMode === '2D' && view2DTheme === 'dark' 
       ? '#FFFFFF' // 2D 다크모드에서는 항상 흰색
-      : (isActiveZone ? guideColor : '#999999'); // 그 외에는 활성 영역만 강조색
-    const zoneLineWidth = isActiveZone ? lineWidth * 2 : lineWidth; // 활성 영역만 굵게
-    const zoneOpacity = isActiveZone ? 1 : 0.6; // 비활성 영역은 60% 투명도
+      : guideColor; // 모든 영역 동일한 색상
+    const zoneLineWidth = lineWidth * 2; // 모든 영역 동일한 굵기
+    const zoneOpacity = 1; // 모든 영역 완전 불투명
     
     // 각 슬롯 경계 계산
     const boundaries = [];
@@ -539,8 +538,8 @@ const ColumnGuides: React.FC = () => {
     const centerX = mmToThreeUnits(startX + width / 2);
     const meshWidth = mmToThreeUnits(width);
     
-    // 활성 상태에 따른 투명도
-    const opacity = isActive ? 0.2 : 0.05;
+    // 모든 영역 동일한 투명도
+    const opacity = 0.2;
     
     if (meshType === 'back') {
       // 뒷면 메쉬 - 가이드 점선과 정확히 일치
@@ -621,7 +620,7 @@ const ColumnGuides: React.FC = () => {
                 zoneSlotInfo.normal.width,
                 floorY,
                 ceilingY,
-                activeDroppedCeilingTab === 'main',
+                true, // 모든 영역 활성화
                 'back',
                 'main'
               )}
@@ -631,7 +630,7 @@ const ColumnGuides: React.FC = () => {
                 zoneSlotInfo.normal.width,
                 floorY,
                 ceilingY,
-                activeDroppedCeilingTab === 'main',
+                true, // 모든 영역 활성화
                 'top',
                 'main'
               )}
@@ -641,7 +640,7 @@ const ColumnGuides: React.FC = () => {
                 zoneSlotInfo.dropped.width,
                 floorY,
                 droppedCeilingY,
-                activeDroppedCeilingTab === 'dropped',
+                true, // 모든 영역 활성화
                 'back',
                 'dropped'
               )}
@@ -651,7 +650,7 @@ const ColumnGuides: React.FC = () => {
                 zoneSlotInfo.dropped.width,
                 floorY,
                 droppedCeilingY,
-                activeDroppedCeilingTab === 'dropped',
+                true, // 모든 영역 활성화
                 'top',
                 'dropped'
               )}

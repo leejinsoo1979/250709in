@@ -71,8 +71,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
       const frameThickness = 50;
       const internalWidth = defaultWidth - frameThickness;
       
-      // 기본값을 최소 개수(1개)로 설정
-      const defaultDoorCount = 1;
+      // SpaceCalculator를 사용하여 폭에 따른 적절한 기본 도어 개수 계산
+      const defaultDoorCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
       
       setSpaceInfo({
         droppedCeiling: {

@@ -103,7 +103,10 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             targetZone: targetZone,
             slotIndex,
             newX: newX * 0.01,
-            newModuleId
+            newModuleId,
+            oldWidth: module.customWidth || module.adjustedWidth,
+            newWidth: targetZone.columnWidth * (isDual ? 2 : 1),
+            targetZoneSlotWidths: targetZone.slotWidths
           });
           
           updatedModules.push({

@@ -666,8 +666,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
                 
-                {/* 구간 분리 가이드라인 - 간격 조정 */}
-                <Line
+                {/* 구간 분리 가이드라인 - 숨김 처리 */}
+                {/* <Line
                   points={[
                     [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, 0, 0.001],
                     [spaceInfo.droppedCeiling.position === 'left' ? mmToThreeUnits(droppedBounds.width) + leftOffset : mmToThreeUnits(normalBounds.width) + leftOffset, subDimensionY - mmToThreeUnits(40), 0.001]
@@ -675,7 +675,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                   dashed
-                />
+                /> */}
                 
                 {/* 메인 구간 연장선 (치수선에서 벽면까지) */}
                 <Line
@@ -2436,39 +2436,149 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         {/* 우측 전체 높이 치수선 */}
         <group>
-          {/* 치수선 */}
-          <Line
-            points={[[rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 하단 화살표 */}
-          <Line
-            points={createArrowHead([rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 상단 화살표 */}
-          <Line
-            points={createArrowHead([rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 전체 높이 치수 텍스트 */}
-          {(showDimensionsText || isStep2) && (
-            <Text
-              position={[rightDimensionX + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[0, 0, -Math.PI / 2]}
-            >
-              {spaceInfo.height}
-            </Text>
+          {/* 단내림이 있는 경우 구간별 높이 치수선 표시 */}
+          {spaceInfo.droppedCeiling?.enabled ? (
+            <>
+              {/* 메인구간 높이 치수선 */}
+              {(() => {
+                const mainAreaLeft = spaceInfo.droppedCeiling.position === 'left' 
+                  ? mmToThreeUnits(spaceInfo.droppedCeiling.width)
+                  : 0;
+                const mainAreaRight = spaceInfo.droppedCeiling.position === 'right'
+                  ? mmToThreeUnits(spaceInfo.width - spaceInfo.droppedCeiling.width)
+                  : mmToThreeUnits(spaceInfo.width);
+                const mainAreaCenter = (mainAreaLeft + mainAreaRight) / 2;
+                
+                return (
+                  <group>
+                    {/* 메인구간 치수선 */}
+                    <Line
+                      points={[[mainAreaCenter + mmToThreeUnits(100), 0, spaceZOffset - mmToThreeUnits(200)], [mainAreaCenter + mmToThreeUnits(100), actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 하단 화살표 */}
+                    <Line
+                      points={createArrowHead([mainAreaCenter + mmToThreeUnits(100), 0, spaceZOffset - mmToThreeUnits(200)], [mainAreaCenter + mmToThreeUnits(100), 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 상단 화살표 */}
+                    <Line
+                      points={createArrowHead([mainAreaCenter + mmToThreeUnits(100), actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [mainAreaCenter + mmToThreeUnits(100), actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 메인구간 높이 텍스트 */}
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        position={[mainAreaCenter + mmToThreeUnits(100) + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
+                        fontSize={largeFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, -Math.PI / 2]}
+                      >
+                        {spaceInfo.height}
+                      </Text>
+                    )}
+                  </group>
+                );
+              })()}
+              
+              {/* 단내림구간 높이 치수선 */}
+              {(() => {
+                const droppedAreaLeft = spaceInfo.droppedCeiling.position === 'left' 
+                  ? 0
+                  : mmToThreeUnits(spaceInfo.width - spaceInfo.droppedCeiling.width);
+                const droppedAreaRight = spaceInfo.droppedCeiling.position === 'left'
+                  ? mmToThreeUnits(spaceInfo.droppedCeiling.width)
+                  : mmToThreeUnits(spaceInfo.width);
+                const droppedAreaCenter = (droppedAreaLeft + droppedAreaRight) / 2;
+                const droppedHeight = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+                const droppedHeightThree = mmToThreeUnits(droppedHeight);
+                
+                return (
+                  <group>
+                    {/* 단내림구간 치수선 */}
+                    <Line
+                      points={[[droppedAreaCenter + mmToThreeUnits(100), 0, spaceZOffset - mmToThreeUnits(200)], [droppedAreaCenter + mmToThreeUnits(100), droppedHeightThree, spaceZOffset - mmToThreeUnits(200)]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 하단 화살표 */}
+                    <Line
+                      points={createArrowHead([droppedAreaCenter + mmToThreeUnits(100), 0, spaceZOffset - mmToThreeUnits(200)], [droppedAreaCenter + mmToThreeUnits(100), 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 상단 화살표 */}
+                    <Line
+                      points={createArrowHead([droppedAreaCenter + mmToThreeUnits(100), droppedHeightThree, spaceZOffset - mmToThreeUnits(200)], [droppedAreaCenter + mmToThreeUnits(100), droppedHeightThree - 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    
+                    {/* 단내림구간 높이 텍스트 */}
+                    {(showDimensionsText || isStep2) && (
+                      <Text
+                        position={[droppedAreaCenter + mmToThreeUnits(100) + mmToThreeUnits(60), droppedHeightThree / 2, spaceZOffset - mmToThreeUnits(200)]}
+                        fontSize={largeFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, -Math.PI / 2]}
+                      >
+                        {droppedHeight}
+                      </Text>
+                    )}
+                  </group>
+                );
+              })()}
+            </>
+          ) : (
+            <>
+              {/* 단내림이 없는 경우 기존 전체 높이 치수선 */}
+              {/* 치수선 */}
+              <Line
+                points={[[rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 하단 화살표 */}
+              <Line
+                points={createArrowHead([rightDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 상단 화살표 */}
+              <Line
+                points={createArrowHead([rightDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [rightDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 전체 높이 치수 텍스트 */}
+              {(showDimensionsText || isStep2) && (
+                <Text
+                  position={[rightDimensionX + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
+                  fontSize={largeFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {spaceInfo.height}
+                </Text>
+              )}
+            </>
           )}
           
           {/* 연장선 */}
@@ -2482,6 +2592,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={dimensionColor}
             lineWidth={1}
           />
+          
+          {/* 단내림 높이 연장선 - 단내림이 있는 경우에만 표시 */}
+          {spaceInfo.droppedCeiling?.enabled && (
+            <Line
+              points={[
+                [actualSpaceWidth, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset], 
+                [actualSpaceWidth, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), spaceZOffset - mmToThreeUnits(180)]
+              ]}
+              color={dimensionColor}
+              lineWidth={1}
+            />
+          )}
         </group>
 
         {/* 좌측 3구간 높이 치수선 */}

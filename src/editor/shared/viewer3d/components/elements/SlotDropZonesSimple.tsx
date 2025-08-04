@@ -138,7 +138,58 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width
     });
     
-    const zoneToUse = activeZoneParam || activeZone;
+    // 드롭 위치에서 마우스 좌표 계산
+    const rect = canvasElement.getBoundingClientRect();
+    const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
+    const mouseY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    // 단내림이 활성화되어 있고 activeZone이 없는 경우, 마우스 X 위치로 영역 판단
+    let zoneToUse = activeZoneParam || activeZone;
+    if (spaceInfo.droppedCeiling?.enabled && !zoneToUse) {
+      try {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        // Three.js 단위로 영역 경계 계산
+        const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+        const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
+        
+        // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // Y=0 평면과의 교차점 계산 (바닥 평면)
+        const planeY = mmToThreeUnits(internalSpace.startY);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+        const intersectPoint = new THREE.Vector3();
+        
+        if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
+          // 단내림 위치에 따라 영역 판단
+          if (spaceInfo.droppedCeiling.position === 'left') {
+            zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
+          } else {
+            zoneToUse = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
+          }
+          
+          console.log('🎯 자동 영역 판단:', {
+            mouseX,
+            mouseY,
+            worldX: intersectPoint.x,
+            droppedEndX,
+            normalStartX,
+            droppedPosition: spaceInfo.droppedCeiling.position,
+            detectedZone: zoneToUse
+          });
+        } else {
+          // 교차점을 찾지 못한 경우 기본값 사용
+          zoneToUse = 'normal';
+          console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
+        }
+      } catch (error) {
+        console.error('❌ 자동 영역 판단 중 오류:', error);
+        zoneToUse = 'normal'; // 오류 발생 시 기본값
+      }
+    }
+    
     if (!currentDragData) {
       console.log('❌ No currentDragData available');
       return false;
@@ -633,9 +684,38 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return true;
     } else {
       
-      // 단내림이 활성화되어 있지만 activeZone이 설정되지 않은 경우 배치 차단
+      // activeZone이 없는 경우 자동으로 적절한 영역 결정
       if (spaceInfo.droppedCeiling?.enabled && !zoneToUse) {
-        return false;
+        // 클릭한 위치의 슬롯 인덱스를 기반으로 영역 결정
+        const allColliders = scene.children
+          .filter(obj => obj.userData?.isSlotCollider && obj.visible)
+          .sort((a, b) => (a.userData?.slotIndex || 0) - (b.userData?.slotIndex || 0));
+        
+        const colliderUserData = allColliders
+          .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
+          ?.userData;
+        
+        // 클릭한 슬롯의 영역 정보 사용
+        const targetZone = colliderUserData?.zone || 'normal';
+        const newModule = {
+          id: placedId,
+          moduleId: moduleData.id,
+          position: { x: finalX, y: 0, z: 0 },
+          rotation: 0,
+          slotIndex,
+          depth: defaultDepth,
+          isDualSlot: isDual,
+          isValidInCurrentSpace: true,
+          adjustedWidth: moduleData.dimensions.width,
+          hingePosition: 'right' as 'left' | 'right',
+          customWidth: customWidth,
+          zone: targetZone // 클릭한 슬롯의 영역 사용
+        };
+        
+        addModule(newModule);
+        setCurrentDragData(null);
+        window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+        return true;
       }
     }
     
@@ -1342,17 +1422,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             const width = rightX - leftX;
             
             return (
-              <mesh
-                key="main-zone-floor"
-                position={[centerX, floorY, slotFloorZ]}
-              >
-                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                <meshBasicMaterial 
-                  color={primaryColor} 
-                  transparent 
-                  opacity={0.2} 
-                />
-              </mesh>
+              <group key="main-zone-group">
+                <mesh
+                  position={[centerX, floorY, slotFloorZ]}
+                >
+                  <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                  <meshBasicMaterial 
+                    color={primaryColor} 
+                    transparent 
+                    opacity={0.35} 
+                  />
+                </mesh>
+                <lineSegments
+                  position={[centerX, floorY, slotFloorZ]}
+                >
+                  <edgesGeometry args={[new THREE.BoxGeometry(width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
+                  <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                </lineSegments>
+              </group>
             );
           } else if (activeZone === 'dropped') {
             // 단내림 구간: 단내림 영역만 표시
@@ -1362,21 +1449,104 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             const width = rightX - leftX;
             
             return (
-              <mesh
-                key="dropped-zone-floor"
-                position={[centerX, floorY, slotFloorZ]}
-              >
-                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                <meshBasicMaterial 
-                  color={primaryColor} 
-                  transparent 
-                  opacity={0.2} 
-                />
-              </mesh>
+              <group key="dropped-zone-group">
+                <mesh
+                  position={[centerX, floorY, slotFloorZ]}
+                >
+                  <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                  <meshBasicMaterial 
+                    color={primaryColor} 
+                    transparent 
+                    opacity={0.35} 
+                  />
+                </mesh>
+                <lineSegments
+                  position={[centerX, floorY, slotFloorZ]}
+                >
+                  <edgesGeometry args={[new THREE.BoxGeometry(width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
+                  <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                </lineSegments>
+              </group>
+            );
+          } else {
+            // activeZone이 설정되지 않은 경우 양쪽 영역 모두 표시
+            return (
+              <>
+                {/* 메인 영역 표시 */}
+                <group key="main-zone-group">
+                  <mesh
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
+                      floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.normal.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    ]} />
+                    <meshBasicMaterial 
+                      color={primaryColor} 
+                      transparent 
+                      opacity={0.35} 
+                    />
+                  </mesh>
+                  {/* 메인 영역 외곽선 */}
+                  <lineSegments
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
+                      floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <edgesGeometry args={[new THREE.BoxGeometry(
+                      mmToThreeUnits(zoneSlotInfo.normal.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    )]} />
+                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                  </lineSegments>
+                </group>
+                {/* 단내림 영역 표시 */}
+                <group key="dropped-zone-group">
+                  <mesh
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
+                      floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.dropped.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    ]} />
+                    <meshBasicMaterial 
+                      color={primaryColor} 
+                      transparent 
+                      opacity={0.35} 
+                    />
+                  </mesh>
+                  {/* 단내림 영역 외곽선 */}
+                  <lineSegments
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
+                      floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <edgesGeometry args={[new THREE.BoxGeometry(
+                      mmToThreeUnits(zoneSlotInfo.dropped.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    )]} />
+                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                  </lineSegments>
+                </group>
+              </>
             );
           }
-          // activeZone이 설정되지 않은 경우 아무것도 표시하지 않음
-          return null;
         } else {
           // 단내림이 없는 경우 전체 영역 표시
           const leftX = indexing.threeUnitBoundaries[0];
@@ -1385,17 +1555,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const width = rightX - leftX;
           
           return (
-            <mesh
-              key="full-zone-floor"
-              position={[centerX, floorY, slotFloorZ]}
-            >
-              <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-              <meshBasicMaterial 
-                color={primaryColor} 
-                transparent 
-                opacity={0.2} 
-              />
-            </mesh>
+            <group key="full-zone-group">
+              <mesh
+                position={[centerX, floorY, slotFloorZ]}
+              >
+                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                <meshBasicMaterial 
+                  color={primaryColor} 
+                  transparent 
+                  opacity={0.35} 
+                />
+              </mesh>
+              <lineSegments
+                position={[centerX, floorY, slotFloorZ]}
+              >
+                <edgesGeometry args={[new THREE.BoxGeometry(width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
+                <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+              </lineSegments>
+            </group>
           );
         }
         
@@ -1433,14 +1610,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 드래그 중인 가구의 모듈 데이터 가져오기
         let moduleData;
         
-        // 단내림이 활성화되고 activeZone이 설정된 경우 영역별 모듈 생성
+        // 단내림이 활성화된 경우 영역별 모듈 생성
         let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
-        if (hasDroppedCeiling && activeZone && zoneSlotInfo) {
+        // activeZone이 없어도 slotZone 정보로 영역 판단
+        const effectiveZone = activeZone || slotZone;
+        if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 영역별 외경 너비 계산 (프레임 포함)
           const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
           let zoneSpaceInfo;
           
-          if (activeZone === 'dropped') {
+          if (effectiveZone === 'dropped') {
             // 단내림 영역용 spaceInfo
             zoneSpaceInfo = {
               ...spaceInfo,
@@ -1459,7 +1638,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
           
           console.log('🎯 [Ghost Preview] Zone 내부 공간 계산:', {
-            activeZone,
+            effectiveZone,
             zoneSpaceInfo: {
               width: zoneSpaceInfo.width,
               height: zoneSpaceInfo.height,
@@ -1472,7 +1651,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           
           // 슬롯 너비에 기반한 모듈 ID 생성
           const baseType = currentDragData.moduleData.id.replace(/-\d+$/, '');
-          const targetZone = activeZone === 'dropped' && zoneSlotInfo.dropped
+          const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
           
@@ -1491,7 +1670,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           moduleData = getModuleById(targetModuleId, zoneInternalSpace, zoneSpaceInfo);
           
           console.log('🔍 [Ghost Preview] 단내림 구간 미리보기 모듈 조회:', {
-            activeZone,
+            effectiveZone,
             baseType,
             targetWidth,
             targetModuleId,
@@ -1522,9 +1701,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 미리보기 위치 계산 - 실제 배치와 동일한 로직 사용
         let previewX = slotX;
         
-        if (hasDroppedCeiling && activeZone && zoneSlotInfo) {
+        if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 구간
-          const zoneInfo = activeZone === 'dropped' && zoneSlotInfo.dropped 
+          const zoneInfo = effectiveZone === 'dropped' && zoneSlotInfo.dropped 
             ? zoneSlotInfo.dropped 
             : zoneSlotInfo.normal;
           
@@ -1573,7 +1752,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const furnitureY = slotStartY + furnitureHeight / 2;
         
         console.log('👻 [Ghost Preview] 가구 높이 계산:', {
-          activeZone,
+          effectiveZone,
           moduleDataHeight: moduleData.dimensions.height,
           moduleDataId: moduleData.id,
           zoneInternalSpaceHeight: zoneInternalSpace?.height,
@@ -1584,7 +1763,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           expectedY: slotStartY + furnitureHeight / 2,
           originalSpaceHeight: spaceInfo.height,
           droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight,
-          isDroppedZone: activeZone === 'dropped'
+          isDroppedZone: effectiveZone === 'dropped'
         });
         
         const doorThickness = mmToThreeUnits(20);
