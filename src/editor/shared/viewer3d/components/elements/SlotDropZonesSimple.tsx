@@ -51,8 +51,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();
   
-  // 마우스가 hover 중인 슬롯 인덱스 상태
+  // 마우스가 hover 중인 슬롯 인덱스와 영역 상태
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
+  const [hoveredZone, setHoveredZone] = useState<'normal' | 'dropped' | null>(null);
   
   // spaceInfo가 없으면 null 반환
   if (!spaceInfo) {
@@ -1041,11 +1042,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (slotIndex === null) {
         setHoveredSlotIndex(null);
+        setHoveredZone(null);
         return;
       }
 
+      // 레이캐스트로 zone 정보 가져오기
+      let detectedZone: 'normal' | 'dropped' | null = null;
+      
       // 단내림이 활성화된 경우 영역별 처리
-      if (spaceInfo.droppedCeiling?.enabled && activeZone) {
+      if (spaceInfo.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
         
         // 레이캐스트로 받은 slotIndex는 이미 영역별 로컬 인덱스
@@ -1059,12 +1064,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
           ?.userData;
         
+        // zone 정보 저장
+        detectedZone = colliderUserData?.zone || 'normal';
         
         // activeZone이 설정된 경우에만 zone 체크
         if (activeZone && colliderUserData?.zone !== activeZone) {
           setHoveredSlotIndex(null);
+          setHoveredZone(null);
           return;
         }
+      } else {
+        // 단내림이 없는 경우 normal zone
+        detectedZone = 'normal';
       }
       
       if (currentDragData) {
@@ -1161,11 +1172,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         if (isAvailable) {
           setHoveredSlotIndex(slotIndex);
+          setHoveredZone(detectedZone);
         } else {
           setHoveredSlotIndex(null);
+          setHoveredZone(null);
         }
       } else {
         setHoveredSlotIndex(slotIndex);
+        setHoveredZone(detectedZone);
       }
     };
 
@@ -1600,21 +1614,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // zone 정보가 있는 경우 로컬 인덱스로 비교
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
           
+          // zone이 일치하는지도 체크
+          const zoneMatches = (!hoveredZone || hoveredZone === slotZone);
+          
           if (isDual) {
             // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           } else {
             // 싱글 가구: 현재 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           }
           
           console.log('🎯 고스트 렌더링 체크:', {
             hoveredSlotIndex,
+            hoveredZone,
             slotIndex,
             slotLocalIndex,
+            slotZone,
             compareIndex,
             isZoneData,
-            slotZone,
+            zoneMatches,
             shouldRenderGhost
           });
         }
