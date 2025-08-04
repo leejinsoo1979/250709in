@@ -80,10 +80,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
                                      module.id.includes('dual-4drawer-pantshanger');
         
-        if (isSpecialDualFurniture && droppedColumnWidth < 550) {
-          showAlert('단내림 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
-          e.preventDefault();
-          return;
+        // 듀얼 가구는 2개 슬롯을 사용하므로 2개 슬롯의 합계 너비로 확인
+        if (isSpecialDualFurniture && droppedSlotWidths.length >= 2) {
+          const dualWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
+          // 스타일러(694mm) 또는 바지걸이(564mm)의 최대값인 694mm로 체크
+          if (dualWidth < 694) {
+            showAlert('단내림 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
+            e.preventDefault();
+            return;
+          }
         }
         
         // 동적 가구인 경우 크기 조정
@@ -115,10 +120,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
                                      module.id.includes('dual-4drawer-pantshanger');
         
-        if (isSpecialDualFurniture && normalColumnWidth < 550) {
-          showAlert('메인 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
-          e.preventDefault();
-          return;
+        // 듀얼 가구는 2개 슬롯을 사용하므로 2개 슬롯의 합계 너비로 확인
+        if (isSpecialDualFurniture && normalSlotWidths.length >= 2) {
+          const dualWidth = normalSlotWidths[0] + normalSlotWidths[1];
+          // 스타일러(694mm) 또는 바지걸이(564mm)의 최대값인 694mm로 체크
+          if (dualWidth < 694) {
+            showAlert('메인 구간의 슬롯갯수를 줄여주세요', { title: '배치 불가' });
+            e.preventDefault();
+            return;
+          }
         }
         
         // 동적 가구인 경우 크기 조정
@@ -147,10 +157,21 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
                                    module.id.includes('dual-4drawer-pantshanger');
       
-      if (isSpecialDualFurniture && indexing.columnWidth < 550) {
-        showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
-        e.preventDefault();
-        return;
+      // 듀얼 가구는 2개 슬롯을 사용하므로 2개 슬롯의 합계 너비로 확인
+      if (isSpecialDualFurniture) {
+        const totalSlots = indexing.columnCount;
+        if (totalSlots < 2) {
+          showAlert('듀얼 가구를 배치하려면 최소 2개의 슬롯이 필요합니다', { title: '배치 불가' });
+          e.preventDefault();
+          return;
+        }
+        // 2개 슬롯의 합계 너비가 694mm (스타일러 내경폭) 이상인지 확인
+        const dualWidth = indexing.columnWidth * 2;
+        if (dualWidth < 694) {
+          showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+          e.preventDefault();
+          return;
+        }
       }
       
       // 동적 가구인 경우 정확한 너비로 ID 생성
@@ -290,10 +311,19 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
                                    module.id.includes('dual-4drawer-pantshanger');
       
-      // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
-      if (isSpecialDualFurniture && indexing.columnWidth < 550) {
-        showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
-        return;
+      // 특수 듀얼 가구이고 슬롯폭이 부족한 경우
+      if (isSpecialDualFurniture) {
+        const totalSlots = indexing.columnCount;
+        if (totalSlots < 2) {
+          showAlert('듀얼 가구를 배치하려면 최소 2개의 슬롯이 필요합니다', { title: '배치 불가' });
+          return;
+        }
+        // 2개 슬롯의 합계 너비가 694mm (스타일러 내경폭) 이상인지 확인
+        const dualWidth = indexing.columnWidth * 2;
+        if (dualWidth < 694) {
+          showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+          return;
+        }
       }
       
       // 동적 크기 조정이 필요한 가구인지 확인

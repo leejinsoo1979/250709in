@@ -65,13 +65,24 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
       });
     } else {
       // 활성화 - 기존 값이 있으면 유지, 없으면 기본값 사용
+      const defaultWidth = droppedCeiling?.width || 900;
+      
+      // 단내림 구간의 내경폭으로 기본 도어 개수 계산
+      const frameThickness = 50;
+      const internalWidth = defaultWidth - frameThickness;
+      
+      // 기본값을 최소 개수(1개)로 설정
+      const defaultDoorCount = 1;
+      
       setSpaceInfo({
         droppedCeiling: {
           enabled: true,
           position: droppedCeiling?.position || 'right',
-          width: droppedCeiling?.width || 1200,
+          width: defaultWidth,
           dropHeight: droppedCeiling?.dropHeight || 200
-        }
+        },
+        // 단내림 구간의 도어 개수를 1개로 초기 설정
+        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount || defaultDoorCount
       });
     }
   };

@@ -129,19 +129,24 @@ export const isSlotAvailable = (
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData) continue;
       
-      // 기존 가구의 듀얼/싱글 여부 판별
-      const isModuleDual = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+      // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
+      const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
+                          Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
       
-      // 기존 모듈의 슬롯 위치 찾기
-      let moduleSlot = -1;
-      if (isModuleDual && indexing.threeUnitDualPositions) {
-        moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
-          Math.abs(pos - placedModule.position.x) < 0.1
-        );
-      } else {
-        moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
-          Math.abs(pos - placedModule.position.x) < 0.1
-        );
+      // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
+      let moduleSlot = placedModule.slotIndex !== undefined ? placedModule.slotIndex : -1;
+      
+      // slotIndex가 없는 경우에만 위치로부터 계산
+      if (moduleSlot === -1) {
+        if (isModuleDual && indexing.threeUnitDualPositions) {
+          moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
+            Math.abs(pos - placedModule.position.x) < 0.1
+          );
+        } else {
+          moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
+            Math.abs(pos - placedModule.position.x) < 0.1
+          );
+        }
       }
       
       if (moduleSlot >= 0) {
@@ -216,33 +221,70 @@ export const findNextAvailableSlot = (
  */
 export const debugSlotOccupancy = (placedModules: PlacedModule[], spaceInfo: SpaceInfo): void => {
   const indexing = calculateSpaceIndexing(spaceInfo);
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  
+  // 전체 슬롯 점유 상태 맵
   const occupancyMap = new Array(indexing.columnCount).fill('[ ]');
+  const slotDetails: Record<number, { modules: string[], isDual: boolean[] }> = {};
+  
+  // 각 슬롯 초기화
+  for (let i = 0; i < indexing.columnCount; i++) {
+    slotDetails[i] = { modules: [], isDual: [] };
+  }
   
   placedModules.forEach((module, index) => {
-    const internalSpace = calculateInternalSpace(spaceInfo);
-    const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-    if (!moduleData) return;
+    // isDualSlot 속성을 우선 사용
+    const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot : false;
+    const moduleSlot = module.slotIndex !== undefined ? module.slotIndex : -1;
     
-    const isModuleDual = Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
-    
-    let moduleSlot = -1;
-    if (isModuleDual && indexing.threeUnitDualPositions) {
-      moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
-        Math.abs(pos - module.position.x) < 0.1
-      );
-      if (moduleSlot >= 0) {
-        occupancyMap[moduleSlot] = `[${String.fromCharCode(65 + index)}`;
-        occupancyMap[moduleSlot + 1] = `${String.fromCharCode(65 + index)}]`;
-      }
-    } else {
-      moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
-        Math.abs(pos - module.position.x) < 0.1
-      );
-      if (moduleSlot >= 0) {
-        occupancyMap[moduleSlot] = `[${String.fromCharCode(65 + index)}]`;
+    if (moduleSlot >= 0) {
+      const moduleLabel = String.fromCharCode(65 + index);
+      
+      if (isModuleDual) {
+        // 듀얼 가구는 2개 슬롯 차지
+        slotDetails[moduleSlot].modules.push(moduleLabel);
+        slotDetails[moduleSlot].isDual.push(true);
+        if (moduleSlot + 1 < indexing.columnCount) {
+          slotDetails[moduleSlot + 1].modules.push(moduleLabel);
+          slotDetails[moduleSlot + 1].isDual.push(true);
+        }
+        
+        occupancyMap[moduleSlot] = `[${moduleLabel}`;
+        if (moduleSlot + 1 < indexing.columnCount) {
+          occupancyMap[moduleSlot + 1] = `${moduleLabel}]`;
+        }
+      } else {
+        // 싱글 가구는 1개 슬롯 차지
+        slotDetails[moduleSlot].modules.push(moduleLabel);
+        slotDetails[moduleSlot].isDual.push(false);
+        occupancyMap[moduleSlot] = `[${moduleLabel}]`;
       }
     }
   });
   
-  // 슬롯 점유 상태 디버그 로그 제거
+  // 문제가 있는 슬롯 찾기 (1개 이상의 가구가 있는 슬롯)
+  const problematicSlots: number[] = [];
+  Object.entries(slotDetails).forEach(([slot, details]) => {
+    if (details.modules.length > 1) {
+      problematicSlots.push(parseInt(slot));
+    }
+  });
+  
+  console.log('📊 전체 슬롯 점유 상태:', {
+    총슬롯수: indexing.columnCount,
+    배치된가구수: placedModules.length,
+    듀얼가구수: placedModules.filter(m => m.isDualSlot).length,
+    싱글가구수: placedModules.filter(m => !m.isDualSlot).length,
+    점유맵: occupancyMap.join(' '),
+    문제슬롯: problematicSlots,
+    슬롯상세: slotDetails
+  });
+  
+  if (problematicSlots.length > 0) {
+    console.error('⚠️ 슬롯 충돌 발견!', problematicSlots.map(slot => ({
+      슬롯번호: slot,
+      가구들: slotDetails[slot].modules,
+      듀얼여부: slotDetails[slot].isDual
+    })));
+  }
 }; 

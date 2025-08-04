@@ -31,7 +31,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   doorWidth,
   originalSlotWidth,
-  slotCenterX
+  slotCenterX,
+  slotWidths
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {

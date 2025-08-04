@@ -19,6 +19,11 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
 
   // 새로운 공간에 맞게 가구 업데이트 함수 (간단한 버전)
   const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
+    console.log('🚨 updateFurnitureForNewSpace 호출됨:', {
+      oldSpaceInfo,
+      newSpaceInfo,
+      caller: new Error().stack
+    });
     setPlacedModules(currentModules => {
       if (currentModules.length === 0) return currentModules;
       
@@ -35,6 +40,12 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       currentModules.forEach(module => {
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
+          console.log('🔍 Zone 가구 처리 시작:', {
+            moduleId: module.moduleId,
+            zone: module.zone,
+            customWidth: module.customWidth,
+            isDualSlot: module.isDualSlot
+          });
           const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
           
           if (!zoneInfo.dropped && module.zone === 'dropped') {
@@ -79,16 +90,30 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
                       (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
           
-          // 영역에 맞는 새로운 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
-          const newModuleId = module.moduleId;
+          // 영역에 맞는 새로운 moduleId 생성
+          // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
+          const baseType = module.moduleId.replace(/-\d+$/, '');
+          const newModuleId = `${baseType}-${targetZone.columnWidth * (isDual ? 2 : 1)}`;
+          
+          console.log('🔄 Zone 가구 업데이트:', {
+            originalModuleId: module.moduleId,
+            baseType,
+            isDual,
+            zone: module.zone,
+            targetZone: targetZone,
+            slotIndex,
+            newX: newX * 0.01,
+            newModuleId
+          });
           
           updatedModules.push({
             ...module,
             moduleId: newModuleId,
             position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
             isValidInCurrentSpace: true,
-            adjustedWidth: targetZone.columnWidth,
-            customWidth: targetZone.columnWidth
+            adjustedWidth: targetZone.columnWidth * (isDual ? 2 : 1),
+            customWidth: targetZone.columnWidth * (isDual ? 2 : 1),
+            isDualSlot: isDual
           });
           return;
         }

@@ -48,13 +48,16 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     const indexing = calculateSpaceIndexing(spaceInfo);
     const columnWidth = indexing.columnWidth;
-    const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+    // 이동하는 가구의 isDualSlot 속성을 우선 사용
+    const isDualFurniture = movingModule.isDualSlot !== undefined ? movingModule.isDualSlot :
+                           Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
 
     // 이동하는 가구가 차지할 슬롯들 계산
     let occupiedSlots: number[] = [];
     if (isDualFurniture) {
       // 듀얼 가구는 2개 슬롯 차지
       occupiedSlots = [newSlotIndex, newSlotIndex + 1];
+      console.log('🔄 듀얼 가구 이동 - 2개 슬롯 차지:', occupiedSlots);
     } else {
       // 싱글 가구는 1개 슬롯 차지
       occupiedSlots = [newSlotIndex];
@@ -80,7 +83,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleInfo) return;
 
-      const isModuleDual = Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
+      // 기존 가구의 isDualSlot 속성을 우선 사용
+      const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot :
+                          Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
       
       // 기존 가구가 차지하는 슬롯들
       let moduleSlots: number[] = [];
@@ -93,6 +98,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
+        console.log('💥 충돌 감지:', {
+          이동하는가구: {
+            id: movingModuleId,
+            isDual: isDualFurniture,
+            targetSlots: occupiedSlots
+          },
+          기존가구: {
+            id: module.id,
+            isDual: isModuleDual,
+            occupiedSlots: moduleSlots
+          }
+        });
         collidingModules.push(module.id);
       }
     });
@@ -185,12 +202,32 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         
         // 레이캐스트로 받은 slotIndex는 이미 영역별 로컬 인덱스
         // targetZone에 맞는 영역인지만 확인
-        if (currentModule.zone === 'normal' && slotIndex >= zoneInfo.normal.columnCount) {
-          console.log('❌ 메인구간 가구: 유효하지 않은 슬롯 인덱스');
-          return;
-        } else if (currentModule.zone === 'dropped' && zoneInfo.dropped && slotIndex >= zoneInfo.dropped.columnCount) {
-          console.log('❌ 단내림구간 가구: 유효하지 않은 슬롯 인덱스');
-          return;
+        
+        // 듀얼 가구인지 먼저 확인
+        const checkIsDual = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot : false;
+        
+        if (currentModule.zone === 'normal') {
+          const maxSlotForDual = checkIsDual ? zoneInfo.normal.columnCount - 1 : zoneInfo.normal.columnCount;
+          if (slotIndex >= maxSlotForDual) {
+            console.log('❌ 메인구간 가구: 유효하지 않은 슬롯 인덱스', {
+              isDual: checkIsDual,
+              slotIndex,
+              maxSlotForDual,
+              columnCount: zoneInfo.normal.columnCount
+            });
+            return;
+          }
+        } else if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
+          const maxSlotForDual = checkIsDual ? zoneInfo.dropped.columnCount - 1 : zoneInfo.dropped.columnCount;
+          if (slotIndex >= maxSlotForDual) {
+            console.log('❌ 단내림구간 가구: 유효하지 않은 슬롯 인덱스', {
+              isDual: checkIsDual,
+              slotIndex,
+              maxSlotForDual,
+              columnCount: zoneInfo.dropped.columnCount
+            });
+            return;
+          }
         }
         
         console.log('✅ 영역별 가구 이동 검증 통과:', {
@@ -224,6 +261,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         
         const zoneSpaceInfo = {
           ...spaceInfo,
+          width: zoneOuterWidth,  // 영역별 외경 너비 설정
           zone: currentModule.zone  // zone 정보 추가
         };
         const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
@@ -239,7 +277,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           threeUnitDualPositions: {},
           threeUnitBoundaries: []
         };
-        isDualFurniture = Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
+        // isDualSlot 속성을 우선 사용
+        isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
+                         Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
       } else {
         // 단내림이 없는 경우 기존 로직
         moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
@@ -247,7 +287,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         
         indexing = calculateSpaceIndexing(spaceInfo);
         const columnWidth = indexing.columnWidth;
-        isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+        // isDualSlot 속성을 우선 사용
+        isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
+                         Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
       }
 
       // 슬롯 가용성 검사 (자기 자신 제외)
@@ -487,6 +529,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         customDepth: newCustomDepth,
         adjustedWidth: newAdjustedWidth || currentModule.adjustedWidth,
         slotIndex: finalSlotIndex,
+        isDualSlot: isDualFurniture, // isDualSlot 속성 유지
         zone: currentModule.zone, // zone 정보 유지
         customWidth: (() => {
           // zone별로 다른 슬롯 너비 사용

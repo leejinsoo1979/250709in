@@ -62,6 +62,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let zoneSpaceInfo = spaceInfo;
   
   // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
+  // 높이는 항상 재계산해야 하므로 조건 제거
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;

@@ -27,7 +27,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   doorWidth,
   originalSlotWidth,
-  slotCenterX
+  slotCenterX,
+  slotWidths
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {

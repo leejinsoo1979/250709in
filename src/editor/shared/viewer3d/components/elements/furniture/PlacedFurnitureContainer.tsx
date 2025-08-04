@@ -28,6 +28,21 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const placedModules = propPlacedModules || storePlacedModules;
   const { activePopup } = useUIStore();
   
+  // activeZone 변경 감지
+  React.useEffect(() => {
+    console.log('🎯 PlacedFurnitureContainer - activeZone 변경:', {
+      activeZone,
+      placedModulesCount: placedModules.length,
+      placedModules: placedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        zone: m.zone,
+        customWidth: m.customWidth,
+        isDualSlot: m.isDualSlot
+      }))
+    });
+  }, [activeZone]);
+  
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;

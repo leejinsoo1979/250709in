@@ -1917,7 +1917,7 @@ const Configurator: React.FC = () => {
                         <button 
                           className={styles.numberInputButton}
                           onClick={() => {
-                            const current = spaceInfo.droppedCeilingDoorCount || 2;
+                            const current = spaceInfo.droppedCeilingDoorCount || 1;
                             const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             const frameThickness = 50;
                             const internalWidth = droppedWidth - frameThickness;
@@ -1932,13 +1932,7 @@ const Configurator: React.FC = () => {
                             }
                           }}
                           disabled={(() => {
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || (() => {
-                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                              const frameThickness = 50;
-                              const internalWidth = droppedWidth - frameThickness;
-                              const MAX_SLOT_WIDTH = 600;
-                              return Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
-                            })();
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || 1;
                             const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             const frameThickness = 50;
                             const internalWidth = droppedWidth - frameThickness;
@@ -1977,15 +1971,15 @@ const Configurator: React.FC = () => {
                               const MAX_SLOT_WIDTH = 600;
                               const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
                               
-                              // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 유효한 값이면 사용
-                              if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount && spaceInfo.droppedCeilingDoorCount >= calculatedMin) {
+                              // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 설정되어 있으면 사용
+                              if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount !== undefined) {
                                 return spaceInfo.droppedCeilingDoorCount;
                               }
-                              // 그렇지 않으면 계산된 기본값 사용
-                              return calculatedMin;
+                              // 그렇지 않으면 1개를 기본값으로 사용 (스타일러장/바지걸이장 배치를 위해)
+                              return 1;
                             })()}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 2;
+                              const value = parseInt(e.target.value) || 1;
                               console.log('🔍 단내림 구간 도어개수 변경:', {
                                 inputValue: e.target.value,
                                 parsedValue: value,
@@ -2007,7 +2001,7 @@ const Configurator: React.FC = () => {
                         <button 
                           className={styles.numberInputButton}
                           onClick={() => {
-                            const current = spaceInfo.droppedCeilingDoorCount || 2;
+                            const current = spaceInfo.droppedCeilingDoorCount || 1;
                             const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             const frameThickness = 50;
                             const internalWidth = droppedWidth - frameThickness;
@@ -2022,13 +2016,7 @@ const Configurator: React.FC = () => {
                             }
                           }}
                           disabled={(() => {
-                            const currentValue = spaceInfo.droppedCeilingDoorCount || (() => {
-                              const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                              const frameThickness = 50;
-                              const internalWidth = droppedWidth - frameThickness;
-                              const MAX_SLOT_WIDTH = 600;
-                              return Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
-                            })();
+                            const currentValue = spaceInfo.droppedCeilingDoorCount || 1;
                             const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             const frameThickness = 50;
                             const internalWidth = droppedWidth - frameThickness;
@@ -2043,16 +2031,11 @@ const Configurator: React.FC = () => {
                     <DoorSlider
                       value={(() => {
                         // 단내림이 활성화되어 있고 droppedCeilingDoorCount가 설정되어 있으면 사용
-                        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount) {
+                        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeilingDoorCount !== undefined) {
                           return spaceInfo.droppedCeilingDoorCount;
                         }
-                        // 그렇지 않으면 계산된 기본값 사용
-                        const droppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                        const frameThickness = 50;
-                        const internalWidth = droppedWidth - frameThickness;
-                        const MAX_SLOT_WIDTH = 600;
-                        const calculatedMin = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
-                        return calculatedMin;
+                        // 그렇지 않으면 1개를 기본값으로 사용 (스타일러장/바지걸이장 배치를 위해)
+                        return 1;
                       })()}
                       onChange={(value) => {
                         handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
