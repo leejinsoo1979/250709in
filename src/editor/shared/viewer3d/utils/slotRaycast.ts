@@ -203,16 +203,20 @@ export const calculateFurniturePosition = (
     }
     
     if (isDual && slotIndex < zoneIndexing.threeUnitPositions.length - 1) {
-      // 듀얼 가구: threeUnitDualPositions 사용
-      if (zoneIndexing.threeUnitDualPositions && 
-          zoneIndexing.threeUnitDualPositions[slotIndex] !== undefined) {
-        return zoneIndexing.threeUnitDualPositions[slotIndex];
-      } else {
-        // fallback: 두 슬롯의 중간점 계산
-        const leftSlotX = zoneIndexing.threeUnitPositions[slotIndex];
-        const rightSlotX = zoneIndexing.threeUnitPositions[slotIndex + 1];
-        return (leftSlotX + rightSlotX) / 2;
-      }
+      // 듀얼 가구: 두 슬롯의 중간점 계산
+      const leftSlotX = zoneIndexing.threeUnitPositions[slotIndex];
+      const rightSlotX = zoneIndexing.threeUnitPositions[slotIndex + 1];
+      const dualCenterX = (leftSlotX + rightSlotX) / 2;
+      
+      console.log('🎯 Dual furniture position (zone):', {
+        zone,
+        slotIndex,
+        leftSlotX,
+        rightSlotX,
+        dualCenterX
+      });
+      
+      return dualCenterX;
     } else {
       // 싱글 가구: 해당 슬롯 위치
       return zoneIndexing.threeUnitPositions[slotIndex];
@@ -221,14 +225,21 @@ export const calculateFurniturePosition = (
   
   // 단내림이 없는 경우 기존 로직 사용
   if (isDual) {
-    // 듀얼 가구: 듀얼 위치 배열 사용
-    if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
-      return indexing.threeUnitDualPositions[slotIndex];
-    } else if (slotIndex < indexing.threeUnitPositions.length - 1) {
-      // fallback: 두 슬롯의 중간점 계산
+    // 듀얼 가구: 두 슬롯의 중간점 계산
+    if (slotIndex < indexing.threeUnitPositions.length - 1) {
       const leftSlotX = indexing.threeUnitPositions[slotIndex];
       const rightSlotX = indexing.threeUnitPositions[slotIndex + 1];
-      return (leftSlotX + rightSlotX) / 2;
+      const dualCenterX = (leftSlotX + rightSlotX) / 2;
+      
+      console.log('🎯 Dual furniture position calculation:', {
+        slotIndex,
+        leftSlotX,
+        rightSlotX,
+        dualCenterX,
+        threeUnitDualPositions: indexing.threeUnitDualPositions
+      });
+      
+      return dualCenterX;
     } else {
       console.error('Dual position not available for slot:', slotIndex);
       return null;
