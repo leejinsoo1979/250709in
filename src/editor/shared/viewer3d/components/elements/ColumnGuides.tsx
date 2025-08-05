@@ -254,7 +254,10 @@ const ColumnGuides: React.FC = () => {
       'spaceInfo.mainDoorCount': spaceInfo.mainDoorCount,
       'spaceInfo.customColumnCount': spaceInfo.customColumnCount,
       'hasDroppedCeiling': hasDroppedCeiling,
-      'spaceInfo.surroundType': spaceInfo.surroundType
+      'spaceInfo.surroundType': spaceInfo.surroundType,
+      'spaceInfo.installType': spaceInfo.installType,
+      'spaceInfo.wallConfig': spaceInfo.wallConfig,
+      'slotWidths': slotWidths
     });
     
     const guides = [];
@@ -277,12 +280,23 @@ const ColumnGuides: React.FC = () => {
     
     // slotWidths가 있으면 사용, 없으면 균등 분할
     if (slotWidths && slotWidths.length === columnCount) {
+      console.log('📏 slotWidths 사용하여 경계 계산:', {
+        startX,
+        slotWidths,
+        totalWidth: slotWidths.reduce((a, b) => a + b, 0)
+      });
       for (let i = 0; i < columnCount; i++) {
         currentX += slotWidths[i];
         boundaries.push(mmToThreeUnits(currentX));
       }
     } else {
       // 기존 로직 유지 (호환성)
+      console.log('📏 균등 분할로 경계 계산:', {
+        startX,
+        width,
+        columnCount,
+        columnWidth
+      });
       for (let i = 1; i <= columnCount; i++) {
         if (i === columnCount) {
           boundaries.push(mmToThreeUnits(startX + width));
@@ -291,6 +305,22 @@ const ColumnGuides: React.FC = () => {
         }
       }
     }
+    
+    console.log('📏 최종 경계:', {
+      firstBoundary: boundaries[0],
+      lastBoundary: boundaries[boundaries.length - 1],
+      totalBoundaries: boundaries.length,
+      expectedEndX: mmToThreeUnits(startX + width),
+      actualEndX: boundaries[boundaries.length - 1],
+      '엔드패널 체크': {
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig,
+        '우측 엔드패널 있음': spaceInfo.surroundType === 'no-surround' && 
+          (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && 
+          !spaceInfo.wallConfig?.right
+      }
+    });
     
     // 슬롯 중심 위치 계산
     const positions = [];

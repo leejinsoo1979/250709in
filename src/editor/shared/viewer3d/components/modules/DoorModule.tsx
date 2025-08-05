@@ -361,8 +361,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
   
-  // 도어 크기 계산
-  let actualDoorWidth = originalSlotWidth || indexing.columnWidth;
+  // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
+  let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
+  
+  console.log('🚪📏 도어 너비 계산:', {
+    originalSlotWidth,
+    moduleWidth,
+    indexingColumnWidth: indexing.columnWidth,
+    actualDoorWidth,
+    설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : '일반 도어'
+  });
   
   // 노서라운드 모드에서 좌우 끝 도어는 600mm 기준으로 계산
   if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {

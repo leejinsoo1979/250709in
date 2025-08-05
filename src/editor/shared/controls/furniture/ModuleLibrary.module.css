@@ -123,6 +123,18 @@
   box-shadow: 0 2px 4px rgba(26, 188, 156, 0.1);
 }
 
+.moduleItem:focus {
+  outline: none !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: none !important;
+}
+
+.moduleItem:focus-visible {
+  outline: none !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: none !important;
+}
+
 .moduleItem:active {
   cursor: grabbing;
 }

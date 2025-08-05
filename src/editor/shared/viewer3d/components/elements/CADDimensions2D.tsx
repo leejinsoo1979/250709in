@@ -678,8 +678,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ? module.isDualSlot 
           : moduleData.id.includes('dual-');
         
-        // 초기값 설정 (나중에 기둥 침범 체크에서 재계산됨)
-        if (module.customWidth !== undefined && module.customWidth !== null) {
+        // 초기값 설정 - adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
+        if (module.adjustedWidth !== undefined && module.adjustedWidth !== null) {
+          furnitureWidthMm = module.adjustedWidth;
+        } else if (module.customWidth !== undefined && module.customWidth !== null) {
           // customWidth가 명시적으로 설정되어 있으면 사용
           furnitureWidthMm = module.customWidth;
         }
@@ -785,7 +787,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {furnitureWidthMm}mm
+                {Math.round(furnitureWidthMm)}mm
               </div>
             </Html>
             

@@ -253,14 +253,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
   
-  // customWidth가 명시적으로 설정되어 있으면 최우선 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
-  if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+  // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
+  if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+    furnitureWidthMm = placedModule.adjustedWidth;
+    console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm, '(기둥 A 침범 케이스)');
+  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+    // customWidth가 명시적으로 설정되어 있으면 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
     furnitureWidthMm = placedModule.customWidth;
     console.log('📐 customWidth 사용:', furnitureWidthMm);
-  } else if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
-    // adjustedWidth가 있으면 사용 (기둥 침범 케이스)
-    furnitureWidthMm = placedModule.adjustedWidth;
-    console.log('📐 adjustedWidth 사용:', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
@@ -535,17 +535,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       moduleIdFromPlaced: placedModule.moduleId
     });
     
-    // 도어 너비가 가구 너비와 크게 차이나는 경우 보정
-    // 단내림 추가 후 슬롯 너비가 변경되었을 때 발생하는 문제 해결
+    // 도어 너비가 가구 너비와 크게 차이나는 경우 - 기둥 침범 시에는 보정하지 않음
+    // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
     const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
-    if (widthDifference > 20 && !isEditMode && !isDraggingThis) {
-      console.warn('⚠️ 도어와 가구 너비 불일치 감지:', {
+    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn)) {
+      console.warn('⚠️ 도어와 가구 너비 불일치 감지 (기둥 없는 경우):', {
         originalSlotWidthMm,
         furnitureWidthMm,
         difference: widthDifference,
         '보정여부': '가구 너비로 도어 너비 보정'
       });
-      // 가구 너비를 기준으로 도어 너비 보정
+      // 기둥이 없는 경우에만 가구 너비를 기준으로 도어 너비 보정
       originalSlotWidthMm = furnitureWidthMm;
     }
   }
@@ -1030,7 +1030,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               internalHeight={furnitureHeightMm}
               viewMode={viewMode}
               renderMode={renderMode}
-              hasDoor={!isFurnitureDragging && slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false)} // 기둥 침범 시 도어는 별도 렌더링 (드래그 중이 아닐 때만)
+              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) 
+                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 도어는 별도 렌더링
+                : (placedModule.hasDoor ?? false)}
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={zoneSpaceInfo}
@@ -1039,6 +1041,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={0} // 도어는 항상 중앙에 위치
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
+              slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
               slotWidths={(() => {
                 // 듀얼 가구인 경우 개별 슬롯 너비 전달
                 if (isDualFurniture) {
@@ -1222,18 +1225,49 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
       </group>
 
-      {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) - 드래그 중이 아닐 때만 */}
-      {(placedModule.hasDoor ?? false) && !isFurnitureDragging && slotInfo && slotInfo.hasColumn && moduleData.type === 'box' && spaceInfo && (
+      {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
+      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 커버도어 렌더링 */}
+      {(placedModule.hasDoor ?? false) && 
+       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
+        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null)) && 
+       spaceInfo && (() => {
+        console.log('🚪🚨 커버도어 렌더링 조건 체크:', {
+          hasDoor: placedModule.hasDoor,
+          isFurnitureDragging,
+          isDraggingThis,
+          isEditMode,
+          hasColumn: slotInfo?.hasColumn,
+          columnType: slotInfo?.columnType,
+          isDeepColumn: slotInfo?.columnType === 'deep',
+          hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
+          adjustedWidth: placedModule.adjustedWidth,
+          originalSlotWidthMm,
+          furnitureWidthMm,
+          원래슬롯중심: originalSlotCenterX,
+          가구조정위치: adjustedPosition?.x,
+          차이: originalSlotWidthMm - furnitureWidthMm,
+          BoxModule도어: slotInfo && slotInfo.hasColumn ? false : (placedModule.hasDoor ?? false),
+          커버도어렌더링: true
+        });
+        return true;
+      })() && (
         <group
           position={[
             originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
             furnitureStartY + height / 2, // 가구와 동일한 Y 위치
-            furnitureZ // 가구와 동일한 Z 위치
+            furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
+          {console.log('🚪🚪 커버도어 렌더링 중:', {
+            위치: [originalSlotCenterX, furnitureStartY + height / 2, furnitureZ],
+            너비: originalSlotWidthMm,
+            깊이: actualDepthMm,
+            가구너비: furnitureWidthMm,
+            차이: originalSlotWidthMm - furnitureWidthMm
+          })}
           <DoorModule
-            moduleWidth={originalSlotWidthMm} // 원래 슬롯 크기 사용
+            moduleWidth={originalSlotWidthMm} // 원래 슬롯 크기 사용 (커버도어)
             moduleDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={zoneSpaceInfo}
@@ -1243,6 +1277,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             slotCenterX={0} // 이미 절대 좌표로 배치했으므로 0
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
+            isDragging={isDraggingThis}
+            isEditMode={isEditMode}
             slotWidths={(() => {
               // 듀얼 가구인 경우 개별 슬롯 너비 전달
               if (isDualFurniture) {

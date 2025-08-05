@@ -23,7 +23,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   doorWidth,
   adjustedWidth,
   originalSlotWidth,
-  slotIndex
+  slotIndex,
+  slotInfo
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -73,8 +74,9 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
         />
       )}
       
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
-      {hasDoor && spaceInfo && (
+      {/* 도어는 항상 렌더링 (가구 식별에 중요) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
+      {hasDoor && spaceInfo && 
+       !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}

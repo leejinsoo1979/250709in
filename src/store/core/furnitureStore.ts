@@ -19,9 +19,6 @@ interface FurnitureDataState {
   // 드래그 상태 (FurnitureDragProvider에서 이전)
   currentDragData: CurrentDragData | null;
   
-  // 클릭-앤-플레이스 상태
-  selectedModuleForPlacement: CurrentDragData | null;
-  
   // 가구 데이터 액션들
   addModule: (module: PlacedModule) => void;
   removeModule: (id: string) => void;
@@ -48,10 +45,6 @@ interface FurnitureDataState {
   // 드래그 상태 액션들 (FurnitureDragProvider와 동일한 인터페이스)
   setCurrentDragData: (data: CurrentDragData | null) => void;
   clearDragData: () => void;
-  
-  // 클릭-앤-플레이스 액션들
-  setSelectedModuleForPlacement: (data: CurrentDragData | null) => void;
-  clearSelectedModuleForPlacement: () => void;
 }
 
 // 가구 데이터 Store 생성
@@ -71,9 +64,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 드래그 상태 초기값 (FurnitureDragProvider와 동일)
   currentDragData: null,
-  
-  // 클릭-앤-플레이스 초기값
-  selectedModuleForPlacement: null,
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
@@ -217,15 +207,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         placedModules: updatedModules
       };
     });
-  },
-  
-  // 클릭-앤-플레이스 액션들
-  setSelectedModuleForPlacement: (data: CurrentDragData | null) => {
-    set({ selectedModuleForPlacement: data });
-  },
-  
-  clearSelectedModuleForPlacement: () => {
-    set({ selectedModuleForPlacement: null });
   }
 }));
 

@@ -71,6 +71,11 @@ const calculateNoSurroundOffset = (spaceInfo: SpaceInfo, side: 'left' | 'right')
 const calculateMaxNoSurroundOffset = (spaceInfo: SpaceInfo): number => {
   if (spaceInfo.surroundType !== 'no-surround') return 20; // 서라운드 기본값
   
+  // 빌트인(양쪽벽)의 경우 서라운드와 동일하게 20 반환
+  if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+    return 20;
+  }
+  
   const leftOffset = calculateNoSurroundOffset(spaceInfo, 'left');
   const rightOffset = calculateNoSurroundOffset(spaceInfo, 'right');
   
@@ -1663,7 +1668,8 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       droppedX,
                       panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -1678,7 +1684,8 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       normalX,
                       topElementsY,
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -1777,8 +1784,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     segment.x, // 분절된 위치
                     topElementsY, 
-                    // 바닥 프레임 앞면과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
-                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
