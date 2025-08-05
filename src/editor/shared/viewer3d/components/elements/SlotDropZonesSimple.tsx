@@ -276,7 +276,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           columnCount: zoneInfo.dropped.columnCount,
           columnWidth: zoneInfo.dropped.columnWidth,
           threeUnitPositions: [],
-          threeUnitDualPositions: {},
+          threeUnitDualPositions: [],
           threeUnitBoundaries: [],
           slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth)
         };
@@ -297,7 +297,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           columnCount: zoneInfo.normal.columnCount,
           columnWidth: zoneInfo.normal.columnWidth,
           threeUnitPositions: [],
-          threeUnitDualPositions: {},
+          threeUnitDualPositions: [],
           threeUnitBoundaries: [],
           slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth)
         };

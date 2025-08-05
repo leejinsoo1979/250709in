@@ -186,7 +186,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       columnCount: targetZone.columnCount,
       columnWidth: targetZone.columnWidth,
       threeUnitPositions: [],
-      threeUnitDualPositions: {},
+      threeUnitDualPositions: [],
       threeUnitBoundaries: []
     };
   } else {

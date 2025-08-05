@@ -308,9 +308,11 @@ export class ColumnIndexer {
     const dualColumnPositions = [];
     const threeUnitDualPositions = [];
     
-    // 인접한 두 컬럼의 경계 위치를 사용 (컬럼 경계가 듀얼 가구의 중심)
-    for (let i = 1; i < columnCount; i++) {
-      const dualCenterPosition = columnBoundaries[i]; // 컬럼 경계가 듀얼 가구의 중심
+    // 인접한 두 슬롯의 중심점들 사이의 중점을 계산
+    for (let i = 0; i < columnCount - 1; i++) {
+      const leftSlotCenter = columnPositions[i];
+      const rightSlotCenter = columnPositions[i + 1];
+      const dualCenterPosition = (leftSlotCenter + rightSlotCenter) / 2;
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
     }
