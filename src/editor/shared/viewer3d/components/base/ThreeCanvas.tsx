@@ -231,40 +231,41 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         cameraConfig: camera
       });
       
-      // OrbitControls 리셋
-      controls.reset();
+      // 카메라 위치를 정확히 설정
+      const targetPosition = cameraPosition || camera.position;
+      const targetTarget = cameraTarget || camera.target;
+      const targetUp = cameraUp || camera.up || [0, 1, 0];
       
-      // 전달받은 카메라 위치로 재설정
-      if (cameraPosition) {
-        controls.object.position.set(...cameraPosition);
-      } else {
-        controls.object.position.set(...camera.position);
-      }
+      // 카메라 위치 설정
+      controls.object.position.set(...targetPosition);
+      controls.target.set(...targetTarget);
+      controls.object.up.set(...targetUp);
       
-      if (cameraTarget) {
-        controls.target.set(...cameraTarget);
-      } else {
-        controls.target.set(...camera.target);
-      }
-      
-      // 카메라 up 벡터도 리셋
-      if (cameraUp) {
-        controls.object.up.set(...cameraUp);
-      } else if (camera.up) {
-        controls.object.up.set(...camera.up);
-      } else {
-        controls.object.up.set(0, 1, 0);
-      }
-      
+      // 2D 모드일 경우 줌 설정
       if (camera.is2DMode && camera.zoom) {
         controls.object.zoom = camera.zoom;
         controls.object.updateProjectionMatrix();
       }
       
-      // 카메라가 타겟을 바라보도록 설정
+      // 카메라가 타겟을 정확히 바라보도록 설정
       controls.object.lookAt(controls.target);
       
-      // 컨트롤 업데이트
+      // OrbitControls 상태 동기화
+      controls.update();
+      
+      // OrbitControls의 내부 상태도 리셋
+      controls.saveState();
+      
+      // 회전 각도를 정확히 0으로 설정 (정면뷰)
+      if (viewMode === '3D') {
+        // 구면 좌표계에서 azimuth(수평 회전)과 polar(수직 회전) 각도를 리셋
+        const spherical = controls.getSpherical();
+        spherical.theta = 0; // 수평 회전각 0 (정면)
+        spherical.phi = Math.PI / 2; // 수직 회전각 90도 (수평선)
+        controls.setSpherical(spherical);
+      }
+      
+      // 다시 한번 업데이트하여 변경사항 적용
       controls.update();
       
       console.log('🎯 카메라 위치 리셋 완료', {
@@ -274,7 +275,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         zoom: controls.object.zoom
       });
     }
-  }, [camera, cameraPosition, cameraTarget, cameraUp]);
+  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {

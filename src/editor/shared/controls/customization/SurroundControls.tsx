@@ -25,7 +25,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
   const hasRightWall = spaceInfo.wallConfig.right;
-  const END_PANEL_WIDTH = 20; // 고정 20mm
+  const END_PANEL_WIDTH = 18; // 고정 18mm
 
   const [frameSize, setFrameSize] = useState<FrameSize>(() => {
     if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 50 };
@@ -36,7 +36,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     };
   });
 
-  const [gapSize, setGapSize] = useState<2 | 3>((spaceInfo.gapConfig?.left as 2 | 3) || 2);
 
   // 계산 로직을 커스텀 훅으로 분리
   const { noSurroundFrameWidth, surroundFrameWidth, columnInfo } = useSurroundCalculations(
@@ -119,14 +118,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         };
       }
       
-      updates.gapConfig = undefined;
+      // 서라운드 모드에서도 gapConfig 기본값 유지
+      updates.gapConfig = {
+        left: 2,
+        right: 2
+      };
     } else {
       // 노서라운드(타이트) 설정
       const gapSizeValue = 2; // 기본 이격거리
       
-      // 노서라운드에서는 프레임 크기를 undefined로 설정하여 
-      // geometry.ts에서 자동 계산하도록 함
-      updates.frameSize = undefined;
+      // 노서라운드에서는 프레임 크기를 기본값으로 설정
+      // (Firebase는 undefined를 허용하지 않음)
+      updates.frameSize = { left: 0, right: 0, top: 0 };
       
       updates.gapConfig = {
         left: hasLeftWall ? gapSizeValue : 0,
@@ -267,16 +270,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     }
   };
 
-  // 이격 크기 변경 핸들러
-  const handleGapSizeChange = (size: 2 | 3) => {
-    setGapSize(size);
-    onUpdate({
-      gapConfig: {
-        left: size,
-        right: size,
-      },
-    });
-  };
 
   return (
     <div className={styles.container}>
@@ -290,8 +283,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       {/* 노서라운드 선택 시 이격거리 설정 (벽이 있는 경우에만) */}
       {isNoSurround && (hasLeftWall || hasRightWall) && (
         <GapControls
-          gapSize={gapSize}
-          onGapSizeChange={handleGapSizeChange}
+          spaceInfo={spaceInfo}
+          onUpdate={onUpdate}
         />
       )}
 
@@ -303,7 +296,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         isSurround={isSurround}
         surroundFrameWidth={surroundFrameWidth}
         noSurroundFrameWidth={noSurroundFrameWidth}
-        gapSize={gapSize}
+        gapSize={2}
         spaceWidth={spaceInfo.width}
         columnInfo={columnInfo}
         onFrameSizeChange={handleFrameSizeChange}

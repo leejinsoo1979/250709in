@@ -13,7 +13,8 @@ export const getSlotIndexFromMousePosition = (
   canvasElement: HTMLCanvasElement,
   camera: THREE.Camera,
   scene: THREE.Scene,
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  activeZone?: 'normal' | 'dropped'
 ): number | null => {
   try {
     // 캔버스 경계 정보
@@ -28,12 +29,10 @@ export const getSlotIndexFromMousePosition = (
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
     
-    // 씬에서 슬롯 콜라이더들 찾기
+    // 씬에서 슬롯 콜라이더들 찾기 - activeZone이 있으면 해당 zone의 콜라이더만 선택
     const slotColliders: THREE.Object3D[] = [];
     let totalSceneObjects = 0;
     let objectsWithUserData = 0;
-    let droppedZoneColliders = 0;
-    let normalZoneColliders = 0;
     
     scene.traverse((child) => {
       totalSceneObjects++;
@@ -44,20 +43,16 @@ export const getSlotIndexFromMousePosition = (
           console.log('🔍 Found slot collider candidate:', {
             userData: child.userData,
             type: child.type,
-            visible: child.visible,
-            position: child.position
+            visible: child.visible
           });
-          
-          // 영역별 콜라이더 카운트
-          if (child.userData.zone === 'dropped') {
-            droppedZoneColliders++;
-          } else if (child.userData.zone === 'normal') {
-            normalZoneColliders++;
-          }
         }
       }
       
       if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
+        // activeZone이 지정된 경우 해당 zone의 콜라이더만 선택
+        if (activeZone && child.userData?.zone !== activeZone) {
+          return;
+        }
         slotColliders.push(child);
       }
     });
@@ -66,36 +61,11 @@ export const getSlotIndexFromMousePosition = (
       totalSceneObjects,
       objectsWithUserData,
       slotCollidersFound: slotColliders.length,
-      droppedZoneColliders,
-      normalZoneColliders,
-      slotColliderDetails: slotColliders.map(c => ({
-        slotIndex: c.userData?.slotIndex,
-        zone: c.userData?.zone,
-        isSlotCollider: c.userData?.isSlotCollider,
-        type: c.userData?.type,
-        position: c.position
-      })),
-      spaceInfo: {
-        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-        droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
-        droppedCeilingPosition: spaceInfo.droppedCeiling?.position
-      }
+      activeZone
     });
     
     // 슬롯 콜라이더들과 교차점 검사
-    const intersects = raycaster.intersectObjects(slotColliders, true); // recursive를 true로 설정
-    
-    console.log('🎯 Raycast intersections:', {
-      intersectCount: intersects.length,
-      slotCollidersChecked: slotColliders.length,
-      intersections: intersects.map(i => ({
-        slotIndex: i.object.userData?.slotIndex,
-        zone: i.object.userData?.zone,
-        distance: i.distance,
-        point: i.point,
-        objectType: i.object.type
-      }))
-    });
+    const intersects = raycaster.intersectObjects(slotColliders);
     
     if (intersects.length > 0) {
       // 가장 가까운 교차점의 슬롯 인덱스 반환
@@ -109,9 +79,7 @@ export const getSlotIndexFromMousePosition = (
         console.log('🎯 Raycast found slot:', {
           slotIndex,
           zone: intersectedObject.userData?.zone,
-          allUserData: intersectedObject.userData,
-          objectName: intersectedObject.name,
-          objectType: intersectedObject.type
+          activeZone
         });
         return slotIndex;
       }
@@ -183,40 +151,21 @@ export const calculateFurniturePosition = (
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
   // 단내림이 활성화되고 영역이 지정된 경우
-  if (spaceInfo.droppedCeiling?.enabled && zone) {
-    // zones가 없으면 null 반환
-    if (!indexing.zones) {
-      console.error('❌ calculateFurniturePosition: indexing.zones is null for dropped ceiling');
-      return null;
-    }
-    
+  if (spaceInfo.droppedCeiling?.enabled && zone && indexing.zones) {
     const zoneIndexing = zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
-    if (!zoneIndexing || !zoneIndexing.threeUnitPositions) {
-      console.error('❌ calculateFurniturePosition: zoneIndexing is null or missing positions', {
-        zone,
-        zoneIndexing,
-        hasZones: !!indexing.zones,
-        hasNormal: !!indexing.zones?.normal,
-        hasDropped: !!indexing.zones?.dropped
-      });
-      return null;
-    }
+    if (!zoneIndexing || !zoneIndexing.threeUnitPositions) return null;
     
     if (isDual && slotIndex < zoneIndexing.threeUnitPositions.length - 1) {
-      // 듀얼 가구: 두 슬롯의 중간점 계산
-      const leftSlotX = zoneIndexing.threeUnitPositions[slotIndex];
-      const rightSlotX = zoneIndexing.threeUnitPositions[slotIndex + 1];
-      const dualCenterX = (leftSlotX + rightSlotX) / 2;
-      
-      console.log('🎯 Dual furniture position (zone):', {
-        zone,
-        slotIndex,
-        leftSlotX,
-        rightSlotX,
-        dualCenterX
-      });
-      
-      return dualCenterX;
+      // 듀얼 가구: threeUnitDualPositions 사용
+      if (zoneIndexing.threeUnitDualPositions && 
+          zoneIndexing.threeUnitDualPositions[slotIndex] !== undefined) {
+        return zoneIndexing.threeUnitDualPositions[slotIndex];
+      } else {
+        // fallback: 두 슬롯의 중간점 계산
+        const leftSlotX = zoneIndexing.threeUnitPositions[slotIndex];
+        const rightSlotX = zoneIndexing.threeUnitPositions[slotIndex + 1];
+        return (leftSlotX + rightSlotX) / 2;
+      }
     } else {
       // 싱글 가구: 해당 슬롯 위치
       return zoneIndexing.threeUnitPositions[slotIndex];
@@ -225,21 +174,14 @@ export const calculateFurniturePosition = (
   
   // 단내림이 없는 경우 기존 로직 사용
   if (isDual) {
-    // 듀얼 가구: 두 슬롯의 중간점 계산
-    if (slotIndex < indexing.threeUnitPositions.length - 1) {
+    // 듀얼 가구: 듀얼 위치 배열 사용
+    if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
+      return indexing.threeUnitDualPositions[slotIndex];
+    } else if (slotIndex < indexing.threeUnitPositions.length - 1) {
+      // fallback: 두 슬롯의 중간점 계산
       const leftSlotX = indexing.threeUnitPositions[slotIndex];
       const rightSlotX = indexing.threeUnitPositions[slotIndex + 1];
-      const dualCenterX = (leftSlotX + rightSlotX) / 2;
-      
-      console.log('🎯 Dual furniture position calculation:', {
-        slotIndex,
-        leftSlotX,
-        rightSlotX,
-        dualCenterX,
-        threeUnitDualPositions: indexing.threeUnitDualPositions
-      });
-      
-      return dualCenterX;
+      return (leftSlotX + rightSlotX) / 2;
     } else {
       console.error('Dual position not available for slot:', slotIndex);
       return null;

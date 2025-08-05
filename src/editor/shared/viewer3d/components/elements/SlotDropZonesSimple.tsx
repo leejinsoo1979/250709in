@@ -760,8 +760,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zoneSlotIndex,
           isDual,
           droppedPositions,
+          dualPositions: fullIndexing.zones.dropped.threeUnitDualPositions,
+          selectedDualPosition: isDual ? fullIndexing.zones.dropped.threeUnitDualPositions?.[zoneSlotIndex] : null,
           finalX,
-          gapConfig: spaceInfo.gapConfig
+          gapConfig: spaceInfo.gapConfig,
+          zoneInfo: {
+            columnCount: fullIndexing.zones.dropped.columnCount,
+            startX: fullIndexing.zones.dropped.internalStartX
+          }
         });
       } else if (fullIndexing.zones?.normal) {
         // 메인 영역: 계산된 위치 사용
@@ -787,8 +793,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zoneSlotIndex,
           isDual,
           normalPositions,
+          dualPositions: fullIndexing.zones.normal.threeUnitDualPositions,
+          selectedDualPosition: isDual ? fullIndexing.zones.normal.threeUnitDualPositions?.[zoneSlotIndex] : null,
           finalX,
-          gapConfig: spaceInfo.gapConfig
+          gapConfig: spaceInfo.gapConfig,
+          zoneInfo: {
+            columnCount: fullIndexing.zones.normal.columnCount,
+            startX: fullIndexing.zones.normal.internalStartX
+          }
         });
       } else {
         // fallback: zones가 없는 경우 전체 indexing 사용
@@ -857,53 +869,158 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let customWidth;
       let adjustedWidth;
       let furnitureX = finalX;
+      let effectiveColumnType: string | undefined;
       
-      // 기둥이 있는 슬롯인지 확인
-      if (slotInfo && slotInfo.hasColumn) {
-        console.log('🏛️ 기둥 침범 슬롯 감지:', {
-          slotIndex,
-          hasColumn: true,
-          availableWidth: slotInfo.availableWidth,
-          adjustedWidth: slotInfo.adjustedWidth,
-          intrusionDirection: slotInfo.intrusionDirection,
-          furniturePosition: slotInfo.furniturePosition
+      // 듀얼 가구의 경우 두 슬롯 모두 확인
+      let hasColumnInAnySlot = false;
+      let columnType: string | undefined;
+      let totalAvailableWidth = 0;
+      
+      if (isDual) {
+        // 듀얼 가구가 차지하는 두 슬롯 확인
+        const slot1Info = columnSlots[globalSlotIndex];
+        const slot2Info = columnSlots[globalSlotIndex + 1];
+        
+        console.log('🏛️ 듀얼 가구 슬롯 기둥 확인:', {
+          slot1: {
+            index: globalSlotIndex,
+            hasColumn: slot1Info?.hasColumn || false,
+            columnType: slot1Info?.columnType,
+            availableWidth: slot1Info?.availableWidth || targetZoneInfo.columnWidth
+          },
+          slot2: {
+            index: globalSlotIndex + 1,
+            hasColumn: slot2Info?.hasColumn || false,
+            columnType: slot2Info?.columnType,
+            availableWidth: slot2Info?.availableWidth || targetZoneInfo.columnWidth
+          }
         });
         
-        // 기둥 침범 시 배치 가능 여부 확인
-        const canPlace = canPlaceFurnitureInColumnSlot(slotInfo, moduleData.dimensions.width, isDual);
-        
-        if (!canPlace) {
-          console.log('🚫 기둥 침범으로 인해 배치 불가:', {
-            이유: isDual ? '듀얼 가구는 기둥 침범 슬롯에 배치 불가' : '공간 부족'
+        // 두 슬롯 중 하나라도 기둥이 있으면 처리
+        if (slot1Info?.hasColumn || slot2Info?.hasColumn) {
+          hasColumnInAnySlot = true;
+          
+          // 두 슬롯의 사용 가능한 너비 합계 계산
+          const slot1Width = slot1Info?.hasColumn ? slot1Info.availableWidth : targetZoneInfo.columnWidth;
+          const slot2Width = slot2Info?.hasColumn ? slot2Info.availableWidth : targetZoneInfo.columnWidth;
+          totalAvailableWidth = slot1Width + slot2Width;
+          
+          // 기둥 타입 결정 (둘 중 하나라도 medium이 아니면 즉시 조정)
+          if (slot1Info?.hasColumn && slot1Info.columnType !== 'medium') {
+            columnType = slot1Info.columnType;
+          } else if (slot2Info?.hasColumn && slot2Info.columnType !== 'medium') {
+            columnType = slot2Info.columnType;
+          } else {
+            columnType = 'medium'; // 둘 다 medium이거나 기둥이 없는 경우
+          }
+          
+          console.log('🏛️ 듀얼 가구 기둥 처리:', {
+            totalAvailableWidth,
+            originalWidth: moduleData.dimensions.width,
+            columnType,
+            willAdjust: columnType !== 'medium'
           });
-          showAlert?.({
-            type: 'error',
-            message: isDual ? '기둥이 있는 슬롯에는 듀얼 가구를 배치할 수 없습니다.' : '기둥 침범으로 인해 공간이 부족합니다.',
-            duration: 3000
+        }
+      }
+      
+      // 기둥이 있는 슬롯인지 확인 (싱글 가구 또는 듀얼 가구 처리)
+      if ((slotInfo && slotInfo.hasColumn) || hasColumnInAnySlot) {
+        if (!isDual) {
+          // 싱글 가구 처리 (기존 로직)
+          console.log('🏛️ 싱글 가구 - 기둥 침범 슬롯 감지:', {
+            slotIndex,
+            hasColumn: true,
+            availableWidth: slotInfo.availableWidth,
+            adjustedWidth: slotInfo.adjustedWidth,
+            intrusionDirection: slotInfo.intrusionDirection,
+            furniturePosition: slotInfo.furniturePosition,
+            columnType: slotInfo.columnType
           });
-          return false;
+          
+          // 기둥 침범 시 배치 가능 여부 확인
+          const canPlace = canPlaceFurnitureInColumnSlot(slotInfo, moduleData.dimensions.width, isDual);
+          
+          if (!canPlace) {
+            console.log('🚫 기둥 침범으로 인해 배치 불가:', {
+              이유: '공간 부족'
+            });
+            showAlert?.({
+              type: 'error',
+              message: '기둥 침범으로 인해 공간이 부족합니다.',
+              duration: 3000
+            });
+            return false;
+          }
+        } else {
+          // 듀얼 가구 처리
+          // 최소 필요 너비 확인 (300mm 이상이어야 배치 가능)
+          if (totalAvailableWidth < 300) {
+            console.log('🚫 듀얼 가구 배치 불가:', {
+              이유: '기둥 침범으로 인한 공간 부족',
+              totalAvailableWidth,
+              최소필요너비: 300
+            });
+            showAlert?.({
+              type: 'error',
+              message: '기둥 침범으로 인해 듀얼 가구를 배치할 공간이 부족합니다.',
+              duration: 3000
+            });
+            return false;
+          }
         }
         
-        // calculateFurnitureBounds를 호출해서 정확한 너비와 위치 계산
-        const slotWidthM = targetZoneInfo.columnWidth * 0.01; // mm to meters
-        const originalSlotBounds = {
-          left: finalX - slotWidthM / 2,
-          right: finalX + slotWidthM / 2,
-          center: finalX
-        };
+        // 기둥 타입에 따라 다르게 처리
+        effectiveColumnType = isDual ? columnType : slotInfo.columnType;
         
-        const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
-        
-        // 기둥 침범에 따른 가구 너비와 위치 조정
-        customWidth = furnitureBounds.renderWidth;
-        adjustedWidth = furnitureBounds.renderWidth;
-        furnitureX = furnitureBounds.center; // 가구 위치를 남은 공간 중심으로 이동
-        
-        console.log('🔧 싱글 가구 폭 조정:', {
-          원래폭: actualSlotWidth,
-          조정된폭: customWidth,
-          위치조정: { 원래X: finalX, 조정된X: furnitureX }
-        });
+        if (effectiveColumnType === 'medium') {
+          // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
+          // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
+          customWidth = actualSlotWidth; // 슬롯 너비 사용
+          adjustedWidth = moduleData.dimensions.width; // 가구는 원본 크기 유지
+          
+          console.log('🔧 기둥 C 선배치 슬롯 - 원본 크기 유지:', {
+            원래폭: actualSlotWidth,
+            가구폭: moduleData.dimensions.width,
+            customWidth: customWidth,
+            위치: finalX,
+            message: '폭 조정은 FurnitureItem에서 실시간으로 처리됨'
+          });
+        } else {
+          // 기둥 A(깊은 기둥) 등 다른 기둥은 즉시 폭 조정
+          if (isDual) {
+            // 듀얼 가구의 경우 totalAvailableWidth 사용
+            customWidth = totalAvailableWidth;
+            adjustedWidth = totalAvailableWidth;
+            
+            console.log('🔧 듀얼 가구 - 기둥 A 침범으로 폭 즉시 조정:', {
+              원래폭: moduleData.dimensions.width,
+              조정된폭: customWidth,
+              columnType: effectiveColumnType
+            });
+          } else {
+            // 싱글 가구 처리 (기존 로직)
+            const slotWidthM = targetZoneInfo.columnWidth * 0.01; // mm to meters
+            const originalSlotBounds = {
+              left: finalX - slotWidthM / 2,
+              right: finalX + slotWidthM / 2,
+              center: finalX
+            };
+            
+            const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+            
+            // 기둥 침범에 따른 가구 너비와 위치 조정
+            customWidth = furnitureBounds.renderWidth;
+            adjustedWidth = furnitureBounds.renderWidth;
+            furnitureX = furnitureBounds.center; // 가구 위치를 남은 공간 중심으로 이동
+            
+            console.log('🔧 싱글 가구 - 기둥 A 침범으로 폭 즉시 조정:', {
+              원래폭: actualSlotWidth,
+              조정된폭: customWidth,
+              위치조정: { 원래X: finalX, 조정된X: furnitureX },
+              columnType: slotInfo.columnType
+            });
+          }
+        }
       } else {
         // 기둥이 없는 경우 기존 로직
         if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
@@ -961,6 +1078,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         calculateOptimalHingePosition(slotInfo) : 
         'right';
       
+      // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
+      let adjustedDepth = defaultDepth;
+      
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
@@ -968,11 +1088,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         position: { x: furnitureX, y: 0, z: 0 }, // 기둥 침범 시 조정된 위치 사용
         rotation: 0,
         hasDoor: false,
-        customDepth: defaultDepth,
+        customDepth: adjustedDepth, // 조정된 깊이 사용
         slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: slotInfo?.hasColumn ? adjustedWidth : undefined, // 기둥 침범 시에만 조정된 너비 사용
+        adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) && effectiveColumnType !== 'medium' ? adjustedWidth : undefined, // 기둥 C가 아닌 경우에만 조정된 너비 사용
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
         customWidth: customWidth, // 실제 슬롯 너비 사용
@@ -1007,7 +1127,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isDualSlot: isDual,
         isDualFromModuleId: zoneTargetModuleId.startsWith('dual-'),
         occupiedSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
-        position: { x: finalX },
+        position: { x: furnitureX },
         customWidth: customWidth,
         zoneInfo: zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal,
         newModule: {
@@ -1089,7 +1209,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
     
-    // 듀얼/싱글 가구 판별 - moduleId로 직접 확인
+    // 듀얼/싱글 가구 판별 - 원본 모듈 ID로 판단
     const isDual = dragData.moduleData.id.startsWith('dual-');
     
     // 메인 구간 슬롯 점유 상태 디버깅
@@ -1250,22 +1370,81 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       finalModuleId: isDual ? dualTargetModuleId : targetModuleId
     });
     
+    // 기둥 분석
+    const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+    const slotInfo = columnSlots[slotIndex];
+    
+    // 기둥이 있는 경우 가구 폭과 위치 조정
+    let adjustedCustomWidth = customWidth;
+    let adjustedPosition = finalX;
+    let adjustedWidthValue = moduleData.dimensions.width;
+    
+    if (slotInfo && slotInfo.hasColumn) {
+      console.log('🏛️ 간단한 배치 - 기둥 침범 슬롯 감지:', {
+        slotIndex,
+        hasColumn: true,
+        availableWidth: slotInfo.availableWidth,
+        adjustedWidth: slotInfo.adjustedWidth,
+        columnType: slotInfo.columnType
+      });
+      
+      if (slotInfo.columnType === 'medium') {
+        // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
+        // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
+        console.log('🔧 기둥 C 선배치 슬롯 - 원본 크기 유지');
+      } else {
+        // 기둥 A(깊은 기둥) 등 다른 기둥은 즉시 폭 조정
+        const slotWidthM = zoneTargetIndexing.columnWidth * 0.01;
+        const originalSlotBounds = {
+          left: finalX - slotWidthM / 2,
+          right: finalX + slotWidthM / 2,
+          center: finalX
+        };
+        
+        const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+        
+        adjustedCustomWidth = furnitureBounds.renderWidth;
+        adjustedWidthValue = furnitureBounds.renderWidth;
+        adjustedPosition = furnitureBounds.center;
+        
+        console.log('🔧 기둥 A 침범 - 가구 폭 즉시 조정:', {
+          원래폭: customWidth,
+          조정된폭: adjustedCustomWidth,
+          원래위치: finalX,
+          조정된위치: adjustedPosition
+        });
+      }
+    }
+    
     // 새 모듈 배치
-    const newModule = {
+    const newModule: any = {
       id: placedId,
       moduleId: isDual ? dualTargetModuleId : targetModuleId, // 듀얼의 경우 합계 너비 ID 사용
-      position: { x: finalX, y: 0, z: 0 },
+      position: { x: adjustedPosition, y: 0, z: 0 },
       rotation: 0,
       hasDoor: false,
       customDepth: defaultDepth,
       slotIndex: slotIndex,
       isDualSlot: isDual,
       isValidInCurrentSpace: true,
-      adjustedWidth: moduleData.dimensions.width,
+      adjustedWidth: slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined, // 기둥 C가 아닌 경우에만 조정된 너비 사용
       hingePosition: 'right' as 'left' | 'right',
-      customWidth: customWidth, // 실제 슬롯 너비 사용
+      customWidth: adjustedCustomWidth, // 실제 슬롯 너비 사용
       zone: zoneToUse // 단내림 영역 정보 저장
     };
+    
+    // 기둥 정보가 있으면 추가
+    if (slotInfo && slotInfo.hasColumn) {
+      newModule.columnSlotInfo = {
+        hasColumn: true,
+        columnId: slotInfo.column?.id,
+        columnPosition: slotInfo.columnPosition,
+        availableWidth: slotInfo.availableWidth,
+        adjustedWidth: slotInfo.adjustedWidth,
+        intrusionDirection: slotInfo.intrusionDirection,
+        furniturePosition: slotInfo.furniturePosition
+      };
+    }
     
     // 듀얼 가구 배치 시 슬롯 점유 상태 로그
     console.log('🎯 가구 배치 완료:', {
@@ -1276,7 +1455,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       slotIndex,
       occupiedSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
       zone: zoneToUse,
-      position: finalX,
+      position: adjustedPosition,
       width: moduleData.dimensions.width,
       customWidth
     });
@@ -2021,6 +2200,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
         const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
         const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+        const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
         
         // Room.tsx의 바닥 계산과 동일하게 수정
         const doorThicknessMm = 20;
@@ -2034,8 +2214,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         const roomBackZ = -mmToThreeUnits(internalSpace.depth / 2);
         const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
-        const slotFloorDepth = frameEndZ - roomBackZ; // 바닥 슬롯 메쉬 깊이
-        const slotFloorZ = (frameEndZ + roomBackZ) / 2; // 바닥 중심 Z 좌표
+        const slotFloorDepth = frameEndZ - roomBackZ - mmToThreeUnits(20); // 바닥 슬롯 메쉬 깊이 (앞쪽에서 20mm 줄임)
+        const slotFloorZ = (frameEndZ + roomBackZ) / 2 - mmToThreeUnits(10); // 바닥 중심 Z 좌표 (앞쪽으로 10mm 이동)
         
         // CSS 변수에서 실제 테마 색상 가져오기
         const getThemeColorFromCSS = () => {
@@ -2055,10 +2235,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <>
               {/* 메인 영역 표시 */}
               <group key="main-zone-group">
+                {/* 바닥 슬롯 메쉬 */}
                 <mesh
                     position={[
                       (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
                       floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.normal.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    ]} />
+                    <meshBasicMaterial 
+                      color={primaryColor} 
+                      transparent 
+                      opacity={0.35} 
+                    />
+                  </mesh>
+                  {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이 */}
+                  <mesh
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
+                      ceilingY,
                       slotFloorZ
                     ]}
                   >
@@ -2091,10 +2291,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 </group>
                 {/* 단내림 영역 표시 */}
                 <group key="dropped-zone-group">
+                  {/* 바닥 슬롯 메쉬 */}
                   <mesh
                     position={[
                       (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
                       floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.dropped.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    ]} />
+                    <meshBasicMaterial 
+                      color={primaryColor} 
+                      transparent 
+                      opacity={0.35} 
+                    />
+                  </mesh>
+                  {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름 */}
+                  <mesh
+                    position={[
+                      (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
+                      mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
                       slotFloorZ
                     ]}
                   >
@@ -2136,8 +2356,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           
           return (
             <group key="full-zone-group">
+              {/* 바닥 슬롯 메쉬 */}
               <mesh
                 position={[centerX, floorY, slotFloorZ]}
+              >
+                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                <meshBasicMaterial 
+                  color={primaryColor} 
+                  transparent 
+                  opacity={0.35} 
+                />
+              </mesh>
+              {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이 */}
+              <mesh
+                position={[centerX, ceilingY, slotFloorZ]}
               >
                 <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
                 <meshBasicMaterial 

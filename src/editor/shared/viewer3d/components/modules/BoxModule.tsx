@@ -30,6 +30,7 @@ interface BoxModuleProps {
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
+  slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   furnitureId?: string; // 가구 ID (칸 강조용)
@@ -65,6 +66,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   slotCenterX,
   adjustedWidth,
   slotWidths,
+  slotIndex,
   viewMode,
   renderMode,
   furnitureId,
@@ -108,6 +110,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -137,6 +140,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -166,6 +170,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -194,6 +199,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
       />
     );
   }
@@ -215,6 +221,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
       />
     );
   }
@@ -236,6 +243,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
       />
     );
   }
@@ -258,6 +266,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -287,6 +296,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+        slotIndex={slotIndex} // 슬롯 인덱스 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -316,6 +326,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth}
+        slotIndex={slotIndex}
       />
     );
   }
@@ -360,6 +371,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX}
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+          slotIndex={slotIndex} // 슬롯 인덱스 전달
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           isDragging={isDragging}
           isEditMode={isEditMode}

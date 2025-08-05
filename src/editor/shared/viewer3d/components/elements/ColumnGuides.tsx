@@ -5,7 +5,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { calculateInternalSpace, calculateFrameThickness } from '../../utils/geometry';
+import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
 
 /**
@@ -101,18 +101,22 @@ const ColumnGuides: React.FC = () => {
           시작X: info.normal.startX,
           너비: info.normal.width,
           끝X: info.normal.startX + info.normal.width,
-          슬롯너비: info.normal.columnWidth
+          슬롯너비: info.normal.columnWidth,
+          slotWidths: info.normal.slotWidths
         },
         단내림: info.dropped ? {
           시작X: info.dropped.startX,
           너비: info.dropped.width,
           끝X: info.dropped.startX + info.dropped.width,
-          슬롯너비: info.dropped.columnWidth
+          슬롯너비: info.dropped.columnWidth,
+          slotWidths: info.dropped.slotWidths
         } : null
       },
       갭체크: info.dropped ? {
         '메인끝-단내림시작': (info.dropped.startX - (info.normal.startX + info.normal.width))
-      } : null
+      } : null,
+      'spaceInfo.surroundType': spaceInfo.surroundType,
+      'spaceInfo.installType': spaceInfo.installType
     });
     
     return info;
@@ -459,7 +463,7 @@ const ColumnGuides: React.FC = () => {
     });
     
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
-    if (showDimensions && viewMode === '3D') {
+    if (showDimensions) {
       positions.forEach((xPos, index) => {
         const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
         const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
@@ -483,8 +487,8 @@ const ColumnGuides: React.FC = () => {
       });
     }
     
-    // 2D 정면뷰에서도 텍스트 표시
-    if (showDimensions && viewMode === '2D' && view2DDirection === 'front') {
+    // 2D 정면뷰에서도 텍스트 표시하지 않음
+    if (false) {
       positions.forEach((xPos, index) => {
         const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
         
@@ -492,7 +496,41 @@ const ColumnGuides: React.FC = () => {
         const textColor = view2DTheme === 'dark' ? '#FFFFFF' : zoneColor;
         
         // 실제 슬롯 너비 계산
-        const actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        let actualWidth: number;
+        
+        // 노서라운드 모드에서 엔드판넬 옆 슬롯인지 확인
+        if (spaceInfo.surroundType === 'no-surround') {
+          // slotWidths가 있으면 사용 (이미 조정된 값)
+          if (slotWidths && slotWidths[index] !== undefined) {
+            actualWidth = slotWidths[index];
+            console.log(`🎯 슬롯 ${index} 너비 (slotWidths 사용):`, actualWidth);
+          } else {
+            // slotWidths가 없으면 직접 계산
+            if (spaceInfo.installType === 'freestanding') {
+              // 양쪽 벽 없음: 첫 번째와 마지막 슬롯 조정
+              if (index === 0 || index === columnCount - 1) {
+                actualWidth = columnWidth - END_PANEL_THICKNESS; // 엔드판넬 두께 빼기
+              } else {
+                actualWidth = columnWidth;
+              }
+            } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+              // 한쪽 벽: 벽이 없는 쪽만 조정
+              if (index === 0 && !spaceInfo.wallConfig?.left) {
+                actualWidth = columnWidth - 18;
+              } else if (index === columnCount - 1 && !spaceInfo.wallConfig?.right) {
+                actualWidth = columnWidth - 18;
+              } else {
+                actualWidth = columnWidth;
+              }
+            } else {
+              // 빌트인: 조정 없음
+              actualWidth = columnWidth;
+            }
+          }
+        } else {
+          // 다른 모드에서는 기존 로직 사용
+          actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        }
         
         guides.push(
           <Text

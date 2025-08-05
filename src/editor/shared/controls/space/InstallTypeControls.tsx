@@ -58,15 +58,15 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         };
       }
     }
-    // 노서라운드 모드일 때는 frameSize를 undefined로 설정
+    // 노서라운드 모드일 때는 frameSize를 기본값으로 설정
     else if (spaceInfo.surroundType === 'no-surround') {
-      updates.frameSize = undefined;
+      updates.frameSize = { left: 0, right: 0, top: 0 };
       
       // gapConfig도 업데이트
       const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
       updates.gapConfig = {
-        left: wallConfig.left ? currentGapConfig.left : 0,
-        right: wallConfig.right ? currentGapConfig.right : 0,
+        left: wallConfig.left ? 2 : 20,
+        right: wallConfig.right ? 2 : 20,
       };
     }
     
@@ -86,11 +86,13 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     };
     
     if (spaceInfo.surroundType === 'no-surround') {
-      const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
+      // 벽이 있는 쪽은 2mm, 없는 쪽은 20mm
       updates.gapConfig = {
-        left: newWallConfig.left ? currentGapConfig.left : 0,
-        right: newWallConfig.right ? currentGapConfig.right : 0
+        left: newWallConfig.left ? 2 : 20,
+        right: newWallConfig.right ? 2 : 20
       };
+      // frameSize도 업데이트하여 자동 계산이 작동하도록 함
+      updates.frameSize = { left: 0, right: 0, top: 0 };
     }
     
     console.log('🏢 InstallTypeControls - wallConfig 변경:', { 

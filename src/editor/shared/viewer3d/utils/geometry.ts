@@ -39,9 +39,9 @@ export const INNER_DEPTH = 580;
 export const SURROUND_FRAME_THICKNESS = 10;
 
 /**
- * 엔드 패널 두께 (20mm)
+ * 엔드 패널 두께 (18mm)
  */
-export const END_PANEL_THICKNESS = 20;
+export const END_PANEL_THICKNESS = 18;
 
 /**
  * 실제 치수를 기반으로 3D 공간의 방 치수 계산 (mm 단위)
@@ -219,8 +219,17 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
     let leftThickness = 0;
     let rightThickness = 0;
     
-    // frameSize가 명시적으로 설정된 경우 사용 (프레임 크기 조정 시)
-    if (frameSize && (frameSize.left !== undefined || frameSize.right !== undefined)) {
+    // frameSize가 명시적으로 설정되고 0이 아닌 경우 사용 (프레임 크기 조정 시)
+    // 노서라운드 모드에서는 frameSize가 0이므로 무시하고 자동 계산
+    console.log('🔍 노서라운드 frameSize 체크:', {
+      frameSize,
+      'frameSize?.left': frameSize?.left,
+      'frameSize?.right': frameSize?.right,
+      'frameSize.left > 0': frameSize?.left > 0,
+      'frameSize.right > 0': frameSize?.right > 0,
+      '조건': frameSize && (frameSize.left > 0 || frameSize.right > 0)
+    });
+    if (frameSize && (frameSize.left > 0 || frameSize.right > 0)) {
       leftThickness = frameSize.left ?? 0;
       rightThickness = frameSize.right ?? 0;
     } else {
@@ -230,18 +239,18 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
         leftThickness = 0;
         rightThickness = 0;
       } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        // 한쪽벽: 벽이 있는 쪽은 0mm, 없는 쪽은 20mm 엔드패널
+        // 한쪽벽: 벽이 있는 쪽은 0mm, 없는 쪽은 18mm 엔드패널
         if (wallConfig?.left) {
           leftThickness = 0;   // 좌측벽 있음: 프레임 없음
-          rightThickness = 20; // 우측벽 없음: 20mm 엔드패널
+          rightThickness = END_PANEL_THICKNESS; // 우측벽 없음: 18mm 엔드패널
         } else {
-          leftThickness = 20;  // 좌측벽 없음: 20mm 엔드패널
+          leftThickness = END_PANEL_THICKNESS;  // 좌측벽 없음: 18mm 엔드패널
           rightThickness = 0;  // 우측벽 있음: 프레임 없음
         }
       } else if (installType === 'freestanding') {
-        // 벽없음(freestanding): 양쪽 모두 20mm 엔드패널
-        leftThickness = 20;
-        rightThickness = 20;
+        // 벽없음(freestanding): 양쪽 모두 18mm 엔드패널
+        leftThickness = END_PANEL_THICKNESS;
+        rightThickness = END_PANEL_THICKNESS;
       }
     }
     
@@ -251,7 +260,9 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       rightThickness,
       installType,
       surroundType,
-      wallConfig
+      wallConfig,
+      '벽위치': wallConfig?.left ? '좌측' : wallConfig?.right ? '우측' : '없음',
+      '엔드패널위치': wallConfig?.left ? '우측' : '좌측'
     });
     
     return {

@@ -1,6 +1,6 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { SpaceCalculator } from './SpaceCalculator';
-import { calculateFrameThickness, SURROUND_FRAME_THICKNESS } from '../../viewer3d/utils/geometry';
+import { calculateFrameThickness, SURROUND_FRAME_THICKNESS, END_PANEL_THICKNESS } from '../../viewer3d/utils/geometry';
 
 /**
  * 컬럼 인덱싱 계산 결과 타입
@@ -80,16 +80,21 @@ export class ColumnIndexer {
       if (spaceInfo.surroundType === 'no-surround') {
         let leftReduction = 0;
         
-        if (spaceInfo.installType === 'builtin') {
-          leftReduction = 2;
-        } else if (spaceInfo.installType === 'semistanding') {
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = 2;
+            // 왼쪽 벽이 있으면: 이격거리만
+            leftReduction = spaceInfo.gapConfig?.left || 2;
           } else {
-            leftReduction = 20;
+            // 왼쪽 벽이 없으면: 엔드패널(18mm) + 이격거리
+            leftReduction = END_PANEL_THICKNESS + (spaceInfo.gapConfig?.left || 0);
           }
         } else {
-          leftReduction = 20;
+          // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 + 이격거리
+          leftReduction = END_PANEL_THICKNESS + (spaceInfo.gapConfig?.left || 0);
         }
         
         internalStartX = -(totalWidth / 2) + leftReduction;
@@ -164,8 +169,8 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.normal.columnCount - 1; i++) {
           const leftSlotThreeUnits = zones.normal.threeUnitPositions[i];
           const rightSlotThreeUnits = zones.normal.threeUnitPositions[i + 1];
-          const dualCenter = (SpaceCalculator.threeUnitsToMm(leftSlotThreeUnits) + SpaceCalculator.threeUnitsToMm(rightSlotThreeUnits)) / 2;
-          zones.normal.threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenter));
+          const dualCenterThreeUnits = (leftSlotThreeUnits + rightSlotThreeUnits) / 2;
+          zones.normal.threeUnitDualPositions.push(dualCenterThreeUnits);
         }
       }
       
@@ -186,8 +191,8 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.dropped.columnCount - 1; i++) {
           const leftSlotThreeUnits = zones.dropped.threeUnitPositions[i];
           const rightSlotThreeUnits = zones.dropped.threeUnitPositions[i + 1];
-          const dualCenter = (SpaceCalculator.threeUnitsToMm(leftSlotThreeUnits) + SpaceCalculator.threeUnitsToMm(rightSlotThreeUnits)) / 2;
-          zones.dropped.threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenter));
+          const dualCenterThreeUnits = (leftSlotThreeUnits + rightSlotThreeUnits) / 2;
+          zones.dropped.threeUnitDualPositions.push(dualCenterThreeUnits);
         }
       }
       
@@ -238,30 +243,93 @@ export class ColumnIndexer {
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
     }
     
-    // 각 컬럼의 너비 계산 - 나머지를 앞쪽 슬롯에 분배
-    const baseWidth = Math.floor(internalWidth / columnCount);
-    const remainder = internalWidth % columnCount;
+    // 노서라운드 모드인지 확인
+    const isNoSurround = spaceInfo.surroundType === 'no-surround';
     
     // 슬롯별 실제 너비 배열 생성
     const slotWidths: number[] = [];
-    for (let i = 0; i < columnCount; i++) {
-      // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
-      slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+    
+    if (isNoSurround && spaceInfo.installType === 'freestanding') {
+      // 노서라운드 벽없음: 전체 공간을 컬럼수로 균등 분할
+      const baseSlotWidth = Math.floor(totalWidth / columnCount);
+      const remainder = totalWidth % columnCount;
+      
+      for (let i = 0; i < columnCount; i++) {
+        // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
+        const slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
+        slotWidths.push(slotWidth);
+      }
+      
+      // 디버깅 로그
+      console.log('🔧 노서라운드 벽없음 슬롯 계산:', {
+        '전체 공간 너비': totalWidth,
+        '컬럼 수': columnCount,
+        '기본 슬롯 너비': baseSlotWidth,
+        '슬롯 너비 배열': slotWidths,
+        '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
+      });
+    } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+      // 노서라운드 한쪽벽: 전체 공간을 컬럼수로 균등 분할
+      const baseSlotWidth = Math.floor(totalWidth / columnCount);
+      const remainder = totalWidth % columnCount;
+      
+      for (let i = 0; i < columnCount; i++) {
+        // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
+        const slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
+        slotWidths.push(slotWidth);
+      }
+      
+      // 디버깅 로그
+      console.log('🔧 노서라운드 한쪽벽 슬롯 계산:', {
+        '전체 공간 너비': totalWidth,
+        '컬럼 수': columnCount,
+        '기본 슬롯 너비': baseSlotWidth,
+        '슬롯 너비 배열': slotWidths,
+        '벽 위치': spaceInfo.wallConfig?.left ? '좌측' : '우측'
+      });
+    } else {
+      // 서라운드 모드 또는 노서라운드 빌트인: 기존 로직 (내경 기준)
+      const baseWidth = Math.floor(internalWidth / columnCount);
+      const remainder = internalWidth % columnCount;
+      
+      for (let i = 0; i < columnCount; i++) {
+        // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
+        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+      }
     }
     
     // 호환성을 위한 평균 너비
-    const columnWidth = baseWidth;
+    const columnWidth = Math.floor(internalWidth / columnCount);
     
     // 좌우 패딩은 0 (모든 공간을 슬롯에 할당)
     const leftPadding = 0;
     
     // 내경의 시작 X좌표 (Three.js 좌표계, 중앙이 0)
     // 전체 공간이 중앙 정렬되므로 (-전체폭/2 + 좌측여백)가 내경 시작점
+    // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
     let internalStartX;
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 전체 너비의 중앙에서 왼쪽 갭만큼 이동한 위치가 시작점
-      const leftGap = spaceInfo.gapConfig?.left || 0;
-      internalStartX = -(totalWidth / 2) + leftGap + leftPadding;
+      // 노서라운드: 이격거리만 고려 (엔드패널 내부에서 시작)
+      let leftReduction = 0;
+      
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
+        leftReduction = spaceInfo.gapConfig?.left || 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 한쪽 벽만 있음
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽이 있으면: 이격거리만
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else {
+          // 왼쪽 벽이 없으면: 엔드패널 두께만
+          leftReduction = END_PANEL_THICKNESS;
+        }
+      } else {
+        // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
+        leftReduction = END_PANEL_THICKNESS;
+      }
+      
+      internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
@@ -269,7 +337,16 @@ export class ColumnIndexer {
     
     // 각 컬럼 경계의 위치 계산 (실제 슬롯 너비 사용)
     const columnBoundaries = [];
-    let currentX = internalStartX;
+    let currentX: number;
+    
+    if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+      // 노서라운드: 전체 공간의 왼쪽 끝에서 시작 (도어가 엔드패널을 덮을 수 있도록)
+      currentX = -(totalWidth / 2);
+    } else {
+      // 서라운드 또는 빌트인: 내경 시작점
+      currentX = internalStartX;
+    }
+    
     columnBoundaries.push(currentX);
     
     for (let i = 0; i < columnCount; i++) {
@@ -308,11 +385,9 @@ export class ColumnIndexer {
     const dualColumnPositions = [];
     const threeUnitDualPositions = [];
     
-    // 인접한 두 슬롯의 중심점들 사이의 중점을 계산
-    for (let i = 0; i < columnCount - 1; i++) {
-      const leftSlotCenter = columnPositions[i];
-      const rightSlotCenter = columnPositions[i + 1];
-      const dualCenterPosition = (leftSlotCenter + rightSlotCenter) / 2;
+    // 인접한 두 컬럼의 경계 위치를 사용 (컬럼 경계가 듀얼 가구의 중심)
+    for (let i = 1; i < columnCount; i++) {
+      const dualCenterPosition = columnBoundaries[i]; // 컬럼 경계가 듀얼 가구의 중심
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
     }
@@ -457,21 +532,76 @@ export class ColumnIndexer {
       
       const columnWidth = Math.floor(internalWidth / columnCount);
       
-      // 프레임을 고려한 내부 시작점 (노서라운드의 경우 gapConfig 사용)
+      // 프레임을 고려한 내부 시작점 (노서라운드의 경우 엔드패널과 gapConfig 고려)
+      // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
       let internalStartX: number;
       if (spaceInfo.surroundType === 'no-surround') {
-        const leftGap = spaceInfo.gapConfig?.left || 0;
-        internalStartX = -(spaceInfo.width / 2) + leftGap;
+        let leftReduction = 0;
+        
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 세미스탠딩: 한쪽 벽만 있음
+          if (spaceInfo.wallConfig?.left) {
+            // 왼쪽 벽이 있으면: 이격거리만
+            leftReduction = spaceInfo.gapConfig?.left || 2;
+          } else {
+            // 왼쪽 벽이 없으면: 엔드패널 두께만
+            leftReduction = END_PANEL_THICKNESS;
+          }
+        } else {
+          // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
+          leftReduction = END_PANEL_THICKNESS;
+        }
+        
+        internalStartX = -(spaceInfo.width / 2) + leftReduction;
       } else {
         internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
       }
       
       // 슬롯별 실제 너비 배열 생성
-      const baseWidth = Math.floor(internalWidth / columnCount);
-      const remainder = internalWidth % columnCount;
       const slotWidths: number[] = [];
-      for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+      
+      if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
+        // 노서라운드 벽없음: 전체 공간을 컬럼수로 나누고, 양쪽 끝 슬롯에서만 18mm 빼기
+        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
+        const remainder = spaceInfo.width % columnCount;
+        
+        for (let i = 0; i < columnCount; i++) {
+          let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
+          
+          // 첫 번째와 마지막 슬롯에서 엔드패널 두께 빼기
+          if (i === 0 || i === columnCount - 1) {
+            slotWidth -= END_PANEL_THICKNESS;
+          }
+          
+          slotWidths.push(slotWidth);
+        }
+      } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+        // 노서라운드 한쪽벽: 전체 공간을 컬럼수로 나누고, 벽이 없는 쪽 끝 슬롯에서만 18mm 빼기
+        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
+        const remainder = spaceInfo.width % columnCount;
+        
+        for (let i = 0; i < columnCount; i++) {
+          let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
+          
+          // 벽이 없는 쪽 엣지 슬롯에서만 엔드패널 두께 빼기
+          if (i === 0 && !spaceInfo.wallConfig?.left) {
+            slotWidth -= END_PANEL_THICKNESS;
+          } else if (i === columnCount - 1 && !spaceInfo.wallConfig?.right) {
+            slotWidth -= END_PANEL_THICKNESS;
+          }
+          
+          slotWidths.push(slotWidth);
+        }
+      } else {
+        // 서라운드 모드 또는 빌트인: 기존 로직
+        const baseWidth = Math.floor(internalWidth / columnCount);
+        const remainder = internalWidth % columnCount;
+        for (let i = 0; i < columnCount; i++) {
+          slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+        }
       }
       
       return {
@@ -494,12 +624,30 @@ export class ColumnIndexer {
     // 전체 내부 너비 (프레임 제외)
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
     
-    // 시작 위치 계산 (노서라운드의 경우 gapConfig 사용)
+    // 시작 위치 계산 (노서라운드의 경우 엔드패널과 gapConfig 고려)
+    // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
     let internalStartX: number;
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 전체 너비의 중앙에서 왼쪽 갭만큼 이동한 위치가 시작점
-      const leftGap = spaceInfo.gapConfig?.left || 0;
-      internalStartX = -(totalWidth / 2) + leftGap;
+      let leftReduction = 0;
+      
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
+        leftReduction = spaceInfo.gapConfig?.left || 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 한쪽 벽만 있음
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽이 있으면: 이격거리만
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else {
+          // 왼쪽 벽이 없으면: 엔드패널 두께만
+          leftReduction = END_PANEL_THICKNESS;
+        }
+      } else {
+        // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
+        leftReduction = END_PANEL_THICKNESS;
+      }
+      
+      internalStartX = -(totalWidth / 2) + leftReduction;
     } else {
       internalStartX = -(totalWidth / 2) + frameThickness.left;
     }
@@ -533,10 +681,27 @@ export class ColumnIndexer {
           'spaceInfo.installType': spaceInfo.installType
         });
       } else {
-        // 노서라운드: 단내림 경계에서는 갭 없이 바로 연결
-        droppedAreaInternalWidth = droppedAreaOuterWidth - (spaceInfo.gapConfig?.left || 0);
+        // 노서라운드: 엔드패널 고려
+        let leftReduction = 0;
+        let rightReduction = 0;
+        
+        // 왼쪽 처리
+        if (spaceInfo.wallConfig?.left) {
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
+        }
+        
+        // 오른쪽 처리
+        if (spaceInfo.wallConfig?.right) {
+          rightReduction = spaceInfo.gapConfig?.right || 2;
+        } else {
+          rightReduction = END_PANEL_THICKNESS;
+        }
+        
+        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
-        normalAreaInternalWidth = normalAreaOuterWidth - (spaceInfo.gapConfig?.right || 0);
+        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -566,10 +731,26 @@ export class ColumnIndexer {
           'spaceInfo.installType': spaceInfo.installType
         });
       } else {
-        // 노서라운드: 단내림 경계에서는 갭 없이 바로 연결
-        normalAreaInternalWidth = normalAreaOuterWidth - (spaceInfo.gapConfig?.left || 0);
+        // 노서라운드: 엔드패널 고려하여 계산
+        // 왼쪽 처리
+        let leftReduction = 0;
+        if (spaceInfo.wallConfig?.left) {
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
+        }
+        
+        // 오른쪽 처리
+        let rightReduction = 0;
+        if (spaceInfo.wallConfig?.right) {
+          rightReduction = spaceInfo.gapConfig?.right || 2;
+        } else {
+          rightReduction = END_PANEL_THICKNESS;
+        }
+        
+        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
-        droppedAreaInternalWidth = droppedAreaOuterWidth - (spaceInfo.gapConfig?.right || 0);
+        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
         droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
@@ -589,8 +770,11 @@ export class ColumnIndexer {
     // 메인 영역 컬럼 수
     if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
       normalColumnCount = spaceInfo.mainDoorCount;
+    } else if (customColumnCount) {
+      // customColumnCount가 있으면 사용
+      normalColumnCount = customColumnCount;
     } else {
-      // 단내림이 있는 경우 customColumnCount를 사용하지 않고 자동 계산
+      // 자동 계산
       normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaInternalWidth);
     }
     
@@ -614,12 +798,6 @@ export class ColumnIndexer {
     if (droppedColumnCount < minRequiredDroppedSlots) {
       droppedColumnCount = minRequiredDroppedSlots;
       console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
-    }
-    
-    // 단내림 영역은 최소 2개 슬롯 보장
-    if (droppedColumnCount < 2) {
-      droppedColumnCount = 2;
-      console.log('🔧 단내림 영역 최소 슬롯 수 보장: 2개로 설정');
     }
     
     // 각 영역의 컬럼 너비 계산 - 나머지를 앞쪽 슬롯에 분배
@@ -744,38 +922,31 @@ export class ColumnIndexer {
   }
 
   /**
-   * 내경 너비에 따른 컬럼 제한 계산
-   * @param internalWidth 내경 너비 (mm)
-   * @returns 컬럼 제한 정보
+   * 내경 너비에 따른 컬럼 수 제한 계산
    */
   static getColumnLimits(internalWidth: number): { minColumns: number; maxColumns: number } {
-    // 최소 컬럼 수는 1개
-    const minColumns = 1;
+    // 슬롯 크기 제약 조건 (400mm ~ 600mm)
+    const MIN_SLOT_WIDTH = 400;
+    const MAX_SLOT_WIDTH = 600;
     
-    // 내경 너비에 따른 최대 컬럼 수 계산
-    let maxColumns = 1;
+    // 최소 컬럼 수: 슬롯이 600mm를 초과하지 않도록
+    const minColumns = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
     
-    if (internalWidth >= 600) {
-      maxColumns = 2;
+    // 최대 컬럼 수: 슬롯이 400mm 미만이 되지 않도록
+    const maxColumns = Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH));
+    
+    // 최소값이 최대값보다 큰 경우 (너무 좁은 공간) 처리
+    if (minColumns > maxColumns) {
+      return { minColumns: 1, maxColumns: 1 };
     }
-    if (internalWidth >= 900) {
-      maxColumns = 3;
-    }
-    if (internalWidth >= 1200) {
-      maxColumns = 4;
-    }
-    if (internalWidth >= 1500) {
-      maxColumns = 5;
-    }
-    if (internalWidth >= 1800) {
-      maxColumns = 6;
-    }
-    if (internalWidth >= 2100) {
-      maxColumns = 7;
-    }
-    if (internalWidth >= 2400) {
-      maxColumns = 8;
-    }
+    
+    console.log('🔧 getColumnLimits 계산:', {
+      internalWidth,
+      minColumns,
+      maxColumns,
+      '최소 슬롯 크기 (최대 컬럼수일 때)': Math.floor(internalWidth / maxColumns),
+      '최대 슬롯 크기 (최소 컬럼수일 때)': Math.floor(internalWidth / minColumns)
+    });
     
     return { minColumns, maxColumns };
   }

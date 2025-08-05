@@ -63,7 +63,8 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const diagonal = Math.sqrt(width * width + height * height + depth * depth);
   
   // 여백을 줄여서 공간이 화면을 더 많이 차지하도록
-  const furnitureMargin = 1.2; // 1.5 → 1.2 (더 가까이, 여백 줄이기)
+  // 가구 유무와 관계없이 일정한 여백 사용
+  const furnitureMargin = 1.2;
   
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
@@ -120,6 +121,7 @@ export const calculateCameraPosition = (
  * @returns 카메라 타겟 위치
  */
 export const calculateCameraTarget = (spaceHeight: number): [number, number, number] => {
+  // 공간 높이의 절반 위치를 타겟으로 설정 (가구 유무와 관계없이 일정)
   const yCenter = mmToThreeUnits(spaceHeight * 0.5);
   return [0, yCenter, 0];
 }; 

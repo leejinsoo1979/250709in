@@ -201,7 +201,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         type: module.type || 'default',
         color: module.color,
         hasDoor: module.hasDoor || false,
-        isDynamic: module.isDynamic
+        isDynamic: module.isDynamic,
+        furnType: module.id.includes('dual-') ? 'dual' : 'single'
       }
     };
 
@@ -309,7 +310,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         type: module.type || 'default',
         color: module.color,
         hasDoor: module.hasDoor || false,
-        isDynamic: module.isDynamic
+        isDynamic: module.isDynamic,
+        furnType: module.id.includes('dual-') ? 'dual' : 'single'
       }
     };
     

@@ -1,5 +1,5 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateFrameThickness } from '../../viewer3d/utils/geometry';
+import { calculateFrameThickness, END_PANEL_THICKNESS } from '../../viewer3d/utils/geometry';
 
 /**
  * 공간 계산 관련 유틸리티 클래스
@@ -23,13 +23,34 @@ export class SpaceCalculator {
     // 전체 폭
     const totalWidth = spaceInfo.width;
     
-    // 내경 계산: 노서라운드인 경우 gapConfig 사용, 서라운드인 경우 프레임 두께 고려
+    // 내경 계산: 노서라운드인 경우 엔드패널과 gapConfig 고려, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: gapConfig의 값 사용
-      const leftGap = spaceInfo.gapConfig?.left || 0;
-      const rightGap = spaceInfo.gapConfig?.right || 0;
+      // 노서라운드: 엔드패널과 이격거리를 모두 고려
+      let leftReduction = 0;
+      let rightReduction = 0;
       
-      return totalWidth - (leftGap + rightGap);
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
+        leftReduction = spaceInfo.gapConfig?.left || 2;
+        rightReduction = spaceInfo.gapConfig?.right || 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 한쪽 벽만 있음
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽이 있으면
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = END_PANEL_THICKNESS;  // 오른쪽은 엔드패널(18mm)만
+        } else {
+          // 오른쪽 벽이 있으면
+          leftReduction = END_PANEL_THICKNESS;    // 왼쪽은 엔드패널(18mm)만
+          rightReduction = spaceInfo.gapConfig?.right || 2;
+        }
+      } else {
+        // 프리스탠딩: 양쪽 벽이 없으므로 양쪽 모두 엔드패널(18mm)만
+        leftReduction = END_PANEL_THICKNESS;
+        rightReduction = END_PANEL_THICKNESS;
+      }
+      
+      return totalWidth - (leftReduction + rightReduction);
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임
       return totalWidth - frameThickness.left - frameThickness.right;

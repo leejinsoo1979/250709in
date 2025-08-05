@@ -116,6 +116,7 @@ interface DoorModuleProps {
   isDragging?: boolean; // 드래그 상태
   isEditMode?: boolean; // 편집 모드 여부
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
+  slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -130,7 +131,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   moduleData,
   isDragging = false,
   isEditMode = false,
-  slotWidths
+  slotWidths,
+  slotIndex
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -359,9 +361,32 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
   
-  // 도어 크기는 항상 FurnitureItem에서 전달받은 originalSlotWidth 사용
-  // originalSlotWidth는 이미 zone별 실제 슬롯 너비가 반영되어 있음
-  const actualDoorWidth = originalSlotWidth || indexing.columnWidth; // 원래 슬롯 너비만 사용
+  // 도어 크기 계산
+  let actualDoorWidth = originalSlotWidth || indexing.columnWidth;
+  
+  // 노서라운드 모드에서 좌우 끝 도어는 600mm 기준으로 계산
+  if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
+    const isFirstSlot = slotIndex === 0;
+    const isLastSlot = slotIndex === indexing.columnCount - 1;
+    
+    if (spaceInfo.installType === 'freestanding') {
+      // 벽없음: 양쪽 끝 도어는 600mm 사용 (슬롯 582mm + 엔드패널 18mm)
+      if (isFirstSlot || isLastSlot) {
+        // 커버도어: 슬롯(582mm) + 엔드패널(18mm) = 600mm
+        actualDoorWidth = 600; // 고정값 600mm
+        console.log(`🚪 노서라운드 커버도어: 슬롯${slotIndex}, ${actualDoorWidth}mm`);
+      }
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 한쪽벽: 벽이 없는 쪽 끝 도어만 600mm
+      if (isFirstSlot && !spaceInfo.wallConfig?.left) {
+        actualDoorWidth = 600; // 고정값 600mm
+        console.log(`🚪 노서라운드 좌측 커버도어: ${actualDoorWidth}mm`);
+      } else if (isLastSlot && !spaceInfo.wallConfig?.right) {
+        actualDoorWidth = 600; // 고정값 600mm
+        console.log(`🚪 노서라운드 우측 커버도어: ${actualDoorWidth}mm`);
+      }
+    }
+  }
   
   // 듀얼 가구인지 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
   const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
@@ -445,7 +470,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   
   // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
-  const doorDepth = mmToThreeUnits(moduleDepth) + mmToThreeUnits(20); // 10mm 바깥쪽으로
+  // 추가로 2mm 더 띄워서 캐비닛과 분리
+  const doorDepth = mmToThreeUnits(moduleDepth) + mmToThreeUnits(20) + mmToThreeUnits(2); // 10mm 바깥쪽 + 2mm 추가 간격
   
   // 패널 두께 (18mm)와 힌지 위치 오프셋(9mm) 상수 정의
   const panelThickness = 18;
@@ -577,8 +603,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     },
   });
 
-  // 도어 위치 계산: 원래 슬롯 중심 사용 (기존 방식)
-  const doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  // 도어 위치 계산: 원래 슬롯 중심 사용
+  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  
+  // 노서라운드 모드에서 양 끝 도어 위치 조정
+  if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
+    const isFirstSlot = slotIndex === 0;
+    const isLastSlot = slotIndex === indexing.columnCount - 1;
+    const END_PANEL_THICKNESS = 18; // mm
+    const doorPositionAdjustment = mmToThreeUnits(END_PANEL_THICKNESS / 2); // 엔드패널 두께의 절반
+    
+    if (spaceInfo.installType === 'freestanding') {
+      if (isFirstSlot) {
+        // 첫번째 도어: 좌측으로 엔드패널 두께의 절반 이동
+        doorGroupX -= doorPositionAdjustment;
+        console.log(`🚪 노서라운드 첫번째 도어 위치 조정: -${END_PANEL_THICKNESS/2}mm`);
+      } else if (isLastSlot) {
+        // 마지막 도어: 우측으로 엔드패널 두께의 절반 이동
+        doorGroupX += doorPositionAdjustment;
+        console.log(`🚪 노서라운드 마지막 도어 위치 조정: +${END_PANEL_THICKNESS/2}mm`);
+      }
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      if (isFirstSlot && !spaceInfo.wallConfig?.left) {
+        doorGroupX -= doorPositionAdjustment;
+      } else if (isLastSlot && !spaceInfo.wallConfig?.right) {
+        doorGroupX += doorPositionAdjustment;
+      }
+    }
+  }
 
   if (isDualFurniture) {
     // 듀얼 가구: 개별 슬롯 너비에서 각각 3mm씩 빼기

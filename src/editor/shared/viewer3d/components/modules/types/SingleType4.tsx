@@ -22,6 +22,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   doorWidth,
   originalSlotWidth,
+  slotIndex,
   slotCenterX
 }) => {
   // 공통 로직 사용
@@ -83,6 +84,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX || 0}
+        slotIndex={slotIndex}
         />
       )}
     </BaseFurnitureShell>

@@ -214,7 +214,8 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     dropHeight: 200
   },
   // 도어 개수 기본값 설정
-  droppedCeilingDoorCount: undefined  // 단내림 구간 도어 개수는 자동 계산되도록 undefined로 설정
+  mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
+  droppedCeilingDoorCount: 0  // 단내림 구간 도어 개수 기본값
 };
 
 // 초기 상태

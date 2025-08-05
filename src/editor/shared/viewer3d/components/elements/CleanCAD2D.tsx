@@ -10,7 +10,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
-import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
+import { calculateFrameThickness, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
 interface CleanCAD2DProps {
@@ -726,10 +726,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           /* 노서라운드 모드: 좌측 이격거리/엔드패널 치수선 */
           (() => {
             // 벽 유무에 따라 값과 텍스트 결정
-            const hasLeftWall = spaceInfo.installType === 'builtin' || 
-                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left);
-            const leftValue = hasLeftWall ? 2 : 20;
-            const leftText = hasLeftWall ? '이격 2' : 'EP 20';
+            const hasLeftWall = spaceInfo.wallConfig?.left;
+            const leftValue = hasLeftWall ? (spaceInfo.gapConfig?.left || 2) : END_PANEL_THICKNESS;
+            const leftText = hasLeftWall ? `이격 ${leftValue}` : `EP ${END_PANEL_THICKNESS}`;
             
             return (
               <>
@@ -838,10 +837,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           /* 노서라운드 모드: 우측 이격거리/엔드패널 치수선 */
           (() => {
             // 벽 유무에 따라 값과 텍스트 결정
-            const hasRightWall = spaceInfo.installType === 'builtin' || 
-                                (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right);
-            const rightValue = hasRightWall ? 2 : 20;
-            const rightText = hasRightWall ? '이격 2' : 'EP 20';
+            const hasRightWall = spaceInfo.wallConfig?.right;
+            const rightValue = hasRightWall ? (spaceInfo.gapConfig?.right || 2) : END_PANEL_THICKNESS;
+            const rightText = hasRightWall ? `이격 ${rightValue}` : `EP ${END_PANEL_THICKNESS}`;
             
             return (
               <>
@@ -1373,9 +1371,40 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
         const indexing = calculateSpaceIndexing(spaceInfo);
         
-        // 기본 너비 설정
-        let actualWidth = module.customWidth || moduleData.dimensions.width;
+        // 기본 너비 설정 - adjustedWidth를 우선적으로 사용
+        let actualWidth = module.adjustedWidth || module.customWidth || moduleData.dimensions.width;
         let actualPositionX = module.position.x;
+        
+        // 노서라운드 모드에서 엔드패널 조정
+        const END_PANEL_THICKNESS = 18;
+        if (spaceInfo.surroundType === 'no-surround') {
+          const isFirstSlot = module.slotIndex === 0;
+          const isLastSlot = module.slotIndex === indexing.columnCount - 1;
+          
+          if (spaceInfo.installType === 'freestanding') {
+            // 벽없음: 양쪽 끝 슬롯 축소 및 위치 조정
+            if (isFirstSlot) {
+              actualWidth = actualWidth - END_PANEL_THICKNESS;
+              // 첫번째 슬롯: 오른쪽으로 9mm 이동
+              actualPositionX = actualPositionX + mmToThreeUnits(END_PANEL_THICKNESS / 2);
+            } else if (isLastSlot) {
+              actualWidth = actualWidth - END_PANEL_THICKNESS;
+              // 마지막 슬롯: 왼쪽으로 9mm 이동
+              actualPositionX = actualPositionX - mmToThreeUnits(END_PANEL_THICKNESS / 2);
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            // 한쪽벽: 벽이 없는 쪽만 축소 및 위치 조정
+            if (spaceInfo.wallConfig?.left && isLastSlot) {
+              // 왼쪽 벽이 있으면 오른쪽 끝만 축소
+              actualWidth = actualWidth - END_PANEL_THICKNESS;
+              actualPositionX = actualPositionX - mmToThreeUnits(END_PANEL_THICKNESS / 2);
+            } else if (spaceInfo.wallConfig?.right && isFirstSlot) {
+              // 오른쪽 벽이 있으면 왼쪽 끝만 축소
+              actualWidth = actualWidth - END_PANEL_THICKNESS;
+              actualPositionX = actualPositionX + mmToThreeUnits(END_PANEL_THICKNESS / 2);
+            }
+          }
+        }
         
         // 기둥 침범 시 가구 크기와 위치 재계산
         if (slotInfo && slotInfo.hasColumn) {
@@ -1544,7 +1573,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 기둥 치수선 */}
             <Line
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
-              color={dimensionColor}
+              color="#FF0000"
               lineWidth={0.5}
               renderOrder={999999}
             />
@@ -1552,7 +1581,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 좌측 화살표 */}
             <Line
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
+              color="#FF0000"
               lineWidth={0.5}
               renderOrder={999999}
             />
@@ -1560,7 +1589,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 우측 화살표 */}
             <Line
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
+              color="#FF0000"
               lineWidth={0.5}
               renderOrder={999999}
             />
@@ -1569,7 +1598,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <Text
               position={[column.position[0], dimY - mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
-              color={dimensionColor}
+              color="#FF0000"
               anchorX="center"
               anchorY="middle"
               renderOrder={999999}
@@ -1580,13 +1609,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
             <Line
               points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
-              color={dimensionColor}
+              color="#FF0000"
               lineWidth={0.5}
               renderOrder={999999}
             />
             <Line
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
-              color={dimensionColor}
+              color="#FF0000"
               lineWidth={0.5}
               renderOrder={999999}
             />
@@ -3025,9 +3054,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
-            // 노서라운드일 때는 이격거리 표시, 서라운드일 때는 프레임 폭 표시
+            // 노서라운드일 때는 벽 유무에 따라 이격거리 또는 엔드패널 표시
             const isNoSurround = spaceInfo.surroundType === 'no-surround';
-            const leftValue = isNoSurround ? (spaceInfo.gapConfig?.left || 2) : frameSize.left;
+            let leftValue: number;
+            
+            if (isNoSurround) {
+              // 노서라운드: 벽이 있으면 이격거리, 없으면 엔드패널
+              if (spaceInfo.wallConfig?.left) {
+                leftValue = spaceInfo.gapConfig?.left || 2;
+              } else {
+                leftValue = END_PANEL_THICKNESS;
+              }
+            } else {
+              // 서라운드: 프레임 폭 표시
+              leftValue = frameSize.left;
+            }
             
             return (
               <>
@@ -3070,9 +3111,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
-            // 노서라운드일 때는 이격거리 표시, 서라운드일 때는 프레임 폭 표시
+            // 노서라운드일 때는 벽 유무에 따라 이격거리 또는 엔드패널 표시
             const isNoSurround = spaceInfo.surroundType === 'no-surround';
-            const rightValue = isNoSurround ? (spaceInfo.gapConfig?.right || 2) : frameSize.right;
+            let rightValue: number;
+            
+            if (isNoSurround) {
+              // 노서라운드: 벽이 있으면 이격거리, 없으면 엔드패널
+              if (spaceInfo.wallConfig?.right) {
+                rightValue = spaceInfo.gapConfig?.right || 2;
+              } else {
+                rightValue = END_PANEL_THICKNESS;
+              }
+            } else {
+              // 서라운드: 프레임 폭 표시
+              rightValue = frameSize.right;
+            }
             
             return (
               <>
@@ -3945,21 +3998,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 기둥 치수선 */}
               <Line
                 points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
-                color={dimensionColor}
+                color="#FF0000"
                 lineWidth={0.5}
               />
               
               {/* 좌측 화살표 */}
               <Line
                 points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
+                color="#FF0000"
                 lineWidth={0.5}
               />
               
               {/* 우측 화살표 */}
               <Line
                 points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
-                color={dimensionColor}
+                color="#FF0000"
                 lineWidth={0.5}
               />
               
@@ -3967,7 +4020,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <Text
                 position={[column.position[0], spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
                 fontSize={baseFontSize}
-                color={dimensionColor}
+                color="#FF0000"
                 anchorX="center"
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}

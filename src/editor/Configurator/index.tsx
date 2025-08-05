@@ -51,7 +51,9 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  // design=new인 경우 로딩을 건너뛰기 위해 초기값 설정
+  const isNewDesign = searchParams.get('design') === 'new';
+  const [loading, setLoading] = useState(!isNewDesign); // 새 디자인인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -952,18 +954,24 @@ const Configurator: React.FC = () => {
 
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
-    const projectId = searchParams.get('projectId') || searchParams.get('id');
+    const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
+    const isNewDesign = searchParams.get('design') === 'new';
     
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
       
-      if (skipLoad) {
-        // Step 1-3에서 넘어온 경우 - 이미 스토어에 데이터가 설정되어 있음
-        console.log('✅ skipLoad=true - Step 1-3에서 설정한 데이터 유지');
+      if (skipLoad || isNewDesign) {
+        // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
+        console.log('✅ skipLoad=true 또는 design=new - Step 1-3에서 설정한 데이터 유지');
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
+        
+        // 로딩 완료 처리
+        setTimeout(() => {
+          setLoading(false);
+        }, 500); // 로딩 화면이 보이도록 약간의 지연
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
         console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
@@ -977,11 +985,17 @@ const Configurator: React.FC = () => {
             setBasicInfo({ title: project.title });
             console.log('📝 프로젝트명 설정:', project.title);
           }
+          setLoading(false);
         });
       } else {
         // 기존 프로젝트 로드
         loadProject(projectId);
       }
+    } else {
+      // projectId가 없는 경우에도 로딩 해제
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   }, [searchParams, currentProjectId]);
 
@@ -1156,15 +1170,15 @@ const Configurator: React.FC = () => {
           case 'semistanding':
             if (currentWallConfig.left && !currentWallConfig.right) {
               newFrameSize.left = 50;
-              newFrameSize.right = 20;
+              newFrameSize.right = 18;
             } else if (!currentWallConfig.left && currentWallConfig.right) {
-              newFrameSize.left = 20;
+              newFrameSize.left = 18;
               newFrameSize.right = 50;
             }
             break;
           case 'freestanding':
-            newFrameSize.left = 20;
-            newFrameSize.right = 20;
+            newFrameSize.left = 18;
+            newFrameSize.right = 18;
             break;
         }
       } else if (updates.surroundType === 'no-surround') {
@@ -1179,16 +1193,16 @@ const Configurator: React.FC = () => {
             // 세미스탠딩: 벽 없는 쪽만 엔드패널
             if (currentWallConfig.left && !currentWallConfig.right) {
               newFrameSize.left = 0;
-              newFrameSize.right = 20;
+              newFrameSize.right = 18;
             } else if (!currentWallConfig.left && currentWallConfig.right) {
-              newFrameSize.left = 20;
+              newFrameSize.left = 18;
               newFrameSize.right = 0;
             }
             break;
           case 'freestanding':
             // 프리스탠딩: 양쪽 엔드패널
-            newFrameSize.left = 20;
-            newFrameSize.right = 20;
+            newFrameSize.left = 18;
+            newFrameSize.right = 18;
             break;
         }
         
@@ -1213,12 +1227,12 @@ const Configurator: React.FC = () => {
       const newFrameSize = { ...spaceInfo.frameSize };
       
       if (updates.wallConfig.left && !updates.wallConfig.right) {
-        // 좌측벽만 있음: 좌측 프레임 50mm, 우측 엔드패널 20mm
+        // 좌측벽만 있음: 좌측 프레임 50mm, 우측 엔드패널 18mm
         newFrameSize.left = 50;
-        newFrameSize.right = 20;
+        newFrameSize.right = 18;
       } else if (!updates.wallConfig.left && updates.wallConfig.right) {
-        // 우측벽만 있음: 좌측 엔드패널 20mm, 우측 프레임 50mm
-        newFrameSize.left = 20;
+        // 우측벽만 있음: 좌측 엔드패널 18mm, 우측 프레임 50mm
+        newFrameSize.left = 18;
         newFrameSize.right = 50;
       }
       
@@ -1265,16 +1279,16 @@ const Configurator: React.FC = () => {
             // 한쪽벽: 벽 위치에 따라 프레임/엔드패널 설정
             if (wallConfig.left && !wallConfig.right) {
               newFrameSize.left = 50;   // 좌측벽: 프레임
-              newFrameSize.right = 20;  // 우측: 엔드패널
+              newFrameSize.right = 18;  // 우측: 엔드패널
             } else if (!wallConfig.left && wallConfig.right) {
-              newFrameSize.left = 20;   // 좌측: 엔드패널
+              newFrameSize.left = 18;   // 좌측: 엔드패널
               newFrameSize.right = 50;  // 우측벽: 프레임
             }
             break;
           case 'freestanding':
-            // 벽없음: 양쪽 모두 엔드패널 20mm
-            newFrameSize.left = 20;
-            newFrameSize.right = 20;
+            // 벽없음: 양쪽 모두 엔드패널 18mm
+            newFrameSize.left = 18;
+            newFrameSize.right = 18;
             break;
         }
       } else if (spaceInfo.surroundType === 'no-surround') {
@@ -1289,16 +1303,16 @@ const Configurator: React.FC = () => {
             // 세미스탠딩: 벽 없는 쪽만 엔드패널
             if (wallConfig.left && !wallConfig.right) {
               newFrameSize.left = 0;
-              newFrameSize.right = 20;
+              newFrameSize.right = 18;
             } else if (!wallConfig.left && wallConfig.right) {
-              newFrameSize.left = 20;
+              newFrameSize.left = 18;
               newFrameSize.right = 0;
             }
             break;
           case 'freestanding':
             // 프리스탠딩: 양쪽 엔드패널
-            newFrameSize.left = 20;
-            newFrameSize.right = 20;
+            newFrameSize.left = 18;
+            newFrameSize.right = 18;
             break;
         }
         
@@ -2009,11 +2023,11 @@ const Configurator: React.FC = () => {
             )}
 
 
-            {/* 레이아웃 표시 */}
+            {/* 컬럼수 표시 */}
             <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>레이아웃</h3>
+                  <h3 className={styles.sectionTitle}>컬럼수</h3>
                 </div>
                 {console.log('🔍 레이아웃 섹션 렌더링:', {
                   activeTab: activeRightPanelTab,
@@ -2291,8 +2305,11 @@ const Configurator: React.FC = () => {
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
-        <LoadingSpinner size="large" />
-        <p>프로젝트를 불러오는 중...</p>
+        <LoadingSpinner 
+          message="에디터를 준비하는 중..."
+          size="large"
+          type="spinner"
+        />
       </div>
     );
   }
@@ -2308,7 +2325,8 @@ const Configurator: React.FC = () => {
       {/* 헤더 */}
       <Header
         title={currentDesignFileName || basicInfo.title || "새로운 디자인"}
-        projectName={currentDesignFileName || basicInfo.title || "새로운 디자인"}
+        projectName={basicInfo.title || "새로운 프로젝트"}
+        designFileName={currentDesignFileName}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}

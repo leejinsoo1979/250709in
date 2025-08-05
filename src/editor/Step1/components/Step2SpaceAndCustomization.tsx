@@ -80,7 +80,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   // spaceInfo 변경 시 뷰어에 반영
   useEffect(() => {
     setViewerKey(prev => prev + 1);
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.installType, spaceInfo.wallPosition]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.installType, spaceInfo.wallConfig?.left, spaceInfo.wallConfig?.right, spaceInfo.surroundType, spaceInfo.gapConfig?.left, spaceInfo.gapConfig?.right]);
 
   const handleStartDesign = async () => {
     if (!basicInfo.title || !basicInfo.location || !canProceed) {
@@ -98,46 +98,75 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       const projectId = `project_${Date.now()}`;
       const currentTimestamp = serverTimestamp();
       
+      // CreateProjectData 형식에 맞게 데이터 준비
       const projectData = {
         userId: user.uid,
-        title: basicInfo.title,
-        description: basicInfo.description || '',
-        location: basicInfo.location,
-        unitType: basicInfo.unitType || 'household',
-        category: basicInfo.category || 'residential',
-        spaceInfo: spaceInfo,
-        placedModules: placedModules,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp,
-        projectData: basicInfo,
+        basicInfo: {
+          title: basicInfo.title,
+          location: basicInfo.location,
+          description: basicInfo.description || '',
+          unitType: basicInfo.unitType || 'household',
+          category: basicInfo.category || 'residential',
+          createdAt: currentTimestamp,
+          updatedAt: currentTimestamp,
+          version: '1.0.0'
+        },
         spaceConfig: spaceInfo,
-        furniture: {
-          placedModules: placedModules
+        customLayout: {
+          wall: {
+            type: spaceInfo.surroundType === 'surround' ? 'wall' : 'nowall',
+            completed: true
+          },
+          rack: {
+            thickness: '2mm',
+            completed: false,
+            options: {
+              isComposite: false
+            }
+          },
+          motor: {
+            type: 'none',
+            completed: false
+          },
+          ventilation: {
+            type: 'none',
+            completed: false
+          },
+          exhaust: {
+            type: 'none',
+            completed: false
+          }
         }
       };
 
-      const result = await createProject(projectId, projectData, user.uid);
+      const result = await createProject(projectData);
       
-      if (result.success) {
+      if (result.success && result.data) {
+        const projectId = result.data;
         const designFileName = `${basicInfo.title || '새로운 디자인'}_${new Date().toISOString().split('T')[0]}`;
         
-        const thumbnailUrl = await generateDefaultThumbnail();
-        const thumbnailBlob = thumbnailUrl ? await dataURLToBlob(thumbnailUrl) : null;
+        const thumbnailDataURL = generateDefaultThumbnail(spaceInfo, placedModules.length);
+        const thumbnailBlob = thumbnailDataURL ? dataURLToBlob(thumbnailDataURL) : null;
         
-        const designFileResult = await createDesignFile(
-          projectId,
-          {
-            fileName: designFileName,
-            furniture: { placedModules: [] },
-            spaceConfig: spaceInfo,
-            projectData: basicInfo,
-            savedAt: currentTimestamp as Timestamp
-          },
-          thumbnailBlob
-        );
+        const designFileResult = await createDesignFile({
+          name: designFileName,
+          projectId: projectId,
+          spaceConfig: spaceInfo,
+          furniture: {
+            placedModules: []
+          }
+        });
 
-        if (designFileResult.success && designFileResult.designFileId) {
-          navigate(`/configurator?projectId=${projectId}&designFileId=${designFileResult.designFileId}`, { replace: true });
+        if (designFileResult.id) {
+          // onClose가 있으면 모달을 닫고, 없으면 직접 navigate
+          if (onClose) {
+            onClose();
+          }
+          
+          // 약간의 지연을 주어 로딩 화면이 보이도록 함
+          setTimeout(() => {
+            navigate(`/configurator?project=${projectId}&design=new`, { replace: true });
+          }, 100);
         } else {
           throw new Error(designFileResult.error || '디자인 파일 생성 실패');
         }
@@ -154,6 +183,16 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
   return (
     <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
+      {/* 로딩 화면 */}
+      {saving && (
+        <div className={styles.loadingOverlay}>
+          <LoadingSpinner 
+            message="Loading"
+            size="large"
+            type="spinner"
+          />
+        </div>
+      )}
       <div className={styles.modalContent}>
         <div className={styles.header}>
           <button
@@ -173,7 +212,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
             {/* 3D 에디터 뷰어 (2D 뷰 제거) */}
             <div className={styles.editorViewer}>
               <Space3DView 
-                key={viewerKey}
+                key={`${viewerKey}-${spaceInfo.wallConfig?.left ? 'L' : 'R'}-${spaceInfo.gapConfig?.left}-${spaceInfo.gapConfig?.right}`}
                 spaceInfo={spaceInfo}
                 viewMode={viewMode}
                 renderMode="solid"
@@ -293,16 +332,29 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                   maxColumns = columnLimits.maxColumns;
                   
                   const currentValue = spaceInfo.droppedCeiling?.enabled 
-                    ? (spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3)
-                    : (spaceInfo.customColumnCount || 3);
+                    ? (spaceInfo.mainDoorCount || spaceInfo.customColumnCount || columnLimits.minColumns)
+                    : (spaceInfo.customColumnCount || columnLimits.minColumns);
+                  
+                  // 현재 값이 범위를 벗어나면 자동 조정
+                  const validValue = Math.max(columnLimits.minColumns, 
+                                             Math.min(columnLimits.maxColumns, currentValue));
+                  
+                  // 값이 조정되었으면 즉시 업데이트
+                  if (validValue !== currentValue) {
+                    if (spaceInfo.droppedCeiling?.enabled) {
+                      handleUpdate({ mainDoorCount: validValue });
+                    } else {
+                      handleUpdate({ customColumnCount: validValue });
+                    }
+                  }
                   
                   return (
                     <>
                       <input
                         type="range"
                         min={columnLimits.minColumns}
-                        max={maxColumns}
-                        value={Math.min(currentValue, maxColumns)}
+                        max={columnLimits.maxColumns}
+                        value={validValue}
                         onChange={(e) => {
                           const value = parseInt(e.target.value);
                           if (spaceInfo.droppedCeiling?.enabled) {
@@ -314,7 +366,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         className={styles.rangeInput}
                       />
                       <span className={styles.rangeValue}>
-                        {Math.min(currentValue, maxColumns)}
+                        {validValue}
                       </span>
                     </>
                   );
@@ -325,15 +377,34 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
               {spaceInfo.droppedCeiling?.enabled && (
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>단내림 컬럼수</label>
-                  <input
-                    type="range"
-                    min={1}
-                    max={2}
-                    value={spaceInfo.droppedCeilingDoorCount || 1}
-                    onChange={(e) => handleUpdate({ droppedCeilingDoorCount: parseInt(e.target.value) })}
-                    className={styles.rangeInput}
-                  />
-                  <span className={styles.rangeValue}>{spaceInfo.droppedCeilingDoorCount || 1}</span>
+                  {(() => {
+                    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
+                    // 단내림 구간의 내부 너비 계산 (프레임 두께 고려)
+                    const frameThickness = spaceInfo.surroundType === 'surround' ? 50 : 0;
+                    const droppedInternalWidth = droppedCeilingWidth - frameThickness;
+                    
+                    // 단내림 구간의 컬럼 제한 계산
+                    const droppedColumnLimits = ColumnIndexer.getColumnLimits(droppedInternalWidth);
+                    const currentValue = spaceInfo.droppedCeilingDoorCount || droppedColumnLimits.minColumns;
+                    
+                    // 현재 값이 범위를 벗어나면 자동 조정
+                    const validValue = Math.max(droppedColumnLimits.minColumns, 
+                                               Math.min(droppedColumnLimits.maxColumns, currentValue));
+                    
+                    return (
+                      <>
+                        <input
+                          type="range"
+                          min={droppedColumnLimits.minColumns}
+                          max={droppedColumnLimits.maxColumns}
+                          value={validValue}
+                          onChange={(e) => handleUpdate({ droppedCeilingDoorCount: parseInt(e.target.value) })}
+                          className={styles.rangeInput}
+                        />
+                        <span className={styles.rangeValue}>{validValue}</span>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -372,14 +443,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
             onClick={handleStartDesign}
             disabled={!canProceed || saving}
           >
-            {saving ? (
-              <>
-                <LoadingSpinner size="small" type="spinner" />
-                <span>저장 중...</span>
-              </>
-            ) : (
-              '시작하기'
-            )}
+            시작하기
           </button>
         </div>
       </div>

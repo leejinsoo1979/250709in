@@ -8,17 +8,18 @@ interface GapControlsProps {
 }
 
 const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
-  const [leftGap, setLeftGap] = useState(spaceInfo.gapConfig?.left || 2);
-  const [rightGap, setRightGap] = useState(spaceInfo.gapConfig?.right || 2);
+  // spaceInfo가 undefined인 경우 기본값 처리
+  const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left || 2);
+  const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right || 2);
   
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
-    setLeftGap(spaceInfo.gapConfig?.left || 2);
-    setRightGap(spaceInfo.gapConfig?.right || 2);
-  }, [spaceInfo.gapConfig]);
+    setLeftGap(spaceInfo?.gapConfig?.left || 2);
+    setRightGap(spaceInfo?.gapConfig?.right || 2);
+  }, [spaceInfo?.gapConfig]);
   
-  // 노서라운드가 아닌 경우 렌더링하지 않음
-  if (spaceInfo.surroundType !== 'no-surround') {
+  // spaceInfo가 없거나 노서라운드가 아닌 경우 렌더링하지 않음
+  if (!spaceInfo || spaceInfo.surroundType !== 'no-surround') {
     return null;
   }
   

@@ -23,6 +23,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   doorWidth,
   doorXOffset = 0,
   originalSlotWidth,
+  slotIndex,
   slotCenterX,
   adjustedWidth
 }) => {
@@ -70,6 +71,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           isDragging={isDragging}
           isEditMode={isEditMode}
+        slotIndex={slotIndex}
         />
       )}
     </BaseFurnitureShell>

@@ -26,6 +26,7 @@ export interface FurnitureTypeProps {
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
+  slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   // 이벤트 핸들러 추가

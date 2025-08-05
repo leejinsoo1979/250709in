@@ -31,6 +31,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   doorWidth,
   originalSlotWidth,
+  slotIndex,
   slotCenterX,
   slotWidths
 }) => {
@@ -871,6 +872,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
+        slotIndex={slotIndex}
         />
       )}
     </>

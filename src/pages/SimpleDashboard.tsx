@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { ProjectSummary } from '../firebase/types';
-import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles } from '@/firebase/projects';
+import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import SettingsPanel from '@/components/common/SettingsPanel';
@@ -476,20 +476,41 @@ const SimpleDashboard: React.FC = () => {
     }
   };
 
-  // 휴지통으로 이동 함수
-  const moveToTrash = (project: ProjectSummary) => {
-    const updatedTrash = [...deletedProjects, { ...project, deletedAt: new Date() }];
-    setDeletedProjects(updatedTrash);
-    setFirebaseProjects(prev => prev.filter(p => p.id !== project.id));
-    
-    // localStorage에 저장
-    if (user) {
-      localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
-    }
-    
-    // 북마크에서도 제거
-    if (bookmarkedProjects.has(project.id)) {
-      toggleBookmark(project.id);
+  // 휴지통으로 이동 함수 (실제로 Firebase에서 삭제)
+  const moveToTrash = async (project: ProjectSummary) => {
+    try {
+      // Firebase에서 프로젝트 삭제
+      const { error } = await deleteProject(project.id);
+      
+      if (error) {
+        alert('프로젝트 삭제 실패: ' + error);
+        return;
+      }
+      
+      // 로컬 상태에서 제거
+      setFirebaseProjects(prev => prev.filter(p => p.id !== project.id));
+      
+      // 북마크에서도 제거
+      if (bookmarkedProjects.has(project.id)) {
+        toggleBookmark(project.id);
+      }
+      
+      // BroadcastChannel로 다른 창에 삭제 알림
+      try {
+        const channel = new BroadcastChannel('project-updates');
+        channel.postMessage({
+          type: 'PROJECT_DELETED',
+          projectId: project.id
+        });
+        channel.close();
+      } catch (broadcastError) {
+        console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+      }
+      
+      console.log('✅ 프로젝트 삭제 완료:', project.id);
+    } catch (error) {
+      console.error('프로젝트 삭제 중 오류:', error);
+      alert('프로젝트 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -1347,6 +1368,41 @@ const SimpleDashboard: React.FC = () => {
         
         // Firebase에 저장
         await saveFolderDataToFirebase(selectedProjectId!, updatedFolders);
+      } else if (moreMenu.itemType === 'design') {
+        // 디자인 파일 삭제
+        try {
+          if (selectedProjectId) {
+            const { error } = await deleteDesignFile(moreMenu.itemId, selectedProjectId);
+            
+            if (error) {
+              alert('디자인 파일 삭제 실패: ' + error);
+            } else {
+              // 로컬 상태에서 제거
+              setProjectDesignFiles(prev => ({
+                ...prev,
+                [selectedProjectId]: prev[selectedProjectId]?.filter(df => df.id !== moreMenu.itemId) || []
+              }));
+              
+              // BroadcastChannel로 다른 창에 삭제 알림
+              try {
+                const channel = new BroadcastChannel('project-updates');
+                channel.postMessage({
+                  type: 'DESIGN_FILE_DELETED',
+                  projectId: selectedProjectId,
+                  designFileId: moreMenu.itemId
+                });
+                channel.close();
+              } catch (broadcastError) {
+                console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              }
+              
+              console.log('✅ 디자인 파일 삭제 완료:', moreMenu.itemId);
+            }
+          }
+        } catch (error) {
+          console.error('디자인 파일 삭제 중 오류:', error);
+          alert('디자인 파일 삭제 중 오류가 발생했습니다.');
+        }
       }
       console.log('삭제:', moreMenu.itemId);
     }

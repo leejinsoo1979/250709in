@@ -43,6 +43,39 @@ const PROJECTS_COLLECTION = 'projects';
 const THUMBNAILS_STORAGE_PATH = 'project-thumbnails';
 
 // ========================
+// 유틸리티 함수
+// ========================
+
+/**
+ * 객체에서 undefined 값을 재귀적으로 제거
+ * Firestore는 undefined를 지원하지 않으므로 필수
+ */
+const removeUndefinedValues = (obj: any): any => {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefinedValues(item));
+  }
+  
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const cleaned: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (value !== undefined) {
+          cleaned[key] = removeUndefinedValues(value);
+        }
+      }
+    }
+    return cleaned;
+  }
+  
+  return obj;
+};
+
+// ========================
 // 타입 정의
 // ========================
 
@@ -70,6 +103,13 @@ export const createProject = async (
   options?: { skipThumbnail?: boolean }
 ): Promise<ServiceResponse<string>> => {
   try {
+    console.log('🔍 createProject 호출됨, projectData:', projectData);
+    
+    if (!projectData || !projectData.basicInfo) {
+      console.error('❌ basicInfo가 없습니다:', projectData);
+      return { success: false, error: 'basicInfo가 필요합니다.' };
+    }
+    
     const user = await getCurrentUserAsync();
     if (!user) {
       return { success: false, error: '로그인이 필요합니다.' };
@@ -104,8 +144,12 @@ export const createProject = async (
       }
     };
 
+    // undefined 값 제거
+    const cleanedProjectData = removeUndefinedValues(newProjectData);
+    console.log('🧹 undefined 값 제거 후 데이터:', cleanedProjectData);
+
     // 프로젝트 문서 생성
-    const projectRef = await addDoc(collection(db, PROJECTS_COLLECTION), newProjectData);
+    const projectRef = await addDoc(collection(db, PROJECTS_COLLECTION), cleanedProjectData);
     
     // 썸네일 업로드 (있는 경우 && 스킵 옵션이 없는 경우)
     let thumbnailUrl: string | undefined;
@@ -276,8 +320,12 @@ export const updateProject = async (
       console.log('📸 썸네일 업데이트 스킵 (빠른 저장 모드)');
     }
 
+    // undefined 값 제거
+    const cleanedUpdateData = removeUndefinedValues(updateData);
+    console.log('🧹 업데이트 데이터에서 undefined 값 제거:', cleanedUpdateData);
+    
     // Firestore 업데이트
-    await updateDoc(projectRef, updateData);
+    await updateDoc(projectRef, cleanedUpdateData);
 
     console.log('✅ 프로젝트 업데이트 완료:', {
       projectId,

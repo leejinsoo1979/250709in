@@ -42,7 +42,40 @@ interface RoomProps {
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-const END_PANEL_THICKNESS = 20; // 20mm로 통일
+const END_PANEL_THICKNESS = 18; // 18mm로 통일
+
+// 노서라운드 모드에서 엔드패널과 이격거리를 계산하는 헬퍼 함수
+const calculateNoSurroundOffset = (spaceInfo: SpaceInfo, side: 'left' | 'right'): number => {
+  if (spaceInfo.surroundType !== 'no-surround') return 0;
+  
+  const gapConfig = spaceInfo.gapConfig || { left: 20, right: 20 };
+  const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
+  
+  if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+    // 빌트인: 이격거리만
+    return side === 'left' ? (gapConfig.left || 2) : (gapConfig.right || 2);
+  } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+    // 세미스탠딩: 벽이 있으면 이격거리만, 없으면 엔드패널 + 이격거리
+    if (side === 'left') {
+      return wallConfig.left ? (gapConfig.left || 2) : (END_PANEL_THICKNESS + (gapConfig.left || 0));
+    } else {
+      return wallConfig.right ? (gapConfig.right || 2) : (END_PANEL_THICKNESS + (gapConfig.right || 0));
+    }
+  } else {
+    // 프리스탠딩: 엔드패널 + 이격거리
+    return END_PANEL_THICKNESS + (side === 'left' ? (gapConfig.left || 0) : (gapConfig.right || 0));
+  }
+};
+
+// 노서라운드 모드에서 최대 오프셋을 계산 (상단/하단 프레임용)
+const calculateMaxNoSurroundOffset = (spaceInfo: SpaceInfo): number => {
+  if (spaceInfo.surroundType !== 'no-surround') return 20; // 서라운드 기본값
+  
+  const leftOffset = calculateNoSurroundOffset(spaceInfo, 'left');
+  const rightOffset = calculateNoSurroundOffset(spaceInfo, 'right');
+  
+  return Math.max(leftOffset, rightOffset);
+};
 
 // 점선 라인 컴포넌트
 const DashedLine: React.FC<{
@@ -165,24 +198,43 @@ const Room: React.FC<RoomProps> = ({
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules); // 가구/프레임용 (동적 계산)
     const frameThicknessMm = calculateFrameThickness(spaceInfo);
+    console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
+      frameThicknessMm,
+      wallConfig: spaceInfo.wallConfig,
+      installType: spaceInfo.installType,
+      surroundType: spaceInfo.surroundType
+    });
     const baseFrameMm = calculateBaseFrameWidth(spaceInfo);
     const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
     const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
     
-    // 노서라운드 빌트인 디버그
+    // 노서라운드 프레임 디버그
     console.log('🔍 Room - 프레임 계산 결과:', {
       surroundType: spaceInfo.surroundType,
       installType: spaceInfo.installType,
+      wallConfig: spaceInfo.wallConfig,
       frameThicknessMm,
       topBottomFrameHeightMm,
       baseFrameHeightMm,
       baseFrameMm,
       isNoSurround: spaceInfo.surroundType === 'no-surround',
       isBuiltin: spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in',
-      shouldHideAllFrames: spaceInfo.surroundType === 'no-surround'
+      isSemistanding: spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing',
+      shouldHideAllFrames: spaceInfo.surroundType === 'no-surround',
+      '예상 프레임': spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')
+        ? (spaceInfo.wallConfig?.left 
+            ? '좌측: 0mm (벽있음), 우측: 18mm (엔드패널)' 
+            : '좌측: 18mm (엔드패널), 우측: 0mm (벽있음)')
+        : '서라운드 또는 다른 타입'
     });
     
     // mm를 Three.js 단위로 변환
+    console.log('🔥 calculateDimensionsAndFrames - 변환 직전:', {
+      'frameThicknessMm.left': frameThicknessMm.left,
+      'frameThicknessMm.right': frameThicknessMm.right,
+      'mmToThreeUnits(frameThicknessMm.left)': mmToThreeUnits(frameThicknessMm.left),
+      'mmToThreeUnits(frameThicknessMm.right)': mmToThreeUnits(frameThicknessMm.right)
+    });
     return {
       width: mmToThreeUnits(widthMm),
       height: mmToThreeUnits(heightMm),
@@ -209,13 +261,28 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, placedModules]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, spaceInfo.wallConfig, placedModules]);
   
   const { 
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
     // 원본 mm 값들
     widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
   } = dimensions;
+  
+  // 디버깅을 위한 로그
+  console.log('🎯 Room - dimensions 디버깅:', {
+    frameThicknessMm,
+    frameThickness,
+    wallConfig: spaceInfo.wallConfig,
+    installType: spaceInfo.installType,
+    surroundType: spaceInfo.surroundType,
+    '계산된_엔드패널': {
+      좌측mm: frameThicknessMm.left,
+      우측mm: frameThicknessMm.right,
+      좌측Three: frameThickness.left,
+      우측Three: frameThickness.right
+    }
+  });
   
   // 기둥 분절 계산을 메모이제이션 (dimensions 정의 이후로 이동)
   const frameSegments = useMemo(() => {
@@ -226,15 +293,37 @@ const Room: React.FC<RoomProps> = ({
       return null; // 분절 없음
     }
     
-    // 노서라운드일 때는 슬롯 가이드와 동일한 범위 사용
+    // 노서라운드일 때는 엔드패널 안쪽 범위 사용
     let frameWidth, frameX;
     if (spaceInfo.surroundType === 'no-surround') {
       const indexing = calculateSpaceIndexing(spaceInfo);
       const { threeUnitBoundaries } = indexing;
       const slotStartX = threeUnitBoundaries[0];
       const slotEndX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
-      frameWidth = slotEndX - slotStartX;
-      frameX = (slotStartX + slotEndX) / 2;
+      
+      // 엔드패널 안쪽으로 조정
+      const endPanelThickness = mmToThreeUnits(END_PANEL_THICKNESS); // 18mm
+      let adjustedStartX = slotStartX;
+      let adjustedEndX = slotEndX;
+      
+      if (spaceInfo.installType === 'freestanding') {
+        // 벽없음: 양쪽 엔드패널 안쪽으로
+        adjustedStartX = slotStartX + endPanelThickness;
+        adjustedEndX = slotEndX - endPanelThickness;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 벽1개: 벽이 없는 쪽만 조정
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽이 있으면 오른쪽만 조정
+          adjustedEndX = slotEndX - endPanelThickness;
+        } else if (spaceInfo.wallConfig?.right) {
+          // 오른쪽 벽이 있으면 왼쪽만 조정
+          adjustedStartX = slotStartX + endPanelThickness;
+        }
+      }
+      // builtin은 양쪽 벽이 있으므로 조정 불필요
+      
+      frameWidth = adjustedEndX - adjustedStartX;
+      frameX = (adjustedStartX + adjustedEndX) / 2;
     } else {
       frameWidth = baseFrame.width;
       // xOffset 직접 계산 (-width / 2)
@@ -286,10 +375,11 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
     
-    // 2D에서 베이스프레임은 연두색으로 표시
+    // 2D에서 베이스프레임은 투명하게 표시
     let frameColor = materialConfig?.doorColor || defaultColor;
+    let baseFrameTransparent = false;
     if (viewMode === '2D' && frameType === 'base') {
-      frameColor = '#7FFF00'; // 연두색 (Chartreuse)
+      baseFrameTransparent = true;
     }
     
     const isHighlighted = frameType && highlightedFrame === frameType;
@@ -315,8 +405,8 @@ const Room: React.FC<RoomProps> = ({
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(isHighlighted ? highlightEmissive : 0x000000),  // 강조 시 자체발광 추가
       emissiveIntensity: isHighlighted ? 1.0 : 0.0, // 강조 시 발광 강도
-      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted,  // 강조 시에도 투명하게
-      opacity: renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서 강조 시 더 불투명
+      transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted || baseFrameTransparent,  // 강조 시에도 투명하게
+      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
     });
 
     // 프레임 텍스처 적용 (강조되지 않은 경우에만)
@@ -464,16 +554,19 @@ const Room: React.FC<RoomProps> = ({
 
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
-  console.log('🏠 Room - 노서라운드 빌트인 프레임 체크:', {
+  console.log('🏠 Room - 노서라운드 프레임 체크:', {
     installType: spaceInfo.installType,
     surroundType: spaceInfo.surroundType,
     isNoSurround: spaceInfo.surroundType === 'no-surround',
     isBuiltin: spaceInfo.installType === 'builtin',
+    isSemistanding: spaceInfo.installType === 'semistanding',
+    wallConfig,
     frameThicknessMm,
     frameThickness,
     leftPanel: frameThickness.left > 0 ? `${frameThicknessMm.left}mm` : 'none',
     rightPanel: frameThickness.right > 0 ? `${frameThicknessMm.right}mm` : 'none',
-    shouldHaveNoFrames: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'builtin'
+    shouldHaveEndPanelLeft: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.left,
+    shouldHaveEndPanelRight: spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'semistanding' && !wallConfig?.right
   });
   
   // 내부 공간 계산 (세로 가이드 선 위치 확인용)
@@ -489,8 +582,8 @@ const Room: React.FC<RoomProps> = ({
       (spaceInfo.installType === 'semistanding' && (!wallConfig?.left || !wallConfig?.right))) {
     console.log('🔍 엔드패널 깊이 비교:', {
       서라운드_깊이mm: slotFloorDepth / 0.01,
-      노서라운드_깊이mm: (slotFloorDepth - mmToThreeUnits(20)) / 0.01,
-      차이mm: 20,
+      노서라운드_깊이mm: (slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS)) / 0.01,
+      차이mm: END_PANEL_THICKNESS,
       slotFloorDepth,
       노서라운드깊이: slotFloorDepth - mmToThreeUnits(20)
     });
@@ -679,9 +772,9 @@ const Room: React.FC<RoomProps> = ({
               } else if (spaceInfo.installType === 'semistanding') {
                 if (spaceInfo.wallConfig?.left) {
                   leftReduction = 2;
-                  rightReduction = 20;
+                  rightReduction = END_PANEL_THICKNESS;
                 } else {
-                  leftReduction = 20;
+                  leftReduction = END_PANEL_THICKNESS;
                   rightReduction = 2;
                 }
               } else {
@@ -1060,8 +1153,8 @@ const Room: React.FC<RoomProps> = ({
         const frameEndZ = furnitureZOffset + furnitureDepth/2;
         
         // 바닥면의 시작점(뒤쪽)과 끝점(프레임 앞쪽) 사이의 거리
-        // 앞쪽에서 20mm 줄이기
-        const floorDepth = frameEndZ - backZ - mmToThreeUnits(20);
+        // 앞쪽에서 END_PANEL_THICKNESS 줄이기
+        const floorDepth = frameEndZ - backZ - mmToThreeUnits(END_PANEL_THICKNESS);
         
         const columns = spaceInfo.columns || [];
         
@@ -1175,8 +1268,25 @@ const Room: React.FC<RoomProps> = ({
       })}
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {/* 노서라운드 모드에서는 좌우 프레임 숨김 */}
-      {showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround' && (() => {
+      {console.log('🔍 왼쪽 프레임/엔드패널 렌더링 체크:', {
+        showFrame,
+        frameThicknessLeft: frameThickness.left,
+        frameThicknessLeftMm: frameThicknessMm.left,
+        condition: showFrame && frameThickness.left > 0,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        wallConfigLeft: wallConfig?.left,
+        wallConfigRight: wallConfig?.right,
+        '예상': !wallConfig?.left ? '왼쪽에 엔드패널 있어야 함' : '왼쪽에 프레임 없음'
+      })}
+      {console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', {
+        frameThicknessLeft: frameThickness.left,
+        frameThicknessLeftMm: frameThicknessMm.left,
+        'frameThickness.left > 0': frameThickness.left > 0,
+        showFrame,
+        'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
+      })}
+      {showFrame && frameThickness.left > 0 && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1199,24 +1309,28 @@ const Room: React.FC<RoomProps> = ({
                 args={[
                   frameThickness.left, 
                   droppedHeight, // 단내림 구간 높이
-                  // 설치 타입과 벽 여부에 따라 깊이 결정
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-                  spaceInfo.installType === 'freestanding' 
-                    ? (spaceInfo.surroundType === 'no-surround' 
-                        ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드: 20mm 짧게
-                        : slotFloorDepth)
-                    : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (20mm)
+                  // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+                  spaceInfo.surroundType === 'no-surround'
+                    ? (wallConfig?.left 
+                        ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+                        : slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))  // 벽이 없는 경우: 엔드패널
+                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
+                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? slotFloorDepth  // 서라운드 엔드패널: 전체 깊이
+                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
                   xOffset + frameThickness.left/2, 
                   droppedCenterY, // 단내림 구간 중심
-                  // 노서라운드 엔드패널은 뒤쪽부터 시작해서 앞쪽 20mm 짧게
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-                  spaceInfo.installType === 'freestanding'
-                    ? (spaceInfo.surroundType === 'no-surround'
-                        ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
-                        : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
+                  // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+                  spaceInfo.surroundType === 'no-surround'
+                    ? (wallConfig?.left 
+                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
+                        : backZ + (slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))/2)  // 벽이 없는 경우: 엔드패널 위치
+                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
+                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
+                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
                 ]}
                 material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
@@ -1226,29 +1340,41 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 우측 단내림인 경우 기존 렌더링
+        console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
+          frameThicknessLeft: frameThickness.left,
+          wallConfigLeft: wallConfig?.left,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
+          위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
+        });
         return (
           <BoxWithEdges
             args={[
               frameThickness.left, 
               adjustedPanelHeight, 
-              // 설치 타입과 벽 여부에 따라 깊이 결정
-              (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-              spaceInfo.installType === 'freestanding' 
-                ? (spaceInfo.surroundType === 'no-surround' 
-                    ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드: 20mm 짧게
-                    : slotFloorDepth)
-                : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (20mm)
+              // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+              spaceInfo.surroundType === 'no-surround'
+                ? (wallConfig?.left 
+                    ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+                    : slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))  // 벽이 없는 경우: 엔드패널
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
+                   (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                    ? slotFloorDepth  // 서라운드 엔드패널: 전체 깊이
+                    : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
               xOffset + frameThickness.left/2, 
               sideFrameCenterY, 
-              // 노서라운드 엔드패널은 뒤쪽부터 시작해서 앞쪽 20mm 짧게
-              (spaceInfo.installType === 'semistanding' && !wallConfig?.left) || 
-              spaceInfo.installType === 'freestanding'
-                ? (spaceInfo.surroundType === 'no-surround'
-                    ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
-                    : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
-                : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
+              // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+              spaceInfo.surroundType === 'no-surround'
+                ? (wallConfig?.left 
+                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
+                    : backZ + (slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))/2)  // 벽이 없는 경우: 엔드패널 위치
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
+                   (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                    ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
+                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
@@ -1258,8 +1384,7 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {/* 노서라운드 모드에서는 좌우 프레임 숨김 */}
-      {showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround' && (() => {
+      {showFrame && frameThickness.right > 0 && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
@@ -1282,24 +1407,28 @@ const Room: React.FC<RoomProps> = ({
                 args={[
                   frameThickness.right, 
                   droppedHeight, // 단내림 구간 높이
-                  // 설치 타입과 벽 여부에 따라 깊이 결정
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-                  spaceInfo.installType === 'freestanding' 
-                    ? (spaceInfo.surroundType === 'no-surround' 
-                        ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드 엔드패널: 20mm 짧게
-                        : slotFloorDepth)  // 서라운드 엔드패널: 전체 깊이
-                    : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
+                  // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+                  spaceInfo.surroundType === 'no-surround'
+                    ? (wallConfig?.right 
+                        ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+                        : slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))  // 벽이 없는 경우: 엔드패널
+                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
+                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? slotFloorDepth  // 서라운드 엔드패널: 전체 깊이
+                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
                   xOffset + width - frameThickness.right/2, 
                   droppedCenterY, // 단내림 구간 중심
-                  // 노서라운드 엔드패널은 뒤쪽부터 시작해서 앞쪽 20mm 짧게
-                  (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-                  spaceInfo.installType === 'freestanding'
-                    ? (spaceInfo.surroundType === 'no-surround'
-                        ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
-                        : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
+                  // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+                  spaceInfo.surroundType === 'no-surround'
+                    ? (wallConfig?.right 
+                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
+                        : backZ + (slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))/2)  // 벽이 없는 경우: 엔드패널 위치
+                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
+                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                        ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
+                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
@@ -1314,24 +1443,28 @@ const Room: React.FC<RoomProps> = ({
             args={[
               frameThickness.right, 
               adjustedPanelHeight, 
-              // 설치 타입과 벽 여부에 따라 깊이 결정
-              (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-              spaceInfo.installType === 'freestanding' 
-                ? (spaceInfo.surroundType === 'no-surround' 
-                    ? slotFloorDepth - mmToThreeUnits(20)  // 노서라운드 엔드패널: 20mm 짧게
-                    : slotFloorDepth)  // 서라운드 엔드패널: 전체 깊이
-                : mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우 프레임 (18mm)
+              // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+              spaceInfo.surroundType === 'no-surround'
+                ? (wallConfig?.right 
+                    ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+                    : slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))  // 벽이 없는 경우: 엔드패널
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
+                   (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                    ? slotFloorDepth  // 서라운드 엔드패널: 전체 깊이
+                    : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
               xOffset + width - frameThickness.right/2, 
               sideFrameCenterY, 
-              // 노서라운드 엔드패널은 뒤쪽부터 시작해서 앞쪽 20mm 짧게
-              (spaceInfo.installType === 'semistanding' && !wallConfig?.right) || 
-              spaceInfo.installType === 'freestanding'
-                ? (spaceInfo.surroundType === 'no-surround'
-                    ? backZ + (slotFloorDepth - mmToThreeUnits(20))/2  // 20mm 짧은 패널의 중심
-                    : backZ + slotFloorDepth/2)  // 서라운드는 기존대로
-                : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 프레임: 기존 위치
+              // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+              spaceInfo.surroundType === 'no-surround'
+                ? (wallConfig?.right 
+                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
+                    : backZ + (slotFloorDepth - mmToThreeUnits(END_PANEL_THICKNESS))/2)  // 벽이 없는 경우: 엔드패널 위치
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
+                   (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                    ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
+                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
             ]}
             material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
@@ -1364,15 +1497,37 @@ const Room: React.FC<RoomProps> = ({
               isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
             }
             
-            // 노서라운드일 때는 슬롯 가이드와 동일한 범위 사용
+            // 노서라운드일 때는 엔드패널 안쪽 범위 사용
             let frameWidth, frameX;
             if (spaceInfo.surroundType === 'no-surround') {
               const indexing = calculateSpaceIndexing(spaceInfo);
               const { threeUnitBoundaries } = indexing;
               const slotStartX = threeUnitBoundaries[0];
               const slotEndX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
-              frameWidth = slotEndX - slotStartX;
-              frameX = (slotStartX + slotEndX) / 2;
+              
+              // 엔드패널 안쪽으로 조정
+              const endPanelThickness = mmToThreeUnits(END_PANEL_THICKNESS); // 18mm
+              let adjustedStartX = slotStartX;
+              let adjustedEndX = slotEndX;
+              
+              if (spaceInfo.installType === 'freestanding') {
+                // 벽없음: 양쪽 엔드패널 안쪽으로
+                adjustedStartX = slotStartX + endPanelThickness;
+                adjustedEndX = slotEndX - endPanelThickness;
+              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                // 벽1개: 벽이 없는 쪽만 조정
+                if (spaceInfo.wallConfig?.left) {
+                  // 왼쪽 벽이 있으면 오른쪽만 조정
+                  adjustedEndX = slotEndX - endPanelThickness;
+                } else if (spaceInfo.wallConfig?.right) {
+                  // 오른쪽 벽이 있으면 왼쪽만 조정
+                  adjustedStartX = slotStartX + endPanelThickness;
+                }
+              }
+              // builtin은 양쪽 벽이 있으므로 조정 불필요
+              
+              frameWidth = adjustedEndX - adjustedStartX;
+              frameX = (adjustedStartX + adjustedEndX) / 2;
             } else {
               frameWidth = finalPanelWidth;
               frameX = topBottomPanelX;
@@ -1393,12 +1548,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
                     topElementsY, 
-                    // 노서라운드: 엔드패널이 있으면 40mm 뒤로, 서라운드: 20mm 뒤로
+                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                    (spaceInfo.surroundType === 'no-surround' && 
-                     (spaceInfo.installType === 'freestanding' || 
-                      (spaceInfo.installType === 'semistanding' && (!spaceInfo.wallConfig?.left || !spaceInfo.wallConfig?.right)))
-                     ? mmToThreeUnits(40) : mmToThreeUnits(20))
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -1434,14 +1586,14 @@ const Room: React.FC<RoomProps> = ({
                 } else if (spaceInfo.installType === 'semistanding') {
                   if (spaceInfo.wallConfig?.left) {
                     leftReduction = 2;
-                    rightReduction = 20;
+                    rightReduction = END_PANEL_THICKNESS;
                   } else {
-                    leftReduction = 20;
+                    leftReduction = END_PANEL_THICKNESS;
                     rightReduction = 2;
                   }
                 } else {
-                  leftReduction = 20;
-                  rightReduction = 20;
+                  leftReduction = END_PANEL_THICKNESS;
+                  rightReduction = END_PANEL_THICKNESS;
                 }
               }
               
@@ -1511,7 +1663,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       droppedX,
                       panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -1526,7 +1678,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       normalX,
                       topElementsY,
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
@@ -1591,12 +1743,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
                     topElementsY, 
-                    // 노서라운드: 엔드패널이 있으면 40mm 뒤로, 서라운드: 20mm 뒤로
+                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                    (spaceInfo.surroundType === 'no-surround' && 
-                     (spaceInfo.installType === 'freestanding' || 
-                      (spaceInfo.installType === 'semistanding' && (!spaceInfo.wallConfig?.left || !spaceInfo.wallConfig?.right)))
-                     ? mmToThreeUnits(40) : mmToThreeUnits(20))
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -1628,8 +1777,8 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     segment.x, // 분절된 위치
                     topElementsY, 
-                    // 바닥 프레임 앞면과 같은 z축 위치에서 20mm 뒤로 이동
-                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                    // 바닥 프레임 앞면과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
@@ -1920,15 +2069,37 @@ const Room: React.FC<RoomProps> = ({
           {(() => {
             const columns = spaceInfo.columns || [];
             
-            // 노서라운드일 때는 슬롯 가이드와 동일한 범위 사용
+            // 노서라운드일 때는 엔드패널 안쪽 범위 사용
             let frameWidth, frameX;
             if (spaceInfo.surroundType === 'no-surround') {
               const indexing = calculateSpaceIndexing(spaceInfo);
               const { threeUnitBoundaries } = indexing;
               const slotStartX = threeUnitBoundaries[0];
               const slotEndX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
-              frameWidth = slotEndX - slotStartX;
-              frameX = (slotStartX + slotEndX) / 2;
+              
+              // 엔드패널 안쪽으로 조정
+              const endPanelThickness = mmToThreeUnits(END_PANEL_THICKNESS); // 18mm
+              let adjustedStartX = slotStartX;
+              let adjustedEndX = slotEndX;
+              
+              if (spaceInfo.installType === 'freestanding') {
+                // 벽없음: 양쪽 엔드패널 안쪽으로
+                adjustedStartX = slotStartX + endPanelThickness;
+                adjustedEndX = slotEndX - endPanelThickness;
+              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                // 벽1개: 벽이 없는 쪽만 조정
+                if (spaceInfo.wallConfig?.left) {
+                  // 왼쪽 벽이 있으면 오른쪽만 조정
+                  adjustedEndX = slotEndX - endPanelThickness;
+                } else if (spaceInfo.wallConfig?.right) {
+                  // 오른쪽 벽이 있으면 왼쪽만 조정
+                  adjustedStartX = slotStartX + endPanelThickness;
+                }
+              }
+              // builtin은 양쪽 벽이 있으므로 조정 불필요
+              
+              frameWidth = adjustedEndX - adjustedStartX;
+              frameX = (adjustedStartX + adjustedEndX) / 2;
             } else {
               frameWidth = finalPanelWidth;
               frameX = topBottomPanelX;
@@ -1955,12 +2126,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     frameX, // 조정된 X 위치
                     panelStartY + baseFrameHeight/2, 
-                    // 노서라운드: 엔드패널이 있으면 40mm 뒤로, 서라운드: 20mm 뒤로
+                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                    (spaceInfo.surroundType === 'no-surround' && 
-                     (spaceInfo.installType === 'freestanding' || 
-                      (spaceInfo.installType === 'semistanding' && (!spaceInfo.wallConfig?.left || !spaceInfo.wallConfig?.right)))
-                     ? mmToThreeUnits(40) : mmToThreeUnits(20))
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={createFrameMaterial('base')}
                   renderMode={renderMode}
@@ -2026,12 +2194,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     topBottomPanelX, // 중앙 정렬
                     panelStartY + baseFrameHeight/2, 
-                    // 노서라운드: 엔드패널이 있으면 40mm 뒤로, 서라운드: 20mm 뒤로
+                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                    (spaceInfo.surroundType === 'no-surround' && 
-                     (spaceInfo.installType === 'freestanding' || 
-                      (spaceInfo.installType === 'semistanding' && (!spaceInfo.wallConfig?.left || !spaceInfo.wallConfig?.right)))
-                     ? mmToThreeUnits(40) : mmToThreeUnits(20))
+                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
                   material={createFrameMaterial('base')}
                   renderMode={renderMode}
@@ -2065,8 +2230,8 @@ const Room: React.FC<RoomProps> = ({
                   position={[
                     segment.x, // 분절된 위치
                     panelStartY + baseFrameHeight/2, 
-                    // 상단 프레임과 같은 z축 위치에서 20mm 뒤로 이동
-                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(20)
+                    // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   material={createFrameMaterial('base')}
                   renderMode={renderMode}
@@ -2161,6 +2326,9 @@ export default React.memo(Room, (prevProps, nextProps) => {
   // installType과 wallConfig 비교 (벽 렌더링에 영향)
   if (prevSpace.installType !== nextSpace.installType) return false;
   if (JSON.stringify(prevSpace.wallConfig) !== JSON.stringify(nextSpace.wallConfig)) return false;
+  
+  // gapConfig 비교 (노서라운드 모드에서 엔드패널 위치에 영향)
+  if (JSON.stringify(prevSpace.gapConfig) !== JSON.stringify(nextSpace.gapConfig)) return false;
   
   // 가구 배치 비교 (빠른 비교를 위해 길이만 우선 확인)
   const prevModules = prevProps.placedModules || [];

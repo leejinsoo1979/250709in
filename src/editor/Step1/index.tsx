@@ -70,13 +70,10 @@ const Step1: React.FC<Step1Props> = ({ onClose }) => {
       loadProject(projectId);
     } else {
       // 새 프로젝트 시작 - 모든 데이터 초기화
-      // 주의: 이미 입력된 데이터가 있을 수 있으므로 조건부로 초기화
-      const currentBasicInfo = useProjectStore.getState().basicInfo;
-      if (!currentBasicInfo.title && !currentBasicInfo.location) {
-        resetProject();
-        resetSpaceConfig();
-        clearAllModules();
-      }
+      // 모달로 열린 경우에는 항상 초기화
+      resetProject();
+      resetSpaceConfig();
+      clearAllModules();
     }
   }, []);
 

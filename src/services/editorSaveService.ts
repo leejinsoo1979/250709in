@@ -6,7 +6,8 @@ import {
   ProjectData, 
   SpaceConfiguration, 
   CustomLayoutConfiguration,
-  UpdateProjectData 
+  UpdateProjectData,
+  CreateProjectData 
 } from '@/types/project';
 import { 
   createProject, 
@@ -44,7 +45,9 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
   const { basicInfo, spaceInfo, placedModules, customOptions } = editorData;
 
   // STEP 2: 공간 설정 변환
-  const spaceConfig: SpaceConfiguration = {
+  // spaceInfo를 그대로 전달하되, dimensions 구조로 변환
+  const spaceConfig: any = {
+    ...spaceInfo,
     dimensions: {
       width: spaceInfo.width || 4800,
       height: spaceInfo.height || 2400,
@@ -63,6 +66,19 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
       enabled: spaceInfo.hasFloorFinish || false,
       height: spaceInfo.floorFinish?.height || 10,
     },
+    // 기존 필드들 유지
+    surroundType: spaceInfo.surroundType,
+    frameSize: spaceInfo.frameSize || { left: 50, right: 50, top: 50 }, // undefined 방지
+    gapConfig: spaceInfo.gapConfig,
+    baseConfig: spaceInfo.baseConfig,
+    materialConfig: spaceInfo.materialConfig,
+    columns: spaceInfo.columns,
+    walls: spaceInfo.walls,
+    panelBs: spaceInfo.panelBs,
+    droppedCeiling: spaceInfo.droppedCeiling,
+    mainDoorCount: spaceInfo.mainDoorCount,
+    droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
+    wallConfig: spaceInfo.wallConfig,
   };
 
   // STEP 3: 맞춤 배치 설정 변환
@@ -234,7 +250,7 @@ export const saveEditorProject = async (
         basicInfo: projectData.basicInfo!,
         spaceConfig: projectData.spaceConfig!,
         customLayout: projectData.customLayout!,
-      }, thumbnailBlob);
+      } as CreateProjectData, thumbnailBlob, options);
       
       if (createResult.success && createResult.data) {
         result = { success: true, projectId: createResult.data };
@@ -349,15 +365,18 @@ export const loadEditorProject = async (projectId: string): Promise<{
         updatedAt: projectData.basicInfo?.updatedAt || projectData.updatedAt,
       },
       spaceInfo: {
-        width: projectData.spaceConfig?.width || 3000,
-        height: projectData.spaceConfig?.height || 2400,
-        depth: projectData.spaceConfig?.depth || 600,
+        // dimensions에서 값 가져오기
+        width: projectData.spaceConfig?.dimensions?.width || projectData.spaceConfig?.width || 3000,
+        height: projectData.spaceConfig?.dimensions?.height || projectData.spaceConfig?.height || 2400,
+        depth: projectData.spaceConfig?.dimensions?.depth || projectData.spaceConfig?.depth || 600,
         installType: projectData.spaceConfig?.installType || projectData.spaceConfig?.installationType || 'builtin',
         wallPosition: projectData.spaceConfig?.wallPosition || 'back',
-        damperPosition: projectData.spaceConfig?.damperPosition || 'left',
-        damperWidth: projectData.spaceConfig?.damperWidth || 200,
-        damperHeight: projectData.spaceConfig?.damperHeight || 200,
-        hasFloorFinish: projectData.spaceConfig?.hasFloorFinish || false,
+        // damper에서 값 가져오기
+        damperPosition: projectData.spaceConfig?.damper?.agentPosition || projectData.spaceConfig?.damperPosition || 'left',
+        damperWidth: projectData.spaceConfig?.damper?.size?.width || projectData.spaceConfig?.damperWidth || 200,
+        damperHeight: projectData.spaceConfig?.damper?.size?.height || projectData.spaceConfig?.damperHeight || 200,
+        // floorFinish에서 값 가져오기
+        hasFloorFinish: projectData.spaceConfig?.floorFinish?.enabled || projectData.spaceConfig?.hasFloorFinish || false,
         floorFinish: projectData.spaceConfig?.floorFinish || null,
         surroundType: projectData.spaceConfig?.surroundType || 'surround',
         frameSize: projectData.spaceConfig?.frameSize || {
@@ -383,7 +402,16 @@ export const loadEditorProject = async (projectId: string): Promise<{
         gapConfig: projectData.spaceConfig?.gapConfig || {
           left: 0,
           right: 0
-        }
+        },
+        // 단내림 설정 추가
+        droppedCeiling: projectData.spaceConfig?.droppedCeiling || {
+          enabled: false,
+          position: 'right',
+          width: 900,
+          dropHeight: 200
+        },
+        mainDoorCount: projectData.spaceConfig?.mainDoorCount || 0,
+        droppedCeilingDoorCount: projectData.spaceConfig?.droppedCeilingDoorCount || 0
       },
       placedModules: projectData.furniture?.placedModules || [],
       customOptions: {

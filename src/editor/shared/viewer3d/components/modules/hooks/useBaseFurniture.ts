@@ -165,7 +165,7 @@ export const useBaseFurniture = (
   useEffect(() => {
     if (material) {
       // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용
-      if (isDragging || isEditMode) {
+      if (isDragging || (isEditMode && viewMode !== '2D')) { // 2D 모드에서는 편집 모드 효과 제거
         material.color.set(getThemeColor());
         material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
         material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
@@ -179,9 +179,12 @@ export const useBaseFurniture = (
         }
       }
       
-      // 투명도 설정
+      // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
       material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
-      material.opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : (isDragging ? 0.6 : (isEditMode ? 0.3 : 1.0));
+      material.opacity = renderMode === 'wireframe' ? 0.3 : 
+                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
+                        (isDragging ? 0.6 : 
+                        (isEditMode ? 0.3 : 1.0));
       material.needsUpdate = true;
       
       console.log('🎨 재질 속성 업데이트:', {

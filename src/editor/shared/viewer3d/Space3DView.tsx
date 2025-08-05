@@ -29,7 +29,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget } from './components/base/utils/threeUtils';
+import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
@@ -451,15 +451,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const bounds = calculateFurnitureBounds;
     
     // 가구가 없을 때도 공간 기준으로 계산
-    const spaceWidth = mmToThreeUnits(spaceInfo?.width || 3000);
-    const spaceHeight = mmToThreeUnits(spaceInfo?.height || 2400);
-    const spaceDepth = mmToThreeUnits(spaceInfo?.depth || 1500);
+    const spaceWidth = spaceInfo?.width || 3000;
+    const spaceHeight = spaceInfo?.height || 2400;
+    const spaceDepth = spaceInfo?.depth || 1500;
     
     if (!bounds) {
       // 가구가 없을 때는 공간 중심과 크기 사용
-      const center = { x: 0, y: spaceHeight / 2, z: 0 };
-      const size = { width: spaceWidth, height: spaceHeight, depth: spaceDepth };
-      const fov = 50;
+      // calculateCameraTarget과 동일한 계산 사용
+      const center = { 
+        x: 0, 
+        y: mmToThreeUnits(spaceHeight * 0.5), // calculateCameraTarget과 동일
+        z: 0 
+      };
+      const size = { 
+        width: mmToThreeUnits(spaceWidth), 
+        height: mmToThreeUnits(spaceHeight), 
+        depth: mmToThreeUnits(spaceDepth) 
+      };
       
       let distance;
       let position;
@@ -467,37 +475,29 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       
       switch (viewDirection) {
         case 'front':
-          distance = Math.max(
-            (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
-            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          // calculateOptimalDistance와 동일한 방식으로 거리 계산
+          distance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
           position = [center.x, center.y, center.z + distance];
           up = [0, 1, 0];
           break;
           
         case 'top':
-          distance = Math.max(
-            (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
-            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2)
-          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          // calculateOptimalDistance와 동일한 방식으로 거리 계산
+          distance = calculateOptimalDistance(spaceWidth, spaceDepth, spaceHeight, placedModules.length);
           position = [center.x, center.y + distance, center.z];
           up = [0, 0, -1];
           break;
           
         case 'left':
-          distance = Math.max(
-            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
-            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          // calculateOptimalDistance와 동일한 방식으로 거리 계산
+          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length);
           position = [center.x - distance, center.y, center.z];
           up = [0, 1, 0];
           break;
           
         case 'right':
-          distance = Math.max(
-            (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
-            (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-          ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+          // calculateOptimalDistance와 동일한 방식으로 거리 계산
+          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length);
           position = [center.x + distance, center.y, center.z];
           up = [0, 1, 0];
           break;
@@ -512,8 +512,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     const center = bounds.center;
     const size = bounds.size;
-    const fov = 50;
-    const aspect = 1; // 각 quadrant는 정사각형에 가까움
+    
+    // mm 단위로 역변환 (size는 Three.js 단위이므로)
+    const sizeInMm = {
+      width: threeUnitsToMm(size.width),
+      height: threeUnitsToMm(size.height),
+      depth: threeUnitsToMm(size.depth)
+    };
     
     let distance;
     let position;
@@ -521,41 +526,29 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     switch (viewDirection) {
       case 'front':
-        // 너비와 높이 기준으로 거리 계산
-        distance = Math.max(
-          (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
-          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        // calculateOptimalDistance와 동일한 방식으로 거리 계산
+        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.height, sizeInMm.depth, placedModules.length);
         position = [center.x, center.y, center.z + distance];
         up = [0, 1, 0]; // Y축이 위
         break;
         
       case 'top':
-        // 너비와 깊이 기준으로 거리 계산
-        distance = Math.max(
-          (size.width / 2) / Math.tan((fov * Math.PI / 180) / 2),
-          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2)
-        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        // calculateOptimalDistance와 동일한 방식으로 거리 계산
+        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length);
         position = [center.x, center.y + distance, center.z];
         up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위 (앞쪽이 위)
         break;
         
       case 'left':
-        // 깊이와 높이 기준으로 거리 계산
-        distance = Math.max(
-          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
-          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        // calculateOptimalDistance와 동일한 방식으로 거리 계산
+        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length);
         position = [center.x - distance, center.y, center.z];
         up = [0, 1, 0]; // Y축이 위
         break;
         
       case 'right':
-        // 깊이와 높이 기준으로 거리 계산
-        distance = Math.max(
-          (size.depth / 2) / Math.tan((fov * Math.PI / 180) / 2),
-          (size.height / 2) / Math.tan((fov * Math.PI / 180) / 2)
-        ) * 1.5; // 4분할 뷰에서는 조금 더 멀리
+        // calculateOptimalDistance와 동일한 방식으로 거리 계산
+        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length);
         position = [center.x + distance, center.y, center.z];
         up = [0, 1, 0]; // Y축이 위
         break;

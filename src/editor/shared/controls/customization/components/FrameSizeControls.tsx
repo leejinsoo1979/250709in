@@ -35,7 +35,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   onFrameSizeBlur,
   onKeyDown
 }) => {
-  const END_PANEL_WIDTH = 20; // 고정 20mm
+  const END_PANEL_WIDTH = 18; // 고정 18mm
   const { setHighlightedFrame } = useUIStore();
 
   // 입력 필드 포커스 핸들러

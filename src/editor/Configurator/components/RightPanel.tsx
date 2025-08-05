@@ -387,7 +387,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
     });
     
     if (doorCount <= 8) {
-      // 도어 개수가 8개 이하면 모든 값 표시
+      // 컬럼 수가 8개 이하면 모든 값 표시
       const labels = [];
       for (let i = minDoors; i <= maxDoors; i++) {
         labels.push(i);
@@ -395,7 +395,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
       console.log('🎯 생성된 라벨:', labels);
       return labels;
     } else {
-      // 도어 개수가 많으면 대표값들만 표시
+      // 컬럼 수가 많으면 대표값들만 표시
       const labels = [];
       const step = Math.ceil(doorCount / 7);
       for (let i = minDoors; i <= maxDoors; i += step) {
@@ -517,7 +517,7 @@ interface RightPanelProps {
   hasStep: boolean;
   onStepToggle: () => void;
   
-  // 도어 개수
+  // 컬럼 수
   doorCount: number;
   onDoorCountChange: (count: number) => void;
   
@@ -577,7 +577,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
     }
   }, [activeTab, spaceInfo.droppedCeiling?.enabled, setActiveDroppedCeilingTab]);
 
-  // 도어 개수 범위 계산
+  // 컬럼 수 범위 계산
   const DOOR_WIDTH = 588;
   
   // 단내림이 활성화된 경우 메인 구간의 폭 계산
@@ -917,14 +917,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 레이아웃 */}
+            {/* 컬럼수 */}
             <FormControl
-              label="레이아웃"
+              label="컬럼수"
               expanded={expandedSections.has('layout')}
               onToggle={() => toggleSection('layout')}
             >
               <NumberInput
-                label={spaceInfo.droppedCeiling?.enabled ? "메인 구간 도어 개수" : "도어 개수"}
+                label={spaceInfo.droppedCeiling?.enabled ? "메인 구간 컬럼수" : "컬럼수"}
                 value={doorCount}
                 onChange={onDoorCountChange}
                 min={minDoors}
@@ -975,19 +975,19 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {spaceInfo.droppedCeiling?.enabled && (
               <div className={styles.formContainer}>
                 <FormControl
-                  label="단내림 구간 레이아웃"
+                  label="단내림 구간 컬럼수"
                   expanded={expandedSections.has('droppedLayout')}
                   onToggle={() => toggleSection('droppedLayout')}
                 >
                   <div className={styles.numberInput}>
-                    <div className={styles.inputLabel}>단내림 구간 도어 개수</div>
+                    <div className={styles.inputLabel}>단내림 구간 컬럼수</div>
                     <div className={styles.inputGroup}>
                       <div className={styles.inputField}>
                         <input
                           type="number"
                           value={(() => {
                             const value = spaceInfo.droppedCeilingDoorCount || 0;
-                            console.log('🎯 단내림 구간 도어개수 표시:', {
+                            console.log('🎯 단내림 구간 컬럼수 표시:', {
                               droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
                               표시값: value,
                               spaceInfo전체: spaceInfo

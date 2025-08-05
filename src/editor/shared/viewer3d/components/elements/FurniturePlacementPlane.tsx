@@ -53,10 +53,11 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   
   // 내경 공간 크기 - 공간 뒷면에 정확히 맞춤
   const planeWidth = mmToThreeUnits(internalSpace.width);
-  const planeDepth = mmToThreeUnits(internalSpace.depth - 200); // 내경 공간에서 200mm 줄인 깊이 사용 (580mm)
+  const planeDepth = mmToThreeUnits(internalSpace.depth - 200 - 20); // 내경 공간에서 220mm 줄인 깊이 사용 (앞쪽에서 20mm 추가)
   
   // 기준면을 내경 공간 중앙에 정확히 배치 (Z=0이 공간 앞면, -depth가 뒷면)
-  const planeZ = mmToThreeUnits(0);
+  // 앞쪽에서 20mm 줄였으므로 중심을 10mm 뒤로 이동
+  const planeZ = mmToThreeUnits(-10);
   
   // placedModules 중 도어가 장착된 모듈이 하나라도 있으면 바닥 슬롯 매쉬를 숨김
   const hasAnyDoor = placedModules.some(module => module.hasDoor);
