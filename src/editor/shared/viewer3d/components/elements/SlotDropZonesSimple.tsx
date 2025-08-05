@@ -260,8 +260,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         };
         // calculateInternalSpace를 사용하여 정확한 내경 계산
         zoneInternalSpace = calculateInternalSpace(droppedSpaceInfo);
-        // 단내림 구간은 높이가 낮음
-        zoneInternalSpace.height = zoneInternalSpace.height - (spaceInfo.droppedCeiling?.dropHeight || 200);
+        // 단내림 구간은 높이가 낮음 - dropHeight만큼 차감
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        zoneInternalSpace.height = Math.max(zoneInternalSpace.height - dropHeight, 100); // 최소 100mm 보장
+        
+        console.log('🔧 [SlotDropZonesSimple] 단내림 영역 내경 계산:', {
+          originalHeight: zoneInternalSpace.height + dropHeight,
+          dropHeight,
+          adjustedHeight: zoneInternalSpace.height,
+          zone: 'dropped'
+        });
+        
         // zoneInfo에서 직접 columnWidth 사용
         zoneIndexing = {
           columnCount: zoneInfo.dropped.columnCount,
@@ -538,12 +547,36 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // generateDynamicModules에 전달할 spaceInfo - 전체 spaceInfo에 zone 정보만 추가
       const zoneSpaceInfo = {
         ...spaceInfo,
-        zone: zoneToUse  // zone 정보 추가
+        zone: zoneToUse,  // zone 정보 추가
+        width: zoneOuterWidth  // 영역별 너비 설정
       };
       
+      console.log('🔧 [SlotDropZonesSimple] zoneSpaceInfo 생성:', {
+        zone: zoneToUse,
+        droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled,
+        zoneSpaceInfo: {
+          width: zoneSpaceInfo.width,
+          zone: zoneSpaceInfo.zone,
+          droppedCeiling: zoneSpaceInfo.droppedCeiling
+        }
+      });
+      
+      // 영역별 내경 공간 재계산
+      const recalculatedZoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+      if (zoneToUse === 'dropped') {
+        // 단내림 영역은 높이 조정
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        recalculatedZoneInternalSpace.height = Math.max(recalculatedZoneInternalSpace.height - dropHeight, 100);
+      }
+      
+      console.log('🔧 [SlotDropZonesSimple] 영역별 내경 공간 재계산:', {
+        zone: zoneToUse,
+        originalInternalSpace: zoneInternalSpace,
+        recalculatedInternalSpace: recalculatedZoneInternalSpace
+      });
       
       // 영역별 모듈 목록 생성
-      const zoneModules = generateDynamicModules(zoneInternalSpace, zoneSpaceInfo);
+      const zoneModules = generateDynamicModules(recalculatedZoneInternalSpace, zoneSpaceInfo);
       
       console.log('🎯 단내림 구간 모듈 생성 결과:', {
         zoneToUse,
@@ -593,7 +626,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       // getModuleById를 사용하여 정확한 너비의 가구 생성
-      const moduleData = getModuleById(targetModuleId, zoneInternalSpace, zoneSpaceInfo);
+      const moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
       
       if (!moduleData) {
         console.error('❌ 가구를 찾을 수 없음:', {
@@ -1368,29 +1401,58 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 단내림이 활성화된 경우 영역별 처리
       if (spaceInfo.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        // 마우스 위치로 zone 판단
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         
-        // 레이캐스트로 받은 slotIndex는 이미 영역별 로컬 인덱스
-        // 활성 영역과 맞는지만 확인
+        // 레이캐스터 생성
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // 모든 콜라이더 가져오기
         const allColliders = scene.children
           .flatMap(child => child.children || [child])
           .filter(obj => obj.userData?.isSlotCollider);
         
+        // 레이캐스트 교차점 확인
+        const intersects = raycaster.intersectObjects(allColliders, true);
         
-        const colliderUserData = allColliders
-          .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
-          ?.userData;
-        
-        // zone 정보 저장
-        detectedZone = colliderUserData?.zone || 'normal';
-        
-        console.log('🔍 Zone 감지:', {
-          slotIndex,
-          detectedZone,
-          colliderUserData
-        });
-        
-        // 모든 zone의 콜라이더를 표시하므로 zone 체크 필요 없음
+        if (intersects.length > 0) {
+          // 가장 가까운 콜라이더의 zone 정보 사용
+          const closestCollider = intersects[0].object;
+          detectedZone = closestCollider.userData?.zone || 'normal';
+          
+          console.log('🔍 Zone 감지 (레이캐스트):', {
+            slotIndex,
+            detectedZone,
+            colliderData: closestCollider.userData,
+            distance: intersects[0].distance
+          });
+        } else {
+          // 레이캐스트 실패 시 마우스 X 위치로 zone 판단
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          if (zoneInfo.dropped && zoneInfo.normal) {
+            const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+            const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
+            
+            // 마우스의 세계 좌표 계산
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+            
+            if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
+              if (spaceInfo.droppedCeiling.position === 'left') {
+                detectedZone = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
+              } else {
+                detectedZone = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
+              }
+            } else {
+              detectedZone = 'normal';
+            }
+          } else {
+            detectedZone = 'normal';
+          }
+        }
       } else {
         // 단내림이 없는 경우 normal zone
         detectedZone = 'normal';
@@ -1554,17 +1616,38 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 단내림이 활성화된 경우 영역별 처리
       if (spaceInfo.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        // 마우스 위치로 zone 판단
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         
+        // 레이캐스터 생성
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // 모든 콜라이더 가져오기
         const allColliders = scene.children
           .flatMap(child => child.children || [child])
           .filter(obj => obj.userData?.isSlotCollider);
         
-        const colliderUserData = allColliders
-          .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
-          ?.userData;
+        // 레이캐스트 교차점 확인
+        const intersects = raycaster.intersectObjects(allColliders, true);
         
-        detectedZone = colliderUserData?.zone || 'normal';
+        if (intersects.length > 0) {
+          // 가장 가까운 콜라이더의 zone 정보 사용
+          const closestCollider = intersects[0].object;
+          detectedZone = closestCollider.userData?.zone || 'normal';
+          
+          console.log('🔍 Zone 감지 (클릭-앤-플레이스):', {
+            slotIndex,
+            detectedZone,
+            colliderData: closestCollider.userData,
+            distance: intersects[0].distance
+          });
+        } else {
+          // 레이캐스트 실패 시 fallback
+          detectedZone = 'normal';
+        }
         
         // 모든 zone의 콜라이더를 표시하므로 zone 체크 필요 없음
       } else {
@@ -2111,12 +2194,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // hoveredZone이 있으면 해당 zone과 일치하는지 체크
           const zoneMatches = !hoveredZone || hoveredZone === slotZone;
           
+          // 단내림이 있고 hoveredZone이 설정되지 않은 경우, 인덱스만으로 비교
+          const shouldIgnoreZone = hasDroppedCeiling && !hoveredZone;
+          
           if (isDual) {
             // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && (shouldIgnoreZone || zoneMatches);
           } else {
             // 싱글 가구: 현재 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && (shouldIgnoreZone || zoneMatches);
           }
           
           console.log('🎯 고스트 렌더링 체크:', {
@@ -2128,6 +2214,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             compareIndex,
             isZoneData,
             zoneMatches,
+            shouldIgnoreZone,
             shouldRenderGhost,
             hasDroppedCeiling,
             activeModuleData: {
@@ -2174,6 +2261,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               height: droppedHeight,  // 단내림 영역의 높이
               zone: 'dropped' as const
             };
+            console.log('🔧 [Ghost Preview] 단내림 영역 zoneSpaceInfo 생성:', {
+              zone: 'dropped',
+              width: droppedCeilingWidth,
+              height: droppedHeight,
+              droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled
+            });
           } else {
             // 메인 영역용 spaceInfo
             zoneSpaceInfo = {
@@ -2181,6 +2274,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               width: spaceInfo.width - droppedCeilingWidth,  // 메인 영역의 외경 너비
               zone: 'normal' as const
             };
+            console.log('🔧 [Ghost Preview] 메인 영역 zoneSpaceInfo 생성:', {
+              zone: 'normal',
+              width: spaceInfo.width - droppedCeilingWidth,
+              droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled
+            });
           }
           
           zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);

@@ -614,6 +614,12 @@ export class ColumnIndexer {
       console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
     }
     
+    // 단내림 영역은 최소 2개 슬롯 보장
+    if (droppedColumnCount < 2) {
+      droppedColumnCount = 2;
+      console.log('🔧 단내림 영역 최소 슬롯 수 보장: 2개로 설정');
+    }
+    
     // 각 영역의 컬럼 너비 계산 - 나머지를 앞쪽 슬롯에 분배
     const normalBaseWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
     const normalRemainder = normalAreaInternalWidth % normalColumnCount;

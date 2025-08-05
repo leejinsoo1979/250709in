@@ -1,6 +1,6 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
-import { calculateSpaceIndexing } from './indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from './indexing';
 import { getModuleById } from '@/data/modules';
 
 // 기둥 포함 슬롯 정보 타입
@@ -164,9 +164,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   const columns = spaceInfo.columns || [];
   const slotInfos: ColumnSlotInfo[] = [];
   
-  // 단내림이 있는 경우 zone별로 처리
+    // 단내림이 있는 경우 zone별로 처리
   if (spaceInfo.droppedCeiling?.enabled) {
-    const { ColumnIndexer } = require('./indexing');
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     
     // 전체 슬롯 수 = normal zone + dropped zone
@@ -1076,6 +1075,11 @@ export const calculateFurnitureBounds = (
   renderWidth: number; // 실제 렌더링될 가구 너비
   depthAdjustmentNeeded?: boolean; // Column C 150mm 이상 침범 시 깊이 조정 필요
 } => {
+  // 단내림 영역에서도 기둥 처리 로직 적용 (기둥 침범 시 가구 줄어들기)
+  if ((spaceInfo as any).zone === 'dropped') {
+    console.log('🔧 [calculateFurnitureBounds] 단내림 영역 - 기둥 처리 로직 적용');
+  }
+  
   if (!slotInfo.hasColumn || !slotInfo.column) {
     // 기둥이 없으면 원래 슬롯 경계 그대로
     const width = originalSlotBounds.right - originalSlotBounds.left;
@@ -1123,23 +1127,16 @@ export const calculateFurnitureBounds = (
       furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
       furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
       
-      // 슬롯 경계 내에서 최소 크기 보장 체크
-      if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-        console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
-          currentWidth: ((furnitureRight - furnitureLeft) * 100).toFixed(1) + 'mm',
-          minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
+      // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 적용하지 않음
+      // 대신 기둥과의 충돌만 방지
+      const leftCurrentWidth = furnitureRight - furnitureLeft;
+      if (leftCurrentWidth < 0.05) { // 50mm 미만이면 배치 불가
+        console.log('🚨 기둥 침범으로 인해 가구 크기가 너무 작아 배치 불가:', {
+          currentWidth: (leftCurrentWidth * 100).toFixed(1) + 'mm',
+          columnPosition: columnRightX.toFixed(3)
         });
-        
-        // 오른쪽 경계는 슬롯 경계로 고정하고, 최소 크기 확보
-        furnitureRight = originalSlotBounds.right;
-        furnitureLeft = Math.max(furnitureRight - minFurnitureWidth, originalSlotBounds.left);
-        
-        // 그래도 최소 크기를 확보할 수 없으면 슬롯 전체를 사용
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureLeft = originalSlotBounds.left;
-          furnitureRight = originalSlotBounds.right;
-          console.log('🚨 슬롯이 너무 작아 전체 슬롯 사용');
-        }
+        furnitureLeft = originalSlotBounds.left;
+        furnitureRight = originalSlotBounds.left + 0.05; // 50mm 강제 설정
       }
       
       // 최종 기둥 충돌 재검사
@@ -1185,23 +1182,16 @@ export const calculateFurnitureBounds = (
       furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
       furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
       
-      // 슬롯 경계 내에서 최소 크기 보장 체크
-      if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-        console.log('⚠️ 최소 크기 미달, 가구 크기 조정:', {
-          currentWidth: ((furnitureRight - furnitureLeft) * 100).toFixed(1) + 'mm',
-          minRequired: (minFurnitureWidth * 100).toFixed(1) + 'mm'
+      // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 적용하지 않음
+      // 대신 기둥과의 충돌만 방지
+      const rightCurrentWidth = furnitureRight - furnitureLeft;
+      if (rightCurrentWidth < 0.05) { // 50mm 미만이면 배치 불가
+        console.log('🚨 기둥 침범으로 인해 가구 크기가 너무 작아 배치 불가:', {
+          currentWidth: (rightCurrentWidth * 100).toFixed(1) + 'mm',
+          columnPosition: columnLeftX.toFixed(3)
         });
-        
-        // 왼쪽 경계는 슬롯 경계로 고정하고, 최소 크기 확보
-        furnitureLeft = originalSlotBounds.left;
-        furnitureRight = Math.min(furnitureLeft + minFurnitureWidth, originalSlotBounds.right);
-        
-        // 그래도 최소 크기를 확보할 수 없으면 슬롯 전체를 사용
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureLeft = originalSlotBounds.left;
-          furnitureRight = originalSlotBounds.right;
-          console.log('🚨 슬롯이 너무 작아 전체 슬롯 사용');
-        }
+        furnitureRight = originalSlotBounds.right;
+        furnitureLeft = originalSlotBounds.right - 0.05; // 50mm 강제 설정
       }
       
       // 최종 기둥 충돌 재검사
@@ -1237,9 +1227,15 @@ export const calculateFurnitureBounds = (
         // 슬롯 경계 제한
         furnitureRight = Math.min(furnitureRight, originalSlotBounds.right);
         
-        // 최소 크기 보장
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureRight = Math.min(furnitureLeft + minFurnitureWidth, originalSlotBounds.right);
+        // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 적용하지 않음
+        // 대신 기둥과의 충돌만 방지
+        const centerLeftCurrentWidth = furnitureRight - furnitureLeft;
+        if (centerLeftCurrentWidth < 0.05) { // 50mm 미만이면 배치 불가
+          console.log('🚨 중앙 침범으로 인해 가구 크기가 너무 작아 배치 불가:', {
+            currentWidth: (centerLeftCurrentWidth * 100).toFixed(1) + 'mm'
+          });
+          furnitureLeft = originalSlotBounds.left;
+          furnitureRight = originalSlotBounds.left + 0.05; // 50mm 강제 설정
         }
       } else if (slotInfo.furniturePosition === 'right-aligned') {
         furnitureLeft = Math.max(columnRightX + margin, originalSlotBounds.left);
@@ -1248,9 +1244,15 @@ export const calculateFurnitureBounds = (
         // 슬롯 경계 제한
         furnitureLeft = Math.max(furnitureLeft, originalSlotBounds.left);
         
-        // 최소 크기 보장
-        if (furnitureRight - furnitureLeft < minFurnitureWidth) {
-          furnitureLeft = Math.max(furnitureRight - minFurnitureWidth, originalSlotBounds.left);
+        // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 적용하지 않음
+        // 대신 기둥과의 충돌만 방지
+        const centerRightCurrentWidth = furnitureRight - furnitureLeft;
+        if (centerRightCurrentWidth < 0.05) { // 50mm 미만이면 배치 불가
+          console.log('🚨 중앙 침범으로 인해 가구 크기가 너무 작아 배치 불가:', {
+            currentWidth: (centerRightCurrentWidth * 100).toFixed(1) + 'mm'
+          });
+          furnitureRight = originalSlotBounds.right;
+          furnitureLeft = originalSlotBounds.right - 0.05; // 50mm 강제 설정
         }
       } else {
         // 기본값: 원래 슬롯 사용
@@ -1308,7 +1310,23 @@ export const calculateFurnitureBounds = (
   furnitureRight = newCenter + halfWidth;
   
   const totalWidth = (furnitureRight - furnitureLeft) * 100; // mm 단위
-  const finalRenderWidth = Math.max(totalWidth, 150); // 최소 150mm 보장
+  
+  // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 제한적으로 적용
+  let finalRenderWidth = totalWidth;
+  
+  // 기둥이 없는 경우에만 최소 크기 보장
+  if (!slotInfo.hasColumn) {
+    finalRenderWidth = Math.max(totalWidth, 150); // 최소 150mm 보장
+  } else {
+    // 기둥 침범 시에는 실제 계산된 크기 사용 (최소 크기 제한 없음)
+    finalRenderWidth = totalWidth;
+    console.log('🔧 기둥 침범 시 가구 크기 조정:', {
+      originalWidth: (originalSlotBounds.right - originalSlotBounds.left) * 100,
+      adjustedWidth: finalRenderWidth,
+      intrusionDirection: slotInfo.intrusionDirection,
+      columnType: slotInfo.columnType
+    });
+  }
   
   // Column C (300mm) 특별 처리 - 150mm 이상 침범 시 깊이 조정 필요
   let depthAdjustmentNeeded = false;

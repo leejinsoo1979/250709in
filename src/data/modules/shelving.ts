@@ -779,11 +779,54 @@ export const generateShelvingModules = (
     // 단내림이 활성화되고 zone 정보가 전달된 경우
     if (indexingSpaceInfo.droppedCeiling?.enabled && (indexingSpaceInfo as any).zone) {
       const zone = (indexingSpaceInfo as any).zone;
+      console.log('🎯 [generateShelvingModules] Zone 정보 확인:', {
+        zone,
+        droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
+        zoneSlotInfo: {
+          dropped: zoneSlotInfo.dropped ? {
+            columnWidth: zoneSlotInfo.dropped.columnWidth,
+            columnCount: zoneSlotInfo.dropped.columnCount
+          } : null,
+          normal: zoneSlotInfo.normal ? {
+            columnWidth: zoneSlotInfo.normal.columnWidth,
+            columnCount: zoneSlotInfo.normal.columnCount
+          } : null
+        }
+      });
+      
       if (zone === 'dropped' && zoneSlotInfo.dropped) {
         columnWidth = zoneSlotInfo.dropped.columnWidth;
         columnCount = zoneSlotInfo.dropped.columnCount;
         slotWidths = zoneSlotInfo.dropped.slotWidths;
+        console.log('✅ [generateShelvingModules] 단내림 영역 사용:', {
+          columnWidth,
+          columnCount,
+          slotWidths,
+          zone: 'dropped',
+          internalSpaceWidth: internalSpace.width,
+          internalSpaceHeight: internalSpace.height
+        });
+      } else if (zone === 'normal' && zoneSlotInfo.normal) {
+        columnWidth = zoneSlotInfo.normal.columnWidth;
+        columnCount = zoneSlotInfo.normal.columnCount;
+        slotWidths = zoneSlotInfo.normal.slotWidths;
+        console.log('✅ [generateShelvingModules] 메인 영역 사용:', {
+          columnWidth,
+          columnCount,
+          slotWidths,
+          zone: 'normal',
+          internalSpaceWidth: internalSpace.width,
+          internalSpaceHeight: internalSpace.height
+        });
       } else {
+        // zone 정보가 있지만 해당 zone이 없는 경우 fallback
+        console.warn('⚠️ [generateShelvingModules] Zone 정보는 있지만 해당 zone이 없음, fallback 사용:', {
+          zone,
+          availableZones: {
+            dropped: !!zoneSlotInfo.dropped,
+            normal: !!zoneSlotInfo.normal
+          }
+        });
         columnWidth = zoneSlotInfo.normal.columnWidth;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
@@ -793,6 +836,14 @@ export const generateShelvingModules = (
       columnWidth = zoneSlotInfo.normal.columnWidth;
       columnCount = zoneSlotInfo.normal.columnCount;
       slotWidths = zoneSlotInfo.normal.slotWidths;
+      console.log('✅ [generateShelvingModules] 일반 계산 사용:', {
+        columnWidth,
+        columnCount,
+        slotWidths,
+        zone: 'none',
+        internalSpaceWidth: internalSpace.width,
+        internalSpaceHeight: internalSpace.height
+      });
     }
   }
   

@@ -90,6 +90,21 @@ export const getModuleById = (
       }
     }
     
+    // zone 정보가 있으면 그대로 유지
+    if (spaceInfo && (spaceInfo as any).zone) {
+      modifiedSpaceInfo = {
+        ...modifiedSpaceInfo,
+        zone: (spaceInfo as any).zone
+      };
+      console.log('🔧 [getModuleById] Zone 정보 유지:', {
+        zone: (spaceInfo as any).zone,
+        modifiedSpaceInfo: {
+          zone: (modifiedSpaceInfo as any).zone,
+          droppedCeilingEnabled: modifiedSpaceInfo.droppedCeiling?.enabled
+        }
+      });
+    }
+    
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     const found = dynamicModules.find(module => module.id === id);
     if (found) {
