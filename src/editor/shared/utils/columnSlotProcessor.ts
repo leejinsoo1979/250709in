@@ -367,55 +367,23 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, targetZone.columnWidth, slotStartX, slotEndX);
     columnType = depthAnalysis.columnType;
     
-    // 기둥 C(300mm)는 폭 조정 방식 사용 (사용자 요구사항)
+    // 기둥 C(300mm)는 깊이 조정 방식 사용 (사용자 요구사항 변경)
     if (columnType === 'medium') {
-      columnProcessingMethod = 'width-adjustment';
-      allowMultipleFurniture = false; // 기둥 C는 폭 조정 방식이므로 1개 가구만 배치
+      columnProcessingMethod = 'depth-adjustment';
+      depthAdjustment = depthAnalysis.depthAdjustment;
+      splitPlacement = depthAnalysis.splitPlacement;
+      allowMultipleFurniture = false; // 기둥 C는 깊이 조정 방식이므로 1개 가구만 배치
       
-      // Column C의 경우 서브슬롯 계산
-      const columnLeftX = columnInSlot.position[0] - (columnInSlot.width * 0.01) / 2;
-      const columnRightX = columnInSlot.position[0] + (columnInSlot.width * 0.01) / 2;
-      
-      // 슬롯 경계
-      const slotWidthM = targetZone.columnWidth * 0.01;
-      const slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
-      const slotLeftX = slotCenterX - slotWidthM / 2;
-      const slotRightX = slotCenterX + slotWidthM / 2;
-      
-      // 좌우 공간 계산
-      const leftGap = (columnLeftX - slotLeftX) * 100; // mm
-      const rightGap = (slotRightX - columnRightX) * 100; // mm
-      
-      // 서브슬롯 정보 생성
-      if (intrusionAnalysis.intrusionDirection === 'from-left') {
-        // 기둥이 왼쪽에서 침범 -> 오른쪽에 가구 배치
-        const rightCenter = columnRightX + (rightGap * 0.001) / 2;
-        subSlots = {
-          left: { availableWidth: 0, center: columnLeftX },
-          right: { availableWidth: rightGap, center: rightCenter }
-        };
-      } else if (intrusionAnalysis.intrusionDirection === 'from-right') {
-        // 기둥이 오른쪽에서 침범 -> 왼쪽에 가구 배치
-        const leftCenter = slotLeftX + (leftGap * 0.001) / 2;
-        subSlots = {
-          left: { availableWidth: leftGap, center: leftCenter },
-          right: { availableWidth: 0, center: columnRightX }
-        };
-      }
-      
-      console.log('🔵 기둥 C 감지 - 폭 조정 방식 및 서브슬롯 생성:', {
+      console.log('🔵 기둥 C 감지 - 깊이 조정 방식:', {
         slotIndex: globalSlotIndex,
         zone,
         columnDepth: columnInSlot.depth,
         columnType: 'C (300mm)',
-        columnProcessingMethod: 'width-adjustment',
+        columnProcessingMethod: 'depth-adjustment',
         availableWidth: intrusionAnalysis.availableWidth,
-        adjustedWidth: intrusionAnalysis.adjustedWidth,
-        침범방향: intrusionAnalysis.intrusionDirection,
-        subSlots: subSlots ? {
-          left: { width: subSlots.left.availableWidth + 'mm', center: subSlots.left.center.toFixed(3) },
-          right: { width: subSlots.right.availableWidth + 'mm', center: subSlots.right.center.toFixed(3) }
-        } : undefined
+        adjustedDepth: depthAnalysis.depthAdjustment.adjustedDepth,
+        canPlaceSingle: depthAnalysis.depthAdjustment.canPlaceSingle,
+        canPlaceDual: depthAnalysis.depthAdjustment.canPlaceDual
       });
     } else if (columnType === 'shallow') {
       columnProcessingMethod = 'depth-adjustment';
@@ -636,54 +604,22 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       const depthAnalysis = analyzeColumnDepthPlacement(columnInSlot, indexing.columnWidth, slotStartX, slotEndX);
       columnType = depthAnalysis.columnType;
       
-      // 기둥 C(300mm)는 폭 조정 방식 사용 (사용자 요구사항과 일치)
+      // 기둥 C(300mm)는 깊이 조정 방식 사용 (사용자 요구사항 변경)
       if (columnType === 'medium') {
-        columnProcessingMethod = 'width-adjustment';
-        allowMultipleFurniture = false; // 기둥 C는 폭 조정 방식이므로 1개 가구만 배치
+        columnProcessingMethod = 'depth-adjustment';
+        depthAdjustment = depthAnalysis.depthAdjustment;
+        splitPlacement = depthAnalysis.splitPlacement;
+        allowMultipleFurniture = false; // 기둥 C는 깊이 조정 방식이므로 1개 가구만 배치
         
-        // Column C의 경우 서브슬롯 계산
-        const columnLeftX = columnInSlot.position[0] - (columnInSlot.width * 0.01) / 2;
-        const columnRightX = columnInSlot.position[0] + (columnInSlot.width * 0.01) / 2;
-        
-        // 슬롯 경계
-        const slotWidthM = indexing.columnWidth * 0.01;
-        const slotCenterX = indexing.threeUnitPositions[slotIndex];
-        const slotLeftX = slotCenterX - slotWidthM / 2;
-        const slotRightX = slotCenterX + slotWidthM / 2;
-        
-        // 좌우 공간 계산
-        const leftGap = (columnLeftX - slotLeftX) * 100; // mm
-        const rightGap = (slotRightX - columnRightX) * 100; // mm
-        
-        // 서브슬롯 정보 생성
-        if (intrusionAnalysis.intrusionDirection === 'from-left') {
-          // 기둥이 왼쪽에서 침범 -> 오른쪽에 가구 배치
-          const rightCenter = columnRightX + (rightGap * 0.001) / 2;
-          subSlots = {
-            left: { availableWidth: 0, center: columnLeftX },
-            right: { availableWidth: rightGap, center: rightCenter }
-          };
-        } else if (intrusionAnalysis.intrusionDirection === 'from-right') {
-          // 기둥이 오른쪽에서 침범 -> 왼쪽에 가구 배치
-          const leftCenter = slotLeftX + (leftGap * 0.001) / 2;
-          subSlots = {
-            left: { availableWidth: leftGap, center: leftCenter },
-            right: { availableWidth: 0, center: columnRightX }
-          };
-        }
-        
-        console.log('🔵 기둥 C 감지 - 폭 조정 방식 및 서브슬롯 생성:', {
+        console.log('🔵 기둥 C 감지 - 깊이 조정 방식:', {
           slotIndex,
           columnDepth: columnInSlot.depth,
           columnType: 'C (300mm)',
-          columnProcessingMethod: 'width-adjustment',
+          columnProcessingMethod: 'depth-adjustment',
           availableWidth: intrusionAnalysis.availableWidth,
-          adjustedWidth: intrusionAnalysis.adjustedWidth,
-          침범방향: intrusionAnalysis.intrusionDirection,
-          subSlots: subSlots ? {
-            left: { width: subSlots.left.availableWidth + 'mm', center: subSlots.left.center.toFixed(3) },
-            right: { width: subSlots.right.availableWidth + 'mm', center: subSlots.right.center.toFixed(3) }
-          } : undefined
+          adjustedDepth: depthAnalysis.depthAdjustment.adjustedDepth,
+          canPlaceSingle: depthAnalysis.depthAdjustment.canPlaceSingle,
+          canPlaceDual: depthAnalysis.depthAdjustment.canPlaceDual
         });
       } else if (columnType === 'shallow') {
         columnProcessingMethod = 'depth-adjustment';

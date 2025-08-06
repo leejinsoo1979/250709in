@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, FurnitureTypeProps, BoxWithEdges } from '../shared';
@@ -9,7 +9,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 // import { SectionConfig } from '@/data/modules/shelving'; // 사용되지 않음
 
 
@@ -70,39 +69,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
 
-  // spaceInfo 가져오기
-  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const materialConfig = storeSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' };
+  // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
+  // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  // const materialConfig = storeSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' };
 
-  // 서랍용 재질 생성 - interiorColor 사용 (내부 재질)
-  const drawerMaterial = useMemo(() => {
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(materialConfig.interiorColor),
-      metalness: 0.0,
-      roughness: 0.6,
-      envMapIntensity: 0.0,
-      emissive: new THREE.Color(0x000000),
-    });
-    
-    return mat;
-  }, []);
-
-  // 서랍 재질 업데이트
-  useEffect(() => {
-    if (drawerMaterial) {
-      drawerMaterial.color.set(materialConfig.interiorColor);
-      drawerMaterial.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
-      drawerMaterial.opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0;
-      drawerMaterial.needsUpdate = true;
-      
-      console.log('🎨 DualType5 서랍 재질 업데이트:', {
-        interiorColor: materialConfig.interiorColor,
-        doorColor: materialConfig.doorColor,
-        transparent: drawerMaterial.transparent,
-        opacity: drawerMaterial.opacity
-      });
-    }
-  }, [drawerMaterial, renderMode, viewMode, materialConfig.interiorColor, materialConfig.doorColor]);
+  // 서랍용 재질은 baseFurniture의 material을 그대로 사용 (cabinet texture 1 포함)
+  // 별도 생성 제거
 
   // 좌우 폭 분할 계산 (절대폭 지정)
   const rightAbsoluteWidth = modelConfig.rightAbsoluteWidth;
@@ -279,7 +251,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   yOffset={sectionCenterY}
                   drawerHeights={section.drawerHeights}
                   gapHeight={section.gapHeight}
-                  material={drawerMaterial}
+                  material={material}
                   renderMode={useSpace3DView().renderMode}
                 />
               );

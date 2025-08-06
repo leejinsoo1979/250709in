@@ -651,55 +651,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 침범에 따른 새로운 가구 경계 계산
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
     
-    // 모든 기둥에 대해 폭 조정 방식 적용 (기둥 C 포함)
-    // 기둥 침범 시에는 항상 가구 폭을 조정하여 기둥과 겹치지 않도록 함
+    // 기둥 A(deep) 등에 대해 폭 조정 방식 적용 (기둥 C는 제외 - 깊이 조정)
+    // 기둥 침범 시에는 가구 폭을 조정하여 기둥과 겹치지 않도록 함
     if (columnProcessingMethod === 'width-adjustment') {
-      // Column C의 경우 서브슬롯 위치 사용
-      if (isColumnC && slotInfo.subSlots) {
-        console.log('🔵 Column C 서브슬롯 정보:', {
-          hasSubSlots: !!slotInfo.subSlots,
-          subSlots: slotInfo.subSlots,
-          placedModule_subSlotPosition: placedModule.subSlotPosition,
-          intrusionDirection: slotInfo.intrusionDirection
-        });
-        
-        // intrusionDirection에 따라 서브슬롯 위치 결정
-        let targetSubSlot;
-        if (slotInfo.intrusionDirection === 'from-left') {
-          // 기둥이 왼쪽에서 침범 -> 오른쪽 서브슬롯 사용
-          targetSubSlot = slotInfo.subSlots.right;
-        } else if (slotInfo.intrusionDirection === 'from-right') {
-          // 기둥이 오른쪽에서 침범 -> 왼쪽 서브슬롯 사용
-          targetSubSlot = slotInfo.subSlots.left;
-        }
-        
-        if (targetSubSlot && targetSubSlot.availableWidth > 0) {
-          // 기둥 침범 시에는 항상 폭 조정
-          furnitureWidthMm = targetSubSlot.availableWidth;
-          adjustedPosition = {
-            ...placedModule.position,
-            x: targetSubSlot.center + positionAdjustmentForEndPanel
-          };
-          
-          console.log('🔵 Column C 서브슬롯 위치 적용:', {
-            intrusionDirection: slotInfo.intrusionDirection,
-            targetSubSlot,
-            width: furnitureWidthMm,
-            center: targetSubSlot.center,
-            originalPosition: placedModule.position.x,
-            customWidth: placedModule.customWidth,
-            widthAdjusted: true
-          });
-        }
-      } else {
-        // 일반 폭 조정 방식: 가구 크기와 위치 조정
-        // 기둥 침범 시에는 항상 폭 조정
-        furnitureWidthMm = furnitureBounds.renderWidth;
-        adjustedPosition = {
-          ...placedModule.position,
-          x: furnitureBounds.center + positionAdjustmentForEndPanel
-        };
-      }
+      // 일반 폭 조정 방식: 가구 크기와 위치 조정
+      // 기둥 침범 시에는 항상 폭 조정
+      furnitureWidthMm = furnitureBounds.renderWidth;
+      adjustedPosition = {
+        ...placedModule.position,
+        x: furnitureBounds.center + positionAdjustmentForEndPanel
+      };
       
       console.log('🪑 폭 조정 방식 - 가구 크기 및 위치 조정:', {
         columnType: slotInfo.columnType,
@@ -739,7 +700,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         });
       }
     } else if (columnProcessingMethod === 'depth-adjustment') {
-      // 깊이 조정 방식 (얕은 기둥만 해당, 기둥 C는 이제 폭 조정 방식)
+      // 깊이 조정 방식 (기둥 C(300mm) 및 얕은 기둥)
       const slotDepth = 730; // 슬롯 기본 깊이
       const columnDepth = slotInfo.column.depth;
       const remainingDepth = slotDepth - columnDepth;
