@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
@@ -32,6 +33,7 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
+  const { selectedModuleForPlacement, setSelectedModuleForPlacement } = useUIStore();
   
   const [selectedType, setSelectedType] = useState<FurnitureType>('tall');
   const [selectedCategory, setSelectedCategory] = useState<FurnitureCategory>('all');
@@ -186,8 +188,16 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
         {filteredModules.map((module) => (
           <div
             key={module.id}
-            className={`${styles.moduleCard} ${selectedModuleId === module.id ? styles.selected : ''}`}
-            onClick={() => onModuleSelect(module.id)}
+            className={`${styles.moduleCard} ${selectedModuleForPlacement === module.id ? styles.selected : ''}`}
+            onClick={() => {
+              // 같은 모듈을 다시 클릭하면 선택 해제
+              if (selectedModuleForPlacement === module.id) {
+                setSelectedModuleForPlacement(null);
+              } else {
+                setSelectedModuleForPlacement(module.id);
+              }
+              onModuleSelect(module.id);
+            }}
             onDoubleClick={() => handleModuleDoubleClick(module.id)}
             title="클릭: 선택, 더블클릭: 자동 배치"
           >

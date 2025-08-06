@@ -19,6 +19,177 @@ interface CleanCAD2DProps {
   isStep2?: boolean;
 }
 
+// 편집 가능한 라벨 컴포넌트를 컴포넌트 밖으로 분리
+const EditableLabel: React.FC<{
+  columnId: string;
+  side: 'left' | 'right' | 'width';
+  currentValue: number;
+  position: [number, number, number];
+  color?: string;
+  label: string;
+  editingColumnId: string | null;
+  editingSide: 'left' | 'right' | 'width' | null;
+  editingValue: string;
+  handleColumnDistanceEdit: (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => void;
+  handleEditSubmit: () => void;
+  handleEditCancel: () => void;
+  currentViewDirection: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+  setEditingValue: (value: string) => void;
+}> = ({
+  columnId,
+  side,
+  currentValue,
+  position,
+  color,
+  label,
+  editingColumnId,
+  editingSide,
+  editingValue,
+  handleColumnDistanceEdit,
+  handleEditSubmit,
+  handleEditCancel,
+  currentViewDirection,
+  inputRef,
+  setEditingValue
+}) => {
+  const isEditing = editingColumnId === columnId && editingSide === side;
+  const finalColor = color || (currentViewDirection === '3D' ? '#000000' : '#4CAF50');
+  
+  if (isEditing) {
+    return (
+      <Html
+        position={position}
+        center
+        style={{ pointerEvents: 'auto' }}
+        occlude={false}
+        zIndexRange={[10000, 10001]}
+        transform={false}
+      >
+        <div 
+          style={{
+            position: 'relative',
+            zIndex: 10000,
+            background: currentViewDirection === '3D'
+              ? 'rgba(255, 255, 255, 0.98)'
+              : 'rgba(255, 255, 255, 0.95)',
+            padding: '4px',
+            borderRadius: '4px',
+            border: `2px solid ${finalColor}`,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            minWidth: '80px'
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="number"
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleEditSubmit();
+              } else if (e.key === 'Escape') {
+                handleEditCancel();
+              }
+            }}
+            onBlur={handleEditSubmit}
+            style={{
+              width: '60px',
+              padding: '2px 4px',
+              border: '1px solid #ccc',
+              borderRadius: '2px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              outline: 'none'
+            }}
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+          />
+          <span style={{ 
+            marginLeft: '4px', 
+            fontSize: '12px', 
+            fontWeight: 'bold',
+            color: '#666'
+          }}>
+            mm
+          </span>
+        </div>
+      </Html>
+    );
+  }
+
+  return (
+    <Html
+      position={position}
+      center
+      style={{ 
+        pointerEvents: 'auto',
+        position: 'relative',
+        zIndex: 99999
+      }}
+      occlude={false}
+      zIndexRange={[9999, 10000]}
+      prepend={false}
+      portal={undefined}
+      transform={false}
+      sprite={false}
+    >
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          color: currentViewDirection === '3D' ? '#000000' : (finalColor === '#4CAF50' ? '#2E7D32' : '#2196F3'),
+          padding: '4px 8px',
+          borderRadius: '4px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          border: `2px solid ${finalColor}`,
+          cursor: 'pointer',
+          userSelect: 'none',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          position: 'relative',
+          zIndex: 100000,
+          pointerEvents: 'auto',
+          isolation: 'isolate'
+        }}
+        onClick={(e) => {
+          console.log('🖱️ 라벨 클릭됨:', { columnId, side, currentValue });
+          e.preventDefault();
+          e.stopPropagation();
+          e.nativeEvent?.preventDefault();
+          e.nativeEvent?.stopPropagation();
+          e.nativeEvent?.stopImmediatePropagation();
+          handleColumnDistanceEdit(columnId, side, currentValue);
+        }}
+        onMouseDown={(e) => {
+          console.log('🖱️ 마우스 다운:', { columnId, side, currentValue });
+          e.preventDefault();
+          e.stopPropagation();
+          e.nativeEvent?.preventDefault();
+          e.nativeEvent?.stopPropagation();
+          e.nativeEvent?.stopImmediatePropagation();
+        }}
+        onMouseUp={(e) => {
+          console.log('🖱️ 마우스 업:', { columnId, side, currentValue });
+          e.preventDefault();
+          e.stopPropagation();
+          e.nativeEvent?.preventDefault();
+          e.nativeEvent?.stopPropagation();
+          e.nativeEvent?.stopImmediatePropagation();
+        }}
+        onTouchStart={(e) => {
+          console.log('👆 터치 시작:', { columnId, side, currentValue });
+          e.preventDefault();
+          e.stopPropagation();
+          handleColumnDistanceEdit(columnId, side, currentValue);
+        }}
+      >
+        {label}
+      </div>
+    </Html>
+  );
+};
+
 /**
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
@@ -148,223 +319,135 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     setEditingValue('');
   };
 
-  // 편집 가능한 라벨 컴포넌트
-  const EditableLabel = ({ 
-    columnId, 
-    side, 
-    currentValue, 
-    position, 
-    color = currentViewDirection === '3D' ? '#000000' : '#4CAF50',
-    label 
-  }: {
-    columnId: string;
-    side: 'left' | 'right' | 'width';
-    currentValue: number;
-    position: [number, number, number];
-    color?: string;
-    label: string;
-  }) => {
-    const isEditing = editingColumnId === columnId && editingSide === side;
-    
-    if (isEditing) {
-      return (
-        <Html
-          position={position}
-          center
-          style={{ pointerEvents: 'auto' }}
-          occlude={false}
-          zIndexRange={[10000, 10001]}
-          transform={false}
-        >
-          <div 
-            style={{
-              position: 'relative',
-              zIndex: 10000,
-              background: currentViewDirection === '3D' 
-                ? `rgba(0, 0, 0, 0.8)` 
-                : `rgba(${color === '#4CAF50' ? '76, 175, 80' : '33, 150, 243'}, 0.95)`,
-              color: 'white',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: `2px solid ${color}`,
-              minWidth: '120px',
-              textAlign: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={editingValue}
-              onChange={(e) => {
-                console.log('📝 입력 변경:', e.target.value);
-                setEditingValue(e.target.value);
-              }}
-              onBlur={() => {
-                console.log('👋 포커스 잃음');
-                handleEditComplete();
-              }}
-              onKeyDown={(e) => {
-                console.log('⌨️ 키 입력:', e.key);
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleEditComplete();
-                }
-                if (e.key === 'Escape') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleEditCancel();
-                }
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-              }}
-              style={{
-                border: 'none',
-                outline: 'none',
-                width: '80px',
-                fontSize: '16px',
-                textAlign: 'center',
-                background: currentViewDirection === '3D' ? 'white' : 'var(--theme-surface)',
-                color: currentViewDirection === '3D' ? '#333' : 'var(--theme-text)',
-                borderRadius: '4px',
-                padding: '6px',
-                fontWeight: 'bold'
-              }}
-              autoFocus
-              placeholder="폭"
-            />
-            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>
-              {label}
-            </div>
-          </div>
-        </Html>
-      );
-    }
-
-    return (
-              <Html
-          position={position}
-          center
-          style={{ 
-            pointerEvents: 'auto',
-            position: 'relative',
-            zIndex: 99999
-          }}
-          occlude={false}
-          zIndexRange={[9999, 10000]}
-          prepend={false}
-          portal={undefined}
-          transform={false}
-          sprite={false}
-        >
-        <div
-          style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            color: currentViewDirection === '3D' ? '#000000' : (color === '#4CAF50' ? '#2E7D32' : '#2196F3'),
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            border: `2px solid ${color}`,
-            cursor: 'pointer',
-            userSelect: 'none',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            position: 'relative',
-            zIndex: 100000,
-            pointerEvents: 'auto',
-            isolation: 'isolate'
-          }}
-          ref={(element) => {
-            if (element) {
-              // 전역 이벤트 리스너 추가
-                             const handleGlobalClick = (e: globalThis.MouseEvent) => {
-                 if (element.contains(e.target as Node)) {
-                   console.log('🎯 전역 클릭 감지됨:', { columnId, side, currentValue });
-                   e.preventDefault();
-                   e.stopPropagation();
-                   e.stopImmediatePropagation();
-                   handleColumnDistanceEdit(columnId, side, currentValue);
-                   return false;
-                 }
-               };
-               
-               const handleGlobalMouseDown = (e: globalThis.MouseEvent) => {
-                 if (element.contains(e.target as Node)) {
-                   console.log('🎯 전역 마우스다운 감지됨:', { columnId, side });
-                   e.preventDefault();
-                   e.stopPropagation();
-                   e.stopImmediatePropagation();
-                   return false;
-                 }
-               };
-              
-                             // 캡처 단계에서 이벤트 처리 - 우선순위 높게
-               document.addEventListener('mousedown', handleGlobalMouseDown, true);
-               document.addEventListener('click', handleGlobalClick, true);
-               
-               return () => {
-                 document.removeEventListener('mousedown', handleGlobalMouseDown, true);
-                 document.removeEventListener('click', handleGlobalClick, true);
-               };
-            }
-          }}
-                                  onClick={(e) => {
-              console.log('🖱️ 라벨 클릭됨:', { columnId, side, currentValue });
-              e.preventDefault();
-              e.stopPropagation();
-              e.nativeEvent?.preventDefault();
-              e.nativeEvent?.stopPropagation();
-              e.nativeEvent?.stopImmediatePropagation();
-              handleColumnDistanceEdit(columnId, side, currentValue);
-            }}
-            onMouseDown={(e) => {
-              console.log('🖱️ 마우스 다운:', { columnId, side, currentValue });
-              e.preventDefault();
-              e.stopPropagation();
-              e.nativeEvent?.preventDefault();
-              e.nativeEvent?.stopPropagation();
-              e.nativeEvent?.stopImmediatePropagation();
-            }}
-            onMouseUp={(e) => {
-              console.log('🖱️ 마우스 업:', { columnId, side, currentValue });
-              e.preventDefault();
-              e.stopPropagation();
-              e.nativeEvent?.preventDefault();
-              e.nativeEvent?.stopPropagation();
-              e.nativeEvent?.stopImmediatePropagation();
-            }}
-          onTouchStart={(e) => {
-            console.log('👆 터치 시작:', { columnId, side, currentValue });
-            e.preventDefault();
-            e.stopPropagation();
-            handleColumnDistanceEdit(columnId, side, currentValue);
-          }}
-          onPointerDown={(e) => {
-            console.log('👆 포인터 다운:', { columnId, side, currentValue });
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onPointerUp={(e) => {
-            console.log('👆 포인터 업:', { columnId, side, currentValue });
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-                 >
-          {currentValue}
-        </div>
-      </Html>
-    );
+  // handleEditSubmit 함수 추가 (EditableLabel에서 사용)
+  const handleEditSubmit = () => {
+    handleEditComplete();
   };
+
+  // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
+  const mmToThreeUnits = (mm: number) => mm * 0.01;
+  
+  // 공간 크기 (Three.js 단위) - furnitureDimensions 전에 선언
+  const spaceWidth = mmToThreeUnits(spaceInfo.width);
+  const spaceHeight = mmToThreeUnits(spaceInfo.height);
+
+  // 가구별 실시간 치수선 및 가이드 미리 계산 (hooks는 항상 호출되어야 함)
+  const furnitureDimensions = React.useMemo(() => {
+    if (placedModules.length === 0 || currentViewDirection === 'top') return null;
+    
+    return placedModules.map((module, index) => {
+      const moduleData = getModuleById(
+        module.moduleId,
+        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+        spaceInfo
+      );
+      
+      if (!moduleData) return null;
+      
+      // 단내림 여부 확인
+      const hasStepDown = spaceInfo.droppedCeiling?.enabled || false;
+      const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
+      const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
+      
+      // 기둥 슬롯 분석
+      const columnSlots = analyzeColumnSlots(spaceInfo);
+      const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      
+      // 기본 너비 설정 - adjustedWidth를 우선적으로 사용
+      let actualWidth = module.adjustedWidth || module.customWidth || moduleData.dimensions.width;
+      let actualPositionX = module.position.x;
+      
+      // 커스텀 깊이가 있는 경우 전용 가구로 취급
+      const actualDepth = module.customDepth || moduleData.dimensions.depth;
+      const hasCustomDepth = module.customDepth && module.customDepth !== moduleData.dimensions.depth;
+      
+      // 기둥에 맞춰 크기가 조정된 경우 adjustedWidth 사용
+      if (module.adjustedWidth) {
+        actualWidth = module.adjustedWidth;
+      }
+      
+      // 실제 X 위치
+      const moduleX = actualPositionX;
+      const moduleY = spaceHeight / 2;
+      
+      // 모듈 왼쪽 및 오른쪽 끝 계산
+      const moduleLeft = moduleX - actualWidth / 2;
+      const moduleRight = moduleX + actualWidth / 2;
+      
+      // 단내림 구간 영역 계산
+      const stepDownStartX = stepDownPosition === 'left' 
+        ? -(spaceInfo.width * 0.01) / 2 
+        : (spaceInfo.width * 0.01) / 2 - (stepDownWidth * 0.01);
+      const stepDownEndX = stepDownPosition === 'left'
+        ? -(spaceInfo.width * 0.01) / 2 + (stepDownWidth * 0.01)
+        : (spaceInfo.width * 0.01) / 2;
+      
+      // 스페이서 처리 
+      const SPACER_WIDTH = 36; // 36mm 스페이서
+      const isSpacerModule = moduleData.name && moduleData.name.includes('스페이서');
+      
+      // 36mm 스페이서일 때만 처리
+      const isSpacerHandled = isSpacerModule && actualWidth === SPACER_WIDTH;
+      
+      // 양쪽에서 가장 가까운 컬럼/벽까지의 거리 계산
+      let nearestLeftDistance = 0;
+      let nearestRightDistance = 0;
+      
+      if (slotInfo && slotInfo.wallPositions) {
+        // 슬롯 정보가 있을 때는 슬롯의 벽 위치 사용
+        nearestLeftDistance = Math.abs(moduleLeft * 100 - slotInfo.wallPositions.left);
+        nearestRightDistance = Math.abs(slotInfo.wallPositions.right - moduleRight * 100);
+      } else {
+        // 슬롯 정보가 없을 때는 직접 계산
+        const moduleLeftMm = moduleLeft * 100;
+        const moduleRightMm = moduleRight * 100;
+        
+        // 좌측 거리 계산
+        nearestLeftDistance = Math.abs(moduleLeftMm - (-spaceInfo.width / 2));
+        
+        // 우측 거리 계산  
+        nearestRightDistance = Math.abs(spaceInfo.width / 2 - moduleRightMm);
+      }
+      
+      // 단내림 구간과의 경계 치수
+      let leftBoundaryDistance = 0;
+      let rightBoundaryDistance = 0;
+      
+      if (hasStepDown) {
+        // 단내림 구간 경계 계산
+        const stepDownBoundaryX = stepDownPosition === 'left' ? stepDownEndX : stepDownStartX;
+        
+        // 가구와 단내림 경계 사이의 거리 계산
+        if (stepDownPosition === 'left') {
+          // 왼쪽 단내림일 때 - 가구 왼쪽과 단내림 우측 경계 사이 거리
+          leftBoundaryDistance = Math.abs((moduleLeft - stepDownBoundaryX) * 100);
+        } else {
+          // 오른쪽 단내림일 때 - 가구 오른쪽과 단내림 좌측 경계 사이 거리
+          rightBoundaryDistance = Math.abs((stepDownBoundaryX - moduleRight) * 100);
+        }
+      }
+      
+      return {
+        module,
+        moduleData,
+        actualWidth,
+        actualDepth,
+        hasCustomDepth,
+        moduleX,
+        moduleY,
+        moduleLeft,
+        moduleRight,
+        nearestLeftDistance,
+        nearestRightDistance,
+        leftBoundaryDistance,
+        rightBoundaryDistance,
+        isSpacerHandled,
+        hasStepDown,
+        stepDownPosition
+      };
+    }).filter(Boolean);
+  }, [placedModules, currentViewDirection, spaceInfo, spaceHeight]);
 
   // 모든 자식 요소의 renderOrder를 설정
   useEffect(() => {
@@ -388,14 +471,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
-  
-  
-  // mm를 Three.js 단위로 변환
-  const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
-  // 공간 크기 (Three.js 단위)
-  const spaceWidth = mmToThreeUnits(spaceInfo.width);
-  const spaceHeight = mmToThreeUnits(spaceInfo.height);
   
   // 폰트 크기 - 적당한 고정값 사용
   const baseFontSize = 0.4; // 적당한 크기
@@ -451,6 +526,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 뷰 방향별 치수선 렌더링
   const renderDimensions = () => {
+    // showDimensions와 showDimensionsText가 모두 true일 때만 렌더링
+    if (!showDimensions || !showDimensionsText) {
+      return null;
+    }
+    
     switch (currentViewDirection) {
       case '3D':
       case 'front':
@@ -1349,102 +1429,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
-      {React.useMemo(() => {
-        if (placedModules.length === 0 || currentViewDirection === 'top') return null;
+      {furnitureDimensions && furnitureDimensions.map((item, index) => {
+        if (!item) return null;
         
-        return placedModules.map((module, index) => {
-        const moduleData = getModuleById(
-          module.moduleId,
-          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-          spaceInfo
-        );
+        const {
+          module,
+          moduleData,
+          actualWidth,
+          actualDepth,
+          hasCustomDepth,
+          moduleX,
+          moduleY,
+          moduleLeft,
+          moduleRight,
+          nearestLeftDistance,
+          nearestRightDistance,
+          leftBoundaryDistance,
+          rightBoundaryDistance,
+          isSpacerHandled,
+          hasStepDown,
+          stepDownPosition
+        } = item;
         
-        if (!moduleData) return null;
+        // actualPositionX를 moduleX로부터 가져옴
+        let actualPositionX = moduleX;
         
-        // 단내림 여부 확인
-        const hasStepDown = spaceInfo.droppedCeiling?.enabled || false;
+        // 실제 너비 계산은 이미 완료되어 있음
         const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
-        const stepDownPosition = spaceInfo.droppedCeiling?.position || 'right';
-        
-        // 기둥 슬롯 분석
-        const columnSlots = analyzeColumnSlots(spaceInfo);
-        const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
-        const indexing = calculateSpaceIndexing(spaceInfo);
-        
-        // 기본 너비 설정 - adjustedWidth를 우선적으로 사용
-        let actualWidth = module.adjustedWidth || module.customWidth || moduleData.dimensions.width;
-        let actualPositionX = module.position.x;
-        
-        // 노서라운드 모드에서 엔드패널 조정
-        const END_PANEL_THICKNESS = 18;
-        if (spaceInfo.surroundType === 'no-surround') {
-          const isFirstSlot = module.slotIndex === 0;
-          const isLastSlot = module.slotIndex === indexing.columnCount - 1;
-          
-          if (spaceInfo.installType === 'freestanding') {
-            // 벽없음: 양쪽 끝 슬롯 축소 및 위치 조정
-            if (isFirstSlot) {
-              actualWidth = actualWidth - END_PANEL_THICKNESS;
-              // 첫번째 슬롯: 오른쪽으로 9mm 이동
-              actualPositionX = actualPositionX + mmToThreeUnits(END_PANEL_THICKNESS / 2);
-            } else if (isLastSlot) {
-              actualWidth = actualWidth - END_PANEL_THICKNESS;
-              // 마지막 슬롯: 왼쪽으로 9mm 이동
-              actualPositionX = actualPositionX - mmToThreeUnits(END_PANEL_THICKNESS / 2);
-            }
-          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-            // 한쪽벽: 벽이 없는 쪽만 축소 및 위치 조정
-            if (spaceInfo.wallConfig?.left && isLastSlot) {
-              // 왼쪽 벽이 있으면 오른쪽 끝만 축소
-              actualWidth = actualWidth - END_PANEL_THICKNESS;
-              actualPositionX = actualPositionX - mmToThreeUnits(END_PANEL_THICKNESS / 2);
-            } else if (spaceInfo.wallConfig?.right && isFirstSlot) {
-              // 오른쪽 벽이 있으면 왼쪽 끝만 축소
-              actualWidth = actualWidth - END_PANEL_THICKNESS;
-              actualPositionX = actualPositionX + mmToThreeUnits(END_PANEL_THICKNESS / 2);
-            }
-          }
-        }
-        
-        // 기둥 침범 시 가구 크기와 위치 재계산
-        if (slotInfo && slotInfo.hasColumn) {
-          // 슬롯 중심 위치 계산
-          let originalSlotCenterX: number;
-          if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
-            originalSlotCenterX = indexing.threeUnitPositions[module.slotIndex];
-          } else {
-            originalSlotCenterX = module.position.x;
-          }
-          
-          // 슬롯 경계 계산
-          const slotWidthM = indexing.columnWidth * 0.01;
-          const originalSlotBounds = {
-            left: originalSlotCenterX - slotWidthM / 2,
-            right: originalSlotCenterX + slotWidthM / 2,
-            center: originalSlotCenterX
-          };
-          
-          // 가구 경계 계산
-          const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
-          actualWidth = furnitureBounds.renderWidth;
-          actualPositionX = furnitureBounds.center;
-          
-          console.log('📐 [CleanCAD2D] 기둥 침범 가구 치수 업데이트:', {
-            moduleId: module.moduleId,
-            slotIndex: module.slotIndex,
-            hasColumn: slotInfo.hasColumn,
-            originalWidth: moduleData.dimensions.width,
-            adjustedWidth: module.adjustedWidth,
-            calculatedWidth: furnitureBounds.renderWidth,
-            finalWidth: actualWidth
-          });
-        }
-        
-        // 커버도어는 columnSlotInfo.doorWidth 사용
-        const isCoverDoor = module.columnSlotInfo?.doorWidth !== undefined;
-        if (isCoverDoor) {
-          actualWidth = module.columnSlotInfo.doorWidth;
-        }
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
@@ -1558,8 +1569,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
           </group>
         );
-      });
-      }, [placedModules, spaceInfo.columns])}
+      })}
       
       {/* 기둥별 치수선 (가구와 동일한 스타일, 탑뷰가 아닐 때만) */}
       {spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
@@ -4485,6 +4495,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 기둥만 렌더링하는 함수
   const renderColumns = () => {
+    // showDimensions가 true이고 currentViewDirection이 'front'일 때만 처리
+    if (!showDimensions || currentViewDirection !== 'front') {
+      return null;
+    }
+    
     // 기둥 관련 거리 표시는 ColumnDistanceLabels에서 더블클릭 시에만 표시
     return null;
   };
@@ -4499,11 +4514,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   return (
     <group ref={groupRef} renderOrder={999999}>
-      {/* 치수선은 showDimensions가 true이고 showDimensionsText가 true일 때만 렌더링 */}
-      {showDimensions && showDimensionsText && renderDimensions()}
+      {/* 치수선 렌더링 - 조건은 renderDimensions 내부에서 처리 */}
+      {renderDimensions()}
       
-      {/* 기둥은 showDimensions가 true일 때만 렌더링 (2D 정면 뷰에서만) */}
-      {showDimensions && currentViewDirection === 'front' && renderColumns()}
+      {/* 기둥 렌더링 - 조건은 renderColumns 내부에서 처리 */}
+      {renderColumns()}
       
       {/* 단내림 구간 경계선 및 가이드 - 2D 정면뷰에서는 숨김 */}
       {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && false && (

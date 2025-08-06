@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Placement Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #10b981;
+        }
+        .instructions {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-left: 3px solid #10b981;
+        }
+        .code {
+            background: #000;
+            color: #10b981;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            background: #10b981;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #0ea968;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Click & Place 기능 테스트</h1>
+        
+        <div class="instructions">
+            <h2>테스트 순서:</h2>
+            
+            <div class="step">
+                <strong>1단계:</strong> 애플리케이션 열기<br>
+                <a href="http://localhost:5174/configurator?design=new" target="_blank">
+                    <button class="button">에디터 열기</button>
+                </a>
+            </div>
+            
+            <div class="step">
+                <strong>2단계:</strong> 좌측 패널에서 가구 썸네일 클릭<br>
+                - 썸네일을 한 번 클릭하면 선택됨 (하이라이트 표시)<br>
+                - 콘솔에 <span class="code">✅ 썸네일 선택: [module_id]</span> 로그 확인
+            </div>
+            
+            <div class="step">
+                <strong>3단계:</strong> 3D 뷰어에서 슬롯에 마우스 호버<br>
+                - 마우스를 슬롯 위로 이동하면 고스트 프리뷰가 나타남<br>
+                - 콘솔에 <span class="code">🖱️ 마우스 이동 - 슬롯 인덱스: [number]</span> 로그 확인
+            </div>
+            
+            <div class="step">
+                <strong>4단계:</strong> 원하는 슬롯에서 클릭<br>
+                - 고스트가 표시된 슬롯을 클릭하면 가구가 배치됨<br>
+                - 콘솔에 <span class="code">✅ 가구 "[name]"을 슬롯 [number]에 배치했습니다.</span> 로그 확인
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>콘솔 로그 확인:</h2>
+            <p>브라우저 개발자 도구(F12)를 열어 Console 탭에서 다음 로그들을 확인하세요:</p>
+            <ul>
+                <li><span class="code">🎯 [ModuleGallery] Click & Place toggled</span> - 썸네일 클릭 시</li>
+                <li><span class="code">🎯 SlotDropZones - selectedModuleForPlacement</span> - 선택 상태 변경 시</li>
+                <li><span class="code">🖱️ 마우스 이동 - 슬롯 인덱스</span> - 마우스 호버 시</li>
+                <li><span class="code">🖱️ 클릭 이벤트</span> - 슬롯 클릭 시</li>
+                <li><span class="code">👻 고스트 프리뷰 체크</span> - 고스트 렌더링 시</li>
+            </ul>
+        </div>
+        
+        <div class="instructions">
+            <h2>예상 동작:</h2>
+            <ol>
+                <li>썸네일 클릭 → 썸네일이 선택 상태로 변경</li>
+                <li>3D 뷰어의 슬롯에 마우스 호버 → 반투명 고스트 프리뷰 표시</li>
+                <li>슬롯 클릭 → 가구 배치 완료</li>
+                <li>썸네일 다시 클릭 → 선택 해제</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

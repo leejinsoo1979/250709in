@@ -1,0 +1,56 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Clear 2D Theme Cache</title>
+</head>
+<body>
+    <h1>2D Theme Cache Cleaner</h1>
+    <button onclick="clearCache()">Clear 2D Theme Cache</button>
+    <div id="result"></div>
+    
+    <script>
+        function clearCache() {
+            try {
+                // ui-store에서 view2DTheme 제거
+                const uiStore = localStorage.getItem('ui-store');
+                if (uiStore) {
+                    const data = JSON.parse(uiStore);
+                    if (data.state && data.state.view2DTheme \!== undefined) {
+                        delete data.state.view2DTheme;
+                        localStorage.setItem('ui-store', JSON.stringify(data));
+                        document.getElementById('result').innerHTML = 
+                            '<p style="color: green;">✅ 2D Theme cache cleared successfully\!</p>' +
+                            '<p>Please refresh the page to apply changes.</p>';
+                    } else {
+                        document.getElementById('result').innerHTML = 
+                            '<p style="color: orange;">⚠️ No 2D theme cache found.</p>';
+                    }
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        '<p style="color: orange;">⚠️ No UI store found in localStorage.</p>';
+                }
+                
+                // 현재 상태 표시
+                const currentStore = localStorage.getItem('ui-store');
+                console.log('Current ui-store:', currentStore);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p style="color: red;">❌ Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // 페이지 로드 시 현재 상태 표시
+        window.onload = function() {
+            const uiStore = localStorage.getItem('ui-store');
+            if (uiStore) {
+                const data = JSON.parse(uiStore);
+                console.log('Current ui-store data:', data);
+                if (data.state && data.state.view2DTheme) {
+                    document.getElementById('result').innerHTML = 
+                        '<p>Current cached 2D theme: <strong>' + data.state.view2DTheme + '</strong></p>';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

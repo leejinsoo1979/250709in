@@ -77,7 +77,7 @@ const Configurator: React.FC = () => {
   const [upperLowerTab, setUpperLowerTab] = useState<'upper' | 'lower'>('upper'); // 상부장/하부장 탭
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
-  const [renderMode, setRenderMode] = useState<RenderMode>('solid'); // wireframe → solid로 기본값 변경
+  const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
@@ -1602,7 +1602,7 @@ const Configurator: React.FC = () => {
               
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                  <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
                   <div style={{ flex: 1 }}>
                     <WidthControl 
                       spaceInfo={spaceInfo}
@@ -1613,7 +1613,7 @@ const Configurator: React.FC = () => {
                 </div>
                 
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                  <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
                   <div style={{ flex: 1 }}>
                     <HeightControl 
                       spaceInfo={spaceInfo}
@@ -1736,7 +1736,7 @@ const Configurator: React.FC = () => {
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {/* 메인구간 폭 */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
                       <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
@@ -1804,7 +1804,7 @@ const Configurator: React.FC = () => {
                     
                     {/* 메인구간 높이 */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
                       <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
@@ -1885,7 +1885,7 @@ const Configurator: React.FC = () => {
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {/* 단내림 구간 폭 */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>W</span>
+                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
                       <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
@@ -1952,7 +1952,7 @@ const Configurator: React.FC = () => {
                     
                     {/* 단내림 구간 높이 */}
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: '#5b21b6' }}>H</span>
+                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
                       <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                         <input
                           type="text"
@@ -2419,7 +2419,16 @@ const Configurator: React.FC = () => {
           {/* 뷰어 컨트롤 */}
           <ViewerControls
             viewMode={viewMode as ViewMode}
-            onViewModeChange={(mode) => setViewMode(mode)}
+            onViewModeChange={(mode) => {
+              setViewMode(mode);
+              // 2D 모드 선택 시 와이어프레임으로 자동 설정
+              if (mode === '2D') {
+                setRenderMode('wireframe');
+              } else if (mode === '3D') {
+                // 3D 모드 선택 시 솔리드로 자동 설정
+                setRenderMode('solid');
+              }
+            }}
             viewDirection={view2DDirection}
             onViewDirectionChange={setView2DDirection}
             renderMode={renderMode}

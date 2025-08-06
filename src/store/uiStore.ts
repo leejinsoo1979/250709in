@@ -75,6 +75,10 @@ interface UIState {
   // 강조된 가구 칸 (가구ID-칸인덱스 형식)
   highlightedCompartment: string | null;
   
+  // 클릭 배치 상태 (Click & Place)
+  selectedModuleForPlacement: string | null;
+  hoveredSlotForPlacement: number | null;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -116,6 +120,8 @@ interface UIState {
   setSelectedPanelBId: (panelBId: string | null) => void;
   setFurnitureDragging: (isDragging: boolean) => void;
   setHighlightedCompartment: (compartmentId: string | null) => void;
+  setSelectedModuleForPlacement: (moduleId: string | null) => void;
+  setHoveredSlotForPlacement: (slotIndex: number | null) => void;
   resetUI: () => void;
 }
 
@@ -144,13 +150,34 @@ const initialUIState = {
   isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
   activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
+  selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
+  hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
+};
+
+// 앱 테마 가져오기 (ThemeContext와 동일한 방식)
+const getAppTheme = (): 'dark' | 'light' => {
+  try {
+    const savedTheme = localStorage.getItem('app-theme-config');
+    if (savedTheme) {
+      const themeConfig = JSON.parse(savedTheme);
+      return themeConfig.mode || 'light';
+    }
+  } catch (error) {
+    console.warn('테마 설정 로드 실패:', error);
+  }
+  return 'light';
 };
 
 export const useUIStore = create<UIState>()(
   persist(
-    (set) => ({
-      ...initialUIState,
-      view2DTheme: 'light' as const,  // 기본값: 라이트 모드
+    (set, get) => {
+      // 스토어 생성 시 앱 테마 읽기
+      const appTheme = getAppTheme();
+      console.log('🔄 UIStore 초기화 - 앱 테마:', appTheme);
+      
+      return {
+        ...initialUIState,
+        view2DTheme: appTheme,  // 앱 테마와 동일하게 초기화
       
       setViewMode: (mode) =>
         set({ viewMode: mode }),
@@ -289,15 +316,23 @@ export const useUIStore = create<UIState>()(
       setHighlightedCompartment: (compartmentId) =>
         set({ highlightedCompartment: compartmentId }),
       
+      setSelectedModuleForPlacement: (moduleId) =>
+        set({ selectedModuleForPlacement: moduleId }),
+      
+      setHoveredSlotForPlacement: (slotIndex) =>
+        set({ hoveredSlotForPlacement: slotIndex }),
+      
       resetUI: () =>
         set(initialUIState),
-    }),
+      };
+    },
     {
       name: 'ui-store', // localStorage 키
       partialize: (state) => ({
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,  // localStorage에 저장
         showDimensions: state.showDimensions,  // localStorage에 저장
+        // view2DTheme은 앱 테마와 동기화되므로 저장하지 않음
         // doorsOpen과 activePopup은 세션별로 초기화
       }),
     }

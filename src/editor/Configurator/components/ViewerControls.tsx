@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -68,13 +68,36 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorInstallationToggle
 }) => {
   // UIStore에서 2D 뷰 방향 상태 가져오기
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme } = useUIStore();
   
   // 테마 컨텍스트
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   
   // QR 코드 생성기 표시 상태
   const [showQRGenerator, setShowQRGenerator] = useState(false);
+  
+  // 컴포넌트 마운트 시 localStorage 캐시 정리 및 초기 동기화
+  useEffect(() => {
+    // localStorage에서 ui-store의 view2DTheme 제거
+    try {
+      const stored = localStorage.getItem('ui-store');
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.state && data.state.view2DTheme !== undefined) {
+          delete data.state.view2DTheme;
+          localStorage.setItem('ui-store', JSON.stringify(data));
+        }
+      }
+    } catch (e) {
+      console.warn('localStorage 정리 실패:', e);
+    }
+    
+    // 앱 테마와 동기화
+    const desiredTheme = theme.mode === 'dark' ? 'dark' : 'light';
+    console.log('ViewerControls mount - theme mode:', theme.mode, 'setting 2D theme to:', desiredTheme);
+    setView2DTheme(desiredTheme);
+  }, [theme, setView2DTheme]); // theme 변경 시 동기화
+  
 
   const viewModes = [
     { id: '3D' as ViewMode, label: '3D' },
@@ -111,7 +134,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <span 
             className={`${styles.toggleLabel} ${styles.clickable}`}
             onClick={() => {
-              console.log('🎯 ON/OFF 라벨 클릭, 현재 상태:', showDimensions);
               
               // 토글이 꺼져있으면 켜고 모든 항목 체크
               if (!showDimensions) {
@@ -146,7 +168,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
             onClick={() => {
-              console.log('🎯 치수 토글 클릭, 현재 상태:', showDimensions);
               
               // 치수 토글이 켜져있으면 끄고, showDimensionsText도 함께 끄기
               if (showDimensions) {
@@ -236,7 +257,19 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               key={mode.id}
               data-view-mode={mode.id}
               className={`${styles.viewModeButton} ${viewMode === mode.id ? styles.active : ''}`}
-              onClick={() => onViewModeChange(mode.id)}
+              onClick={() => {
+                onViewModeChange(mode.id);
+                // 2D 모드로 전환 시
+                if (mode.id === '2D') {
+                  // 와이어프레임을 기본으로 설정
+                  if (renderMode !== 'wireframe') {
+                    onRenderModeChange('wireframe');
+                  }
+                  // 앱 테마에 따라 2D 테마 자동 설정 (2D 모드 진입 시에만)
+                  const desiredTheme = theme.mode === 'dark' ? 'dark' : 'light';
+                  setView2DTheme(desiredTheme);
+                }
+              }}
               title={mode.id === '3D' ? '3D 모드 - 휠 버튼 드래그: 회전' : '2D 모드'}
             >
               {mode.label}
@@ -285,11 +318,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             {/* 다크모드/라이트모드 토글 - 2D 모드에서만 표시 */}
             <button
               className={styles.themeToggle}
-              onClick={toggleView2DTheme}
+              onClick={() => {
+                toggleView2DTheme();
+              }}
               title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
             >
               {view2DTheme === 'dark' ? (
-                // 해 아이콘 (라이트 모드)
+                // 달 아이콘 (다크 모드 상태)
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              ) : (
+                // 해 아이콘 (라이트 모드 상태)
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="5" />
                   <line x1="12" y1="1" x2="12" y2="3" />
@@ -300,11 +340,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   <line x1="21" y1="12" x2="23" y2="12" />
                   <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                // 달 아이콘 (다크 모드)
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
               )}
             </button>
