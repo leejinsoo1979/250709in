@@ -1037,9 +1037,9 @@ const Room: React.FC<RoomProps> = ({
           ) : (
             // 3D 모드나 다른 2D 뷰에서는 투명 처리
             <mesh
-              position={[xOffset + width/2, panelStartY + height/2, zOffset - 0.01]}
+              position={[xOffset + width/2, panelStartY + height/2, extendedZOffset + extendedPanelDepth/2]}
             >
-              <planeGeometry args={[width, height]} />
+              <planeGeometry args={[width, extendedPanelDepth]} />
               <meshStandardMaterial 
                 color="#ffffff" 
                 transparent={true}
