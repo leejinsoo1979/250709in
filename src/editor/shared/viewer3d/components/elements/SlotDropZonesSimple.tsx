@@ -1135,6 +1135,43 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
       }
       
+      // 노서라운드 엔드패널 슬롯에 듀얼 가구 배치 체크
+      if (spaceInfo.surroundType === 'no-surround' && isDual) {
+        console.log('🔍 노서라운드 듀얼 가구 배치 체크:', {
+          isDualFurniture: isDual,
+          moduleId: zoneTargetModuleId,
+          globalSlotIndex,
+          zoneSlotIndex,
+          columnCount: indexing.columnCount
+        });
+        
+        const isFirstSlot = globalSlotIndex === 0;
+        const isLastSlot = globalSlotIndex >= indexing.columnCount - 2; // 듀얼은 2슬롯 차지
+        
+        // 엔드패널이 있는 슬롯인지 확인
+        const hasLeftEndPanel = isFirstSlot && (spaceInfo.installType === 'freestanding' || 
+                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
+        const hasRightEndPanel = isLastSlot && (spaceInfo.installType === 'freestanding' || 
+                                (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
+        
+        console.log('🔍 엔드패널 체크:', {
+          hasLeftEndPanel,
+          hasRightEndPanel,
+          isFirstSlot,
+          isLastSlot,
+          installType: spaceInfo.installType,
+          wallConfig: spaceInfo.wallConfig
+        });
+        
+        if (hasLeftEndPanel || hasRightEndPanel) {
+          console.log('🚫 듀얼 가구 배치 차단!');
+          showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
+            title: '배치 불가' 
+          });
+          return false;
+        }
+      }
+      
       console.log('✅ 가구 배치 완료:', {
         zone: zoneToUse,
         moduleId: zoneTargetModuleId,
@@ -1242,6 +1279,43 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }))
     });
        
+    // 노서라운드 엔드패널 슬롯에 듀얼 가구 배치 체크 (단내림이 없는 경우)
+    if (spaceInfo.surroundType === 'no-surround' && isDual) {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      console.log('🔍 노서라운드 듀얼 가구 배치 체크 (non-dropped):', {
+        isDualFurniture: isDual,
+        moduleId: dragData.moduleData.id,
+        slotIndex,
+        columnCount: indexing.columnCount
+      });
+      
+      const isFirstSlot = slotIndex === 0;
+      const isLastSlot = slotIndex >= indexing.columnCount - 2; // 듀얼은 2슬롯 차지
+      
+      // 엔드패널이 있는 슬롯인지 확인
+      const hasLeftEndPanel = isFirstSlot && (spaceInfo.installType === 'freestanding' || 
+                             (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
+      const hasRightEndPanel = isLastSlot && (spaceInfo.installType === 'freestanding' || 
+                              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
+      
+      console.log('🔍 엔드패널 체크 (non-dropped):', {
+        hasLeftEndPanel,
+        hasRightEndPanel,
+        isFirstSlot,
+        isLastSlot,
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig
+      });
+      
+      if (hasLeftEndPanel || hasRightEndPanel) {
+        console.log('🚫 듀얼 가구 배치 차단 (non-dropped)!');
+        showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
+          title: '배치 불가' 
+        });
+        return false;
+      }
+    }
+    
     // 슬롯 가용성 검사
     if (!isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
       console.log('❌ 메인 구간 슬롯 충돌로 배치 불가');

@@ -67,6 +67,54 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         // 드롭 위치 계산
         const dropPosition = calculateDropPosition(e, currentDragData);
         if (!dropPosition) return;
+        
+        // 듀얼 가구 여부를 모듈 ID로 정확히 판단하고 dropPosition에도 반영
+        const isDualFurniture = currentDragData.moduleData.id.includes('dual-');
+        dropPosition.isDualFurniture = isDualFurniture; // dropPosition 업데이트
+        
+        // 노서라운드 엔드패널 슬롯에 듀얼 가구 배치 체크
+        if (spaceInfo.surroundType === 'no-surround') {
+          console.log('🔍 노서라운드 모드 체크:', {
+            isDualFurniture,
+            moduleId: currentDragData.moduleData.id,
+            dropColumn: dropPosition.column,
+            columnCount: indexing.columnCount
+          });
+          
+          if (isDualFurniture) {
+            const isFirstSlot = dropPosition.column === 0;
+            const isLastSlot = dropPosition.column >= indexing.columnCount - 2; // 듀얼은 2슬롯 차지
+            
+            console.log('🔍 슬롯 위치 체크:', {
+              isFirstSlot,
+              isLastSlot,
+              dropColumn: dropPosition.column,
+              columnCount: indexing.columnCount
+            });
+            
+            // 엔드패널이 있는 슬롯인지 확인
+            const hasLeftEndPanel = isFirstSlot && (spaceInfo.installType === 'freestanding' || 
+                                   (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
+            const hasRightEndPanel = isLastSlot && (spaceInfo.installType === 'freestanding' || 
+                                    (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
+            
+            console.log('🔍 엔드패널 체크:', {
+              hasLeftEndPanel,
+              hasRightEndPanel,
+              installType: spaceInfo.installType,
+              wallConfig: spaceInfo.wallConfig
+            });
+            
+            if (hasLeftEndPanel || hasRightEndPanel) {
+              console.log('🚫 듀얼 가구 배치 차단!');
+              showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
+                title: '배치 불가' 
+              });
+              setFurniturePlacementMode(false);
+              return;
+            }
+          }
+        }
 
         let finalX = dropPosition.x;
         

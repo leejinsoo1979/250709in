@@ -4,6 +4,9 @@ import AlertModal from '@/components/common/AlertModal';
 
 interface AlertOptions {
   title?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  showCancel?: boolean;
 }
 
 interface AlertContextType {
@@ -29,17 +32,24 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [title, setTitle] = useState('알림');
+  const [onConfirm, setOnConfirm] = useState<(() => void) | undefined>();
+  const [onCancel, setOnCancel] = useState<(() => void) | undefined>();
+  const [showCancel, setShowCancel] = useState(false);
 
   const showAlert = useCallback((message: string, options?: AlertOptions) => {
     setMessage(message);
-    if (options?.title) {
-      setTitle(options.title);
-    }
+    setTitle(options?.title || '알림');
+    setOnConfirm(() => options?.onConfirm);
+    setOnCancel(() => options?.onCancel);
+    setShowCancel(options?.showCancel || false);
     setIsOpen(true);
   }, []);
 
   const hideAlert = useCallback(() => {
     setIsOpen(false);
+    setOnConfirm(undefined);
+    setOnCancel(undefined);
+    setShowCancel(false);
   }, []);
 
   return (
@@ -55,6 +65,9 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
             message={message}
             title={title}
             onClose={hideAlert}
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            showCancel={showCancel}
           />,
           modalRoot
         );

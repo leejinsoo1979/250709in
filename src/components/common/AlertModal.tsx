@@ -6,13 +6,38 @@ interface AlertModalProps {
   message: string;
   onClose: () => void;
   title?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  showCancel?: boolean;
 }
 
-const AlertModal: React.FC<AlertModalProps> = ({ isOpen, message, onClose, title = '알림' }) => {
+const AlertModal: React.FC<AlertModalProps> = ({ 
+  isOpen, 
+  message, 
+  onClose, 
+  title = '알림',
+  onConfirm,
+  onCancel,
+  showCancel = false
+}) => {
   if (!isOpen) return null;
 
+  const handleConfirm = () => {
+    if (onConfirm) {
+      onConfirm();
+    }
+    onClose();
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+    onClose();
+  };
+
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={showCancel ? handleCancel : onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h3 className={styles.title}>{title}</h3>
@@ -21,7 +46,12 @@ const AlertModal: React.FC<AlertModalProps> = ({ isOpen, message, onClose, title
           <p className={styles.message}>{message}</p>
         </div>
         <div className={styles.footer}>
-          <button className={styles.confirmButton} onClick={onClose}>
+          {showCancel && (
+            <button className={styles.cancelButton} onClick={handleCancel}>
+              취소
+            </button>
+          )}
+          <button className={styles.confirmButton} onClick={handleConfirm}>
             확인
           </button>
         </div>

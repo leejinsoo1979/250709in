@@ -6,6 +6,9 @@ import { useSurroundCalculations } from './hooks/useSurroundCalculations';
 import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
 import FrameSizeControls from './components/FrameSizeControls';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useAlert } from '@/contexts/AlertContext';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 interface SurroundControlsProps {
   spaceInfo: SpaceInfo;
@@ -16,6 +19,11 @@ interface SurroundControlsProps {
 const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
   // 파생 상태 스토어 사용
   const derivedStore = useDerivedSpaceStore();
+  
+  // 가구 스토어와 Alert 훅 추가
+  const placedModules = useFurnitureStore(state => state.placedModules);
+  const removeModule = useFurnitureStore(state => state.removeModule);
+  const { showAlert } = useAlert();
   
   // 이전 spaceInfo 값을 추적하여 불필요한 재계산 방지
   const prevSpaceInfoRef = useRef(spaceInfo);
@@ -87,6 +95,48 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   // 서라운드 타입 변경 처리
   const handleSurroundTypeChange = (type: SurroundType) => {
     console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
+    
+    // 노서라운드로 변경 시 엔드패널 슬롯의 듀얼 가구 체크
+    if (type === 'no-surround') {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const dualFurnituresInEndSlots: any[] = [];
+      
+      placedModules.forEach(module => {
+        // 듀얼 가구인지 확인
+        if (module.isDualSlot || module.moduleId.includes('dual-')) {
+          const isFirstSlot = module.slotIndex === 0;
+          const isLastSlot = module.slotIndex >= indexing.columnCount - 2; // 듀얼은 2슬롯 차지
+          
+          // 엔드패널이 있는 슬롯인지 확인
+          const hasLeftEndPanel = isFirstSlot && (spaceInfo.installType === 'freestanding' || 
+                                 (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
+          const hasRightEndPanel = isLastSlot && (spaceInfo.installType === 'freestanding' || 
+                                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
+          
+          if (hasLeftEndPanel || hasRightEndPanel) {
+            dualFurnituresInEndSlots.push(module);
+          }
+        }
+      });
+      
+      if (dualFurnituresInEndSlots.length > 0) {
+        console.log('🚫 엔드패널 슬롯에 듀얼 가구 발견:', dualFurnituresInEndSlots);
+        
+        showAlert(
+          `노서라운드 모드에서 듀얼 캐비닛은 커버 도어 적용이 불가합니다.\n해당 위치의 듀얼 캐비닛을 자동으로 제거합니다.`,
+          { 
+            title: '듀얼 캐비닛 제거 안내',
+            onConfirm: () => {
+              // 엔드패널 슬롯의 듀얼 가구들 제거
+              dualFurnituresInEndSlots.forEach(module => {
+                removeModule(module.id);
+              });
+            }
+          }
+        );
+      }
+    }
+    
     const updates: Partial<SpaceInfo> = {
       surroundType: type,
     };
