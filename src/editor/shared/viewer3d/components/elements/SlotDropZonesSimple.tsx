@@ -25,6 +25,7 @@ interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
   showAll?: boolean;
   showDimensions?: boolean;
+  viewMode?: '2D' | '3D';
 }
 
 // 전역 window 타입 확장
@@ -34,7 +35,7 @@ declare global {
   }
 }
 
-const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true }) => {
+const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true, viewMode: viewModeProp }) => {
   // 모든 훅을 먼저 호출
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
@@ -45,8 +46,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
-  const { viewMode } = useSpace3DView();
+  const { viewMode: contextViewMode } = useSpace3DView();
   const { view2DDirection } = useUIStore();
+  
+  // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
+  const viewMode = viewModeProp || contextViewMode;
+  
+  console.log('🎯 SlotDropZonesSimple - viewMode:', {
+    viewModeProp,
+    contextViewMode,
+    finalViewMode: viewMode
+  });
   
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();
@@ -1021,15 +1031,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       } else {
         // 기둥이 없는 경우 기존 로직
-        if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-          customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
-        } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-          // 싱글 가구의 경우 실제 슬롯 너비 사용
-          customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
+        // 노서라운드 모드에서는 customWidth도 설정하지 않음
+        if (spaceInfo.surroundType !== 'no-surround') {
+          if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+            customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
+          } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+            // 싱글 가구의 경우 실제 슬롯 너비 사용
+            customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
+          } else {
+            customWidth = actualSlotWidth;
+          }
         } else {
-          customWidth = actualSlotWidth;
+          customWidth = undefined;
         }
-        adjustedWidth = moduleData.dimensions.width;
+        // 노서라운드 모드에서는 adjustedWidth를 설정하지 않음
+        // adjustedWidth는 기둥 침범 시에만 사용
+        adjustedWidth = undefined;
       }
       
       console.log('🎯 가구 배치 정보:', {
@@ -1484,7 +1501,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       isValidInCurrentSpace: true,
       adjustedWidth: slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined, // 기둥 C를 제외한 모든 기둥에서 조정된 너비 사용
       hingePosition: 'right' as 'left' | 'right',
-      customWidth: adjustedCustomWidth, // 실제 슬롯 너비 사용
+      // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
+      customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
       zone: zoneToUse // 단내림 영역 정보 저장
     };
     
@@ -1955,14 +1973,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const reducedDepth = slotDimensions.depth - mmToThreeUnits(20);
         const zOffset = -mmToThreeUnits(10); // 뒤쪽으로 10mm 이동 (앞쪽에서만 20mm 줄이기 위해)
         
-        // 영역별 슬롯 너비 계산
+        // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
         if (hasDroppedCeiling && zoneSlotInfo) {
           const currentZone = slotZone;
-          const zoneColumnWidth = currentZone === 'dropped' && zoneSlotInfo.dropped
-            ? zoneSlotInfo.dropped.columnWidth
-            : zoneSlotInfo.normal.columnWidth;
-          slotWidth = mmToThreeUnits(zoneColumnWidth);
+          // slotWidths 배열에서 실제 슬롯 너비 가져오기
+          const zoneSlotWidths = currentZone === 'dropped' && zoneSlotInfo.dropped
+            ? zoneSlotInfo.dropped.slotWidths
+            : zoneSlotInfo.normal.slotWidths;
+          
+          if (zoneSlotWidths && slotLocalIndex < zoneSlotWidths.length) {
+            slotWidth = mmToThreeUnits(zoneSlotWidths[slotLocalIndex]);
+          } else {
+            // slotWidths가 없으면 기본 columnWidth 사용
+            const zoneColumnWidth = currentZone === 'dropped' && zoneSlotInfo.dropped
+              ? zoneSlotInfo.dropped.columnWidth
+              : zoneSlotInfo.normal.columnWidth;
+            slotWidth = mmToThreeUnits(zoneColumnWidth);
+          }
+        } else if (indexing.slotWidths && slotLocalIndex < indexing.slotWidths.length) {
+          // 단내림이 없는 경우 indexing.slotWidths 사용
+          slotWidth = mmToThreeUnits(indexing.slotWidths[slotLocalIndex]);
         }
         
         // 띄워서 배치인지 확인
@@ -2050,6 +2081,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         if (hasDroppedCeiling && zoneSlotInfo.dropped) {
           // 단내림 활성화된 경우 양쪽 영역 모두 표시
+          console.log('🎯 SlotDropZonesSimple - 바닥 메쉬 위치 계산:', {
+            메인영역: {
+              시작X_mm: zoneSlotInfo.normal.startX,
+              너비_mm: zoneSlotInfo.normal.width,
+              끝X_mm: zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width,
+              시작X_three: mmToThreeUnits(zoneSlotInfo.normal.startX),
+              끝X_three: mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width),
+              중심X_three: (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
+              너비_three: mmToThreeUnits(zoneSlotInfo.normal.width)
+            }
+          });
+          
           return (
             <>
               {/* 메인 영역 표시 */}
@@ -2073,25 +2116,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                       opacity={0.35} 
                     />
                   </mesh>
-                  {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이 */}
-                  <mesh
-                    position={[
-                      (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
-                      ceilingY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <boxGeometry args={[
-                      mmToThreeUnits(zoneSlotInfo.normal.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
-                    />
-                  </mesh>
+                  {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
+                  {viewMode !== '2D' && (
+                    <mesh
+                      position={[
+                        (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
+                        ceilingY,
+                        slotFloorZ
+                      ]}
+                    >
+                      <boxGeometry args={[
+                        mmToThreeUnits(zoneSlotInfo.normal.width),
+                        viewMode === '2D' ? 0.1 : 0.001,
+                        slotFloorDepth
+                      ]} />
+                      <meshBasicMaterial 
+                        color={primaryColor} 
+                        transparent 
+                        opacity={0.35} 
+                      />
+                    </mesh>
+                  )}
                   {/* 메인 영역 외곽선 */}
                   <lineSegments
                     position={[
@@ -2129,25 +2174,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                       opacity={0.35} 
                     />
                   </mesh>
-                  {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름 */}
-                  <mesh
-                    position={[
-                      (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
-                      mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
-                      slotFloorZ
-                    ]}
-                  >
-                    <boxGeometry args={[
-                      mmToThreeUnits(zoneSlotInfo.dropped.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
-                    />
-                  </mesh>
+                  {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
+                  {viewMode !== '2D' && (
+                    <mesh
+                      position={[
+                        (mmToThreeUnits(zoneSlotInfo.dropped.startX) + mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width)) / 2,
+                        mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
+                        slotFloorZ
+                      ]}
+                    >
+                      <boxGeometry args={[
+                        mmToThreeUnits(zoneSlotInfo.dropped.width),
+                        viewMode === '2D' ? 0.1 : 0.001,
+                        slotFloorDepth
+                      ]} />
+                      <meshBasicMaterial 
+                        color={primaryColor} 
+                        transparent 
+                        opacity={0.35} 
+                      />
+                    </mesh>
+                  )}
                   {/* 단내림 영역 외곽선 */}
                   <lineSegments
                     position={[
@@ -2186,17 +2233,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   opacity={0.35} 
                 />
               </mesh>
-              {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이 */}
-              <mesh
-                position={[centerX, ceilingY, slotFloorZ]}
-              >
-                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                <meshBasicMaterial 
-                  color={primaryColor} 
-                  transparent 
-                  opacity={0.35} 
-                />
-              </mesh>
+              {/* 천장 슬롯 메쉬 - 2D 모드에서는 숨김 */}
+              {console.log('🎯 천장 메시 렌더링 조건:', { viewMode, shouldRender: viewMode !== '2D' })}
+              {viewMode !== '2D' && (
+                <mesh
+                  position={[centerX, ceilingY, slotFloorZ]}
+                >
+                  <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                  <meshBasicMaterial 
+                    color={primaryColor} 
+                    transparent 
+                    opacity={0.35} 
+                  />
+                </mesh>
+              )}
               <lineSegments
                 position={[centerX, floorY, slotFloorZ]}
               >

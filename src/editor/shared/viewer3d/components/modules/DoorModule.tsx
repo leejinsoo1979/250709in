@@ -372,27 +372,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : '일반 도어'
   });
   
-  // 노서라운드 모드에서 좌우 끝 도어는 600mm 기준으로 계산
-  if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
-    const isFirstSlot = slotIndex === 0;
-    const isLastSlot = slotIndex === indexing.columnCount - 1;
-    
-    if (spaceInfo.installType === 'freestanding') {
-      // 벽없음: 양쪽 끝 도어는 600mm 사용 (슬롯 582mm + 엔드패널 18mm)
-      if (isFirstSlot || isLastSlot) {
-        // 커버도어: 슬롯(582mm) + 엔드패널(18mm) = 600mm
-        actualDoorWidth = 600; // 고정값 600mm
-        console.log(`🚪 노서라운드 커버도어: 슬롯${slotIndex}, ${actualDoorWidth}mm`);
+  // 노서라운드 모드에서 도어 크기 처리
+  if (spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
+    // originalSlotWidth가 없으면 fallback으로 계산
+    if (!originalSlotWidth) {
+      // 전체 너비에서 엔드패널/프레임을 제외한 실제 가구 공간을 슬롯 수로 나눔
+      let availableWidth = spaceInfo.width;
+      
+      // installType에 따라 엔드패널/이격거리 처리
+      if (spaceInfo.installType === 'freestanding') {
+        // 벽없음: 양쪽 엔드패널 18mm씩
+        availableWidth -= 36; // 18mm * 2
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 한쪽벽: 벽이 없는 쪽에만 엔드패널
+        if (!spaceInfo.wallConfig?.left) {
+          availableWidth -= 18; // 왼쪽 엔드패널
+        } else if (!spaceInfo.wallConfig?.right) {
+          availableWidth -= 18; // 오른쪽 엔드패널
+        }
+      } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 양쪽벽: 엔드패널 없음 (이격거리는 별도 처리)
+        // availableWidth 그대로 사용
       }
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 한쪽벽: 벽이 없는 쪽 끝 도어만 600mm
-      if (isFirstSlot && !spaceInfo.wallConfig?.left) {
-        actualDoorWidth = 600; // 고정값 600mm
-        console.log(`🚪 노서라운드 좌측 커버도어: ${actualDoorWidth}mm`);
-      } else if (isLastSlot && !spaceInfo.wallConfig?.right) {
-        actualDoorWidth = 600; // 고정값 600mm
-        console.log(`🚪 노서라운드 우측 커버도어: ${actualDoorWidth}mm`);
-      }
+      
+      actualDoorWidth = Math.floor(availableWidth / indexing.columnCount);
+      console.log(`🚪 노서라운드 도어 너비 계산:`, {
+        전체너비: spaceInfo.width,
+        좌측제외: spaceInfo.wallConfig?.left ? 2 : 18,
+        우측제외: spaceInfo.wallConfig?.right ? 2 : 18,
+        가용너비: availableWidth,
+        슬롯수: indexing.columnCount,
+        도어너비: actualDoorWidth
+      });
     }
   }
   
@@ -477,9 +489,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   }
   
+  // 노서라운드 + 벽없음 상태 체크
+  const isNoSurroundNoWallLeft = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.left;
+  const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
+  const endPanelThickness = 18; // 엔드패널 두께 18mm
+  
   // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
   // 추가로 2mm 더 띄워서 캐비닛과 분리
-  const doorDepth = mmToThreeUnits(moduleDepth) + mmToThreeUnits(20) + mmToThreeUnits(2); // 10mm 바깥쪽 + 2mm 추가 간격
+  // 노서라운드와 서라운드 모드에서 동일한 Z축 위치 유지
+  const baseDepthOffset = mmToThreeUnits(20) + mmToThreeUnits(2);
+  const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset; // 서라운드와 노서라운드 동일하게 처리
   
   // 패널 두께 (18mm)와 힌지 위치 오프셋(9mm) 상수 정의
   const panelThickness = 18;
@@ -611,33 +630,118 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     },
   });
 
-  // 도어 위치 계산: 원래 슬롯 중심 사용
+  // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
   let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   
-  // 노서라운드 모드에서 양 끝 도어 위치 조정
-  if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
-    const isFirstSlot = slotIndex === 0;
-    const isLastSlot = slotIndex === indexing.columnCount - 1;
-    const END_PANEL_THICKNESS = 18; // mm
-    const doorPositionAdjustment = mmToThreeUnits(END_PANEL_THICKNESS / 2); // 엔드패널 두께의 절반
+  // slotCenterX가 제공되었는지 확인
+  if (slotCenterX !== undefined && slotCenterX !== null) {
+    // slotCenterX가 제공된 경우 그대로 사용
+    console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
+      slotIndex,
+      slotCenterX,
+      doorGroupX
+    });
+  } else {
+    // slotCenterX가 제공되지 않은 경우 기본값 0 사용
+    console.log(`🚪 도어 위치 기본값 사용:`, {
+      slotIndex,
+      doorGroupX: 0
+    });
+  }
+
+  // 기둥 옆에 있는지 확인하여 힌지 위치 자동 조정
+  const checkColumnAdjacent = () => {
+    const columns = spaceInfo.columns || [];
+    if (columns.length === 0) {
+      console.log('🚪 기둥이 없음');
+      return { isNearColumn: false, columnSide: null };
+    }
     
-    if (spaceInfo.installType === 'freestanding') {
-      if (isFirstSlot) {
-        // 첫번째 도어: 좌측으로 엔드패널 두께의 절반 이동
-        doorGroupX -= doorPositionAdjustment;
-        console.log(`🚪 노서라운드 첫번째 도어 위치 조정: -${END_PANEL_THICKNESS/2}mm`);
-      } else if (isLastSlot) {
-        // 마지막 도어: 우측으로 엔드패널 두께의 절반 이동
-        doorGroupX += doorPositionAdjustment;
-        console.log(`🚪 노서라운드 마지막 도어 위치 조정: +${END_PANEL_THICKNESS/2}mm`);
+    // 도어의 실제 위치 계산 (Three.js 좌표)
+    const doorCenterX = slotCenterX || 0;
+    const doorLeftEdge = doorCenterX - mmToThreeUnits(actualDoorWidth / 2);
+    const doorRightEdge = doorCenterX + mmToThreeUnits(actualDoorWidth / 2);
+    
+    console.log('🚪 도어 위치 체크:', {
+      doorCenterX,
+      doorLeftEdge,
+      doorRightEdge,
+      actualDoorWidth,
+      slotCenterX
+    });
+    
+    // 각 기둥과의 거리 체크
+    for (const column of columns) {
+      const columnX = mmToThreeUnits(column.position[0] - spaceInfo.width / 2);
+      const columnWidth = mmToThreeUnits(column.width);
+      const columnLeftEdge = columnX - columnWidth / 2;
+      const columnRightEdge = columnX + columnWidth / 2;
+      
+      // 기둥과의 거리 체크 (100mm 이내를 인접으로 판단 - 임계값 증가)
+      const threshold = mmToThreeUnits(100);
+      
+      const leftDistance = Math.abs(doorLeftEdge - columnRightEdge);
+      const rightDistance = Math.abs(doorRightEdge - columnLeftEdge);
+      
+      console.log('🚪 기둥 거리 체크:', {
+        columnPosition: column.position,
+        columnX,
+        columnWidth: column.width,
+        columnLeftEdge,
+        columnRightEdge,
+        leftDistance: leftDistance / 0.01, // mm로 변환
+        rightDistance: rightDistance / 0.01, // mm로 변환
+        threshold: threshold / 0.01 // mm로 변환
+      });
+      
+      // 왼쪽에 기둥이 있는 경우
+      if (leftDistance < threshold) {
+        console.log('🚪 왼쪽에 기둥 감지');
+        return { isNearColumn: true, columnSide: 'left' };
       }
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      if (isFirstSlot && !spaceInfo.wallConfig?.left) {
-        doorGroupX -= doorPositionAdjustment;
-      } else if (isLastSlot && !spaceInfo.wallConfig?.right) {
-        doorGroupX += doorPositionAdjustment;
+      
+      // 오른쪽에 기둥이 있는 경우
+      if (rightDistance < threshold) {
+        console.log('🚪 오른쪽에 기둥 감지');
+        return { isNearColumn: true, columnSide: 'right' };
       }
     }
+    
+    console.log('🚪 기둥 인접하지 않음');
+    return { isNearColumn: false, columnSide: null };
+  };
+  
+  const columnCheck = checkColumnAdjacent();
+  
+  // 커버도어인 경우 힌지 위치 자동 조정
+  let adjustedHingePosition = hingePosition;
+  
+  // 모든 도어 타입에서 기둥 체크 (type이 'door' 또는 moduleId에 'door'가 포함된 경우)
+  const isDoorModule = moduleData?.type === 'door' || 
+                       moduleData?.id?.toLowerCase().includes('door') ||
+                       moduleData?.moduleId?.toLowerCase().includes('door');
+  
+  if (columnCheck.isNearColumn && isDoorModule) {
+    // 기둥이 왼쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림 - 기둥 반대 방향)
+    // 기둥이 오른쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림 - 기둥 반대 방향)
+    adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
+    
+    console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
+      originalHinge: hingePosition,
+      adjustedHinge: adjustedHingePosition,
+      columnSide: columnCheck.columnSide,
+      doorCenterX: slotCenterX,
+      moduleData,
+      isDoorModule,
+      note: '힌지는 기둥 반대쪽에 위치'
+    });
+  } else {
+    console.log('🚪 힌지 조정 안함:', {
+      isNearColumn: columnCheck.isNearColumn,
+      columnSide: columnCheck.columnSide,
+      isDoorModule,
+      moduleData
+    });
   }
 
   if (isDualFurniture) {
@@ -1043,8 +1147,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       moduleDataId: moduleData?.id
     });
     
-    // 힌지 위치에 따른 회전축 오프셋 계산
-    const hingeAxisOffset = hingePosition === 'left' 
+    // 조정된 힌지 위치 사용
+    const hingeAxisOffset = adjustedHingePosition === 'left' 
       ? -doorWidthUnits / 2 + hingeOffsetUnits  // 왼쪽 힌지: 왼쪽 가장자리에서 9mm 안쪽
       : doorWidthUnits / 2 - hingeOffsetUnits;  // 오른쪽 힌지: 오른쪽 가장자리에서 9mm 안쪽
     
@@ -1053,7 +1157,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
-        <animated.group rotation-y={hingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
+        <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
             <BoxWithEdges
@@ -1086,9 +1190,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                 {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                 {(() => {
-                  // 첫 번째 대각선 (위에서 아래로)
-                  const start1 = [hingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0];
-                  const end1 = [hingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                  // 첫 번째 대각선 (위에서 아래로) - 조정된 힌지 위치 사용
+                  const start1 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0];
+                  const end1 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
                   const segments1 = [];
                   
                   // 선분의 총 길이 계산
@@ -1159,9 +1263,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     isLongDash = !isLongDash;
                   }
                   
-                  // 두 번째 대각선 (아래에서 위로)
-                  const start2 = [hingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
-                  const end2 = [hingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
+                  // 두 번째 대각선 (아래에서 위로) - 조정된 힌지 위치 사용
+                  const start2 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                  const end2 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
                   const segments2 = [];
                   
                   const dx2 = end2[0] - start2[0];

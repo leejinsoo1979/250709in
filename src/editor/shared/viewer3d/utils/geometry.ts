@@ -78,12 +78,23 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   const topFrameHeight = calculateTopBottomFrameHeight(spaceInfo);
   const baseFrameHeight = calculateBaseFrameHeight(spaceInfo);
   
-  // 내경 너비 계산
+  // 내경 너비 계산 - SpaceCalculator.calculateInternalWidth와 동일한 로직 사용
   let internalWidth;
   
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 내경 너비 = 전체 너비 - (좌우 이격거리)
-    internalWidth = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
+  if (spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드: 설치 유형에 따라 다르게 계산
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      const rightGap = spaceInfo.gapConfig?.right || 2;
+      internalWidth = spaceInfo.width - leftGap - rightGap;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
+      internalWidth = spaceInfo.width - 18; // 엔드패널 두께 18mm
+    } else {
+      // 프리스탠딩: 양쪽 엔드패널
+      internalWidth = spaceInfo.width - 36; // 양쪽 엔드패널 18mm * 2
+    }
   } else {
     // 서라운드: 내경 너비 = 전체 너비 - 좌측 프레임 - 우측 프레임
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
@@ -225,14 +236,12 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       frameSize,
       'frameSize?.left': frameSize?.left,
       'frameSize?.right': frameSize?.right,
-      'frameSize.left > 0': frameSize?.left > 0,
-      'frameSize.right > 0': frameSize?.right > 0,
-      '조건': frameSize && (frameSize.left > 0 || frameSize.right > 0)
+      installType,
+      wallConfig
     });
-    if (frameSize && (frameSize.left > 0 || frameSize.right > 0)) {
-      leftThickness = frameSize.left ?? 0;
-      rightThickness = frameSize.right ?? 0;
-    } else {
+    
+    // 노서라운드 모드에서는 frameSize를 무시하고 설치 타입과 벽 구성에 따라 자동 계산
+    {
       // frameSize가 없으면 설치 타입과 벽 구성에 따라 자동 계산
       if (installType === 'builtin' || installType === 'built-in') {
         // 양쪽벽: 모두 0mm (프레임 없음)

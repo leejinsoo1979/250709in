@@ -20,6 +20,7 @@ interface BaseFurnitureOptions {
   isDragging?: boolean;
   isEditMode?: boolean; // 편집 모드 여부
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
+  slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
 }
 
 // 가구 기본 설정 반환 타입
@@ -69,7 +70,8 @@ export const useBaseFurniture = (
     customDepth, 
     isDragging = false,
     isEditMode = false,
-    adjustedWidth
+    adjustedWidth,
+    slotWidths
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -94,8 +96,29 @@ export const useBaseFurniture = (
   const backPanelThickness = mmToThreeUnits(BACK_PANEL_THICKNESS);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
-  // adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
-  const actualWidthMm = adjustedWidth !== undefined ? adjustedWidth : moduleData.dimensions.width;
+  // 듀얼 가구의 경우 slotWidths 합산, adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
+  let actualWidthMm: number;
+  
+  // 듀얼 가구 판별
+  const isDualFurniture = moduleData.id.includes('dual');
+  
+  if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
+    // 듀얼 가구이고 slotWidths가 제공된 경우: 두 슬롯 너비 합산
+    actualWidthMm = slotWidths[0] + slotWidths[1];
+    console.log('🔧 듀얼 가구 너비 계산 (slotWidths 합산):', {
+      slot1: slotWidths[0],
+      slot2: slotWidths[1],
+      total: actualWidthMm,
+      adjustedWidth: adjustedWidth ? `${adjustedWidth}mm (무시됨)` : 'undefined'
+    });
+  } else if (adjustedWidth !== undefined) {
+    // adjustedWidth가 제공된 경우 사용
+    actualWidthMm = adjustedWidth;
+  } else {
+    // 기본값: 원래 모듈 너비 사용
+    actualWidthMm = moduleData.dimensions.width;
+  }
+  
   const width = mmToThreeUnits(actualWidthMm);
   const height = mmToThreeUnits(internalHeight || moduleData.dimensions.height);
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
@@ -103,11 +126,14 @@ export const useBaseFurniture = (
   
   console.log('🔧 useBaseFurniture 폭 결정:', {
     moduleId: moduleData.id,
+    isDualFurniture,
     originalWidth: moduleData.dimensions.width + 'mm',
     adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
+    slotWidths: slotWidths ? slotWidths.map(w => w + 'mm').join(' + ') : 'undefined',
     actualWidthMm: actualWidthMm + 'mm',
     finalWidth: width.toFixed(3) + ' (Three.js units)',
-    logic: adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용',
+    logic: isDualFurniture && slotWidths ? 'slotWidths 합산' : 
+           (adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'),
     isDragging,
     isEditMode,
     호출스택: new Error().stack?.split('\n').slice(1, 4).join(' → ')
@@ -374,6 +400,7 @@ export const useBaseFurniture = (
     innerWidth,
     innerHeight,
     actualDepthMm,
+    actualWidthMm,  // 실제 가구 너비 (mm 단위) 추가
     
     // 계산된 값들
     basicThickness,

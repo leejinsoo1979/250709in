@@ -8,13 +8,20 @@ import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/ind
 import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
 
+interface ColumnGuidesProps {
+  viewMode?: '2D' | '3D';
+}
+
 /**
  * 컬럼 인덱스 가이드 라인 컴포넌트
  * step0 이후로는 모든 step에서 configurator로 통일 처리
  */
-const ColumnGuides: React.FC = () => {
+const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
+  
+  // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
+  const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
@@ -102,7 +109,12 @@ const ColumnGuides: React.FC = () => {
           너비: info.normal.width,
           끝X: info.normal.startX + info.normal.width,
           슬롯너비: info.normal.columnWidth,
-          slotWidths: info.normal.slotWidths
+          slotWidths: info.normal.slotWidths,
+          '🎯 Three.js 단위': {
+            시작X_three: info.normal.startX * 0.01,
+            끝X_three: (info.normal.startX + info.normal.width) * 0.01,
+            중심X_three: (info.normal.startX + info.normal.width/2) * 0.01
+          }
         },
         단내림: info.dropped ? {
           시작X: info.dropped.startX,
@@ -279,6 +291,7 @@ const ColumnGuides: React.FC = () => {
     boundaries.push(mmToThreeUnits(currentX));
     
     // slotWidths가 있으면 사용, 없으면 균등 분할
+    // ColumnIndexer에서 이미 엔드패널을 고려한 값을 제공하므로 여기서는 추가 조정 불필요
     if (slotWidths && slotWidths.length === columnCount) {
       console.log('📏 slotWidths 사용하여 경계 계산:', {
         startX,
@@ -495,21 +508,35 @@ const ColumnGuides: React.FC = () => {
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
     if (showDimensions) {
       positions.forEach((xPos, index) => {
-        const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
-        const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
-        
         // 실제 슬롯 너비 계산
         const actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        
+        // 탑뷰와 다른 뷰에 따라 텍스트 위치와 회전 조정
+        let textPosition: [number, number, number];
+        let textRotation: [number, number, number];
+        
+        if (viewMode === '2D' && view2DDirection === 'top') {
+          // 탑뷰: Y축은 바닥 약간 위로, Z축은 슬롯의 정중앙으로
+          const slotCenterZ = (frontZ + backZ) / 2; // 슬롯의 전후 중앙
+          textPosition = [xPos, floorY + 0.1, slotCenterZ];
+          textRotation = [-Math.PI / 2, 0, 0]; // 텍스트를 수평으로 눕힘
+        } else {
+          // 프론트뷰 및 3D뷰: 기존 위치 유지
+          const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
+          const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
+          textPosition = [xPos, textY, textZ];
+          textRotation = [0, 0, 0];
+        }
         
         guides.push(
           <Text
             key={`${zoneType}-slot-size-${index}`}
-            position={[xPos, textY, textZ]}
+            position={textPosition}
             fontSize={0.5}
             color={zoneColor}
             anchorX="center"
             anchorY="middle"
-            rotation={[0, 0, 0]}
+            rotation={textRotation}
           >
             {Math.round(actualWidth)}mm
           </Text>
@@ -630,10 +657,30 @@ const ColumnGuides: React.FC = () => {
         </mesh>
       );
     } else {
-      // 상부 메쉬
+      // 상부 메쉬 (2D 탑뷰에서는 바닥 메쉬로 표시)
       const depth = frontZ - backZ;
       const centerZ = (frontZ + backZ) / 2;
       
+      // 2D 탑뷰에서는 바닥에 표시
+      if (viewMode === '2D' && view2DDirection === 'top') {
+        return (
+          <mesh
+            key={`${zoneType}-floor-mesh`}
+            position={[centerX, floorY, centerZ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[meshWidth, depth]} />
+            <meshBasicMaterial 
+              color={primaryColor} 
+              transparent 
+              opacity={opacity}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      }
+      
+      // 3D 모드에서는 천장에 표시
       return (
         <mesh
           key={`${zoneType}-top-mesh`}

@@ -23,11 +23,22 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
     return null;
   }
   
-  // 벽이 모두 없는 경우 (벽없음) 렌더링하지 않음
+  // 벽 상태 확인
   const hasLeftWall = spaceInfo.wallConfig?.left ?? true;
   const hasRightWall = spaceInfo.wallConfig?.right ?? true;
   
-  if (!hasLeftWall && !hasRightWall) {
+  // 빌트인(양쪽 벽이 모두 있는 경우)에만 표시
+  // 세미스탠딩(한쪽 벽만) 또는 프리스탠딩(벽 없음)에서는 렌더링하지 않음
+  if (!(hasLeftWall && hasRightWall)) {
+    // 세미스탠딩이나 프리스탠딩에서 이격거리를 0으로 설정
+    if (spaceInfo.gapConfig?.left !== 0 || spaceInfo.gapConfig?.right !== 0) {
+      onUpdate({
+        gapConfig: {
+          left: 0,
+          right: 0
+        }
+      });
+    }
     return null;
   }
 

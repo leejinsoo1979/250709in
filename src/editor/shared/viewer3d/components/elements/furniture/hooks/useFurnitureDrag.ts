@@ -527,11 +527,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         moduleId: updatedModuleId,
         position: adjustedPosition,
         customDepth: newCustomDepth,
-        adjustedWidth: newAdjustedWidth || currentModule.adjustedWidth,
+        adjustedWidth: newAdjustedWidth, // 기둥이 없는 슬롯으로 이동 시 undefined로 설정되어야 함
         slotIndex: finalSlotIndex,
         isDualSlot: isDualFurniture, // isDualSlot 속성 유지
         zone: currentModule.zone, // zone 정보 유지
         customWidth: (() => {
+          // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
+          if (targetSlotInfo && targetSlotInfo.hasColumn) {
+            return undefined; // 기둥 슬롯에서는 adjustedWidth만 사용
+          }
           // zone별로 다른 슬롯 너비 사용
           if (currentModule.zone && spaceInfo.droppedCeiling?.enabled) {
             const fullIndexing = calculateSpaceIndexing(spaceInfo);

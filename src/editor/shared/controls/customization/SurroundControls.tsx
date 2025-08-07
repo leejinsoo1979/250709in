@@ -280,8 +280,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         disabled={disabled}
       />
 
-      {/* 노서라운드 선택 시 이격거리 설정 (벽이 있는 경우에만) */}
-      {isNoSurround && (hasLeftWall || hasRightWall) && (
+      {/* 노서라운드 선택 시 이격거리 설정 (빌트인 - 양쪽 벽이 모두 있는 경우에만) */}
+      {isNoSurround && hasLeftWall && hasRightWall && (
         <GapControls
           spaceInfo={spaceInfo}
           onUpdate={onUpdate}

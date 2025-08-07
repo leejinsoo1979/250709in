@@ -1430,6 +1430,10 @@ const Configurator: React.FC = () => {
       wallConfig: finalUpdates.wallConfig
     });
     
+    // installType 변경 감지
+    const isInstallTypeChanged = finalUpdates.installType !== undefined && 
+                                  finalUpdates.installType !== spaceInfo.installType;
+    
     setSpaceInfo(finalUpdates);
     
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
@@ -1439,6 +1443,16 @@ const Configurator: React.FC = () => {
       setTimeout(() => {
         setViewMode(viewMode);
       }, 0);
+    }
+    
+    // installType 변경 시 가구 너비 재계산
+    if (isInstallTypeChanged && placedModules.length > 0) {
+      console.log('🔧 InstallType 변경 - 가구 너비 재계산');
+      // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
+      setTimeout(() => {
+        const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
+        updateFurnitureForNewSpace(spaceInfo, newSpaceInfo);
+      }, 100);
     }
   };
 

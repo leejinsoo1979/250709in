@@ -33,6 +33,14 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       wallConfig,
     };
     
+    // 노서라운드 모드에서 세미스탠딩/프리스탠딩으로 변경 시 이격거리를 0으로 설정
+    if (spaceInfo.surroundType === 'no-surround' && (type === 'semistanding' || type === 'freestanding')) {
+      updates.gapConfig = {
+        left: 0,
+        right: 0
+      };
+    }
+    
     // 서라운드 모드일 때 프레임 크기 재설정
     if (spaceInfo.surroundType === 'surround') {
       if (type === 'builtin') {
@@ -86,11 +94,21 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     };
     
     if (spaceInfo.surroundType === 'no-surround') {
-      // 벽이 있는 쪽은 2mm, 없는 쪽은 20mm
-      updates.gapConfig = {
-        left: newWallConfig.left ? 2 : 20,
-        right: newWallConfig.right ? 2 : 20
-      };
+      // 세미스탠딩(한쪽 벽만)이나 프리스탠딩(벽 없음)에서는 이격거리 0
+      // 빌트인(양쪽 벽)에서만 이격거리 설정
+      if (newWallConfig.left && newWallConfig.right) {
+        // 빌트인: 이격거리 기본값 2mm
+        updates.gapConfig = {
+          left: spaceInfo.gapConfig?.left || 2,
+          right: spaceInfo.gapConfig?.right || 2
+        };
+      } else {
+        // 세미스탠딩 또는 프리스탠딩: 이격거리 0
+        updates.gapConfig = {
+          left: 0,
+          right: 0
+        };
+      }
       // frameSize도 업데이트하여 자동 계산이 작동하도록 함
       updates.frameSize = { left: 0, right: 0, top: 0 };
     }

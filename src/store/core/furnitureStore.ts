@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
+import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
+import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -29,6 +31,9 @@ interface FurnitureDataState {
   
   // 전체 도어 설치/제거
   setAllDoors: (hasDoor: boolean) => void;
+  
+  // 기둥 변경 시 가구 업데이트
+  updateFurnitureForColumns: (spaceInfo: any) => void;
   
   // 선택 상태 액션들 (FurnitureSelectionProvider와 동일한 인터페이스)
   setSelectedLibraryModuleId: (id: string | null) => void;
@@ -201,6 +206,107 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       console.log('🚪 setAllDoors 완료:', {
         updatedModulesCount: updatedModules.length,
         updatedModules: updatedModules.map(m => ({ id: m.id, hasDoor: m.hasDoor }))
+      });
+      
+      return {
+        placedModules: updatedModules
+      };
+    });
+  },
+  
+  // 기둥 변경 시 가구 adjustedWidth 업데이트
+  updateFurnitureForColumns: (spaceInfo: any) => {
+    set((state) => {
+      console.log('🔧 updateFurnitureForColumns 호출:', {
+        surroundType: spaceInfo.surroundType,
+        columnCount: spaceInfo.columns?.length || 0,
+        columns: spaceInfo.columns?.map(c => ({ id: c.id, position: c.position, depth: c.depth }))
+      });
+      
+      const columnSlots = analyzeColumnSlots(spaceInfo);
+      console.log('🔧 analyzeColumnSlots 결과:', columnSlots);
+      
+      const updatedModules = state.placedModules.map(module => {
+        if (module.slotIndex === undefined) return module;
+        
+        // zone이 있는 경우 글로벌 슬롯 인덱스로 변환
+        let globalSlotIndex = module.slotIndex;
+        if (module.zone && spaceInfo.droppedCeiling?.enabled) {
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          if (module.zone === 'dropped' && zoneInfo.dropped) {
+            globalSlotIndex = zoneInfo.normal.columnCount + module.slotIndex;
+          }
+        }
+        
+        const slotInfo = columnSlots[globalSlotIndex];
+        
+        console.log(`🔧 가구 ${module.id} (슬롯 ${module.slotIndex} → ${globalSlotIndex}):`, {
+          hasColumn: slotInfo?.hasColumn,
+          availableWidth: slotInfo?.availableWidth,
+          adjustedWidth: slotInfo?.adjustedWidth,
+          intrusionDirection: slotInfo?.intrusionDirection
+        });
+        
+        // 기둥이 있는 슬롯인 경우 adjustedWidth 설정
+        if (slotInfo?.hasColumn) {
+          const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+          console.log(`✅ 가구 ${module.id} adjustedWidth 설정: ${newAdjustedWidth}mm`);
+          return {
+            ...module,
+            adjustedWidth: newAdjustedWidth
+          };
+        } else {
+          // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
+          if (module.adjustedWidth !== undefined) {
+            console.log(`❌ 가구 ${module.id} adjustedWidth 제거 및 위치 복원`);
+            
+            // 원래 슬롯 중심 위치로 복원
+            const indexing = calculateSpaceIndexing(spaceInfo);
+            let originalX = module.position.x;
+            
+            // zone이 있는 경우 zone별 위치 사용
+            if (module.zone && spaceInfo.droppedCeiling?.enabled) {
+              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              const targetZone = module.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+              
+              if (module.slotIndex !== undefined && module.slotIndex < targetZone.columnCount) {
+                // zone별 indexing 정보 사용
+                const zoneIndexing = module.zone === 'dropped' && indexing.zones?.dropped 
+                  ? indexing.zones.dropped 
+                  : (module.zone === 'normal' && indexing.zones?.normal ? indexing.zones.normal : indexing);
+                
+                if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[module.slotIndex] !== undefined) {
+                  originalX = zoneIndexing.threeUnitPositions[module.slotIndex];
+                }
+              }
+            } else if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+              // zone이 없는 경우 전체 indexing 사용
+              originalX = indexing.threeUnitPositions[module.slotIndex];
+            }
+            
+            return {
+              ...module,
+              adjustedWidth: undefined,
+              position: {
+                ...module.position,
+                x: originalX
+              }
+            };
+          }
+          return {
+            ...module,
+            adjustedWidth: undefined
+          };
+        }
+      });
+      
+      console.log('🔧 기둥 변경에 따른 가구 업데이트 완료:', {
+        columnCount: spaceInfo.columns?.length || 0,
+        updatedFurniture: updatedModules.filter(m => m.adjustedWidth !== undefined).map(m => ({
+          id: m.id,
+          slotIndex: m.slotIndex,
+          adjustedWidth: m.adjustedWidth
+        }))
       });
       
       return {

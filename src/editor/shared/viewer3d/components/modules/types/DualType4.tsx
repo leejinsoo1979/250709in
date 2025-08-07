@@ -37,7 +37,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     internalHeight,
     customDepth,
     isDragging,
-    isEditMode
+    isEditMode,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const {

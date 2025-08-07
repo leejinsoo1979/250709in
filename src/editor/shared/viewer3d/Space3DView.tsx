@@ -46,7 +46,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
+  const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
   const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
@@ -64,16 +64,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
   
-  // 기둥 변경 감지하여 즉시 리렌더링
+  // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
     if (spaceInfo) {
       console.log('🔄 Space3DView - 기둥 상태 변경 감지:', {
         columnsCount: spaceInfo.columns?.length || 0,
         columnsData: spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, depth: col.depth }))
       });
+      
+      // 기둥 변경 시 가구의 adjustedWidth 업데이트
+      updateFurnitureForColumns(spaceInfo);
     }
     // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
-  }, [spaceInfo?.columns]);
+  }, [spaceInfo?.columns]); // updateFurnitureForColumns는 dependency에서 제외 (무한 루프 방지)
   
 
   
@@ -1189,7 +1192,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* Configurator에서 표시되는 요소들 */}
             {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
-            {showDimensions && showAll && <ColumnGuides />}
+            {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
             
             {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
             <CleanCAD2D 
@@ -1200,7 +1203,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
+            <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
             
             {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
             <InternalDimensionDisplay />
@@ -1340,7 +1343,7 @@ const QuadrantContent: React.FC<{
       ))}
       
       {/* 컬럼 가이드 표시 */}
-      {showDimensions && showAll && <ColumnGuides />}
+      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
       <CleanCAD2D 
@@ -1353,7 +1356,7 @@ const QuadrantContent: React.FC<{
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🎯 QuadrantContent - Room 렌더링:', {

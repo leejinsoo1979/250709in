@@ -5,7 +5,7 @@ import { calculateSpaceIndexing, findSlotIndexFromPosition } from '@/editor/shar
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
-import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 interface UseFurnitureSpaceAdapterProps {
   setPlacedModules: React.Dispatch<React.SetStateAction<PlacedModule[]>>;
@@ -114,8 +114,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             moduleId: newModuleId,
             position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
             isValidInCurrentSpace: true,
-            adjustedWidth: targetZone.columnWidth * (isDual ? 2 : 1),
-            customWidth: targetZone.columnWidth * (isDual ? 2 : 1),
+            adjustedWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
+            customWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
             isDualSlot: isDual
           });
           return;
@@ -288,6 +288,23 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           }
         }
         
+        // 실제 가구 너비 계산 - 슬롯에 맞는 너비 사용
+        let newCustomWidth: number | undefined;
+        
+        // slotWidths가 있으면 사용
+        if (newIndexing.slotWidths && newIndexing.slotWidths[slotIndex] !== undefined) {
+          if (isDualModule && slotIndex + 1 < newIndexing.slotWidths.length) {
+            // 듀얼 가구: 두 슬롯의 너비 합
+            newCustomWidth = newIndexing.slotWidths[slotIndex] + newIndexing.slotWidths[slotIndex + 1];
+          } else {
+            // 싱글 가구: 해당 슬롯의 너비
+            newCustomWidth = newIndexing.slotWidths[slotIndex];
+          }
+        } else if (zone === 'dropped' && customWidth) {
+          // 단내림 영역은 이미 계산된 customWidth 사용
+          newCustomWidth = customWidth;
+        }
+        
         updatedModules.push({
           ...module,
           moduleId: newModuleId,
@@ -296,7 +313,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           isDualSlot: newModuleId.includes('dual'),
           isValidInCurrentSpace: true,
           zone,
-          customWidth
+          customWidth: newCustomWidth,
+          adjustedWidth: undefined // adjustedWidth는 FurnitureItem에서 다시 계산됨
         });
       });
       

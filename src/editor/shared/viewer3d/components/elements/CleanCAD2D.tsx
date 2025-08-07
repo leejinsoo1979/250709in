@@ -202,11 +202,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
   
-  console.log('🎯 CleanCAD2D showDimensions:', {
+  console.log('🎯 CleanCAD2D 전체 렌더링:', {
     showDimensionsProp,
     showDimensionsFromStore,
     showDimensions,
-    viewDirection
+    viewDirection,
+    isStep2,
+    surroundType: spaceInfo.surroundType,
+    installType: spaceInfo.installType,
+    wallConfig: spaceInfo.wallConfig,
+    '좌우치수표시조건': !isStep2
   });
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
@@ -354,18 +359,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
       const indexing = calculateSpaceIndexing(spaceInfo);
       
-      // 기본 너비 설정 - adjustedWidth를 우선적으로 사용
-      let actualWidth = module.adjustedWidth || module.customWidth || moduleData.dimensions.width;
+      // 기본 너비 설정 - customWidth를 우선적으로 사용 (탑뷰와 동일하게)
+      let actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
       let actualPositionX = module.position.x;
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
       const actualDepth = module.customDepth || moduleData.dimensions.depth;
       const hasCustomDepth = module.customDepth && module.customDepth !== moduleData.dimensions.depth;
       
-      // 기둥에 맞춰 크기가 조정된 경우 adjustedWidth 사용
-      if (module.adjustedWidth) {
-        actualWidth = module.adjustedWidth;
-      }
+      // customWidth가 있으면 우선 사용 (이미 위에서 처리됨)
+      // adjustedWidth는 두 번째 우선순위 (이미 위에서 처리됨)
       
       // 실제 X 위치
       const moduleX = actualPositionX;
@@ -800,18 +803,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
       
       {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {!isStep2 && (
-      <group>
-        {spaceInfo.surroundType === 'no-surround' ? (
-          /* 노서라운드 모드: 좌측 이격거리/엔드패널 치수선 */
-          (() => {
-            // 벽 유무에 따라 값과 텍스트 결정
-            const hasLeftWall = spaceInfo.wallConfig?.left;
-            const leftValue = hasLeftWall ? (spaceInfo.gapConfig?.left || 2) : END_PANEL_THICKNESS;
-            const leftText = hasLeftWall ? `이격 ${leftValue}` : `EP ${END_PANEL_THICKNESS}`;
+      {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+            // 양쪽 벽이 모두 있는지 확인
+            const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+            
+            let leftValue: number;
+            let leftText: string;
+            
+            if (hasBothWalls) {
+              // 양쪽 벽이 있으면 이격거리 표시
+              leftValue = spaceInfo.gapConfig?.left || 2;
+              leftText = `이격 ${leftValue}`;
+            } else {
+              // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              
+              // 왼쪽 벽이 있으면 표시하지 않음
+              if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+                return null;
+              }
+              
+              leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
+              leftText = `EP ${leftValue}`;
+            }
             
             return (
-              <>
+      <group>
                 {/* 치수선 */}
                 <Line
                   points={[[leftOffset, topDimensionY - mmToThreeUnits(120), 0.002], [leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(120), 0.002]]}
@@ -856,12 +873,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   lineWidth={0.5}
                 />
-              </>
+      </group>
             );
-          })()
-        ) : (
-          /* 서라운드 모드: 기존 좌측 프레임 치수선 */
-          <>
+          })()}
+      
+      {/* 서라운드 모드 좌측 프레임 치수선 */}
+      {!isStep2 && spaceInfo.surroundType === 'surround' && (
+      <group>
             {/* 치수선 */}
             <Line
               points={[[leftOffset, topDimensionY - mmToThreeUnits(120), 0.002], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(120), 0.002]]}
@@ -905,24 +923,36 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor}
               lineWidth={0.5}
             />
-          </>
-        )}
       </group>
       )}
       
       {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {!isStep2 && (
-      <group>
-        {spaceInfo.surroundType === 'no-surround' ? (
-          /* 노서라운드 모드: 우측 이격거리/엔드패널 치수선 */
-          (() => {
-            // 벽 유무에 따라 값과 텍스트 결정
-            const hasRightWall = spaceInfo.wallConfig?.right;
-            const rightValue = hasRightWall ? (spaceInfo.gapConfig?.right || 2) : END_PANEL_THICKNESS;
-            const rightText = hasRightWall ? `이격 ${rightValue}` : `EP ${END_PANEL_THICKNESS}`;
+      {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+            // 양쪽 벽이 모두 있는지 확인
+            const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+            
+            let rightValue: number;
+            let rightText: string;
+            
+            if (hasBothWalls) {
+              // 양쪽 벽이 있으면 이격거리 표시
+              rightValue = spaceInfo.gapConfig?.right || 2;
+              rightText = `이격 ${rightValue}`;
+            } else {
+              // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              
+              // 오른쪽 벽이 있으면 표시하지 않음
+              if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
+                return null;
+              }
+              
+              rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
+              rightText = `EP ${rightValue}`;
+            }
             
             return (
-              <>
+      <group>
                 {/* 치수선 */}
                 <Line
                   points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(120), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(120), 0.002]]}
@@ -966,12 +996,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={textColor}
                   lineWidth={0.5}
                 />
-              </>
+      </group>
             );
-          })()
-        ) : (
-          /* 서라운드 모드: 기존 우측 프레임 치수선 */
-          <>
+          })()}
+      
+      {/* 서라운드 모드 우측 프레임 치수선 */}
+      {!isStep2 && spaceInfo.surroundType === 'surround' && (
+      <group>
             {/* 치수선 */}
             <Line
               points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(120), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(120), 0.002]]}
@@ -1015,8 +1046,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor}
               lineWidth={0.5}
             />
-          </>
-        )}
       </group>
       )}
       
@@ -3064,23 +3093,79 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
-            // 노서라운드일 때는 벽 유무에 따라 이격거리 또는 엔드패널 표시
-            const isNoSurround = spaceInfo.surroundType === 'no-surround';
-            let leftValue: number;
-            
-            if (isNoSurround) {
-              // 노서라운드: 벽이 있으면 이격거리, 없으면 엔드패널
-              if (spaceInfo.wallConfig?.left) {
+            // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
+            if (spaceInfo.surroundType === 'no-surround') {
+              const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+              
+              let leftValue: number;
+              let leftText: string;
+              
+              if (hasBothWalls) {
+                // 양쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left || 2;
+                leftText = `이격 ${leftValue}`;
               } else {
-                leftValue = END_PANEL_THICKNESS;
+                // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+                const frameThickness = calculateFrameThickness(spaceInfo);
+                
+                // 왼쪽 벽만 있으면 표시하지 않음
+                if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+                  return null;
+                }
+                
+                leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
+                leftText = `EP ${leftValue}`;
               }
+              
+              return (
+                <>
+                  <Line
+                    points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  
+                  {/* 좌측 프레임 화살표들 */}
+                  <Line
+                    points={createArrowHead([spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + 0.02, spaceHeight, frameDimZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue) - 0.02, spaceHeight, frameDimZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  
+                  {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
+                  <group
+                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight, frameDimZ - 0.15]}
+                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  >
+                    <Text
+                      fontSize={0.08}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                    >
+                      {leftText}
+                    </Text>
+                  </group>
+                </>
+              );
             } else {
-              // 서라운드: 프레임 폭 표시
-              leftValue = frameSize.left;
-            }
-            
-            return (
+              // 서라운드 모드일 때는 기존 로직 유지
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              
+              // 왼쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
+              if (frameThickness.left === 0) {
+                return null;
+              }
+              
+              // 프레임 두께 값을 직접 사용
+              const leftValue = frameThickness.left;
+              
+              return (
               <>
                 <Line
                   points={[[spaceXOffset, spaceHeight, frameDimZ], [spaceXOffset + mmToThreeUnits(leftValue), spaceHeight, frameDimZ]]}
@@ -3112,7 +3197,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {leftValue}
                 </Text>
               </>
-            );
+              );
+            }
           })()}
         </group>
         
@@ -3121,21 +3207,77 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
             
-            // 노서라운드일 때는 벽 유무에 따라 이격거리 또는 엔드패널 표시
-            const isNoSurround = spaceInfo.surroundType === 'no-surround';
-            let rightValue: number;
-            
-            if (isNoSurround) {
-              // 노서라운드: 벽이 있으면 이격거리, 없으면 엔드패널
-              if (spaceInfo.wallConfig?.right) {
+            // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
+            if (spaceInfo.surroundType === 'no-surround') {
+              const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+              
+              let rightValue: number;
+              let rightText: string;
+              
+              if (hasBothWalls) {
+                // 양쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right || 2;
+                rightText = `이격 ${rightValue}`;
               } else {
-                rightValue = END_PANEL_THICKNESS;
+                // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+                const frameThickness = calculateFrameThickness(spaceInfo);
+                
+                // 오른쪽 벽만 있으면 표시하지 않음
+                if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
+                  return null;
+                }
+                
+                rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
+                rightText = `EP ${rightValue}`;
               }
+              
+              return (
+                <>
+                  <Line
+                    points={[[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth, spaceHeight, frameDimZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  
+                  {/* 우측 프레임 화살표들 */}
+                  <Line
+                    points={createArrowHead([spaceXOffset + spaceWidth - mmToThreeUnits(rightValue), spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - mmToThreeUnits(rightValue) + 0.02, spaceHeight, frameDimZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  <Line
+                    points={createArrowHead([spaceXOffset + spaceWidth, spaceHeight, frameDimZ], [spaceXOffset + spaceWidth - 0.02, spaceHeight, frameDimZ])}
+                    color={dimensionColor}
+                    lineWidth={0.5}
+                  />
+                  
+                  {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
+                  <group
+                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight, frameDimZ - 0.15]}
+                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  >
+                    <Text
+                      fontSize={0.08}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                    >
+                      {rightText}
+                    </Text>
+                  </group>
+                </>
+              );
             } else {
-              // 서라운드: 프레임 폭 표시
-              rightValue = frameSize.right;
-            }
+              // 서라운드 모드일 때는 기존 로직 유지
+              const frameThickness = calculateFrameThickness(spaceInfo);
+              
+              // 오른쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
+              if (frameThickness.right === 0) {
+                return null;
+              }
+              
+              // 프레임 두께 값을 직접 사용
+              const rightValue = frameThickness.right;
             
             return (
               <>
@@ -3169,7 +3311,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {rightValue}
                 </Text>
               </>
-            );
+              );
+            }
           })()}
         </group>
         
@@ -3880,8 +4023,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           if (!moduleData) return null;
           
-          // 기둥에 의해 조정된 너비와 위치 사용
-          const actualWidth = module.adjustedWidth || moduleData.dimensions.width;
+          // 기둥에 의해 조정된 너비와 위치 사용 (customWidth 우선)
+          const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
           const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
           const actualPositionX = module.adjustedPosition?.x || module.position.x;
@@ -4208,7 +4351,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
 
         {/* 도어 치수 표시 - 도어가 실제로 설치된 캐비넷에만 표시 */}
-        {placedModules.length > 0 && placedModules.filter(module => {
+        {/* 도어 치수 표시 비활성화 */}
+        {false && placedModules.length > 0 && placedModules.filter(module => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },

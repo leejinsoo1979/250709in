@@ -655,6 +655,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       
       {/* 배치된 가구 치수 */}
       {React.useMemo(() => placedModules.map((module, index) => {
+        // 도어가 있는 가구는 치수 표시하지 않음
+        if (module.doorConfig) {
+          return null;
+        }
         const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(
           module.moduleId,
@@ -678,12 +682,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           ? module.isDualSlot 
           : moduleData.id.includes('dual-');
         
-        // 초기값 설정 - adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
+        // FurnitureItem.tsx와 동일한 우선순위 적용
+        // 우선순위 1: adjustedWidth (기둥 침범 조정 너비 - 최우선)
         if (module.adjustedWidth !== undefined && module.adjustedWidth !== null) {
           furnitureWidthMm = module.adjustedWidth;
-        } else if (module.customWidth !== undefined && module.customWidth !== null) {
-          // customWidth가 명시적으로 설정되어 있으면 사용
+        }
+        // 우선순위 2: customWidth (슬롯 사이즈에 맞춘 너비 - 기둥이 없는 경우)
+        else if (module.customWidth !== undefined && module.customWidth !== null) {
           furnitureWidthMm = module.customWidth;
+        }
+        // 우선순위 3: 슬롯 너비 직접 계산 (customWidth가 없는 경우)
+        else if (indexing.slotWidths && module.slotIndex !== undefined) {
+          if (isDualFurniture && module.slotIndex < indexing.slotWidths.length - 1) {
+            furnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
+          } else if (indexing.slotWidths[module.slotIndex] !== undefined) {
+            furnitureWidthMm = indexing.slotWidths[module.slotIndex];
+          }
+        }
+        // 우선순위 4: 기본값 (모듈 원래 크기)
+        else {
+          furnitureWidthMm = moduleData.dimensions.width;
         }
         
         // 기둥 침범 시 가구 크기와 위치 재계산
@@ -722,9 +740,57 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         }
         
-        const moduleWidth = mmToThreeUnits(furnitureWidthMm);
-        const leftX = furniturePositionX - moduleWidth / 2;
-        const rightX = furniturePositionX + moduleWidth / 2;
+        // 노서라운드 모드에서 실제 가구 너비 계산 (FurnitureItem.tsx와 동일)
+        let actualFurnitureWidthMm = furnitureWidthMm;
+        
+        // 노서라운드 모드에서는 기둥이 있는 경우만 조정 (엔드패널은 이미 slotWidths에 반영됨)
+        if (spaceInfo.surroundType === 'no-surround' && module.slotIndex !== undefined) {
+          // 기둥이 있는 경우 adjustedWidth 적용
+          if (module.adjustedWidth !== undefined && module.adjustedWidth !== null) {
+            actualFurnitureWidthMm = module.adjustedWidth;
+          }
+        }
+        
+        // 도어가 있는 경우 - 도어의 실제 크기와 위치로 치수 가이드 조정
+        let displayWidth = actualFurnitureWidthMm;
+        let displayPositionX = furniturePositionX;
+        
+        // 도어 치수 표시 코드 주석 처리
+        // if (module.doorConfig) {
+        //   // no-surround freestanding에서 첫 번째/마지막 슬롯은 특별 처리
+        //   if (spaceInfo.surroundType === 'no-surround' && 
+        //       spaceInfo.installType === 'freestanding' &&
+        //       (module.slotIndex === 0 || module.slotIndex === indexing.columnCount - 1)) {
+        //     // 첫 번째/마지막 슬롯: 가구 본체는 582mm이지만 도어는 600mm - 3mm = 597mm
+        //     // 가구 본체 너비(582mm)에 18mm를 더해서 원래 슬롯 너비(600mm)로 복원
+        //     displayWidth = furnitureWidthMm + 18 - 3; // 582 + 18 - 3 = 597mm
+        //   } else {
+        //     // 일반 슬롯: 원래 슬롯 너비에서 3mm를 뺀 값
+        //     const baseSlotWidth = Math.floor(spaceInfo.width / indexing.columnCount);
+        //     const remainder = spaceInfo.width % indexing.columnCount;
+        //     
+        //     let originalSlotWidth = baseSlotWidth;
+        //     if (module.slotIndex !== undefined && remainder > 0 && module.slotIndex < remainder) {
+        //       originalSlotWidth = baseSlotWidth + 1;
+        //     }
+        //     
+        //     displayWidth = originalSlotWidth - 3; // 도어 실제 크기
+        //   }
+        //   
+        //   console.log('🚪 [CADDimensions2D] 도어 치수 가이드:', {
+        //     moduleId: module.moduleId,
+        //     slotIndex: module.slotIndex,
+        //     furnitureWidth: furnitureWidthMm,
+        //     doorWidth: displayWidth,
+        //     originalSlotWidth,
+        //     surroundType: spaceInfo.surroundType,
+        //     installType: spaceInfo.installType
+        //   });
+        // }
+        
+        const moduleWidth = mmToThreeUnits(displayWidth);
+        const leftX = displayPositionX - moduleWidth / 2;
+        const rightX = displayPositionX + moduleWidth / 2;
         const dimY = -mmToThreeUnits(100); // 하단 치수선
         
         // 가구의 상단 Y 좌표 계산
@@ -766,7 +832,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             
             {/* 치수 텍스트 */}
             <Html
-              position={[furniturePositionX, dimY - mmToThreeUnits(40), 0.01]}
+              position={[displayPositionX, dimY - mmToThreeUnits(40), 0.01]}
               center
               transform={false}
               occlude={false}
@@ -787,7 +853,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {Math.round(furnitureWidthMm)}mm
+                {Math.round(displayWidth)}mm
               </div>
             </Html>
             
@@ -831,7 +897,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
           </group>
         );
-      }), [placedModules, spaceInfo.columns])}
+      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig])}
       
       
       {/* 컬럼 치수 표시 */}

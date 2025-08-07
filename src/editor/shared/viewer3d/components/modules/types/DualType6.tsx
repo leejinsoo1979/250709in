@@ -38,7 +38,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     internalHeight,
     customDepth,
     isDragging,
-    isEditMode
+    isEditMode,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const {
@@ -72,16 +73,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
 
-  // 좌우 폭 분할 계산 (절대폭 지정)
-  const rightAbsoluteWidth = modelConfig.rightAbsoluteWidth;
+  // 좌우 폭 분할 계산 - 실제 렌더링되는 가구의 innerWidth 기반
   let leftWidth, rightWidth, leftXOffset, rightXOffset;
   
-  if (rightAbsoluteWidth) {
-    // 절대값 모드: 우측 고정폭, 좌측 나머지 (중앙 칸막이 두께 제외)
-    rightWidth = mmToThreeUnits(rightAbsoluteWidth);
+  // modelConfig에 rightAbsoluteWidth가 있으면 그 비율대로 분할
+  if (modelConfig.rightAbsoluteWidth) {
+    // 원래 모듈의 전체 너비 대비 우측 절대폭의 비율 계산
+    const originalTotalWidth = moduleData.dimensions.width;
+    const rightRatio = modelConfig.rightAbsoluteWidth / (originalTotalWidth - 36); // 36 = 양쪽 측판 두께
+    
+    // 현재 innerWidth에서 같은 비율로 분할
+    rightWidth = innerWidth * rightRatio;
     leftWidth = innerWidth - rightWidth - basicThickness; // 중앙 칸막이 두께 제외
     
-    // X 오프셋 계산 (중앙 칸막이 고려)
     leftXOffset = -(rightWidth + basicThickness) / 2;
     rightXOffset = (leftWidth + basicThickness) / 2;
   } else {
@@ -687,7 +691,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               lineWidth={1}
             />
             
-            {/* 가로 내경 텍스트 */}
+            {/* 가로 내경 텍스트 - 실제 우측 구간 너비 표시 */}
             <Text
               position={[
                 ((leftWidth - rightWidth) / 2 + basicThickness/2 + width/2 - basicThickness) / 2, 
@@ -701,7 +705,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               renderOrder={999}
               depthTest={false}
             >
-                                  {Math.round(((width/2 - basicThickness) - ((leftWidth - rightWidth) / 2 + basicThickness/2)) * 100)}
+              {Math.round(threeUnitsToMm(rightWidth))}
             </Text>
             
             {/* 수평선 양끝 점 */}
