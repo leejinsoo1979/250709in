@@ -35,14 +35,25 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const hasRightWall = spaceInfo.wallConfig.right;
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
-  const [frameSize, setFrameSize] = useState<FrameSize>(() => {
-    if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 50 };
+  const [frameSize, setFrameSize] = useState<FrameSize | any>(() => {
+    if (!spaceInfo.frameSize) return { left: '50', right: '50', top: '50' };
     return {
-      left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
-      right: !hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right,
-      top: spaceInfo.frameSize.top,
+      left: String(!hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left),
+      right: String(!hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right),
+      top: String(spaceInfo.frameSize.top),
     };
   });
+
+  // 서라운드 타입이 변경될 때만 frameSize 업데이트
+  useEffect(() => {
+    if (spaceInfo.frameSize) {
+      setFrameSize({
+        left: String(!hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left),
+        right: String(!hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right),
+        top: String(spaceInfo.frameSize.top),
+      });
+    }
+  }, [spaceInfo.surroundType]);
 
 
   // 계산 로직을 커스텀 훅으로 분리
@@ -192,55 +203,40 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 프레임 크기 변경 핸들러
   const handleFrameSizeChange = (dimension: 'left' | 'right' | 'top', value: string) => {
-    // 벽이 없는 쪽은 수정 불가능
-    if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
+    // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능 (18mm 고정)
+    if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
       return;
     }
     
-    // 빈 문자열이거나 숫자인 경우에만 업데이트
-    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
-      const numValue = value === '' ? 0 : parseInt(value);
-      const newFrameSize = { ...frameSize, [dimension]: numValue };
-      setFrameSize(newFrameSize);
-      
-      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (value && !isNaN(Number(value)) && spaceInfo.frameSize) {
-        let validatedValue = numValue;
-        
-        // 범위 검증
-        if (dimension === 'left' || dimension === 'right') {
-          if (validatedValue < 40) validatedValue = 40;
-          if (validatedValue > 100) validatedValue = 100;
-        } else {
-          if (validatedValue < 10) validatedValue = 10;
-          if (validatedValue > 200) validatedValue = 200;
-        }
-        
-        // 즉시 store 업데이트
-        onUpdate({
-          frameSize: {
-            ...spaceInfo.frameSize,
-            [dimension]: validatedValue,
-          },
-        });
-      }
+    // 빈 문자열이면 그대로 허용 (삭제 가능하도록)
+    if (value === '') {
+      setFrameSize(prev => ({ ...prev, [dimension]: '' }));
+      return;
     }
+    
+    // 숫자만 허용
+    const numericValue = value.replace(/[^0-9]/g, '');
+    
+    // 로컬 상태 즉시 업데이트 (입력 필드 반영)
+    setFrameSize(prev => ({ ...prev, [dimension]: numericValue }));
   };
 
   // 프레임 크기 업데이트 (blur 또는 Enter 시)
   const handleFrameSizeBlur = (dimension: 'left' | 'right' | 'top') => {
     if (!spaceInfo.frameSize) return;
     
-    // 벽이 없는 쪽은 수정 불가능
-    if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
+    // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능
+    if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
       return;
     }
     
     let value = frameSize[dimension];
     
-    // 숫자로 변환
-    if (typeof value === 'string') {
-      value = value === '' ? 10 : parseInt(value);
+    // 빈 문자열이면 기본값 설정
+    if (value === '' || value === undefined || value === null) {
+      value = dimension === 'top' ? 10 : 50;
+    } else if (typeof value === 'string') {
+      value = parseInt(value);
     }
     
     // 유효하지 않은 숫자라면 기본값 사용
@@ -260,16 +256,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     // 로컬 상태 업데이트
     setFrameSize(prev => ({ ...prev, [dimension]: value }));
 
-    // 값에 변화가 있을 때만 업데이트
-    const currentValue = spaceInfo.frameSize[dimension as keyof typeof spaceInfo.frameSize];
-    if (value !== currentValue) {
-      onUpdate({
-        frameSize: {
-          ...spaceInfo.frameSize,
-          [dimension]: value,
-        },
-      });
-    }
+    // store 업데이트
+    onUpdate({
+      frameSize: {
+        ...spaceInfo.frameSize,
+        [dimension]: value,
+      },
+    });
   };
 
   // Enter 키 및 화살표 키 처리
@@ -279,13 +272,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
       
-      // 벽이 없는 쪽은 수정 불가능
-      if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
+      // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능
+      if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
         return;
       }
       
       const currentValue = typeof frameSize[dimension] === 'string' 
-        ? parseInt(frameSize[dimension] as string) || 0 
+        ? (frameSize[dimension] === '' ? 0 : parseInt(frameSize[dimension] as string) || 0)
         : frameSize[dimension];
       
       let minValue, maxValue;

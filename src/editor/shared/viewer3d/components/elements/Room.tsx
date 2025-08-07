@@ -1485,8 +1485,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
-      {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
-      {showFrame && topBottomFrameHeightMm > 0 && (
+      {/* 서라운드 모드에서만 표시 */}
+      {showFrame && topBottomFrameHeightMm > 0 && spaceInfo.surroundType === 'surround' && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
@@ -1783,10 +1783,8 @@ const Room: React.FC<RoomProps> = ({
         </>
       )}
       
-      {/* 상단 서브프레임 - 상단 프레임에서 앞쪽으로 내려오는 판 (ㄱ자의 세로 부분, X축 기준 90도 회전) */}
-      {/* 상단 프레임 높이가 18mm보다 클 때만 렌더링 (서브프레임 높이 18mm와 비교) */}
-      {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
-      {showFrame && topBottomFrameHeightMm > 18 && (
+      {/* 상단 서브프레임 - 완전히 제거 */}
+      {false && (
         <>
           {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
           {(() => {
@@ -1920,7 +1918,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
+      {/* 좌측 프레임 크기가 20 미만이면 서브프레임 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
+        spaceInfo.frameSize?.left >= 20 &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
         
@@ -1984,7 +1984,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
+      {/* 우측 프레임 크기가 20 미만이면 서브프레임 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
+        spaceInfo.frameSize?.right >= 20 &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
         

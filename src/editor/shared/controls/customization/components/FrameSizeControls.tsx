@@ -39,8 +39,10 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
   const { setHighlightedFrame } = useUIStore();
 
   // 입력 필드 포커스 핸들러
-  const handleInputFocus = (frame: HighlightedFrame) => {
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>, frame: HighlightedFrame) => {
     setHighlightedFrame(frame);
+    // 포커스 시 전체 텍스트 선택
+    e.target.select();
   };
 
   // 입력 필드 블러 핸들러
@@ -62,12 +64,10 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>좌측 (40~100)</label>
             <input
-              type="number"
-              min="40"
-              max="100"
+              type="text"
               value={!hasLeftWall ? END_PANEL_WIDTH : frameSize.left}
               onChange={(e) => handleRealTimeChange('left', e.target.value)}
-              onFocus={() => handleInputFocus('left')}
+              onFocus={(e) => handleInputFocus(e, 'left')}
               onBlur={() => handleInputBlur('left')}
               onKeyDown={(e) => onKeyDown(e, 'left')}
               className={`${styles.input} ${!hasLeftWall ? styles.inputError : ''}`}
@@ -79,12 +79,10 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>우측 (40~100)</label>
             <input
-              type="number"
-              min="40"
-              max="100"
+              type="text"
               value={!hasRightWall ? END_PANEL_WIDTH : frameSize.right}
               onChange={(e) => handleRealTimeChange('right', e.target.value)}
-              onFocus={() => handleInputFocus('right')}
+              onFocus={(e) => handleInputFocus(e, 'right')}
               onBlur={() => handleInputBlur('right')}
               onKeyDown={(e) => onKeyDown(e, 'right')}
               className={`${styles.input} ${!hasRightWall ? styles.inputError : ''}`}
@@ -96,12 +94,10 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>상단 (10~200)</label>
             <input
-              type="number"
-              min="10"
-              max="200"
+              type="text"
               value={frameSize.top}
               onChange={(e) => handleRealTimeChange('top', e.target.value)}
-              onFocus={() => handleInputFocus('top')}
+              onFocus={(e) => handleInputFocus(e, 'top')}
               onBlur={() => handleInputBlur('top')}
               onKeyDown={(e) => onKeyDown(e, 'top')}
               className={styles.input}
@@ -121,12 +117,10 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
         <div className={styles.inputWrapper}>
           <label className={styles.inputLabel}>상단 (10~200)</label>
           <input
-            type="number"
-            min="10"
-            max="200"
+            type="text"
             value={frameSize.top}
             onChange={(e) => handleRealTimeChange('top', e.target.value)}
-            onFocus={() => handleInputFocus('top')}
+            onFocus={(e) => handleInputFocus(e, 'top')}
             onBlur={() => handleInputBlur('top')}
             onKeyDown={(e) => onKeyDown(e, 'top')}
             className={styles.input}
