@@ -813,7 +813,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (hasBothWalls) {
               // 양쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left || 2;
-              leftText = `이격 ${leftValue}`;
+              leftText = `${leftValue}`;
             } else {
               // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
               const frameThickness = calculateFrameThickness(spaceInfo);
@@ -824,7 +824,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
               
               leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-              leftText = `EP ${leftValue}`;
+              leftText = `${leftValue}`;
             }
             
             return (
@@ -850,12 +850,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={2}
                 />
                 
-                {/* 좌측 치수 텍스트 */}
+                {/* 좌측 치수 텍스트 - 가구 치수와 같은 높이 */}
                 {showDimensionsText && (
                   <Text
-                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(120) - mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize}
-                    color={textColor}
+                    color={dimensionColor}
                     anchorX="center"
                     anchorY="middle"
                   >
@@ -937,7 +937,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (hasBothWalls) {
               // 양쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right || 2;
-              rightText = `이격 ${rightValue}`;
+              rightText = `${rightValue}`;
             } else {
               // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
               const frameThickness = calculateFrameThickness(spaceInfo);
@@ -948,7 +948,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
               
               rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-              rightText = `EP ${rightValue}`;
+              rightText = `${rightValue}`;
             }
             
             return (
@@ -974,11 +974,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={2}
                 />
                 
-                {/* 우측 치수 텍스트 */}
+                {/* 우측 치수 텍스트 - 가구 치수와 같은 높이 */}
                 <Text
-                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(120) - mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize}
-                  color={textColor}
+                  color={dimensionColor}
                   anchorX="center"
                   anchorY="middle"
                 >
@@ -3091,7 +3091,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 좌측 프레임 폭 치수선 - 외부로 이동 */}
         <group>
           {(() => {
-            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 120 : 80);
             
             // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
@@ -3103,7 +3103,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (hasBothWalls) {
                 // 양쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left || 2;
-                leftText = `이격 ${leftValue}`;
+                leftText = `${leftValue}`;
               } else {
                 // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo);
@@ -3114,7 +3114,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                leftText = `EP ${leftValue}`;
+                leftText = `${leftValue}`;
               }
               
               return (
@@ -3138,19 +3138,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   
                   {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
-                  <group
-                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight, frameDimZ - 0.15]}
-                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  <Text
+                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    <Text
-                      fontSize={0.08}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                    >
-                      {leftText}
-                    </Text>
-                  </group>
+                    {leftText}
+                  </Text>
                 </>
               );
             } else {
@@ -3205,7 +3202,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
         <group>
           {(() => {
-            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 120 : 80);
             
             // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
@@ -3217,7 +3214,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (hasBothWalls) {
                 // 양쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right || 2;
-                rightText = `이격 ${rightValue}`;
+                rightText = `${rightValue}`;
               } else {
                 // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo);
@@ -3228,7 +3225,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-                rightText = `EP ${rightValue}`;
+                rightText = `${rightValue}`;
               }
               
               return (
@@ -3252,19 +3249,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   
                   {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
-                  <group
-                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight, frameDimZ - 0.15]}
-                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  <Text
+                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    <Text
-                      fontSize={0.08}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                    >
-                      {rightText}
-                    </Text>
-                  </group>
+                    {rightText}
+                  </Text>
                 </>
               );
             } else {

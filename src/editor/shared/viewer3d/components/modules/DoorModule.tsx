@@ -473,9 +473,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
       : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
   } else {
-    // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
+    // 받침대 없음: 상단 프레임 높이 조정 없음 (0으로 설정)
     const topFrameHeight = spaceInfo.frameSize?.top || 50;
-    doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+    doorYPosition = 0;
   }
   
   // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)
@@ -630,20 +630,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     },
   });
 
-  // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
-  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
+  // 도어 위치 계산: slotCenterX는 실제로 오프셋 값임
+  // 도어는 기본적으로 가구 중심(0,0,0)에 위치하고, slotCenterX 오프셋만큼 이동
+  let doorGroupX = slotCenterX || 0; // 도어 X축 오프셋 (Three.js 단위)
   
   // slotCenterX가 제공되었는지 확인
-  if (slotCenterX !== undefined && slotCenterX !== null) {
-    // slotCenterX가 제공된 경우 그대로 사용
-    console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
+  if (slotCenterX !== undefined && slotCenterX !== null && slotCenterX !== 0) {
+    // slotCenterX는 오프셋 값으로 처리
+    console.log(`🚪 도어 오프셋 적용:`, {
       slotIndex,
-      slotCenterX,
-      doorGroupX
+      slotCenterX_오프셋: slotCenterX,
+      doorGroupX,
+      설명: '도어를 가구 중심에서 오프셋만큼 이동'
     });
   } else {
-    // slotCenterX가 제공되지 않은 경우 기본값 0 사용
-    console.log(`🚪 도어 위치 기본값 사용:`, {
+    // slotCenterX가 제공되지 않은 경우 기본값 0 사용 (가구 중심)
+    console.log(`🚪 도어 위치 기본값 사용 (가구 중심):`, {
       slotIndex,
       doorGroupX: 0
     });

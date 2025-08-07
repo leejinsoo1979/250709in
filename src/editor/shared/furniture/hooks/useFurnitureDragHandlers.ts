@@ -276,6 +276,23 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           }
         }
         
+        // 노서라운드 엔드패널 슬롯 확인 - adjustedWidth 설정 제거
+        // FurnitureItem에서 직접 처리하도록 변경
+        const isNoSurroundEndSlot = spaceInfo.surroundType === 'no-surround' && 
+          dropPosition.column !== undefined &&
+          ((spaceInfo.installType === 'freestanding' && 
+            (dropPosition.column === 0 || dropPosition.column === indexing.columnCount - 1)) ||
+           (spaceInfo.installType === 'semistanding' && 
+            ((spaceInfo.wallConfig?.left && dropPosition.column === indexing.columnCount - 1) || 
+             (spaceInfo.wallConfig?.right && dropPosition.column === 0))));
+        
+        if (isNoSurroundEndSlot) {
+          console.log('🎯 노서라운드 엔드패널 슬롯 감지:', {
+            슬롯인덱스: dropPosition.column,
+            설명: 'FurnitureItem에서 자동으로 18mm 감소 처리'
+          });
+        }
+        
         // 새 모듈 배치
         let newModuleData: any = {
           id: placedId,
@@ -286,7 +303,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
-          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정
+          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정 또는 노서라운드 엔드패널 슬롯 너비
         };
         
         // Column C의 경우 서브슬롯 위치 추가

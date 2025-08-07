@@ -680,6 +680,23 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       let finalPosition = { x: finalX, y: 0, z: 0 };
       let adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
+      // 노서라운드 엔드패널 슬롯 확인 - adjustedWidth 설정 제거
+      // FurnitureItem에서 직접 처리하도록 변경
+      const isNoSurroundEndSlot = spaceInfo.surroundType === 'no-surround' && 
+        zoneSlotIndex !== undefined &&
+        ((spaceInfo.installType === 'freestanding' && 
+          (zoneSlotIndex === 0 || zoneSlotIndex === indexing.columnCount - 1)) ||
+         (spaceInfo.installType === 'semistanding' && 
+          ((spaceInfo.wallConfig?.left && zoneSlotIndex === indexing.columnCount - 1) || 
+           (spaceInfo.wallConfig?.right && zoneSlotIndex === 0))));
+      
+      if (isNoSurroundEndSlot) {
+        console.log('🎯 SlotDropZones - 노서라운드 엔드패널 슬롯 감지:', {
+          슬롯인덱스: zoneSlotIndex,
+          설명: 'FurnitureItem에서 자동으로 18mm 감소 처리'
+        });
+      }
+      
       // 새 모듈 배치
       const newModule = {
         id: placedId,
@@ -835,6 +852,29 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
       
       finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
+    }
+    
+    // 노서라운드 엔드패널 슬롯 확인 (기둥이 있는 경우에도 체크)
+    const isNoSurroundEndSlot = spaceInfo.surroundType === 'no-surround' && 
+      zoneSlotIndex !== undefined &&
+      ((spaceInfo.installType === 'freestanding' && 
+        (zoneSlotIndex === 0 || zoneSlotIndex === indexing.columnCount - 1)) ||
+       (spaceInfo.installType === 'semistanding' && 
+        ((spaceInfo.wallConfig?.left && zoneSlotIndex === indexing.columnCount - 1) || 
+         (spaceInfo.wallConfig?.right && zoneSlotIndex === 0))));
+    
+    // 노서라운드 엔드패널 슬롯이고 기둥이 없는 경우 adjustedWidth 설정
+    if (isNoSurroundEndSlot && (!targetSlotInfo || !targetSlotInfo.hasColumn)) {
+      // indexing.slotWidths에 이미 엔드패널이 반영된 너비가 있음
+      if (indexing.slotWidths && indexing.slotWidths[zoneSlotIndex] !== undefined) {
+        adjustedFurnitureWidth = indexing.slotWidths[zoneSlotIndex];
+        console.log('🎯 SlotDropZones(기둥구역) - 노서라운드 엔드패널 슬롯 너비 설정:', {
+          슬롯인덱스: zoneSlotIndex,
+          adjustedWidth: adjustedFurnitureWidth,
+          원래너비: actualModuleData.dimensions.width,
+          설명: '엔드패널이 반영된 슬롯 너비 사용'
+        });
+      }
     }
     
     // 새 모듈 배치
@@ -1641,6 +1681,30 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         const previewDepth = mmToThreeUnits(previewCustomDepth);
         const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
 
+        // 노서라운드 엔드패널 슬롯 확인
+        const isNoSurroundEndSlot = spaceInfo.surroundType === 'no-surround' && 
+          hoveredSlotIndex !== undefined &&
+          ((spaceInfo.installType === 'freestanding' && 
+            (hoveredSlotIndex === 0 || hoveredSlotIndex === indexing.columnCount - 1)) ||
+           (spaceInfo.installType === 'semistanding' && 
+            ((spaceInfo.wallConfig?.left && hoveredSlotIndex === indexing.columnCount - 1) || 
+             (spaceInfo.wallConfig?.right && hoveredSlotIndex === 0))));
+        
+        // 노서라운드 엔드패널 슬롯인 경우 프리뷰 가구 너비 조정
+        let previewAdjustedWidth = undefined;
+        if (isNoSurroundEndSlot) {
+          // indexing.slotWidths에 이미 엔드패널이 반영된 너비가 있음
+          if (indexing.slotWidths && indexing.slotWidths[hoveredSlotIndex] !== undefined) {
+            previewAdjustedWidth = indexing.slotWidths[hoveredSlotIndex];
+            console.log('👻 고스트 프리뷰 - 노서라운드 엔드패널 슬롯 너비 설정:', {
+              슬롯인덱스: hoveredSlotIndex,
+              adjustedWidth: previewAdjustedWidth,
+              원래너비: previewModuleData.dimensions.width,
+              설명: '엔드패널이 반영된 슬롯 너비 사용'
+            });
+          }
+        }
+
         return (
           <group key={`furniture-preview-${slotIndex}`} position={[furnitureX, furnitureY, furnitureZ]}>
             <BoxModule 
@@ -1651,6 +1715,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
               hasDoor={false}
               customDepth={previewCustomDepth}
               spaceInfo={spaceInfo}
+              adjustedWidth={previewAdjustedWidth} // 노서라운드 엔드패널 슬롯 너비 전달
             />
           </group>
         );
