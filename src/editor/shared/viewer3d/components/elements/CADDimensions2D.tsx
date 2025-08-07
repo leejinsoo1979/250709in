@@ -87,9 +87,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     ];
   };
 
-  // 정면뷰에서만 치수 표시 (다른 뷰에서는 복잡함 방지)
+  // 정면뷰와 3D뷰에서 치수 표시
   // showDimensions가 false이면 치수 표시하지 않음
-  if (currentViewDirection !== 'front' || !showDimensions) {
+  if ((currentViewDirection !== 'front' && currentViewDirection !== '3D') || !showDimensions) {
     return null;
   }
 
@@ -796,9 +796,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         // 가구의 상단 Y 좌표 계산
         const furnitureTopY = floatHeight + mmToThreeUnits(moduleData.dimensions.height);
         
+        // 가구 높이와 깊이
+        const furnitureHeight = moduleData.dimensions.height;
+        const furnitureDepth = module.customDepth || moduleData.dimensions.depth;
+        
         return (
           <group key={`module-dim-${index}`}>
-            {/* 치수선 */}
+            {/* 너비 치수선 */}
             <Line
               points={[
                 [leftX, dimY, 0.01],
@@ -830,7 +834,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               lineWidth={2}
             />
             
-            {/* 치수 텍스트 */}
+            {/* 너비 치수 텍스트 */}
             <Html
               position={[displayPositionX, dimY - mmToThreeUnits(40), 0.01]}
               center
@@ -853,9 +857,65 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {Math.round(displayWidth)}mm
+                W: {Math.round(displayWidth)}mm
               </div>
             </Html>
+            
+            {/* 높이 치수 텍스트 - 가구 중앙에 표시 */}
+            <Html
+              position={[displayPositionX, floatHeight + mmToThreeUnits(furnitureHeight) / 2, 0.01]}
+              center
+              transform={false}
+              occlude={false}
+              zIndexRange={[1000, 1001]}
+            >
+              <div
+                style={{
+                  background: dimensionColors.background,
+                  color: dimensionColors.furniture,
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  border: `1px solid ${dimensionColors.furniture}`,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none',
+                  pointerEvents: 'none'
+                }}
+              >
+                H: {Math.round(furnitureHeight)}mm
+              </div>
+            </Html>
+            
+            {/* 깊이 치수 텍스트 - 가구 오른쪽에 표시 */}
+            {furnitureDepth && (
+              <Html
+                position={[rightX + mmToThreeUnits(50), floatHeight + mmToThreeUnits(furnitureHeight) / 2 - mmToThreeUnits(30), 0.01]}
+                center
+                transform={false}
+                occlude={false}
+                zIndexRange={[1000, 1001]}
+              >
+                <div
+                  style={{
+                    background: dimensionColors.background,
+                    color: dimensionColors.furniture,
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    border: `1px solid ${dimensionColors.furniture}`,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  D: {Math.round(furnitureDepth)}mm
+                </div>
+              </Html>
+            )}
             
             {/* 위쪽 연장선 - 가구 상단에서 위쪽 외부 영역으로 */}
             <Line

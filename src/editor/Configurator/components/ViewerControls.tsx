@@ -111,8 +111,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     { id: 'right' as ViewDirection, label: 'right' }
   ];
 
-  // 2D 모드에서 사용할 뷰 방향들
-  const viewDirectionsWithAll = viewDirections;
+  // 2D 모드에서 사용할 뷰 방향들 (all 포함)
+  const viewDirectionsWithAll = [
+    { id: 'all' as ViewDirection, label: 'all' },
+    ...viewDirections
+  ];
 
   const renderModes = [
     { id: 'solid' as RenderMode, label: 'Solid' },

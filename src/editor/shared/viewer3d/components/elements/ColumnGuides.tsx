@@ -10,18 +10,20 @@ import ColumnDropTarget from './ColumnDropTarget';
 
 interface ColumnGuidesProps {
   viewMode?: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top';
 }
 
 /**
  * 컬럼 인덱스 가이드 라인 컴포넌트
  * step0 이후로는 모든 step에서 configurator로 통일 처리
  */
-const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
+const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, view2DDirection: view2DDirectionProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection: contextView2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
   
-  // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
+  // prop으로 받은 값을 우선 사용, 없으면 context의 값 사용
   const viewMode = viewModeProp || contextViewMode;
+  const view2DDirection = view2DDirectionProp || contextView2DDirection;
   const { theme } = useViewerTheme();
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행

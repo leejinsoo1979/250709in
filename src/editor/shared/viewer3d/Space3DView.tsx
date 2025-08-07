@@ -643,6 +643,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                viewMode="2D"
+                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -724,6 +726,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                viewMode="2D"
+                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -805,6 +809,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                viewMode="2D"
+                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -886,6 +892,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                viewMode="2D"
+                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -1275,7 +1283,9 @@ const QuadrantContent: React.FC<{
   showAxis: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone }) => {
+  viewMode?: '2D' | '3D';
+  renderMode?: 'solid' | 'wireframe';
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, viewMode = '2D', renderMode = 'wireframe' }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1343,7 +1353,7 @@ const QuadrantContent: React.FC<{
       ))}
       
       {/* 컬럼 가이드 표시 */}
-      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
+      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} view2DDirection={viewDirection} />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
       <CleanCAD2D 
@@ -1369,7 +1379,7 @@ const QuadrantContent: React.FC<{
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}
-        renderMode="solid"
+        renderMode={renderMode}
         showDimensions={showDimensions}
         showAll={showAll}
         isStep2={isStep2}
