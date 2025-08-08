@@ -37,6 +37,9 @@ interface ViewerControlsProps {
   showAxis: boolean;
   onShowAxisToggle: () => void;
   
+  showFurniture: boolean;
+  onShowFurnitureToggle: () => void;
+  
   doorsOpen: boolean;
   onDoorsToggle: () => void;
   
@@ -62,6 +65,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onShowGuidesToggle,
   showAxis,
   onShowAxisToggle,
+  showFurniture,
+  onShowFurnitureToggle,
   doorsOpen,
   onDoorsToggle,
   hasDoorsInstalled = false,
@@ -142,6 +147,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               if (!showDimensions) {
                 onShowDimensionsToggle();
                 // 모든 항목이 체크되어 있지 않으면 체크
+                if (!showFurniture) onShowFurnitureToggle();
                 if (!showAll) onShowAllToggle();
                 if (!showDimensionsText) onShowDimensionsTextToggle();
                 if (!showGuides) onShowGuidesToggle();
@@ -150,10 +156,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               }
               
               // 토글이 켜져있을 때: 토글을 끄지 않고 모든 체크박스 해제
-              const anyChecked = showAll || showDimensionsText || showGuides || showAxis;
+              const anyChecked = showFurniture || showAll || showDimensionsText || showGuides || showAxis;
               
               if (anyChecked) {
                 // 하나라도 체크되어 있으면 모두 체크 해제
+                if (showFurniture) onShowFurnitureToggle();
                 if (showAll) onShowAllToggle();
                 if (showDimensionsText) onShowDimensionsTextToggle();
                 if (showGuides) onShowGuidesToggle();
@@ -193,12 +200,23 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
+              checked={showDimensions && showFurniture}
+              onChange={onShowFurnitureToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            가구
+          </label>
+
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
               checked={showDimensions && showAll}
               onChange={onShowAllToggle}
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            가이드
+            컬럼
           </label>
 
           <label className={styles.checkboxLabel}>

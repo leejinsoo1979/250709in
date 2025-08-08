@@ -100,28 +100,35 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   return (
     <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <boxGeometry args={args} />
-          {viewMode === '2D' ? (
-            <meshStandardMaterial 
-              {...(processedMaterial as THREE.MeshStandardMaterial)}
-              transparent={true}
-              opacity={0.5}
-            />
-          ) : (
-            <primitive object={processedMaterial} attach="material" />
-          )}
-        </mesh>
-      )}
+      {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
+      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid'} castShadow={viewMode === '3D' && renderMode === 'solid'}>
+        <boxGeometry args={args} />
+        {renderMode === 'wireframe' ? (
+          // 와이어프레임 모드: 완전히 투명한 재질
+          <meshBasicMaterial transparent={true} opacity={0} />
+        ) : viewMode === '2D' ? (
+          <meshStandardMaterial 
+            {...(processedMaterial as THREE.MeshStandardMaterial)}
+            transparent={true}
+            opacity={0.5}
+          />
+        ) : (
+          <primitive object={processedMaterial} attach="material" />
+        )}
+      </mesh>
       {/* 윤곽선 렌더링 */}
       {!hideEdges && (
-        <lineSegments renderOrder={viewMode === '2D' ? 1000 : 999}>
+        <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={edgeColor}
-            transparent={(isBackPanel && viewMode === '2D' && view2DDirection === 'front') || viewMode === '3D'}
+            color={
+              viewMode === '3D' 
+                ? "#505050"
+                : renderMode === 'wireframe' 
+                  ? (viewMode === '2D' ? "#ff5500" : (theme?.mode === 'dark' ? "#ffffff" : "#333333")) 
+                  : (view2DTheme === 'dark' ? "#999999" : "#444444")
+            }
+            transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
             opacity={
               isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
                 ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게

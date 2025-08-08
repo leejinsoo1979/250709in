@@ -41,7 +41,7 @@ import { useThrottle } from '@/editor/shared/hooks/useThrottle';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFurniture = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();

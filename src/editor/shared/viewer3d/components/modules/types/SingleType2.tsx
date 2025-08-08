@@ -57,13 +57,16 @@ const BoxWithEdges: React.FC<{
 
   return (
     <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'}>
-          <boxGeometry args={args} />
+      {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
+      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid'} castShadow={viewMode === '3D' && renderMode === 'solid'}>
+        <boxGeometry args={args} />
+        {renderMode === 'wireframe' ? (
+          // 와이어프레임 모드: 완전히 투명한 재질
+          <meshBasicMaterial transparent={true} opacity={0} />
+        ) : (
           <primitive object={processedMaterial} attach="material" />
-        </mesh>
-      )}
+        )}
+      </mesh>
       {/* 윤곽선 렌더링 */}
       {!hideEdges && (
         <lineSegments>

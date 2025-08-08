@@ -30,6 +30,20 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
       const newIndexing = calculateSpaceIndexing(newSpaceInfo);
       
+      // 세미스탠딩에서 벽 위치만 변경된 경우 감지
+      const isOnlyWallPositionChange = 
+        oldSpaceInfo.installType === 'semistanding' && 
+        newSpaceInfo.installType === 'semistanding' &&
+        oldSpaceInfo.width === newSpaceInfo.width &&
+        oldSpaceInfo.wallConfig?.left !== newSpaceInfo.wallConfig?.left &&
+        oldIndexing.columnWidth === newIndexing.columnWidth;
+      
+      if (isOnlyWallPositionChange) {
+        console.log('🔄 세미스탠딩 벽 위치만 변경됨 - 가구 너비 유지');
+        // 벽 위치만 변경된 경우 가구를 그대로 반환
+        return currentModules;
+      }
+      
       // 컬럼 변경이 있을 때만 로그 출력
       if (oldIndexing.columnCount !== newIndexing.columnCount || oldIndexing.columnWidth !== newIndexing.columnWidth) {
         console.log(`🔄 컬럼 변경: ${oldIndexing.columnCount}개(${oldIndexing.columnWidth}mm) → ${newIndexing.columnCount}개(${newIndexing.columnWidth}mm)`);

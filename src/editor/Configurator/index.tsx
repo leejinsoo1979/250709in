@@ -79,6 +79,7 @@ const Configurator: React.FC = () => {
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
+  const [showFurniture, setShowFurniture] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
   const [capturedViews, setCapturedViews] = useState<{
@@ -2457,6 +2458,8 @@ const Configurator: React.FC = () => {
             onShowGuidesToggle={toggleGuides}
             showAxis={showAxis}
             onShowAxisToggle={toggleAxis}
+            showFurniture={showFurniture}
+            onShowFurnitureToggle={() => setShowFurniture(!showFurniture)}
             doorsOpen={doorsOpen}
             onDoorsToggle={toggleDoors}
             hasDoorsInstalled={hasDoorsInstalled}
@@ -2489,6 +2492,7 @@ const Configurator: React.FC = () => {
               setViewMode={setViewMode}
               renderMode={renderMode}
               showAll={showAll}
+              showFurniture={showFurniture}
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달

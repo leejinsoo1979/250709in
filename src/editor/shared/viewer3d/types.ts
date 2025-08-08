@@ -23,6 +23,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   renderMode?: 'solid' | 'wireframe';
   /** 가이드 표시 여부 */
   showAll?: boolean;
+  /** 가구 표시 여부 */
+  showFurniture?: boolean;
   /** 뷰어 전용 모드 여부 */
   isViewerOnly?: boolean;
   /** 프로젝트 데이터 (뷰어 모드용) */

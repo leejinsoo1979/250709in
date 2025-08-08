@@ -1292,7 +1292,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (() => {
+      {showFrame && frameThickness.left > 0 && view2DDirection !== 'left' && view2DDirection !== 'right' && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1392,7 +1392,8 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {showFrame && frameThickness.right > 0 && (() => {
+      {/* 측면뷰에서는 우측 프레임 숨김 */}
+      {showFrame && frameThickness.right > 0 && view2DDirection !== 'left' && view2DDirection !== 'right' && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
@@ -1919,8 +1920,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {/* 좌측 프레임 크기가 20 미만이면 서브프레임 숨김 */}
+      {/* 좌측뷰에서는 좌측 서브프레임 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
-        spaceInfo.frameSize?.left >= 20 &&
+        spaceInfo.frameSize?.left >= 20 && view2DDirection !== 'left' && view2DDirection !== 'right' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
         
@@ -1985,8 +1987,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
       {/* 우측 프레임 크기가 20 미만이면 서브프레임 숨김 */}
+      {/* 측면뷰에서는 우측 서브프레임 숨김 */}
       {showFrame && spaceInfo.surroundType !== 'no-surround' &&
-        spaceInfo.frameSize?.right >= 20 &&
+        spaceInfo.frameSize?.right >= 20 && view2DDirection !== 'left' && view2DDirection !== 'right' &&
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
         
