@@ -131,11 +131,22 @@ export class ColumnIndexer {
       const dualColumnPositions = [];
       const threeUnitDualPositions = [];
       
-      // 인접한 두 컬럼의 중심점들 사이의 중점을 계산
+      // 듀얼 가구는 두 슬롯의 경계에 위치 (슬롯 경계가 듀얼 가구의 중심)
       for (let i = 0; i < columnCount - 1; i++) {
-        const leftColumnCenter = columnPositions[i];
-        const rightColumnCenter = columnPositions[i + 1];
-        const dualCenterPosition = (leftColumnCenter + rightColumnCenter) / 2;
+        let dualCenterPosition;
+        
+        if (slotWidths && slotWidths[i] !== undefined) {
+          // 슬롯 경계 위치 계산 (i번째 슬롯의 끝 = i+1번째 슬롯의 시작)
+          let slotBoundaryX = 0;
+          for (let j = 0; j <= i; j++) {
+            slotBoundaryX += slotWidths[j];
+          }
+          dualCenterPosition = slotBoundaryX;
+        } else {
+          // 기본 계산: 슬롯 경계 위치
+          dualCenterPosition = columnBoundaries[i];
+        }
+        
         dualColumnPositions.push(dualCenterPosition);
         threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
       }
@@ -434,11 +445,29 @@ export class ColumnIndexer {
     const dualColumnPositions = [];
     const threeUnitDualPositions = [];
     
-    // 인접한 두 컬럼의 경계 위치를 사용 (컬럼 경계가 듀얼 가구의 중심)
-    for (let i = 1; i < columnCount; i++) {
-      const dualCenterPosition = columnBoundaries[i]; // 컬럼 경계가 듀얼 가구의 중심
+    // 듀얼 가구는 두 슬롯의 정확한 중심에 배치
+    // 슬롯 경계가 아니라 두 슬롯이 차지하는 전체 영역의 중심
+    for (let i = 0; i < columnCount - 1; i++) {
+      // i번째 슬롯의 시작과 i+1번째 슬롯의 끝을 구해서 그 중심을 계산
+      const leftSlotStart = columnBoundaries[i];
+      const rightSlotEnd = columnBoundaries[i + 2];
+      const dualCenterPosition = (leftSlotStart + rightSlotEnd) / 2;
+      
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
+      
+      // 노서라운드 디버깅
+      if (isNoSurround && (i === 0 || i === columnCount - 2)) {
+        console.log(`🎯 듀얼 가구 위치 계산 [슬롯 ${i}-${i+1}]:`, {
+          leftSlotWidth: slotWidths[i],
+          rightSlotWidth: slotWidths[i + 1],
+          leftSlotStart,
+          rightSlotEnd,
+          totalWidth: rightSlotEnd - leftSlotStart,
+          dualCenterPosition,
+          설명: '두 슬롯 전체 영역의 중심'
+        });
+      }
     }
     
     

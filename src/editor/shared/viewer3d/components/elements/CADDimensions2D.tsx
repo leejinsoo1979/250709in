@@ -675,12 +675,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         
         // 실제 렌더링될 가구 폭과 위치 계산 (FurnitureItem.tsx와 동일한 로직)
         let furnitureWidthMm = moduleData.dimensions.width;
-        let furniturePositionX = module.position.x;
         
         // 듀얼 가구인지 확인 (FurnitureItem.tsx와 동일한 로직)
         const isDualFurniture = module.isDualSlot !== undefined 
           ? module.isDualSlot 
           : moduleData.id.includes('dual-');
+        
+        // 듀얼 가구의 경우 슬롯 경계에 위치 (FurnitureItem.tsx와 동일)
+        let furniturePositionX = module.position.x;
+        if (isDualFurniture && module.slotIndex !== undefined && indexing.threeUnitDualPositions) {
+          furniturePositionX = indexing.threeUnitDualPositions[module.slotIndex] || module.position.x;
+        } else if (module.slotIndex !== undefined && indexing.threeUnitPositions) {
+          furniturePositionX = indexing.threeUnitPositions[module.slotIndex] || module.position.x;
+        }
         
         // FurnitureItem.tsx와 동일한 우선순위 적용
         // 우선순위 1: adjustedWidth (기둥 침범 조정 너비 - 최우선)
@@ -742,6 +749,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         
         // 노서라운드 모드에서 실제 가구 너비 계산 (FurnitureItem.tsx와 동일)
         let actualFurnitureWidthMm = furnitureWidthMm;
+        let positionAdjustmentForEndPanel = 0;
         
         // 노서라운드 모드에서는 기둥이 있는 경우만 조정 (엔드패널은 이미 slotWidths에 반영됨)
         if (spaceInfo.surroundType === 'no-surround' && module.slotIndex !== undefined) {
@@ -749,11 +757,43 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (module.adjustedWidth !== undefined && module.adjustedWidth !== null) {
             actualFurnitureWidthMm = module.adjustedWidth;
           }
+          
+          // 듀얼 가구의 엔드패널 정렬 처리 (FurnitureItem.tsx와 동일)
+          const isLastSlot = isDualFurniture
+            ? module.slotIndex === indexing.columnCount - 2
+            : module.slotIndex === indexing.columnCount - 1;
+          
+          // 노서라운드 엔드패널 슬롯인지 확인
+          const isNoSurroundEndSlot = 
+            ((spaceInfo.installType === 'freestanding' && 
+              (module.slotIndex === 0 || isLastSlot)) ||
+             (spaceInfo.installType === 'semistanding' && 
+              ((spaceInfo.wallConfig?.left && isLastSlot) || 
+               (spaceInfo.wallConfig?.right && module.slotIndex === 0))));
+          
+          // 엔드패널 슬롯에서 듀얼 가구 너비와 위치 조정
+          if (isNoSurroundEndSlot && isDualFurniture && indexing.slotWidths && 
+              module.slotIndex < indexing.slotWidths.length - 1 &&
+              !(module.customWidth !== undefined && module.customWidth !== null) &&
+              !(module.adjustedWidth !== undefined && module.adjustedWidth !== null)) {
+            
+            // 듀얼 가구 너비: 두 슬롯의 합계
+            actualFurnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
+            
+            // 치수 표시 위치 조정: 엔드패널을 피해서 표시
+            if (module.slotIndex === 0) {
+              // 첫 번째 슬롯: 치수를 우측으로 9mm 이동 (엔드패널 영역 피함)
+              positionAdjustmentForEndPanel = 0.09; // mm to Three.js units (9mm)
+            } else if (isLastSlot) {
+              // 마지막 슬롯: 치수를 좌측으로 9mm 이동 (엔드패널 영역 피함)  
+              positionAdjustmentForEndPanel = -0.09; // mm to Three.js units (-9mm)
+            }
+          }
         }
         
         // 도어가 있는 경우 - 도어의 실제 크기와 위치로 치수 가이드 조정
         let displayWidth = actualFurnitureWidthMm;
-        let displayPositionX = furniturePositionX;
+        let displayPositionX = furniturePositionX + positionAdjustmentForEndPanel; // 엔드패널 영역을 피해서 표시
         
         // 도어 치수 표시 코드 주석 처리
         // if (module.doorConfig) {
@@ -936,11 +976,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               lineWidth={1}
               dashed={false}
             />
-            {/* 아래쪽 연장선 - 가구 하단에서 아래쪽 외부 영역으로 */}
+            {/* 아래쪽 연장선 - 치수선 위아래로 짧게만 */}
             <Line
               points={[
-                [leftX, floatHeight, 0.01],
-                [leftX, dimY + mmToThreeUnits(20), 0.01]
+                [leftX, dimY + mmToThreeUnits(5), 0.01],
+                [leftX, dimY - mmToThreeUnits(5), 0.01]
               ]}
               color={dimensionColors.furniture}
               lineWidth={1}
@@ -948,8 +988,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
             <Line
               points={[
-                [rightX, floatHeight, 0.01],
-                [rightX, dimY + mmToThreeUnits(20), 0.01]
+                [rightX, dimY + mmToThreeUnits(5), 0.01],
+                [rightX, dimY - mmToThreeUnits(5), 0.01]
               ]}
               color={dimensionColors.furniture}
               lineWidth={1}

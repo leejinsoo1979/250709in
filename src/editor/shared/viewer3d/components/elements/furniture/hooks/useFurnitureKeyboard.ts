@@ -143,26 +143,29 @@ export const useFurnitureKeyboard = ({
                 });
               }
               
-              // customWidth 계산
+              // customWidth 계산 - 듀얼 가구만
               const customWidth = (() => {
-                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
+                if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                  if (nextSlot < indexing.slotWidths.length - 1) {
                     return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
-                  } else {
-                    return indexing.slotWidths[nextSlot];
                   }
                 }
-                return indexing.columnWidth;
+                return undefined;
               })();
               
               // 업데이트
-              updatePlacedModule(targetModuleId, {
+              const updateData: any = {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
-                adjustedWidth: adjustedWidth,
-                customWidth: customWidth
-              });
+                adjustedWidth: adjustedWidth
+              };
+              
+              if (customWidth !== undefined) {
+                updateData.customWidth = customWidth;
+              }
+              
+              updatePlacedModule(targetModuleId, updateData);
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -230,26 +233,29 @@ export const useFurnitureKeyboard = ({
                 });
               }
               
-              // customWidth 계산
+              // customWidth 계산 - 듀얼 가구만
               const customWidth = (() => {
-                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
+                if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                  if (nextSlot < indexing.slotWidths.length - 1) {
                     return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
-                  } else {
-                    return indexing.slotWidths[nextSlot];
                   }
                 }
-                return indexing.columnWidth;
+                return undefined;
               })();
               
               // 업데이트
-              updatePlacedModule(targetModuleId, {
+              const updateData: any = {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
-                adjustedWidth: adjustedWidth,
-                customWidth: customWidth
-              });
+                adjustedWidth: adjustedWidth
+              };
+              
+              if (customWidth !== undefined) {
+                updateData.customWidth = customWidth;
+              }
+              
+              updatePlacedModule(targetModuleId, updateData);
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -372,26 +378,29 @@ export const useFurnitureKeyboard = ({
                   });
                 }
                 
-                // customWidth 계산
+                // customWidth 계산 - 듀얼 가구만
                 const customWidth = (() => {
-                  if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                    if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
+                  if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                    if (nextSlot < indexing.slotWidths.length - 1) {
                       return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
-                    } else {
-                      return indexing.slotWidths[nextSlot];
                     }
                   }
-                  return indexing.columnWidth;
+                  return undefined;
                 })();
                 
                 // 업데이트
-                updatePlacedModule(selectedPlacedModuleId, {
+                const updateData: any = {
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
-                  adjustedWidth: adjustedWidth,
-                  customWidth: customWidth
-                });
+                  adjustedWidth: adjustedWidth
+                };
+                
+                if (customWidth !== undefined) {
+                  updateData.customWidth = customWidth;
+                }
+                
+                updatePlacedModule(selectedPlacedModuleId, updateData);
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
               e.preventDefault();
@@ -459,26 +468,29 @@ export const useFurnitureKeyboard = ({
                   });
                 }
                 
-                // customWidth 계산
+                // customWidth 계산 - 듀얼 가구만
                 const customWidth = (() => {
-                  if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                    if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
+                  if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                    if (nextSlot < indexing.slotWidths.length - 1) {
                       return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
-                    } else {
-                      return indexing.slotWidths[nextSlot];
                     }
                   }
-                  return indexing.columnWidth;
+                  return undefined;
                 })();
                 
                 // 업데이트
-                updatePlacedModule(selectedPlacedModuleId, {
+                const updateData: any = {
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
-                  adjustedWidth: adjustedWidth,
-                  customWidth: customWidth
-                });
+                  adjustedWidth: adjustedWidth
+                };
+                
+                if (customWidth !== undefined) {
+                  updateData.customWidth = customWidth;
+                }
+                
+                updatePlacedModule(selectedPlacedModuleId, updateData);
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
               e.preventDefault();

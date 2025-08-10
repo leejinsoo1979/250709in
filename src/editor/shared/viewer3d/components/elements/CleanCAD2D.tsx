@@ -338,7 +338,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 가구별 실시간 치수선 및 가이드 미리 계산 (hooks는 항상 호출되어야 함)
   const furnitureDimensions = React.useMemo(() => {
-    if (placedModules.length === 0 || currentViewDirection === 'top') return null;
+    if (placedModules.length === 0) return null;
     
     return placedModules.map((module, index) => {
       const moduleData = getModuleById(
@@ -362,6 +362,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       // 기본 너비 설정 - customWidth를 우선적으로 사용 (탑뷰와 동일하게)
       let actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
       let actualPositionX = module.position.x;
+      
+      // 듀얼 가구도 슬롯 경계에 정확히 맞춤 - 위치 조정 제거
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
       const actualDepth = module.customDepth || moduleData.dimensions.depth;
@@ -1582,17 +1584,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 하부 프레임에서 전체 가로 치수 보조선까지 확장 */}
+            {/* 연장선 - 가구 상단에서 치수선까지 */}
+            {/* 좌측 연장선 */}
             <Line
-              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftX, furnitureHeight, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
               renderOrder={999999}
             />
+            {/* 우측 연장선 */}
             <Line
-              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightX, furnitureHeight, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
               renderOrder={999999}
             />
             
@@ -1645,17 +1649,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {Math.round(column.width)}
             </Text>
             
-            {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
+            {/* 연장선 - 공간 상단에서 치수선까지 */}
+            {/* 좌측 연장선 */}
             <Line
-              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftX, spaceHeight, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1}
               renderOrder={999999}
             />
+            {/* 우측 연장선 */}
             <Line
-              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightX, spaceHeight, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1}
               renderOrder={999999}
             />
           </group>
@@ -3856,7 +3862,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
           const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
-          const actualPositionX = module.adjustedPosition?.x || module.position.x;
+          let actualPositionX = module.adjustedPosition?.x || module.position.x;
+          
+          // 노서라운드 모드에서 듀얼 가구 엔드패널 정렬 적용
+          const isDualFurniture = moduleData.id.includes('dual');
+          if (isDualFurniture && spaceInfo.surroundType === 'no-surround') {
+            const indexing = calculateSpaceIndexing(spaceInfo);
+            const isFirstSlot = module.slotIndex === 0;
+            const isLastSlot = module.slotIndex === indexing.columnCount - 2; // 듀얼은 -2
+            
+            // 엔드패널이 있는 슬롯인지 확인
+            const isNoSurroundEndSlot = 
+              ((spaceInfo.installType === 'freestanding') ||
+               (spaceInfo.installType === 'semistanding' && 
+                ((spaceInfo.wallConfig?.left && isLastSlot) ||
+                 (spaceInfo.wallConfig?.right && isFirstSlot))));
+            
+            // 듀얼 가구도 슬롯 경계에 정확히 맞춤 - 위치 조정 제거
+          }
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
           

@@ -106,12 +106,18 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             });
             
             if (hasLeftEndPanel || hasRightEndPanel) {
-              console.log('🚫 듀얼 가구 배치 차단!');
-              showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
-                title: '배치 불가' 
-              });
-              setFurniturePlacementMode(false);
-              return;
+              console.log('✅ 엔드패널 구간 듀얼 가구 배치 허용');
+              // 엔드패널 구간의 듀얼 가구는 customWidth 설정
+              const slotWidths = indexing.slotWidths || [];
+              if (dropPosition.targetSlotIndex < slotWidths.length - 1) {
+                const firstSlotWidth = slotWidths[dropPosition.targetSlotIndex];
+                const secondSlotWidth = slotWidths[dropPosition.targetSlotIndex + 1];
+                adjustedWidth = firstSlotWidth + secondSlotWidth;
+                console.log('🎯 엔드패널 구간 듀얼 가구 customWidth:', adjustedWidth);
+                
+                // 듀얼 가구는 두 슬롯의 중앙에 위치해야 함
+                // 위치 조정은 하지 않음 (기본 위치가 이미 올바름)
+              }
             }
           }
         }
@@ -275,9 +281,17 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             // 새 모듈 배치 (아래에서 처리됨)
           } else {
             // 일반 기둥 처리 (기존 로직)
-            // 듀얼 가구는 기둥 슬롯에 배치 불가
-            if (dropPosition.isDualFurniture) {
-              console.log('❌ 듀얼 가구는 기둥 슬롯에 배치 불가');
+            // 엔드패널 구간에서 듀얼 가구 처리
+            if (dropPosition.isDualFurniture && targetSlotInfo.column?.depth === 18) {
+              // 엔드패널 구간의 듀얼 가구 - customWidth 설정
+              const slotWidths = indexing.slotWidths || [];
+              if (dropPosition.targetSlotIndex < slotWidths.length - 1) {
+                adjustedWidth = slotWidths[dropPosition.targetSlotIndex] + slotWidths[dropPosition.targetSlotIndex + 1];
+                console.log('🎯 엔드패널 구간 듀얼 가구 customWidth:', adjustedWidth);
+              }
+            } else if (dropPosition.isDualFurniture) {
+              // 일반 기둥에는 듀얼 가구 배치 불가
+              console.log('❌ 듀얼 가구는 일반 기둥 슬롯에 배치 불가');
               return;
             }
             

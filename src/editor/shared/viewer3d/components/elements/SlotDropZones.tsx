@@ -302,15 +302,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       return result;
     };
     
-    // 듀얼 가구가 기둥에 침범당하면 배치 불가
+    // 듀얼 가구가 기둥에 침범당하면 처리
     if (isDual && targetSlotInfo && targetSlotInfo.hasColumn) {
-      console.log('🚫 듀얼 가구가 기둥 슬롯에 배치 시도됨 - 배치 불가:', {
-        slotIndex,
-        columnId: targetSlotInfo.column?.id,
-        reason: '듀얼 가구는 기둥이 있는 슬롯에 배치할 수 없음'
-      });
-      showAlert('듀얼 가구는 기둥이 있는 슬롯에 배치할 수 없습니다.', { title: '배치 불가' });
-      return false;
+      // 엔드패널(18mm)인 경우는 허용
+      if (targetSlotInfo.column?.depth === 18) {
+        console.log('✅ 엔드패널 구간 듀얼 가구 배치 허용');
+      } else {
+        console.log('🚫 듀얼 가구가 일반 기둥 슬롯에 배치 시도됨 - 배치 불가');
+        showAlert('듀얼 가구는 일반 기둥이 있는 슬롯에 배치할 수 없습니다.', { title: '배치 불가' });
+        return false;
+      }
     }
     
     // 기존 단일 가구 배치 로직 (분할이 필요하지 않은 경우)

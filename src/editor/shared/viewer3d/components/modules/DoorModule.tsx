@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -137,6 +138,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen, view2DDirection } = useUIStore();
+  const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
@@ -633,6 +635,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 위치 계산: slotCenterX는 실제로 오프셋 값임
   // 도어는 기본적으로 가구 중심(0,0,0)에 위치하고, slotCenterX 오프셋만큼 이동
   let doorGroupX = slotCenterX || 0; // 도어 X축 오프셋 (Three.js 단위)
+  let doorAdjustment = 0; // 도어 위치 보정값 (듀얼 가구에서 사용)
   
   // slotCenterX가 제공되었는지 확인
   if (slotCenterX !== undefined && slotCenterX !== null && slotCenterX !== 0) {
@@ -747,51 +750,134 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   if (isDualFurniture) {
-    // 듀얼 가구: 개별 슬롯 너비에서 각각 3mm씩 빼기
-    const totalWidth = actualDoorWidth; // 원래 슬롯 크기 사용
+    // 듀얼 가구 도어 처리
+    let totalWidth = actualDoorWidth; // 기본값
+    let leftDoorWidth, rightDoorWidth;
     
-    let leftDoorWidth: number;
-    let rightDoorWidth: number;
-    
-    if (slotWidths && slotWidths.length >= 2) {
-      // 개별 슬롯 너비가 제공된 경우
-      leftDoorWidth = slotWidths[0] - 3;
-      rightDoorWidth = slotWidths[1] - 3;
+    // 노서라운드 모드: 커버도어 (엔드패널을 가림)
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드에서는 도어가 엔드패널을 덮으므로, 
+      // 엔드패널이 제거된 슬롯 너비를 복원해야 함
+      let slot1Width = slotWidths?.[0] || actualDoorWidth / 2;
+      let slot2Width = slotWidths?.[1] || actualDoorWidth / 2;
+      
+      if (slotWidths && slotWidths.length >= 2) {
+        // 첫 번째 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+        if (slotIndex === 0) {
+          slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
+          slot2Width = slotWidths[1];
+        }
+        // 마지막 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+        else if (columnCount && slotIndex === columnCount - 2) {
+          slot1Width = slotWidths[0];
+          slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
+        }
+        // 중간 슬롯인 경우: 실제 값 사용
+        else {
+          slot1Width = slotWidths[0];
+          slot2Width = slotWidths[1];
+        }
+      }
+      
+      // 도어 전체 너비 계산
+      totalWidth = slot1Width + slot2Width;
+      
+      // 첫 번째 슬롯: 엔드패널 쪽으로 이동
+      if (slotIndex === 0) {
+        doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm (엔드패널 쪽)
+      }
+      // 마지막 슬롯: 엔드패널 쪽으로 이동 
+      // 듀얼 가구는 2개 슬롯을 차지하므로 columnCount - 2가 마지막 듀얼 가구가 시작하는 슬롯
+      else if (columnCount && slotIndex === columnCount - 2) {
+        doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm (엔드패널 쪽)
+      }
+      
+      // 노서라운드 도어 크기: 1200mm 기준 균등분할
+      const doorGap = 3; // 도어 사이 간격
+      const edgeGap = 1.5; // 양쪽 끝 간격
+      leftDoorWidth = (totalWidth - doorGap - 2 * edgeGap) / 2;  // 597mm
+      rightDoorWidth = (totalWidth - doorGap - 2 * edgeGap) / 2; // 597mm
     } else {
-      // fallback: 균등분할
-      const doorWidth = (totalWidth - 6) / 2;
-      leftDoorWidth = doorWidth;
-      rightDoorWidth = doorWidth;
+      // 서라운드 모드: 일반 도어
+      const doorGap = 6; // 도어 사이 간격 (각 3mm씩)
+      leftDoorWidth = (totalWidth - doorGap) / 2;
+      rightDoorWidth = (totalWidth - doorGap) / 2;
     }
+    
+    console.log('🚪 듀얼 도어:', {
+      totalWidth,
+      leftDoorWidth,
+      rightDoorWidth,
+      doorAdjustment,
+      slotIndex,
+      columnCount,
+      isFirstSlot: slotIndex === 0,
+      isLastSlot: slotIndex === columnCount - 2,
+      slotWidths,
+      correctedSlotWidths: spaceInfo.surroundType === 'no-surround' ? 
+        [slotIndex === 0 ? (slotWidths?.[0] || 0) + endPanelThickness : (slotWidths?.[0] || 0), 
+         columnCount && slotIndex === columnCount - 2 ? (slotWidths?.[1] || 0) + endPanelThickness : (slotWidths?.[1] || 0)] : 
+        slotWidths,
+      surroundType: spaceInfo.surroundType
+    });
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
-    // 도어 위치 계산 (개별 슬롯 너비 기반)
-    const leftSlotWidth = slotWidths?.[0] || totalWidth / 2;
-    const rightSlotWidth = slotWidths?.[1] || totalWidth / 2;
+    // 도어 위치 계산
+    let leftDoorCenter, rightDoorCenter;
     
-    const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
-    const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
+    // 노서라운드: 1200mm 기준으로 배치
+    // 서라운드: 1182mm 기준으로 배치
+    const doorGap = 3;
+    const edgeGap = 1.5;
     
-    const leftXOffset = mmToThreeUnits(leftSlotCenter);
-    const rightXOffset = mmToThreeUnits(rightSlotCenter);
+    // 도어 위치는 전체 너비 기준으로 계산
+    // doorAdjustment가 도어 그룹 전체를 이동시킴
+    leftDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth / 2;
+    rightDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth + doorGap + rightDoorWidth / 2;
+    
+    // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
+    
+    const leftXOffset = mmToThreeUnits(leftDoorCenter);
+    const rightXOffset = mmToThreeUnits(rightDoorCenter);
     
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
+    // 노서라운드 모드에서 도어 그룹 전체 위치 보정
+    if (spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
+      doorGroupX += mmToThreeUnits(doorAdjustment);
+      console.log('🚪 노서라운드 듀얼 도어 그룹 위치 보정 적용:', {
+        slotIndex,
+        columnCount,
+        isFirstSlot: slotIndex === 0,
+        isLastSlot: slotIndex === columnCount - 2,
+        기존doorGroupX: slotCenterX || 0,
+        doorAdjustment_mm: doorAdjustment,
+        doorAdjustment_units: mmToThreeUnits(doorAdjustment),
+        새doorGroupX: doorGroupX,
+        설명: doorAdjustment > 0 ? '오른쪽으로 이동 (마지막 슬롯)' : '왼쪽으로 이동 (첫 슬롯)'
+      });
+    }
+
     console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
       slotWidths,
+      slotIndex,
+      columnCount,
+      isLastSlot: slotIndex === columnCount - 2,
       leftDoorWidth,
       rightDoorWidth,
+      doorAdjustment,
+      doorGroupX,
+      doorGroupX_mm: doorGroupX / 0.01,
       mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
       leftXOffset: leftXOffset.toFixed(3),
       rightXOffset: rightXOffset.toFixed(3),
       leftHingeX: leftHingeX.toFixed(3),
-      rightHingeX: rightHingeX.toFixed(3),
-      doorGroupX: doorGroupX
+      rightHingeX: rightHingeX.toFixed(3)
     });
 
     return (
@@ -1137,14 +1223,46 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
-    // 문의 폭 = 원래 슬롯 전체 폭 - 3mm (갭)
-    const doorWidth = actualDoorWidth - 3; // 슬롯사이즈 - 3mm
+    // 노서라운드 모드에서는 엔드패널을 고려
+    let doorWidth = actualDoorWidth - 3; // 기본: 슬롯사이즈 - 3mm
+    
+    // 노서라운드 모드에서 첫번째/마지막 슬롯 처리
+    // 싱글 도어는 가구 크기에 맞춤 (엔드패널 미포함)
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 첫 번째 슬롯: 위치만 조정 (크기는 582mm 유지)
+      if (slotIndex === 0) {
+        doorWidth = actualDoorWidth - 3; // 582 - 3 = 579mm
+        doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+      }
+      // 마지막 슬롯: 위치만 조정 (크기는 582mm 유지)
+      else if (columnCount && slotIndex === columnCount - 1) {
+        doorWidth = actualDoorWidth - 3; // 582 - 3 = 579mm
+        doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+      }
+      // 중간 슬롯: 일반 처리
+      else {
+        doorWidth = actualDoorWidth - 3; // 600 - 3 = 597mm
+      }
+    }
+    
     const doorWidthUnits = mmToThreeUnits(doorWidth);
+    
+    // 노서라운드 모드에서 도어 그룹 위치 보정
+    if (spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
+      doorGroupX += mmToThreeUnits(doorAdjustment);
+    }
     
     console.log('🚪 싱글 도어 크기:', {
       actualDoorWidth,
       doorWidth,
       originalSlotWidth,
+      slotIndex,
+      columnCount,
+      isFirstSlot: slotIndex === 0,
+      isLastSlot: slotIndex === columnCount - 1,
+      doorAdjustment,
+      doorGroupX,
+      surroundType: spaceInfo.surroundType,
       fallbackColumnWidth: indexing.columnWidth,
       moduleDataId: moduleData?.id
     });

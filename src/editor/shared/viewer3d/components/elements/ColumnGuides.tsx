@@ -379,14 +379,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         프레임정보: spaceInfo.frameSize
       });
       
-      // 2D 정면 뷰에서도 단내림이 있는 경우 각 영역의 실제 경계 사용
-      // 단내림이 없는 경우에만 내경 범위로 클리핑
-      const startBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
-        ? Math.max(zoneStartX, internalStartX) 
-        : zoneStartX;
-      const endBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
-        ? Math.min(zoneEndX, internalEndX) 
-        : zoneEndX;
+      // 2D 정면 뷰에서는 전체 너비 사용
+      const startBoundaryX = zoneStartX;
+      const endBoundaryX = zoneEndX;
       
       // 바닥 가이드
       guides.push(

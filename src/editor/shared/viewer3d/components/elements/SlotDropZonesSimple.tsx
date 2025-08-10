@@ -1164,11 +1164,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
         
         if (hasLeftEndPanel || hasRightEndPanel) {
-          console.log('🚫 듀얼 가구 배치 차단!');
-          showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
-            title: '배치 불가' 
-          });
-          return false;
+          console.log('✅ 엔드패널 구간 듀얼 가구 배치 허용');
+          // 엔드패널 구간의 듀얼 가구는 허용
         }
       }
       
@@ -1308,11 +1305,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       if (hasLeftEndPanel || hasRightEndPanel) {
-        console.log('🚫 듀얼 가구 배치 차단 (non-dropped)!');
-        showAlert('듀얼 캐비닛은 커버 도어 적용이 불가합니다. 다른 슬롯에 배치하거나 싱글 캐비닛으로 변경해 주세요.', { 
-          title: '배치 불가' 
-        });
-        return false;
+        console.log('✅ 엔드패널 구간 듀얼 가구 배치 허용 (non-dropped)');
+        // 엔드패널 구간의 듀얼 가구는 허용
       }
     }
     

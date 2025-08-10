@@ -39,9 +39,10 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         oldIndexing.columnWidth === newIndexing.columnWidth;
       
       if (isOnlyWallPositionChange) {
-        console.log('🔄 세미스탠딩 벽 위치만 변경됨 - 가구 너비 유지');
-        // 벽 위치만 변경된 경우 가구를 그대로 반환
-        return currentModules;
+        console.log('🔄 세미스탠딩 벽 위치만 변경됨 - 가구 너비는 유지하되 위치는 재계산 필요');
+        // 벽 위치 변경 시에도 듀얼 가구의 경우 엔드패널 정렬이 달라질 수 있으므로
+        // 전체 가구 위치를 재계산해야 함
+        // return currentModules; // 이 부분을 제거하여 아래 로직이 실행되도록 함
       }
       
       // 컬럼 변경이 있을 때만 로그 출력
@@ -296,6 +297,35 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           if (isDualModule && newIndexing.threeUnitDualPositions) {
             // 듀얼 가구: 듀얼 위치 배열 사용
             newX = newIndexing.threeUnitDualPositions[slotIndex];
+            
+            // 노서라운드 모드에서 엔드패널 슬롯의 듀얼 가구는 위치 조정이 필요함
+            // FurnitureItem에서도 동일한 조정을 적용하므로 여기서 미리 적용
+            if (newSpaceInfo.surroundType === 'no-surround') {
+              const isLastSlotForDual = slotIndex === newIndexing.columnCount - 2;
+              
+              if (slotIndex === 0 && 
+                  (newSpaceInfo.installType === 'freestanding' || 
+                   (newSpaceInfo.installType === 'semistanding' && newSpaceInfo.wallConfig?.right))) {
+                // 첫 번째 슬롯: 우측으로 엔드패널 두께의 절반만큼 이동 (좌측 엔드패널 정렬)
+                // FurnitureItem에서도 동일한 조정이 적용되므로 여기서는 적용하지 않음
+                console.log('🔄 듀얼 가구 첫번째 슬롯 (공간 변경) - FurnitureItem에서 엔드패널 조정 예정');
+              } else if (isLastSlotForDual && 
+                        (newSpaceInfo.installType === 'freestanding' || 
+                         (newSpaceInfo.installType === 'semistanding' && newSpaceInfo.wallConfig?.left))) {
+                // 마지막 슬롯: 좌측으로 엔드패널 두께의 절반만큼 이동 (우측 엔드패널 정렬)
+                // FurnitureItem에서도 동일한 조정이 적용되므로 여기서는 적용하지 않음
+                console.log('🔄 듀얼 가구 마지막 슬롯 (공간 변경) - FurnitureItem에서 엔드패널 조정 예정');
+              }
+            }
+            
+            console.log('🔄 듀얼 가구 위치 (공간 변경):', {
+              slotIndex,
+              newX,
+              surroundType: newSpaceInfo.surroundType,
+              installType: newSpaceInfo.installType,
+              wallConfig: newSpaceInfo.wallConfig,
+              설명: '기본 경계 위치 사용 (FurnitureItem에서 엔드패널 조정 적용)'
+            });
           } else {
             // 싱글 가구: 일반 위치 배열 사용
             newX = newIndexing.threeUnitPositions[slotIndex];

@@ -1939,9 +1939,9 @@ const Room: React.FC<RoomProps> = ({
           return (
             <group 
               position={[
-                xOffset + frameThickness.left - mmToThreeUnits(10),
+                xOffset + frameThickness.left - mmToThreeUnits(10) + mmToThreeUnits(1), // 우측으로 1mm 이동
                 droppedCenterY, 
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
@@ -1963,9 +1963,9 @@ const Room: React.FC<RoomProps> = ({
         return (
           <group 
             position={[
-              xOffset + frameThickness.left - mmToThreeUnits(10),
+              xOffset + frameThickness.left - mmToThreeUnits(10) + mmToThreeUnits(1), // 우측으로 1mm 이동
               sideFrameCenterY, 
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
             ]}
             rotation={[0, Math.PI / 2, 0]}
           >
@@ -2006,9 +2006,9 @@ const Room: React.FC<RoomProps> = ({
           return (
             <group 
               position={[
-                xOffset + width - frameThickness.right + mmToThreeUnits(10),
+                xOffset + width - frameThickness.right + mmToThreeUnits(10) - mmToThreeUnits(1), // 왼쪽으로 1mm 이동
                 droppedCenterY, 
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
@@ -2030,9 +2030,9 @@ const Room: React.FC<RoomProps> = ({
         return (
           <group 
             position={[
-              xOffset + width - frameThickness.right + mmToThreeUnits(10),
+              xOffset + width - frameThickness.right + mmToThreeUnits(10) - mmToThreeUnits(1), // 왼쪽으로 1mm 이동
               sideFrameCenterY, 
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
             ]}
             rotation={[0, Math.PI / 2, 0]}
           >
