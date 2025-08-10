@@ -1753,13 +1753,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         if (intersects.length > 0) {
           // 가장 가까운 콜라이더의 zone 정보 사용
-          const closestCollider = intersects[0].object;
-          detectedZone = closestCollider.userData?.zone || 'normal';
-          
+          const closestCollider = intersects[0].object as any;
+          const colliderUserData = closestCollider?.userData;
+          detectedZone = colliderUserData?.zone || 'normal';
+
           console.log('🔍 Zone 감지 (레이캐스트):', {
             slotIndex,
             detectedZone,
-            colliderData: closestCollider.userData,
+            colliderData: colliderUserData,
             distance: intersects[0].distance
           });
         } else {
@@ -1806,15 +1807,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 단내림 구간일 경우 영역별 가구 확인
         const isAvailable = (() => {
-          if (spaceInfo.droppedCeiling?.enabled && colliderUserData?.zone) {
+          // 레이캐스트로 검출한 영역 정보가 있으면 그 영역을 기준으로 가용성 검사를 수행
+          if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
             // 영역별 컬럼 수 가져오기
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const targetZone = colliderUserData.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+            const targetZone = detectedZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
             
             // 듀얼 가구가 영역 경계를 넘어가는지 체크
             if (isDual && slotIndex + 1 >= targetZone.columnCount) {
               console.log('🚫 Hover: 듀얼 가구가 영역 경계를 넘어감:', {
-                zone: colliderUserData.zone,
+                zone: detectedZone,
                 slotIndex,
                 targetZoneColumnCount: targetZone.columnCount,
                 필요한슬롯: [slotIndex, slotIndex + 1],
@@ -1824,11 +1826,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             }
             
             // 단내림 구간: 동일 영역의 가구만 확인
-            const zoneModules = placedModules.filter(m => m.zone === colliderUserData?.zone);
+            const zoneModules = placedModules.filter(m => m.zone === detectedZone);
             
             // 단내림 구간 슬롯 점유 상태 로깅
             console.log('🏗️ 단내림 구간 슬롯 점유 상태 (hover):', {
-              zone: colliderUserData?.zone,
+              zone: detectedZone,
               currentSlot: slotIndex,
               isDualDragging: isDual,
               targetSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
