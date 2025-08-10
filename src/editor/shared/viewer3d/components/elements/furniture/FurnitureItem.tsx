@@ -886,7 +886,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 노서라운드 모드에서 커버도어의 힌지 위치 조정
   if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlot = placedModule.slotIndex === 0;
-    const isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
+    // 듀얼 가구는 2개 슬롯을 차지하므로 다르게 판단
+    const isLastSlot = isDualFurniture 
+      ? placedModule.slotIndex + 2 >= indexing.columnCount
+      : placedModule.slotIndex === indexing.columnCount - 1;
     
     if (spaceInfo.installType === 'freestanding') {
       if (isFirstSlot) {
@@ -1314,7 +1317,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 const hasLeftEndPanel = placedModule.slotIndex === 0 && 
                   (spaceInfo.installType === 'freestanding' || 
                    (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
-                const isLastSlot = placedModule.slotIndex === (indexing.columnCount - 1);
+                // 듀얼 가구는 2개 슬롯을 차지하므로 다르게 판단
+                const isLastSlot = isDualFurniture 
+                  ? placedModule.slotIndex + 2 >= indexing.columnCount
+                  : placedModule.slotIndex === indexing.columnCount - 1;
                 const hasRightEndPanel = isLastSlot && 
                   (spaceInfo.installType === 'freestanding' || 
                    (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
