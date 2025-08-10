@@ -76,8 +76,8 @@ const BoxWithEdges: React.FC<{
               viewMode === '3D' 
                 ? "#505050"
                 : renderMode === 'wireframe' 
-                  ? (viewMode === '2D' ? "#ff5500" : (theme?.mode === 'dark' ? "#ffffff" : "#333333")) 
-                  : (theme?.mode === 'dark' ? "#cccccc" : "#444444")
+                  ? "#ff5500"  // 2D wireframe 모드에서는 항상 테마 색상
+                  : "#444444"  // 2D solid 모드
             }
             transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
             opacity={

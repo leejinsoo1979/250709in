@@ -61,45 +61,30 @@ const BoxWithEdges: React.FC<{
   
   return (
     <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh 
-          geometry={geometry} 
-          material={processedMaterial}
-          receiveShadow={viewMode === '3D' && !isEditMode} 
-          castShadow={viewMode === '3D' && !isEditMode}
-          renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
-          onClick={onClick}
-          onPointerOver={onPointerOver}
-          onPointerOut={onPointerOut}
+      {/* 면 렌더링 */}
+      <mesh 
+        geometry={geometry} 
+        material={processedMaterial}
+        receiveShadow={viewMode === '3D' && renderMode === 'solid' && !isEditMode} 
+        castShadow={viewMode === '3D' && renderMode === 'solid' && !isEditMode}
+        renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
+        onClick={onClick}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+      />
+      {/* 윤곽선 렌더링 */}
+      <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 900}>
+        <lineBasicMaterial 
+          color={
+            viewMode === '2D'
+              ? "#00FF00"  // 2D는 항상 초록색
+              : renderMode === 'wireframe'
+                ? "#808080"  // 3D 와이어프레임: 회색
+                : "#505050"  // 3D solid: 진한 회색
+          }
+          linewidth={viewMode === '2D' ? 3 : 1}
         />
-      )}
-      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
-      {viewMode === '3D' ? (
-        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 0}>
-          <lineBasicMaterial 
-            color={isEditMode ? getThemeColor() : "#505050"}
-            transparent={true}
-            opacity={isEditMode ? 0.3 : 0.9}
-            depthTest={true}
-            depthWrite={false}
-            polygonOffset={true}
-            polygonOffsetFactor={-10}
-            polygonOffsetUnits={-10}
-          />
-        </lineSegments>
-      ) : (
-        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments geometry={edgesGeometry} renderOrder={900}>
-            <lineBasicMaterial 
-              color={viewMode === '2D' ? "#00FF00" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))} 
-              linewidth={viewMode === '2D' ? 3 : 0.5}
-              depthTest={false}
-              depthWrite={false}
-            />
-          </lineSegments>
-        )
-      )}
+      </lineSegments>
     </group>
   );
 };
@@ -246,9 +231,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.opacity = 1.0;
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
+          mat.map = null;  // 텍스처 제거
+          mat.color.set(doorColor);  // 도어 색상으로 설정
           mat.transparent = true;
-          mat.opacity = 0.3;
-          mat.depthWrite = true;
+          mat.opacity = viewMode === '3D' ? 0.5 : 0.0;  // 2D에서는 완전 투명, 3D에서는 반투명
+          mat.depthWrite = false;
+          mat.side = THREE.DoubleSide;
+          mat.emissive = new THREE.Color(0x000000);
+          mat.emissiveIntensity = 0;
         } else if (isSelected) {
           mat.transparent = true;
           mat.opacity = 0.5;
@@ -341,8 +331,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       materialConfig
     });
     
-    // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용 (성능 최적화)
-    if (!isDragging && !isEditMode) {
+    // 드래그 중이거나 편집 모드, 와이어프레임 모드가 아닐 때만 텍스처 적용 (성능 최적화)
+    if (!isDragging && !isEditMode && renderMode !== 'wireframe') {
       // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
       if (doorMaterial) {
         applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
@@ -356,7 +346,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     
     // Three.js가 자동으로 업데이트하도록 함
-  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // 필요한 의존성 추가
+  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode, renderMode]); // 필요한 의존성 추가
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
@@ -1457,19 +1447,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               onPointerOver={handleDoorPointerOver}
               onPointerOut={handleDoorPointerOut}
             />
-            {/* 윤곽선 */}
-            <lineSegments>
-              <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
-              <lineBasicMaterial 
-                color={
-                  viewMode === '2D' && renderMode === 'wireframe'
-                    ? getThemeColor()
-                    : (viewMode === '3D' ? "#505050" : "#666666")
-                } 
-                transparent={viewMode === '3D'}
-                opacity={viewMode === '3D' ? 0.9 : 1}
-              />
-            </lineSegments>
+            {/* 윤곽선 - 제거 (BoxWithEdges에서 이미 처리됨) */}
             
             {/* 도어 열리는 방향 표시 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (

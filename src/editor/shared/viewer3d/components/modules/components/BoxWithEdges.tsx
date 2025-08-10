@@ -14,6 +14,9 @@ interface BoxWithEdgesProps {
   isEditMode?: boolean; // 편집 모드 여부 추가
   hideEdges?: boolean; // 엣지 숨김 옵션 추가
   isBackPanel?: boolean; // 백패널 여부 추가
+  onClick?: (e: any) => void;
+  onPointerOver?: (e: any) => void;
+  onPointerOut?: (e: any) => void;
 }
 
 /**
@@ -28,7 +31,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   isDragging = false,
   isEditMode = false,
   hideEdges = false,
-  isBackPanel = false 
+  isBackPanel = false,
+  onClick,
+  onPointerOver,
+  onPointerOut
 }) => {
   const { viewMode } = useSpace3DView();
   const { view2DDirection } = useUIStore(); // view2DDirection 추가
@@ -101,16 +107,19 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
-      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid'} castShadow={viewMode === '3D' && renderMode === 'solid'}>
+      <mesh 
+        receiveShadow={viewMode === '3D' && renderMode === 'solid'} 
+        castShadow={viewMode === '3D' && renderMode === 'solid'}
+        onClick={onClick}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+      >
         <boxGeometry args={args} />
         {renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 완전히 투명한 재질
-          <meshBasicMaterial transparent={true} opacity={0} />
-        ) : viewMode === '2D' ? (
-          <meshStandardMaterial 
-            {...(processedMaterial as THREE.MeshStandardMaterial)}
-            transparent={true}
-            opacity={0.5}
+          <meshBasicMaterial 
+            transparent={true} 
+            opacity={0}
           />
         ) : (
           <primitive object={processedMaterial} attach="material" />
@@ -123,9 +132,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <lineBasicMaterial 
             color={
               viewMode === '3D' 
-                ? "#505050"
+                ? "#505050"  // 3D에서는 항상 회색
                 : renderMode === 'wireframe' 
-                  ? (viewMode === '2D' ? "#ff5500" : (theme?.mode === 'dark' ? "#ffffff" : "#333333")) 
+                  ? "#ff5500"  // 2D wireframe 모드에서는 테마 색상
                   : (view2DTheme === 'dark' ? "#999999" : "#444444")
             }
             transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
@@ -133,7 +142,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
               isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
                 ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
                 : viewMode === '3D' 
-                  ? 0.9 
+                  ? 0.9
                   : 1
             }
             depthTest={viewMode === '3D'}

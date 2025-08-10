@@ -146,16 +146,19 @@ const BoxWithEdges: React.FC<{
       <lineSegments geometry={edgesGeometry}>
         <lineBasicMaterial 
           color={
-            // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
-            viewMode === '2D' && isEndPanel 
-              ? "#00FF00" // 연두색 (도어 색상)
-              : renderMode === 'wireframe' 
-                ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") 
-                : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
+            // 3D 모드에서는 가구와 동일한 회색
+            viewMode === '3D'
+              ? "#505050"
+              // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
+              : viewMode === '2D' && isEndPanel 
+                ? "#00FF00" // 연두색 (도어 색상)
+                : renderMode === 'wireframe' 
+                  ? "#ff5500" // 2D wireframe에서는 주황색 (가구와 동일)
+                  : (view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
           } 
           linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
-          opacity={1.0}
-          transparent={false}
+          opacity={viewMode === '3D' ? 0.9 : 1.0}
+          transparent={viewMode === '3D'}
         />
       </lineSegments>
     </group>
@@ -412,7 +415,7 @@ const Room: React.FC<RoomProps> = ({
       emissive: new THREE.Color(isHighlighted ? highlightEmissive : 0x000000),  // 강조 시 자체발광 추가
       emissiveIntensity: isHighlighted ? 1.0 : 0.0, // 강조 시 발광 강도
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted || baseFrameTransparent,  // 강조 시에도 투명하게
-      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
+      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서는 완전 투명
     });
 
     // 프레임 텍스처 적용 (강조되지 않은 경우에만)
