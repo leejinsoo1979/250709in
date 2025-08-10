@@ -7,7 +7,7 @@ import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { getSlotIndexFromMousePosition as getSlotIndexFromRaycast } from '../../../../utils/slotRaycast';
+import { getSlotIndexFromMousePosition as getSlotIndexFromRaycast, getSlotIndexAndZoneFromMousePosition } from '../../../../utils/slotRaycast';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
@@ -39,7 +39,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   }, [invalidate]);
 
   // 가구 충돌 감지 함수
-  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number, targetSlotInfo: any) => {
+  const detectFurnitureCollisions = useCallback((
+    movingModuleId: string,
+    newSlotIndex: number,
+    targetSlotInfo: any,
+    targetZone?: 'normal' | 'dropped',
+    treatAsDual?: boolean
+  ) => {
     const movingModule = placedModules.find(m => m.id === movingModuleId);
     if (!movingModule) return [];
 
@@ -48,9 +54,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     const indexing = calculateSpaceIndexing(spaceInfo);
     const columnWidth = indexing.columnWidth;
-    // 이동하는 가구의 isDualSlot 속성을 우선 사용
-    const isDualFurniture = movingModule.isDualSlot !== undefined ? movingModule.isDualSlot :
-                           Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+    // 이동하는 가구의 isDual 여부: 호출 측에서 강제 지정되면 우선 사용
+    const isDualFurniture = typeof treatAsDual === 'boolean'
+      ? treatAsDual
+      : (movingModule.isDualSlot !== undefined
+          ? movingModule.isDualSlot
+          : Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50);
 
     // 이동하는 가구가 차지할 슬롯들 계산
     let occupiedSlots: number[] = [];
@@ -72,10 +81,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     // 충돌하는 다른 가구들 찾기
     const collidingModules: string[] = [];
     
-    // 단내림 구간에서는 동일 zone의 가구만 충돌 검사
-    const modulesToCheck = movingModule.zone 
-      ? placedModules.filter(m => m.zone === movingModule.zone)
-      : placedModules;
+    // 충돌 검사 대상: 대상 zone이 지정되면 그 zone의 가구만, 아니면 전체
+    const modulesToCheck = targetZone
+      ? placedModules.filter(m => m.zone === targetZone)
+      : (movingModule.zone ? placedModules.filter(m => m.zone === movingModule.zone) : placedModules);
     
     modulesToCheck.forEach(module => {
       if (module.id === movingModuleId) return; // 자기 자신 제외
@@ -178,35 +187,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const currentModule = placedModules.find(m => m.id === draggingModuleId);
     if (!currentModule) return;
     
-    // 단내림이 활성화되고 zone이 있는 경우에만 zone 전달
-    const targetZone = spaceInfo.droppedCeiling?.enabled && currentModule.zone 
-      ? currentModule.zone 
-      : undefined;
-    
-    let slotIndex = getSlotIndexFromRaycast(
-      event.nativeEvent.clientX, 
-      event.nativeEvent.clientY, 
+    // 영역 제한 없이 슬롯과 소속 영역을 함께 탐지하여
+    // 노멀 ↔ 단내림 구간을 가로지르는 이동을 허용
+    const { slotIndex, zone: detectedZone } = getSlotIndexAndZoneFromMousePosition(
+      event.nativeEvent.clientX,
+      event.nativeEvent.clientY,
       canvas,
       camera,
       scene,
-      spaceInfo,
-      targetZone  // activeDroppedCeilingTab 대신 가구의 zone 정보 사용
+      spaceInfo
     );
     
     if (slotIndex !== null) {
       // currentModule은 이미 위에서 정의됨
       
       // 단내림이 활성화된 경우 영역 체크
-      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+      if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        
-        // 레이캐스트로 받은 slotIndex는 이미 영역별 로컬 인덱스
-        // targetZone에 맞는 영역인지만 확인
         
         // 듀얼 가구인지 먼저 확인
         const checkIsDual = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot : false;
         
-        if (currentModule.zone === 'normal') {
+        if (detectedZone === 'normal') {
           const maxSlotForDual = checkIsDual ? zoneInfo.normal.columnCount - 1 : zoneInfo.normal.columnCount;
           if (slotIndex >= maxSlotForDual) {
             console.log('❌ 메인구간 가구: 유효하지 않은 슬롯 인덱스', {
@@ -217,7 +219,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
             });
             return;
           }
-        } else if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
+        } else if (detectedZone === 'dropped' && zoneInfo.dropped) {
           const maxSlotForDual = checkIsDual ? zoneInfo.dropped.columnCount - 1 : zoneInfo.dropped.columnCount;
           if (slotIndex >= maxSlotForDual) {
             console.log('❌ 단내림구간 가구: 유효하지 않은 슬롯 인덱스', {
@@ -231,20 +233,21 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
         
         console.log('✅ 영역별 가구 이동 검증 통과:', {
-          zone: currentModule.zone,
+          zone: detectedZone,
           slotIndex,
-          maxSlots: currentModule.zone === 'dropped' ? zoneInfo.dropped?.columnCount : zoneInfo.normal.columnCount
+          maxSlots: detectedZone === 'dropped' ? zoneInfo.dropped?.columnCount : zoneInfo.normal.columnCount
         });
       }
 
-      // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
+      // 단내림이 활성화되고 감지된 zone 정보가 있는 경우 영역별 처리
       let moduleData;
       let indexing;
       let isDualFurniture;
+      let effectiveZone: 'normal' | 'dropped' | undefined = detectedZone || undefined;
       
-      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+      if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        const targetZone = detectedZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
         
         // 영역별 spaceInfo와 internalSpace 생성
         // 단내림 영역별 외경 너비 계산 (프레임 포함)
@@ -280,6 +283,22 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // isDualSlot 속성을 우선 사용
         isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
                          Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
+
+        // 단내림(현재) → 메인(목표) 이동 시 정책 적용: 듀얼은 두 칸 이동, 불가 시 싱글로 전환
+        let forceTreatAsDual: boolean | undefined = undefined;
+        if (currentModule.zone === 'dropped' && detectedZone === 'normal' && isDualFurniture) {
+          const normalCount = zoneInfo.normal.columnCount;
+          // 두 칸 이동 가능한지 (마지막-1 미만)
+          if (slotIndex < normalCount - 1) {
+            forceTreatAsDual = true; // 우선 듀얼 유지 (두 칸)
+          } else {
+            forceTreatAsDual = false; // 마지막 슬롯이면 싱글로 전환
+          }
+          // 강제 정책을 즉시 반영하여 이후 위치/충돌 계산에 사용
+          if (typeof forceTreatAsDual === 'boolean') {
+            isDualFurniture = forceTreatAsDual;
+          }
+        }
       } else {
         // 단내림이 없는 경우 기존 로직
         moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
@@ -307,7 +326,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // slotIndex는 이미 영역별 로컬 인덱스이므로 직접 사용
         const zoneSlotIndex = slotIndex;
         
-        if (currentModule.zone === 'dropped' && fullIndexing.zones?.dropped) {
+        if (detectedZone === 'dropped' && fullIndexing.zones?.dropped) {
           // 단내림 영역: 계산된 위치 사용
           const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
           
@@ -333,7 +352,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
             droppedPositions,
             finalX
           });
-        } else if (currentModule.zone === 'normal' && fullIndexing.zones?.normal) {
+        } else if (detectedZone === 'normal' && fullIndexing.zones?.normal) {
           // 메인 영역: 계산된 위치 사용
           const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
           
@@ -385,9 +404,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
       let globalSlotIndex = slotIndex;
-      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+      if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
+        if (detectedZone === 'dropped' && zoneInfo.dropped) {
           // 단내림 구간: 메인 구간 슬롯 수를 더해서 글로벌 인덱스 계산
           globalSlotIndex = zoneInfo.normal.columnCount + slotIndex;
         }
@@ -416,7 +435,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       // 충돌 감지 (기둥 슬롯 제외)
       // 단내림 구간에서는 로컬 슬롯 인덱스 사용
-      const collisionCheckIndex = currentModule.zone ? slotIndex : globalSlotIndex;
+      const collisionCheckIndex = effectiveZone ? slotIndex : globalSlotIndex;
       
       // 듀얼 가구가 차지할 슬롯 범위 로그
       if (isDualFurniture) {
@@ -429,11 +448,52 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         });
       }
       
-      const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo);
+      let treatAsDualForCollision = isDualFurniture;
+      let collidingModules = detectFurnitureCollisions(
+        draggingModuleId,
+        collisionCheckIndex,
+        targetSlotInfo,
+        effectiveZone,
+        treatAsDualForCollision
+      );
       if (collidingModules.length > 0) {
-        // 충돌하는 가구가 있으면 이동 취소
-        console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
-        return;
+        // 충돌 발생. 단내림→메인 이동에서 듀얼 강제였던 경우, 싱글 전환으로 재시도
+        if (spaceInfo.droppedCeiling?.enabled && currentModule.zone === 'dropped' && detectedZone === 'normal' && isDualFurniture) {
+          console.log('🔁 듀얼 충돌 발생, 싱글로 전환하여 재시도');
+          treatAsDualForCollision = false;
+          // 위치 재계산: 메인 영역에서 싱글 기준
+          const fullIndexing = calculateSpaceIndexing(spaceInfo);
+          if (fullIndexing.zones?.normal) {
+            const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
+            if (slotIndex < normalPositions.length) {
+              finalX = normalPositions[slotIndex];
+            }
+          }
+          // 글로벌 인덱스는 동일 (메인)
+          // 기둥 정보/충돌 재계산
+          const columnSlotsRetry = analyzeColumnSlots(spaceInfo, placedModules);
+          const targetSlotInfoRetry = columnSlotsRetry[slotIndex];
+          collidingModules = detectFurnitureCollisions(
+            draggingModuleId,
+            slotIndex,
+            targetSlotInfoRetry,
+            'normal',
+            false
+          );
+          if (collidingModules.length > 0) {
+            console.log('❌ 싱글 전환 후에도 충돌. 이동 취소', collidingModules);
+            return;
+          }
+          // 싱글 전환 적용
+          isDualFurniture = false;
+          effectiveZone = 'normal';
+          // targetSlotInfo 갱신
+          targetSlotInfo = targetSlotInfoRetry as any;
+        } else {
+          // 충돌하는 가구가 있으면 이동 취소
+          console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
+          return;
+        }
       }
 
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth와 adjustedWidth 계산
@@ -518,7 +578,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 모듈 업데이트 - zone 정보 유지 및 moduleId 업데이트
       let updatedModuleId = currentModule.moduleId;
       
-      // 이제 ID는 너비 정보를 포함하지 않으므로 변경하지 않음
+      // 단내림→메인 이동에서 싱글로 전환된 경우 ID를 single-* 로 변경
+      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone === 'dropped' && (detectedZone === 'normal' || effectiveZone === 'normal') && !isDualFurniture) {
+        const fullIndexing = calculateSpaceIndexing(spaceInfo);
+        const normalWidth = fullIndexing.zones?.normal?.slotWidths?.[slotIndex] || fullIndexing.zones?.normal?.columnWidth || fullIndexing.columnWidth;
+        updatedModuleId = currentModule.moduleId
+          .replace(/^dual-/, 'single-')
+          .replace(/-(\d+)$/, `-${normalWidth}`);
+      }
       
       // slotIndex는 이미 zone별 로컬 인덱스이므로 직접 사용
       let finalSlotIndex = slotIndex;
@@ -529,18 +596,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         customDepth: newCustomDepth,
         adjustedWidth: newAdjustedWidth, // 기둥이 없는 슬롯으로 이동 시 undefined로 설정되어야 함
         slotIndex: finalSlotIndex,
-        isDualSlot: isDualFurniture, // isDualSlot 속성 유지
-        zone: currentModule.zone, // zone 정보 유지
+        isDualSlot: isDualFurniture, // 듀얼 유지 여부 반영 (전환 시 false)
+        zone: detectedZone || currentModule.zone, // 감지된 zone으로 업데이트하여 cross-zone 이동 허용
         customWidth: (() => {
           // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
           if (targetSlotInfo && targetSlotInfo.hasColumn) {
             return undefined; // 기둥 슬롯에서는 adjustedWidth만 사용
           }
           // zone별로 다른 슬롯 너비 사용
-          if (currentModule.zone && spaceInfo.droppedCeiling?.enabled) {
+          if (detectedZone && spaceInfo.droppedCeiling?.enabled) {
             const fullIndexing = calculateSpaceIndexing(spaceInfo);
             
-            if (currentModule.zone === 'dropped' && fullIndexing.zones?.dropped?.slotWidths) {
+            if (detectedZone === 'dropped' && fullIndexing.zones?.dropped?.slotWidths) {
               const droppedSlotWidths = fullIndexing.zones.dropped.slotWidths;
               if (isDualFurniture && finalSlotIndex < droppedSlotWidths.length - 1) {
                 // 듀얼 가구: 두 슬롯의 실제 너비 합계
@@ -549,7 +616,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
                 // 싱글 가구: 해당 슬롯의 실제 너비
                 return droppedSlotWidths[finalSlotIndex];
               }
-            } else if (currentModule.zone === 'normal' && fullIndexing.zones?.normal?.slotWidths) {
+            } else if (detectedZone === 'normal' && fullIndexing.zones?.normal?.slotWidths) {
               const normalSlotWidths = fullIndexing.zones.normal.slotWidths;
               if (isDualFurniture && finalSlotIndex < normalSlotWidths.length - 1) {
                 // 듀얼 가구: 두 슬롯의 실제 너비 합계
@@ -562,7 +629,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
             
             // fallback: zone의 평균 슬롯 너비
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped 
+            const targetZone = (detectedZone === 'dropped' && zoneInfo.dropped) 
               ? zoneInfo.dropped 
               : zoneInfo.normal;
             return targetZone.columnWidth;

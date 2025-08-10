@@ -65,7 +65,6 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
-          doorXOffset={0}
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX}
           moduleData={moduleData}

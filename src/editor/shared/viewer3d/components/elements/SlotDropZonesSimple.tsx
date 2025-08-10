@@ -208,34 +208,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     }
     
-    // 클릭-앤-플레이스 모드와 드래그 모드 모두 지원
-    const activeModuleData = currentDragData;
-    
-    if (!activeModuleData) {
-      console.log('❌ No currentDragData available');
-      return false;
-    }
-    
-    // HTML5 드래그 데이터 가져오기
-    let dragData;
+    // HTML5 드래그 데이터 우선 파싱 → 없으면 스토어의 currentDragData 사용
+    let dragData: any = null;
     try {
       const dragDataString = dragEvent.dataTransfer?.getData('application/json');
       console.log('📋 Drag data string:', dragDataString);
-      
-      if (!dragDataString) {
-        console.log('❌ No drag data string from dataTransfer');
-        // Fallback to activeModuleData (currentDragData)
-        dragData = activeModuleData;
-      } else {
+      if (dragDataString) {
         dragData = JSON.parse(dragDataString);
       }
-      
-      console.log('📦 Parsed drag data:', dragData);
     } catch (error) {
       console.error('Error parsing drag data:', error);
-      // Fallback to activeModuleData
-      dragData = activeModuleData;
     }
+    // 데이터 전송이 없으면 currentDragData로 대체
+    if (!dragData) {
+      dragData = currentDragData;
+    }
+    console.log('📦 Effective drag data:', dragData);
     
     if (!dragData || dragData.type !== 'furniture') {
       return false;
@@ -603,7 +591,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
       
       // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
-      const isDual = dragData.moduleData.id.startsWith('dual-');
+      let isDual = dragData.moduleData.id.startsWith('dual-');
       
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
@@ -633,16 +621,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }))
       });
       
-      // getModuleById를 사용하여 정확한 너비의 가구 생성
-      const moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
+      // getModuleById를 사용하여 정확한 너비의 가구 생성 (드롭존 내부 기준)
+      let moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
       
+      // 드롭존 높이/필터로 인해 모듈을 찾지 못한 경우 전역 기준으로 재시도
       if (!moduleData) {
-        console.error('❌ 가구를 찾을 수 없음:', {
-          targetModuleId,
-          targetWidth,
-          zoneToUse
-        });
-        return false;
+        console.warn('⚠️ 영역 기준 모듈 미존재. 전역 기준으로 재시도:', { targetModuleId, zone: zoneToUse });
+        moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
+      }
+      
+      // 그래도 없으면 원본 드래그 모듈로 대체하고 customWidth로 폭을 맞춤
+      if (!moduleData) {
+        console.warn('⚠️ 전역 기준에도 모듈 미존재. 드래그 원본 모듈로 대체 후 customWidth 사용:', { targetModuleId });
+        moduleData = dragData.moduleData;
       }
       
       
@@ -657,7 +648,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           필요한슬롯: [zoneSlotIndex, zoneSlotIndex + 1],
           영역범위: `0 ~ ${targetZone.columnCount - 1}`
         });
-        return false;
+        // 마지막 슬롯 등 두 칸 확보 불가: 싱글로 자동 전환 시도
+        console.log('🔁 듀얼 → 싱글 자동 전환 (경계)');
+        const singleTargetWidth = zoneIndexing.slotWidths?.[zoneSlotIndex] || zoneIndexing.columnWidth;
+        const singleTargetModuleId = `${moduleBaseType}-${singleTargetWidth}`;
+        moduleData = getModuleById(singleTargetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo)
+          || getModuleById(singleTargetModuleId, internalSpace, spaceInfo)
+          || dragData.moduleData;
+        isDual = false;
       }
       
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
@@ -677,7 +675,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }))
       });
 
-      const hasSlotConflict = zoneExistingModules.some(m => {
+      let hasSlotConflict = zoneExistingModules.some(m => {
         if (isDual) {
           // 듀얼 가구는 2개 슬롯 차지
           let conflict = false;
@@ -734,8 +732,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       if (hasSlotConflict) {
-        console.log('❌ 슬롯 충돌로 배치 불가');
-        return false;
+        if (isDual) {
+          // 듀얼 충돌: 싱글로 자동 전환 후 재검사
+          console.log('🔁 듀얼 충돌 → 싱글로 재시도');
+          const singleTargetWidth = zoneIndexing.slotWidths?.[zoneSlotIndex] || zoneIndexing.columnWidth;
+          const singleTargetModuleId = `${moduleBaseType}-${singleTargetWidth}`;
+          moduleData = getModuleById(singleTargetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo)
+            || getModuleById(singleTargetModuleId, internalSpace, spaceInfo)
+            || dragData.moduleData;
+          isDual = false;
+          hasSlotConflict = zoneExistingModules.some(m => {
+            const conflict = m.slotIndex === zoneSlotIndex ||
+                            (m.isDualSlot && (m.slotIndex === zoneSlotIndex || m.slotIndex + 1 === zoneSlotIndex));
+            return conflict;
+          });
+          if (hasSlotConflict) {
+            console.log('❌ 싱글 전환 후에도 충돌. 배치 불가');
+            return false;
+          }
+        } else {
+          console.log('❌ 슬롯 충돌로 배치 불가');
+          return false;
+        }
       }
       
       // 최종 위치 계산 - calculateSpaceIndexing에서 계산된 실제 위치 사용
@@ -2102,7 +2120,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 ? slotLocalIndex + zoneSlotInfo.normal.columnCount  // 단내림 영역은 메인 영역 이후 인덱스
                 : slotLocalIndex  // 메인 영역 또는 단내림 없는 경우
             }}
-            visible={false}
+            // 레이캐스트 가능하도록 보이게 두되, 완전 투명 머티리얼 사용
+            visible={true}
           >
             <boxGeometry args={[slotWidth, slotHeight, reducedDepth]} />
             <meshBasicMaterial transparent opacity={0} />

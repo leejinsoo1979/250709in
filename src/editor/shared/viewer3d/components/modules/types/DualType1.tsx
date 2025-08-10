@@ -66,7 +66,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
-          doorXOffset={0} // 도어 위치 고정 (커버 방식)
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX} // FurnitureItem에서 계산한 오프셋 사용

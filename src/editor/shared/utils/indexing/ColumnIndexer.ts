@@ -127,6 +127,15 @@ export class ColumnIndexer {
       const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       
+      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해)
+      // 이 부분을 듀얼 가구 위치 계산 전으로 이동
+      const baseWidth = Math.floor(internalWidth / columnCount);
+      const remainder = internalWidth % columnCount;
+      const slotWidths: number[] = [];
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+      }
+      
       // 듀얼 가구용 위치 계산
       const dualColumnPositions = [];
       const threeUnitDualPositions = [];
@@ -205,14 +214,6 @@ export class ColumnIndexer {
           const dualCenterThreeUnits = (leftSlotThreeUnits + rightSlotThreeUnits) / 2;
           zones.dropped.threeUnitDualPositions.push(dualCenterThreeUnits);
         }
-      }
-      
-      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해)
-      const baseWidth = Math.floor(internalWidth / columnCount);
-      const remainder = internalWidth % columnCount;
-      const slotWidths: number[] = [];
-      for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
       }
       
       return {

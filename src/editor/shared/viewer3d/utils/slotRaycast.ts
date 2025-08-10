@@ -94,6 +94,54 @@ export const getSlotIndexFromMousePosition = (
 };
 
 /**
+ * 마우스 위치에서 슬롯 인덱스와 소속 영역(zone)을 함께 감지
+ * - activeZone을 지정하지 않으면 모든 영역의 콜라이더를 대상으로 탐색
+ */
+export const getSlotIndexAndZoneFromMousePosition = (
+  clientX: number,
+  clientY: number,
+  canvasElement: HTMLCanvasElement,
+  camera: THREE.Camera,
+  scene: THREE.Scene,
+  spaceInfo: SpaceInfo,
+  activeZone?: 'normal' | 'dropped'
+): { slotIndex: number | null; zone: 'normal' | 'dropped' | null } => {
+  try {
+    const rect = canvasElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    const slotColliders: THREE.Object3D[] = [];
+    scene.traverse((child) => {
+      if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
+        if (activeZone && child.userData?.zone !== activeZone) return;
+        slotColliders.push(child);
+      }
+    });
+
+    const intersects = raycaster.intersectObjects(slotColliders);
+    if (intersects.length > 0) {
+      const intersectedObject: any = intersects[0].object;
+      const slotIndex = intersectedObject.userData?.slotIndex;
+      const zone = (intersectedObject.userData?.zone as 'normal' | 'dropped' | undefined) || null;
+      if (typeof slotIndex === 'number' && slotIndex >= 0) {
+        return { slotIndex, zone };
+      }
+    }
+
+    return { slotIndex: null, zone: null };
+  } catch (error) {
+    console.error('Slot raycast detection (with zone) error:', error);
+    return { slotIndex: null, zone: null };
+  }
+};
+
+/**
  * 가구가 듀얼 가구인지 판별하는 유틸리티
  */
 export const isDualFurniture = (moduleId: string, spaceInfo: SpaceInfo): boolean => {
