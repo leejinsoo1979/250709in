@@ -25,7 +25,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   adjustedWidth,
-  slotInfo
+  slotInfo,
+  showFurniture = true
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -56,25 +57,29 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   const { renderMode } = useSpace3DView();
 
   return (
-    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
-      
-      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-      {!isDragging && (
-        <SectionsRenderer
-          modelConfig={baseFurniture.modelConfig}
-          height={baseFurniture.height}
-          innerWidth={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
-          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-          basicThickness={baseFurniture.basicThickness}
-          shelfZOffset={baseFurniture.shelfZOffset}
-          material={baseFurniture.material}
-          calculateSectionHeight={baseFurniture.calculateSectionHeight}
-          renderMode={renderMode}
-        />
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+          {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+          {!isDragging && (
+            <SectionsRenderer
+              modelConfig={baseFurniture.modelConfig}
+              height={baseFurniture.height}
+              innerWidth={baseFurniture.innerWidth}
+              depth={baseFurniture.depth}
+              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+              basicThickness={baseFurniture.basicThickness}
+              shelfZOffset={baseFurniture.shelfZOffset}
+              material={baseFurniture.material}
+              calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              renderMode={renderMode}
+            />
+          )}
+        </BaseFurnitureShell>
       )}
       
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
       {hasDoor && spaceInfo && 
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
         <DoorModule
@@ -91,7 +96,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-    </BaseFurnitureShell>
+    </>
   );
 };
 

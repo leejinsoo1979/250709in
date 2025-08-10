@@ -142,34 +142,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <span 
             className={`${styles.toggleLabel} ${styles.clickable}`}
             onClick={() => {
-              
-              // 토글이 꺼져있으면 켜고 모든 항목 체크
-              if (!showDimensions) {
-                onShowDimensionsToggle();
-                // 모든 항목이 체크되어 있지 않으면 체크
-                if (!showFurniture) onShowFurnitureToggle();
-                if (!showAll) onShowAllToggle();
-                if (!showDimensionsText) onShowDimensionsTextToggle();
-                if (!showGuides) onShowGuidesToggle();
-                if (!showAxis) onShowAxisToggle();
-                return;
-              }
-              
-              // 토글이 켜져있을 때: 토글을 끄지 않고 모든 체크박스 해제
-              const anyChecked = showFurniture || showAll || showDimensionsText || showGuides || showAxis;
-              
-              if (anyChecked) {
-                // 하나라도 체크되어 있으면 모두 체크 해제
-                if (showFurniture) onShowFurnitureToggle();
-                if (showAll) onShowAllToggle();
-                if (showDimensionsText) onShowDimensionsTextToggle();
-                if (showGuides) onShowGuidesToggle();
-                if (showAxis) onShowAxisToggle();
-                // showDimensions는 끄지 않음
-              } else {
-                // 모두 체크 해제되어 있으면 토글 OFF
-                onShowDimensionsToggle();
-              }
+              // 단순히 치수 표시만 토글
+              onShowDimensionsToggle();
             }}
             style={{ cursor: 'pointer' }}
           >
@@ -178,17 +152,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
             onClick={() => {
-              
-              // 치수 토글이 켜져있으면 끄고, showDimensionsText도 함께 끄기
-              if (showDimensions) {
-                onShowDimensionsToggle();
-                if (showDimensionsText) {
-                  onShowDimensionsTextToggle();
-                }
-              } else {
-                // 치수 토글이 꺼져있으면 켜기
-                onShowDimensionsToggle();
-              }
+              // 단순히 치수 표시만 토글
+              onShowDimensionsToggle();
             }}
           >
             <div className={styles.switchHandle}></div>
@@ -197,21 +162,24 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
         {/* 체크박스 옵션들 - 항상 표시 */}
         <div className={styles.checkboxGroup}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showDimensions && showFurniture}
-              onChange={onShowFurnitureToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            가구
-          </label>
+          {/* 가구 체크박스 - 2D 모드에서만 표시 */}
+          {viewMode === '2D' && (
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showFurniture}
+                onChange={onShowFurnitureToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              가구
+            </label>
+          )}
 
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={showDimensions && showAll}
+              checked={showAll}
               onChange={onShowAllToggle}
               className={styles.checkbox}
             />
@@ -222,7 +190,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={showDimensions && showDimensionsText}
+              checked={showDimensionsText}
               onChange={onShowDimensionsTextToggle}
               className={styles.checkbox}
             />
@@ -233,7 +201,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={showDimensions && showGuides}
+              checked={showGuides}
               onChange={onShowGuidesToggle}
               className={styles.checkbox}
             />
@@ -244,7 +212,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={showDimensions && showAxis}
+              checked={showAxis}
               onChange={onShowAxisToggle}
               className={styles.checkbox}
             />

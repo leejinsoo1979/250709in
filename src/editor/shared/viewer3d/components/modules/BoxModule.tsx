@@ -34,6 +34,7 @@ interface BoxModuleProps {
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   furnitureId?: string; // 가구 ID (칸 강조용)
+  showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -70,6 +71,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   viewMode,
   renderMode,
   furnitureId,
+  showFurniture = true, // 기본값은 true (가구 표시)
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -111,6 +113,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -141,6 +144,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -171,6 +175,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -200,6 +205,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
       />
     );
   }
@@ -222,6 +228,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
       />
     );
   }
@@ -244,6 +251,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
       />
     );
   }
@@ -267,6 +275,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -297,6 +306,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        showFurniture={showFurniture} // 가구 본체 표시 여부
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -327,6 +337,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth}
         slotIndex={slotIndex}
+        showFurniture={showFurniture} // 가구 본체 표시 여부
       />
     );
   }
@@ -334,50 +345,61 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // === 2단계: 일반 폴백 케이스 (공통 로직 사용) ===
   // 나머지 케이스들을 공통 로직으로 처리
   return (
-    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
-      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-      {!isDragging && (
-        <SectionsRenderer
-          modelConfig={baseFurniture.modelConfig}
-          height={baseFurniture.height}
-          innerWidth={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
-          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-          basicThickness={baseFurniture.basicThickness}
-          shelfZOffset={baseFurniture.shelfZOffset}
-          material={baseFurniture.material}
-          calculateSectionHeight={baseFurniture.calculateSectionHeight}
-          renderMode={renderMode || useSpace3DView().renderMode}
-          furnitureId={furnitureId}
-        />
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+          {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+          {!isDragging && (
+            <SectionsRenderer
+              modelConfig={baseFurniture.modelConfig}
+              height={baseFurniture.height}
+              innerWidth={baseFurniture.innerWidth}
+              depth={baseFurniture.depth}
+              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+              basicThickness={baseFurniture.basicThickness}
+              shelfZOffset={baseFurniture.shelfZOffset}
+              material={baseFurniture.material}
+              calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              renderMode={renderMode || useSpace3DView().renderMode}
+              furnitureId={furnitureId}
+            />
+          )}
+        </BaseFurnitureShell>
       )}
       
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
-      {hasDoor && spaceInfo && (() => {
-        console.log('🚪 BoxModule 도어 렌더링:', {
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
+      {(() => {
+        console.log('🚪 BoxModule 도어 체크:', {
           moduleId: moduleData.id,
           hasDoor,
-          spaceInfo: !!spaceInfo
+          spaceInfo: !!spaceInfo,
+          showFurniture,
+          willRenderDoor: hasDoor && spaceInfo
         });
-        return true;
-      })() && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width} // 무시됨
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          doorXOffset={0} // 사용하지 않음
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX}
-          slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
-          slotIndex={slotIndex} // 슬롯 인덱스 전달
-          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-        />
-      )}
-    </BaseFurnitureShell>
+        
+        if (hasDoor && spaceInfo) {
+          return (
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width} // 무시됨
+              moduleDepth={baseFurniture.actualDepthMm}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              doorXOffset={0} // 사용하지 않음
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX}
+              slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+              slotIndex={slotIndex} // 슬롯 인덱스 전달
+              moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+            />
+          );
+        }
+        return null;
+      })()}
+    </>
   );
 };
 

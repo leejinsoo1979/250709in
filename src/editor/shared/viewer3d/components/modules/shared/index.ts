@@ -30,6 +30,7 @@ export interface FurnitureTypeProps {
   slotInfo?: any; // 슬롯 정보 (기둥 침범 여부 포함)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
+  showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

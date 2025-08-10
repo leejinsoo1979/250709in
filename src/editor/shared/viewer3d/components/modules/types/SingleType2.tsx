@@ -122,7 +122,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   adjustedWidth,
-  slotInfo
+  slotInfo,
+  showFurniture = true
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -155,9 +156,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { theme } = useTheme();
 
   return (
-    <group>
-      {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
-      {isMultiSectionFurniture() ? (
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <group>
+          {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
+          {isMultiSectionFurniture() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {getSectionHeights().map((sectionHeight: number, index: number) => {
@@ -279,8 +283,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
         />
       )}
+        </group>
+      )}
       
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
       {hasDoor && spaceInfo && 
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
         <DoorModule
@@ -297,7 +303,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           slotIndex={slotIndex}
         />
       )}
-    </group>
+    </>
   );
 };
 

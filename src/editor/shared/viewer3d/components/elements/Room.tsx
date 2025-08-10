@@ -32,6 +32,7 @@ interface RoomProps {
     doorTexture?: string;
   };
   showAll?: boolean;
+  showFurniture?: boolean; // 가구 표시 여부
   placedModules?: any[]; // 뷰어 모드용 가구 데이터
   showFrame?: boolean; // 프레임 표시 여부
   showDimensions?: boolean; // 치수 표시 여부
@@ -168,6 +169,7 @@ const Room: React.FC<RoomProps> = ({
   view2DDirection,
   materialConfig,
   showAll = true,
+  showFurniture = true,
   showFrame = true,
   placedModules,
   showDimensions,
@@ -2244,39 +2246,43 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 서브프레임 제거됨 */}
       
-      {/* 배치된 가구들 */}
-      {placedModules && placedModules.length > 0 ? (
-        // 뷰어 모드에서만 props로 전달
-        <>
-          {(() => {
-            // activeZone이 있고 단내림이 활성화된 경우 필터링
-            const filteredModules = activeZone && spaceInfo.droppedCeiling?.enabled
-              ? placedModules.filter(module => module.zone === activeZone)
-              : placedModules;
-            
-            console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
+      {/* 배치된 가구들 - showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        placedModules && placedModules.length > 0 ? (
+          // 뷰어 모드에서만 props로 전달
+          <>
+            {(() => {
+              // activeZone이 있고 단내림이 활성화된 경우 필터링
+              const filteredModules = activeZone && spaceInfo.droppedCeiling?.enabled
+                ? placedModules.filter(module => module.zone === activeZone)
+                : placedModules;
+              
+              console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
+                viewMode,
+                renderMode,
+                activeZone,
+                originalCount: placedModules?.length || 0,
+                filteredCount: filteredModules?.length || 0,
+                placedModules: filteredModules,
+                showFurniture
+              });
+              
+              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} />;
+            })()}
+          </>
+        ) : (
+          // 일반 에디터 모드에서는 props 없이
+          <>
+            {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
               viewMode,
               renderMode,
+              view2DDirection,
               activeZone,
-              originalCount: placedModules?.length || 0,
-              filteredCount: filteredModules?.length || 0,
-              placedModules: filteredModules
-            });
-            
-            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} />;
-          })()}
-        </>
-      ) : (
-        // 일반 에디터 모드에서는 props 없이
-        <>
-          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
-            viewMode,
-            renderMode,
-            view2DDirection,
-            activeZone
-          })}
-          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} />
-        </>
+              showFurniture
+            })}
+            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} />
+          </>
+        )
       )}
     </group>
   );
@@ -2289,6 +2295,7 @@ export default React.memo(Room, (prevProps, nextProps) => {
   if (prevProps.view2DDirection !== nextProps.view2DDirection) return false;
   if (prevProps.renderMode !== nextProps.renderMode) return false;
   if (prevProps.showAll !== nextProps.showAll) return false;
+  if (prevProps.showFurniture !== nextProps.showFurniture) return false;
   if (prevProps.floorColor !== nextProps.floorColor) return false;
   if (prevProps.showFrame !== nextProps.showFrame) return false;
   if (prevProps.showDimensions !== nextProps.showDimensions) return false;

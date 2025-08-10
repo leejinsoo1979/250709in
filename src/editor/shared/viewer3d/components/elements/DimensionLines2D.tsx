@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Line } from '@react-three/drei';
+import { Line, Html } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -62,7 +62,81 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
         color={dimensionColor}
         lineWidth={1.5}
       />
-      {/* 컬럼 치수선/치수 텍스트(슬롯 내경)는 완전히 제거 */}
+      
+      {/* 내부 공간 치수 (슬롯 내경) */}
+      {(() => {
+        // 프레임 두께 계산
+        const frameSize = spaceInfo.frameSize || { top: 50, side: 9 };
+        const sideFrameThickness = frameSize.side || 9;
+        
+        // 내부 공간 계산 (프레임 두께를 제외한 실제 사용 가능한 공간)
+        const internalWidth = spaceInfo.width - (sideFrameThickness * 2);
+        
+        // 내부 치수선 위치 (상단에서 조금 아래)
+        const internalY = topY - mmToThreeUnits(100);
+        const internalLeft = mmToThreeUnits(sideFrameThickness);
+        const internalRight = mmToThreeUnits(spaceInfo.width - sideFrameThickness);
+        
+        return (
+          <>
+            {/* 내부 폭 치수선 */}
+            <Line
+              points={[[internalLeft, internalY, zVal], [internalRight, internalY, zVal]]}
+              color={dimensionColor}
+              lineWidth={2}
+            />
+            
+            {/* 내부 폭 좌측 화살표 */}
+            <Line
+              points={[
+                [internalLeft, internalY + mmToThreeUnits(10), zVal], 
+                [internalLeft, internalY, zVal], 
+                [internalLeft, internalY - mmToThreeUnits(10), zVal]
+              ]}
+              color={dimensionColor}
+              lineWidth={1.5}
+            />
+            
+            {/* 내부 폭 우측 화살표 */}
+            <Line
+              points={[
+                [internalRight, internalY + mmToThreeUnits(10), zVal], 
+                [internalRight, internalY, zVal], 
+                [internalRight, internalY - mmToThreeUnits(10), zVal]
+              ]}
+              color={dimensionColor}
+              lineWidth={1.5}
+            />
+            
+            {/* 내부 폭 텍스트 */}
+            <Html
+              position={[(internalLeft + internalRight) / 2, internalY + mmToThreeUnits(30), zVal]}
+              center
+              transform={false}
+              occlude={false}
+              zIndexRange={[1000, 1001]}
+            >
+              <div
+                style={{
+                  background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                  color: dimensionColor,
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  border: `2px solid ${dimensionColor}`,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none',
+                  pointerEvents: 'none'
+                }}
+              >
+                {internalWidth}mm
+              </div>
+            </Html>
+          </>
+        );
+      })()}
     </group>
   );
 };

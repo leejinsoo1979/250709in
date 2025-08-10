@@ -90,7 +90,7 @@ const BoxWithEdges: React.FC<{
         </lineSegments>
       ) : (
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments geometry={edgesGeometry} renderOrder={1001}>
+          <lineSegments geometry={edgesGeometry} renderOrder={900}>
             <lineBasicMaterial 
               color={viewMode === '2D' ? "#00FF00" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))} 
               linewidth={viewMode === '2D' ? 3 : 0.5}
@@ -759,18 +759,57 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       slot2Width = slotWidths?.[1] || indexing.columnWidth;
       
       if (slotWidths && slotWidths.length >= 2) {
-        // 첫 번째 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-        if (slotIndex === 0) {
-          slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
-          slot2Width = slotWidths[1];
+        // 벽없음(freestanding) 모드: 양쪽 끝에 엔드패널
+        if (spaceInfo.installType === 'freestanding') {
+          // 첫 번째 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+          if (slotIndex === 0) {
+            slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
+            slot2Width = slotWidths[1];
+          }
+          // 마지막 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+          // 듀얼 가구는 2개 슬롯을 차지하므로 slotIndex + 2가 columnCount 이상일 때
+          else if (slotIndex + 2 >= indexing.columnCount) {
+            slot1Width = slotWidths[0];
+            slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
+          }
+          // 중간 슬롯인 경우: 실제 값 사용
+          else {
+            slot1Width = slotWidths[0];
+            slot2Width = slotWidths[1];
+          }
+        } 
+        // 한쪽벽(semistanding) 모드: 벽이 없는 쪽에만 엔드패널
+        else if (spaceInfo.installType === 'semistanding') {
+          // 왼쪽벽 모드: 오른쪽 끝에만 엔드패널
+          if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+            if (slotIndex + 2 >= indexing.columnCount) {
+              // 마지막 슬롯: 오른쪽에 엔드패널
+              slot1Width = slotWidths[0];
+              slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
+            } else {
+              // 나머지: 실제 슬롯 너비 사용
+              slot1Width = slotWidths[0];
+              slot2Width = slotWidths[1];
+            }
+          }
+          // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
+          else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
+            if (slotIndex === 0) {
+              // 첫 번째 슬롯: 왼쪽에 엔드패널
+              slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
+              slot2Width = slotWidths[1];
+            } else {
+              // 나머지: 실제 슬롯 너비 사용
+              slot1Width = slotWidths[0];
+              slot2Width = slotWidths[1];
+            }
+          } else {
+            // 예외 케이스: 실제 슬롯 너비 사용
+            slot1Width = slotWidths[0];
+            slot2Width = slotWidths[1];
+          }
         }
-        // 마지막 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-        // 듀얼 가구는 2개 슬롯을 차지하므로 slotIndex + 2가 columnCount 이상일 때
-        else if (slotIndex + 2 >= indexing.columnCount) {
-          slot1Width = slotWidths[0];
-          slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
-        }
-        // 중간 슬롯인 경우: 실제 값 사용
+        // 양쪽벽(standing) 모드: 엔드패널 없음
         else {
           slot1Width = slotWidths[0];
           slot2Width = slotWidths[1];
@@ -780,17 +819,51 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 도어 전체 너비 계산
       totalWidth = slot1Width + slot2Width;
       
-      // 엔드패널 위치 판단: 실제 슬롯 너비가 582mm면 엔드패널이 있는 것
-      isFirstSlotWithEndPanel = slotIndex === 0 && slot1Width < indexing.columnWidth;
-      isLastSlotWithEndPanel = slotWidths && slotWidths.length >= 2 && 
-                                     slotWidths[1] < indexing.columnWidth && 
-                                     slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
-      
-      // 듀얼 도어 위치 보정
-      if (isFirstSlotWithEndPanel) {
-        doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
-      } else if (isLastSlotWithEndPanel) {
-        doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+      // 엔드패널 위치 판단
+      if (spaceInfo.installType === 'freestanding') {
+        // 벽없음 모드: 양쪽 끝에 엔드패널
+        isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
+        isLastSlotWithEndPanel = slotWidths && slotWidths.length >= 2 && 
+                                       slotWidths[1] < indexing.columnWidth && 
+                                       slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
+        
+        // 듀얼 도어 위치 보정
+        if (isFirstSlotWithEndPanel) {
+          doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+        } else if (isLastSlotWithEndPanel) {
+          doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+        }
+      } else if (spaceInfo.installType === 'semistanding') {
+        // 한쪽벽 모드: 벽이 없는 쪽에만 엔드패널
+        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+          // 왼쪽벽 모드: 오른쪽 끝에만 엔드패널
+          isFirstSlotWithEndPanel = false;
+          isLastSlotWithEndPanel = slotIndex + 2 >= indexing.columnCount && 
+                                   slotWidths && slotWidths.length >= 2 && 
+                                   slotWidths[1] < indexing.columnWidth;
+          
+          if (isLastSlotWithEndPanel) {
+            doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+          }
+        } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
+          // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
+          isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
+          isLastSlotWithEndPanel = false;
+          
+          if (isFirstSlotWithEndPanel) {
+            doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+          }
+        } else {
+          // 예외 케이스
+          isFirstSlotWithEndPanel = false;
+          isLastSlotWithEndPanel = false;
+          doorAdjustment = 0;
+        }
+      } else {
+        // 양쪽벽 모드: 엔드패널 없음
+        isFirstSlotWithEndPanel = false;
+        isLastSlotWithEndPanel = false;
+        doorAdjustment = 0;
       }
       
       console.log('🚪 듀얼 엔드패널 상태:', {
@@ -969,6 +1042,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -993,6 +1067,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1035,6 +1110,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1059,6 +1135,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1138,6 +1215,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1162,6 +1240,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1204,6 +1283,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1228,6 +1308,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
+                            renderOrder={1002}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1251,34 +1332,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let doorWidth = actualDoorWidth - 3; // 기본: 슬롯사이즈 - 3mm
     
     // 노서라운드 모드에서 첫번째/마지막 슬롯 처리
-    // 싱글 도어는 가구 크기에 맞춤 (엔드패널 미포함)
     if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
       // 실제 슬롯 너비로 엔드패널 여부 판단
       const hasEndPanel = actualDoorWidth < indexing.columnWidth;
       
       // 노서라운드 모드에서 엔드패널 위치 판단
-      // freestanding: 양쪽 엔드패널
-      // semistanding: 벽 반대쪽에만 엔드패널
       let isLeftEndPanel = false;
       let isRightEndPanel = false;
       
       if (spaceInfo.installType === 'freestanding') {
-        // 양쪽 엔드패널
+        // 벽없음: 양쪽 끝에 엔드패널
         isLeftEndPanel = slotIndex === 0 && hasEndPanel;
-        isRightEndPanel = hasEndPanel && slotIndex !== 0; // 첫 번째가 아니고 엔드패널이 있으면 오른쪽
+        isRightEndPanel = slotIndex === indexing.columnCount - 1 && hasEndPanel;
       } else if (spaceInfo.installType === 'semistanding') {
-        // 벽 반대쪽에만 엔드패널
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽: 오른쪽에만 엔드패널
-          isRightEndPanel = hasEndPanel;
-        } else if (spaceInfo.wallConfig?.right) {
-          // 오른쪽 벽: 왼쪽에만 엔드패널  
+        // 한쪽벽: 벽 반대쪽에만 엔드패널
+        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+          // 왼쪽벽: 오른쪽 끝에만 엔드패널
+          isRightEndPanel = slotIndex === indexing.columnCount - 1 && hasEndPanel;
+        } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
+          // 오른쪽벽: 왼쪽 끝에만 엔드패널
           isLeftEndPanel = slotIndex === 0 && hasEndPanel;
         }
       }
+      // 양쪽벽(standing) 모드는 엔드패널 없음
       
       console.log('🔍 싱글 도어 엔드패널 판단:', {
         slotIndex,
+        columnCount: indexing.columnCount,
         hasEndPanel,
         isLeftEndPanel,
         isRightEndPanel,
@@ -1288,20 +1368,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         columnWidth: indexing.columnWidth
       });
       
-      // 왼쪽 엔드패널
-      if (isLeftEndPanel) {
-        doorWidth = actualDoorWidth - 3; // 582 - 3 = 579mm
-        doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
-        console.log('왼쪽 엔드패널: 도어 크기와 위치 조정', doorAdjustment);
-      }
-      // 오른쪽 엔드패널
-      else if (isRightEndPanel) {
-        doorWidth = actualDoorWidth - 3; // 582 - 3 = 579mm
-        doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
-        console.log('오른쪽 엔드패널: 도어 크기와 위치 조정', doorAdjustment);
-      }
-      // 중간 슬롯 또는 엔드패널 없는 경우
-      else {
+      // 엔드패널이 있는 경우 도어 크기 복원 및 위치 조정
+      if (isLeftEndPanel || isRightEndPanel) {
+        // 노서라운드 커버도어: 엔드패널을 덮는 원래 슬롯 크기로 복원
+        doorWidth = actualDoorWidth + endPanelThickness - 3; // 582 + 18 - 3 = 597mm
+        
+        // 도어 위치 보정
+        if (isLeftEndPanel) {
+          doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+          console.log('왼쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+        } else if (isRightEndPanel) {
+          doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+          console.log('오른쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+        }
+      } else {
+        // 중간 슬롯 또는 엔드패널 없는 경우
         doorWidth = actualDoorWidth - 3; // 일반 슬롯 크기 - 3mm
         console.log('중간 슬롯 또는 엔드패널 없음');
       }
@@ -1436,6 +1517,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
+                          renderOrder={1002}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -1460,6 +1542,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
+                          renderOrder={1002}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -1502,6 +1585,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
+                          renderOrder={1002}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;
@@ -1526,6 +1610,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
+                          renderOrder={1002}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;

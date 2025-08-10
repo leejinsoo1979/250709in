@@ -655,10 +655,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       
       {/* 배치된 가구 치수 */}
       {React.useMemo(() => placedModules.map((module, index) => {
-        // 도어가 있는 가구는 치수 표시하지 않음
-        if (module.doorConfig) {
-          return null;
-        }
         const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(
           module.moduleId,

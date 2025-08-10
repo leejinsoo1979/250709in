@@ -30,7 +30,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths
+  slotWidths,
+  showFurniture = true
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -627,9 +628,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   };
 
   return (
-    <group>
-      {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
-      <BoxWithEdges
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <group>
+          {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
+          <BoxWithEdges
         args={[basicThickness, height, depth]}
         position={[-width/2 + basicThickness/2, 0, 0]}
         material={material}
@@ -734,8 +738,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       
       {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
       {!isDragging && renderAsymmetricSections()}
+        </group>
+      )}
       
-      {/* 도어 렌더링 */}
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -752,7 +758,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-    </group>
+    </>
   );
 };
 

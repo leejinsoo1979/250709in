@@ -643,6 +643,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                showFurniture={showFurniture}
                 viewMode="2D"
                 renderMode={renderMode}
                 activeZone={activeZone}
@@ -726,6 +727,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                showFurniture={showFurniture}
                 viewMode="2D"
                 renderMode={renderMode}
                 activeZone={activeZone}
@@ -809,6 +811,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                showFurniture={showFurniture}
                 viewMode="2D"
                 renderMode={renderMode}
                 activeZone={activeZone}
@@ -892,6 +895,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
+                showFurniture={showFurniture}
                 viewMode="2D"
                 renderMode={renderMode}
                 activeZone={activeZone}
@@ -1024,6 +1028,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               materialConfig={materialConfig} 
               showAll={showAll} 
+              showFurniture={showFurniture}
               showFrame={showFrame}
               showDimensions={showDimensions}
               showGuides={showGuides}
@@ -1206,6 +1211,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <CleanCAD2D 
               viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
               showDimensions={showDimensions}
+              showFurniture={showFurniture}
               isStep2={isStep2}
             />
             
@@ -1281,11 +1287,12 @@ const QuadrantContent: React.FC<{
   showDimensions: boolean;
   showGuides: boolean;
   showAxis: boolean;
+  showFurniture?: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, viewMode = '2D', renderMode = 'wireframe' }) => {
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, showFurniture = true, isStep2, throttledUpdateColumn, activeZone, viewMode = '2D', renderMode = 'wireframe' }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1359,6 +1366,7 @@ const QuadrantContent: React.FC<{
       <CleanCAD2D 
         viewDirection={viewDirection} 
         showDimensions={showDimensions}
+        showFurniture={showFurniture}
         isStep2={isStep2}
       />
       
@@ -1382,6 +1390,7 @@ const QuadrantContent: React.FC<{
         renderMode={renderMode}
         showDimensions={showDimensions}
         showAll={showAll}
+        showFurniture={showFurniture}
         isStep2={isStep2}
         showFrame={showFrame}
         materialConfig={materialConfig}

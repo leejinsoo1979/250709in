@@ -16,6 +16,7 @@ import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/ut
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
+  showFurniture?: boolean;
   isStep2?: boolean;
 }
 
@@ -194,7 +195,7 @@ const EditableLabel: React.FC<{
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
  */
-const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
+const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, showFurniture = true, isStep2 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
   const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme } = useUIStore();
@@ -1460,7 +1461,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
-      {furnitureDimensions && furnitureDimensions.map((item, index) => {
+      {showFurniture && furnitureDimensions && furnitureDimensions.map((item, index) => {
         if (!item) return null;
         
         const {
@@ -2768,7 +2769,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         
         {/* 가구별 치수선 (우측뷰에서는 깊이 치수) */}
-        {placedModules.length > 0 && placedModules.map((module, index) => {
+        {showFurniture && placedModules.length > 0 && placedModules.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -3849,7 +3850,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         )}
 
         {/* 캐비넷별 폭 치수선 - 외부로 이동하고 정면처럼 표시 */}
-        {placedModules.length > 0 && placedModules.map((module, index) => {
+        {showFurniture && placedModules.length > 0 && placedModules.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },

@@ -25,7 +25,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  adjustedWidth
+  adjustedWidth,
+  showFurniture = true
 }) => {
   const { renderMode } = useSpace3DView();
   
@@ -40,24 +41,29 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   });
 
   return (
-    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
-      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-      {!isDragging && (
-        <SectionsRenderer
-          modelConfig={baseFurniture.modelConfig}
-          height={baseFurniture.height}
-          innerWidth={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
-          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-          basicThickness={baseFurniture.basicThickness}
-          shelfZOffset={baseFurniture.shelfZOffset}
-          material={baseFurniture.material}
-          calculateSectionHeight={baseFurniture.calculateSectionHeight}
-          renderMode={renderMode}
-        />
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+          {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+          {!isDragging && (
+            <SectionsRenderer
+              modelConfig={baseFurniture.modelConfig}
+              height={baseFurniture.height}
+              innerWidth={baseFurniture.innerWidth}
+              depth={baseFurniture.depth}
+              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+              basicThickness={baseFurniture.basicThickness}
+              shelfZOffset={baseFurniture.shelfZOffset}
+              material={baseFurniture.material}
+              calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              renderMode={renderMode}
+            />
+          )}
+        </BaseFurnitureShell>
       )}
       
-      {/* 도어 렌더링 */}
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -73,7 +79,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-    </BaseFurnitureShell>
+    </>
   );
 };
 
