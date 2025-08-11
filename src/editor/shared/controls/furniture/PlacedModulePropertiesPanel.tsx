@@ -263,6 +263,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
     console.log(`🔍 [가구 타입 확인] ${moduleData?.id}: 듀얼=${isDualFurniture}, 싱글=${isSingleFurniture}, 커버도어=${isCoverDoor}`);
+    console.log(`🚪 [도어 경첩 표시 조건] hasDoor=${hasDoor}, isSingleFurniture=${isSingleFurniture}, 표시여부=${hasDoor && isSingleFurniture}`);
   }
 
   // 모듈 데이터가 없으면 렌더링하지 않음
