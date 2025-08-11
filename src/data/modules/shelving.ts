@@ -185,7 +185,7 @@ const createFurnitureBase = (
   color,
   description,
   isDynamic: true,
-  hasDoor: true,
+  hasDoor: false,
   widthOptions: [width],
   type: 'box',
   defaultDepth: defaultDepth || FURNITURE_SPECS.DEFAULT_DEPTH,

@@ -453,7 +453,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         stepDownPosition
       };
     }).filter(Boolean);
-  }, [placedModules, currentViewDirection, spaceInfo, spaceHeight]);
+  }, [
+    placedModules, 
+    currentViewDirection, 
+    spaceInfo, 
+    spaceHeight,
+    // placedModules의 adjustedWidth 변경 감지를 위해 추가
+    JSON.stringify(placedModules.map(m => ({
+      id: m.id,
+      adjustedWidth: m.adjustedWidth,
+      customWidth: m.customWidth,
+      position: m.position
+    })))
+  ]);
 
   // 모든 자식 요소의 renderOrder를 설정
   useEffect(() => {

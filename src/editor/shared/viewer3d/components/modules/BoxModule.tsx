@@ -375,9 +375,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           hasDoor,
           spaceInfo: !!spaceInfo,
           showFurniture,
+          viewMode: useSpace3DView().viewMode,
           willRenderDoor: hasDoor && spaceInfo
         });
         
+        // 2D 모드에서 showFurniture가 false여도 도어는 렌더링
         if (hasDoor && spaceInfo) {
           return (
             <DoorModule

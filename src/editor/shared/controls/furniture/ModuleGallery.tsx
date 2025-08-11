@@ -54,6 +54,19 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
   const { activeDroppedCeilingTab } = useUIStore();
+  
+  // 클릭과 더블클릭을 구분하기 위한 타이머
+  const clickTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isDoubleClickRef = React.useRef<boolean>(false);
+  
+  // 컴포넌트 언마운트 시 타이머 정리
+  React.useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
@@ -237,22 +250,45 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const handleClick = () => {
     if (!isValid) return;
     
-    // 이미 선택된 가구를 다시 클릭하면 비활성화
-    if (selectedFurnitureId === module.id) {
-      setSelectedFurnitureId(null);
-      setFurniturePlacementMode(false);
-      setCurrentDragData(null);
+    // 더블클릭이 처리되고 있으면 클릭 무시
+    if (isDoubleClickRef.current) {
+      isDoubleClickRef.current = false;
       return;
     }
     
-    // 영역별 인덱싱 계산
-    let indexing = calculateSpaceIndexing(spaceInfo);
-    let targetZone: 'normal' | 'dropped' = 'normal';
-    let adjustedDimensions = { ...module.dimensions };
-    let dragModuleId = module.id;
+    // 더블클릭 대기 중이면 클릭 무시
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+      return;
+    }
     
-    // 단내림이 활성화되어 있는 경우
-    if (spaceInfo.droppedCeiling?.enabled) {
+    // 300ms 후에 클릭 처리 (더블클릭이 아닌 경우에만)
+    clickTimeoutRef.current = setTimeout(() => {
+      clickTimeoutRef.current = null;
+      
+      // 더블클릭이 발생했으면 클릭 처리 하지 않음
+      if (isDoubleClickRef.current) {
+        isDoubleClickRef.current = false;
+        return;
+      }
+      
+      // 이미 선택된 가구를 다시 클릭하면 비활성화
+      if (selectedFurnitureId === module.id) {
+        setSelectedFurnitureId(null);
+        setFurniturePlacementMode(false);
+        setCurrentDragData(null);
+        return;
+      }
+      
+      // 영역별 인덱싱 계산
+      let indexing = calculateSpaceIndexing(spaceInfo);
+      let targetZone: 'normal' | 'dropped' = 'normal';
+      let adjustedDimensions = { ...module.dimensions };
+      let dragModuleId = module.id;
+      
+      // 단내림이 활성화되어 있는 경우
+      if (spaceInfo.droppedCeiling?.enabled) {
       targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
@@ -291,15 +327,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }
           }
         }
+        }
       }
-    }
-    
-    // 가구 선택 상태 설정
-    setSelectedFurnitureId(module.id);
-    setFurniturePlacementMode(true);
-    
-    // Click & Place를 위한 데이터 설정
-    const clickPlaceData = {
+      
+      // 가구 선택 상태 설정
+      setSelectedFurnitureId(module.id);
+      setFurniturePlacementMode(true);
+      
+      // Click & Place를 위한 데이터 설정
+      const clickPlaceData = {
       type: 'furniture',
       zone: targetZone,
       moduleData: {
@@ -313,26 +349,49 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         isDynamic: module.isDynamic,
         furnType: module.id.includes('dual-') ? 'dual' : 'single'
       }
-    };
-    
-    setCurrentDragData(clickPlaceData);
-    
-    console.log('🎯 [ModuleGallery] Click & Place activated:', {
-      moduleId: module.id,
-      adjustedId: dragModuleId,
-      zone: targetZone,
-      data: clickPlaceData
-    });
+      };
+      
+      setCurrentDragData(clickPlaceData);
+      
+      console.log('🎯 [ModuleGallery] Click & Place activated:', {
+        moduleId: module.id,
+        adjustedId: dragModuleId,
+        zone: targetZone,
+        data: clickPlaceData
+      });
+    }, 300);
   };
 
   // 더블클릭 시 자동 배치 핸들러
   const handleDoubleClick = () => {
-    if (!isValid) return;
+    console.log('🚨🚨🚨 [ModuleGallery] Double click event triggered!', {
+      moduleId: module.id,
+      isValid
+    });
     
-    console.log('🚨 [ModuleGallery] Double click start:', {
+    // 더블클릭 플래그 설정
+    isDoubleClickRef.current = true;
+    
+    if (!isValid) {
+      console.log('❌ Module is not valid, exiting');
+      return;
+    }
+    
+    // 클릭 타이머가 있으면 취소 (클릭 이벤트 방지)
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+    
+    // Click & Place 모드 비활성화 (고스트 제거)
+    setSelectedFurnitureId(null);
+    setFurniturePlacementMode(false);
+    setCurrentDragData(null);
+    
+    console.log('🚨 [ModuleGallery] Double click processing:', {
       moduleId: module.id,
       moduleWidth: module.dimensions.width,
-      activeZone,
+      activeZone: activeDroppedCeilingTab,
       droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
       spaceInfo: {
         width: spaceInfo.width,
@@ -342,59 +401,18 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     });
     
     try {
-      // 단내림이 활성화되어 있는 경우 영역별 처리
-      let zoneSpaceInfo = spaceInfo;
-      let zoneInternalSpace = calculateInternalSpace(spaceInfo);
-      const targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      // 전체 공간 사용 (통합된 공간)
+      const fullSpaceInfo = spaceInfo;
+      const fullInternalSpace = calculateInternalSpace(spaceInfo);
       
-      if (spaceInfo.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        console.log('🎯 [ModuleGallery] Zone info:', {
-          targetZone,
-          zoneInfo,
-          originalWidth: spaceInfo.width,
-          originalColumns: spaceInfo.customColumnCount
-        });
-        
-        if (targetZone === 'dropped' && zoneInfo.dropped) {
-          // 단내림 영역용 spaceInfo 생성
-          zoneSpaceInfo = {
-            ...spaceInfo,
-            width: zoneInfo.dropped.width,
-            customColumnCount: zoneInfo.dropped.columnCount,
-            columnMode: 'custom' // columnMode도 설정
-          } as SpaceInfo;
-          zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-          console.log('🎯 [ModuleGallery] Dropped zone space:', {
-            zoneWidth: zoneInfo.dropped.width,
-            zoneColumns: zoneInfo.dropped.columnCount,
-            zoneInternalWidth: zoneInternalSpace.width
-          });
-        } else if (targetZone === 'normal' && zoneInfo.normal) {
-          // 메인 영역용 spaceInfo 생성
-          zoneSpaceInfo = {
-            ...spaceInfo,
-            width: zoneInfo.normal.width,
-            customColumnCount: zoneInfo.normal.columnCount,
-            columnMode: 'custom'
-          } as SpaceInfo;
-          zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-          console.log('🎯 [ModuleGallery] Normal zone space:', {
-            zoneWidth: zoneInfo.normal.width,
-            zoneColumns: zoneInfo.normal.columnCount,
-            zoneInternalWidth: zoneInternalSpace.width
-          });
-        }
-      }
+      // 전체 공간에 대한 인덱싱 계산
+      const indexing = calculateSpaceIndexing(fullSpaceInfo);
+      const internalSpace = fullInternalSpace;
       
-      // 영역별 공간으로 인덱싱 계산
-      const indexing = calculateSpaceIndexing(zoneSpaceInfo);
-      const internalSpace = zoneInternalSpace;
-      
-      console.log('🚨 [ModuleGallery] After zone calculation:', {
-        zoneSpaceInfo: {
-          width: zoneSpaceInfo.width,
-          customColumnCount: zoneSpaceInfo.customColumnCount
+      console.log('🚨 [ModuleGallery] Using full space:', {
+        fullSpaceInfo: {
+          width: fullSpaceInfo.width,
+          customColumnCount: fullSpaceInfo.customColumnCount
         },
         indexing: {
           columnWidth: indexing.columnWidth,
@@ -450,12 +468,21 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 듀얼/싱글 가구 판별
       const isDualFurniture = module.id.startsWith('dual-');
       
+      console.log('🔍 [ModuleGallery] Checking slot availability:', {
+        totalSlots: indexing.columnCount,
+        isDualFurniture,
+        placedModulesCount: placedModules.length,
+        placedModules: placedModules.map(m => ({ id: m.id, slotIndex: m.slotIndex, zone: m.zone }))
+      });
+      
       // 첫 번째 빈 슬롯 찾기
       let availableSlotIndex = -1;
       
       // 모든 슬롯을 순회하며 빈 슬롯 찾기
       for (let i = 0; i < indexing.columnCount; i++) {
-        if (isSlotAvailable(i, isDualFurniture, placedModules, zoneSpaceInfo, module.id)) {
+        const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id);
+        console.log(`🔍 Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+        if (isAvailable) {
           availableSlotIndex = i;
           break;
         }
@@ -463,11 +490,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       
       // 첫 번째 슬롯에서 찾지 못하면 다음 사용 가능한 슬롯 찾기
       if (availableSlotIndex === -1) {
-        availableSlotIndex = findNextAvailableSlot(0, 'right', isDualFurniture, placedModules, zoneSpaceInfo, module.id) || -1;
+        console.log('🔍 No slot found in first pass, trying findNextAvailableSlot...');
+        availableSlotIndex = findNextAvailableSlot(0, 'right', isDualFurniture, placedModules, fullSpaceInfo, module.id) || -1;
       }
       
+      console.log('🎯 Final availableSlotIndex:', availableSlotIndex);
+      
       if (availableSlotIndex === -1) {
-        console.warn('사용 가능한 슬롯이 없습니다.');
+        console.warn('❌ 사용 가능한 슬롯이 없습니다.');
         return;
       }
       
@@ -483,7 +513,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         
       
       console.log('🎯 [ModuleGallery] Position calculation:', {
-        activeZone,
+        activeZone: activeDroppedCeilingTab,
         positionX,
         availableSlotIndex,
         isDualFurniture,
@@ -534,6 +564,22 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         slotWidths: indexing.slotWidths
       });
 
+      // 슬롯 인덱스에 따라 zone 결정
+      let targetZone: 'normal' | 'dropped' | undefined = undefined;
+      let localSlotIndex = availableSlotIndex; // 로컬 슬롯 인덱스
+      
+      if (spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        if (zoneInfo.dropped && availableSlotIndex >= zoneInfo.normal.columnCount) {
+          targetZone = 'dropped';
+          // 단내림 구간 내에서의 로컬 슬롯 인덱스로 변환
+          localSlotIndex = availableSlotIndex - zoneInfo.normal.columnCount;
+        } else {
+          targetZone = 'normal';
+          localSlotIndex = availableSlotIndex;
+        }
+      }
+      
       // 새 모듈 생성
       const newModule = {
         id: placedId,
@@ -546,7 +592,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         rotation: 0,
         hasDoor: false,
         customDepth: getDefaultDepth(module),
-        slotIndex: availableSlotIndex,
+        slotIndex: localSlotIndex, // 로컬 슬롯 인덱스 사용
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true,
         adjustedWidth: actualWidth, // 계산된 실제 너비 사용
@@ -566,10 +612,32 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       });
       
       // 가구 배치
-      console.log('🎯 [ModuleGallery] About to add module:', newModule);
+      console.log('🎯 [ModuleGallery] About to add module:', {
+        ...newModule,
+        addModuleFunction: typeof addModule,
+        addModuleDefined: addModule !== undefined,
+        currentPlacedModulesCount: placedModules.length
+      });
+      
+      if (!addModule) {
+        console.error('❌❌❌ addModule function is not defined!');
+        return;
+      }
+      
       try {
+        console.log('🎯 Calling addModule with:', JSON.stringify(newModule));
         addModule(newModule);
         console.log('✅ [ModuleGallery] Module added successfully');
+        
+        // 스토어 상태 확인
+        const updatedModules = useFurnitureStore.getState().placedModules;
+        console.log('📦 Updated placedModules count:', updatedModules.length);
+        console.log('📦 Updated placedModules:', updatedModules.map(m => ({ 
+          id: m.id, 
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          zone: m.zone
+        })));
       } catch (addError) {
         console.error('❌ [ModuleGallery] Failed to add module:', addError);
         throw addError;
@@ -579,9 +647,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
       setSelectedPlacedModuleId(placedId);
       
-      console.log(`✅ 가구 "${module.name}"을 슬롯 ${availableSlotIndex + 1}에 자동 배치했습니다.`, {
+      console.log(`✅ 가구 "${module.name}"을 슬롯 ${localSlotIndex + 1}에 자동 배치했습니다.`, {
         moduleId: module.id,
-        slotIndex: availableSlotIndex,
+        globalSlotIndex: availableSlotIndex,
+        localSlotIndex: localSlotIndex,
+        zone: targetZone,
         position: newModule.position,
         isDual: isDualFurniture,
         selectedId: placedId
@@ -591,10 +661,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       console.error('🚨🚨🚨 [ModuleGallery] 가구 자동 배치 중 오류 발생:', error);
       console.error('Error details:', {
         moduleId: module.id,
-        activeZone,
+        activeZone: activeDroppedCeilingTab,
         spaceInfo,
         error
       });
+    } finally {
+      // 더블클릭 처리 완료 후 플래그 리셋
+      setTimeout(() => {
+        isDoubleClickRef.current = false;
+      }, 100);
     }
   };
 

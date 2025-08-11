@@ -426,12 +426,17 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
       
       // 2D 상부뷰에서는 수평선으로 표시
       if (viewMode === '2D' && view2DDirection === 'top') {
+        // 단내림 구간과 메인 구간의 Y 위치를 다르게 계산
+        const guideY = zoneType === 'dropped' 
+          ? (floorY + ceilingY) / 2  // 단내림 구간: 낮은 천장 고려
+          : floorY + mmToThreeUnits(internalSpace.height/2);  // 메인 구간: 전체 높이의 중간
+        
         guides.push(
           <Line
             key={`${zoneType}-horizontal-guide-top-${index}`}
             points={[
-              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), backZ),
-              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), frontZ)
+              new THREE.Vector3(xPos, guideY, backZ),
+              new THREE.Vector3(xPos, guideY, frontZ)
             ]}
             color={zoneColor}
             lineWidth={zoneLineWidth}

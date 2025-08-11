@@ -1122,7 +1122,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         rotation: 0,
         hasDoor: false,
         customDepth: adjustedDepth, // 조정된 깊이 사용
-        slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
+        slotIndex: zoneSlotIndex,  // 영역 내 로컬 슬롯 인덱스 사용 (zone과 함께 사용)
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
         adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) && effectiveColumnType !== 'medium' ? adjustedWidth : undefined, // 기둥 C가 아닌 경우에만 조정된 너비 사용
@@ -2657,6 +2657,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const previewDepth = mmToThreeUnits(customDepth);
         const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
         
+        // 단내림 구간에서는 조정된 spaceInfo 사용
+        const effectiveSpaceInfo = hasDroppedCeiling && effectiveZone === 'dropped' && zoneSlotInfo
+          ? {
+              ...spaceInfo,
+              width: spaceInfo.droppedCeiling?.width || 900,
+              height: spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0),
+              zone: 'dropped' as const
+            }
+          : spaceInfo;
+        
         return (
           <group key={`furniture-preview-${slotIndex}`} position={[previewX, furnitureY, furnitureZ]}>
             <BoxModule 
@@ -2665,7 +2675,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               isDragging={true}
               hasDoor={false}
               customDepth={customDepth}
-              spaceInfo={spaceInfo}
+              spaceInfo={effectiveSpaceInfo}
             />
           </group>
         );

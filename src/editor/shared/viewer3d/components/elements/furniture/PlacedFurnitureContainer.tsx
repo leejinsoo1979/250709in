@@ -45,6 +45,20 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     });
   }, [activeZone]);
   
+  // placedModules 변경 감지
+  React.useEffect(() => {
+    console.log('📦📦📦 PlacedFurnitureContainer - placedModules 변경:', {
+      count: placedModules.length,
+      modules: placedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        position: m.position,
+        slotIndex: m.slotIndex,
+        zone: m.zone
+      }))
+    });
+  }, [placedModules]);
+  
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;

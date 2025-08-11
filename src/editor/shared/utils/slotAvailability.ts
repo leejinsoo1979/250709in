@@ -21,7 +21,8 @@ export const isSlotAvailable = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string
+  excludeModuleId?: string,
+  targetZone?: 'normal' | 'dropped'
 ): boolean => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -193,7 +194,8 @@ export const findNextAvailableSlot = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string
+  excludeModuleId?: string,
+  targetZone?: 'normal' | 'dropped'
 ): number | null => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const step = direction === 'left' ? -1 : 1;
@@ -208,7 +210,7 @@ export const findNextAvailableSlot = (
        direction === 'right' ? slot <= maxSlot : slot >= 0; 
        slot += moveStep) {
     
-    if (isSlotAvailable(slot, isDualFurniture, placedModules, spaceInfo, moduleId, excludeModuleId)) {
+    if (isSlotAvailable(slot, isDualFurniture, placedModules, spaceInfo, moduleId, excludeModuleId, targetZone)) {
       return slot;
     }
   }

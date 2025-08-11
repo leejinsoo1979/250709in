@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
-import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 // 가구 데이터 Store 상태 타입 정의
@@ -226,6 +226,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const columnSlots = analyzeColumnSlots(spaceInfo);
       console.log('🔧 analyzeColumnSlots 결과:', columnSlots);
       
+      // 제거할 듀얼 가구 ID 수집
+      const modulesToRemove: string[] = [];
+      
       const updatedModules = state.placedModules.map(module => {
         if (module.slotIndex === undefined) return module;
         
@@ -240,20 +243,75 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         const slotInfo = columnSlots[globalSlotIndex];
         
+        // 듀얼 가구인 경우 두 번째 슬롯도 확인
+        const isDualFurniture = module.isDualSlot || module.moduleId?.includes('dual-');
+        let secondSlotInfo = null;
+        if (isDualFurniture && columnSlots[globalSlotIndex + 1]) {
+          secondSlotInfo = columnSlots[globalSlotIndex + 1];
+        }
+        
         console.log(`🔧 가구 ${module.id} (슬롯 ${module.slotIndex} → ${globalSlotIndex}):`, {
+          isDualFurniture,
           hasColumn: slotInfo?.hasColumn,
           availableWidth: slotInfo?.availableWidth,
           adjustedWidth: slotInfo?.adjustedWidth,
-          intrusionDirection: slotInfo?.intrusionDirection
+          intrusionDirection: slotInfo?.intrusionDirection,
+          secondSlotHasColumn: secondSlotInfo?.hasColumn
         });
         
-        // 기둥이 있는 슬롯인 경우 adjustedWidth 설정
-        if (slotInfo?.hasColumn) {
+        // 듀얼 가구이고 기둥이 침범하는 경우 제거 대상으로 표시
+        if (isDualFurniture && (slotInfo?.hasColumn || secondSlotInfo?.hasColumn)) {
+          console.log(`🚫 듀얼 가구 ${module.id} 제거 예정 - 기둥 침범`);
+          modulesToRemove.push(module.id);
+          return module; // 일단 그대로 반환 (나중에 필터링)
+        }
+        
+        // 싱글 가구의 기둥 침범 처리
+        if (!isDualFurniture && slotInfo?.hasColumn) {
           const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           console.log(`✅ 가구 ${module.id} adjustedWidth 설정: ${newAdjustedWidth}mm`);
+          
+          // 가구 위치 계산
+          const indexing = calculateSpaceIndexing(spaceInfo);
+          let slotCenterX = module.position.x; // 기본값
+          
+          // zone이 있는 경우 zone별 위치 사용
+          if (module.zone && spaceInfo.droppedCeiling?.enabled) {
+            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            const targetZone = module.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+            
+            if (module.slotIndex !== undefined && module.slotIndex < targetZone.columnCount) {
+              const zoneIndexing = module.zone === 'dropped' && indexing.zones?.dropped 
+                ? indexing.zones.dropped 
+                : (module.zone === 'normal' && indexing.zones?.normal ? indexing.zones.normal : indexing);
+              
+              if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[module.slotIndex] !== undefined) {
+                slotCenterX = zoneIndexing.threeUnitPositions[module.slotIndex];
+              }
+            }
+          } else if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+            slotCenterX = indexing.threeUnitPositions[module.slotIndex];
+          }
+          
+          // 슬롯 경계 계산
+          const slotWidth = indexing.columnWidth * 0.01; // mm to Three.js units
+          const originalSlotBounds = {
+            left: slotCenterX - slotWidth / 2,
+            right: slotCenterX + slotWidth / 2,
+            center: slotCenterX
+          };
+          
+          // 가구 위치 계산 (calculateFurnitureBounds 함수 사용)
+          const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+          const adjustedX = furnitureBounds.center;
+          
           return {
             ...module,
-            adjustedWidth: newAdjustedWidth
+            adjustedWidth: newAdjustedWidth,
+            position: {
+              ...module.position,
+              x: adjustedX
+            }
           };
         } else {
           // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
@@ -300,17 +358,26 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       });
       
+      // 제거 대상 듀얼 가구 필터링
+      const filteredModules = updatedModules.filter(m => !modulesToRemove.includes(m.id));
+      
       console.log('🔧 기둥 변경에 따른 가구 업데이트 완료:', {
         columnCount: spaceInfo.columns?.length || 0,
-        updatedFurniture: updatedModules.filter(m => m.adjustedWidth !== undefined).map(m => ({
+        removedDualFurniture: modulesToRemove,
+        updatedFurniture: filteredModules.filter(m => m.adjustedWidth !== undefined).map(m => ({
           id: m.id,
           slotIndex: m.slotIndex,
           adjustedWidth: m.adjustedWidth
         }))
       });
       
+      // 제거된 듀얼 가구가 있으면 알림
+      if (modulesToRemove.length > 0) {
+        console.log(`⚠️ ${modulesToRemove.length}개의 듀얼 가구가 기둥 침범으로 제거되었습니다.`);
+      }
+      
       return {
-        placedModules: updatedModules
+        placedModules: filteredModules
       };
     });
   }

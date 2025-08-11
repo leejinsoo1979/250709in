@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
 import { Column, Wall, PanelB } from '@/types/space';
+import { useFurnitureStore } from './furnitureStore';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -295,33 +296,63 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     })),
   
   addColumn: (column) =>
-    set((state) => ({
-      spaceInfo: {
-        ...state.spaceInfo,
-        columns: [...(state.spaceInfo.columns || []), column]
-      },
-      isDirty: true,
-    })),
+    set((state) => {
+      const newState = {
+        spaceInfo: {
+          ...state.spaceInfo,
+          columns: [...(state.spaceInfo.columns || []), column]
+        },
+        isDirty: true,
+      };
+      
+      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
+      setTimeout(() => {
+        const { updateFurnitureForColumns } = useFurnitureStore.getState();
+        updateFurnitureForColumns(newState.spaceInfo);
+      }, 0);
+      
+      return newState;
+    }),
   
   removeColumn: (id) =>
-    set((state) => ({
-      spaceInfo: {
-        ...state.spaceInfo,
-        columns: (state.spaceInfo.columns || []).filter(col => col.id !== id)
-      },
-      isDirty: true,
-    })),
+    set((state) => {
+      const newState = {
+        spaceInfo: {
+          ...state.spaceInfo,
+          columns: (state.spaceInfo.columns || []).filter(col => col.id !== id)
+        },
+        isDirty: true,
+      };
+      
+      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
+      setTimeout(() => {
+        const { updateFurnitureForColumns } = useFurnitureStore.getState();
+        updateFurnitureForColumns(newState.spaceInfo);
+      }, 0);
+      
+      return newState;
+    }),
   
   updateColumn: (id, updates) =>
-    set((state) => ({
-      spaceInfo: {
-        ...state.spaceInfo,
-        columns: (state.spaceInfo.columns || []).map(col => 
-          col.id === id ? { ...col, ...updates } : col
-        )
-      },
-      isDirty: true,
-    })),
+    set((state) => {
+      const newState = {
+        spaceInfo: {
+          ...state.spaceInfo,
+          columns: (state.spaceInfo.columns || []).map(col => 
+            col.id === id ? { ...col, ...updates } : col
+          )
+        },
+        isDirty: true,
+      };
+      
+      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
+      setTimeout(() => {
+        const { updateFurnitureForColumns } = useFurnitureStore.getState();
+        updateFurnitureForColumns(newState.spaceInfo);
+      }, 0);
+      
+      return newState;
+    }),
   
   // 가벽 설정 액션들
   setWalls: (walls) =>
