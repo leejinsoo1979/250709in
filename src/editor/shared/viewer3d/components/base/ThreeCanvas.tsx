@@ -49,7 +49,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마 가져오기
-  const { view2DTheme, isFurnitureDragging } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -583,15 +583,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               }, 100);
             }
           }}
-          enabled={controlsConfig.enabled && !isFurnitureDragging}
+          enabled={controlsConfig.enabled && !isFurnitureDragging && !isDraggingColumn}
           target={controlsConfig.target}
           minPolarAngle={controlsConfig.minPolarAngle}
           maxPolarAngle={controlsConfig.maxPolarAngle}
           minAzimuthAngle={controlsConfig.minAzimuthAngle}
           maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
-          enablePan={controlsConfig.enablePan && !isFurnitureDragging}
-          enableZoom={controlsConfig.enableZoom && !isFurnitureDragging}
-          enableRotate={controlsConfig.enableRotate && !isFurnitureDragging}
+          enablePan={controlsConfig.enablePan && !isFurnitureDragging && !isDraggingColumn}
+          enableZoom={controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn}
+          enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn}
           minDistance={controlsConfig.minDistance}
           maxDistance={controlsConfig.maxDistance}
           mouseButtons={controlsConfig.mouseButtons}
@@ -608,7 +608,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* 터치 컨트롤 설정 - 항상 활성화 (테스트용) */}
         <TouchOrbitControlsSetup 
           controlsRef={controlsRef}
-          enabled={!isFurnitureDragging}
+          enabled={!isFurnitureDragging && !isDraggingColumn}
         />
         
         {/* 기존 조건부 터치 컨트롤 (나중에 필요시 사용) */}

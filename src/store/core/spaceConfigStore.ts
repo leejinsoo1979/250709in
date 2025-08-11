@@ -261,6 +261,33 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         });
       }
       
+      // 컬럼 수 변경 감지 (customColumnCount, mainDoorCount, droppedCeilingDoorCount)
+      const columnCountChanged = 
+        processedInfo.customColumnCount !== undefined && processedInfo.customColumnCount !== state.spaceInfo.customColumnCount ||
+        processedInfo.mainDoorCount !== undefined && processedInfo.mainDoorCount !== state.spaceInfo.mainDoorCount ||
+        processedInfo.droppedCeilingDoorCount !== undefined && processedInfo.droppedCeilingDoorCount !== state.spaceInfo.droppedCeilingDoorCount;
+      
+      if (columnCountChanged) {
+        console.log('📐 컬럼 수 변경 감지:', {
+          이전: {
+            customColumnCount: state.spaceInfo.customColumnCount,
+            mainDoorCount: state.spaceInfo.mainDoorCount,
+            droppedCeilingDoorCount: state.spaceInfo.droppedCeilingDoorCount
+          },
+          새로운: {
+            customColumnCount: processedInfo.customColumnCount,
+            mainDoorCount: processedInfo.mainDoorCount,
+            droppedCeilingDoorCount: processedInfo.droppedCeilingDoorCount
+          }
+        });
+        
+        // 가구 재배치를 위해 furnitureStore의 updateFurnitureForColumns 호출
+        setTimeout(() => {
+          const { updateFurnitureForColumns } = useFurnitureStore.getState();
+          updateFurnitureForColumns(newState.spaceInfo);
+        }, 0);
+      }
+      
       return newState;
     });
   },

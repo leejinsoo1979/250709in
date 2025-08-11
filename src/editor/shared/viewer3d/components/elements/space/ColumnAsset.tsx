@@ -55,7 +55,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setIsDraggingColumn, viewMode: uiViewMode } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -198,7 +198,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         setHasMoved(true);
         setIsDragging(true);
         isDraggingRef.current = true;
-        setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
+        setIsDraggingColumn(true); // 기둥 드래그 시작 시 화면 회전 비활성화
         
         // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋 이벤트 발생
         if (uiViewMode === '3D') {
@@ -253,7 +253,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     const handleGlobalPointerUp = () => {
       // 드래그 중이었다면 화면 회전 다시 활성화
       if (isDraggingRef.current) {
-        setFurnitureDragging(false);
+        setIsDraggingColumn(false);
         
         // 기둥 드래그 종료 이벤트 발생
         window.dispatchEvent(new CustomEvent('column-drag-end'));

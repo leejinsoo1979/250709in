@@ -1391,6 +1391,16 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
+            onClick={(e) => {
+              e.stopPropagation();
+              // 프레임 클릭 시 강조만 처리 (크기 변경 없음)
+              console.log('🎯 좌측 프레임 클릭', {
+                showFrame,
+                frameThicknessLeft: frameThickness.left,
+                view2DDirection,
+                wallConfigLeft: wallConfig?.left
+              });
+            }}
           />
         );
       })()}
@@ -1484,6 +1494,16 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
+            onClick={(e) => {
+              e.stopPropagation();
+              // 프레임 클릭 시 강조만 처리 (크기 변경 없음)
+              console.log('🎯 우측 프레임 클릭', {
+                showFrame,
+                frameThicknessRight: frameThickness.right,
+                view2DDirection,
+                wallConfigRight: wallConfig?.right
+              });
+            }}
           />
         );
       })()}
@@ -1543,7 +1563,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
                 />
               );
@@ -1663,7 +1683,7 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
                   />
                   {/* 일반 영역 상부 프레임 */}
@@ -1679,7 +1699,7 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
                   />
                 </>
@@ -1746,7 +1766,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
                 />
               );
@@ -1780,7 +1800,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('top')}
+                  material={topFrameMaterial ?? createFrameMaterial('top')}
                   renderMode={renderMode}
                 />
               );
@@ -1817,7 +1837,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
                   />
                 </group>
@@ -1888,7 +1908,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={createFrameMaterial('top')}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
                     renderMode={renderMode}
                   />
                 </group>
@@ -2134,7 +2154,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('base')}
+                  material={baseFrameMaterial ?? createFrameMaterial('base')}
                   renderMode={renderMode}
                 />
               );
@@ -2202,7 +2222,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={createFrameMaterial('base')}
+                  material={baseFrameMaterial ?? createFrameMaterial('base')}
                   renderMode={renderMode}
                 />
               );
@@ -2237,7 +2257,7 @@ const Room: React.FC<RoomProps> = ({
                     // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
-                  material={createFrameMaterial('base')}
+                  material={baseFrameMaterial ?? createFrameMaterial('base')}
                   renderMode={renderMode}
                 />
               );

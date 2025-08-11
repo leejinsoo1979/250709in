@@ -14,6 +14,7 @@ interface BoxWithEdgesProps {
   isEditMode?: boolean; // 편집 모드 여부 추가
   hideEdges?: boolean; // 엣지 숨김 옵션 추가
   isBackPanel?: boolean; // 백패널 여부 추가
+  isEndPanel?: boolean; // 엔드패널 여부 추가
   onClick?: (e: any) => void;
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
@@ -32,6 +33,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   isEditMode = false,
   hideEdges = false,
   isBackPanel = false,
+  isEndPanel = false,
   onClick,
   onPointerOver,
   onPointerOut

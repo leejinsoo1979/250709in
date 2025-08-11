@@ -596,7 +596,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         slotIndex: localSlotIndex, // 로컬 슬롯 인덱스 사용
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true,
-        adjustedWidth: actualWidth, // 계산된 실제 너비 사용
+        // 단내림이 있을 때는 customWidth를 사용하지 않고 adjustedWidth도 설정하지 않음
+        // 이렇게 하면 실제 슬롯 너비에 맞게 가구가 렌더링됨
         hingePosition: 'right' as 'left' | 'right',
         zone: targetZone || undefined, // 영역 정보 저장
         customWidth: customWidth // 실제 슬롯 너비 추가
@@ -605,11 +606,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       console.log('🚨 [ModuleGallery] New module created:', {
         moduleId: module.id,
         originalWidth: module.dimensions.width,
-        actualWidth: actualWidth,
+        customWidth: customWidth,
         expectedColumnWidth: indexing.columnWidth,
         position: newModule.position,
         zone: targetZone,
-        adjustedWidth: newModule.adjustedWidth
+        slotIndex: localSlotIndex
       });
       
       // 가구 배치
