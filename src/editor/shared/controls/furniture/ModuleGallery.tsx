@@ -401,6 +401,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     });
     
     try {
+      // 단내림 사용 여부에 따라 할당될 수 있는 영역 값
+      let targetZone: 'normal' | 'dropped' | undefined = undefined;
       // 전체 공간 사용 (통합된 공간)
       const fullSpaceInfo = spaceInfo;
       const fullInternalSpace = calculateInternalSpace(spaceInfo);
@@ -565,7 +567,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       });
 
       // 슬롯 인덱스에 따라 zone 결정
-      let targetZone: 'normal' | 'dropped' | undefined = undefined;
       let localSlotIndex = availableSlotIndex; // 로컬 슬롯 인덱스
       
       if (spaceInfo.droppedCeiling?.enabled) {
