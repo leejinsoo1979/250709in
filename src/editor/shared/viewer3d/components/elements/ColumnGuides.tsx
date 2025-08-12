@@ -401,43 +401,44 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         />
       );
       
-      // 바닥 슬롯 메쉬 (3D 모드에서만 표시)
-      if (viewMode === '3D') {
+      // 바닥 슬롯 메쉬 (3D 모드와 2D 탑뷰에서만 표시)
+      if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) {
         const width = endBoundaryX - startBoundaryX;
         const centerX = (startBoundaryX + endBoundaryX) / 2;
-        const depth = mmToThreeUnits(1500); // 패널 깊이
+        
+        // 점선 가이드와 동일한 깊이 사용 (backZ와 frontZ는 이미 매개변수로 전달됨)
+        const meshDepth = frontZ - backZ;
+        const meshZ = (frontZ + backZ) / 2; // 중앙
         
         console.log('🟢 바닥 슬롯 메쉬 렌더링:', {
           zoneType,
           viewMode,
           centerX,
-          floorY: floorY + 0.01,
+          floorY: floorY + 0.001,
           width,
-          depth,
+          meshDepth,
+          meshZ,
+          backZ,
+          frontZ,
           startBoundaryX,
           endBoundaryX
         });
         
-        // 바닥 가이드 점선과 정확히 같은 위치에 면 생성
-        const frontZ = mmToThreeUnits(internalSpace.depth / 2);
-        const backZ = -frontZ;
-        const meshDepth = frontZ - backZ;
-        const meshZ = 0; // 중앙
-        
         guides.push(
           <mesh
             key={`${zoneType}-floor-mesh`}
-            position={[centerX, floorY + 0.1, meshZ]}
-            renderOrder={100}
+            position={[centerX, floorY + 0.001, meshZ]}
+            renderOrder={1000}
             frustumCulled={false}
           >
-            <boxGeometry args={[width, 0.05, meshDepth]} />
+            <boxGeometry args={[width, 0.002, meshDepth]} />
             <meshBasicMaterial 
-              color="#10b981"
+              color={guideColor}
               transparent
-              opacity={0.3}
+              opacity={0.05}
               side={THREE.DoubleSide}
               depthWrite={false}
+              depthTest={false}
             />
           </mesh>
         );
@@ -460,6 +461,60 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           transparent
         />
       );
+      
+      // 천장 슬롯 메쉬 (3D 모드에서만 표시, 2D 뷰에서는 숨김) - 바닥과 동일한 재질
+      if (viewMode === '3D') {
+        const width = endBoundaryX - startBoundaryX;
+        const centerX = (startBoundaryX + endBoundaryX) / 2;
+        const meshDepth = frontZ - backZ;
+        const meshZ = (frontZ + backZ) / 2;
+        
+        guides.push(
+          <mesh
+            key={`${zoneType}-ceiling-mesh`}
+            position={[centerX, ceilingY - 0.001, meshZ]}
+            renderOrder={1000}
+            frustumCulled={false}
+          >
+            <boxGeometry args={[width, 0.002, meshDepth]} />
+            <meshBasicMaterial 
+              color={guideColor}
+              transparent
+              opacity={0.05}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+            />
+          </mesh>
+        );
+      }
+      
+      // 정면(뒷벽) 슬롯 메쉬 (3D 모드와 2D 정면뷰에서만 표시) - 바닥과 동일한 재질
+      if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) {
+        const width = endBoundaryX - startBoundaryX;
+        const centerX = (startBoundaryX + endBoundaryX) / 2;
+        const height = ceilingY - floorY;
+        const centerY = (floorY + ceilingY) / 2;
+        
+        guides.push(
+          <mesh
+            key={`${zoneType}-back-wall-mesh`}
+            position={[centerX, centerY, backZ + 0.001]}
+            renderOrder={1000}
+            frustumCulled={false}
+          >
+            <boxGeometry args={[width, height, 0.002]} />
+            <meshBasicMaterial 
+              color={guideColor}
+              transparent
+              opacity={0.05}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+              depthTest={false}
+            />
+          </mesh>
+        );
+      }
     }
     
     // 각 슬롯 경계의 수직 가이드
@@ -666,84 +721,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     'columnCount': columnCount
   });
 
-  // 투명 메쉬 렌더링 함수
-  const renderTransparentMeshes = (
-    startX: number,
-    width: number,
-    floorY: number,
-    ceilingY: number,
-    isActive: boolean,
-    meshType: 'back' | 'top',
-    zoneType: string
-  ) => {
-    const centerX = mmToThreeUnits(startX + width / 2);
-    const meshWidth = mmToThreeUnits(width);
-    
-    // 모든 영역 동일한 투명도
-    const opacity = 0.2;
-    
-    if (meshType === 'back') {
-      // 뒷면 메쉬 - 가이드 점선과 정확히 일치
-      const height = ceilingY - floorY;
-      const centerY = floorY + height / 2;
-      
-      return (
-        <mesh
-          key={`${zoneType}-back-mesh`}
-          position={[centerX, centerY, backZ]}
-          rotation={[0, 0, 0]}
-        >
-          <planeGeometry args={[meshWidth, height]} />
-          <meshBasicMaterial 
-            color={primaryColor} 
-            transparent 
-            opacity={opacity}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      );
-    } else {
-      // 상부 메쉬 (2D 탑뷰에서는 바닥 메쉬로 표시)
-      const depth = frontZ - backZ;
-      const centerZ = (frontZ + backZ) / 2;
-      
-      // 2D 탑뷰에서는 바닥에 표시
-      if (viewMode === '2D' && view2DDirection === 'top') {
-        return (
-          <mesh
-            key={`${zoneType}-floor-mesh`}
-            position={[centerX, floorY, centerZ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[meshWidth, depth]} />
-            <meshBasicMaterial 
-              color={primaryColor} 
-              transparent 
-              opacity={opacity}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        );
-      }
-      
-      // 3D 모드에서는 천장에 표시
-      return (
-        <mesh
-          key={`${zoneType}-top-mesh`}
-          position={[centerX, ceilingY, centerZ]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[meshWidth, depth]} />
-          <meshBasicMaterial 
-            color={primaryColor} 
-            transparent 
-            opacity={opacity}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      );
-    }
-  };
+  // 투명 메쉬 렌더링 함수 - 제거됨 (정면과 천장 메쉬 사용 안함)
+  const renderTransparentMeshes = () => null;
 
   return (
     <group>

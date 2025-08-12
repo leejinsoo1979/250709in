@@ -1354,8 +1354,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               )}
               
-              {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있는 경우에만 표시 */}
-              {floorFinishHeight > 0 && (
+              {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있고 탑뷰가 아닌 경우에만 표시 */}
+              {floorFinishHeight > 0 && view2DDirection !== 'top' && (
                 <group>
                   <Line
                     points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, floorFinishTopY, 0.002]]}

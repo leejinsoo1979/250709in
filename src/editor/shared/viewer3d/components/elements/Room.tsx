@@ -1142,7 +1142,7 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 바닥 마감재 - 공간 메쉬 안쪽 경계선에 맞춰 배치 */}
-      {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
+      {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && !(viewMode === '2D' && view2DDirection === 'top') && (
         <BoxWithEdges
           args={[width, floorFinishHeight, panelDepth]}
           position={[xOffset + width/2, floorFinishHeight/2, 0]}
