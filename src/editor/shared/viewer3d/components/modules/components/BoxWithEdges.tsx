@@ -44,12 +44,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   
-  // 드래그 중이거나 편집 모드일 때 고스트 효과 적용
+  // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
-    if ((isDragging || isEditMode) && material instanceof THREE.MeshStandardMaterial) {
+    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = material.clone();
       ghostMaterial.transparent = true;
-      ghostMaterial.opacity = isEditMode ? 0.2 : 0.6;
+      ghostMaterial.opacity = 0.6;
       
       // 테마 색상 가져오기
       const getThemeColor = () => {
@@ -64,14 +64,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       };
       
       ghostMaterial.color = new THREE.Color(getThemeColor());
-      if (isEditMode) {
-        ghostMaterial.emissive = new THREE.Color(getThemeColor());
-        ghostMaterial.emissiveIntensity = 0.1;
-        ghostMaterial.depthWrite = false;
-      }
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
+    // 편집 모드에서는 원래 재질 그대로 사용
     return material;
   }, [material, isDragging, isEditMode]);
 

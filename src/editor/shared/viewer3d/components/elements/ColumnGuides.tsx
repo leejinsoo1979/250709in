@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
@@ -20,6 +21,7 @@ interface ColumnGuidesProps {
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, view2DDirection: view2DDirectionProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { viewMode: contextViewMode, showDimensions, view2DDirection: contextView2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
+  const { placedModules } = useFurnitureStore();
   
   // prop으로 받은 값을 우선 사용, 없으면 context의 값 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -245,6 +247,25 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
   // 프레임 두께 계산
   const frameThickness = calculateFrameThickness(spaceInfo);
   
+  // 특정 슬롯 인덱스에 가구가 배치되었는지 확인하는 함수
+  const isSlotOccupied = (slotIndex: number, zoneType: string) => {
+    return placedModules.some(module => {
+      // 단내림 영역 체크
+      if (zoneType === 'dropped' && module.isDroppedZone) {
+        return module.columnIndex === slotIndex;
+      }
+      // 메인 영역 체크
+      if (zoneType === 'normal' && !module.isDroppedZone) {
+        return module.columnIndex === slotIndex;
+      }
+      // 전체 영역일 경우
+      if (zoneType === 'full') {
+        return module.columnIndex === slotIndex;
+      }
+      return false;
+    });
+  };
+
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (
     startX: number,
@@ -401,47 +422,42 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         />
       );
       
-      // 바닥 슬롯 메쉬 (3D 모드와 2D 탑뷰에서만 표시)
+      // 바닥 슬롯 메쉬 (3D 모드와 2D 탑뷰에서만 표시) - 슬롯별로 렌더링
       if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) {
-        const width = endBoundaryX - startBoundaryX;
-        const centerX = (startBoundaryX + endBoundaryX) / 2;
-        
-        // 점선 가이드와 동일한 깊이 사용 (backZ와 frontZ는 이미 매개변수로 전달됨)
         const meshDepth = frontZ - backZ;
-        const meshZ = (frontZ + backZ) / 2; // 중앙
+        const meshZ = (frontZ + backZ) / 2;
         
-        console.log('🟢 바닥 슬롯 메쉬 렌더링:', {
-          zoneType,
-          viewMode,
-          centerX,
-          floorY: floorY + 0.001,
-          width,
-          meshDepth,
-          meshZ,
-          backZ,
-          frontZ,
-          startBoundaryX,
-          endBoundaryX
-        });
-        
-        guides.push(
-          <mesh
-            key={`${zoneType}-floor-mesh`}
-            position={[centerX, floorY + 0.001, meshZ]}
-            renderOrder={1000}
-            frustumCulled={false}
-          >
-            <boxGeometry args={[width, 0.002, meshDepth]} />
-            <meshBasicMaterial 
-              color={guideColor}
-              transparent
-              opacity={0.05}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-            />
-          </mesh>
-        );
+        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
+        for (let i = 0; i < columnCount; i++) {
+          // 가구가 배치된 슬롯은 건너뛰기
+          if (isSlotOccupied(i, zoneType)) {
+            continue;
+          }
+          
+          const slotStartX = boundaries[i];
+          const slotEndX = boundaries[i + 1];
+          const slotWidth = slotEndX - slotStartX;
+          const slotCenterX = (slotStartX + slotEndX) / 2;
+          
+          guides.push(
+            <mesh
+              key={`${zoneType}-floor-mesh-${i}`}
+              position={[slotCenterX, floorY + 0.001, meshZ]}
+              renderOrder={-1}
+              frustumCulled={false}
+            >
+              <boxGeometry args={[slotWidth, 0.002, meshDepth]} />
+              <meshBasicMaterial 
+                color={guideColor}
+                transparent
+                opacity={viewMode === '2D' ? 0.05 : 0.15}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+          );
+        }
       }
       
       // 천장 가이드
@@ -462,58 +478,80 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         />
       );
       
-      // 천장 슬롯 메쉬 (3D 모드에서만 표시, 2D 뷰에서는 숨김) - 바닥과 동일한 재질
+      // 천장 슬롯 메쉬 (3D 모드에서만 표시, 2D 뷰에서는 숨김) - 슬롯별로 렌더링
       if (viewMode === '3D') {
-        const width = endBoundaryX - startBoundaryX;
-        const centerX = (startBoundaryX + endBoundaryX) / 2;
         const meshDepth = frontZ - backZ;
         const meshZ = (frontZ + backZ) / 2;
         
-        guides.push(
-          <mesh
-            key={`${zoneType}-ceiling-mesh`}
-            position={[centerX, ceilingY - 0.001, meshZ]}
-            renderOrder={1000}
-            frustumCulled={false}
-          >
-            <boxGeometry args={[width, 0.002, meshDepth]} />
-            <meshBasicMaterial 
-              color={guideColor}
-              transparent
-              opacity={0.05}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-            />
-          </mesh>
-        );
+        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
+        for (let i = 0; i < columnCount; i++) {
+          // 가구가 배치된 슬롯은 건너뛰기
+          if (isSlotOccupied(i, zoneType)) {
+            continue;
+          }
+          
+          const slotStartX = boundaries[i];
+          const slotEndX = boundaries[i + 1];
+          const slotWidth = slotEndX - slotStartX;
+          const slotCenterX = (slotStartX + slotEndX) / 2;
+          
+          guides.push(
+            <mesh
+              key={`${zoneType}-ceiling-mesh-${i}`}
+              position={[slotCenterX, ceilingY - 0.001, meshZ]}
+              renderOrder={-1}
+              frustumCulled={false}
+            >
+              <boxGeometry args={[slotWidth, 0.002, meshDepth]} />
+              <meshBasicMaterial 
+                color={guideColor}
+                transparent
+                opacity={0.15}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+          );
+        }
       }
       
-      // 정면(뒷벽) 슬롯 메쉬 (3D 모드와 2D 정면뷰에서만 표시) - 바닥과 동일한 재질
+      // 정면(뒷벽) 슬롯 메쉬 (3D 모드와 2D 정면뷰에서만 표시) - 슬롯별로 렌더링
       if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) {
-        const width = endBoundaryX - startBoundaryX;
-        const centerX = (startBoundaryX + endBoundaryX) / 2;
         const height = ceilingY - floorY;
         const centerY = (floorY + ceilingY) / 2;
         
-        guides.push(
-          <mesh
-            key={`${zoneType}-back-wall-mesh`}
-            position={[centerX, centerY, backZ + 0.001]}
-            renderOrder={1000}
-            frustumCulled={false}
-          >
-            <boxGeometry args={[width, height, 0.002]} />
-            <meshBasicMaterial 
-              color={guideColor}
-              transparent
-              opacity={0.05}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              depthTest={false}
-            />
-          </mesh>
-        );
+        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
+        for (let i = 0; i < columnCount; i++) {
+          // 가구가 배치된 슬롯은 건너뛰기
+          if (isSlotOccupied(i, zoneType)) {
+            continue;
+          }
+          
+          const slotStartX = boundaries[i];
+          const slotEndX = boundaries[i + 1];
+          const slotWidth = slotEndX - slotStartX;
+          const slotCenterX = (slotStartX + slotEndX) / 2;
+          
+          guides.push(
+            <mesh
+              key={`${zoneType}-back-wall-mesh-${i}`}
+              position={[slotCenterX, centerY, backZ + 0.001]}
+              renderOrder={-1}
+              frustumCulled={false}
+            >
+              <boxGeometry args={[slotWidth, height, 0.002]} />
+              <meshBasicMaterial 
+                color={guideColor}
+                transparent
+                opacity={viewMode === '2D' ? 0.05 : 0.15}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+          );
+        }
       }
     }
     

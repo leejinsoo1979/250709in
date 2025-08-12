@@ -165,12 +165,13 @@ export const useBaseFurniture = (
     return '#10b981'; // 기본값 (green)
   };
   
-  // 색상 결정: 드래그 중이거나 편집 모드면 테마 색상 사용, 아니면 기본 색상
-  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
+  // 색상 결정: 드래그 중일 때만 테마 색상 사용, 편집 모드는 기본 색상 유지
+  const furnitureColor = isDragging ? getThemeColor() : (
     color || (materialConfig.interiorColor === materialConfig.doorColor 
       ? materialConfig.doorColor
       : materialConfig.interiorColor)
   );
+  
   
   // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
@@ -190,40 +191,27 @@ export const useBaseFurniture = (
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
     if (material) {
-      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용
-      if (isDragging || (isEditMode && viewMode !== '2D')) { // 2D 모드에서는 편집 모드 효과 제거
+      // 드래그 중일 때만 테마 색상 사용
+      if (isDragging) {
         material.color.set(getThemeColor());
-        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
-        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
+        material.map = null; // 드래그 중에는 텍스처 제거
+        material.emissive.set(new THREE.Color(getThemeColor())); // 드래그 중 발광 효과
         material.emissiveIntensity = 0.2; // 약간의 발광
       } else {
         material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
         material.emissiveIntensity = 0;
         if (!material.map) {
-          // 드래그 중이 아니고 편집 모드가 아니고 텍스처가 없을 때만 기본 색상 사용
+          // 드래그 중이 아닐 때는 기본 색상 사용
           material.color.set(furnitureColor);
         }
       }
       
-      // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
+      // 투명도 설정 - 편집 모드는 투명도 적용하지 않음
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging;
       material.opacity = renderMode === 'wireframe' ? 0.3 : 
                         (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 : 
-                        (isEditMode ? 0.3 : 1.0));
+                        (isDragging ? 0.6 : 1.0);
       material.needsUpdate = true;
-      
-      console.log('🎨 재질 속성 업데이트:', {
-        furnitureColor: (isDragging || isEditMode) ? getThemeColor() : furnitureColor,
-        actualColor: material.color.getHexString(),
-        transparent: material.transparent,
-        opacity: material.opacity,
-        hasMap: !!material.map,
-        isDragging,
-        isEditMode,
-        emissive: material.emissive.getHexString(),
-        emissiveIntensity: material.emissiveIntensity
-      });
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
