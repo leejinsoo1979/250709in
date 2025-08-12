@@ -174,46 +174,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
                   </div>
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label className={styles.fieldLabel}>
-                    바닥 마감재
-                  </label>
-                  <div className={styles.toggleSection}>
-                    <div className={styles.toggleButtons}>
-                      <button
-                        type="button"
-                        className={`${styles.toggleButton} ${!hasFloorFinish ? styles.active : ''}`}
-                        onClick={() => hasFloorFinish && handleFloorFinishToggle()}
-                      >
-                        없음
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.toggleButton} ${hasFloorFinish ? styles.active : ''}`}
-                        onClick={() => !hasFloorFinish && handleFloorFinishToggle()}
-                      >
-                        있음
-                      </button>
-                    </div>
-                    
-                    {hasFloorFinish && (
-                      <div className={styles.subOption}>
-                        <label className={styles.subLabel}>높이</label>
-                        <div className={styles.heightInput}>
-                          <input
-                            type="number"
-                            value={floorFinishHeight}
-                            onChange={(e) => handleFloorFinishHeightChange(parseInt(e.target.value) || 10)}
-                            min="5"
-                            max="50"
-                            className={styles.numberInput}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {/* 바닥 마감재 섹션 제거 (Step2에서 설정) */}
               </div>
             </div>
           </div>

@@ -17,9 +17,9 @@
 .modalContent {
   background: white;
   border-radius: 16px;
-  width: 95vw;
-  max-width: 1200px;
-  max-height: 90vh;
+  width: 98vw;
+  max-width: 1500px;  /* Same as Step2 */
+  max-height: 92vh;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalFadeIn 0.3s ease-out;
@@ -83,7 +83,7 @@
 /* 콘텐츠 */
 .content {
   display: flex;
-  min-height: 600px;
+  min-height: 650px;  /* Increased from 600px */
 }
 
 /* 왼쪽 섹션 - 아이콘 */
@@ -259,9 +259,9 @@
 
 .nextButton {
   padding: 12px 32px;
-  background: var(--theme-primary);
-  color: white;
-  border: none;
+  background: var(--theme-primary) !important;
+  color: white !important;
+  border: none !important;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
@@ -270,12 +270,12 @@
 }
 
 .nextButton:hover:not(:disabled) {
-  background: var(--theme-primary-dark);
+  background: var(--theme-primary-dark) !important;
   transform: translateY(-1px);
 }
 
 .nextButton:disabled {
-  background: #d1d5db;
+  background: #d1d5db !important;
   cursor: not-allowed;
   transform: none;
 }
@@ -336,10 +336,14 @@
 }
 
 .toggleButton.active {
-  background: var(--theme-primary);
-  color: #ffffff;
-  border-color: var(--theme-primary);
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--theme-primary) !important;
 }
+
+/* 활성 플래그 클래스 (CSS Modules에서 존재하도록 선언) */
+/* 활성 상태 클래스는 모듈 선택자 병합을 위해 유지 */
+.active { outline: 0; }
 
 .subOption {
   margin-top: 12px;

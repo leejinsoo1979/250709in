@@ -383,7 +383,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
       const startBoundaryX = zoneStartX;
       const endBoundaryX = zoneEndX;
       
-      // 바닥 가이드
+      // 바닥 가이드 라인
       guides.push(
         <Line
           key={`${zoneType}-floor-horizontal`}
@@ -400,6 +400,48 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           transparent
         />
       );
+      
+      // 바닥 슬롯 메쉬 (3D 모드에서만 표시)
+      if (viewMode === '3D') {
+        const width = endBoundaryX - startBoundaryX;
+        const centerX = (startBoundaryX + endBoundaryX) / 2;
+        const depth = mmToThreeUnits(1500); // 패널 깊이
+        
+        console.log('🟢 바닥 슬롯 메쉬 렌더링:', {
+          zoneType,
+          viewMode,
+          centerX,
+          floorY: floorY + 0.01,
+          width,
+          depth,
+          startBoundaryX,
+          endBoundaryX
+        });
+        
+        // 바닥 가이드 점선과 정확히 같은 위치에 면 생성
+        const frontZ = mmToThreeUnits(internalSpace.depth / 2);
+        const backZ = -frontZ;
+        const meshDepth = frontZ - backZ;
+        const meshZ = 0; // 중앙
+        
+        guides.push(
+          <mesh
+            key={`${zoneType}-floor-mesh`}
+            position={[centerX, floorY + 0.1, meshZ]}
+            renderOrder={100}
+            frustumCulled={false}
+          >
+            <boxGeometry args={[width, 0.05, meshDepth]} />
+            <meshBasicMaterial 
+              color="#10b981"
+              transparent
+              opacity={0.3}
+              side={THREE.DoubleSide}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      }
       
       // 천장 가이드
       guides.push(
@@ -608,6 +650,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     }
     
     console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
+    console.log('🔴 guides 배열 내용:', guides.map(g => g.key));
     return guides;
   };
 

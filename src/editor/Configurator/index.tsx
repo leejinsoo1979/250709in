@@ -40,7 +40,8 @@ import {
   HeightControl,
   InstallTypeControls, 
   SurroundControls,
-  BaseControls
+  BaseControls,
+  FloorFinishControls
 } from '@/editor/shared/controls';
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 
@@ -2300,16 +2301,28 @@ const Configurator: React.FC = () => {
             />
 
 
-            {/* 받침대 - 양쪽 탭에서 모두 표시 */}
+            {/* 배치 설정 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>받침대</h3>
+                <h3 className={styles.sectionTitle}>배치 설정</h3>
               </div>
               <BaseControls 
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
                 disabled={hasSpecialDualFurniture}
+              />
+            </div>
+
+            {/* 바닥 마감재 - 양쪽 탭에서 모두 표시 */}
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>바닥 마감재</h3>
+              </div>
+              <FloorFinishControls 
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
               />
             </div>
 

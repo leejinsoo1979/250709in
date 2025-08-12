@@ -87,31 +87,8 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
         </div>
       )}
 
-      {/* 받침대 없음 - 배치 설정 */}
+      {/* 띄워서 배치 - 띄움 높이 설정 */}
       {isStand && (
-        <div className={styles.section}>
-          <span className={styles.label}>배치 설정</span>
-          <div className={styles.radioGroup}>
-            <button
-              className={`${styles.button} ${isGround ? styles.buttonActive : ''}`}
-              onClick={() => onPlacementTypeChange('ground')}
-              disabled={disabled}
-            >
-              바닥에 배치
-            </button>
-            <button
-              className={`${styles.button} ${isFloat ? styles.buttonActive : ''}`}
-              onClick={() => onPlacementTypeChange('float')}
-              disabled={disabled}
-            >
-              띄워서 배치
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 받침대 없음 + 띄워서 배치 - 띄움 높이 설정 */}
-      {isStand && isFloat && (
         <div className={styles.section}>
           <span className={styles.label}>띄움 높이</span>
           <div className={styles.inputWrapper}>

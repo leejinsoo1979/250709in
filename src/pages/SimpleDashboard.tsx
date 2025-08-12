@@ -3210,9 +3210,11 @@ const SimpleDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Step1 모달 */}
+      {/* Step1 모달 - 대시보드 컨텍스트에서도 라이트 테마 강제 적용 */}
       {isStep1ModalOpen && (
-        <Step1 onClose={handleCloseStep1Modal} />
+        <div data-theme="light" style={{ colorScheme: 'light' }}>
+          <Step1 onClose={handleCloseStep1Modal} />
+        </div>
       )}
 
 

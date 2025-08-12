@@ -63,6 +63,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const internalWidth = mmToThreeUnits(internalSpace.width);
   const internalHeight = mmToThreeUnits(internalSpace.height);
   
+  // 바닥 마감재 높이
+  const floorFinishHeight = spaceInfo.hasFloorFinish ? mmToThreeUnits(spaceInfo.floorFinish?.height || 10) : 0;
+  
   // 띄워서 배치일 때 프레임 하단 위치 계산
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
@@ -259,7 +262,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 좌측 내부 연장선 */}
         <Line
           points={[
-            [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
           ]}
           color={dimensionColors.primary}
@@ -270,7 +273,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 우측 내부 연장선 */}
         <Line
           points={[
-            [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
           ]}
           color={dimensionColors.primary}
@@ -490,8 +493,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 내부 높이 치수선 */}
         <Line
           points={[
-            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
-            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
+            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
           ]}
           color={dimensionColors.primary}
           lineWidth={2}
@@ -500,8 +503,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 하단 화살표 */}
         <Line
           points={createArrow(
-            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01),
-            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + 0.05, 0.01)
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01),
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + 0.05, 0.01)
           )}
           color={dimensionColors.primary}
           lineWidth={2}
@@ -510,8 +513,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 상단 화살표 */}
         <Line
           points={createArrow(
-            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01),
-            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight - 0.05, 0.01)
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01),
+            new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight - 0.05, 0.01)
           )}
           color={dimensionColors.primary}
           lineWidth={2}
@@ -519,7 +522,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         
         {/* 내부 높이 텍스트 */}
         <Html
-          position={[dimensionOffsetX + mmToThreeUnits(150) - mmToThreeUnits(80), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight / 2, 0.01]}
+          position={[dimensionOffsetX + mmToThreeUnits(150) - mmToThreeUnits(80), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight / 2, 0.01]}
           center
           transform={false}
           occlude={false}
@@ -548,8 +551,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 내부 하단 연장선 */}
         <Line
           points={[
-            [0, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
-            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01]
+            [0, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
+            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01]
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
@@ -559,14 +562,97 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 내부 상단 연장선 */}
         <Line
           points={[
-            [0, floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01],
-            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
+            [0, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01],
+            [dimensionOffsetX + mmToThreeUnits(170), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
           ]}
           color={dimensionColors.primary}
           lineWidth={1}
           dashed={false}
         />
       </group>
+      
+      {/* 바닥 마감재 치수 (바닥 마감재가 있고 사이드뷰일 때만 표시) */}
+      {currentViewDirection === 'front' && spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
+        <group>
+          {/* 바닥 마감재 치수선 */}
+          <Line
+            points={[
+              [rightDimensionOffsetX + mmToThreeUnits(50), floatHeight, 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight, 0.01]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 하단 화살표 */}
+          <Line
+            points={createArrow(
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight, 0.01),
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + 0.02, 0.01)
+            )}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 상단 화살표 */}
+          <Line
+            points={createArrow(
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight, 0.01),
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight - 0.02, 0.01)
+            )}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 바닥 마감재 텍스트 */}
+          <Html
+            position={[rightDimensionOffsetX + mmToThreeUnits(50) + mmToThreeUnits(80), floatHeight + floorFinishHeight / 2, 0.01]}
+            center
+            transform={false}
+            occlude={false}
+            zIndexRange={[1000, 1001]}
+          >
+            <div
+              style={{
+                background: dimensionColors.background,
+                color: dimensionColors.primary,
+                padding: '10px 15px',
+                fontSize: '36px',
+                fontWeight: 'bold',
+                borderRadius: '6px',
+                border: `2px solid ${dimensionColors.primary}`,
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+                pointerEvents: 'none'
+              }}
+            >
+              바닥 마감재 {spaceInfo.floorFinish?.height || 10}mm
+            </div>
+          </Html>
+          
+          {/* 바닥 마감재 하단 연장선 */}
+          <Line
+            points={[
+              [spaceWidth, floatHeight, 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(70), floatHeight, 0.01]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={false}
+          />
+          
+          {/* 바닥 마감재 상단 연장선 */}
+          <Line
+            points={[
+              [spaceWidth, floatHeight + floorFinishHeight, 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(70), floatHeight + floorFinishHeight, 0.01]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={false}
+          />
+        </group>
+      )}
       
       {/* 우측 띄움 높이 치수 (띄워서 배치일 때만 표시) */}
       {isFloating && floatHeight > 0 && (
@@ -647,6 +733,91 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               [rightDimensionOffsetX + mmToThreeUnits(120), floatHeight, 0.01]
             ]}
             color={dimensionColors.float}
+            lineWidth={1}
+            dashed={false}
+          />
+        </group>
+      )}
+      
+      {/* 받침대 높이 치수 - 받침대가 있을 때만 */}
+      {spaceInfo.baseConfig?.type === 'floor' && spaceInfo.baseConfig?.height && (
+        <group>
+          {/* 받침대 높이 치수선 */}
+          <Line
+            points={[
+              [rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 하단 화살표 (바닥) */}
+          <Line
+            points={createArrow(
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01),
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0.03, 0.01)
+            )}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 상단 화살표 (받침대 상단) */}
+          <Line
+            points={createArrow(
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01),
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height) - 0.03, 0.01)
+            )}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          
+          {/* 받침대 높이 텍스트 */}
+          <Html
+            position={[rightDimensionOffsetX + mmToThreeUnits(180), mmToThreeUnits(spaceInfo.baseConfig.height) / 2, 0.01]}
+            center
+            transform={false}
+            occlude={false}
+            zIndexRange={[1000, 1001]}
+          >
+            <div
+              style={{
+                background: dimensionColors.background,
+                color: dimensionColors.primary,
+                padding: '6px 10px',
+                borderRadius: '4px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                border: `1px solid ${dimensionColors.primary}`,
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+                pointerEvents: 'none',
+                transform: 'rotate(90deg)'
+              }}
+            >
+              받침대 {spaceInfo.baseConfig.height}mm
+            </div>
+          </Html>
+          
+          {/* 하단 연장선 (바닥) */}
+          <Line
+            points={[
+              [spaceWidth, 0, 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(120), 0, 0.01]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={false}
+          />
+          
+          {/* 상단 연장선 (받침대 상단) */}
+          <Line
+            points={[
+              [spaceWidth, mmToThreeUnits(spaceInfo.baseConfig.height), 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(120), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01]
+            ]}
+            color={dimensionColors.primary}
             lineWidth={1}
             dashed={false}
           />

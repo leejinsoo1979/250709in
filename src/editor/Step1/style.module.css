@@ -12,6 +12,23 @@
   z-index: 1000;
   padding: 20px;
   overflow-y: auto;
+  
+  /* 라이트 모드 CSS 변수 강제 정의 */
+  --theme-primary: #667eea;
+  --theme-primary-hover: #5a67d8;
+  --theme-primary-light: rgba(102, 126, 234, 0.1);
+  --theme-primary-dark: #4c51bf;
+  
+  --theme-background: #ffffff;
+  --theme-background-secondary: #f7fafc;
+  --theme-surface: #ffffff;
+  --theme-text: #1a202c;
+  --theme-text-secondary: #4a5568;
+  --theme-text-muted: #718096;
+  --theme-border: #e2e8f0;
+  --theme-border-hover: #cbd5e0;
+  --theme-shadow: rgba(0, 0, 0, 0.1);
+  --theme-overlay: rgba(0, 0, 0, 0.5);
 }
 
 /* 모달 콘텐츠 박스 - 다크모드 무시, 항상 라이트 모드 */
@@ -27,6 +44,7 @@
   margin: auto;
   /* 라이트 모드 강제 적용 */
   color-scheme: light;
+  color: #1a202c;
 }
 
 .header {

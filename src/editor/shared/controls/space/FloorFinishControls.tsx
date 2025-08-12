@@ -12,12 +12,12 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
   onUpdate
 }) => {
   const [floorThickness, setFloorThickness] = useState<string>(
-    spaceInfo.floorFinish?.height?.toString() || '20'
+    spaceInfo.floorFinish?.height?.toString() || '9'
   );
 
   // spaceInfo 변경 시 로컬 상태 업데이트
   useEffect(() => {
-    setFloorThickness(spaceInfo.floorFinish?.height?.toString() || '20');
+    setFloorThickness(spaceInfo.floorFinish?.height?.toString() || '9');
   }, [spaceInfo.floorFinish?.height]);
 
   const handleFloorStatusChange = (isFinished: boolean) => {
@@ -29,7 +29,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       });
     } else {
       // 바닥설치예정 - hasFloorFinish = true
-      const thickness = parseInt(floorThickness) || 20;
+      const thickness = parseInt(floorThickness) || 9;
       onUpdate({
         hasFloorFinish: true,
         floorFinish: {
@@ -49,7 +49,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
   const handleThicknessBlur = () => {
     const value = floorThickness;
     if (value === '') {
-      setFloorThickness('20');
+      setFloorThickness('9');
       return;
     }
     
@@ -65,11 +65,11 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       });
     } else {
       // 범위를 벗어나면 기본값으로 되돌림
-      setFloorThickness('20');
+      setFloorThickness('9');
       onUpdate({
         hasFloorFinish: true,
         floorFinish: {
-          height: 20
+          height: 9
         }
       });
     }
@@ -104,6 +104,25 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
           </button>
         </div>
       </div>
+      
+      {/* 바닥 마감재가 있을 때 두께 입력 필드 표시 */}
+      {spaceInfo.hasFloorFinish && (
+        <div className={styles.section}>
+          <label className={styles.label}>두께</label>
+          <div className={styles.inputWrapper}>
+            <input
+              type="text"
+              className={styles.input}
+              value={floorThickness}
+              onChange={(e) => handleThicknessChange(e.target.value)}
+              onBlur={handleThicknessBlur}
+              onKeyDown={handleThicknessKeyDown}
+              placeholder="5-100"
+            />
+            <span className={styles.unit}>mm</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

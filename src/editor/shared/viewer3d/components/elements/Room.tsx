@@ -167,7 +167,7 @@ const BoxWithEdges: React.FC<{
 
 const Room: React.FC<RoomProps> = ({
   spaceInfo,
-  floorColor = '#FF9966',
+  floorColor = '#B89B87',  // 옐로우를 뺀 그레이시 브라운 톤
   viewMode = '3D',
   view2DDirection,
   materialConfig,
@@ -190,6 +190,17 @@ const Room: React.FC<RoomProps> = ({
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  
+  // 바닥 마감재 material을 useMemo로 캐싱하여 재생성 방지
+  const floorFinishMaterial = useMemo(() => {
+    return new THREE.MeshLambertMaterial({
+      color: floorColor,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+  }, [floorColor]);
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
@@ -1130,20 +1141,31 @@ const Room: React.FC<RoomProps> = ({
         </>
       )}
       
-      {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
+      {/* 바닥 마감재 - 공간 메쉬 안쪽 경계선에 맞춰 배치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
         <BoxWithEdges
-          args={[width, floorFinishHeight, extendedPanelDepth]}
-          position={[xOffset + width/2, yOffset + floorFinishHeight/2, extendedZOffset + extendedPanelDepth/2]}
-          material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
+          args={[width, floorFinishHeight, panelDepth]}
+          position={[xOffset + width/2, floorFinishHeight/2, 0]}
+          material={(() => {
+            const mat = new THREE.MeshStandardMaterial({
+              color: floorColor,
+              transparent: false,  // 투명도 완전 비활성화
+              side: THREE.DoubleSide,
+              roughness: 0.8,
+              metalness: 0.1,
+              depthWrite: true,
+              polygonOffset: true,
+              polygonOffsetFactor: -1,
+              polygonOffsetUnits: -1
+            });
+            return mat;
+          })()}
           renderMode={renderMode}
-          viewMode={viewMode}
-          view2DTheme={view2DTheme}
         />
       )}
       
-      {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true일 때만 */}
-      {showAll && (() => {
+      {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true이고 2D 측면뷰가 아닐 때만 */}
+      {showAll && !(viewMode === '2D' && view2DDirection === 'front') && (() => {
         // 내경 공간 계산 (ColumnGuides와 동일한 방식)
         const internalSpace = calculateInternalSpace(spaceInfo);
         const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -1159,6 +1181,10 @@ const Room: React.FC<RoomProps> = ({
         
         const slotWidth = slotEndX - slotStartX;
         const slotCenterX = (slotStartX + slotEndX) / 2;
+        
+        // 슬롯 깊이 계산
+        const slotDepth = furnitureDepth;
+        const slotCenterZ = furnitureZOffset;
         
         // 좌우 프레임의 앞쪽 끝 위치 계산
         const frameEndZ = furnitureZOffset + furnitureDepth/2;
@@ -1190,9 +1216,27 @@ const Room: React.FC<RoomProps> = ({
         // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
         const hasDeepColumns = columns.some(column => column.depth >= 730);
         
+        // 바닥 슬롯 메쉬는 항상 렌더링 - 기둥이 없어도 보이도록
         if (columns.length === 0 || !hasDeepColumns) {
-          // 기둥이 없거나 모든 기둥이 729mm 이하면 바닥면 렌더링 안함 (SlotDropZonesSimple에서 처리)
-          return null;
+          // 기둥이 없거나 얕은 경우 전체 바닥면 렌더링
+          return (
+            <mesh
+              position={[slotCenterX, floorY + 0.001, slotCenterZ]}
+              rotation={[0, 0, 0]}
+              renderOrder={100}
+              frustumCulled={false}
+            >
+              <boxGeometry args={[slotWidth, 0.01, slotDepth]} />
+              <meshBasicMaterial 
+                color="#10b981"
+                transparent
+                opacity={0.3}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+          );
         }
         
         // 기둥이 있는 경우 분절된 바닥면들 렌더링
@@ -1252,7 +1296,9 @@ const Room: React.FC<RoomProps> = ({
                 backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
               ]}
               rotation={[-Math.PI / 2, 0, 0]}
-              receiveShadow
+              castShadow={false}
+              receiveShadow={false}
+              frustumCulled={false}
             >
               <planeGeometry args={[slotWidth, floorDepth]} />
               <meshStandardMaterial 
@@ -1308,10 +1354,11 @@ const Room: React.FC<RoomProps> = ({
         
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
-          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + droppedHeight/2;
-          const upperPartHeight = height - droppedHeight;
-          const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
+          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
+          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
+          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const upperPartHeight = mmToThreeUnits(dropHeight);
+          const upperPartCenterY = panelStartY + floatHeight + droppedHeight + upperPartHeight/2;
           
           return (
             <>
@@ -1419,10 +1466,11 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + droppedHeight/2;
-          const upperPartHeight = droppedCeilingHeight;
-          const upperPartCenterY = panelStartY + height - upperPartHeight/2;
+          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
+          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
+          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const upperPartHeight = mmToThreeUnits(dropHeight);
+          const upperPartCenterY = panelStartY + floatHeight + droppedHeight + upperPartHeight/2;
           
           return (
             <>
@@ -1679,7 +1727,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     position={[
                       droppedX,
-                      panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
+                      // 바닥 마감재가 있을 때 전체 높이에서 dropHeight를 뺀 위치
+                      // panelStartY는 바닥 마감재 높이, height는 전체 패널 높이
+                      panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2,
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
@@ -1956,10 +2006,11 @@ const Room: React.FC<RoomProps> = ({
         const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
         const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
         
-        // 왼쫝이 단내림 영역인 경우
+        // 왼쪽이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
-          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + droppedHeight/2;
+          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
+          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
+          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
           
           return (
             <group 
@@ -2025,8 +2076,9 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
-          const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + droppedHeight/2;
+          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
+          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
+          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
           
           return (
             <group 

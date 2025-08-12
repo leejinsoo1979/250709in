@@ -12,12 +12,9 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // 컨트롤 컴포넌트들 import
-import InstallTypeControls from '@/editor/shared/controls/space/InstallTypeControls';
+import { INSTALL_TYPES, InstallType } from '@/editor/shared/controls/types';
 import WidthControl from '@/editor/shared/controls/space/WidthControl';
 import HeightControl from '@/editor/shared/controls/space/HeightControl';
-import FloorFinishControls from '@/editor/shared/controls/space/FloorFinishControls';
-import BaseControls from '@/editor/shared/controls/customization/BaseControls';
-import SurroundControls from '@/editor/shared/controls/customization/SurroundControls';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
 
@@ -228,15 +225,69 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
           <div className={styles.rightSection}>
             <div className={styles.formContent}>
-              {/* 설치 타입 */}
-              <InstallTypeControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleUpdate}
-              />
+              {/* 공간 유형 */}
+              <div className={styles.compactSection}>
+                <label className={styles.compactLabel}>공간 유형</label>
+                <div className={styles.toggleButtonsWide}>
+                  {INSTALL_TYPES.map((type) => (
+                    <button
+                      key={type.type}
+                      className={`${styles.toggleButton} ${spaceInfo.installType === type.type ? styles.active : ''}`}
+                      onClick={() => {
+                        const updates: Partial<typeof spaceInfo> = {
+                          installType: type.type,
+                        };
+                        
+                        if (type.type === 'builtin') {
+                          updates.wallConfig = { left: true, right: true };
+                          updates.gapConfig = { left: 2, right: 2 };
+                        } else if (type.type === 'semistanding') {
+                          updates.wallConfig = { left: true, right: false };
+                          updates.gapConfig = { left: 2, right: 20 };
+                        } else if (type.type === 'freestanding') {
+                          updates.wallConfig = { left: false, right: false };
+                          updates.gapConfig = { left: 20, right: 20 };
+                        }
+                        
+                        handleUpdate(updates);
+                      }}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 세미스탠딩일 때 벽 위치 선택 */}
+              {spaceInfo.installType === 'semistanding' && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>벽 위치</label>
+                  <div className={styles.toggleButtonsWide}>
+                    <button
+                      className={`${styles.toggleButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
+                      onClick={() => handleUpdate({ 
+                        wallConfig: { left: true, right: false },
+                        gapConfig: { left: 2, right: 20 }
+                      })}
+                    >
+                      좌측
+                    </button>
+                    <button
+                      className={`${styles.toggleButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
+                      onClick={() => handleUpdate({ 
+                        wallConfig: { left: false, right: true },
+                        gapConfig: { left: 20, right: 2 }
+                      })}
+                    >
+                      우측
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* 공간 크기 */}
               <div className={styles.compactSection}>
-                <label className={styles.compactLabel}>크기</label>
+                <label className={styles.compactLabel}>공간 크기</label>
                 <div className={styles.sizeInputs}>
                   <span className={styles.sizeLabel}>W</span>
                   <WidthControl
@@ -252,7 +303,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
               </div>
 
               {/* 단내림 */}
-              <div className={styles.formGroup}>
+              <div className={styles.compactSection}>
                 <label className={styles.compactLabel}>단내림</label>
                 <div className={styles.toggleButtonsWide}>
                   <button
@@ -286,7 +337,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
               {spaceInfo.droppedCeiling?.enabled && (
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>위치</label>
-                  <div className={styles.toggleButtons}>
+                  <div className={styles.toggleButtonsWide}>
                     <button
                       className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.position === 'left' ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
@@ -410,23 +461,260 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
               <div className={styles.divider} />
 
-              {/* 프레임 타입 */}
-              <SurroundControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleUpdate}
-              />
+              {/* 프레임 설정 */}
+              <div className={styles.compactSection}>
+                <label className={styles.compactLabel}>프레임 설정</label>
+                <div className={styles.toggleButtonsWide}>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.surroundType === 'surround' ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      surroundType: 'surround',
+                      frameSize: spaceInfo.frameSize || { left: 50, right: 50, top: 10 }
+                    })}
+                  >
+                    서라운드(일반)
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.surroundType === 'no-surround' ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      surroundType: 'no-surround',
+                      frameSize: { left: 0, right: 0, top: 0 },
+                      gapConfig: {
+                        left: spaceInfo.installType === 'builtin' ? 2 : 
+                              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
+                        right: spaceInfo.installType === 'builtin' ? 2 : 
+                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+                      }
+                    })}
+                  >
+                    노서라운드(타이트)
+                  </button>
+                </div>
+              </div>
+              
+              {/* 서라운드일 때 프레임 사이즈 입력 필드 */}
+              {spaceInfo.surroundType === 'surround' && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>프레임 두께</label>
+                  <div className={styles.sizeInputs}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', minWidth: '20px' }}>좌</span>
+                      <input
+                        type="number"
+                        value={spaceInfo.frameSize?.left || 50}
+                        onChange={(e) => handleUpdate({
+                          frameSize: {
+                            ...spaceInfo.frameSize,
+                            left: parseInt(e.target.value) || 50
+                          }
+                        })}
+                        style={{ width: '60px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                        min="40"
+                        max="100"
+                      />
+                      <span style={{ fontSize: '12px', color: '#6b7280', minWidth: '20px' }}>우</span>
+                      <input
+                        type="number"
+                        value={spaceInfo.frameSize?.right || 50}
+                        onChange={(e) => handleUpdate({
+                          frameSize: {
+                            ...spaceInfo.frameSize,
+                            right: parseInt(e.target.value) || 50
+                          }
+                        })}
+                        style={{ width: '60px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                        min="40"
+                        max="100"
+                      />
+                      <span style={{ fontSize: '12px', color: '#6b7280', minWidth: '20px' }}>상</span>
+                      <input
+                        type="number"
+                        value={spaceInfo.frameSize?.top || 10}
+                        onChange={(e) => handleUpdate({
+                          frameSize: {
+                            ...spaceInfo.frameSize,
+                            top: parseInt(e.target.value) || 10
+                          }
+                        })}
+                        style={{ width: '60px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                        min="10"
+                        max="200"
+                      />
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 노서라운드일 때 이격거리 설정 */}
+              {spaceInfo.surroundType === 'no-surround' && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>이격거리</label>
+                  <div className={styles.sizeInputs}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: '#6b7280', minWidth: '20px' }}>좌</span>
+                      <input
+                        type="number"
+                        value={spaceInfo.gapConfig?.left || 2}
+                        onChange={(e) => handleUpdate({
+                          gapConfig: {
+                            ...spaceInfo.gapConfig,
+                            left: parseInt(e.target.value) || 2
+                          }
+                        })}
+                        style={{ width: '60px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                        min="2"
+                        max="50"
+                        disabled={spaceInfo.installType === 'builtin' || (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left)}
+                      />
+                      <span style={{ fontSize: '12px', color: '#6b7280', minWidth: '20px' }}>우</span>
+                      <input
+                        type="number"
+                        value={spaceInfo.gapConfig?.right || 2}
+                        onChange={(e) => handleUpdate({
+                          gapConfig: {
+                            ...spaceInfo.gapConfig,
+                            right: parseInt(e.target.value) || 2
+                          }
+                        })}
+                        style={{ width: '60px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                        min="2"
+                        max="50"
+                        disabled={spaceInfo.installType === 'builtin' || (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right)}
+                      />
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              {/* 받침대 */}
-              <BaseControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleUpdate}
-              />
+              {/* 배치 설정 */}
+              <div className={styles.compactSection}>
+                <label className={styles.compactLabel}>배치 설정</label>
+                <div className={styles.toggleButtonsWide}>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.baseConfig?.type === 'floor' || !spaceInfo.baseConfig ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      baseConfig: { 
+                        ...spaceInfo.baseConfig,
+                        type: 'floor',
+                        height: spaceInfo.baseConfig?.height || 65,
+                        placementType: 'floor'
+                      } 
+                    })}
+                  >
+                    바닥에 배치
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.baseConfig?.type === 'stand' ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      baseConfig: { 
+                        ...spaceInfo.baseConfig,
+                        type: 'stand',
+                        placementType: 'float',
+                        floatHeight: spaceInfo.baseConfig?.floatHeight || 200
+                      } 
+                    })}
+                  >
+                    띄워서 배치
+                  </button>
+                </div>
+              </div>
+              
+              {/* 높이 입력 필드 - 바닥에 배치일 때 */}
+              {(spaceInfo.baseConfig?.type === 'floor' || !spaceInfo.baseConfig) && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>높이</label>
+                  <div className={styles.sizeInputs}>
+                    <input
+                      type="number"
+                      value={spaceInfo.baseConfig?.height || 65}
+                      onChange={(e) => handleUpdate({
+                        baseConfig: {
+                          ...spaceInfo.baseConfig,
+                          type: 'floor',
+                          height: parseInt(e.target.value) || 65
+                        }
+                      })}
+                      style={{ width: '80px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                      min="50"
+                      max="500"
+                    />
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>mm</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* 높이 입력 필드 - 띄워서 배치일 때 */}
+              {spaceInfo.baseConfig?.type === 'stand' && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>높이</label>
+                  <div className={styles.sizeInputs}>
+                    <input
+                      type="number"
+                      value={spaceInfo.baseConfig?.floatHeight || 200}
+                      onChange={(e) => handleUpdate({
+                        baseConfig: {
+                          ...spaceInfo.baseConfig,
+                          type: 'stand',
+                          placementType: 'float',
+                          floatHeight: parseInt(e.target.value) || 200
+                        }
+                      })}
+                      style={{ width: '80px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                      min="100"
+                      max="500"
+                    />
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>mm</span>
+                  </div>
+                </div>
+              )}
 
               {/* 바닥 마감재 */}
-              <FloorFinishControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleUpdate}
-              />
+              <div className={styles.compactSection}>
+                <label className={styles.compactLabel}>바닥 마감재</label>
+                <div className={styles.toggleButtonsWide}>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      hasFloorFinish: true,
+                      floorFinish: spaceInfo.floorFinish || { height: 10 }
+                    })}
+                  >
+                    있음
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.active : ''}`}
+                    onClick={() => handleUpdate({ 
+                      hasFloorFinish: false 
+                    })}
+                  >
+                    없음
+                  </button>
+                </div>
+              </div>
+              
+              {/* 바닥 마감재 두께 입력 필드 - 마감재가 있을 때만 표시 */}
+              {spaceInfo.hasFloorFinish && (
+                <div className={styles.compactSection}>
+                  <label className={styles.compactLabel}>마감재 두께</label>
+                  <div className={styles.sizeInputs}>
+                    <input
+                      type="number"
+                      value={spaceInfo.floorFinish?.height || 10}
+                      onChange={(e) => handleUpdate({
+                        floorFinish: {
+                          height: parseInt(e.target.value) || 10
+                        }
+                      })}
+                      style={{ width: '80px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                      min="5"
+                      max="50"
+                    />
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>mm</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

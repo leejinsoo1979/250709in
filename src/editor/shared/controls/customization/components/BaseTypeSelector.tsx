@@ -25,14 +25,14 @@ const BaseTypeSelector: React.FC<BaseTypeSelectorProps> = ({
           onClick={() => onBaseTypeChange('floor')}
           disabled={disabled}
         >
-          있음
+          바닥에 배치
         </button>
         <button
           className={`${styles.toggleButton} ${isStand ? styles.toggleButtonActive : ''}`}
           onClick={() => onBaseTypeChange('stand')}
           disabled={disabled}
         >
-          없음
+          띄워서 배치
         </button>
       </div>
     </div>

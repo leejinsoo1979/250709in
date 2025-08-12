@@ -299,11 +299,11 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       break;
     case 'semistanding':
     case 'semi-standing':
-      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 20mm 엔드패널
-      if (wallConfig.left && !wallConfig.right) {
+      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 18mm 엔드패널
+      if (wallConfig?.left && !wallConfig?.right) {
         leftThickness = leftFrameSize;
         rightThickness = END_PANEL_THICKNESS;
-      } else if (!wallConfig.left && wallConfig.right) {
+      } else if (!wallConfig?.left && wallConfig?.right) {
         leftThickness = END_PANEL_THICKNESS;
         rightThickness = rightFrameSize;
       } else {
@@ -314,7 +314,7 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       break;
     case 'freestanding':
     case 'free-standing':
-      // 프리스탠딩: 양쪽 모두 벽이 없으므로 20mm 엔드패널
+      // 프리스탠딩: 양쪽 모두 벽이 없으므로 18mm 엔드패널
       leftThickness = END_PANEL_THICKNESS;
       rightThickness = END_PANEL_THICKNESS;
       break;
