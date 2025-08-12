@@ -4,6 +4,7 @@ import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 
@@ -59,11 +60,26 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
-  const { viewMode, view2DDirection } = useUIStore();
+  const { viewMode, view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const { theme } = useTheme();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
 
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth * 1.5}
+          depth={baseFurniture.depth * 1.5}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, -baseFurniture.height/2 - 0.02, 0]}
+        />
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <group>

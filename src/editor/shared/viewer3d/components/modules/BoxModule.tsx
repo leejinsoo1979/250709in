@@ -101,56 +101,84 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   });
   
   // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const placementType = spaceInfo?.baseConfig?.placementType;
+  const isFloating = placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled;
+  // 간접조명 표시 조건
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
   
-  console.log('🔥 간접조명 체크:', {
-    baseConfig: spaceInfo?.baseConfig,
-    placementType: spaceInfo?.baseConfig?.placementType,
+  // 간접조명 Y 위치 계산 (가구 하단 바로 아래)
+  const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
+  const lightY = furnitureBottomY - 0.15;  // 가구 하단에서 15cm 아래
+  
+  console.log('🔥 간접조명 위치 디버그:', {
+    moduleId: moduleData.id,
+    furnitureHeight: baseFurniture.height,
+    furnitureBottomY,
+    lightY,
+    lightPosition: [0, lightY, 0],
+    showIndirectLight,
     isFloating,
-    floatHeight,
-    isDragging,
-    indirectLightEnabled,
-    showIndirectLight
+    floatHeight
   });
   
   
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
   if (moduleData.id.includes('dual-4drawer-hanging')) {
     return (
-      <DualType4
-        moduleData={moduleData}
-        color={color}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        internalHeight={internalHeight}
-        hasDoor={hasDoor}
-        customDepth={customDepth}
-        hingePosition={hingePosition}
-        spaceInfo={spaceInfo}
-        doorWidth={doorWidth}
-        doorXOffset={0} // 도어 위치 고정 (커버 방식)
-        originalSlotWidth={originalSlotWidth}
-        slotCenterX={slotCenterX}
-        adjustedWidth={adjustedWidth} // 조정된 폭 전달
-        slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
-        slotIndex={slotIndex} // 슬롯 인덱스 전달
-        showFurniture={showFurniture} // 가구 본체 표시 여부
-        // 이벤트 핸들러들 전달
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerOver={onPointerOver}
-        onPointerOut={onPointerOut}
-        onDoubleClick={onDoubleClick}
-      />
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <DualType4
+          moduleData={moduleData}
+          color={color}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          internalHeight={internalHeight}
+          hasDoor={hasDoor}
+          customDepth={customDepth}
+          hingePosition={hingePosition}
+          spaceInfo={spaceInfo}
+          doorWidth={doorWidth}
+          doorXOffset={0} // 도어 위치 고정 (커버 방식)
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={slotCenterX}
+          adjustedWidth={adjustedWidth} // 조정된 폭 전달
+          slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+          slotIndex={slotIndex} // 슬롯 인덱스 전달
+          showFurniture={showFurniture} // 가구 본체 표시 여부
+          // 이벤트 핸들러들 전달
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
+          onDoubleClick={onDoubleClick}
+        />
+      </>
     );
   }
   
   if (moduleData.id.includes('dual-2drawer-hanging')) {
     return (
-      <DualType1
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <DualType1
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -176,12 +204,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
       />
+      </>
     );
   }
   
   if (moduleData.id.includes('dual-2hanging')) {
     return (
-      <DualType2
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <DualType2
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -207,12 +246,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
       />
+      </>
     );
   }
   
   if (moduleData.id.includes('single-4drawer-hanging')) {
     return (
-      <SingleType4
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <SingleType4
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -230,12 +280,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
       />
+      </>
     );
   }
   
   if (moduleData.id.includes('single-2drawer-hanging')) {
     return (
-      <SingleType1
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <SingleType1
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -254,12 +315,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
       />
+      </>
     );
   }
   
   if (moduleData.id.includes('single-2hanging')) {
     return (
-      <SingleType2
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <SingleType2
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -277,12 +349,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
       />
+      </>
     );
   }
 
   if (moduleData.id.includes('dual-2drawer-styler')) {
     return (
-      <DualType5
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <DualType5
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -308,12 +391,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
       />
+      </>
     );
   }
 
   if (moduleData.id.includes('dual-4drawer-pantshanger')) {
     return (
-      <DualType6
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <DualType6
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -339,13 +433,24 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
       />
+      </>
     );
   }
 
   // === 상부장 타입들 ===
   if (moduleData.id.includes('upper-cabinet-')) {
     return (
-      <UpperCabinet
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <UpperCabinet
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -363,6 +468,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
       />
+      </>
     );
   }
 
@@ -371,35 +477,29 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (() => {
-        console.log('🌟 간접조명 렌더링 시도:', {
+      {(() => {
+        console.log('🌟 간접조명 체크 상세:', {
           showIndirectLight,
-          width: baseFurniture.innerWidth * 1.2,
-          depth: baseFurniture.depth * 1.2,
-          intensity: indirectLightIntensity || 0.8,
-          position: [0, -baseFurniture.height/2 - 0.01, 0]
+          isFloating,
+          floatHeight,
+          isDragging,
+          indirectLightEnabled,
+          lightY,
+          furnitureHeight: baseFurniture.height,
+          renderPosition: [0, lightY, 0]
         });
         
-        // 디버그용 빨간색 박스 (확실히 보이도록)
-        return (
-          <group position={[0, -baseFurniture.height/2 - 0.02, 0]}>
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[baseFurniture.innerWidth * 1.5, baseFurniture.depth * 1.5]} />
-              <meshBasicMaterial 
-                color={new THREE.Color(1, 0, 0)} // 빨간색으로 테스트
-                transparent={true}
-                opacity={0.5}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
+        if (showIndirectLight) {
+          return (
             <IndirectLight
-              width={baseFurniture.innerWidth * 1.2}
-              depth={baseFurniture.depth * 1.2}
+              width={baseFurniture.innerWidth * 1.5}
+              depth={baseFurniture.depth * 1.5}
               intensity={indirectLightIntensity || 0.8}
-              position={[0, 0, 0]}
+              position={[0, lightY, 0]}
             />
-          </group>
-        );
+          );
+        }
+        return null;
       })()}
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}

@@ -5,6 +5,7 @@ import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../share
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 // 독립적인 엣지 표시를 위한 박스 컴포넌트
@@ -19,7 +20,7 @@ const BoxWithEdges: React.FC<{
   isBackPanel?: boolean; // 백패널 여부 추가
 }> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false, hideEdges = false, isBackPanel = false }) => {
   const { viewMode } = useSpace3DView();
-  const { view2DDirection } = useUIStore(); // view2DDirection 추가
+  const { view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore(); // view2DDirection 추가
   const { gl } = useThree();
   const { theme } = useTheme();
   
@@ -148,11 +149,26 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode } = useSpace3DView();
-  const { view2DDirection } = useUIStore();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === "float";
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const { view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const { theme } = useTheme();
 
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth * 1.5}
+          depth={baseFurniture.depth * 1.5}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, -baseFurniture.height/2 - 0.02, 0]}
+        />
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <group>

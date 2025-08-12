@@ -65,20 +65,40 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   const { renderMode } = useSpace3DView();
   
   // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const placementType = spaceInfo?.baseConfig?.placementType;
+  const isFloating = placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  
+  console.log('🔥 SingleType1 간접조명 체크:', {
+    moduleId: moduleData.id,
+    placementType,
+    isFloating,
+    floatHeight,
+    isDragging,
+    indirectLightEnabled,
+    showIndirectLight
+  });
 
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
       {showIndirectLight && (
-        <IndirectLight
-          width={innerWidth * 1.2}
-          depth={depth * 1.2}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, -height/2 - 0.01, 0]}
-        />
+        <>
+          {console.log('🌟 SingleType1 간접조명 렌더링:', {
+            showIndirectLight,
+            width: innerWidth * 1.5,
+            depth: depth * 1.5,
+            intensity: indirectLightIntensity || 0.8,
+            position: [0, -height/2 - 0.02, 0]
+          })}
+          <IndirectLight
+            width={innerWidth * 1.5}
+            depth={depth * 1.5}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, -height/2 - 0.02, 0]}
+          />
+        </>
       )}
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}

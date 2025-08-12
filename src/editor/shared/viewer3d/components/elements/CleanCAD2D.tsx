@@ -1517,6 +1517,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {showFurniture && furnitureDimensions && furnitureDimensions.map((item, index) => {
         if (!item) return null;
         
+        // 띄워서 배치 여부 확인
+        const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+        const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+        
+        console.log('📐 가구 치수 렌더링 체크:', {
+          index,
+          moduleId: item.module.moduleId,
+          showFurniture,
+          showDimensions,
+          isFloating,
+          floatHeight,
+          actualWidth: item.actualWidth
+        });
+        
         const {
           module,
           moduleData,
@@ -1590,10 +1604,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const isInMainArea = leftX >= mainAreaLeft && rightX <= mainAreaRight;
         const isInStepDownArea = hasStepDown && !isInMainArea;
         
-        // 가이드라인 높이 계산 - 가구 상단까지만
+        // 가이드라인 높이 계산 - 가구 상단까지만 (띄워서 배치 고려)
         const furnitureHeight = mmToThreeUnits(moduleData.dimensions.height);
-        const guideTopY = furnitureHeight; // 가구 상단까지만 표시
-        const guideBottomY = 0;
+        const guideTopY = floatHeight + furnitureHeight; // 가구 상단까지만 표시 (띄움 높이 포함)
+        const guideBottomY = floatHeight; // 띄움 높이부터 시작
         
         // 가이드라인은 해당 구간 내에서만 표시
         const shouldShowGuide = isInMainArea || isInStepDownArea;
@@ -1638,17 +1652,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 가구 상단에서 치수선까지 */}
+            {/* 연장선 - 가구 상단에서 치수선까지 (띄움 높이 고려) */}
             {/* 좌측 연장선 */}
             <Line
-              points={[[leftX, furnitureHeight, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
+              points={[[leftX, guideTopY, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={999999}
             />
             {/* 우측 연장선 */}
             <Line
-              points={[[rightX, furnitureHeight, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
+              points={[[rightX, guideTopY, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={999999}

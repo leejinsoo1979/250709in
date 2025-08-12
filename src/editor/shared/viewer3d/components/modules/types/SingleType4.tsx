@@ -1,6 +1,8 @@
 import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -29,6 +31,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   showFurniture = true
 }) => {
   // 공통 로직 사용
+  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
@@ -55,9 +58,16 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === "float";
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
 
   return (
     <>
+      {/* 간접조명은 BoxModule에서 처리 */}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>

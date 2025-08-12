@@ -6,6 +6,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
@@ -58,9 +59,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     modelConfig
   } = baseFurniture;
 
-  const { viewMode, view2DDirection, showDimensions } = useUIStore();
+  const { viewMode, view2DDirection, showDimensions, indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const { theme } = useTheme();
   const { renderMode } = useSpace3DView();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === "float";
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -679,6 +685,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth * 1.5}
+          depth={baseFurniture.depth * 1.5}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, -baseFurniture.height/2 - 0.02, 0]}
+        />
+      )}
+      
         {/* 좌측 섹션 그룹 */}
         <group position={[leftXOffset, 0, 0]}>
           {renderLeftSections()}
@@ -722,6 +738,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth * 1.5}
+          depth={baseFurniture.depth * 1.5}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, -baseFurniture.height/2 - 0.02, 0]}
+        />
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>

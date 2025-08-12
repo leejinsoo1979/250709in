@@ -825,7 +825,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       )}
       
       {/* 배치된 가구 치수 */}
-      {React.useMemo(() => placedModules.map((module, index) => {
+      {React.useMemo(() => {
+        console.log('📐 가구 치수 렌더링:', {
+          placedModules: placedModules.length,
+          showDimensions,
+          isFloating,
+          floatHeight
+        });
+        
+        return placedModules.map((module, index) => {
         const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(
           module.moduleId,
@@ -1164,6 +1172,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
           </group>
         );
+      });
       }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig])}
       
       

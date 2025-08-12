@@ -198,9 +198,10 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     right: 2, // 기본 이격거리 2mm
   },
   baseConfig: {
-    type: 'floor',
+    type: 'stand',  // 'stand'로 변경해야 띄워서 배치가 작동함
     height: DEFAULT_BASE_VALUES.HEIGHT,
-    placementType: 'float'  // 기본값을 띄워서 배치로 변경
+    placementType: 'float',  // 띄워서 배치
+    floatHeight: 200  // 띄움 높이 추가
   },
   // 재질 설정 초기값
   materialConfig: {

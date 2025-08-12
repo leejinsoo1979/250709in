@@ -10,41 +10,46 @@ interface IndirectLightProps {
 
 const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, position }) => {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const [loadError, setLoadError] = useState(false);
   
   useEffect(() => {
-    console.log('🔍 IndirectLight 컴포넌트 마운트됨');
-    const loader = new THREE.TextureLoader();
+    console.log('🔍 IndirectLight 컴포넌트 마운트됨', { width, depth, intensity, position });
     
-    // 여러 경로 시도
-    const paths = [
-      '/images/lighting/light3000k.png',
-      './images/lighting/light3000k.png',
-      'images/lighting/light3000k.png'
-    ];
+    // 먼저 이미지가 실제로 로드 가능한지 확인
+    const img = new Image();
+    img.onload = () => {
+      console.log('✅ 이미지 로드 성공 (HTML Image):', img.width, 'x', img.height);
+      
+      // 이미지 로드 성공 시 Three.js 텍스처로 변환
+      const loader = new THREE.TextureLoader();
+      const imagePath = '/images/lighting/light3000k.png';
+      
+      loader.load(
+        imagePath,
+        (loadedTexture) => {
+          console.log('✅ Three.js 텍스처 로드 성공');
+          loadedTexture.wrapS = THREE.RepeatWrapping;
+          loadedTexture.wrapT = THREE.RepeatWrapping;
+          loadedTexture.repeat.set(1, 1);
+          loadedTexture.needsUpdate = true;
+          setTexture(loadedTexture);
+        },
+        (progress) => {
+          console.log('⏳ 텍스처 로딩 중...', progress);
+        },
+        (error) => {
+          console.error('❌ Three.js 텍스처 로드 실패:', error);
+          setLoadError(true);
+        }
+      );
+    };
     
-    let loaded = false;
+    img.onerror = (error) => {
+      console.error('❌ HTML 이미지 로드 실패:', error);
+      setLoadError(true);
+    };
     
-    paths.forEach(path => {
-      if (!loaded) {
-        console.log('🔍 텍스처 로드 시도:', path);
-        loader.load(
-          path,
-          (loadedTexture) => {
-            if (!loaded) {
-              loaded = true;
-              console.log('✅ IndirectLight 텍스처 로드 성공:', path);
-              loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
-              loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
-              setTexture(loadedTexture);
-            }
-          },
-          undefined,
-          (error) => {
-            console.log('❌ 텍스처 로드 실패:', path, error);
-          }
-        );
-      }
-    });
+    img.src = '/images/lighting/light3000k.png';
     
     return () => {
       if (texture) {
@@ -53,40 +58,43 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
     };
   }, []);
 
-  // 텍스처가 로드되지 않았을 때 기본 색상 표시
-  if (!texture) {
-    console.log('⚠️ 텍스처 없음, 기본 색상 사용');
-    return (
+  // 렌더링
+  console.log('🎨 IndirectLight 렌더링 위치:', { 
+    hasTexture: !!texture, 
+    loadError,
+    width, 
+    depth, 
+    intensity,
+    position,
+    y위치: position[1]
+  });
+
+  // 실제 간접조명 렌더링
+  return (
+    <>
+      {/* 디버그: 위치 확인용 빨간 구 */}
+      <mesh position={position}>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
+      
+      {/* 간접조명 효과 - X축으로 180도 회전하여 아래로 향하게 */}
       <group position={position}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[Math.PI, 0, 0]} renderOrder={999}>
           <planeGeometry args={[width, depth]} />
           <meshBasicMaterial 
-            color={new THREE.Color(1, 0.95, 0.7)}
+            map={texture}
+            color={new THREE.Color(1, 0.9, 0.7)} // 따뜻한 3000K 색상
             transparent={true}
-            opacity={intensity * 0.5}
+            opacity={texture ? intensity * 0.6 : 0.2}
             side={THREE.DoubleSide}
             depthWrite={false}
-            emissive={new THREE.Color(1, 0.9, 0.6)}
-            emissiveIntensity={0.5}
+            depthTest={false}
+            blending={THREE.NormalBlending}
           />
         </mesh>
       </group>
-    );
-  }
-
-  return (
-    <group position={position}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[width, depth]} />
-        <meshBasicMaterial 
-          map={texture}
-          transparent={true}
-          opacity={intensity}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-    </group>
+    </>
   );
 };
 

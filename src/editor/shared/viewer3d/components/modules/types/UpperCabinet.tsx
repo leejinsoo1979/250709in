@@ -3,6 +3,8 @@ import { ModuleData } from '@/data/modules/shelving';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -31,6 +33,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   const { renderMode } = useSpace3DView();
   
   // 공통 가구 로직 사용
+  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,

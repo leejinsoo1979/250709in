@@ -1,6 +1,8 @@
 import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -28,6 +30,9 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   slotWidths,
   showFurniture = true
 }) => {
+  // 간접조명 관련 상태
+  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -39,9 +44,42 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   });
 
   const { renderMode } = useSpace3DView();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  
+  console.log('🔥 DualType1 간접조명 체크:', {
+    moduleId: moduleData.id,
+    isFloating,
+    floatHeight,
+    isDragging,
+    indirectLightEnabled,
+    showIndirectLight
+  });
 
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <>
+          {console.log('🌟 DualType1 간접조명 렌더링:', {
+            showIndirectLight,
+            width: baseFurniture.innerWidth * 1.5,
+            depth: baseFurniture.depth * 1.5,
+            intensity: indirectLightIntensity || 0.8,
+            position: [0, -baseFurniture.height/2 - 0.02, 0]
+          })}
+          <IndirectLight
+            width={baseFurniture.innerWidth * 1.5}
+            depth={baseFurniture.depth * 1.5}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, -baseFurniture.height/2 - 0.02, 0]}
+          />
+        </>
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
