@@ -102,6 +102,9 @@ interface BaseFurnitureShellProps {
   // 편집 모드 상태
   isEditMode?: boolean;
   
+  // 강조 상태
+  isHighlighted?: boolean;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -128,6 +131,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   mmToThreeUnits,
   isDragging = false,
   isEditMode = false,
+  isHighlighted = false,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기

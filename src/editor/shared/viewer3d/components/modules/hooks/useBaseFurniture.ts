@@ -21,6 +21,7 @@ interface BaseFurnitureOptions {
   isEditMode?: boolean; // 편집 모드 여부
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
+  isHighlighted?: boolean; // 가구 강조 여부
 }
 
 // 가구 기본 설정 반환 타입
@@ -71,7 +72,8 @@ export const useBaseFurniture = (
     isDragging = false,
     isEditMode = false,
     adjustedWidth,
-    slotWidths
+    slotWidths,
+    isHighlighted = false
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -172,6 +174,16 @@ export const useBaseFurniture = (
       : materialConfig.interiorColor)
   );
   
+  // 강조 상태 디버깅
+  if (isHighlighted) {
+    console.log('🌟 useBaseFurniture - 가구 강조 상태:', {
+      moduleId: moduleData.id,
+      isHighlighted,
+      isDragging,
+      색상: furnitureColor
+    });
+  }
+  
   
   // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
@@ -197,6 +209,13 @@ export const useBaseFurniture = (
         material.map = null; // 드래그 중에는 텍스처 제거
         material.emissive.set(new THREE.Color(getThemeColor())); // 드래그 중 발광 효과
         material.emissiveIntensity = 0.2; // 약간의 발광
+      } else if (isHighlighted) {
+        // 강조 상태일 때 고스트 효과 (반투명)
+        material.emissive.set(new THREE.Color(0x000000)); // 발광 없음
+        material.emissiveIntensity = 0;
+        if (!material.map) {
+          material.color.set(furnitureColor);
+        }
       } else {
         material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
         material.emissiveIntensity = 0;
@@ -207,13 +226,13 @@ export const useBaseFurniture = (
       }
       
       // 투명도 설정 - 편집 모드는 투명도 적용하지 않음
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging;
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isHighlighted;
       material.opacity = renderMode === 'wireframe' ? 0.3 : 
                         (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 : 1.0);
+                        (isDragging ? 0.6 : (isHighlighted ? 0.5 : 1.0)); // 강조 시 0.5 투명도 (고스트 효과)
       material.needsUpdate = true;
     }
-  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
+  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted]);
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {

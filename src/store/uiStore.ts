@@ -82,6 +82,11 @@ interface UIState {
   selectedModuleForPlacement: string | null;
   hoveredSlotForPlacement: number | null;
   
+  // 간접조명 설정
+  indirectLightEnabled: boolean;
+  indirectLightIntensity: number;
+  indirectLightColor: string;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -126,6 +131,9 @@ interface UIState {
   setHighlightedCompartment: (compartmentId: string | null) => void;
   setSelectedModuleForPlacement: (moduleId: string | null) => void;
   setHoveredSlotForPlacement: (slotIndex: number | null) => void;
+  setIndirectLightEnabled: (enabled: boolean) => void;
+  setIndirectLightIntensity: (intensity: number) => void;
+  setIndirectLightColor: (color: string) => void;
   resetUI: () => void;
 }
 
@@ -157,6 +165,9 @@ const initialUIState = {
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
   hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
+  indirectLightEnabled: true,  // 기본값: 간접조명 활성화
+  indirectLightIntensity: 0.8,  // 기본값: 강도 0.8
+  indirectLightColor: '#ffffff',  // 기본값: 흰색
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -244,10 +255,16 @@ export const useUIStore = create<UIState>()(
         }),
       
       // 가구 편집 팝업 열기 (다른 모든 팝업 닫기)
-      openFurnitureEditPopup: (moduleId) =>
+      openFurnitureEditPopup: (moduleId) => {
+        console.log('🔹 openFurnitureEditPopup 호출:', {
+          moduleId,
+          현재상태: get().highlightedCompartment
+        });
         set({ 
-          activePopup: { type: 'furnitureEdit', id: moduleId }
-        }),
+          activePopup: { type: 'furnitureEdit', id: moduleId },
+          highlightedCompartment: moduleId // 가구 편집 시 해당 가구도 강조
+        });
+      },
       
       // 기둥 팝업 열기 (다른 모든 팝업 닫기)
       openColumnPopup: (columnId) =>
@@ -291,7 +308,8 @@ export const useUIStore = create<UIState>()(
       // 모든 팝업 닫기
       closeAllPopups: () =>
         set({ 
-          activePopup: { type: null, id: null }
+          activePopup: { type: null, id: null },
+          highlightedCompartment: null // 팝업 닫을 때 강조도 제거
         }),
       
       setHighlightedFrame: (frame) =>
@@ -329,6 +347,15 @@ export const useUIStore = create<UIState>()(
       
       setHoveredSlotForPlacement: (slotIndex) =>
         set({ hoveredSlotForPlacement: slotIndex }),
+      
+      setIndirectLightEnabled: (enabled) =>
+        set({ indirectLightEnabled: enabled }),
+      
+      setIndirectLightIntensity: (intensity) =>
+        set({ indirectLightIntensity: intensity }),
+      
+      setIndirectLightColor: (color) =>
+        set({ indirectLightColor: color }),
       
       resetUI: () =>
         set(initialUIState),

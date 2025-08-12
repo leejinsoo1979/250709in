@@ -91,6 +91,12 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   // 커스텀 훅들 사용 - 조건부 호출 제거
   const isViewerOnly = !!propPlacedModules;
   
+  console.log('🎮 PlacedFurnitureContainer 모드:', {
+    isViewerOnly,
+    propPlacedModules: !!propPlacedModules,
+    propPlacedModulesLength: propPlacedModules?.length
+  });
+  
   // 항상 훅을 호출하되, 결과를 조건부로 사용
   const selectionStateFromHook = useFurnitureSelection();
   const dragHandlersFromHook = useFurnitureDrag({ spaceInfo });

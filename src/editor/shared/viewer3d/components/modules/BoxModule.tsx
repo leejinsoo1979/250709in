@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ModuleData } from '../../../../../data/modules/shelving';
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer } from './shared';
 import DoorModule from './DoorModule';
 import { useSpace3DView } from '../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
+import * as THREE from 'three';
+import IndirectLight from './IndirectLight';
 import SingleType1 from './types/SingleType1';
 import SingleType2 from './types/SingleType2';
 import SingleType4 from './types/SingleType4';
@@ -35,6 +38,7 @@ interface BoxModuleProps {
   renderMode?: 'solid' | 'wireframe';
   furnitureId?: string; // 가구 ID (칸 강조용)
   showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
+  isHighlighted?: boolean; // 가구 강조 여부
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -72,6 +76,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   renderMode,
   furnitureId,
   showFurniture = true, // 기본값은 true (가구 표시)
+  isHighlighted = false, // 강조 상태
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -81,7 +86,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   onDoubleClick
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
-  useSpaceConfigStore(); // Hook 순서 보장을 위해 호출 (실제로는 사용하지 않음)
+  const spaceConfigStore = useSpaceConfigStore();
+  const { indirectLightEnabled, indirectLightIntensity, indirectLightColor } = useUIStore();
   
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -90,8 +96,25 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    isHighlighted
   });
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled;
+  
+  console.log('🔥 간접조명 체크:', {
+    baseConfig: spaceInfo?.baseConfig,
+    placementType: spaceInfo?.baseConfig?.placementType,
+    isFloating,
+    floatHeight,
+    isDragging,
+    indirectLightEnabled,
+    showIndirectLight
+  });
+  
   
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
   if (moduleData.id.includes('dual-4drawer-hanging')) {
@@ -229,6 +252,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        isHighlighted={isHighlighted} // 강조 상태 전달
       />
     );
   }
@@ -346,9 +370,41 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // 나머지 케이스들을 공통 로직으로 처리
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (() => {
+        console.log('🌟 간접조명 렌더링 시도:', {
+          showIndirectLight,
+          width: baseFurniture.innerWidth * 1.2,
+          depth: baseFurniture.depth * 1.2,
+          intensity: indirectLightIntensity || 0.8,
+          position: [0, -baseFurniture.height/2 - 0.01, 0]
+        });
+        
+        // 디버그용 빨간색 박스 (확실히 보이도록)
+        return (
+          <group position={[0, -baseFurniture.height/2 - 0.02, 0]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[baseFurniture.innerWidth * 1.5, baseFurniture.depth * 1.5]} />
+              <meshBasicMaterial 
+                color={new THREE.Color(1, 0, 0)} // 빨간색으로 테스트
+                transparent={true}
+                opacity={0.5}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+            <IndirectLight
+              width={baseFurniture.innerWidth * 1.2}
+              depth={baseFurniture.depth * 1.2}
+              intensity={indirectLightIntensity || 0.8}
+              position={[0, 0, 0]}
+            />
+          </group>
+        );
+      })()}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} isHighlighted={isHighlighted}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <SectionsRenderer

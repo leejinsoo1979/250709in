@@ -251,8 +251,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음 (조건부 렌더링은 훅 선언 이후에만)
   if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
+    console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
+      type: activePopup.type,
+      id: activePopup.id
+    });
     return null;
   }
+  
+  console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
+    type: activePopup.type,
+    id: activePopup.id
+  });
 
   // 듀얼 가구 여부 확인 (moduleId 기반)
   const isDualFurniture = moduleData ? moduleData.id.startsWith('dual-') : false;

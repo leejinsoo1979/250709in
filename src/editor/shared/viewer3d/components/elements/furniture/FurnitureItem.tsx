@@ -56,9 +56,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
-  const { isFurnitureDragging, showDimensions, view2DTheme } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, highlightedCompartment } = useUIStore();
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
+  
+  // 이 가구가 강조되어야 하는지 확인
+  const isHighlighted = highlightedCompartment === placedModule.id;
+  
+  // 디버깅 로그
+  React.useEffect(() => {
+    if (isHighlighted) {
+      console.log('🔆 가구 강조됨:', {
+        moduleId: placedModule.id,
+        highlightedCompartment,
+        isHighlighted
+      });
+    }
+  }, [isHighlighted, placedModule.id, highlightedCompartment]);
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
@@ -663,7 +677,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             furnitureZ // 공간 앞면에서 뒤쪽으로 배치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
-          onDoubleClick={(e) => onDoubleClick(e, placedModule.id)}
+          onClick={(e) => {
+            console.log('🎯 FurnitureItem onClick 이벤트 발생:', placedModule.id);
+            onDoubleClick(e, placedModule.id);
+          }}
+          onDoubleClick={(e) => {
+            console.log('🎯 FurnitureItem onDoubleClick 이벤트 발생:', placedModule.id);
+            onDoubleClick(e, placedModule.id);
+          }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -700,6 +721,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 viewMode={viewMode}
                 renderMode={renderMode}
                 showFurniture={showFurniture}
+                isHighlighted={isHighlighted} // 강조 상태 전달
                 hasDoor={(isFurnitureDragging || isDraggingThis)
                   ? false // 드래그 중에는 도어 렌더링 안 함
                   : (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) 
@@ -709,6 +731,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 hingePosition={optimalHingePosition}
                 spaceInfo={zoneSpaceInfo}
                 doorWidth={furnitureWidthMm} // 도어 너비는 가구 너비와 동일
+                onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}
                 slotCenterX={(() => {
                   // 도어 위치 계산 함수: 논리적으로 도어가 커버해야 할 영역의 중심을 계산

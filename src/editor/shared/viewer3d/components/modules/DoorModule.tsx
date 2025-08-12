@@ -408,6 +408,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // === 문 높이 계산 ===
   // 문 높이 = 전체 공간 높이 - 바닥재 높이 (내경 공간 높이)
   let fullSpaceHeight = spaceInfo.height;
+  let floatHeight = 0;
+  
+  // 띄워서 배치인 경우 floatHeight 가져오기
+  if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+    floatHeight = spaceInfo.baseConfig.floatHeight || 0;
+  }
   
   // 단내림 구간인 경우 높이 조정
   if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
@@ -423,7 +429,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
   const actualDoorHeight = fullSpaceHeight - floorHeight;
-  const doorHeight = mmToThreeUnits(actualDoorHeight - 30); // 30mm 줄임 (기존 20mm에서 10mm 추가)
+  
+  // 띄워서 배치인 경우 도어 높이에서 floatHeight 빼기 (아래에서만 줄어듦)
+  const doorHeightAdjusted = floatHeight > 0 ? actualDoorHeight - floatHeight : actualDoorHeight;
+  const doorHeight = mmToThreeUnits(doorHeightAdjusted - 5); // 5mm 줄임 (20mm에서 15mm 확장)
+  
+  console.log('🚪📐 도어 높이 계산:', {
+    fullSpaceHeight,
+    floatHeight,
+    actualDoorHeight,
+    doorHeightAdjusted,
+    doorHeight_mm: doorHeightAdjusted - 30,
+    isFloating: floatHeight > 0,
+    note: floatHeight > 0 ? '띄워서 배치 - 아래에서 줄어듦' : '바닥 배치'
+  });
   
   // === 문 Y 위치 계산 (기존 작동하던 로직으로 복원) ===
   // 
@@ -448,6 +467,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 받침대 없음: 상단 프레임 높이 조정 없음 (0으로 설정)
     const topFrameHeight = spaceInfo.frameSize?.top || 50;
     doorYPosition = 0;
+    
+    // 띄워서 배치인 경우 Y 위치를 아래로 조정 (15mm 아래로 확장)
+    if (floatHeight > 0) {
+      // 도어를 7.5mm 아래로 이동 (15mm 확장의 절반)
+      doorYPosition = mmToThreeUnits(-7.5);
+      console.log('🚪📍 띄워서 배치 도어 위치 조정:', {
+        floatHeight,
+        doorYPosition,
+        doorYPosition_mm: -7.5,
+        note: '도어 아래로 15mm 확장을 위해 7.5mm 아래로 이동'
+      });
+    }
   }
   
   // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)

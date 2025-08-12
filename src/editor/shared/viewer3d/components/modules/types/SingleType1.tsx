@@ -1,6 +1,8 @@
 import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -26,8 +28,12 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotInfo,
   slotCenterX,
-  showFurniture = true
+  showFurniture = true,
+  isHighlighted = false
 }) => {
+  // 간접조명 관련 상태
+  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -35,7 +41,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    isHighlighted
   });
 
   const {
@@ -51,16 +58,32 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     material,
     mmToThreeUnits,
     isMultiSectionFurniture,
-    getSectionHeights
+    getSectionHeights,
+    actualDepthMm
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+  
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const showIndirectLight = isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled;
 
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={innerWidth * 1.2}
+          depth={depth * 1.2}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, -height/2 - 0.01, 0]}
+        />
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} isHighlighted={isHighlighted}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <SectionsRenderer
