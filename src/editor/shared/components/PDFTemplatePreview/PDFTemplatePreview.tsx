@@ -2611,12 +2611,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     <button 
                       className={`${styles.switch} ${uiStore.showDimensions ? styles.on : styles.off}`}
                       onClick={() => {
-                        // 치수 토글이 켜져있으면 끄고, showDimensionsText도 함께 끄기
+                        // 치수 토글이 켜져있으면 끄고, 모든 관련 옵션들도 함께 끄기
                         if (uiStore.showDimensions) {
                           uiStore.setShowDimensions(false);
-                          if (uiStore.showDimensionsText) {
-                            uiStore.setShowDimensionsText(false);
-                          }
+                          // 모든 하위 옵션들 OFF
+                          if (uiStore.showAll) uiStore.setShowAll(false);
+                          if (uiStore.showDimensionsText) uiStore.setShowDimensionsText(false);
+                          if (uiStore.showGuides) uiStore.setShowGuides(false);
+                          if (uiStore.showAxis) uiStore.setShowAxis(false);
                         } else {
                           // 치수 토글이 꺼져있으면 켜기
                           uiStore.setShowDimensions(true);
@@ -2627,7 +2629,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     </button>
                   </div>
 
-                  {/* 체크박스 옵션들 */}
+                  {/* 체크박스 옵션들 - 서브헤더가 ON일 때만 표시 */}
+                  {uiStore.showDimensions ? (
                   <div className={styles.checkboxGroup}>
                     <label className={styles.checkboxLabel}>
                       <input
@@ -2673,6 +2676,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       축
                     </label>
                   </div>
+                  ) : null}
                 </div>
 
                 <div className={styles.centerControls}>

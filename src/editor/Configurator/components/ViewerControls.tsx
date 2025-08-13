@@ -160,7 +160,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </button>
         </div>
 
-        {/* 체크박스 옵션들 - 항상 표시 */}
+        {/* 체크박스 옵션들 - showDimensions가 true일 때만 표시 */}
+        {showDimensions && (
         <div className={styles.checkboxGroup}>
           {/* 가구 체크박스 - 2D 모드에서만 표시 */}
           {viewMode === '2D' && (
@@ -220,6 +221,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             축
           </label>
         </div>
+        )}
 
         {/* 두 번째 도어 토글 제거 (불필요) */}
       </div>

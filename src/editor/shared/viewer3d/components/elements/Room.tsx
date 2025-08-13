@@ -1559,8 +1559,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
-      {/* 서라운드 모드에서만 표시 */}
-      {showFrame && topBottomFrameHeightMm > 0 && spaceInfo.surroundType === 'surround' && (
+      {/* 서라운드/노서라운드 모두 표시 */}
+      {showFrame && topBottomFrameHeightMm > 0 && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
