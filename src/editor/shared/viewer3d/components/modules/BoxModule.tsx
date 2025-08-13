@@ -111,21 +111,25 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   const is2DMode = currentViewMode === '2D' || currentViewMode !== '3D';
   const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
   
+  if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
+    console.log('🔥 간접조명 계산 디버그:', {
+      moduleId: moduleData.id,
+      placementType,
+      isFloating,
+      floatHeight,
+      isDragging,
+      indirectLightEnabled,
+      is2DMode,
+      showIndirectLight,
+      spaceInfo: spaceInfo?.baseConfig
+    });
+  }
+  
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
   // 가구 바닥에서 약간 아래에 위치
   const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
   
-  console.log('🔥 간접조명 디버그:', {
-    moduleId: moduleData.id,
-    currentViewMode,
-    is2DMode,
-    showIndirectLight,
-    isFloating,
-    floatHeight,
-    indirectLightEnabled,
-    조건: `!${is2DMode} && ${isFloating} && ${floatHeight > 0} && ${!isDragging} && ${indirectLightEnabled}`
-  });
   
   
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
@@ -359,6 +363,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   if (moduleData.id.includes('dual-2drawer-styler')) {
+    console.log('🔍 BoxModule: 스타일러장 렌더링 시작', {
+      moduleId: moduleData.id,
+      showFurniture,
+      isDragging,
+      isEditMode,
+      spaceInfo: {
+        hasSpaceInfo: !!spaceInfo,
+        placementType: spaceInfo?.baseConfig?.placementType,
+        floatHeight: spaceInfo?.baseConfig?.floatHeight
+      }
+    });
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -401,6 +416,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   if (moduleData.id.includes('dual-4drawer-pantshanger')) {
+    console.log('🔍 BoxModule: 바지걸이장 렌더링 시작', {
+      moduleId: moduleData.id,
+      showFurniture,
+      isDragging,
+      isEditMode,
+      spaceInfo: {
+        hasSpaceInfo: !!spaceInfo,
+        placementType: spaceInfo?.baseConfig?.placementType,
+        floatHeight: spaceInfo?.baseConfig?.floatHeight
+      }
+    });
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

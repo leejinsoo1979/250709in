@@ -387,7 +387,7 @@ export const loadEditorProject = async (projectId: string): Promise<{
         baseConfig: projectData.spaceConfig?.baseConfig || {
           type: 'floor',
           height: 100,
-          placementType: 'floor'
+          placementType: 'ground'
         },
         materialConfig: projectData.spaceConfig?.materialConfig || {
           interiorColor: '#FFFFFF',

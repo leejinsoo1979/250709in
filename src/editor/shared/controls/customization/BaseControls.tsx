@@ -52,7 +52,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
         baseConfig: {
           ...currentBaseConfig,
           type,
-          placementType: 'floor', // 바닥에 배치 설정
+          placementType: 'ground', // 바닥에 배치 설정
           height: currentBaseConfig.height || 65, // 받침대 높이 유지
         },
       });

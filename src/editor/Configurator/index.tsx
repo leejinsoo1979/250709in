@@ -2310,7 +2310,7 @@ const Configurator: React.FC = () => {
               <BaseControls 
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
+                disabled={false}
               />
             </div>
 

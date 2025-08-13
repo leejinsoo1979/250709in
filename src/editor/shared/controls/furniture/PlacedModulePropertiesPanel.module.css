@@ -170,6 +170,85 @@
   border-radius: 4px;
 }
 
+/* 상세보기 버튼 스타일 */
+.detailsButton {
+  padding: 8px 16px;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 12px;
+  white-space: nowrap;
+}
+
+.detailsButton:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--theme-primary-light);
+}
+
+.detailsButton:active {
+  transform: translateY(0);
+}
+
+/* 상세보기 섹션 스타일 */
+.detailsSection {
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  margin-top: -8px;
+}
+
+.panelList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.panelSectionHeader {
+  padding: 10px 0 6px 0;
+  margin-top: 12px;
+  border-bottom: 2px solid var(--theme-primary);
+  color: var(--theme-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panelSectionHeader:first-child {
+  margin-top: 0;
+}
+
+.panelItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--theme-border);
+  font-size: 12px;
+}
+
+.panelItem:last-child {
+  border-bottom: none;
+}
+
+.panelName {
+  font-weight: 500;
+  color: var(--theme-text);
+  min-width: 80px;
+}
+
+.panelSize {
+  color: var(--theme-text-secondary);
+  text-align: right;
+  font-family: monospace;
+}
+
 .moduleBox {
   width: 45px;
   height: 45px;

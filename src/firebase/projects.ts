@@ -51,7 +51,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
         baseConfig: {
           type: 'floor',
           height: 65,
-          placementType: 'floor',
+          placementType: 'ground',
         },
         hasFloorFinish: false,
         floorFinish: null,

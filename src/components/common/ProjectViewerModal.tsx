@@ -95,7 +95,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               baseConfig: {
                 type: 'floor',
                 height: 65,
-                placementType: 'floor',
+                placementType: 'ground',
               },
               hasFloorFinish: false,
               floorFinish: null,

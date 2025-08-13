@@ -34,6 +34,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   slotWidths,
   showFurniture = true
 }) => {
+  try {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -65,6 +66,34 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
   const { viewMode, view2DDirection, showDimensions, indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const { theme } = useTheme();
+  
+  // 띄워서 배치 여부 확인
+  const placementType = spaceInfo?.baseConfig?.placementType;
+  const isFloating = placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  
+  // 간접조명 표시 조건 (3D 모드에서만)
+  const is2DMode = viewMode === '2D' || viewMode !== '3D';
+  const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  
+  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
+  const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
+  // 가구 바닥에서 약간 아래에 위치
+  const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
+  
+  console.log('🔥 DualType6 간접조명 계산:', {
+    moduleId: moduleData.id,
+    hasSpaceInfo: !!spaceInfo,
+    baseConfig: spaceInfo?.baseConfig,
+    placementType,
+    isFloating,
+    floatHeight,
+    isDragging,
+    indirectLightEnabled,
+    is2DMode,
+    showIndirectLight,
+    lightY
+  });
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -97,6 +126,22 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     leftXOffset = -innerWidth / 4;
     rightXOffset = innerWidth / 4;
   }
+  
+  console.log('🔍 DualType6 좌우 분할 계산:', {
+    moduleId: moduleData.id,
+    width,
+    innerWidth,
+    leftWidth,
+    rightWidth,
+    leftXOffset,
+    rightXOffset,
+    modelConfig: {
+      rightAbsoluteWidth: modelConfig.rightAbsoluteWidth,
+      hasSharedMiddlePanel: modelConfig.hasSharedMiddlePanel,
+      leftSections: modelConfig.leftSections,
+      rightSections: modelConfig.rightSections
+    }
+  });
 
   // 통합 중단선반 및 안전선반 관련 계산
   const hasSharedMiddlePanel = modelConfig.hasSharedMiddlePanel || false;
@@ -449,16 +494,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth * 1.5}
-          depth={baseFurniture.depth * 1.5}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, -baseFurniture.height/2 - 0.02, 0]}
-        />
-      )}
-      
         {/* 좌측 섹션 그룹 */}
         <group position={[leftXOffset, 0, 0]}>
           {renderLeftSections()}
@@ -638,6 +673,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     );
   };
 
+  console.log('🚨 DualType6 렌더링 시작:', {
+    moduleId: moduleData.id,
+    showFurniture,
+    isDragging,
+    baseFurniture: {
+      width: baseFurniture.width,
+      height: baseFurniture.height,
+      depth: baseFurniture.depth,
+      material: baseFurniture.material
+    }
+  });
+
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
@@ -646,13 +693,23 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           width={baseFurniture.innerWidth * 1.5}
           depth={baseFurniture.depth * 1.5}
           intensity={indirectLightIntensity || 0.8}
-          position={[0, -baseFurniture.height/2 - 0.02, 0]}
+          position={[0, lightY, 0]}
         />
       )}
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <group>
+          {console.log('🔍 DualType6 기본 구조 렌더링:', {
+            width,
+            height,
+            depth,
+            innerWidth,
+            innerHeight,
+            basicThickness,
+            leftPanelPosition: -width/2 + basicThickness/2,
+            rightPanelPosition: width/2 - basicThickness/2
+          })}
           {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
           <BoxWithEdges
         args={[basicThickness, height, depth]}
@@ -781,6 +838,24 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       )}
     </>
   );
+  } catch (error) {
+    console.error('🚨 DualType6 렌더링 에러:', error);
+    console.error('스택 트레이스:', error.stack);
+    console.error('모듈 데이터:', moduleData);
+    console.error('Props:', {
+      color,
+      internalHeight,
+      hasDoor,
+      customDepth,
+      isDragging,
+      isEditMode,
+      showFurniture,
+      slotWidths
+    });
+    
+    // 에러가 발생해도 빈 group을 반환하여 전체 씬이 충돌하지 않도록 함
+    return <group />;
+  }
 };
 
 export default DualType6; 

@@ -54,6 +54,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onDoubleClick,
   showFurniture = true // 기본값 true
 }) => {
+  // furnitureStartY 변경 감지
+  React.useEffect(() => {
+    if (placedModule.moduleId.includes('dual-4drawer-pantshanger') || placedModule.moduleId.includes('dual-2drawer-styler')) {
+      console.log('🎯 FurnitureItem - furnitureStartY 변경 감지:', {
+        moduleId: placedModule.moduleId,
+        furnitureStartY,
+        baseConfig: spaceInfo?.baseConfig,
+        placementType: spaceInfo?.baseConfig?.placementType,
+        floatHeight: spaceInfo?.baseConfig?.floatHeight
+      });
+    }
+  }, [furnitureStartY, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, placedModule.moduleId]);
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
   const { isFurnitureDragging, showDimensions, view2DTheme, highlightedCompartment } = useUIStore();
@@ -667,13 +679,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id]);
 
+  // 가구의 Y 위치를 계산 (변경될 때마다 업데이트)
+  const furnitureYPosition = React.useMemo(() => {
+    const yPos = furnitureStartY + height / 2;
+    if (actualModuleData.id.includes('dual-4drawer-pantshanger') || actualModuleData.id.includes('dual-2drawer-styler')) {
+      console.log('🚀 가구 Y 위치 계산:', {
+        moduleId: actualModuleData.id,
+        furnitureStartY,
+        height,
+        totalY: yPos,
+        baseConfig: spaceInfo?.baseConfig
+      });
+    }
+    return yPos;
+  }, [furnitureStartY, height, actualModuleData.id, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight]);
+
   return (
     <group>
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
       <group
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,
-            furnitureStartY + height / 2, // 내경 바닥 높이 + 가구 높이의 절반
+            furnitureYPosition, // memoized Y position
             furnitureZ // 공간 앞면에서 뒤쪽으로 배치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
@@ -729,7 +756,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   : (placedModule.hasDoor ?? false)}
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
-                spaceInfo={zoneSpaceInfo}
+                spaceInfo={(() => {
+                  console.log('🚨 FurnitureItem -> BoxModule spaceInfo 전달:', {
+                    moduleId: actualModuleData.id,
+                    hasSpaceInfo: !!zoneSpaceInfo,
+                    baseConfig: zoneSpaceInfo?.baseConfig,
+                    placementType: zoneSpaceInfo?.baseConfig?.placementType,
+                    floatHeight: zoneSpaceInfo?.baseConfig?.floatHeight
+                  });
+                  return zoneSpaceInfo;
+                })()}
                 doorWidth={furnitureWidthMm} // 도어 너비는 가구 너비와 동일
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}

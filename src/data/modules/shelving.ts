@@ -258,11 +258,10 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
     { 
-      type: 'shelf', 
+      type: 'hanging', // 하부장도 옷걸이 구역
       heightType: 'absolute', 
       height: bottomHeight,
-      count: 1, // 하부 옷걸이 구역 (내부 상단에 마감 패널 1개)
-      shelfPositions: [bottomHeight - 18 - 9] // 섹션 최상단에서 27mm 아래
+      shelfPositions: [] // 하부장에는 선반 없음
     },
     { 
       type: 'hanging', 
@@ -404,11 +403,10 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number): ModuleData
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
     { 
-      type: 'shelf', 
+      type: 'hanging', // 하부장도 옷걸이 구역
       heightType: 'absolute', 
       height: bottomHeight,
-      count: 1, // 하부 옷걸이 구역 (내부 상단에 마감 패널 1개)
-      shelfPositions: [bottomHeight - 18 - 9] // 섹션 최상단에서 27mm 아래
+      shelfPositions: [] // 하부장에는 선반 없음
     },
     { 
       type: 'hanging', 

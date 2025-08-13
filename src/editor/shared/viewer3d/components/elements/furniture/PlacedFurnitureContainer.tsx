@@ -25,6 +25,15 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   showFurniture = true // 기본값 true
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
+  
+  // spaceInfo 변경 감지 디버그
+  React.useEffect(() => {
+    console.log('🎯 PlacedFurnitureContainer - spaceInfo 변경:', {
+      baseConfig: spaceInfo?.baseConfig,
+      placementType: spaceInfo?.baseConfig?.placementType,
+      floatHeight: spaceInfo?.baseConfig?.floatHeight
+    });
+  }, [spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight]);
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
   // activeZone 필터링 제거 - 모든 가구 표시
   const placedModules = propPlacedModules || storePlacedModules;
@@ -79,6 +88,12 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       // 띄워서 배치: 바닥재 + 띄움 높이
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
       furnitureStartY = mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
+      console.log('🔥 띄워서 배치 Y 위치 계산:', {
+        placementType: spaceInfo.baseConfig.placementType,
+        floatHeightMm,
+        floorFinishHeightMm,
+        furnitureStartY
+      });
     } else {
       // 바닥에 배치: 바닥재만
       furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
@@ -127,7 +142,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
         return (
           <FurnitureItem
-            key={`${placedModule.id}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}`}
+            key={`${placedModule.id}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}-${spaceInfo.baseConfig?.placementType || 'ground'}-${spaceInfo.baseConfig?.floatHeight || 0}`}
             placedModule={placedModule}
             placedModules={placedModules}
             spaceInfo={spaceInfo}
