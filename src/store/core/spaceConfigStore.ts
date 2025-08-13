@@ -198,10 +198,10 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
     right: 2, // 기본 이격거리 2mm
   },
   baseConfig: {
-    type: 'stand',  // 'stand'로 변경해야 띄워서 배치가 작동함
+    type: 'floor',  // 바닥 프레임(받침대) 있음
     height: DEFAULT_BASE_VALUES.HEIGHT,
-    placementType: 'float',  // 띄워서 배치
-    floatHeight: 200  // 띄움 높이 추가
+    placementType: 'ground',  // 바닥에 배치 (기본값)
+    floatHeight: 200  // 띄움 높이 (띄워서 배치 선택 시 사용)
   },
   // 재질 설정 초기값
   materialConfig: {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { useSpace3DView } from '../../context/useSpace3DView';
 
 interface IndirectLightProps {
   width: number;
@@ -9,8 +10,15 @@ interface IndirectLightProps {
 }
 
 const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, position }) => {
+  const { viewMode } = useSpace3DView();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [loadError, setLoadError] = useState(false);
+  
+  // 2D 모드에서는 아예 렌더링하지 않음
+  if (viewMode === '2D') {
+    console.log('🚫 2D 모드라서 간접조명 렌더링 안함');
+    return null;
+  }
   
   useEffect(() => {
     console.log('🔍 IndirectLight 컴포넌트 마운트됨', { width, depth, intensity, position });
@@ -71,30 +79,22 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
 
   // 실제 간접조명 렌더링
   return (
-    <>
-      {/* 디버그: 위치 확인용 빨간 구 */}
-      <mesh position={position}>
-        <sphereGeometry args={[0.1, 16, 16]} />
-        <meshBasicMaterial color="red" />
-      </mesh>
-      
+    <group position={position}>
       {/* 간접조명 효과 - X축으로 180도 회전하여 아래로 향하게 */}
-      <group position={position}>
-        <mesh rotation={[Math.PI, 0, 0]} renderOrder={999}>
-          <planeGeometry args={[width, depth]} />
-          <meshBasicMaterial 
-            map={texture}
-            color={new THREE.Color(1, 0.9, 0.7)} // 따뜻한 3000K 색상
-            transparent={true}
-            opacity={texture ? intensity * 0.6 : 0.2}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-            depthTest={false}
-            blending={THREE.NormalBlending}
-          />
-        </mesh>
-      </group>
-    </>
+      <mesh rotation={[Math.PI, 0, 0]} renderOrder={1} frustumCulled={false}>
+        <planeGeometry args={[width, depth]} />
+        <meshBasicMaterial 
+          map={texture}
+          color={new THREE.Color(1, 0.6, 0.2)} // 더 진한 오렌지색
+          transparent={true}
+          opacity={texture ? intensity * 0.6 : 0.2}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          depthTest={false}
+          blending={THREE.NormalBlending}
+        />
+      </mesh>
+    </group>
   );
 };
 

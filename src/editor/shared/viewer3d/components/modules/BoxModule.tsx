@@ -104,22 +104,27 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   const placementType = spaceInfo?.baseConfig?.placementType;
   const isFloating = placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  // 간접조명 표시 조건
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  // 간접조명 표시 조건 (3D 모드에서만)
+  const { viewMode: contextViewMode } = useSpace3DView();
+  const currentViewMode = viewMode || contextViewMode;
+  // 2D 모드 체크 강화 - 2D 모드면 절대 안 보이게
+  const is2DMode = currentViewMode === '2D' || currentViewMode !== '3D';
+  const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
   
-  // 간접조명 Y 위치 계산 (가구 하단 바로 아래)
+  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
-  const lightY = furnitureBottomY - 0.15;  // 가구 하단에서 15cm 아래
+  // 가구 바닥에서 약간 아래에 위치
+  const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
   
-  console.log('🔥 간접조명 위치 디버그:', {
+  console.log('🔥 간접조명 디버그:', {
     moduleId: moduleData.id,
-    furnitureHeight: baseFurniture.height,
-    furnitureBottomY,
-    lightY,
-    lightPosition: [0, lightY, 0],
+    currentViewMode,
+    is2DMode,
     showIndirectLight,
     isFloating,
-    floatHeight
+    floatHeight,
+    indirectLightEnabled,
+    조건: `!${is2DMode} && ${isFloating} && ${floatHeight > 0} && ${!isDragging} && ${indirectLightEnabled}`
   });
   
   
@@ -476,31 +481,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // 나머지 케이스들을 공통 로직으로 처리
   return (
     <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {(() => {
-        console.log('🌟 간접조명 체크 상세:', {
-          showIndirectLight,
-          isFloating,
-          floatHeight,
-          isDragging,
-          indirectLightEnabled,
-          lightY,
-          furnitureHeight: baseFurniture.height,
-          renderPosition: [0, lightY, 0]
-        });
-        
-        if (showIndirectLight) {
-          return (
-            <IndirectLight
-              width={baseFurniture.innerWidth * 1.5}
-              depth={baseFurniture.depth * 1.5}
-              intensity={indirectLightIntensity || 0.8}
-              position={[0, lightY, 0]}
-            />
-          );
-        }
-        return null;
-      })()}
+      {/* 띄워서 배치 시 간접조명 효과 (3D 모드에서만) */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth}
+          depth={baseFurniture.depth}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, lightY, 0]}
+        />
+      )}
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
