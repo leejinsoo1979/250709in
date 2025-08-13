@@ -88,6 +88,25 @@ export class TextureGenerator {
   }
 
   /**
+   * 기둥용 세로 그라데이션 텍스처 (적당한 중간톤)
+   */
+  static createColumnGradientTexture(): THREE.CanvasTexture {
+    const { canvas, context } = this.createCanvas();
+    
+    const gradient = this.createVerticalGradient(context, 256, [
+      { position: 0, color: '#d8d8d8' },    // 상단: 연한 회색
+      { position: 0.3, color: '#d0d0d0' },  // 중상단
+      { position: 0.7, color: '#c8c8c8' },  // 중하단
+      { position: 1, color: '#c0c0c0' }     // 하단: 진한 회색
+    ]);
+    
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 256, 256);
+    
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  /**
    * 바닥용 가로 그라데이션 텍스처 (앞쪽: 흰색, 뒤쪽: 그레이)
    */
   static createFloorGradientTexture(): THREE.CanvasTexture {

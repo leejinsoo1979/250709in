@@ -268,6 +268,32 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.mainDoorCount !== undefined && processedInfo.mainDoorCount !== state.spaceInfo.mainDoorCount ||
         processedInfo.droppedCeilingDoorCount !== undefined && processedInfo.droppedCeilingDoorCount !== state.spaceInfo.droppedCeilingDoorCount;
       
+      // 띄워서 배치 설정 변경 감지
+      const placementChanged = 
+        (processedInfo.baseConfig?.placementType !== undefined && 
+         processedInfo.baseConfig?.placementType !== state.spaceInfo.baseConfig?.placementType) ||
+        (processedInfo.baseConfig?.floatHeight !== undefined && 
+         processedInfo.baseConfig?.floatHeight !== state.spaceInfo.baseConfig?.floatHeight);
+      
+      if (placementChanged) {
+        console.log('🎯 띄워서 배치 설정 변경 감지:', {
+          이전: {
+            placementType: state.spaceInfo.baseConfig?.placementType,
+            floatHeight: state.spaceInfo.baseConfig?.floatHeight
+          },
+          새로운: {
+            placementType: processedInfo.baseConfig?.placementType,
+            floatHeight: processedInfo.baseConfig?.floatHeight
+          }
+        });
+        
+        // 가구 Y 위치 업데이트를 위해 furnitureStore의 updateFurnitureYPositions 호출
+        setTimeout(() => {
+          const { updateFurnitureYPositions } = useFurnitureStore.getState();
+          updateFurnitureYPositions(newState.spaceInfo);
+        }, 0);
+      }
+      
       if (columnCountChanged) {
         console.log('📐 컬럼 수 변경 감지:', {
           이전: {

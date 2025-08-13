@@ -7,6 +7,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
+import { TextureGenerator } from '../../../utils/materials/TextureGenerator';
 
 
 interface ColumnAssetProps {
@@ -73,18 +74,25 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
 
-  // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
+  // 기둥 재질 생성 - 그라데이션 텍스처 적용
   const material = React.useMemo(() => {
-    // 선택된 기둥은 연두색으로 표시
-    const displayColor = isSelected ? '#4CAF50' : color;
+    // 벽과 똑같은 그라데이션 텍스처 사용
+    const gradientTexture = TextureGenerator.createWallGradientTexture();
+    
+    // 텍스처가 세로로 한 번만 적용되도록 설정
+    gradientTexture.wrapS = THREE.ClampToEdgeWrapping;
+    gradientTexture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    // 선택된 기둥은 연두색 틴트 적용
+    const displayColor = isSelected ? '#4CAF50' : new THREE.Color(1, 1, 1);
+    
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(displayColor),
+      map: gradientTexture,
+      color: displayColor,
       metalness: 0.1,
       roughness: 0.7,
-      transparent: true,
-      opacity: 1.0,
     });
-  }, [color, isSelected]); // isDragging 제거
+  }, [isSelected]);
 
   // 와이어프레임용 윤곽선 재질
   const wireframeMaterial = React.useMemo(() => {

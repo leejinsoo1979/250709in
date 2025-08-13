@@ -35,6 +35,9 @@ interface FurnitureDataState {
   // 기둥 변경 시 가구 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => void;
   
+  // 띄워서 배치 설정 변경 시 가구 Y 위치 업데이트
+  updateFurnitureYPositions: (spaceInfo: any) => void;
+  
   // 선택 상태 액션들 (FurnitureSelectionProvider와 동일한 인터페이스)
   setSelectedLibraryModuleId: (id: string | null) => void;
   setSelectedPlacedModuleId: (id: string | null) => void;
@@ -445,6 +448,30 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       
       return {
         placedModules: filteredModules
+      };
+    });
+  },
+  
+  // 띄워서 배치 설정 변경 시 가구 Y 위치 업데이트
+  updateFurnitureYPositions: (spaceInfo: any) => {
+    set((state) => {
+      console.log('📍 updateFurnitureYPositions 호출:', {
+        placementType: spaceInfo.baseConfig?.placementType,
+        floatHeight: spaceInfo.baseConfig?.floatHeight,
+        furnitureCount: state.placedModules.length
+      });
+      
+      // 각 가구의 Y 위치는 FurnitureItem 컴포넌트에서 자동 계산되므로
+      // 여기서는 강제 리렌더링을 위해 타임스탬프를 추가
+      const updatedModules = state.placedModules.map(module => ({
+        ...module,
+        _lastYUpdate: Date.now() // 리렌더링 트리거용
+      }));
+      
+      console.log('📍 Y 위치 업데이트 완료 - 가구 리렌더링 트리거');
+      
+      return {
+        placedModules: updatedModules
       };
     });
   }

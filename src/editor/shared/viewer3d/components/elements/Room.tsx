@@ -537,8 +537,8 @@ const Room: React.FC<RoomProps> = ({
   // 전체 그룹을 z축 방향으로 약간 조정 (앞으로 당겨서 중앙에 오도록)
   const groupZOffset = 0; // 필요에 따라 조정 가능 (양수: 앞으로, 음수: 뒤로)
   
-  // 공간 메쉬 확장 깊이 (300mm = 3 Three.js units)
-  const extensionDepth = mmToThreeUnits(300);
+  // 공간 메쉬 확장 깊이 (1200mm = 12 Three.js units)
+  const extensionDepth = mmToThreeUnits(1200);
   const extendedPanelDepth = panelDepth + extensionDepth;
   // 뒷쪽은 고정하고 앞쪽으로만 확장 (기존 zOffset 사용)
   const extendedZOffset = zOffset;
@@ -862,30 +862,6 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
                   <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse')} />
                 </mesh>
-                
-                {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
-                <mesh
-                  position={[
-                    (() => {
-                      // ColumnIndexer의 계산과 동일하게 처리
-                      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      
-                      if (isLeftDropped) {
-                        // 왼쪽 단내림: 단내림 끝 = 메인 시작
-                        return mmToThreeUnits(zoneInfo.normal.startX);
-                      } else {
-                        // 오른쪽 단내림: 메인 끝 = 단내림 시작
-                        return mmToThreeUnits(zoneInfo.dropped.startX);
-                      }
-                    })(),
-                    panelStartY + height - droppedCeilingHeight/2, 
-                    extendedZOffset + extendedPanelDepth/2
-                  ]}
-                  rotation={[0, Math.PI / 2, 0]}
-                >
-                  <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
-                </mesh>
               </>
             );
           })()}
@@ -1138,6 +1114,115 @@ const Room: React.FC<RoomProps> = ({
             <planeGeometry args={[0.02, extendedPanelDepth]} />
             <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
           </mesh>
+          
+          {/* 뒷벽 - 단내림이 있으면 높이만 분할, 없으면 전체 렌더링 */}
+          {(() => {
+            if (spaceInfo.droppedCeiling?.enabled) {
+              // 단내림이 있는 경우 - 뒷벽을 두 부분으로 분할 (높이만)
+              const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
+              const droppedCeilingHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
+              const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              
+              // 단내림 경계 X 위치 계산
+              const boundaryX = isLeftDropped 
+                ? mmToThreeUnits(zoneInfo.normal.startX)
+                : mmToThreeUnits(zoneInfo.dropped.startX);
+              
+              // 각 영역의 높이 계산
+              const normalHeight = height; // 일반 영역은 전체 높이
+              const droppedHeight = height - droppedCeilingHeight; // 단내림 영역은 낮은 높이
+              
+              // 뒷벽 영역별 너비와 위치 계산
+              let normalSectionWidth, droppedSectionWidth;
+              let normalSectionX, droppedSectionX;
+              
+              if (isLeftDropped) {
+                // 왼쪽 단내림
+                droppedSectionWidth = droppedWidth;
+                normalSectionWidth = width - droppedWidth;
+                droppedSectionX = xOffset + droppedSectionWidth/2;
+                normalSectionX = xOffset + droppedWidth + normalSectionWidth/2;
+              } else {
+                // 오른쪽 단내림
+                normalSectionWidth = width - droppedWidth;
+                droppedSectionWidth = droppedWidth;
+                normalSectionX = xOffset + normalSectionWidth/2;
+                droppedSectionX = xOffset + normalSectionWidth + droppedSectionWidth/2;
+              }
+              
+              return (
+                <>
+                  {/* 일반 영역 뒷벽 */}
+                  <mesh
+                    position={[normalSectionX, panelStartY + normalHeight/2, extendedZOffset]}
+                    rotation={[0, 0, 0]}
+                  >
+                    <planeGeometry args={[normalSectionWidth, normalHeight]} />
+                    <meshStandardMaterial 
+                      color="#e8e8e8" 
+                      roughness={0.8}
+                      metalness={0.0}
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+                  
+                  {/* 단내림 영역 뒷벽 (높이가 낮음) */}
+                  <mesh
+                    position={[droppedSectionX, panelStartY + droppedHeight/2, extendedZOffset]}
+                    rotation={[0, 0, 0]}
+                  >
+                    <planeGeometry args={[droppedSectionWidth, droppedHeight]} />
+                    <meshStandardMaterial 
+                      color="#e8e8e8" 
+                      roughness={0.8}
+                      metalness={0.0}
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+                </>
+              );
+            } else {
+              // 단내림이 없는 경우 - 기존처럼 전체 뒷벽 렌더링
+              return (
+                <mesh
+                  position={[xOffset + width/2, panelStartY + height/2, extendedZOffset]}
+                  rotation={[0, 0, 0]}
+                >
+                  <planeGeometry args={[width, height]} />
+                  <meshStandardMaterial 
+                    color="#e8e8e8" 
+                    roughness={0.8}
+                    metalness={0.0}
+                    side={THREE.DoubleSide}
+                  />
+                </mesh>
+              );
+            }
+          })()}
+          
+          {/* 단내림 경계 수직 벽 - 뒷벽 다음에 렌더링 */}
+          {spaceInfo.droppedCeiling?.enabled && (() => {
+            const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
+            const droppedCeilingHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
+            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            
+            return (
+              <mesh
+                position={[
+                  isLeftDropped 
+                    ? mmToThreeUnits(zoneInfo.normal.startX)
+                    : mmToThreeUnits(zoneInfo.dropped.startX),
+                  panelStartY + height - droppedCeilingHeight/2, 
+                  extendedZOffset + extendedPanelDepth/2
+                ]}
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
+                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+              </mesh>
+            );
+          })()}
         </>
       )}
       
