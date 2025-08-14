@@ -1,0 +1,54 @@
+.exportButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exportButton:hover:not(:disabled) {
+  background: white;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.exportButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.exportButton.primary {
+  background: hsl(var(--theme) / 0.9);
+  border-color: hsl(var(--theme));
+  color: white;
+}
+
+.exportButton.primary:hover:not(:disabled) {
+  background: hsl(var(--theme));
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exportButton.pdf {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+.exportButton.pdf:hover:not(:disabled) {
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.exportButton svg {
+  width: 13px;
+  height: 13px;
+}

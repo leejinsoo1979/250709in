@@ -1,0 +1,69 @@
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import type { Panel, StockSheet, CutSettings, Unit } from '../../types/cutlist';
+
+type Store = {
+  panels: Panel[];
+  stock: StockSheet[];
+  settings: CutSettings;
+  selectedPanelId: string | null;
+  currentSheetIndex: number;
+  setPanels: (p: Panel[]) => void;
+  setStock: (s: StockSheet[]) => void;
+  setSettings: (k: Partial<CutSettings>) => void;
+  setSelectedPanelId: (id: string | null) => void;
+  setCurrentSheetIndex: (index: number) => void;
+  metrics: () => { partsCount: number; partsArea: number; stockArea: number };
+};
+
+const Ctx = createContext<Store | null>(null);
+
+export function CNCProvider({ children }: { children: React.ReactNode }){
+  const [panels, setPanels] = useState<Panel[]>([]);
+  const [stock, setStock] = useState<StockSheet[]>([]);
+  const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
+  const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
+  const [settings, setSettingsState] = useState<CutSettings>({
+    unit: 'mm' as Unit, 
+    kerf: 5, 
+    trimTop: 0, 
+    trimLeft: 0,
+    labelsOnPanels: true, 
+    singleSheetOnly: false,
+    considerMaterial: true, 
+    edgeBanding: false, 
+    considerGrain: true,
+    alignVerticalCuts: true // 세로 컷팅 라인 정렬 기본값
+  });
+
+  const setSettings = (k: Partial<CutSettings>) => setSettingsState(s => ({ ...s, ...k }));
+
+  const metrics = () => {
+    const partsArea = panels.reduce((acc, p) => acc + p.width*p.length*p.quantity, 0);
+    const sheetArea1 = stock.length ? stock[0].width*stock[0].length : 0;
+    const stockArea = stock.reduce((acc, s) => acc + (s.width*s.length*s.quantity), 0);
+    const partsCount = panels.reduce((acc, p) => acc + p.quantity, 0);
+    return { partsCount, partsArea, stockArea: stockArea || sheetArea1 };
+  };
+
+  const value: Store = useMemo(()=>({ 
+    panels, 
+    stock, 
+    settings, 
+    selectedPanelId,
+    currentSheetIndex,
+    setPanels, 
+    setStock, 
+    setSettings,
+    setSelectedPanelId,
+    setCurrentSheetIndex,
+    metrics 
+  }), [panels, stock, settings, selectedPanelId, currentSheetIndex]);
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useCNCStore(){
+  const ctx = useContext(Ctx);
+  if(!ctx) throw new Error('useCNCStore must be used within CNCProvider');
+  return ctx;
+}

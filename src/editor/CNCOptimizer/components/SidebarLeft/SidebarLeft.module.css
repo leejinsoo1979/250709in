@@ -1,0 +1,336 @@
+.section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sectionHeader svg {
+  width: 16px;
+  height: 16px;
+  color: #666;
+}
+
+.sectionHeader h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: hsl(var(--theme) / 0.1);
+  border: 1px solid hsl(var(--theme) / 0.2);
+  border-radius: 4px;
+  color: hsl(var(--theme));
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addButton:hover {
+  background: hsl(var(--theme) / 0.15);
+  border-color: hsl(var(--theme) / 0.3);
+}
+
+.tableContainer {
+  padding: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.tableContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tableContainer::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.tableContainer::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+.table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.table thead {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table th {
+  padding: 8px 4px;
+  text-align: left;
+  color: #666;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.table tbody tr.selected {
+  background: hsl(var(--theme) / 0.08);
+  border-left: 2px solid hsl(var(--theme));
+}
+
+.table td {
+  padding: 6px 4px;
+  color: #333;
+}
+
+.input {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: hsl(var(--theme) / 0.3);
+  background: white;
+}
+
+.inputSmall {
+  width: 45px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.inputSmall:focus {
+  outline: none;
+  border-color: hsl(var(--theme) / 0.3);
+  background: white;
+}
+
+.inputTiny {
+  width: 35px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.inputTiny:focus {
+  outline: none;
+  border-color: hsl(var(--theme) / 0.3);
+  background: white;
+}
+
+.select {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select:focus {
+  outline: none;
+  border-color: hsl(var(--theme) / 0.3);
+  background: white;
+}
+
+.dimensions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.deleteButton {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background: #fee;
+  color: #e00;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 32px 16px;
+  font-size: 13px;
+}
+
+/* Options Card Styles */
+.options {
+  padding: 16px;
+}
+
+.optionGroup {
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.optionGroup:hover {
+  background: hsl(var(--theme) / 0.03);
+  border-radius: 6px;
+  padding: 4px;
+  margin: -4px -4px 12px -4px;
+}
+
+.optionGroup label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.optionGroup label:hover {
+  color: hsl(var(--theme));
+}
+
+.optionGroup label span {
+  flex: 1;
+  font-weight: 500;
+}
+
+.numberInput {
+  justify-content: space-between !important;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 2px 8px 2px 4px;
+  transition: all 0.2s ease;
+}
+
+.inputWrapper:hover {
+  border-color: hsl(var(--theme) / 0.4);
+}
+
+.inputWrapper:focus-within {
+  border-color: hsl(var(--theme));
+  box-shadow: 0 0 0 3px hsl(var(--theme) / 0.1);
+}
+
+.optionGroup input[type="number"] {
+  width: 50px;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--theme));
+  outline: none;
+}
+
+.unit {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+}
+
+.optionGroup input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: hsl(var(--theme));
+  position: relative;
+}
+
+.optionGroup input[type="checkbox"]:checked {
+  background-color: hsl(var(--theme));
+  border-color: hsl(var(--theme));
+}
+
+.optionGroup input[type="checkbox"]:hover {
+  border-color: hsl(var(--theme) / 0.6);
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.resetLink {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: hsl(var(--theme) / 0.8);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.link:hover {
+  color: hsl(var(--theme));
+  transform: translateX(2px);
+}
+
+.link svg {
+  width: 12px;
+  height: 12px;
+}

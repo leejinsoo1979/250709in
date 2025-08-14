@@ -1,10 +1,23 @@
 /* 테마 CSS 변수 정의 */
 :root {
+  /* Theme Colors (HSL channels for Tailwind) */
+  --theme: 254 92% 65%; /* Default purple */
+  --theme-50: 254 92% 98%;
+  --theme-100: 254 92% 95%;
+  --theme-200: 254 92% 90%;
+  --theme-300: 254 92% 80%;
+  --theme-400: 254 92% 70%;
+  --theme-500: 254 92% 65%;
+  --theme-600: 254 87% 55%;
+  --theme-700: 254 82% 45%;
+  --theme-800: 254 77% 35%;
+  --theme-900: 254 72% 25%;
+  
   /* 다크 모드를 기본값으로 설정 */
-  --theme-primary: #10b981;
-  --theme-primary-hover: #059669;
-  --theme-primary-light: rgba(16, 185, 129, 0.2);
-  --theme-primary-dark: #047857;
+  --theme-primary: hsl(var(--theme-500));
+  --theme-primary-hover: hsl(var(--theme-600));
+  --theme-primary-light: hsl(var(--theme) / 0.2);
+  --theme-primary-dark: hsl(var(--theme-700));
   
   --theme-background: #121212;
   --theme-background-secondary: #121212;
@@ -34,17 +47,21 @@
   --theme-success-hover: #059669;
   --theme-success-light: rgba(16, 185, 129, 0.2);
   
+  /* 추가 테마 색상 */
+  --theme-disabled-bg: #374151;
+  --theme-disabled-text: #6b7280;
+  --theme-secondary-bg: #1f2937;
+  --theme-secondary-bg-hover: #374151;
+  
   /* 팝업 그림자 - 다크 모드 기본값 */
   --popup-shadow: 0 10px 40px rgba(16, 185, 129, 0.2), 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
 /* 라이트 테마 변수 (data-theme="light" 범위 내 강제 적용) */
+/* ThemeContext에서 동적으로 설정되는 CSS 변수를 사용 */
 [data-theme="light"] {
-  --theme-primary: #6366f1; /* 라이트에서 더 명확한 포커스 색 */
-  --theme-primary-hover: #4f46e5;
-  --theme-primary-light: rgba(99, 102, 241, 0.15);
-  --theme-primary-dark: #4338ca;
-
+  /* primary 색상은 ThemeContext에서 설정됨 - 사용자가 선택한 테마 색상 사용 */
+  
   --theme-background: #ffffff;
   --theme-background-secondary: #f8fafc;
   --theme-surface: #ffffff;
@@ -55,6 +72,12 @@
   --theme-border-hover: #cbd5e1;
   --theme-shadow: rgba(0, 0, 0, 0.08);
   --theme-overlay: rgba(255, 255, 255, 0.75);
+  
+  /* 추가 테마 색상 - 라이트 모드 */
+  --theme-disabled-bg: #d1d5db;
+  --theme-disabled-text: #9ca3af;
+  --theme-secondary-bg: #f3f4f6;
+  --theme-secondary-bg-hover: #e5e7eb;
 
   --popup-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.06);
 }

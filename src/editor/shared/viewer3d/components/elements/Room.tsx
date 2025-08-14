@@ -1116,7 +1116,8 @@ const Room: React.FC<RoomProps> = ({
           </mesh>
           
           {/* 뒷벽 - 단내림이 있으면 높이만 분할, 없으면 전체 렌더링 */}
-          {(() => {
+          {/* 뒷벽 숨김 처리 - 주석 처리 */}
+          {/* {(() => {
             if (spaceInfo.droppedCeiling?.enabled) {
               // 단내림이 있는 경우 - 뒷벽을 두 부분으로 분할 (높이만)
               const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
@@ -1154,7 +1155,7 @@ const Room: React.FC<RoomProps> = ({
               return (
                 <>
                   {/* 일반 영역 뒷벽 */}
-                  <mesh
+                  {/* <mesh
                     position={[normalSectionX, panelStartY + normalHeight/2, extendedZOffset]}
                     rotation={[0, 0, 0]}
                   >
@@ -1165,10 +1166,10 @@ const Room: React.FC<RoomProps> = ({
                       metalness={0.0}
                       side={THREE.DoubleSide}
                     />
-                  </mesh>
+                  </mesh> */}
                   
                   {/* 단내림 영역 뒷벽 (높이가 낮음) */}
-                  <mesh
+                  {/* <mesh
                     position={[droppedSectionX, panelStartY + droppedHeight/2, extendedZOffset]}
                     rotation={[0, 0, 0]}
                   >
@@ -1179,8 +1180,8 @@ const Room: React.FC<RoomProps> = ({
                       metalness={0.0}
                       side={THREE.DoubleSide}
                     />
-                  </mesh>
-                </>
+                  </mesh> */}
+                {/* </> 
               );
             } else {
               // 단내림이 없는 경우 - 기존처럼 전체 뒷벽 렌더링
@@ -1199,7 +1200,7 @@ const Room: React.FC<RoomProps> = ({
                 </mesh>
               );
             }
-          })()}
+          })()} */}
           
           {/* 단내림 경계 수직 벽 - 뒷벽 다음에 렌더링 */}
           {spaceInfo.droppedCeiling?.enabled && (() => {

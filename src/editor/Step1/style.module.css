@@ -13,11 +13,7 @@
   padding: 20px;
   overflow-y: auto;
   
-  /* 라이트 모드 CSS 변수 강제 정의 */
-  --theme-primary: #667eea;
-  --theme-primary-hover: #5a67d8;
-  --theme-primary-light: rgba(102, 126, 234, 0.1);
-  --theme-primary-dark: #4c51bf;
+  /* 라이트 모드 CSS 변수 - 글로벌 테마 사용 */
   
   --theme-background: #ffffff;
   --theme-background-secondary: #f7fafc;

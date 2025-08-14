@@ -304,6 +304,18 @@ const Header: React.FC<HeaderProps> = ({
             <Settings size={20} />
           </button>
 
+          {/* CNC 옵티마이저 버튼 */}
+          <button 
+            className={styles.convertButton} 
+            onClick={() => {
+              console.log('CNC 옵티마이저 버튼 클릭됨');
+              navigate('/cnc-optimizer');
+            }}
+            style={{ marginRight: '8px' }}
+          >
+            컷팅 옵티마이저
+          </button>
+
           {onConvert && (
             <button className={styles.convertButton} onClick={onConvert}>
               도면 편집기

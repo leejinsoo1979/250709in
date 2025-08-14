@@ -20,6 +20,10 @@ import { TouchTestPage } from '@/components/TouchUI/TouchTestPage';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import CNCOptimizer from '@/editor/CNCOptimizer';
+import CNCOptimizerNew from '@/editor/CNCOptimizer/CNCOptimizerNew';
+import CNCOptimizerPro from '@/editor/CNCOptimizer/CNCOptimizerPro';
+import { initializeTheme } from '@/theme';
 
 // AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
 const ARViewer = lazy(() => import('@/editor/ar-viewer/ARViewer'));
@@ -93,6 +97,7 @@ function AppContent() {
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
+        <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
         <Route path="/step0" element={<Navigate to="/step1" replace />} />
         <Route path="/step2" element={<Navigate to="/configurator" replace />} />
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />
@@ -109,6 +114,11 @@ function AppContent() {
 }
 
 function App() {
+  // Initialize theme on app load
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
