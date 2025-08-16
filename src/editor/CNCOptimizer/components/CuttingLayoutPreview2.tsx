@@ -149,10 +149,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     
     // Draw trim margins (if any) - 여백 영역 표시
     const settings = window.cncSettings || {};
-    const trimTop = settings.trimTop || 0;
-    const trimBottom = settings.trimBottom || 0;
-    const trimLeft = settings.trimLeft || 0;
-    const trimRight = settings.trimRight || 0;
+    const trimTop = settings.trimTop ?? 10;
+    const trimBottom = settings.trimBottom ?? 10;
+    const trimLeft = settings.trimLeft ?? 10;
+    const trimRight = settings.trimRight ?? 10;
     
     if (trimTop > 0 || trimBottom > 0 || trimLeft > 0 || trimRight > 0) {
       ctx.save();
@@ -210,7 +210,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     // Left dimension text (rotated)
     ctx.save();
     ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
-    ctx.rotate(-Math.PI / 2);
+    // 전체 회전이 -90도일 때는 반대로 회전
+    if (rotation === -90) {
+      ctx.rotate(Math.PI / 2);  // 시계 방향으로 90도
+    } else {
+      ctx.rotate(-Math.PI / 2); // 반시계 방향으로 90도
+    }
     ctx.textBaseline = 'middle';
     ctx.fillText(
       `${result.stockPanel.height} mm`,
@@ -537,9 +542,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     setIsDragging(false);
   };
 
-  // Handle rotation - toggle between 0 and 90 degrees
+  // Handle rotation - toggle between 0 and -90 degrees (반시계 방향)
   const handleRotate = () => {
-    setRotation((prev) => prev === 0 ? 90 : 0); // Toggle between 0° and 90°
+    setRotation((prev) => prev === 0 ? -90 : 0); // Toggle between 0° and -90° (반시계)
     setOffset({ x: 0, y: 0 }); // Always reset to center on rotation
     setScale(1); // Reset scale to fit view
   };
@@ -660,9 +665,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           <button
             className={styles.rotateButton}
             onClick={handleRotate}
-            title={rotation === 0 ? "90° 회전" : "원래대로"}
+            title={rotation === 0 ? "반시계 90° 회전" : "원래대로"}
             style={{ 
-              transform: rotation === 90 ? 'rotate(90deg)' : 'none',
+              transform: rotation === -90 ? 'rotate(-90deg)' : 'none',
               transition: 'transform 0.3s ease'
             }}
           >

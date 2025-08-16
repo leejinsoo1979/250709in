@@ -298,14 +298,31 @@ function PageInner(){
             canRotate: p.canRotate
           }));
 
-          // Run optimization with original stock size
+          // 여백을 고려한 사용 가능한 공간 계산
+          const adjustedStockPanel = {
+            ...stockPanel,
+            width: stockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+            height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10)
+          };
+          
+          // Run optimization with adjusted stock size
           const results = await optimizePanelsMultiple(
             optimizerPanels,
-            stockPanel, // 원본 크기 그대로 사용
+            adjustedStockPanel, // 여백을 제외한 크기 사용
             settings.singleSheetOnly ? 1 : 999, // 제한 없음
             settings.alignVerticalCuts !== false, // Use aligned packing by default
             settings.kerf || 5 // 톱날 두께 전달
           );
+          
+          // 패널 위치를 여백만큼 오프셋
+          results.forEach(result => {
+            result.panels.forEach(panel => {
+              panel.x += (settings.trimLeft || 10);
+              panel.y += (settings.trimBottom || 10);
+            });
+            // 원본 크기 정보 복원
+            result.stockPanel = stockPanel;
+          });
           
           console.log(`Optimization for ${material}: ${results.length} sheets generated`);
           console.log(`Panels to optimize: ${optimizerPanels.length}`);

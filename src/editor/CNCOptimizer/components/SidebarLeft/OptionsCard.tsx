@@ -46,7 +46,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimTop ?? 0}
+                value={settings.trimTop ?? 10}
                 onChange={e => setSettings({ trimTop: Number(e.target.value) })}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && onSettingsChange) {
@@ -67,7 +67,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimBottom ?? 0}
+                value={settings.trimBottom ?? 10}
                 onChange={e => setSettings({ trimBottom: Number(e.target.value) })}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && onSettingsChange) {
@@ -88,7 +88,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimLeft ?? 0}
+                value={settings.trimLeft ?? 10}
                 onChange={e => setSettings({ trimLeft: Number(e.target.value) })}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && onSettingsChange) {
@@ -109,7 +109,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimRight ?? 0}
+                value={settings.trimRight ?? 10}
                 onChange={e => setSettings({ trimRight: Number(e.target.value) })}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && onSettingsChange) {
@@ -195,10 +195,10 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
             className={styles.link}
             onClick={() => setSettings({
               kerf: 5,
-              trimTop: 0,
-              trimBottom: 0,
-              trimLeft: 0,
-              trimRight: 0,
+              trimTop: 10,
+              trimBottom: 10,
+              trimLeft: 10,
+              trimRight: 10,
               considerGrain: true,
               considerMaterial: true,
               labelsOnPanels: true,
