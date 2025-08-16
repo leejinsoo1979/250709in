@@ -1,0 +1,169 @@
+import React, { useEffect, useRef } from 'react';
+import { OptimizedResult } from '../types';
+import styles from '../CNCOptimizerPro.module.css';
+
+interface SheetThumbnailProps {
+  result: OptimizedResult;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+export default function SheetThumbnail({ 
+  result, 
+  index, 
+  isActive, 
+  onClick
+}: SheetThumbnailProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !result) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 원본 시트 크기
+    const originalWidth = result.stockPanel.width;
+    const originalHeight = result.stockPanel.height;
+    
+    // 세로형이면 회전시켜서 가로로 표시
+    const isPortrait = originalHeight > originalWidth;
+    const stockWidth = isPortrait ? originalHeight : originalWidth;
+    const stockHeight = isPortrait ? originalWidth : originalHeight;
+    
+    // 고정 캔버스 크기 (항상 가로 비율)
+    const canvasWidth = 160;
+    const canvasHeight = 80;
+    const scale = Math.min(canvasWidth / stockWidth, canvasHeight / stockHeight);
+    
+    // 고화질을 위한 DPR 적용
+    const dpr = window.devicePixelRatio || 1;
+    
+    // 캔버스 크기 설정
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+    
+    // DPR 스케일 적용
+    ctx.scale(dpr, dpr);
+    
+    // 안티앨리어싱 활성화
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 배경 그라데이션
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    bgGradient.addColorStop(0, '#ffffff');
+    bgGradient.addColorStop(1, '#fafbfc');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // 원장 크기 계산 (중앙 정렬)
+    const sheetWidth = stockWidth * scale;
+    const sheetHeight = stockHeight * scale;
+    const offsetX = (canvasWidth - sheetWidth) / 2;
+    const offsetY = (canvasHeight - sheetHeight) / 2;
+
+    // 원장 그림자
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(offsetX, offsetY, sheetWidth, sheetHeight);
+    ctx.restore();
+    
+    // 원장 테두리
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(offsetX, offsetY, sheetWidth, sheetHeight);
+    
+    // 테마 색상 가져오기
+    const themeColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--theme')
+      .trim() || '220 90% 56%';
+    
+    // 패널 그리기
+    result.panels.forEach(panel => {
+      let x, y, width, height;
+      
+      if (isPortrait) {
+        // 세로형 시트를 가로로 회전
+        x = offsetX + panel.y * scale;
+        y = offsetY + (originalWidth - panel.x - panel.width) * scale;
+        width = (panel.rotated ? panel.width : panel.height) * scale;
+        height = (panel.rotated ? panel.height : panel.width) * scale;
+      } else {
+        // 가로형 시트는 그대로
+        x = offsetX + panel.x * scale;
+        y = offsetY + panel.y * scale;
+        width = (panel.rotated ? panel.height : panel.width) * scale;
+        height = (panel.rotated ? panel.width : panel.height) * scale;
+      }
+      
+      // 패널 배경 (재질별 색상)
+      const materialColors: { [key: string]: string } = {
+        'PB': `hsl(${themeColor} / 0.06)`,
+        'MDF': `hsl(${themeColor} / 0.08)`,
+        'PLY': `hsl(${themeColor} / 0.10)`,
+        'HPL': `hsl(${themeColor} / 0.12)`,
+        'LPM': `hsl(${themeColor} / 0.14)`
+      };
+      
+      ctx.fillStyle = materialColors[panel.material] || `hsl(${themeColor} / 0.06)`;
+      ctx.fillRect(x, y, width, height);
+      
+      // 패널 테두리
+      ctx.strokeStyle = `hsl(${themeColor} / 0.3)`;
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(x, y, width, height);
+    });
+    
+    // 효율성 뱃지
+    if (result.efficiency > 0) {
+      ctx.save();
+      const efficiency = result.efficiency.toFixed(0);
+      const badgeSize = 24;
+      const badgeX = canvasWidth - badgeSize - 6;
+      const badgeY = 6;
+      
+      // 뱃지 배경
+      const effColor = result.efficiency > 80 ? '#10b981' : 
+                       result.efficiency > 60 ? '#f59e0b' : '#ef4444';
+      ctx.fillStyle = effColor;
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeSize, 16, 8);
+      ctx.fill();
+      
+      // 뱃지 텍스트
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 10px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${efficiency}%`, badgeX + badgeSize/2, badgeY + 8);
+      ctx.restore();
+    }
+
+  }, [result]);
+
+  // Get panel thickness (assuming all panels have same thickness)
+  const thickness = result.panels.length > 0 ? result.panels[0].thickness : 18;
+  
+  return (
+    <div className={styles.thumbnailWrapper}>
+      <div className={styles.thumbnailTitle}>시트 {index + 1} ({thickness}T)</div>
+      <div
+        className={`${styles.thumbnail} ${isActive ? styles.activeThumbnail : ''}`}
+        onClick={onClick}
+      >
+        <canvas
+          ref={canvasRef}
+          className={styles.thumbnailCanvas}
+        />
+      </div>
+    </div>
+  );
+}

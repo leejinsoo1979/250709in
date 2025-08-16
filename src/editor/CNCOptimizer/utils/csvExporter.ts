@@ -51,8 +51,18 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
   const lines: string[] = [PANEL_CSV_HEADERS];
   
   panels.forEach(panel => {
-    // 결 방향 결정 (기본적으로 가로가 길면 H, 세로가 길면 V)
-    const grain = panel.width > panel.height ? 'H' : 'V';
+    // 결 방향 결정
+    // 1. panel에 이미 grain이 있으면 그것을 사용
+    // 2. 없으면 세로가 기본 (height > width면 V, 아니면 H)
+    let grain = 'V'; // 기본값은 세로
+    if (panel.grain) {
+      // 이미 설정된 grain 값 사용
+      grain = panel.grain === 'VERTICAL' || panel.grain === 'WIDTH' ? 'V' : 
+              panel.grain === 'HORIZONTAL' || panel.grain === 'LENGTH' ? 'H' : 'V';
+    } else {
+      // grain이 없으면 세로가 긴 경우 V, 가로가 긴 경우 H
+      grain = panel.height > panel.width ? 'V' : 'H';
+    }
     
     // CutList Optimizer는 Length가 세로, Width가 가로
     const line = [

@@ -3,14 +3,13 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 16px;
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #f8f9fa;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -49,76 +48,182 @@
 }
 
 .tableContainer {
-  padding: 12px;
-  max-height: 150px;
+  padding: 0;
+  max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.tableContainer::-webkit-scrollbar {
+/* 원자재 테이블 컨테이너는 더 작은 높이 */
+.stockTableContainer {
+  padding: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.tableContainer::-webkit-scrollbar,
+.stockTableContainer::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
-.tableContainer::-webkit-scrollbar-track {
+.tableContainer::-webkit-scrollbar-track,
+.stockTableContainer::-webkit-scrollbar-track {
   background: #f5f5f5;
   border-radius: 3px;
 }
 
-.tableContainer::-webkit-scrollbar-thumb {
+.tableContainer::-webkit-scrollbar-thumb,
+.stockTableContainer::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 3px;
 }
 
-.tableContainer::-webkit-scrollbar-thumb:hover {
+.tableContainer::-webkit-scrollbar-thumb:hover,
+.stockTableContainer::-webkit-scrollbar-thumb:hover {
   background: #aaa;
 }
 
 .table {
   width: 100%;
-  font-size: 12px;
-  border-collapse: collapse;
+  font-size: 11px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* 패널 테이블 열 너비 최적화 */
+.table th:first-child,
+.table td:first-child {
+  width: 140px; /* 이름 - 가구명과 패널명이 모두 보이도록 증가 */
+  min-width: 140px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 90px; /* 치수 - 약간 줄임 */
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 38px; /* 두께 - 약간 줄임 */
+  text-align: center;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 36px; /* 수량 - 약간 줄임 */
+  text-align: center;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 44px; /* 재질 - 약간 줄임 */
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  width: 32px; /* 결방향 - 약간 줄임 */
+  text-align: center;
+}
+
+.table th:last-child,
+.table td:last-child {
+  width: 22px; /* 삭제 - 약간 줄임 */
+  text-align: center;
+}
+
+/* 원자재 테이블 열 너비 지정 */
+.stockTable th:first-child,
+.stockTable td:first-child {
+  width: 110px;
+}
+
+.stockTable th:nth-child(2),
+.stockTable td:nth-child(2) {
+  width: 110px;
+}
+
+.stockTable th:nth-child(3),
+.stockTable td:nth-child(3) {
+  width: 60px;
+}
+
+.stockTable th:nth-child(4),
+.stockTable td:nth-child(4) {
+  width: 60px;
+}
+
+.stockTable th:last-child,
+.stockTable td:last-child {
+  width: 25px;
+  text-align: center;
 }
 
 .table thead {
-  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
 }
 
 .table th {
-  padding: 8px 4px;
+  padding: 8px 6px;
   text-align: left;
-  color: #666;
-  font-weight: 500;
-  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.table tbody tr {
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.table tbody tr:hover {
+  white-space: nowrap;
+  border-bottom: 2px solid #e5e7eb;
   background: #f8f9fa;
 }
 
+.table tbody tr {
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.table tbody tr:hover {
+  background: #fafbfc;
+}
+
 .table tbody tr.selected {
-  background: hsl(var(--theme) / 0.08);
-  border-left: 2px solid hsl(var(--theme));
+  background: hsl(var(--theme) / 0.06);
+  position: relative;
+}
+
+.table tbody tr.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: hsl(var(--theme));
 }
 
 .table td {
-  padding: 6px 4px;
-  color: #333;
+  padding: 6px 6px;
+  color: #374151;
+  vertical-align: middle;
+  font-size: 11px;
 }
 
 .input {
   width: 100%;
-  padding: 2px 4px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  font-size: 11px;
   transition: all 0.2s;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .input:focus {
@@ -128,13 +233,14 @@
 }
 
 .inputSmall {
-  width: 45px;
-  padding: 2px 4px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 12px;
+  width: 50px;
+  padding: 3px 4px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  font-size: 11px;
   text-align: center;
   transition: all 0.2s;
+  border-radius: 3px;
 }
 
 .inputSmall:focus {
@@ -144,13 +250,14 @@
 }
 
 .inputTiny {
-  width: 35px;
-  padding: 2px 4px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 12px;
+  width: 40px;
+  padding: 3px 4px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  font-size: 11px;
   text-align: center;
   transition: all 0.2s;
+  border-radius: 3px;
 }
 
 .inputTiny:focus {
@@ -161,12 +268,13 @@
 
 .select {
   width: 100%;
-  padding: 2px 4px;
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 12px;
+  padding: 3px 4px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
+  border-radius: 3px;
 }
 
 .select:focus {
@@ -199,7 +307,74 @@
 
 .deleteButton:hover {
   background: #fee;
-  color: #e00;
+  color: #f00;
+}
+
+.grainSelector {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.grainButton {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  color: #999;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.grainButton:hover {
+  background: #fff;
+  border-color: #999;
+  color: #666;
+}
+
+.grainButton.active {
+  background: hsl(var(--theme) / 0.1);
+  border-color: hsl(var(--theme) / 0.3);
+  color: hsl(var(--theme));
+}
+
+.grainButton.active:hover {
+  background: hsl(var(--theme) / 0.15);
+  border-color: hsl(var(--theme) / 0.4);
+}
+
+.grainToggle {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.grainToggle:hover {
+  background: hsl(var(--theme) / 0.08);
+  border-color: hsl(var(--theme) / 0.3);
+  color: hsl(var(--theme));
+}
+
+.grainToggle:active {
+  transform: scale(0.95);
 }
 
 .empty {
@@ -212,26 +387,46 @@
 
 /* Options Card Styles */
 .options {
-  padding: 16px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.options::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.options::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.options::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
 }
 
 .optionGroup {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   transition: all 0.2s ease;
 }
 
 .optionGroup:hover {
   background: hsl(var(--theme) / 0.03);
   border-radius: 6px;
-  padding: 4px;
-  margin: -4px -4px 12px -4px;
+  padding: 2px;
+  margin: -2px -2px 8px -2px;
 }
 
 .optionGroup label {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 13px;
+  gap: 8px;
+  font-size: 12px;
   color: #333;
   cursor: pointer;
   transition: all 0.2s ease;

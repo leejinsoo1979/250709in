@@ -1,54 +1,237 @@
-.exportButton {
+.exportDropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.exportMainButton {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  color: #4b5563;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.exportButton:hover:not(:disabled) {
-  background: white;
-  border-color: #d1d5db;
-  color: #111827;
-}
-
-.exportButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.exportButton.primary {
+  gap: 6px;
+  padding: 8px 16px;
   background: hsl(var(--theme) / 0.9);
-  border-color: hsl(var(--theme));
+  border: 1px solid hsl(var(--theme));
+  border-radius: 6px;
   color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.exportButton.primary:hover:not(:disabled) {
+.exportMainButton:hover:not(:disabled) {
   background: hsl(var(--theme));
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px hsl(var(--theme) / 0.3);
 }
 
-.exportButton.pdf {
-  background: #10b981;
-  border-color: #10b981;
-  color: white;
+.exportMainButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #9ca3af;
 }
 
-.exportButton.pdf:hover:not(:disabled) {
-  background: #059669;
-  border-color: #059669;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.chevron {
+  transition: transform 0.2s ease;
+  margin-left: 2px;
 }
 
-.exportButton svg {
-  width: 13px;
-  height: 13px;
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 280px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  animation: slideDown 0.2s ease;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuHeader {
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: hsl(var(--theme) / 0.05);
+}
+
+.menuItem:active:not(:disabled) {
+  background: hsl(var(--theme) / 0.08);
+}
+
+.menuItem:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.menuItem svg {
+  flex-shrink: 0;
+  color: hsl(var(--theme) / 0.7);
+}
+
+.menuItem:hover:not(:disabled) svg {
+  color: hsl(var(--theme));
+}
+
+.menuItemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menuItemTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuItemDesc {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuItem:hover:not(:disabled) .menuItemTitle {
+  color: hsl(var(--theme));
+}
+
+.menuDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+.recommended {
+  position: relative;
+}
+
+.recommended::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: hsl(var(--theme));
+}
+
+.badge {
+  padding: 2px 6px;
+  background: hsl(var(--theme) / 0.1);
+  color: hsl(var(--theme));
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .dropdownMenu {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .menuHeader {
+    background: #111827;
+    border-color: #374151;
+    color: #9ca3af;
+  }
+  
+  .menuItem {
+    background: #1f2937;
+  }
+  
+  .menuItem:hover:not(:disabled) {
+    background: hsl(var(--theme) / 0.1);
+  }
+  
+  .menuItem:disabled {
+    background: #111827;
+  }
+  
+  .menuItemTitle {
+    color: #f3f4f6;
+  }
+  
+  .menuItemDesc {
+    color: #9ca3af;
+  }
+  
+  .menuDivider {
+    background: #374151;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dropdownMenu {
+    min-width: 240px;
+    right: auto;
+    left: 0;
+  }
+  
+  .menuItem {
+    padding: 8px 12px;
+  }
+  
+  .menuItemTitle {
+    font-size: 12px;
+  }
+  
+  .menuItemDesc {
+    font-size: 10px;
+  }
 }

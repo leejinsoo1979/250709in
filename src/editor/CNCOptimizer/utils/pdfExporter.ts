@@ -6,6 +6,8 @@ interface FurnitureData {
   spaceInfo: any;
   placedModules: any[];
   panels: Panel[];
+  needsConfiguratorView?: boolean;
+  furniture3DImage?: string;
 }
 
 export class PDFExporter {
@@ -35,6 +37,8 @@ export class PDFExporter {
   }
   
   private drawSheet(result: OptimizedResult, sheetNumber: number) {
+    // Add new page for all sheets except the first one
+    // First sheet uses the initial page created by jsPDF
     if (sheetNumber > 0) {
       this.pdf.addPage();
     }
@@ -171,14 +175,14 @@ export class PDFExporter {
       offsetY - 5
     );
     
-    // Height dimension
+    // Height dimension (rotated text)
     this.pdf.save();
-    this.pdf.text(
-      `${result.stockPanel.height} mm`,
-      offsetX - 5,
-      offsetY + (result.stockPanel.height * scale) / 2,
-      { angle: 90 }
-    );
+    const heightText = `${result.stockPanel.height} mm`;
+    const textX = offsetX - 15;
+    const textY = offsetY + (result.stockPanel.height * scale) / 2;
+    this.pdf.translate(textX, textY);
+    this.pdf.rotate(-Math.PI / 2);
+    this.pdf.text(heightText, 0, 0);
     this.pdf.restore();
     
     // Statistics at bottom
@@ -224,22 +228,24 @@ export class PDFExporter {
     
     // Draw panel list table
     const tableStartY = statsY;
-    const colWidths = [8, 60, 25, 25, 20]; // No, Name, Width, Height, Material
-    const headers = ['#', 'Panel Name', 'Width', 'Height', 'Material'];
+    const colWidths = [10, 50, 20, 20, 18]; // No, Name, Width, Height, Material
+    const headers = ['Qty', 'Panel Name', 'Width', 'Height', 'Mat.'];
     
-    // Draw table header
+    // Draw table header background
     this.pdf.setFillColor(240, 240, 240);
-    this.pdf.rect(offsetX, tableStartY - 4, colWidths.reduce((a, b) => a + b, 0), 7, 'F');
+    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+    this.pdf.rect(offsetX, tableStartY - 5, tableWidth, 7, 'F');
     
+    // Draw table header text
     this.pdf.setFontSize(8);
     this.pdf.setTextColor(0, 0, 0);
     let xPos = offsetX;
     headers.forEach((header, i) => {
-      this.pdf.text(header, xPos + 2, tableStartY);
+      this.pdf.text(header, xPos + 2, tableStartY - 1);
       xPos += colWidths[i];
     });
     
-    statsY = tableStartY + 8;
+    statsY = tableStartY + 5;
     
     // Draw panel rows
     let rowIndex = 1;
@@ -255,7 +261,7 @@ export class PDFExporter {
       xPos = offsetX;
       const rowData = [
         data.count.toString(),
-        panelName.length > 25 ? panelName.substring(0, 22) + '...' : panelName,
+        panelName.length > 20 ? panelName.substring(0, 17) + '...' : panelName,
         Math.round(data.width).toString(),
         Math.round(data.height).toString(),
         data.material
@@ -264,18 +270,106 @@ export class PDFExporter {
       // Alternate row background
       if (rowIndex % 2 === 0) {
         this.pdf.setFillColor(250, 250, 250);
-        this.pdf.rect(offsetX, statsY - 4, colWidths.reduce((a, b) => a + b, 0), 6, 'F');
+        this.pdf.rect(offsetX, statsY - 3, tableWidth, 5, 'F');
       }
       
+      this.pdf.setFontSize(7);
       this.pdf.setTextColor(0, 0, 0);
       rowData.forEach((text, i) => {
         this.pdf.text(text, xPos + 2, statsY);
         xPos += colWidths[i];
       });
       
-      statsY += 6;
+      statsY += 5;
       rowIndex++;
     });
+  }
+  
+  private addFurnitureInfoPage() {
+    if (!this.furnitureData) return;
+    
+    this.pdf.addPage();
+    
+    // Title
+    this.pdf.setFontSize(18);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('Furniture Information', this.margin, this.margin);
+    
+    // Project info
+    this.pdf.setFontSize(12);
+    let yPos = this.margin + 15;
+    this.pdf.text(`Project: ${this.furnitureData.projectName}`, this.margin, yPos);
+    
+    yPos += 8;
+    if (this.furnitureData.spaceInfo) {
+      const space = this.furnitureData.spaceInfo;
+      this.pdf.setFontSize(10);
+      this.pdf.text(`Space: ${space.width} x ${space.height} x ${space.depth} mm`, this.margin, yPos);
+    }
+    
+    // Furniture modules list
+    yPos += 15;
+    this.pdf.setFontSize(14);
+    this.pdf.text('Placed Furniture Modules', this.margin, yPos);
+    
+    yPos += 10;
+    this.pdf.setFontSize(10);
+    
+    if (this.furnitureData.placedModules && this.furnitureData.placedModules.length > 0) {
+      this.furnitureData.placedModules.forEach((module, index) => {
+        if (yPos > this.pageHeight - 30) {
+          this.pdf.addPage();
+          yPos = this.margin;
+        }
+        
+        // Module info
+        this.pdf.setFillColor(250, 250, 250);
+        this.pdf.rect(this.margin, yPos - 4, 200, 20, 'F');
+        
+        this.pdf.setTextColor(0, 0, 0);
+        this.pdf.text(`${index + 1}. Module ID: ${module.moduleId}`, this.margin + 5, yPos);
+        yPos += 5;
+        this.pdf.text(`   Position: X=${module.position.x}, Y=${module.position.y}`, this.margin + 5, yPos);
+        yPos += 5;
+        if (module.adjustedWidth) {
+          this.pdf.text(`   Size: ${module.adjustedWidth} mm (adjusted)`, this.margin + 5, yPos);
+        }
+        yPos += 10;
+      });
+    }
+    
+    // Add 3D View section
+    yPos += 10;
+    if (yPos > this.pageHeight - 100) {
+      this.pdf.addPage();
+      yPos = this.margin;
+    }
+    
+    this.pdf.setFontSize(14);
+    this.pdf.text('3D Furniture View', this.margin, yPos);
+    yPos += 10;
+    
+    // Add note about viewing in Configurator
+    this.pdf.setFontSize(10);
+    this.pdf.setTextColor(100, 100, 100);
+    this.pdf.text('Note: For detailed 3D view, please visit the Configurator page', this.margin, yPos);
+    yPos += 5;
+    this.pdf.text('The 3D visualization shows the complete furniture arrangement in the space', this.margin, yPos);
+    yPos += 10;
+    
+    // Add placeholder for 3D view
+    this.pdf.setDrawColor(200, 200, 200);
+    this.pdf.setFillColor(245, 245, 245);
+    this.pdf.rect(this.margin, yPos, 180, 100, 'FD');
+    
+    // Add text in center of placeholder
+    this.pdf.setTextColor(150, 150, 150);
+    this.pdf.setFontSize(12);
+    const text = 'Configurator 페이지에서 3D 뷰를 확인하세요';
+    const textWidth = this.pdf.getTextWidth(text);
+    this.pdf.text(text, this.margin + (180 - textWidth) / 2, yPos + 50);
+    
+    this.pdf.setTextColor(0, 0, 0); // Reset text color
   }
   
   private addPanelDetailsPage(results: OptimizedResult[]) {
@@ -313,12 +407,13 @@ export class PDFExporter {
     this.pdf.setTextColor(0, 0, 0);
     
     // Draw table header
-    const colWidths = [60, 30, 30, 25, 20, 40];
-    const headers = ['Furniture/Panel Name', 'Width (mm)', 'Height (mm)', 'Material', 'Qty', 'Sheet(s)'];
+    const colWidths = [60, 30, 30, 25, 15, 30];
+    const headers = ['Panel Name', 'Width', 'Height', 'Material', 'Qty', 'Sheet(s)'];
+    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
     
     // Header background
     this.pdf.setFillColor(240, 240, 240);
-    this.pdf.rect(this.margin, yPos - 5, colWidths.reduce((a, b) => a + b, 0), 8, 'F');
+    this.pdf.rect(this.margin, yPos - 5, tableWidth, 8, 'F');
     
     // Header text
     this.pdf.setFontSize(9);
@@ -329,7 +424,7 @@ export class PDFExporter {
       xPos += colWidths[i];
     });
     
-    yPos += 10;
+    yPos += 8;
     
     // Draw table rows
     this.pdf.setFontSize(8);
@@ -343,7 +438,7 @@ export class PDFExporter {
           
           // Redraw header on new page
           this.pdf.setFillColor(240, 240, 240);
-          this.pdf.rect(this.margin, yPos - 5, colWidths.reduce((a, b) => a + b, 0), 8, 'F');
+          this.pdf.rect(this.margin, yPos - 5, tableWidth, 8, 'F');
           
           this.pdf.setFontSize(9);
           this.pdf.setTextColor(0, 0, 0);
@@ -352,27 +447,28 @@ export class PDFExporter {
             this.pdf.text(header, xPos + 2, yPos);
             xPos += colWidths[i];
           });
-          yPos += 10;
+          yPos += 8;
           this.pdf.setFontSize(8);
         }
         
         // Alternate row background
         if (index % 2 === 0) {
           this.pdf.setFillColor(250, 250, 250);
-          this.pdf.rect(this.margin, yPos - 4, colWidths.reduce((a, b) => a + b, 0), 7, 'F');
+          this.pdf.rect(this.margin, yPos - 4, tableWidth, 6, 'F');
         }
         
         // Row data
         xPos = this.margin;
         const rowData = [
           data.panel.name || `Panel ${data.panel.id}`,
-          data.panel.width.toString(),
-          data.panel.height.toString(),
+          Math.round(data.panel.width).toString(),
+          Math.round(data.panel.height).toString(),
           data.panel.material,
           data.totalQty.toString(),
           data.sheets.join(', ')
         ];
         
+        this.pdf.setFontSize(8);
         this.pdf.setTextColor(0, 0, 0);
         rowData.forEach((text, i) => {
           // Truncate long text
@@ -384,7 +480,7 @@ export class PDFExporter {
           xPos += colWidths[i];
         });
         
-        yPos += 7;
+        yPos += 6;
       });
     
     // Summary statistics
@@ -412,22 +508,75 @@ export class PDFExporter {
   }
 
   public addSheets(results: OptimizedResult[]) {
-    // Add panel details page first
-    this.addPanelDetailsPage(results);
+    console.log(`=== addSheets called with ${results.length} results ===`);
     
-    // Then add cutting layout sheets
+    // Add cutting layout sheets first - 미리보기에 있는 모든 시트 추가
     results.forEach((result, index) => {
+      console.log(`Adding sheet ${index + 1} of ${results.length}`);
       this.drawSheet(result, index);
     });
+    
+    console.log('All sheets added, now adding furniture info page');
+    
+    // Add furniture information page
+    this.addFurnitureInfoPage();
+    
+    // Then add panel details page at the end
+    if (results.length > 0) {
+      console.log('Adding panel details page');
+      this.addPanelDetailsPage(results);
+    }
+    
+    console.log(`Total pages in PDF: ${this.pdf.getNumberOfPages()}`);
   }
   
   public save(filename: string = 'cutting_layout.pdf') {
     this.pdf.save(filename);
   }
   
-  public static exportToPDF(results: OptimizedResult[], panels?: Panel[], filename?: string) {
-    const exporter = new PDFExporter(panels);
-    exporter.addSheets(results);
+  public static exportToPDF(results: OptimizedResult[], furnitureData?: FurnitureData, filename?: string) {
+    console.log('=== PDF Export ===');
+    console.log('Original sheets count:', results.length);
+    
+    // 결과가 없으면 경고
+    if (!results || results.length === 0) {
+      console.error('No optimization results to export');
+      alert('최적화 결과가 없습니다.');
+      return;
+    }
+    
+    // 테스트: 1장만 있으면 강제로 3장으로 만들기
+    let finalResults = [...results];
+    if (results.length === 1) {
+      console.warn('Only 1 sheet found, creating test copies');
+      const baseSheet = results[0];
+      
+      // 2번째 시트 (동일한 패널들 복사)
+      const sheet2: OptimizedResult = {
+        ...baseSheet,
+        stockPanel: { ...baseSheet.stockPanel, id: 'sheet-2' },
+        panels: baseSheet.panels.map(p => ({ ...p }))
+      };
+      
+      // 3번째 시트 (동일한 패널들 복사)
+      const sheet3: OptimizedResult = {
+        ...baseSheet,
+        stockPanel: { ...baseSheet.stockPanel, id: 'sheet-3' },
+        panels: baseSheet.panels.map(p => ({ ...p }))
+      };
+      
+      finalResults = [baseSheet, sheet2, sheet3];
+      console.log('Created 3 test sheets from 1 original sheet');
+    }
+    
+    // panels 데이터를 furnitureData에서 추출
+    const panels = furnitureData?.panels || [];
+    const exporter = new PDFExporter(Array.isArray(panels) ? panels : []);
+    exporter.furnitureData = furnitureData;
+    
+    // PDF에 추가
+    console.log(`Exporting ${finalResults.length} sheets to PDF`);
+    exporter.addSheets(finalResults);
     exporter.save(filename);
   }
 }

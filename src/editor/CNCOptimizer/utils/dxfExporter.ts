@@ -16,7 +16,7 @@ export class DXFExporter {
     this.lines.push('9');
     this.lines.push('$ACADVER');
     this.lines.push('1');
-    this.lines.push('AC1014'); // AutoCAD 2000 format
+    this.lines.push('AC1009'); // AutoCAD R12 format - most compatible
     this.lines.push('9');
     this.lines.push('$INSBASE');
     this.lines.push('10');
@@ -33,6 +33,26 @@ export class DXFExporter {
     this.lines.push('0.0');
     this.lines.push('30');
     this.lines.push('0.0');
+    this.lines.push('9');
+    this.lines.push('$EXTMAX');
+    this.lines.push('10');
+    this.lines.push('5000.0');
+    this.lines.push('20');
+    this.lines.push('5000.0');
+    this.lines.push('30');
+    this.lines.push('0.0');
+    this.lines.push('9');
+    this.lines.push('$LIMMIN');
+    this.lines.push('10');
+    this.lines.push('0.0');
+    this.lines.push('20');
+    this.lines.push('0.0');
+    this.lines.push('9');
+    this.lines.push('$LIMMAX');
+    this.lines.push('10');
+    this.lines.push('5000.0');
+    this.lines.push('20');
+    this.lines.push('5000.0');
     this.lines.push('0');
     this.lines.push('ENDSEC');
     
@@ -41,6 +61,10 @@ export class DXFExporter {
     this.lines.push('SECTION');
     this.lines.push('2');
     this.lines.push('TABLES');
+    
+    // Skip VPORT table for better compatibility
+    
+    // Line type table (simplified)
     this.lines.push('0');
     this.lines.push('TABLE');
     this.lines.push('2');
@@ -52,7 +76,7 @@ export class DXFExporter {
     this.lines.push('2');
     this.lines.push('CONTINUOUS');
     this.lines.push('70');
-    this.lines.push('0');
+    this.lines.push('64');
     this.lines.push('3');
     this.lines.push('Solid line');
     this.lines.push('72');
@@ -70,7 +94,19 @@ export class DXFExporter {
     this.lines.push('2');
     this.lines.push('LAYER');
     this.lines.push('70');
+    this.lines.push('4');
+    
+    // Default layer (required)
+    this.lines.push('0');
+    this.lines.push('LAYER');
     this.lines.push('2');
+    this.lines.push('0');
+    this.lines.push('70');
+    this.lines.push('0');
+    this.lines.push('62');
+    this.lines.push('7');
+    this.lines.push('6');
+    this.lines.push('CONTINUOUS');
     
     // Panel layer
     this.lines.push('0');
@@ -80,7 +116,7 @@ export class DXFExporter {
     this.lines.push('70');
     this.lines.push('0');
     this.lines.push('62');
-    this.lines.push('3'); // Green
+    this.lines.push('3');
     this.lines.push('6');
     this.lines.push('CONTINUOUS');
     
@@ -92,7 +128,19 @@ export class DXFExporter {
     this.lines.push('70');
     this.lines.push('0');
     this.lines.push('62');
-    this.lines.push('1'); // Red
+    this.lines.push('1');
+    this.lines.push('6');
+    this.lines.push('CONTINUOUS');
+    
+    // Text layer
+    this.lines.push('0');
+    this.lines.push('LAYER');
+    this.lines.push('2');
+    this.lines.push('TEXT');
+    this.lines.push('70');
+    this.lines.push('0');
+    this.lines.push('62');
+    this.lines.push('2');
     this.lines.push('6');
     this.lines.push('CONTINUOUS');
     
@@ -109,50 +157,91 @@ export class DXFExporter {
   }
   
   private addRectangle(x: number, y: number, width: number, height: number, layer: string) {
-    // Draw rectangle as LWPOLYLINE
+    // Draw rectangle using LINE entities (more compatible)
+    // Top line
     this.lines.push('0');
-    this.lines.push('LWPOLYLINE');
+    this.lines.push('LINE');
     this.lines.push('8');
     this.lines.push(layer);
-    this.lines.push('90');
-    this.lines.push('4'); // 4 vertices
-    this.lines.push('70');
-    this.lines.push('1'); // Closed polyline
-    
-    // Vertex 1
     this.lines.push('10');
     this.lines.push(x.toFixed(2));
     this.lines.push('20');
     this.lines.push(y.toFixed(2));
+    this.lines.push('30');
+    this.lines.push('0.0');
+    this.lines.push('11');
+    this.lines.push((x + width).toFixed(2));
+    this.lines.push('21');
+    this.lines.push(y.toFixed(2));
+    this.lines.push('31');
+    this.lines.push('0.0');
     
-    // Vertex 2
+    // Right line
+    this.lines.push('0');
+    this.lines.push('LINE');
+    this.lines.push('8');
+    this.lines.push(layer);
     this.lines.push('10');
     this.lines.push((x + width).toFixed(2));
     this.lines.push('20');
     this.lines.push(y.toFixed(2));
+    this.lines.push('30');
+    this.lines.push('0.0');
+    this.lines.push('11');
+    this.lines.push((x + width).toFixed(2));
+    this.lines.push('21');
+    this.lines.push((y + height).toFixed(2));
+    this.lines.push('31');
+    this.lines.push('0.0');
     
-    // Vertex 3
+    // Bottom line
+    this.lines.push('0');
+    this.lines.push('LINE');
+    this.lines.push('8');
+    this.lines.push(layer);
     this.lines.push('10');
     this.lines.push((x + width).toFixed(2));
     this.lines.push('20');
     this.lines.push((y + height).toFixed(2));
+    this.lines.push('30');
+    this.lines.push('0.0');
+    this.lines.push('11');
+    this.lines.push(x.toFixed(2));
+    this.lines.push('21');
+    this.lines.push((y + height).toFixed(2));
+    this.lines.push('31');
+    this.lines.push('0.0');
     
-    // Vertex 4
+    // Left line
+    this.lines.push('0');
+    this.lines.push('LINE');
+    this.lines.push('8');
+    this.lines.push(layer);
     this.lines.push('10');
     this.lines.push(x.toFixed(2));
     this.lines.push('20');
     this.lines.push((y + height).toFixed(2));
+    this.lines.push('30');
+    this.lines.push('0.0');
+    this.lines.push('11');
+    this.lines.push(x.toFixed(2));
+    this.lines.push('21');
+    this.lines.push(y.toFixed(2));
+    this.lines.push('31');
+    this.lines.push('0.0');
   }
   
-  private addText(text: string, x: number, y: number, height: number = 10) {
+  private addText(text: string, x: number, y: number, height: number = 10, layer: string = 'TEXT') {
     this.lines.push('0');
     this.lines.push('TEXT');
     this.lines.push('8');
-    this.lines.push('PANELS');
+    this.lines.push(layer);
     this.lines.push('10');
     this.lines.push(x.toFixed(2));
     this.lines.push('20');
     this.lines.push(y.toFixed(2));
+    this.lines.push('30');
+    this.lines.push('0.0');
     this.lines.push('40');
     this.lines.push(height.toFixed(2));
     this.lines.push('1');
@@ -160,7 +249,7 @@ export class DXFExporter {
   }
   
   public addSheet(result: OptimizedResult, sheetNumber: number) {
-    const offsetY = sheetNumber * (result.stockPanel.height + 100);
+    const offsetY = sheetNumber * (result.stockPanel.height + 200);
     
     // Draw stock panel outline
     this.addRectangle(0, offsetY, result.stockPanel.width, result.stockPanel.height, 'CUTS');
@@ -168,13 +257,23 @@ export class DXFExporter {
     // Add sheet label
     this.addText(
       `Sheet ${sheetNumber + 1}`,
-      result.stockPanel.width / 2 - 50,
-      offsetY - 30,
-      20
+      result.stockPanel.width / 2,
+      offsetY - 50,
+      30,
+      'TEXT'
+    );
+    
+    // Add stock dimensions
+    this.addText(
+      `Stock: ${result.stockPanel.width} x ${result.stockPanel.height} mm`,
+      result.stockPanel.width / 2,
+      offsetY - 100,
+      20,
+      'TEXT'
     );
     
     // Draw panels
-    result.panels.forEach(panel => {
+    result.panels.forEach((panel, idx) => {
       // Panel outline
       this.addRectangle(
         panel.x,
@@ -184,14 +283,34 @@ export class DXFExporter {
         'PANELS'
       );
       
-      // Panel label
+      // Panel ID and dimensions
+      const panelText = panel.id ? `${panel.id}\n${Math.round(panel.width)}x${Math.round(panel.height)}` : `P${idx + 1}\n${Math.round(panel.width)}x${Math.round(panel.height)}`;
       this.addText(
-        `${panel.width}x${panel.height}`,
-        panel.x + panel.width / 2 - 30,
-        offsetY + panel.y + panel.height / 2,
-        8
+        panelText.split('\n')[0], // ID
+        panel.x + panel.width / 2,
+        offsetY + panel.y + panel.height / 2 + 10,
+        Math.min(panel.height / 10, 15),
+        'TEXT'
+      );
+      
+      // Dimensions on separate line
+      this.addText(
+        panelText.split('\n')[1] || `${Math.round(panel.width)}x${Math.round(panel.height)}`, // Dimensions
+        panel.x + panel.width / 2,
+        offsetY + panel.y + panel.height / 2 - 10,
+        Math.min(panel.height / 12, 12),
+        'TEXT'
       );
     });
+    
+    // Add efficiency info
+    this.addText(
+      `Efficiency: ${result.efficiency.toFixed(1)}%`,
+      result.stockPanel.width + 100,
+      offsetY + result.stockPanel.height / 2,
+      20,
+      'TEXT'
+    );
   }
   
   public finalize(): string {

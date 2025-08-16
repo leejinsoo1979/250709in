@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DXF Export Test</title>
+</head>
+<body>
+    <h1>DXF Export Test</h1>
+    <button onclick="generateDXF()">Generate DXF</button>
+    <pre id="output"></pre>
+    
+    <script type="module">
+        import { DXFExporter } from './src/editor/CNCOptimizer/utils/dxfExporter.ts';
+        
+        window.generateDXF = function() {
+            const testResult = {
+                stockPanel: { width: 2440, height: 1220 },
+                panels: [
+                    { id: 'P1', x: 0, y: 0, width: 600, height: 800, material: 'PB' },
+                    { id: 'P2', x: 610, y: 0, width: 450, height: 600, material: 'PB' },
+                    { id: 'P3', x: 1070, y: 0, width: 300, height: 400, material: 'MDF' }
+                ],
+                efficiency: 85.5,
+                usedArea: 1043600,
+                wasteArea: 1932800
+            };
+            
+            const dxfContent = DXFExporter.exportToDXF([testResult]);
+            document.getElementById('output').textContent = dxfContent;
+            
+            // Create download link
+            const blob = new Blob([dxfContent], { type: 'application/dxf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test.dxf';
+            a.click();
+        }
+    </script>
+</body>
+</html>

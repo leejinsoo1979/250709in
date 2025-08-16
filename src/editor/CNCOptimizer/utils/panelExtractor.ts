@@ -63,6 +63,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - ${dividerName}`,
         width: innerWidth,
         height: customDepth - backPanelThickness - 17,
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -93,9 +94,10 @@ export const calculatePanelDetails = (
       // 섹션 좌우측판
       panels.push({
         id: `panel-${panelId++}`,
-        name: `${moduleData.name} - ${sectionName} 좌측판`,
+        name: `${moduleData.name} - 좌측판`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -103,9 +105,10 @@ export const calculatePanelDetails = (
       
       panels.push({
         id: `panel-${panelId++}`,
-        name: `${moduleData.name} - ${sectionName} 우측판`,
+        name: `${moduleData.name} - 우측판`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -115,9 +118,10 @@ export const calculatePanelDetails = (
       if (sectionIndex === sections.length - 1) {
         panels.push({
           id: `panel-${panelId++}`,
-          name: `${moduleData.name} - ${sectionName} 상판`,
+          name: `${moduleData.name} - 상판`,
           width: innerWidth,
           height: customDepth,
+          thickness: basicThickness,  // 18mm
           material: 'PB',
           color: 'MW',
           quantity: 1
@@ -128,9 +132,10 @@ export const calculatePanelDetails = (
       const depthAdjustment = sectionIndex === 0 ? 0 : (backPanelThickness + 17);
       panels.push({
         id: `panel-${panelId++}`,
-        name: `${moduleData.name} - ${sectionName} 하판`,
+        name: `${moduleData.name} - 하판`,
         width: innerWidth,
         height: customDepth - depthAdjustment,
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -139,9 +144,10 @@ export const calculatePanelDetails = (
       // 섹션 뒷판
       panels.push({
         id: `panel-${panelId++}`,
-        name: `${moduleData.name} - ${sectionName} 뒷판`,
+        name: `${moduleData.name} - 뒷판`,
         width: innerWidth + 10,
         height: Math.round(sectionHeightMm) + 10,
+        thickness: backPanelThickness,  // 9mm
         material: 'MDF',
         color: 'MW',
         quantity: 1
@@ -171,10 +177,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 손잡이판`,
             width: customWidth,
             height: individualDrawerHeight,
+            thickness: drawerHandleThickness,  // 18mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
           
           // 서랍 앞판
@@ -183,10 +190,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 앞판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
+            thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
           
           // 서랍 뒷판
@@ -195,10 +203,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 뒷판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
+            thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
           
           // 서랍 좌우측판
@@ -208,10 +217,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 좌측판`,
             width: drawerSideDepth,
             height: drawerBodyHeight,
+            thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
           
           panels.push({
@@ -219,10 +229,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 우측판`,
             width: drawerSideDepth,
             height: drawerBodyHeight,
+            thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
           
           // 서랍 바닥판
@@ -231,10 +242,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 바닥판`,
             width: drawerBodyWidth - 26,
             height: drawerBodyDepth - 26,
+            thickness: drawerBottomThickness,  // 5mm
             material: 'MDF',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
         }
         
@@ -245,10 +257,11 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍 칸막이 ${i}`,
             width: innerWidth,
             height: customDepth - backPanelThickness - 17,
+            thickness: basicThickness,  // 18mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
         }
       } else if (section.type === 'hanging') {
@@ -257,9 +270,10 @@ export const calculatePanelDetails = (
           section.shelfPositions.forEach((pos: any, i: number) => {
             panels.push({
               id: `panel-${panelId++}`,
-              name: `${moduleData.name} - ${sectionName} 선반 ${i + 1}`,
+              name: `${moduleData.name} - 선반 ${i + 1}`,
               width: innerWidth,
               height: customDepth - 8,
+              thickness: basicThickness,  // 18mm
               material: 'PB',
               color: 'MW',
               quantity: 1
@@ -271,13 +285,14 @@ export const calculatePanelDetails = (
         for (let i = 1; i <= section.count; i++) {
           panels.push({
             id: `panel-${panelId++}`,
-            name: `${moduleData.name} - ${sectionName} 선반 ${i}`,
+            name: `${moduleData.name} - 선반 ${i}`,
             width: innerWidth,
             height: customDepth - 8,
+            thickness: basicThickness,  // 18mm
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'LENGTH'
+            grain: 'VERTICAL'  // 서랍도 세로 결방향
           });
         }
       }
@@ -290,10 +305,11 @@ export const calculatePanelDetails = (
       name: `${moduleData.name} - 좌측판`,
       width: customDepth,
       height: height,
+      thickness: basicThickness,  // 18mm
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: height > customDepth ? 'VERTICAL' : 'HORIZONTAL'
+      grain: 'VERTICAL'  // 기본값을 세로로 설정
     });
     
     panels.push({
@@ -301,10 +317,11 @@ export const calculatePanelDetails = (
       name: `${moduleData.name} - 우측판`,
       width: customDepth,
       height: height,
+      thickness: basicThickness,  // 18mm
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: height > customDepth ? 'VERTICAL' : 'HORIZONTAL'
+      grain: 'VERTICAL'  // 기본값을 세로로 설정
     });
     
     // 상하판
@@ -313,10 +330,11 @@ export const calculatePanelDetails = (
       name: `${moduleData.name} - 상판`,
       width: innerWidth,
       height: customDepth,
+      thickness: basicThickness,  // 18mm
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: height > customDepth ? 'VERTICAL' : 'HORIZONTAL'
+      grain: 'VERTICAL'  // 기본값을 세로로 설정
     });
     
     panels.push({
@@ -324,10 +342,11 @@ export const calculatePanelDetails = (
       name: `${moduleData.name} - 하판`,
       width: innerWidth,
       height: customDepth,
+      thickness: basicThickness,  // 18mm
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: height > customDepth ? 'VERTICAL' : 'HORIZONTAL'
+      grain: 'VERTICAL'  // 기본값을 세로로 설정
     });
     
     // 뒷판
@@ -336,10 +355,11 @@ export const calculatePanelDetails = (
       name: `${moduleData.name} - 뒷판`,
       width: innerWidth,
       height: innerHeight,
+      thickness: backPanelThickness,  // 9mm
       material: 'MDF',
       color: 'MW',
       quantity: 1,
-      grain: height > customDepth ? 'VERTICAL' : 'HORIZONTAL'
+      grain: 'VERTICAL'  // 기본값을 세로로 설정
     });
   }
   
@@ -354,6 +374,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 좌측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -363,6 +384,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 우측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1
@@ -373,6 +395,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 도어`,
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
+        thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
         quantity: 1

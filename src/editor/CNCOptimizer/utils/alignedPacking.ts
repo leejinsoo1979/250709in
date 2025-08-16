@@ -10,6 +10,7 @@ interface Column {
   width: number;
   height: number;
   panels: Rect[];
+  maxWidth: number; // Track the maximum width used in this column
 }
 
 export class AlignedPacker {
@@ -28,35 +29,42 @@ export class AlignedPacker {
   /**
    * Find or create a column for the panel
    */
-  private findOrCreateColumn(width: number): Column | null {
-    // Try to find existing column with same width
+  private findOrCreateColumn(width: number, height: number): Column | null {
+    // 먼저 기존 컬럼에서 맞는 것 찾기
     for (const column of this.columns) {
-      if (Math.abs(column.width - width) < 1) { // Allow 1mm tolerance
-        if (column.height + this.kerf < this.binHeight) {
-          return column;
+      // 컬럼에 패널이 들어갈 수 있는지 확인
+      if (width <= column.maxWidth) {
+        const remainingHeight = this.binHeight - column.height;
+        if (height + this.kerf <= remainingHeight) {
+          // 원장 범위 내에 있는지 확인
+          if (column.x + width <= this.binWidth) {
+            return column;
+          }
         }
       }
     }
     
-    // Calculate total width used
-    let totalWidth = 0;
+    // 새 컬럼을 만들 수 있는지 확인
+    // 현재 사용된 너비 계산
+    let totalWidth = this.kerf;
     for (const column of this.columns) {
-      totalWidth += column.width + this.kerf;
+      totalWidth += column.maxWidth + this.kerf;
     }
     
-    // Check if we can add new column
+    // 새 컬럼이 원장 너비를 초과하지 않는지 확인
     if (totalWidth + width + this.kerf <= this.binWidth) {
       const newColumn: Column = {
         x: totalWidth,
         width: width,
-        height: 0,
-        panels: []
+        height: this.kerf,
+        panels: [],
+        maxWidth: width
       };
       this.columns.push(newColumn);
       return newColumn;
     }
     
-    return null;
+    return null;  // 패널을 배치할 수 없음
   }
   
   /**
@@ -64,48 +72,11 @@ export class AlignedPacker {
    */
   pack(panel: Rect): Rect | null {
     // Try normal orientation first
-    let column = this.findOrCreateColumn(panel.width);
-    if (column && column.height + panel.height + this.kerf <= this.binHeight) {
-      const packed: Rect = {
-        ...panel,
-        x: column.x,
-        y: column.height,
-        rotated: false
-      };
-      
-      column.panels.push(packed);
-      column.height += panel.height + this.kerf;
-      this.panels.push(packed);
-      return packed;
-    }
-    
-    // Try rotated if allowed
-    const canRotate = panel.canRotate !== false;
-    if (canRotate) {
-      column = this.findOrCreateColumn(panel.height);
-      if (column && column.height + panel.width + this.kerf <= this.binHeight) {
-        const packed: Rect = {
-          ...panel,
-          x: column.x,
-          y: column.height,
-          width: panel.height,
-          height: panel.width,
-          rotated: true
-        };
-        
-        column.panels.push(packed);
-        column.height += panel.width + this.kerf;
-        this.panels.push(packed);
-        return packed;
-      }
-    }
-    
-    // Try to fit in any available space in existing columns
-    for (const column of this.columns) {
-      const remainingHeight = this.binHeight - column.height;
-      
-      // Try normal orientation
-      if (panel.width <= column.width && panel.height <= remainingHeight) {
+    let column = this.findOrCreateColumn(panel.width, panel.height);
+    if (column) {
+      // 패널이 원장을 벗어나지 않는지 확인
+      if (column.x + panel.width <= this.binWidth && 
+          column.height + panel.height <= this.binHeight) {
         const packed: Rect = {
           ...panel,
           x: column.x,
@@ -118,22 +89,87 @@ export class AlignedPacker {
         this.panels.push(packed);
         return packed;
       }
+    }
+    
+    // Try rotated if allowed
+    const canRotate = panel.canRotate !== false;
+    if (canRotate) {
+      // 회전한 크기로 컬럼 찾기
+      column = this.findOrCreateColumn(panel.height, panel.width);
+      if (column) {
+        // 회전된 패널이 원장을 벗어나지 않는지 확인
+        if (column.x + panel.height <= this.binWidth && 
+            column.height + panel.width <= this.binHeight) {
+          const packed: Rect = {
+            ...panel,
+            x: column.x,
+            y: column.height,
+            width: panel.height,  // 회전 시 width와 height 교체
+            height: panel.width,  // 회전 시 width와 height 교체
+            rotated: true
+          };
+          
+          column.panels.push(packed);
+          column.height += packed.height + this.kerf;  // 회전된 패널의 실제 높이
+          this.panels.push(packed);
+          return packed;
+        }
+      }
+    }
+    
+    // Try to fit in any available space in existing columns
+    for (const column of this.columns) {
+      const remainingHeight = this.binHeight - column.height;
+      
+      // Try normal orientation
+      if (panel.width <= column.maxWidth && 
+          panel.height + this.kerf <= remainingHeight) {
+        // 패널이 원장을 벗어나지 않는지 확인
+        if (column.x + panel.width <= this.binWidth && 
+            column.height + panel.height <= this.binHeight) {
+          const packed: Rect = {
+            ...panel,
+            x: column.x,
+            y: column.height,
+            rotated: false
+          };
+          
+          column.panels.push(packed);
+          column.height += panel.height + this.kerf;
+          // 컬럼의 최대 너비 업데이트
+          if (panel.width > column.maxWidth) {
+            column.maxWidth = panel.width;
+          }
+          this.panels.push(packed);
+          return packed;
+        }
+      }
       
       // Try rotated
-      if (canRotate && panel.height <= column.width && panel.width <= remainingHeight) {
-        const packed: Rect = {
-          ...panel,
-          x: column.x,
-          y: column.height,
-          width: panel.height,
-          height: panel.width,
-          rotated: true
-        };
-        
-        column.panels.push(packed);
-        column.height += panel.width + this.kerf;
-        this.panels.push(packed);
-        return packed;
+      if (canRotate && 
+          panel.height <= column.maxWidth && 
+          panel.width + this.kerf <= remainingHeight) {
+        // 회전된 패널이 원장을 벗어나지 않는지 확인
+        if (column.x + panel.height <= this.binWidth && 
+            column.height + panel.width <= this.binHeight) {
+          const packed: Rect = {
+            ...panel,
+            x: column.x,
+            y: column.height,
+            width: panel.height,  // 회전 시 width와 height 교체
+            height: panel.width,  // 회전 시 width와 height 교체
+            rotated: true
+          };
+          
+          column.panels.push(packed);
+          column.height += packed.height + this.kerf;  // 회전된 패널의 실제 높이
+          // 컬럼의 최대 너비 업데이트
+          if (packed.width > column.maxWidth) {
+            column.maxWidth = packed.width;
+          }
+          this.panels.push(packed);
+          return packed;
+        }
       }
     }
     
@@ -146,9 +182,8 @@ export class AlignedPacker {
   getResult(): PackedBin {
     let usedArea = 0;
     for (const panel of this.panels) {
-      const w = panel.rotated ? panel.height : panel.width;
-      const h = panel.rotated ? panel.width : panel.height;
-      usedArea += w * h;
+      // 패널의 실제 크기로 면적 계산
+      usedArea += panel.width * panel.height;
     }
     
     const totalArea = this.binWidth * this.binHeight;
@@ -178,46 +213,53 @@ export function packWithAlignment(
   panels: Rect[],
   binWidth: number,
   binHeight: number,
-  kerf: number = 3
+  kerf: number = 3,
+  maxBins: number = 20
 ): PackedBin[] {
-  // Group panels by width for better column utilization
-  const panelsByWidth = new Map<number, Rect[]>();
-  
-  panels.forEach(panel => {
-    const width = Math.round(panel.width);
-    if (!panelsByWidth.has(width)) {
-      panelsByWidth.set(width, []);
+  // Enhanced sorting strategy: prioritize by width first for column alignment
+  const sortedPanels = [...panels].sort((a, b) => {
+    // First sort by width (for column grouping)
+    const widthDiff = b.width - a.width;
+    if (Math.abs(widthDiff) > 50) {
+      return widthDiff;
     }
-    panelsByWidth.get(width)!.push(panel);
+    // Then by area for efficient packing
+    return b.width * b.height - a.width * a.height;
   });
   
-  // Sort width groups by total area (largest first)
-  const sortedGroups = Array.from(panelsByWidth.entries()).sort((a, b) => {
-    const areaA = a[1].reduce((sum, p) => sum + p.width * p.height, 0);
-    const areaB = b[1].reduce((sum, p) => sum + p.width * p.height, 0);
-    return areaB - areaA;
+  // Group panels by similar width for better column alignment
+  const widthGroups = new Map<number, Rect[]>();
+  const snapGrid = 10;
+  
+  sortedPanels.forEach(panel => {
+    const snappedWidth = Math.ceil(panel.width / snapGrid) * snapGrid;
+    if (!widthGroups.has(snappedWidth)) {
+      widthGroups.set(snappedWidth, []);
+    }
+    widthGroups.get(snappedWidth)!.push(panel);
   });
   
-  const bins: PackedBin[] = [];
-  const remainingPanels: Rect[] = [];
+  // Sort groups by width (largest first) and flatten
+  const finalPanels: Rect[] = [];
+  const sortedWidths = Array.from(widthGroups.keys()).sort((a, b) => b - a);
   
-  // Flatten sorted groups back to panel list
-  const sortedPanels: Rect[] = [];
-  sortedGroups.forEach(([_, groupPanels]) => {
-    // Sort panels within group by height (tallest first)
-    groupPanels.sort((a, b) => b.height - a.height);
-    sortedPanels.push(...groupPanels);
-  });
+  for (const width of sortedWidths) {
+    const group = widthGroups.get(width)!;
+    // Sort within group by height for better stacking
+    group.sort((a, b) => b.height - a.height);
+    finalPanels.push(...group);
+  }
   
   // Pack panels into bins
+  const bins: PackedBin[] = [];
   let currentBin = 0;
-  const unpacked = [...sortedPanels];
+  const unpacked = [...finalPanels];
   
-  while (unpacked.length > 0 && currentBin < 10) {
+  while (unpacked.length > 0 && currentBin < maxBins) {
     const packer = new AlignedPacker(binWidth, binHeight, kerf);
     const panelsToRemove: number[] = [];
     
-    // Try to pack each remaining panel
+    // Pack all panels in order (already sorted optimally)
     for (let i = 0; i < unpacked.length; i++) {
       const panel = unpacked[i];
       const packed = packer.pack(panel);
@@ -227,8 +269,9 @@ export function packWithAlignment(
     }
     
     // Remove packed panels
-    for (let i = panelsToRemove.length - 1; i >= 0; i--) {
-      unpacked.splice(panelsToRemove[i], 1);
+    panelsToRemove.sort((a, b) => b - a); // Sort descending to remove from end first
+    for (const idx of panelsToRemove) {
+      unpacked.splice(idx, 1);
     }
     
     // Add bin if it has panels

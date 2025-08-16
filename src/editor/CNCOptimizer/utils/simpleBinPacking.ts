@@ -68,8 +68,9 @@ export class SimplePacker {
           ...panel,
           x: position.x,
           y: position.y,
-          width: panel.height,
-          height: panel.width,
+          // 원래 크기를 유지하고 rotated 플래그만 설정
+          width: panel.width,
+          height: panel.height,
           rotated: true
         };
         this.panels.push(packed);
@@ -162,7 +163,8 @@ export function packIntoBins(
   binWidth: number,
   binHeight: number,
   kerf: number = 3,
-  allowRotation: boolean = true
+  allowRotation: boolean = true,
+  maxBins: number = 20
 ): PackedBin[] {
   // Sort panels by area (largest first)
   const sortedPanels = [...panels].sort((a, b) => 
@@ -172,7 +174,7 @@ export function packIntoBins(
   const bins: PackedBin[] = [];
   const remainingPanels = [...sortedPanels];
   
-  while (remainingPanels.length > 0) {
+  while (remainingPanels.length > 0 && bins.length < maxBins) {
     const packer = new SimplePacker(binWidth, binHeight, kerf);
     const panelsToRemove: number[] = [];
     

@@ -25,8 +25,10 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
   const [settings, setSettingsState] = useState<CutSettings>({
     unit: 'mm' as Unit, 
     kerf: 5, 
-    trimTop: 0, 
-    trimLeft: 0,
+    trimTop: 0,     // 상단 여백 기본값 0mm
+    trimBottom: 0,  // 하단 여백 기본값 0mm
+    trimLeft: 0,    // 좌측 여백 기본값 0mm
+    trimRight: 0,   // 우측 여백 기본값 0mm
     labelsOnPanels: true, 
     singleSheetOnly: false,
     considerMaterial: true, 

@@ -20,7 +20,8 @@ export function useLivePanelData() {
   useEffect(() => {
     console.log('🔄 Live panel data update triggered:', {
       modulesCount: placedModules.length,
-      spaceInfo: spaceInfo
+      spaceInfo: spaceInfo,
+      placedModules: placedModules
     });
 
     const extractPanels = () => {
@@ -34,13 +35,21 @@ export function useLivePanelData() {
         depth: spaceInfo.depth
       };
 
-      placedModules.forEach(placedModule => {
+      console.log('📐 Internal space:', internalSpace);
+
+      placedModules.forEach((placedModule, moduleIndex) => {
         // Get module ID
         const moduleId = placedModule.moduleId || placedModule.moduleType;
         if (!moduleId) {
-          console.warn('Module ID missing:', placedModule);
+          console.warn(`Module ${moduleIndex} ID missing:`, placedModule);
           return;
         }
+        
+        console.log(`🪑 Processing module ${moduleIndex + 1}:`, {
+          moduleId,
+          position: placedModule.position,
+          dimensions: { width: placedModule.width, depth: placedModule.depth }
+        });
         
         // Find module data with dynamic sizing
         const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
@@ -56,22 +65,34 @@ export function useLivePanelData() {
         const material = placedModule.material || 'PB';
         const color = placedModule.color || 'MW';
 
+        console.log(`  Module config:`, { width, depth, hasDoor, material, color });
+
         // Extract panel details using the panel extractor
         const modulePanels = calculatePanelDetails(moduleData, width, depth, hasDoor);
         
-        // Update material and color info
-        modulePanels.forEach(panel => {
+        console.log(`  Extracted ${modulePanels.length} panels from module ${moduleData.name}`);
+        
+        // Update material, color info and ensure unique IDs
+        modulePanels.forEach((panel, panelIndex) => {
           panel.material = material;
           panel.color = color;
+          // 가구 인덱스와 패널 인덱스를 조합하여 고유 ID 생성
+          panel.id = `m${moduleIndex}_p${panelIndex}`;
         });
 
         allPanels.push(...modulePanels);
       });
 
-      console.log('📊 Live panels extracted:', {
+      console.log('📊 Total live panels extracted:', {
         count: allPanels.length,
         materials: [...new Set(allPanels.map(p => p.material))],
-        colors: [...new Set(allPanels.map(p => p.color))]
+        colors: [...new Set(allPanels.map(p => p.color))],
+        panels: allPanels.map(p => ({ 
+          name: p.name, 
+          width: p.width, 
+          height: p.height,
+          quantity: p.quantity 
+        }))
       });
 
       setPanels(allPanels);
@@ -155,7 +176,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       depth: spaceInfo.depth
     };
 
-    placedModules.forEach(placedModule => {
+    placedModules.forEach((placedModule, moduleIndex) => {
       const moduleId = placedModule.moduleId || placedModule.moduleType;
       if (!moduleId) return;
       
@@ -170,9 +191,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       const modulePanels = calculatePanelDetails(moduleData, width, depth, hasDoor);
       
-      modulePanels.forEach(panel => {
+      modulePanels.forEach((panel, panelIndex) => {
         panel.material = material;
         panel.color = color;
+        // 가구 인덱스와 패널 인덱스를 조합하여 고유 ID 생성
+        panel.id = `m${moduleIndex}_p${panelIndex}`;
       });
 
       allPanels.push(...modulePanels);

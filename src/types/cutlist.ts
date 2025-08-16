@@ -26,7 +26,9 @@ export interface CutSettings {
   unit: Unit;
   kerf: number;
   trimTop?: number;
+  trimBottom?: number;
   trimLeft?: number;
+  trimRight?: number;
   labelsOnPanels?: boolean;
   singleSheetOnly?: boolean;
   considerMaterial?: boolean;

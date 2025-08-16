@@ -43,17 +43,17 @@ export default function StockTable(){
         </button>
       </div>
       
-      <div className={styles.tableContainer}>
+      <div className={styles.stockTableContainer}>
         {stock.length === 0 ? (
           <div className={styles.empty}>
             원자재가 없습니다. "추가" 버튼을 클릭하여 생성하세요.
           </div>
         ) : (
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.stockTable}`}>
             <thead>
               <tr>
                 <th>이름</th>
-                <th>길이×폭</th>
+                <th>치수 (L×W)</th>
                 <th>수량</th>
                 <th>재질</th>
                 <th></th>

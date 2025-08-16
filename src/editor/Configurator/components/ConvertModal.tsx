@@ -107,11 +107,27 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
   const handlePDFTemplate = async () => {
     console.log('PDF 템플릿 버튼 클릭됨');
     
-    // 테스트를 위해 바로 미리보기 표시
-    setShowPDFPreview(true);
+    // jsPDF 직접 사용해서 바로 다운로드
+    const { jsPDF } = await import('jspdf');
+    const pdf = new jsPDF();
     
-    // 실제 캡처는 백그라운드에서 진행
-    // await captureViews();
+    // 제목 추가
+    pdf.setFontSize(20);
+    pdf.text('Furniture Design', 20, 20);
+    
+    // 현재 화면 캡처
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 15, 40, 180, 100);
+    }
+    
+    // 날짜 추가
+    pdf.setFontSize(12);
+    pdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 160);
+    
+    // PDF 다운로드
+    pdf.save('furniture-design.pdf');
   };
 
   return (

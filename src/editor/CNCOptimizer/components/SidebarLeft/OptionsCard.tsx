@@ -3,7 +3,11 @@ import { useCNCStore } from '../../store';
 import { Settings, RotateCw } from 'lucide-react';
 import styles from './SidebarLeft.module.css';
 
-export default function OptionsCard(){
+interface OptionsCardProps {
+  onSettingsChange?: () => void;
+}
+
+export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {}){
   const { settings, setSettings } = useCNCStore();
 
   return (
@@ -22,6 +26,11 @@ export default function OptionsCard(){
                 type="number" 
                 value={settings.kerf}
                 onChange={e => setSettings({ kerf: Number(e.target.value) })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && onSettingsChange) {
+                    onSettingsChange();
+                  }
+                }}
                 min="0"
                 max="10"
                 step="0.5"
@@ -37,8 +46,34 @@ export default function OptionsCard(){
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimTop || 0}
+                value={settings.trimTop ?? 0}
                 onChange={e => setSettings({ trimTop: Number(e.target.value) })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && onSettingsChange) {
+                    onSettingsChange();
+                  }
+                }}
+                min="0"
+                max="50"
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          </label>
+        </div>
+
+        <div className={styles.optionGroup}>
+          <label className={styles.numberInput}>
+            <span>하단 여백</span>
+            <div className={styles.inputWrapper}>
+              <input 
+                type="number" 
+                value={settings.trimBottom ?? 0}
+                onChange={e => setSettings({ trimBottom: Number(e.target.value) })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && onSettingsChange) {
+                    onSettingsChange();
+                  }
+                }}
                 min="0"
                 max="50"
               />
@@ -53,8 +88,34 @@ export default function OptionsCard(){
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
-                value={settings.trimLeft || 0}
+                value={settings.trimLeft ?? 0}
                 onChange={e => setSettings({ trimLeft: Number(e.target.value) })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && onSettingsChange) {
+                    onSettingsChange();
+                  }
+                }}
+                min="0"
+                max="50"
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          </label>
+        </div>
+
+        <div className={styles.optionGroup}>
+          <label className={styles.numberInput}>
+            <span>우측 여백</span>
+            <div className={styles.inputWrapper}>
+              <input 
+                type="number" 
+                value={settings.trimRight ?? 0}
+                onChange={e => setSettings({ trimRight: Number(e.target.value) })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && onSettingsChange) {
+                    onSettingsChange();
+                  }
+                }}
                 min="0"
                 max="50"
               />
@@ -135,7 +196,9 @@ export default function OptionsCard(){
             onClick={() => setSettings({
               kerf: 5,
               trimTop: 0,
+              trimBottom: 0,
               trimLeft: 0,
+              trimRight: 0,
               considerGrain: true,
               considerMaterial: true,
               labelsOnPanels: true,

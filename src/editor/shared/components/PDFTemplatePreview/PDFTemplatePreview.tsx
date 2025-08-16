@@ -162,6 +162,66 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const { spaceInfo, materialConfig } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
   const uiStore = useUIStore();
+  
+  // capturedViews가 있을 때 자동으로 viewPositions 초기화
+  useEffect(() => {
+    if (capturedViews && Object.keys(capturedViews).length > 0 && viewPositions.length === 0) {
+      const initialPositions: ViewPosition[] = [];
+      let xOffset = 50;
+      let yOffset = 50;
+      
+      // 각 캡처된 뷰를 viewPositions에 추가
+      if (capturedViews.top) {
+        initialPositions.push({
+          id: `top_${Date.now()}`,
+          x: xOffset,
+          y: yOffset,
+          width: 150,
+          height: 150,
+          scale: 1
+        });
+        xOffset += 200;
+      }
+      
+      if (capturedViews.front) {
+        initialPositions.push({
+          id: `front_${Date.now()+1}`,
+          x: xOffset,
+          y: yOffset,
+          width: 150,
+          height: 150,
+          scale: 1
+        });
+        xOffset += 200;
+      }
+      
+      if (capturedViews.side) {
+        initialPositions.push({
+          id: `side_${Date.now()+2}`,
+          x: xOffset,
+          y: yOffset,
+          width: 150,
+          height: 150,
+          scale: 1
+        });
+        yOffset += 200;
+        xOffset = 50;
+      }
+      
+      if (capturedViews.door) {
+        initialPositions.push({
+          id: `door_${Date.now()+3}`,
+          x: xOffset,
+          y: yOffset,
+          width: 150,
+          height: 150,
+          scale: 1
+        });
+      }
+      
+      setViewPositions(initialPositions);
+    }
+  }, [capturedViews]);
   const { viewMode, view2DDirection, setViewMode, setView2DDirection, renderMode, setRenderMode, view2DTheme } = uiStore;
   const { theme } = useTheme();
   
@@ -1244,7 +1304,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       pdf.setFillColor(paperColor);
       pdf.rect(0, 0, paperDimensions.width, paperDimensions.height, 'F');
 
-      // 각 뷰 위치에 대해 벡터 렌더링
+      // 각 뷰 위치에 대해 이미지 렌더링
       for (const view of viewPositions) {
         // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
         const viewType = view.id.split('_')[0];
@@ -1255,53 +1315,31 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
         const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
 
-        try {
-          // 뷰 설정 생성
-          const viewConfig = {
-            viewMode: '2D' as const,
-            view2DDirection: viewType as 'front' | 'top' | 'left' | 'right',
-            renderMode: renderMode,
-            showDimensions: uiStore.showDimensionsText,
-            showGuides: uiStore.showGuides,
-            showAxis: uiStore.showAxis,
-            showAll: uiStore.showAll,
-            spaceInfo: spaceInfo,
-            placedModules: placedModules
-          };
-
-          // 벡터 데이터 생성
-          const vectorData = generateVectorDataFromConfig(
-            viewConfig,
-            view.width * view.scale,
-            view.height * view.scale
-          );
-          
-          // SVG로 변환
-          const svgString = convertToSVG(vectorData);
-          
-          // SVG를 PDF에 추가
-          const svgElement = new DOMParser().parseFromString(svgString, 'image/svg+xml').documentElement;
-          
-          // svg2pdf 라이브러리를 사용하여 SVG를 PDF에 벡터로 추가
-          (pdf as any).svg(svgElement, {
-            x: viewXMm,
-            y: viewYMm,
-            width: viewWidthMm,
-            height: viewHeightMm
-          });
-
-        } catch (err) {
-          console.error('벡터 렌더링 실패, 이미지 폴백 시도:', err);
-          
-          // 벡터 렌더링 실패 시 이미지 폴백
-          const localImage = localCapturedViews[`${view.id}_${viewType}`];
-          if (localImage) {
-            try {
-              pdf.addImage(localImage, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
-            } catch (imgErr) {
-              console.error('이미지 추가도 실패:', imgErr);
-            }
+        // capturedViews에서 이미지 가져오기
+        let imageData = null;
+        if (viewType === 'top') {
+          imageData = capturedViews?.top;
+        } else if (viewType === 'front') {
+          imageData = capturedViews?.front;
+        } else if (viewType === 'side') {
+          imageData = capturedViews?.side;
+        } else if (viewType === 'door') {
+          imageData = capturedViews?.door;
+        }
+        
+        // localCapturedViews에서도 확인
+        if (!imageData) {
+          imageData = localCapturedViews[view.id];
+        }
+        
+        if (imageData) {
+          try {
+            pdf.addImage(imageData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+          } catch (imgErr) {
+            console.error('이미지 추가 실패:', imgErr);
           }
+        } else {
+          console.warn('이미지를 찾을 수 없음:', viewType, view.id);
         }
       }
 
