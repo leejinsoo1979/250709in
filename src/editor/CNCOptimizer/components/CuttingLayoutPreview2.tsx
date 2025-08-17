@@ -341,31 +341,61 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
+          // 패널 크기에 맞는 폰트 크기 계산
+          const maxTextWidth = width * 0.8; // 패널 너비의 80%
+          const maxTextHeight = height * 0.3; // 패널 높이의 30%
+          let fontSize = Math.min(32 * fontScale, maxTextHeight); // 기본 크기와 최대 높이 중 작은 값
+          
           // 가로 모드일 때 텍스트를 시계방향 90도 회전
           if (rotation === -90) {
             ctx.save();
             ctx.translate(x + width / 2, y + height / 2);
             ctx.rotate(Math.PI / 2); // 시계방향 90도 회전
             
-            let fontSize = 32 * fontScale;
+            // 텍스트가 패널 크기에 맞도록 폰트 크기 조정
             ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-            ctx.fillText(panel.name, 0, 0);
+            let textWidth = ctx.measureText(panel.name).width;
             
+            // 회전된 상태에서 패널 높이가 텍스트 제한 너비가 됨
+            const rotatedMaxWidth = height * 0.8;
+            while (textWidth > rotatedMaxWidth && fontSize > 8) {
+              fontSize -= 1;
+              ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+              textWidth = ctx.measureText(panel.name).width;
+            }
+            
+            ctx.fillText(panel.name, 0, 0);
             ctx.restore();
           } else {
-            let fontSize = 32 * fontScale;
+            // 세로 모드
             ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            let nameWidth = ctx.measureText(panel.name).width;
             
-            // 패널이 좁으면 텍스트를 회전시킴
-            const nameWidth = ctx.measureText(panel.name).width;
-            if (nameWidth > width * 0.9 && height > width) {
+            // 패널이 좁고 길면 텍스트를 회전시킴
+            if (nameWidth > maxTextWidth && height > width) {
               // 세로로 긴 패널 - 텍스트를 90도 회전
               ctx.save();
               ctx.translate(x + width / 2, y + height / 2);
               ctx.rotate(-Math.PI / 2);
+              
+              // 회전된 상태에서 다시 크기 조정
+              const rotatedMaxWidth = height * 0.8;
+              while (nameWidth > rotatedMaxWidth && fontSize > 8) {
+                fontSize -= 1;
+                ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                nameWidth = ctx.measureText(panel.name).width;
+              }
+              
               ctx.fillText(panel.name, 0, 0);
               ctx.restore();
             } else {
+              // 가로로 표시 - 텍스트가 패널 너비에 맞도록 조정
+              while (nameWidth > maxTextWidth && fontSize > 8) {
+                fontSize -= 1;
+                ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                nameWidth = ctx.measureText(panel.name).width;
+              }
+              
               ctx.fillText(panel.name, x + width / 2, y + height / 2);
             }
           }

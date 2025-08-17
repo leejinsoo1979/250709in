@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
-import { Package, Plus, Trash2 } from 'lucide-react';
+import { Package, Plus, Trash2, Upload } from 'lucide-react';
 import styles from './SidebarLeft.module.css';
 
 export default function PanelsTable(){
   const { panels, setPanels, selectedPanelId, setSelectedPanelId } = useCNCStore();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to selected panel
   useEffect(() => {
@@ -112,15 +113,127 @@ export default function PanelsTable(){
     setSelectedPanelId(selectedPanelId === id ? null : id);
   };
 
+  // CSV 파일 업로드 처리
+  const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      parseCSV(text);
+    };
+    reader.readAsText(file);
+    
+    // 같은 파일을 다시 선택할 수 있도록 리셋
+    event.target.value = '';
+  };
+
+  // CSV 파싱 함수
+  const parseCSV = (csvText: string) => {
+    try {
+      const lines = csvText.split('\n').filter(line => line.trim());
+      
+      // 첫 줄은 헤더로 가정
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
+      // 필요한 컬럼 인덱스 찾기
+      const nameIndex = headers.findIndex(h => h.includes('이름') || h.includes('name') || h.includes('label') || h.includes('품명'));
+      const widthIndex = headers.findIndex(h => h.includes('가로') || h.includes('width') || h === 'w');
+      const lengthIndex = headers.findIndex(h => h.includes('세로') || h.includes('length') || h.includes('높이') || h === 'l');
+      const thicknessIndex = headers.findIndex(h => h.includes('두께') || h.includes('thickness') || h === 't');
+      const quantityIndex = headers.findIndex(h => h.includes('수량') || h.includes('quantity') || h.includes('qty'));
+      const materialIndex = headers.findIndex(h => h.includes('재질') || h.includes('material') || h.includes('재료'));
+      const grainIndex = headers.findIndex(h => h.includes('결') || h.includes('grain') || h.includes('방향'));
+
+      const newPanels: Panel[] = [];
+      
+      // 데이터 라인 파싱
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // CSV 값 파싱 (콤마 내부의 따옴표 처리)
+        const values = line.match(/(".*?"|[^,]+)/g)?.map(v => v.replace(/^"(.*)"$/, '$1').trim()) || [];
+        
+        if (values.length < 2) continue; // 최소한 가로, 세로는 있어야 함
+        
+        // 가로, 세로 값 추출
+        let width = parseFloat(values[widthIndex] || '600') || 600;
+        let length = parseFloat(values[lengthIndex] || '800') || 800;
+        
+        // 항상 length가 더 크도록 조정
+        if (width > length) {
+          [width, length] = [length, width];
+        }
+        
+        const panel: Panel = {
+          id: `csv_${Date.now()}_${i}`,
+          label: values[nameIndex] || `Panel_${i}`,
+          width: width,
+          length: length,
+          thickness: parseFloat(values[thicknessIndex] || '18') || 18,
+          quantity: parseInt(values[quantityIndex] || '1') || 1,
+          material: values[materialIndex]?.toUpperCase() || 'PB',
+          grain: values[grainIndex]?.toUpperCase() === 'H' ? 'H' : 'V'
+        };
+        
+        // 재질 검증
+        const validMaterials = ['PB', 'MDF', 'PET', 'PLY', 'HPL', 'LPM'];
+        if (!validMaterials.includes(panel.material)) {
+          panel.material = 'PB';
+        }
+        
+        newPanels.push(panel);
+      }
+      
+      if (newPanels.length > 0) {
+        // 기존 패널에 추가할지 대체할지 확인
+        const shouldReplace = panels.length === 0 || 
+          confirm(`기존 패널 ${panels.length}개가 있습니다. 대체하시겠습니까?\n\n'확인': CSV 파일로 대체\n'취소': 기존 패널에 추가`);
+        
+        if (shouldReplace) {
+          setPanels(newPanels);
+          alert(`${newPanels.length}개의 패널을 CSV 파일에서 가져왔습니다.`);
+        } else {
+          setPanels([...panels, ...newPanels]);
+          alert(`${newPanels.length}개의 패널을 추가했습니다.`);
+        }
+      } else {
+        alert('CSV 파일에서 유효한 패널 데이터를 찾을 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('CSV 파싱 오류:', error);
+      alert('CSV 파일을 읽는 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <Package size={16} />
         <h3>패널 목록 ({panels.length})</h3>
-        <button className={styles.addButton} onClick={addRow}>
-          <Plus size={14} />
-          추가
-        </button>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button 
+            className={styles.addButton} 
+            onClick={() => fileInputRef.current?.click()}
+            title="CSV 파일 업로드"
+          >
+            <Upload size={14} />
+            CSV
+          </button>
+          <button className={styles.addButton} onClick={addRow}>
+            <Plus size={14} />
+            추가
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleCSVUpload}
+          style={{ display: 'none' }}
+        />
       </div>
       
       <div className={styles.tableContainer} ref={tableContainerRef}>

@@ -62,47 +62,52 @@ export class PDFExporter {
       this.margin + 10
     );
     
-    // Calculate scale to fit the sheet on the page
+    // Calculate scale to fit the sheet on the page (가로 방향으로 표시)
     const drawableWidth = this.pageWidth - (this.margin * 2);
     const drawableHeight = this.pageHeight - (this.margin * 2) - 20;
     
-    const scaleX = drawableWidth / result.stockPanel.width;
-    const scaleY = drawableHeight / result.stockPanel.height;
+    // 패널을 가로로 표시하기 위해 width와 height를 바꿔서 계산
+    const isRotated = result.stockPanel.height > result.stockPanel.width;
+    const displayWidth = isRotated ? result.stockPanel.height : result.stockPanel.width;
+    const displayHeight = isRotated ? result.stockPanel.width : result.stockPanel.height;
+    
+    const scaleX = drawableWidth / displayWidth;
+    const scaleY = drawableHeight / displayHeight;
     const scale = Math.min(scaleX, scaleY, 0.2); // Max scale 0.2 for readability
     
     const offsetX = this.margin;
     const offsetY = this.margin + 20;
     
-    // Draw stock panel outline
+    // Draw stock panel outline (가로 방향)
     this.pdf.setDrawColor(200, 200, 200);
     this.pdf.setLineWidth(0.5);
     this.pdf.rect(
       offsetX,
       offsetY,
-      result.stockPanel.width * scale,
-      result.stockPanel.height * scale
+      displayWidth * scale,
+      displayHeight * scale
     );
     
-    // Draw grid
+    // Draw grid (가로 방향 고려)
     this.pdf.setDrawColor(240, 240, 240);
     this.pdf.setLineWidth(0.1);
     
     // Vertical grid lines (every 100mm)
-    for (let x = 100; x < result.stockPanel.width; x += 100) {
+    for (let x = 100; x < displayWidth; x += 100) {
       this.pdf.line(
         offsetX + (x * scale),
         offsetY,
         offsetX + (x * scale),
-        offsetY + (result.stockPanel.height * scale)
+        offsetY + (displayHeight * scale)
       );
     }
     
     // Horizontal grid lines (every 100mm)
-    for (let y = 100; y < result.stockPanel.height; y += 100) {
+    for (let y = 100; y < displayHeight; y += 100) {
       this.pdf.line(
         offsetX,
         offsetY + (y * scale),
-        offsetX + (result.stockPanel.width * scale),
+        offsetX + (displayWidth * scale),
         offsetY + (y * scale)
       );
     }
@@ -116,12 +121,23 @@ export class PDFExporter {
       'LPM': [252, 228, 236]    // Light pink
     };
     
-    // Draw panels
+    // Draw panels (가로 방향 고려)
     result.panels.forEach((panel, index) => {
-      const x = offsetX + (panel.x * scale);
-      const y = offsetY + (panel.y * scale);
-      const width = panel.width * scale;
-      const height = panel.height * scale;
+      let x, y, width, height;
+      
+      if (isRotated) {
+        // 패널이 세로일 때는 90도 회전하여 그리기
+        x = offsetX + (panel.y * scale);
+        y = offsetY + ((result.stockPanel.width - panel.x - panel.width) * scale);
+        width = panel.height * scale;
+        height = panel.width * scale;
+      } else {
+        // 패널이 가로일 때는 그대로
+        x = offsetX + (panel.x * scale);
+        y = offsetY + (panel.y * scale);
+        width = panel.width * scale;
+        height = panel.height * scale;
+      }
       
       // Panel fill
       const color = materialColors[panel.material] || [243, 244, 246];
@@ -171,31 +187,31 @@ export class PDFExporter {
       }
     });
     
-    // Draw dimensions
+    // Draw dimensions (가로 방향 고려)
     this.pdf.setFontSize(9);
     this.pdf.setTextColor(100, 100, 100);
     
-    // Width dimension
+    // Width dimension (항상 위쪽에 표시)
     this.pdf.text(
-      `${result.stockPanel.width} mm`,
-      offsetX + (result.stockPanel.width * scale) / 2 - 10,
+      `${displayWidth} mm`,
+      offsetX + (displayWidth * scale) / 2 - 10,
       offsetY - 5
     );
     
-    // Height dimension (written horizontally next to the sheet)
-    const heightText = `${result.stockPanel.height} mm`;
+    // Height dimension (항상 왼쪽에 표시)
+    const heightText = `${displayHeight} mm`;
     this.pdf.setFontSize(8);
     // Write height dimension to the left of the sheet
     this.pdf.text(
       heightText,
       offsetX - 35,
-      offsetY + (result.stockPanel.height * scale) / 2
+      offsetY + (displayHeight * scale) / 2
     );
     
-    // Statistics at bottom
+    // Statistics at bottom (가로 방향 고려)
     this.pdf.setFontSize(8);
     this.pdf.setTextColor(0, 0, 0);
-    let statsY = offsetY + (result.stockPanel.height * scale) + 10;
+    let statsY = offsetY + (displayHeight * scale) + 10;
     
     // Calculate areas if not provided
     const totalArea = result.stockPanel.width * result.stockPanel.height;
