@@ -46,13 +46,18 @@
 
 /* 툴바 스타일 */
 .toolbar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 0;
+  padding: 6px;
   background: white;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 10;
 }
 
@@ -60,32 +65,38 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 8px;
-  border-right: 1px solid #e5e7eb;
+  padding: 0 12px;
+  position: relative;
 }
 
-.toolGroup:last-child {
-  border-right: none;
+.toolGroup:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
 }
 
 .toolButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: white;
-  border: 1px solid #d1d5db;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
   border-radius: 6px;
-  color: #4b5563;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .toolButton:hover {
   background: #f3f4f6;
-  border-color: #9ca3af;
-  color: #1f2937;
+  color: #374151;
 }
 
 .toolButton:active {
@@ -93,17 +104,70 @@
 }
 
 .toolButton.active {
-  background: hsl(var(--theme) / 0.1);
-  border-color: hsl(var(--theme) / 0.3);
-  color: hsl(var(--theme));
+  background: #eff6ff;
+  color: #2563eb;
 }
 
 .zoomLevel {
   font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  min-width: 45px;
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 48px;
   text-align: center;
+  padding: 4px 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+  margin: 0 4px;
+}
+
+.textSizeControl {
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.textSizeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.textSizeBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.textSizeBtn:active {
+  background: #e5e7eb;
+}
+
+.textSizeBtn .textSmall {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.textSizeBtn .textLarge {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.divider {
+  width: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
 }
 
 .viewControls {

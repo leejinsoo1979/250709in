@@ -71,6 +71,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Toggle ruler display
   const [showRuler, setShowRuler] = useState(false);
   
+  // Toggle dimension display
+  const [showDimensions, setShowDimensions] = useState(true);
+  
   // Get settings from store
   const { settings, setSettings } = useCNCStore();
 
@@ -207,55 +210,57 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     // 패널을 그리기 위해 다시 변환 적용 (치수 표기도 시트와 함께 움직이도록)
     // 이미 변환이 적용된 상태이므로 계속 진행
     
-    // Draw dimensions - 시트와 함께 움직이고 크기도 같이 변경
-    ctx.save();
-    ctx.fillStyle = '#1f2937'; // 더 진한 색상으로 변경
-    const fontSize = Math.max(32 * fontScale / scale, 24 * fontScale); // fontScale 적용
-    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.textAlign = 'center';
-    
-    const dimOffset = 20 / (baseScale * scale); // 간격 줄임 (45 → 20)
-    
-    // 가로 모드일 때 (rotation === -90) 텍스트를 180도 회전
-    if (rotation === -90) {
-      // Top dimension (W 치수 - 1220) - 180도 회전
+    // Draw dimensions - 시트와 함께 움직이고 크기도 같이 변경 (showDimensions가 true일 때만)
+    if (showDimensions) {
       ctx.save();
-      ctx.translate(offsetX + result.stockPanel.width / 2, offsetY - dimOffset);
-      ctx.rotate(Math.PI); // 180도 회전
-      ctx.textBaseline = 'top';  // bottom을 top으로 변경하여 텍스트가 정상적으로 보이도록
-      ctx.fillText(`${result.stockPanel.width}mm`, 0, 0);
-      ctx.restore();
+      ctx.fillStyle = '#1f2937'; // 더 진한 색상으로 변경
+      const fontSize = Math.max(32 * fontScale / scale, 24 * fontScale); // fontScale 적용
+      ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.textAlign = 'center';
       
-      // Left dimension (L 치수) - 90도 회전 (읽기 쉽게)
-      ctx.save();
-      ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
-      ctx.rotate(Math.PI / 2); // 90도 회전
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${result.stockPanel.height}mm`, 0, 0);
-      ctx.restore();
-    } else {
-      // 세로 모드일 때 (기본)
-      // Top dimension
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(
-        `${result.stockPanel.width}mm`,
-        offsetX + result.stockPanel.width / 2,
-        offsetY - dimOffset
-      );
+      const dimOffset = 20 / (baseScale * scale); // 간격 줄임 (45 → 20)
       
-      // Left dimension (rotated)
-      ctx.save();
-      ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
-      ctx.rotate(-Math.PI / 2);
-      ctx.textBaseline = 'middle';
-      ctx.fillText(
-        `${result.stockPanel.height}mm`,
-        0, 0
-      );
-      ctx.restore();
-    }
+      // 가로 모드일 때 (rotation === -90) 텍스트를 180도 회전
+      if (rotation === -90) {
+        // Top dimension (W 치수 - 1220) - 180도 회전
+        ctx.save();
+        ctx.translate(offsetX + result.stockPanel.width / 2, offsetY - dimOffset);
+        ctx.rotate(Math.PI); // 180도 회전
+        ctx.textBaseline = 'top';  // bottom을 top으로 변경하여 텍스트가 정상적으로 보이도록
+        ctx.fillText(`${result.stockPanel.width}mm`, 0, 0);
+        ctx.restore();
+        
+        // Left dimension (L 치수) - 90도 회전 (읽기 쉽게)
+        ctx.save();
+        ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
+        ctx.rotate(Math.PI / 2); // 90도 회전
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${result.stockPanel.height}mm`, 0, 0);
+        ctx.restore();
+      } else {
+        // 세로 모드일 때 (기본)
+        // Top dimension
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(
+          `${result.stockPanel.width}mm`,
+          offsetX + result.stockPanel.width / 2,
+          offsetY - dimOffset
+        );
+        
+        // Left dimension (rotated)
+        ctx.save();
+        ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          `${result.stockPanel.height}mm`,
+          0, 0
+        );
+        ctx.restore();
+      }
     
-    ctx.restore();
+      ctx.restore();
+    } // End of showDimensions for stock panel
 
     // Grid removed - no more grid lines
 
@@ -343,8 +348,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           
           // 패널 크기에 맞는 폰트 크기 계산
           const maxTextWidth = width * 0.8; // 패널 너비의 80%
-          const maxTextHeight = height * 0.3; // 패널 높이의 30%
-          let fontSize = Math.min(32 * fontScale, maxTextHeight); // 기본 크기와 최대 높이 중 작은 값
+          const maxTextHeight = height * 0.4; // 패널 높이의 40%로 증가
+          let baseFontSize = 24; // 기본 폰트 크기
+          let fontSize = Math.min(baseFontSize * fontScale, maxTextHeight); // fontScale 적용
           
           // 가로 모드일 때 텍스트를 시계방향 90도 회전
           if (rotation === -90) {
@@ -402,16 +408,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           ctx.restore();
         }
         
-        // 치수 텍스트만 표시 (선 없이)
-        ctx.save();
-        ctx.fillStyle = '#111827'; // 더 진한 색상으로 변경
-        const fontSize = 32 * fontScale; // 크기 더 증가 (24 -> 32)
-        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // L방향 치수 (패널 중앙 상단) - 항상 panel.width 표시
-        if (width > 50) {
+        // 치수 텍스트만 표시 (선 없이) - showDimensions가 true일 때만
+        if (showDimensions) {
+          ctx.save();
+          ctx.fillStyle = '#111827'; // 더 진한 색상으로 변경
+          const baseDimFontSize = 20; // 기본 치수 폰트 크기
+          const dimFontSize = baseDimFontSize * fontScale; // fontScale 적용
+          ctx.font = `bold ${dimFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          // L방향 치수 (패널 중앙 상단) - 항상 panel.width 표시
+          if (width > 50) {
           const widthText = `${Math.round(panel.width)}`;
           const textY = y + 35; // 패널 상단에서 35px 아래
           
@@ -450,7 +458,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           ctx.restore();
         }
         
-        ctx.restore();
+          ctx.restore();
+        } // End of showDimensions check
+        
         ctx.restore();
       }
     });
@@ -526,7 +536,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
-  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale]);
+  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions]);
 
   // Handle wheel zoom with mouse position as center
   const handleWheel = (e: React.WheelEvent) => {
@@ -637,16 +647,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Handle font size increase
   const handleFontIncrease = () => {
-    const newScale = Math.min(fontScale * 1.2, 2);
+    const newScale = Math.min(fontScale * 1.2, 3); // 최대 3배까지 확대 가능
     setFontScale(newScale);
-    draw(); // Redraw with new font size
   };
   
   // Handle font size decrease
   const handleFontDecrease = () => {
-    const newScale = Math.max(fontScale * 0.8, 0.5);
+    const newScale = Math.max(fontScale * 0.8, 0.3); // 최소 0.3배까지 축소 가능
     setFontScale(newScale);
-    draw(); // Redraw with new font size
+  };
+  
+  // Handle font size reset
+  const handleFontReset = () => {
+    setFontScale(1);
   };
 
   // Helper function to draw arrow
@@ -752,80 +765,75 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       
       {/* 툴바 추가 */}
       <div className={styles.toolbar}>
+        {/* 줌 컨트롤 그룹 */}
         <div className={styles.toolGroup}>
           <button 
             className={styles.toolButton} 
             onClick={handleZoomOut}
-            title="축소 (Zoom Out)"
+            title="축소"
           >
             <ZoomOut size={18} />
           </button>
+          <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
           <button 
             className={styles.toolButton} 
             onClick={handleZoomIn}
-            title="확대 (Zoom In)"
+            title="확대"
           >
             <ZoomIn size={18} />
           </button>
+        </div>
+        
+        {/* 뷰 컨트롤 그룹 */}
+        <div className={styles.toolGroup}>
           <button 
             className={styles.toolButton} 
             onClick={handleReset}
-            title="초기화 (Reset View)"
+            title="초기화"
           >
             <Home size={18} />
           </button>
-        </div>
-        
-        <div className={styles.toolGroup}>
-          <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
-        </div>
-        
-        <div className={styles.toolGroup}>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleFitToScreen}
-            title="화면에 맞추기 (Fit to Screen)"
-          >
-            <Maximize size={18} />
-          </button>
-        </div>
-        
-        <div className={styles.toolGroup}>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleFontDecrease}
-            title="글자 크기 줄이기"
-          >
-            <Type size={16} />
-          </button>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleFontIncrease}
-            title="글자 크기 키우기"
-          >
-            <ALargeSmall size={18} />
-          </button>
-        </div>
-        
-        <div className={styles.toolGroup}>
           <button 
             className={styles.toolButton} 
             onClick={handleRotate}
-            title="회전 (Rotate)"
+            title="회전"
           >
             <RotateCw size={18} />
           </button>
           <button 
-            className={`${styles.toolButton} ${showRuler ? styles.active : ''}`}
-            onClick={() => setShowRuler(!showRuler)}
-            title="자 (Ruler)"
+            className={`${styles.toolButton} ${showDimensions ? styles.active : ''}`}
+            onClick={() => setShowDimensions(!showDimensions)}
+            title="치수 표시"
           >
             <Ruler size={18} />
           </button>
         </div>
         
+        {/* 텍스트 크기 그룹 */}
+        <div className={styles.toolGroup}>
+          <div className={styles.textSizeControl}>
+            <button 
+              className={styles.textSizeBtn} 
+              onClick={handleFontDecrease}
+              title="글자 크기 줄이기"
+            >
+              <span className={styles.textLarge}>A</span>
+              <span className={styles.textSmall}>A</span>
+            </button>
+            <div className={styles.divider}></div>
+            <button 
+              className={styles.textSizeBtn} 
+              onClick={handleFontIncrease}
+              title="글자 크기 키우기"
+            >
+              <span className={styles.textSmall}>A</span>
+              <span className={styles.textLarge}>A</span>
+            </button>
+          </div>
+        </div>
+        
         {/* 최적화 타입 선택 - 오른쪽 끝에 배치 */}
-        <div className={styles.toolGroup} style={{ marginLeft: 'auto', borderLeft: '1px solid #e5e7eb', paddingLeft: '12px' }}>
+        <div className={styles.toolGroup} style={{ marginLeft: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <input 
@@ -836,7 +844,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 onChange={() => setSettings({ optimizationType: 'cnc' })}
                 style={{ accentColor: 'hsl(var(--theme))' }}
               />
-              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>CNC (자유 재단)</span>
+              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>Free Cut</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <input 
@@ -847,7 +855,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 onChange={() => setSettings({ optimizationType: 'cutsaw' })}
                 style={{ accentColor: 'hsl(var(--theme))' }}
               />
-              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>컷쏘 (길로틴 컷)</span>
+              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>Guillotine Cut</span>
             </label>
           </div>
         </div>
