@@ -118,6 +118,7 @@ export default function StockTable(){
               <tr>
                 <th>이름</th>
                 <th>치수 (L×W)</th>
+                <th>두께</th>
                 <th>수량</th>
                 <th>재질</th>
                 <th></th>
@@ -150,6 +151,15 @@ export default function StockTable(){
                         className={styles.inputSmall}
                       />
                     </div>
+                  </td>
+                  <td>
+                    <input 
+                      type="number"
+                      value={s.thickness || 18} 
+                      onChange={e => onChange(i, 'thickness', e.target.value)}
+                      className={styles.inputTiny}
+                      placeholder="18"
+                    />
                   </td>
                   <td>
                     <input 

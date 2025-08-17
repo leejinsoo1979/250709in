@@ -4,6 +4,7 @@ import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap, Play } from 'lucide-react';
+import Logo from '@/components/common/Logo';
 import { setThemeColor } from '@/theme';
 
 // Components
@@ -45,6 +46,7 @@ function PageInner(){
   const [viewerScale, setViewerScale] = useState(1);
   const [viewerRotation, setViewerRotation] = useState(-90); // 기본값 -90 (가로뷰)
   const [viewerOffset, setViewerOffset] = useState({ x: 0, y: 0 });
+  const [showCuttingList, setShowCuttingList] = useState(false); // 시트 목록 탭 상태
 
   // Handle ESC key to clear selection
   useEffect(() => {
@@ -456,6 +458,7 @@ function PageInner(){
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
+          <Logo size="small" />
           <h1>CNC Optimizer Pro</h1>
           <span className={styles.projectName}>{projectName}</span>
         </div>
@@ -611,37 +614,101 @@ function PageInner(){
               </div>
             )}
 
-            {/* Sheet List - 동적 높이 계산 */}
+            {/* Sheet List with Tabs */}
             {optimizationResults.length > 0 && (
               <div className={`${styles.statsCard} ${styles.sheetListCard}`}>
-                <h3>시트 목록 ({optimizationResults.length}개)</h3>
-                <div className={styles.sheetList}>
-                  {optimizationResults.map((result, index) => {
-                    // 시트의 원자재 정보 찾기
-                    const stockInfo = stock.find(s => 
-                      s.material === result.stockPanel.material &&
-                      s.width === result.stockPanel.width &&
-                      s.length === result.stockPanel.height
-                    );
-                    const thickness = stockInfo?.thickness || 18;
-                    
-                    return (
-                      <div 
-                        key={index}
-                        className={`${styles.sheetItem} ${index === currentSheetIndex ? styles.active : ''}`}
-                        onClick={() => setCurrentSheetIndex(index)}
-                      >
-                        <span className={styles.sheetNumber}>{index + 1}</span>
-                        <span className={styles.sheetInfo}>
-                          {result.stockPanel.id || `${result.stockPanel.material}_${result.stockPanel.width}x${result.stockPanel.height}`}
-                          <small>{thickness}T</small>
-                        </span>
-                        <span className={styles.sheetPanels}>{result.panels.length}개</span>
-                        <span className={styles.sheetEfficiency}>{result.efficiency.toFixed(0)}%</span>
-                      </div>
-                    );
-                  })}
+                <div className={styles.sheetListHeader}>
+                  <div className={styles.tabButtons}>
+                    <button 
+                      className={`${styles.tabButton} ${!showCuttingList ? styles.active : ''}`}
+                      onClick={() => setShowCuttingList(false)}
+                    >
+                      시트 목록
+                    </button>
+                    <button 
+                      className={`${styles.tabButton} ${showCuttingList ? styles.active : ''}`}
+                      onClick={() => setShowCuttingList(true)}
+                    >
+                      컷팅 리스트
+                    </button>
+                  </div>
                 </div>
+                
+                {!showCuttingList ? (
+                  <div className={styles.sheetList}>
+                    {optimizationResults.map((result, index) => {
+                      // 시트의 원자재 정보 찾기
+                      const stockLabel = result.stockPanel.id || `${result.stockPanel.material}_${result.stockPanel.width}x${result.stockPanel.height}`;
+                      
+                      return (
+                        <div 
+                          key={index}
+                          className={`${styles.sheetItem} ${index === currentSheetIndex ? styles.active : ''}`}
+                          onClick={() => setCurrentSheetIndex(index)}
+                        >
+                          <span className={styles.sheetNumber}>{index + 1}</span>
+                          <span className={styles.sheetInfo}>
+                            {stockLabel}
+                          </span>
+                          <span className={styles.sheetPanels}>{result.panels.length}개</span>
+                          <span className={styles.sheetEfficiency}>{result.efficiency.toFixed(0)}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className={styles.cutsList}>
+                    <div className={styles.cutsTableHeader}>
+                      <span className={styles.cutsCol1}>#</span>
+                      <span className={styles.cutsCol2}>Panel</span>
+                      <span className={styles.cutsCol3}>Cut</span>
+                      <span className={styles.cutsCol4}>Sheet</span>
+                    </div>
+                    <div className={styles.cutsTableBody}>
+                      {(() => {
+                        let cutNumber = 0;
+                        const allCuts = [];
+                        
+                        // 모든 시트의 패널을 순서대로 수집
+                        optimizationResults.forEach((result, sheetIdx) => {
+                          result.panels.forEach((panel) => {
+                            cutNumber++;
+                            const originalPanel = panels.find(p => p.id === panel.id);
+                            allCuts.push({
+                              cutNumber,
+                              sheetNumber: sheetIdx + 1,
+                              panel,
+                              panelId: panel.id,
+                              originalSize: originalPanel ? `${originalPanel.width}×${originalPanel.length}` : `${panel.width}×${panel.height}`
+                            });
+                          });
+                        });
+                        
+                        return allCuts.map(cut => (
+                          <div 
+                            key={`${cut.sheetNumber}-${cut.panel.id}`}
+                            className={`${styles.cutsRow} ${selectedPanelId === cut.panelId ? styles.selected : ''}`}
+                            onClick={() => {
+                              setSelectedPanelId(cut.panelId);
+                              setCurrentSheetIndex(cut.sheetNumber - 1);
+                            }}
+                          >
+                            <span className={styles.cutsCol1}>{cut.cutNumber}</span>
+                            <span className={styles.cutsCol2}>
+                              {cut.originalSize}
+                            </span>
+                            <span className={styles.cutsCol3}>
+                              {Math.round(cut.panel.x)}×{Math.round(cut.panel.y)}
+                            </span>
+                            <span className={styles.cutsCol4}>
+                              #{cut.sheetNumber}
+                            </span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
