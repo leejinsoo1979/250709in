@@ -152,29 +152,24 @@
   flex: 1;
   display: grid;
   grid-template-columns: 460px minmax(600px, 1fr) 280px;
+  grid-template-rows: 1fr;
   gap: 12px;
   padding: 12px;
   overflow: hidden;
+  max-height: calc(100vh - 56px);
   height: calc(100vh - 56px);
+  align-items: start;
 }
 
 .leftSidebar {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 4px;
-}
-
-.leftSidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.leftSidebar::-webkit-scrollbar-track {
-  background: #f5f5f5;
-  border-radius: 4px;
+  width: 460px;
+  min-width: 460px;
+  max-width: 460px;
+  height: calc(100vh - 80px);
+  overflow: hidden;
 }
 
 .leftSidebar::-webkit-scrollbar-thumb {
@@ -192,13 +187,14 @@
   gap: 0;
   height: 100%;
   min-width: 600px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .viewerContainer {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 80px);
   gap: 12px;
 }
 
@@ -267,6 +263,7 @@
 .thumbnailBar {
   height: 140px;
   min-height: 140px;
+  max-height: 140px;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -625,26 +622,29 @@
 .rightSidebarContent {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .sheetListCard {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 200px;
+  max-height: calc(100vh - 400px);
 }
 
 .sheetList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
-  overflow-y: auto; /* 내부 스크롤 */
+  overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
-  min-height: 0;
+  max-height: 300px;
 }
 
 .sheetList::-webkit-scrollbar {

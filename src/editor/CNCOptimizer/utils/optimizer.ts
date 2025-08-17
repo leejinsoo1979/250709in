@@ -12,13 +12,13 @@ import { packGuillotine } from './guillotinePacking';
  * 모든 패널을 수집하여 완전히 다시 패킹
  */
 function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, kerf: number): PackedBin[] {
-  console.log(`\n=== Starting Bin Redistribution ===`);
-  console.log(`Initial bins: ${bins.length}`);
+  // console.log(`\n=== Starting Bin Redistribution ===`);
+  // console.log(`Initial bins: ${bins.length}`);
   
   // 효율 분석
-  bins.forEach((bin, index) => {
-    console.log(`Bin ${index + 1}: ${bin.panels.length} panels, ${bin.efficiency.toFixed(1)}% efficiency`);
-  });
+  // bins.forEach((bin, index) => {
+  //   console.log(`Bin ${index + 1}: ${bin.panels.length} panels, ${bin.efficiency.toFixed(1)}% efficiency`);
+  // });
   
   // 효율이 낮은 시트 감지 (20% 미만이거나 패널이 2개 이하)
   const hasLowEfficiencyBin = bins.some(bin => 
@@ -27,11 +27,11 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
   );
   
   if (!hasLowEfficiencyBin) {
-    console.log('No low efficiency bins detected, keeping original layout');
+    // console.log('No low efficiency bins detected, keeping original layout');
     return bins;
   }
   
-  console.log('Low efficiency bins detected, starting complete redistribution...');
+  // console.log('Low efficiency bins detected, starting complete redistribution...');
   
   // 모든 패널을 수집
   const allPanels: Rect[] = [];
@@ -39,7 +39,7 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     allPanels.push(...bin.panels);
   });
   
-  console.log(`Total panels to redistribute: ${allPanels.length}`);
+  // console.log(`Total panels to redistribute: ${allPanels.length}`);
   
   // 패널을 크기별로 그룹화
   const largePanels: Rect[] = [];
@@ -59,7 +59,7 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     }
   });
   
-  console.log(`Panel distribution: ${largePanels.length} large, ${mediumPanels.length} medium, ${smallPanels.length} small`);
+  // console.log(`Panel distribution: ${largePanels.length} large, ${mediumPanels.length} medium, ${smallPanels.length} small`);
   
   // 새로운 빈 생성 및 패널 재배치
   const newBins: PackedBin[] = [];
@@ -102,7 +102,7 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     }
     
     if (placedInThisBin.length === 0) {
-      console.warn('Cannot place remaining panels, keeping them in separate bin');
+      // console.warn('Cannot place remaining panels, keeping them in separate bin');
       break;
     }
     
@@ -114,11 +114,11 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     
     const result = packer.getResult();
     newBins.push(result);
-    console.log(`New bin ${newBins.length}: ${result.panels.length} panels, ${result.efficiency.toFixed(1)}% efficiency`);
+    // console.log(`New bin ${newBins.length}: ${result.panels.length} panels, ${result.efficiency.toFixed(1)}% efficiency`);
     
     currentBinIndex++;
     if (currentBinIndex >= 10) {
-      console.warn('Maximum bins reached');
+      // console.warn('Maximum bins reached');
       break;
     }
   }
@@ -131,21 +131,21 @@ function optimizeBins(bins: PackedBin[], binWidth: number, binHeight: number, ke
     }
   }
   
-  console.log(`\n=== Redistribution Complete ===`);
-  console.log(`Result: ${bins.length} bins → ${newBins.length} bins`);
+  // console.log(`\n=== Redistribution Complete ===`);
+  // console.log(`Result: ${bins.length} bins → ${newBins.length} bins`);
   
   // 효율이 개선되었는지 확인
   const oldTotalEfficiency = bins.reduce((sum, bin) => sum + bin.efficiency, 0) / bins.length;
   const newTotalEfficiency = newBins.reduce((sum, bin) => sum + bin.efficiency, 0) / newBins.length;
   
-  console.log(`Average efficiency: ${oldTotalEfficiency.toFixed(1)}% → ${newTotalEfficiency.toFixed(1)}%`);
+  // console.log(`Average efficiency: ${oldTotalEfficiency.toFixed(1)}% → ${newTotalEfficiency.toFixed(1)}%`);
   
   // 개선되었거나 빈 수가 줄었으면 새 레이아웃 사용
   if (newBins.length < bins.length || newTotalEfficiency > oldTotalEfficiency + 5) {
-    console.log('Using optimized layout');
+    // console.log('Using optimized layout');
     return newBins;
   } else {
-    console.log('Keeping original layout (no significant improvement)');
+    // console.log('Keeping original layout (no significant improvement)');
     return bins;
   }
 }
@@ -360,7 +360,7 @@ export const optimizePanelsMultiple = async (
   let bins: PackedBin[];
   
   if (optimizationType === 'cutsaw') {
-    console.log('Using Guillotine Cut optimization (horizontal/vertical strips)');
+    // console.log('Using Guillotine Cut optimization (horizontal/vertical strips)');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -369,7 +369,7 @@ export const optimizePanelsMultiple = async (
       maxSheets
     );
   } else {
-    console.log('Using CNC optimization (free placement)');
+    // console.log('Using CNC optimization (free placement'));
     bins = packSimple(
       rectangles,
       stockPanel.width,

@@ -3,7 +3,34 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  flex-grow: 0;
 }
+
+/* 패널 목록 섹션 - 고정 높이 */
+.section:has(.tableContainer) {
+  height: 240px;
+  min-height: 240px;
+  max-height: 240px;
+}
+
+/* 원자재 섹션 - 고정 높이 */
+.section:has(.stockTableContainer) {
+  height: 180px;
+  min-height: 180px;
+  max-height: 180px;
+}
+
+/* 설정 섹션 - 나머지 공간 채우기 */
+.section:has(.options) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 
 .sectionHeader {
   display: flex;
@@ -49,18 +76,22 @@
 
 .tableContainer {
   padding: 0;
-  max-height: calc(100vh - 500px);
-  min-height: 200px;
+  height: 180px;
+  min-height: 180px;
+  max-height: 180px;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* 원자재 테이블 컨테이너는 더 작은 높이 */
 .stockTableContainer {
-  padding: 0; /* 패딩 제거하여 테이블이 상단에 붙도록 */
-  max-height: 180px;
+  padding: 0;
+  height: 120px;
+  min-height: 120px;
+  max-height: 120px;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .tableContainer::-webkit-scrollbar,
@@ -398,8 +429,11 @@
 
 /* Options Card Styles */
 .options {
-  padding: 12px;
-  max-height: 200px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -422,25 +456,25 @@
 }
 
 .optionGroup {
-  margin-bottom: 10px;
+  margin: 0;
+  padding: 2px 4px;
   transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
 .optionGroup:hover {
-  background: hsl(var(--theme) / 0.03);
-  border-radius: 6px;
-  padding: 2px;
-  margin: -2px -2px 8px -2px;
+  background: hsl(var(--theme) / 0.05);
 }
 
 .optionGroup label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: #333;
   cursor: pointer;
   transition: all 0.2s ease;
+  height: 20px;
 }
 
 .optionGroup label:hover {
@@ -493,9 +527,125 @@
   font-weight: 500;
 }
 
+/* 여백 설정 그리드 */
+.marginGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.marginRow {
+  display: flex;
+  gap: 6px;
+}
+
+.numberInputCompact {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+}
+
+.numberInputCompact span {
+  font-size: 10px;
+  color: #666;
+  min-width: 24px;
+}
+
+.numberInputCompact .inputWrapper {
+  flex: 1;
+}
+
+.numberInputCompact input[type="number"] {
+  width: 100%;
+}
+
+/* 갭 설정 토글 버튼 */
+.gapToggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 8px;
+  margin: 4px 0;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.gapToggleButton:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.gapToggleButton:active {
+  background: #e5e7eb;
+}
+
+.gapToggleButton svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+}
+
+/* 체크박스 그리드 레이아웃 */
+.checkboxGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 4px 0;
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 8px;
+}
+
+.checkboxCompact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 3px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.checkboxCompact:hover {
+  background: hsl(var(--theme) / 0.05);
+}
+
+.checkboxCompact input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: hsl(var(--theme));
+  flex-shrink: 0;
+}
+
+.checkboxCompact span {
+  font-size: 10px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .optionGroup input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
   accent-color: hsl(var(--theme));
   position: relative;
@@ -513,9 +663,9 @@
 }
 
 .resetLink {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #e5e7eb;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: center;
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OptimizedResult } from '../types';
-import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCNCStore } from '../store';
 import styles from './CuttingLayoutPreview2.module.css';
 
@@ -25,6 +25,7 @@ interface CuttingLayoutPreview2Props {
     isOptimizing: boolean;
     stock?: any[];
   };
+  onCurrentSheetIndexChange?: (index: number) => void;
 }
 
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({ 
@@ -39,7 +40,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   onScaleChange,
   onRotationChange,
   onOffsetChange,
-  sheetInfo
+  sheetInfo,
+  onCurrentSheetIndexChange
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -734,132 +736,128 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
   return (
     <div ref={containerRef} className={`${styles.container} panel-clickable`}>
-      {sheetInfo && result && (
+      {result && (
         <div className={styles.headerBar}>
-          <span className={styles.sheetInfo}>
-            {(() => {
-              // stock 정보에서 매칭되는 원자재 찾기
-              const matchingStock = sheetInfo.stock?.find(s => 
-                s.material === result.stockPanel.material &&
-                s.width === result.stockPanel.width &&
-                s.length === result.stockPanel.height
-              );
-              const thickness = matchingStock?.thickness || 18;
-              const stockName = result.stockPanel.id || `${result.stockPanel.width}x${result.stockPanel.height}`;
-              
-              return `시트 ${sheetInfo.currentIndex + 1} / ${sheetInfo.totalSheets} - ${result.stockPanel.material || 'PB'} ${stockName} (${thickness}T)`;
-            })()}
-          </span>
-          <button
-            className={styles.optimizeButton}
-            onClick={sheetInfo.onOptimize}
-            disabled={sheetInfo.isOptimizing}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-            {sheetInfo.isOptimizing ? '최적화 중...' : '최적화'}
-          </button>
-        </div>
-      )}
-      
-      {/* 툴바 추가 */}
-      <div className={styles.toolbar}>
-        {/* 줌 컨트롤 그룹 */}
-        <div className={styles.toolGroup}>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleZoomOut}
-            title="축소"
-          >
-            <ZoomOut size={18} />
-          </button>
-          <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleZoomIn}
-            title="확대"
-          >
-            <ZoomIn size={18} />
-          </button>
-        </div>
-        
-        {/* 뷰 컨트롤 그룹 */}
-        <div className={styles.toolGroup}>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleReset}
-            title="초기화"
-          >
-            <Home size={18} />
-          </button>
-          <button 
-            className={styles.toolButton} 
-            onClick={handleRotate}
-            title="회전"
-          >
-            <RotateCw size={18} />
-          </button>
-          <button 
-            className={`${styles.toolButton} ${showDimensions ? styles.active : ''}`}
-            onClick={() => setShowDimensions(!showDimensions)}
-            title="치수 표시"
-          >
-            <Ruler size={18} />
-          </button>
-        </div>
-        
-        {/* 텍스트 크기 그룹 */}
-        <div className={styles.toolGroup}>
-          <div className={styles.textSizeControl}>
+          {/* 좌측: 시트 제목 및 네비게이션 */}
+          <div className={styles.sheetNavSection}>
             <button 
-              className={styles.textSizeBtn} 
-              onClick={handleFontDecrease}
-              title="글자 크기 줄이기"
+              className={styles.headerNavButton}
+              onClick={() => sheetInfo && sheetInfo.currentIndex > 0 && onCurrentSheetIndexChange?.(sheetInfo.currentIndex - 1)}
+              disabled={!sheetInfo || sheetInfo.currentIndex === 0}
+              title="이전 시트"
             >
-              <span className={styles.textLarge}>A</span>
-              <span className={styles.textSmall}>A</span>
+              <ChevronLeft size={16} />
             </button>
-            <div className={styles.divider}></div>
+            <div className={styles.sheetTitle}>
+              Sheet {sheetInfo ? sheetInfo.currentIndex + 1 : 1} / {sheetInfo ? sheetInfo.totalSheets : 1}
+              {result.stockPanel && (
+                <span className={styles.sheetInfo}>
+                  {' '}• {result.stockPanel.material || 'PB'} {result.stockPanel.thickness || 18}T
+                </span>
+              )}
+            </div>
             <button 
-              className={styles.textSizeBtn} 
-              onClick={handleFontIncrease}
-              title="글자 크기 키우기"
+              className={styles.headerNavButton}
+              onClick={() => sheetInfo && sheetInfo.currentIndex < sheetInfo.totalSheets - 1 && onCurrentSheetIndexChange?.(sheetInfo.currentIndex + 1)}
+              disabled={!sheetInfo || sheetInfo.currentIndex >= sheetInfo.totalSheets - 1}
+              title="다음 시트"
             >
-              <span className={styles.textSmall}>A</span>
-              <span className={styles.textLarge}>A</span>
+              <ChevronRight size={16} />
             </button>
           </div>
-        </div>
-        
-        {/* 최적화 타입 선택 - 오른쪽 끝에 배치 */}
-        <div className={styles.toolGroup} style={{ marginLeft: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          
+          {/* 우측: 툴바 아이콘들 */}
+          <div className={styles.headerToolbar}>
+            {/* 줌 컨트롤 */}
+            <button 
+              className={styles.headerToolButton} 
+              onClick={handleZoomOut}
+              title="축소"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
+            <button 
+              className={styles.headerToolButton} 
+              onClick={handleZoomIn}
+              title="확대"
+            >
+              <ZoomIn size={16} />
+            </button>
+            
+            <div className={styles.headerDivider} />
+            
+            {/* 뷰 컨트롤 */}
+            <button 
+              className={styles.headerToolButton} 
+              onClick={handleReset}
+              title="초기화"
+            >
+              <Home size={16} />
+            </button>
+            <button 
+              className={styles.headerToolButton} 
+              onClick={handleRotate}
+              title="회전"
+            >
+              <RotateCw size={16} />
+            </button>
+            <button 
+              className={`${styles.headerToolButton} ${showDimensions ? styles.active : ''}`}
+              onClick={() => setShowDimensions(!showDimensions)}
+              title="치수 표시"
+            >
+              <Ruler size={16} />
+            </button>
+            
+            <div className={styles.headerDivider} />
+            
+            {/* 텍스트 크기 */}
+            <div className={styles.textSizeControlSmall}>
+              <button 
+                className={styles.textSizeBtnSmall} 
+                onClick={handleFontDecrease}
+                title="글자 크기 줄이기"
+              >
+                <span className={styles.textLarge}>A</span>
+                <span className={styles.textSmall}>A</span>
+              </button>
+              <button 
+                className={styles.textSizeBtnSmall} 
+                onClick={handleFontIncrease}
+                title="글자 크기 키우기"
+              >
+                <span className={styles.textSmall}>A</span>
+                <span className={styles.textLarge}>A</span>
+              </button>
+            </div>
+            
+            <div className={styles.headerDivider} />
+            
+            {/* 최적화 타입 */}
+            <label className={styles.optimizationTypeLabel}>
               <input 
                 type="radio" 
                 name="optimizationType" 
                 value="cnc"
                 checked={settings.optimizationType === 'cnc'}
                 onChange={() => setSettings({ optimizationType: 'cnc' })}
-                style={{ accentColor: 'hsl(var(--theme))' }}
               />
-              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>Free Cut</span>
+              <span>Free Cut</span>
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <label className={styles.optimizationTypeLabel}>
               <input 
                 type="radio" 
                 name="optimizationType" 
                 value="cutsaw"
                 checked={settings.optimizationType === 'cutsaw'}
                 onChange={() => setSettings({ optimizationType: 'cutsaw' })}
-                style={{ accentColor: 'hsl(var(--theme))' }}
               />
-              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>Guillotine Cut</span>
+              <span>Guillotine</span>
             </label>
           </div>
         </div>
-      </div>
+      )}
       <canvas 
         ref={canvasRef}
         className={`${styles.canvas} panel-clickable`}

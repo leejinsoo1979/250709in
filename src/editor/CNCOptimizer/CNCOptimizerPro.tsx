@@ -75,9 +75,9 @@ function PageInner(){
   useEffect(() => {
     // Convert live panels to CutList format
     if (livePanels.length > 0) {
-      console.log('🔄 Converting live panels to CutList format');
-      console.log('Live panels count:', livePanels.length);
-      console.log('Live panels:', livePanels);
+      // console.log('🔄 Converting live panels to CutList format');
+      // console.log('Live panels count:', livePanels.length);
+      // console.log('Live panels:', livePanels);
       
       const cutlistPanels: Panel[] = livePanels.map(p => {
         // 패널의 긴 방향을 L(세로) 방향으로 배치
@@ -115,12 +115,12 @@ function PageInner(){
         };
       });
       
-      console.log('Converted panels count:', cutlistPanels.length);
-      console.log('Converted panels:', cutlistPanels);
+      // console.log('Converted panels count:', cutlistPanels.length);
+      // console.log('Converted panels:', cutlistPanels);
       setPanels(cutlistPanels);
     } else if (panels.length === 0) {
       // 테스트용 패널 추가 (live panels가 없을 때만)
-      console.log('⚠️ No live panels found, adding test panels');
+      // console.log('⚠️ No live panels found, adding test panels');
       const testPanels: Panel[] = [
         { id: '1', label: 'Panel_1', width: 600, length: 800, thickness: 18, quantity: 2, material: 'PB', grain: 'V' },
         { id: '2', label: 'Panel_2', width: 450, length: 600, thickness: 18, quantity: 3, material: 'PB', grain: 'V' },
@@ -240,7 +240,7 @@ function PageInner(){
         let processedPanel = { ...panel };
         
         // 패널 치수를 그대로 사용 (width와 length를 변경하지 않음)
-        console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
+        // console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
         
         // 결방향 고려 설정이 켜져있고 결방향이 설정되어 있으면 회전 불가
         // 결방향이 V(세로) 또는 H(가로)이면 회전 불가
@@ -284,7 +284,7 @@ function PageInner(){
         
         // Last resort: use first stock (but warn)
         if (!matchingStock && stock.length > 0) {
-          console.warn(`No matching stock for ${material} ${thickness}mm, using default stock`);
+          // console.warn(`No matching stock for ${material} ${thickness}mm, using default stock`);
           matchingStock = stock[0];
         }
 
@@ -342,21 +342,21 @@ function PageInner(){
             result.stockPanel = stockPanel;
           });
           
-          console.log(`Optimization for ${material}: ${results.length} sheets generated`);
-          console.log(`Panels to optimize: ${optimizerPanels.length}`);
+          // console.log(`Optimization for ${material}: ${results.length} sheets generated`);
+          // console.log(`Panels to optimize: ${optimizerPanels.length}`);
           allResults.push(...results);
         }
       }
 
-      console.log('=== Initial Optimization Complete ===');
-      console.log('Total sheets generated:', allResults.length);
+      // console.log('=== Initial Optimization Complete ===');
+      // console.log('Total sheets generated:', allResults.length);
       
       // 재최적화: 낮은 효율 시트 감지 및 재배치
       let finalResults = [...allResults];
       const lowEfficiencySheets = allResults.filter(r => r.efficiency < 20);
       
       if (lowEfficiencySheets.length > 0) {
-        console.log(`Found ${lowEfficiencySheets.length} low efficiency sheets, attempting redistribution...`);
+        // console.log(`Found ${lowEfficiencySheets.length} low efficiency sheets, attempting redistribution...`);
         
         // 모든 패널을 수집
         const allPanelsToRedistribute: PlacedPanel[] = [];
@@ -364,7 +364,7 @@ function PageInner(){
           allPanelsToRedistribute.push(...result.panels);
         });
         
-        console.log(`Total panels to redistribute: ${allPanelsToRedistribute.length}`);
+        // console.log(`Total panels to redistribute: ${allPanelsToRedistribute.length}`);
         
         // 패널을 다시 최적화용 형식으로 변환
         const panelsForRepack: Panel[] = allPanelsToRedistribute.map(p => ({
@@ -413,26 +413,26 @@ function PageInner(){
           const oldAvgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
           const newAvgEfficiency = reoptimizedResults.reduce((sum, r) => sum + r.efficiency, 0) / reoptimizedResults.length;
           
-          console.log(`Redistribution result: ${allResults.length} sheets → ${reoptimizedResults.length} sheets`);
-          console.log(`Average efficiency: ${oldAvgEfficiency.toFixed(1)}% → ${newAvgEfficiency.toFixed(1)}%`);
+          // console.log(`Redistribution result: ${allResults.length} sheets → ${reoptimizedResults.length} sheets`);
+          // console.log(`Average efficiency: ${oldAvgEfficiency.toFixed(1)}% → ${newAvgEfficiency.toFixed(1)}%`);
           
           // 개선되었거나 시트 수가 줄었으면 사용
           if (reoptimizedResults.length < allResults.length || newAvgEfficiency > oldAvgEfficiency + 10) {
-            console.log('Using redistributed layout');
+            // console.log('Using redistributed layout');
             finalResults = reoptimizedResults;
           } else {
-            console.log('Keeping original layout');
+            // console.log('Keeping original layout');
           }
         }
       }
       
-      console.log('=== Final Optimization Complete ===');
-      console.log('Total sheets:', finalResults.length);
+      // console.log('=== Final Optimization Complete ===');
+      // console.log('Total sheets:', finalResults.length);
       
       // 각 시트의 패널 수 출력
-      finalResults.forEach((result, index) => {
-        console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
-      });
+      // finalResults.forEach((result, index) => {
+      //   console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
+      // });
       
       setOptimizationResults(finalResults);
       setCurrentSheetIndex(0);
@@ -442,7 +442,7 @@ function PageInner(){
         showToast(`Optimized ${totalPanels} panels across ${allResults.length} sheets`, 'success');
       }
     } catch (error) {
-      console.error('Optimization error:', error);
+      // console.error('Optimization error:', error);
       showToast('Optimization failed', 'error');
     } finally {
       setIsOptimizing(false);
@@ -516,6 +516,7 @@ function PageInner(){
                     isOptimizing: isOptimizing,
                     stock: stock
                   }}
+                  onCurrentSheetIndexChange={setCurrentSheetIndex}
                 />
               </div>
               

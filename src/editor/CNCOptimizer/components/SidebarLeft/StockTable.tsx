@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useCNCStore } from '../../store';
 import type { StockSheet } from '../../../../types/cutlist';
-import { Layers, Plus, Trash2 } from 'lucide-react';
+import { Layers, Plus, Trash2, Upload } from 'lucide-react';
 import styles from './SidebarLeft.module.css';
+import { showToast } from '@/utils/cutlist/csv';
 
 export default function StockTable(){
   const { stock, setStock } = useCNCStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onChange = (i:number, key: keyof StockSheet, val:any) => {
     const next = stock.slice();
@@ -32,11 +34,73 @@ export default function StockTable(){
     setStock(next); 
   };
 
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          showToast('CSV 파일에 데이터가 없습니다', 'error');
+          return;
+        }
+
+        const newStock: StockSheet[] = [];
+        
+        // Skip header row and parse data
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.trim());
+          
+          if (values.length >= 5) {
+            newStock.push({
+              label: values[0] || `Stock_${i}`,
+              length: parseInt(values[1]) || 2440,
+              width: parseInt(values[2]) || 1220,
+              thickness: parseInt(values[3]) || 18,
+              quantity: parseInt(values[4]) || 10,
+              material: values[5] || 'PB'
+            });
+          }
+        }
+
+        if (newStock.length > 0) {
+          setStock([...stock, ...newStock]);
+          showToast(`${newStock.length}개의 원자재를 추가했습니다`, 'success');
+        }
+      } catch (error) {
+        showToast('CSV 파일 읽기 실패', 'error');
+      }
+    };
+    
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <Layers size={16} />
         <h3>원자재 ({stock.length})</h3>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleCSVUpload}
+          style={{ display: 'none' }}
+        />
+        <button 
+          className={styles.addButton} 
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload size={14} />
+          CSV
+        </button>
         <button className={styles.addButton} onClick={addRow}>
           <Plus size={14} />
           추가
