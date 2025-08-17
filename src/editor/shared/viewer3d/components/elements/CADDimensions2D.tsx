@@ -1173,7 +1173,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         );
       });
-      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig])}
+      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig]}
       
       
       {/* 컬럼 치수 표시 */}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import type { Panel, StockSheet, CutSettings, Unit } from '../../types/cutlist';
+import type { Panel, StockSheet, CutSettings, Unit, Placement, CutStep, SawStats } from '../../types/cutlist';
 
 type Store = {
   panels: Panel[];
@@ -7,11 +7,33 @@ type Store = {
   settings: CutSettings;
   selectedPanelId: string | null;
   currentSheetIndex: number;
+  // Simulation state
+  placements: Placement[];
+  cuts: CutStep[];
+  selectedSheetId?: string;
+  selectedCutIndex?: number;
+  selectedCutId?: string;
+  simulating: boolean;
+  simSpeed: number;
+  simProgress: number;
+  sawStats: SawStats;
+  // Actions
   setPanels: (p: Panel[]) => void;
   setStock: (s: StockSheet[]) => void;
   setSettings: (k: Partial<CutSettings>) => void;
   setSelectedPanelId: (id: string | null) => void;
   setCurrentSheetIndex: (index: number) => void;
+  setSelectedSheetId: (id?: string) => void;
+  // Simulation actions
+  setPlacements: (p: Placement[]) => void;
+  setCuts: (c: CutStep[]) => void;
+  selectPanel: (panelId?: string, sheetId?: string) => void;
+  selectCutIndex: (i?: number) => void;
+  selectCutId: (id?: string) => void;
+  setSimulating: (v: boolean) => void;
+  setSimSpeed: (v: number) => void;
+  setSimProgress: (v: number) => void;
+  setSawStats: (stats: SawStats) => void;
   metrics: () => { partsCount: number; partsArea: number; stockArea: number };
 };
 
@@ -38,7 +60,38 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     optimizationType: 'cnc' // 기본값: CNC 최적화
   });
 
+  // Simulation state
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [cuts, setCuts] = useState<CutStep[]>([]);
+  const [selectedSheetId, setSelectedSheetId] = useState<string | undefined>();
+  const [selectedCutIndex, setSelectedCutIndex] = useState<number | undefined>();
+  const [selectedCutId, setSelectedCutId] = useState<string | undefined>();
+  const [simulating, setSimulating] = useState(false);
+  const [simSpeed, setSimSpeed] = useState(1.0);
+  const [simProgress, setSimProgress] = useState(0);
+  const [sawStats, setSawStats] = useState<SawStats>({ bySheet: {}, total: 0, unit: 'm' });
+
   const setSettings = (k: Partial<CutSettings>) => setSettingsState(s => ({ ...s, ...k }));
+  
+  const selectPanel = (panelId?: string, sheetId?: string) => {
+    setSelectedPanelId(panelId || null);
+    setSelectedSheetId(sheetId);
+    if (sheetId) {
+      // Find sheet index by ID
+      const sheetIndex = parseInt(sheetId) - 1;
+      if (!isNaN(sheetIndex)) {
+        setCurrentSheetIndex(sheetIndex);
+      }
+    }
+  };
+  
+  const selectCutIndex = (i?: number) => {
+    setSelectedCutIndex(i);
+  };
+  
+  const selectCutId = (id?: string) => {
+    setSelectedCutId(id);
+  };
 
   const metrics = () => {
     const partsArea = panels.reduce((acc, p) => acc + p.width*p.length*p.quantity, 0);
@@ -54,13 +107,36 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     settings, 
     selectedPanelId,
     currentSheetIndex,
+    // Simulation state
+    placements,
+    cuts,
+    selectedSheetId,
+    selectedCutIndex,
+    selectedCutId,
+    simulating,
+    simSpeed,
+    simProgress,
+    sawStats,
+    // Actions
     setPanels, 
     setStock, 
     setSettings,
     setSelectedPanelId,
     setCurrentSheetIndex,
+    setSelectedSheetId,
+    // Simulation actions
+    setPlacements,
+    setCuts,
+    selectPanel,
+    selectCutIndex,
+    selectCutId,
+    setSimulating,
+    setSimSpeed,
+    setSimProgress,
+    setSawStats,
     metrics 
-  }), [panels, stock, settings, selectedPanelId, currentSheetIndex]);
+  }), [panels, stock, settings, selectedPanelId, currentSheetIndex, 
+      placements, cuts, selectedSheetId, selectedCutIndex, selectedCutId, simulating, simSpeed, simProgress, sawStats]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

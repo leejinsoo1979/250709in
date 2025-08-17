@@ -1,6 +1,6 @@
 .section {
   background: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -37,8 +37,8 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .sectionHeader svg {
@@ -259,7 +259,8 @@
   width: 100%;
   padding: 3px 6px;
   border: 1px solid #e0e0e0;
-  background: white;
+  background: white !important;
+  color: #333 !important;
   font-size: 11px;
   transition: all 0.2s;
   border-radius: 3px;
@@ -271,14 +272,16 @@
 .input:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
-  background: white;
+  background: white !important;
+  color: #333 !important;
 }
 
 .inputSmall {
   width: 42px;
   padding: 3px 2px;
   border: 1px solid #e0e0e0;
-  background: white;
+  background: white !important;
+  color: #333 !important;
   font-size: 11px;
   text-align: center;
   transition: all 0.2s;
@@ -288,14 +291,16 @@
 .inputSmall:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
-  background: white;
+  background: white !important;
+  color: #333 !important;
 }
 
 .inputTiny {
   width: 32px;
   padding: 3px 2px;
   border: 1px solid #e0e0e0;
-  background: white;
+  background: white !important;
+  color: #333 !important;
   font-size: 11px;
   text-align: center;
   transition: all 0.2s;
@@ -305,14 +310,16 @@
 .inputTiny:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
-  background: white;
+  background: white !important;
+  color: #333 !important;
 }
 
 .select {
   width: 100%;
   padding: 3px 4px;
   border: 1px solid #e0e0e0;
-  background: white;
+  background: white !important;
+  color: #333 !important;
   font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
@@ -322,7 +329,8 @@
 .select:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
-  background: white;
+  background: white !important;
+  color: #333 !important;
 }
 
 .dimensions {
@@ -344,6 +352,67 @@
   color: #999;
   cursor: pointer;
   border-radius: 3px;
+  transition: all 0.2s;
+}
+
+/* Radio Group Styles */
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.radioGroup > span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.radioButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.radioButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+
+.radioButton:hover {
+  background: hsl(var(--theme) / 0.05);
+  border-color: hsl(var(--theme) / 0.2);
+}
+
+.radioButton input[type="radio"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.radioButton input[type="radio"]:checked {
+  accent-color: hsl(var(--theme));
+}
+
+.radioButton input[type="radio"]:checked + span {
+  color: hsl(var(--theme));
+  font-weight: 500;
+}
+
+.radioButton span {
+  flex: 1;
+  color: #374151;
   transition: all 0.2s;
 }
 

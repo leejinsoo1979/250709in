@@ -203,7 +203,6 @@ export default function PanelsTable(){
         alert('CSV 파일에서 유효한 패널 데이터를 찾을 수 없습니다.');
       }
     } catch (error) {
-      console.error('CSV 파싱 오류:', error);
       alert('CSV 파일을 읽는 중 오류가 발생했습니다.');
     }
   };

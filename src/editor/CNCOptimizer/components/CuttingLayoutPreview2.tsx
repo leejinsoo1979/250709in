@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OptimizedResult } from '../types';
-import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { useCNCStore } from '../store';
+import { buildSequenceForPanel, runSimulation } from '@/utils/cut/simulate';
+import type { CutStep } from '@/types/cutlist';
 import styles from './CuttingLayoutPreview2.module.css';
 
 interface CuttingLayoutPreview2Props {
@@ -26,6 +28,8 @@ interface CuttingLayoutPreview2Props {
     stock?: any[];
   };
   onCurrentSheetIndexChange?: (index: number) => void;
+  showCuttingListTab?: boolean; // 컷팅 리스트 탭이 활성화되어 있는지 여부
+  allCutSteps?: any[]; // All cut steps for current sheet
 }
 
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({ 
@@ -41,7 +45,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   onRotationChange,
   onOffsetChange,
   sheetInfo,
-  onCurrentSheetIndexChange
+  onCurrentSheetIndexChange,
+  showCuttingListTab = false,
+  allCutSteps = []
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,10 +82,131 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Toggle dimension display
   const [showDimensions, setShowDimensions] = useState(true);
   
-  // Get settings from store
-  const { settings, setSettings } = useCNCStore();
+  // Get settings and simulation state from store
+  const { 
+    settings, setSettings,
+    selectedPanelId, selectedSheetId,
+    placements, cuts, setCuts,
+    simulating, setSimulating,
+    simSpeed, setSimSpeed,
+    selectedCutIndex, selectCutIndex,
+    selectedCutId, selectCutId
+  } = useCNCStore();
+  
+  // Simulation state
+  const [cutSequence, setCutSequence] = useState<CutStep[]>([]);
+  const [currentCutIndex, setCurrentCutIndex] = useState(0);
+  const cancelSimRef = useRef({ current: false });
+  
+  // Generate cut sequence when panel is selected or for entire sheet simulation
+  useEffect(() => {
+    console.log('Simulation state:', { 
+      simulating, 
+      selectedPanelId, 
+      hasResult: !!result, 
+      allCutStepsLength: allCutSteps?.length || 0 
+    });
+    
+    if (simulating && !selectedPanelId && result && allCutSteps && allCutSteps.length > 0) {
+      // Full sheet simulation - use all cut steps for current sheet
+      const currentSheetNumber = (sheetInfo?.currentIndex ?? 0) + 1;
+      const sheetCuts = allCutSteps.filter(cut => 
+        cut.sheetNumber === currentSheetNumber
+      );
+      
+      console.log('Sheet cuts:', { currentSheetNumber, sheetCutsLength: sheetCuts.length });
+      
+      if (sheetCuts.length > 0) {
+        setCutSequence(sheetCuts);
+        setCurrentCutIndex(0);
+      } else {
+        // 컷이 없는 경우 시뮬레이션 종료
+        console.log('No cuts found, stopping simulation');
+        setSimulating(false);
+      }
+    } else if (selectedPanelId && selectedSheetId && result) {
+      // Single panel simulation
+      const placement = placements.find(
+        p => p.panelId === selectedPanelId && p.sheetId === String(sheetInfo?.currentIndex + 1 || 1)
+      );
+      
+      if (placement) {
+        // Generate cut sequence
+        const sequence = buildSequenceForPanel({
+          mode: settings.optimizationType === 'cnc' ? 'free' : 'guillotine',
+          sheetW: result.stockPanel.width,
+          sheetH: result.stockPanel.height,
+          kerf: settings.kerf || 5,
+          placement: {
+            x: placement.x,
+            y: placement.y,
+            width: placement.width,
+            height: placement.height
+          },
+          sheetId: placement.sheetId,
+          panelId: placement.panelId
+        });
+        setCutSequence(sequence);
+        setCurrentCutIndex(0);
+      }
+    } else {
+      setCutSequence([]);
+      setCurrentCutIndex(0);
+    }
+  }, [selectedPanelId, selectedSheetId, result, placements, settings, sheetInfo, simulating, allCutSteps]);
+  
+  // Run simulation when simulating flag is set
+  useEffect(() => {
+    console.log('Run simulation check:', { simulating, cutSequenceLength: cutSequence.length });
+    
+    if (simulating && cutSequence.length > 0) {
+      console.log('Starting simulation with', cutSequence.length, 'cuts');
+      // Cancel any existing simulation
+      if (cancelSimRef.current) {
+        cancelSimRef.current.current = true;
+      }
+      
+      // Create new cancel ref for this simulation
+      const newCancelRef = { current: false };
+      cancelSimRef.current = newCancelRef;
+      
+      // Start new simulation with faster speed
+      runSimulation(cutSequence, {
+        onTick: (i) => {
+          console.log('Setting cut index:', i);
+          setCurrentCutIndex(i);
+          selectCutIndex(i);
+        },
+        onDone: () => {
+          console.log('Simulation done');
+          setSimulating(false);
+        },
+        speed: 2.0, // Faster default speed
+        cancelRef: newCancelRef
+      });
+    } else if (!simulating && cancelSimRef.current) {
+      cancelSimRef.current.current = true;
+    }
+    
+    return () => {
+      cancelSimRef.current.current = true;
+    };
+  }, [simulating, cutSequence, simSpeed, selectCutIndex, setSimulating]);
+  
+  // Handle ESC key to stop simulation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSimulating(false);
+        cancelSimRef.current.current = true;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setSimulating]);
 
-  // Drawing function
+  // Drawing function (not memoized to ensure it rerenders)
   const draw = () => {
     if (!result || !canvasRef.current || !containerRef.current) return;
 
@@ -274,15 +401,50 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     // Use theme color for highlighted/active panels
     const materialColors: { [key: string]: { fill: string; stroke: string } } = {
       'PB': { fill: `hsl(${themeColor} / 0.08)`, stroke: `hsl(${themeColor} / 0.5)` },
-      'MDF': { fill: `hsl(${themeColor} / 0.10)`, stroke: `hsl(${themeColor} / 0.6)` },
+      'MDF': { fill: '#e8d4b0', stroke: '#8b6239' }, // MDF 더 밝은 갈색으로 변경
       'PET': { fill: `hsl(${themeColor} / 0.15)`, stroke: `hsl(${themeColor} / 0.8)` },
-      'PLY': { fill: `hsl(${themeColor} / 0.12)`, stroke: `hsl(${themeColor} / 0.7)` },
+      'PLY': { fill: '#f5e6d3', stroke: '#a68966' }, // 합판 더 밝은 나무색
       'HPL': { fill: `hsl(${themeColor} / 0.14)`, stroke: `hsl(${themeColor} / 0.8)` },
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
     };
 
-    // Draw panels
-    result.panels.forEach((panel) => {
+    // Draw panels (show progressively during simulation)
+    result.panels.forEach((panel, panelIndex) => {
+      // During simulation, hide panels initially and show them as they are cut
+      if (simulating && cutSequence.length > 0) {
+        // Check if this panel has been yielded by any completed cut
+        let panelYielded = false;
+        
+        // Debug first panel
+        if (panelIndex === 0 && currentCutIndex === 0) {
+          console.log('Panel visibility check:', {
+            panelId: panel.id,
+            simulating,
+            currentCutIndex,
+            cutSequenceLength: cutSequence.length,
+            allYieldIds: cutSequence.map(c => c.yieldsPanelId).filter(id => id)
+          });
+        }
+        
+        for (let i = 0; i <= currentCutIndex && i < cutSequence.length; i++) {
+          if (cutSequence[i].yieldsPanelId === panel.id) {
+            panelYielded = true;
+            break;
+          }
+        }
+        
+        // If panel hasn't been yielded yet, skip drawing it completely
+        if (!panelYielded) {
+          return; // Skip this panel entirely
+        }
+        
+        // Check if this panel is currently being cut (next to be yielded)
+        const nextCut = currentCutIndex < cutSequence.length - 1 ? cutSequence[currentCutIndex + 1] : null;
+        if (nextCut && nextCut.yieldsPanelId === panel.id) {
+          ctx.globalAlpha = 0.5; // Show partial transparency for panel being cut
+        }
+      }
+      
       const x = offsetX + panel.x;
       const y = offsetY + panel.y;
       // 회전된 경우에도 실제 차지하는 공간으로 그림
@@ -293,24 +455,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const isHovered = hoveredPanelId === panel.id;
       const colors = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
 
-      // Panel shadow for highlighted/hovered
-      if (isHighlighted || isHovered) {
+      // Draw panel background
+      ctx.fillStyle = colors.fill;
+      ctx.fillRect(x, y, width, height);
+      
+      // Draw panel border - clean and simple highlight
+      if (isHighlighted) {
+        // Simple, clean highlight with theme color
+        ctx.strokeStyle = `hsl(${themeColor})`;
+        ctx.lineWidth = 3 / (baseScale * scale);
+        ctx.strokeRect(x, y, width, height);
+        
+        // Subtle inner glow
         ctx.save();
-        ctx.shadowColor = isHighlighted ? `hsl(${themeColor} / 0.3)` : 'rgba(0, 0, 0, 0.1)';
-        ctx.shadowBlur = isHighlighted ? 15 : 8;
-        ctx.fillStyle = isHighlighted ? `hsl(${themeColor} / 0.15)` : colors.fill;
+        ctx.fillStyle = `hsl(${themeColor} / 0.08)`;
         ctx.fillRect(x, y, width, height);
         ctx.restore();
+      } else if (isHovered) {
+        ctx.strokeStyle = `hsl(${themeColor} / 0.5)`;
+        ctx.lineWidth = 2 / (baseScale * scale);
+        ctx.strokeRect(x, y, width, height);
       } else {
-        // Normal panel fill
-        ctx.fillStyle = colors.fill;
-        ctx.fillRect(x, y, width, height);
+        // Normal border
+        ctx.strokeStyle = colors.stroke;
+        ctx.lineWidth = 1 / (baseScale * scale);
+        ctx.strokeRect(x, y, width, height);
       }
-
-      // Panel border
-      ctx.strokeStyle = isHighlighted ? `hsl(${themeColor})` : isHovered ? `hsl(${themeColor} / 0.6)` : colors.stroke;
-      ctx.lineWidth = (isHighlighted ? 3 : isHovered ? 2 : 1.5) / (baseScale * scale);
-      ctx.strokeRect(x, y, width, height);
+      
 
       // Grain direction removed - no grain lines
 
@@ -344,7 +515,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 패널 중앙에 이름 표시
         if (panel.name) {
           ctx.save();
-          ctx.fillStyle = '#9ca3af'; // 더 흐린 회색으로 변경
+          // MDF는 갈색 배경이므로 더 진한 색상 사용
+          ctx.fillStyle = panel.material === 'MDF' ? '#4a4a4a' : '#9ca3af';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
@@ -352,7 +524,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           const maxTextWidth = width * 0.8; // 패널 너비의 80%
           const maxTextHeight = height * 0.4; // 패널 높이의 40%로 증가
           let baseFontSize = 24; // 기본 폰트 크기
-          let fontSize = Math.min(baseFontSize * fontScale, maxTextHeight); // fontScale 적용
+          let fontSize = Math.min(baseFontSize, maxTextHeight); // 패널 이름은 fontScale 적용 안 함
           
           // 가로 모드일 때 텍스트를 시계방향 90도 회전
           if (rotation === -90) {
@@ -413,8 +585,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 치수 텍스트만 표시 (선 없이) - showDimensions가 true일 때만
         if (showDimensions) {
           ctx.save();
-          ctx.fillStyle = '#111827'; // 더 진한 색상으로 변경
-          const baseDimFontSize = 20; // 기본 치수 폰트 크기
+          // MDF는 갈색 배경이므로 치수도 더 진한 색상 사용
+          ctx.fillStyle = panel.material === 'MDF' ? '#2c2c2c' : '#111827';
+          const baseDimFontSize = 32; // 기본 치수 폰트 크기를 32로 증가
           const dimFontSize = baseDimFontSize * fontScale; // fontScale 적용
           ctx.font = `bold ${dimFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
           ctx.textAlign = 'center';
@@ -464,8 +637,84 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         } // End of showDimensions check
         
         ctx.restore();
+        ctx.globalAlpha = 1; // Reset transparency after drawing panel
       }
     });
+
+    // Draw cutting line animation during simulation
+    if (simulating && cutSequence.length > 0 && currentCutIndex < cutSequence.length) {
+      const currentCut = cutSequence[currentCutIndex];
+      
+      // Draw all previous cuts as completed
+      for (let i = 0; i < currentCutIndex; i++) {
+        const cut = cutSequence[i];
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+        ctx.lineWidth = 2 / (baseScale * scale);
+        ctx.setLineDash([5, 5]);
+        
+        ctx.beginPath();
+        if (cut.axis === 'x') {
+          // Vertical cut
+          ctx.moveTo(offsetX + cut.pos, offsetY + cut.spanStart);
+          ctx.lineTo(offsetX + cut.pos, offsetY + cut.spanEnd);
+        } else {
+          // Horizontal cut
+          ctx.moveTo(offsetX + cut.spanStart, offsetY + cut.pos);
+          ctx.lineTo(offsetX + cut.spanEnd, offsetY + cut.pos);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+      
+      // Draw current cut with animation
+      ctx.save();
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3 / (baseScale * scale);
+      ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
+      ctx.shadowBlur = 10;
+      
+      // Animated dashed line
+      const dashOffset = (Date.now() / 50) % 20;
+      ctx.setLineDash([10, 10]);
+      ctx.lineDashOffset = -dashOffset;
+      
+      ctx.beginPath();
+      if (currentCut.axis === 'x') {
+        // Vertical cut
+        ctx.moveTo(offsetX + currentCut.pos, offsetY + currentCut.spanStart);
+        ctx.lineTo(offsetX + currentCut.pos, offsetY + currentCut.spanEnd);
+      } else {
+        // Horizontal cut
+        ctx.moveTo(offsetX + currentCut.spanStart, offsetY + currentCut.pos);
+        ctx.lineTo(offsetX + currentCut.spanEnd, offsetY + currentCut.pos);
+      }
+      ctx.stroke();
+      
+      // Draw cutting direction indicator
+      ctx.save();
+      ctx.fillStyle = '#ff0000';
+      ctx.font = `bold ${14 / (baseScale * scale)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const cutMidX = currentCut.axis === 'x' 
+        ? offsetX + currentCut.pos
+        : offsetX + (currentCut.spanStart + currentCut.spanEnd) / 2;
+      const cutMidY = currentCut.axis === 'y'
+        ? offsetY + currentCut.pos  
+        : offsetY + (currentCut.spanStart + currentCut.spanEnd) / 2;
+      
+      // Draw cut info
+      ctx.fillText(
+        `${currentCut.axis === 'x' ? '↕' : '↔'} ${currentCut.axis}=${Math.round(currentCut.pos)}`,
+        cutMidX,
+        cutMidY
+      );
+      ctx.restore();
+      
+      ctx.restore();
+    }
 
     ctx.restore(); // Restore main transformation
 
@@ -508,10 +757,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // Info text - 항상 좌측 하단
     ctx.save();
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
+    
+    // Material info (moved from header)
+    const materialInfo = `${result.stockPanel.material || 'PB'} ${result.stockPanel.thickness || 18}T`;
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(materialInfo, 20, canvasHeight - 40);
+    
+    // Panel and waste info
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#6b7280';
     ctx.fillText(`Panels: ${result.panels.length}`, 20, canvasHeight - 25);
     ctx.fillText(`Waste: ${wasteArea} m²`, 20, canvasHeight - 10);
     ctx.restore();
@@ -538,7 +795,30 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
-  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions]);
+  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, simulating, currentCutIndex]);
+
+  // Animation loop for simulation
+  useEffect(() => {
+    let animationId: number;
+    
+    const animate = () => {
+      if (simulating) {
+        draw();
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    
+    if (simulating) {
+      animate();
+    }
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [simulating]);
+
 
   // Handle wheel zoom with mouse position as center
   const handleWheel = (e: React.WheelEvent) => {
@@ -750,11 +1030,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             </button>
             <div className={styles.sheetTitle}>
               Sheet {sheetInfo ? sheetInfo.currentIndex + 1 : 1} / {sheetInfo ? sheetInfo.totalSheets : 1}
-              {result.stockPanel && (
-                <span className={styles.sheetInfo}>
-                  {' '}• {result.stockPanel.material || 'PB'} {result.stockPanel.thickness || 18}T
-                </span>
-              )}
             </div>
             <button 
               className={styles.headerNavButton}
@@ -873,6 +1148,295 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
+      
+      {/* Simulation Overlay - 컷팅 리스트 탭이 활성화되어 있을 때만 표시 */}
+      {showCuttingListTab && ((selectedPanelId && cutSequence.length > 0) || selectedCutId) && (
+        <div 
+          className={styles.simulationOverlay}
+          style={{
+            position: 'absolute',
+            top: sheetInfo ? '40px' : '0',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none',
+            zIndex: 10
+          }}
+        >
+          <svg 
+            style={{ 
+              width: '100%', 
+              height: '100%',
+              position: 'absolute'
+            }}
+          >
+            {/* Render selected cut if not simulating */}
+            {!simulating && selectedCutId && (() => {
+              // Find the selected cut from allCutSteps  
+              const currentSheetCuts = allCutSteps.filter(c => c.sheetNumber === (sheetInfo?.currentIndex || 0) + 1);
+              const selectedCut = currentSheetCuts.find(c => c.id === selectedCutId);
+              if (!selectedCut || !result || !containerRef.current) return null;
+              
+              const containerRect = containerRef.current.getBoundingClientRect();
+              const containerWidth = containerRect.width;
+              const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
+              
+              // Calculate scale and center
+              const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                 Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                  Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              
+              const scaleX = containerWidth * 0.9 / rotatedWidth;
+              const scaleY = containerHeight * 0.9 / rotatedHeight;
+              const baseScale = Math.min(scaleX, scaleY, 1.2);
+              const totalScale = baseScale * scale;
+              
+              const centerX = containerWidth / 2 + offset.x;
+              const centerY = containerHeight / 2 + offset.y;
+              
+              // Transform cut coordinates with guaranteed span
+              const angle = (rotation * Math.PI) / 180;
+              
+              let x1, y1, x2, y2;
+              if (selectedCut.axis === 'x') {
+                // Vertical line
+                x1 = selectedCut.pos;
+                y1 = selectedCut.spanStart != null ? selectedCut.spanStart : 0;
+                x2 = selectedCut.pos;
+                y2 = selectedCut.spanEnd != null ? selectedCut.spanEnd : result.stockPanel.height;
+              } else {
+                // Horizontal line
+                x1 = selectedCut.spanStart != null ? selectedCut.spanStart : 0;
+                y1 = selectedCut.pos;
+                x2 = selectedCut.spanEnd != null ? selectedCut.spanEnd : result.stockPanel.width;
+                y2 = selectedCut.pos;
+              }
+              
+              // Clamp to sheet bounds
+              x1 = Math.max(0, Math.min(result.stockPanel.width, x1));
+              x2 = Math.max(0, Math.min(result.stockPanel.width, x2));
+              y1 = Math.max(0, Math.min(result.stockPanel.height, y1));
+              y2 = Math.max(0, Math.min(result.stockPanel.height, y2));
+              
+              // Transform to view coordinates
+              const transform = (x: number, y: number) => {
+                // Center the sheet
+                const cx = x - result.stockPanel.width / 2;
+                const cy = y - result.stockPanel.height / 2;
+                
+                // Apply rotation
+                const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
+                const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
+                
+                // Apply scale and offset
+                return {
+                  x: centerX + rx * totalScale,
+                  y: centerY + ry * totalScale
+                };
+              };
+              
+              const p1 = transform(x1, y1);
+              const p2 = transform(x2, y2);
+              
+              const strokeWidth = Math.max(2, (selectedCut.kerf || settings.kerf || 5) * totalScale);
+              
+              return (
+                <line
+                  x1={p1.x}
+                  y1={p1.y}
+                  x2={p2.x}
+                  y2={p2.y}
+                  stroke="#FF4D4F"
+                  strokeWidth={strokeWidth}
+                  opacity={1.0}
+                  strokeDasharray="5,5"
+                  className={styles.animatedCut}
+                />
+              );
+            })()}
+            {/* Render simulation cuts */}
+            {cutSequence.slice(0, currentCutIndex + 1).map((cut, index) => {
+              if (!result || !containerRef.current) return null;
+              
+              const containerRect = containerRef.current.getBoundingClientRect();
+              const containerWidth = containerRect.width;
+              const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
+              
+              // Calculate scale and center
+              const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                 Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                  Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              
+              const scaleX = containerWidth * 0.9 / rotatedWidth;
+              const scaleY = containerHeight * 0.9 / rotatedHeight;
+              const baseScale = Math.min(scaleX, scaleY, 1.2);
+              const totalScale = baseScale * scale;
+              
+              const centerX = containerWidth / 2 + offset.x;
+              const centerY = containerHeight / 2 + offset.y;
+              
+              // Transform cut coordinates
+              const angle = (rotation * Math.PI) / 180;
+              
+              let x1, y1, x2, y2;
+              if (cut.axis === 'x') {
+                // Vertical line
+                x1 = cut.pos;
+                y1 = cut.spanStart;
+                x2 = cut.pos;
+                y2 = cut.spanEnd;
+              } else {
+                // Horizontal line
+                x1 = cut.spanStart;
+                y1 = cut.pos;
+                x2 = cut.spanEnd;
+                y2 = cut.pos;
+              }
+              
+              // Transform to view coordinates
+              const transform = (x: number, y: number) => {
+                // Center the sheet
+                const cx = x - result.stockPanel.width / 2;
+                const cy = y - result.stockPanel.height / 2;
+                
+                // Apply rotation
+                const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
+                const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
+                
+                // Apply scale and offset
+                return {
+                  x: centerX + rx * totalScale,
+                  y: centerY + ry * totalScale
+                };
+              };
+              
+              const p1 = transform(x1, y1);
+              const p2 = transform(x2, y2);
+              
+              const isCurrentCut = index === currentCutIndex;
+              const strokeWidth = Math.max(2, (cut.kerf || settings.kerf || 5) * totalScale);
+              
+              return (
+                <line
+                  key={cut.id}
+                  x1={p1.x}
+                  y1={p1.y}
+                  x2={p2.x}
+                  y2={p2.y}
+                  stroke="#FF4D4F"
+                  strokeWidth={strokeWidth}
+                  opacity={isCurrentCut ? 1.0 : 0.35}
+                  strokeDasharray={isCurrentCut ? "5,5" : "none"}
+                  className={isCurrentCut ? styles.animatedCut : ''}
+                />
+              );
+            })}
+          </svg>
+          
+          {/* Highlight selected panel */}
+          {(() => {
+            const placement = placements.find(
+              p => p.panelId === selectedPanelId && p.sheetId === String(sheetInfo?.currentIndex + 1 || 1)
+            );
+            if (!placement || !result || !containerRef.current) return null;
+            
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
+            
+            const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                               Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
+            const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
+            
+            const scaleX = containerWidth * 0.9 / rotatedWidth;
+            const scaleY = containerHeight * 0.9 / rotatedHeight;
+            const baseScale = Math.min(scaleX, scaleY, 1.2);
+            const totalScale = baseScale * scale;
+            
+            const centerX = containerWidth / 2 + offset.x;
+            const centerY = containerHeight / 2 + offset.y;
+            const angle = (rotation * Math.PI) / 180;
+            
+            // Transform panel corners
+            const transform = (x: number, y: number) => {
+              const cx = x - result.stockPanel.width / 2;
+              const cy = y - result.stockPanel.height / 2;
+              const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
+              const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
+              return {
+                x: centerX + rx * totalScale,
+                y: centerY + ry * totalScale
+              };
+            };
+            
+            const tl = transform(placement.x, placement.y);
+            const tr = transform(placement.x + placement.width, placement.y);
+            const br = transform(placement.x + placement.width, placement.y + placement.height);
+            const bl = transform(placement.x, placement.y + placement.height);
+            
+            return (
+              <svg style={{ width: '100%', height: '100%', position: 'absolute' }}>
+                <polygon
+                  points={`${tl.x},${tl.y} ${tr.x},${tr.y} ${br.x},${br.y} ${bl.x},${bl.y}`}
+                  fill="hsl(var(--theme))"
+                  opacity={0.15}
+                />
+              </svg>
+            );
+          })()}
+        </div>
+      )}
+      
+      {/* Simulation Controls - 컷팅 리스트 탭이 활성화되어 있을 때만 표시 */}
+      {showCuttingListTab && selectedPanelId && cutSequence.length > 0 && (
+        <div className={styles.simulationControls}>
+          <button 
+            onClick={() => {
+              setCurrentCutIndex(Math.max(0, currentCutIndex - 1));
+              selectCutIndex(Math.max(0, currentCutIndex - 1));
+            }}
+            disabled={currentCutIndex === 0}
+            title="이전 절단"
+          >
+            <SkipBack size={16} />
+          </button>
+          <button 
+            onClick={() => setSimulating(!simulating)}
+            className={styles.playButton}
+            title={simulating ? "일시정지" : "재생"}
+          >
+            {simulating ? <Pause size={18} /> : <Play size={18} />}
+          </button>
+          <button 
+            onClick={() => {
+              setCurrentCutIndex(Math.min(cutSequence.length - 1, currentCutIndex + 1));
+              selectCutIndex(Math.min(cutSequence.length - 1, currentCutIndex + 1));
+            }}
+            disabled={currentCutIndex >= cutSequence.length - 1}
+            title="다음 절단"
+          >
+            <SkipForward size={16} />
+          </button>
+          <div className={styles.speedControl}>
+            <label>속도: {simSpeed}x</label>
+            <input 
+              type="range" 
+              min="0.25" 
+              max="3" 
+              step="0.25" 
+              value={simSpeed}
+              onChange={(e) => setSimSpeed(parseFloat(e.target.value))}
+            />
+          </div>
+          <div className={styles.cutInfo}>
+            {currentCutIndex + 1} / {cutSequence.length} 절단
+          </div>
+        </div>
+      )}
+      
       {!result && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📐</div>

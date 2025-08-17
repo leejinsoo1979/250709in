@@ -49,7 +49,14 @@ export function parseHexToHsl(hex: string): { h: number; s: number; l: number } 
  * Parse HSL string to HSL values
  */
 export function parseHslString(hsl: string): { h: number; s: number; l: number } | null {
-  const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+  // Try modern CSS format (space-separated)
+  let match = hsl.match(/hsl\((\d+)\s+(\d+)%\s+(\d+)%\)/);
+  
+  // Fallback to old format (comma-separated)
+  if (!match) {
+    match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+  }
+  
   if (!match) return null;
   
   return {

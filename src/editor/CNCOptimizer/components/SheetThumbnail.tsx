@@ -104,20 +104,40 @@ export default function SheetThumbnail({
         height = (panel.rotated ? panel.width : panel.height) * scale;
       }
       
-      // 패널 배경 (재질별 색상)
-      const materialColors: { [key: string]: string } = {
-        'PB': `hsl(${themeColor} / 0.06)`,
-        'MDF': `hsl(${themeColor} / 0.08)`,
-        'PLY': `hsl(${themeColor} / 0.10)`,
-        'HPL': `hsl(${themeColor} / 0.12)`,
-        'LPM': `hsl(${themeColor} / 0.14)`
+      // 패널 배경 (재질별 색상 - MDF는 고유 갈색)
+      const materialColors: { [key: string]: { fill: string; stroke: string } } = {
+        'PB': { 
+          fill: `hsl(${themeColor} / 0.06)`,
+          stroke: `hsl(${themeColor} / 0.3)`
+        },
+        'MDF': { 
+          fill: 'rgba(212, 165, 116, 0.3)', // MDF 고유 갈색 (투명도 적용)
+          stroke: 'rgba(139, 98, 57, 0.5)'   // MDF 테두리 색상
+        },
+        'PET': { 
+          fill: `hsl(${themeColor} / 0.10)`,
+          stroke: `hsl(${themeColor} / 0.4)`
+        },
+        'PLY': { 
+          fill: 'rgba(232, 212, 176, 0.3)', // 합판 밝은 나무색 (투명도 적용)
+          stroke: 'rgba(166, 137, 102, 0.5)' // 합판 테두리
+        },
+        'HPL': { 
+          fill: `hsl(${themeColor} / 0.12)`,
+          stroke: `hsl(${themeColor} / 0.35)`
+        },
+        'LPM': { 
+          fill: `hsl(${themeColor} / 0.14)`,
+          stroke: `hsl(${themeColor} / 0.35)`
+        }
       };
       
-      ctx.fillStyle = materialColors[panel.material] || `hsl(${themeColor} / 0.06)`;
+      const colors = materialColors[panel.material] || materialColors['PB'];
+      ctx.fillStyle = colors.fill;
       ctx.fillRect(x, y, width, height);
       
       // 패널 테두리
-      ctx.strokeStyle = `hsl(${themeColor} / 0.3)`;
+      ctx.strokeStyle = colors.stroke;
       ctx.lineWidth = 0.5;
       ctx.strokeRect(x, y, width, height);
     });

@@ -500,6 +500,7 @@ export function packGuillotine(
   console.log(`\n=== Starting Guillotine Packing ===`);
   console.log(`Total panels: ${panels.length}`);
   console.log(`Bin size: ${binWidth}x${binHeight}mm`);
+  console.log(`GUILLOTINE MODE ACTIVATED!`);
   
   const bins: PackedBin[] = [];
   let currentBin = 0;

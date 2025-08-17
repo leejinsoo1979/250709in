@@ -6,6 +6,7 @@ import { packSimple, SimplePacker as SimplePackerClass } from './simplePacking';
 import { packColumns } from './columnPacking';
 import { packCutsaw } from './cutsawPacking';
 import { packGuillotine } from './guillotinePacking';
+import { PlacementValidator, PrecisionReport } from './precision';
 
 /**
  * 시트 간 재최적화 함수
@@ -240,7 +241,8 @@ export const optimizePanels = async (
     stockPanel,
     panels: placedPanels,
     efficiency: packingResult.efficiency,
-    wasteArea: packingResult.width * packingResult.height - packingResult.usedArea
+    wasteArea: packingResult.width * packingResult.height - packingResult.usedArea,
+    usedArea: packingResult.usedArea
   };
 };
 
@@ -320,7 +322,8 @@ export const optimizePanelsImproved = async (
     stockPanel,
     panels: placedPanels,
     efficiency: packingResult.efficiency,
-    wasteArea: packingResult.width * packingResult.height - packingResult.usedArea
+    wasteArea: packingResult.width * packingResult.height - packingResult.usedArea,
+    usedArea: packingResult.usedArea
   };
 };
 
@@ -359,8 +362,8 @@ export const optimizePanelsMultiple = async (
   // 최적화 타입에 따라 다른 알고리즘 사용
   let bins: PackedBin[];
   
+  
   if (optimizationType === 'cutsaw') {
-    // console.log('Using Guillotine Cut optimization (horizontal/vertical strips)');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -369,7 +372,6 @@ export const optimizePanelsMultiple = async (
       maxSheets
     );
   } else {
-    // console.log('Using CNC optimization (free placement'));
     bins = packSimple(
       rectangles,
       stockPanel.width,
@@ -388,14 +390,17 @@ export const optimizePanelsMultiple = async (
   bins.slice(0, maxSheets).forEach((bin, index) => {
     const placedPanels: PlacedPanel[] = bin.panels.map(rect => {
       const originalPanel = panelMap.get(rect.id!)!;
+      // 회전된 경우 실제 배치된 크기 사용
+      const isRotated = rect.rotated || false;
       return {
         ...originalPanel,
+        id: rect.id!, // Use the unique ID from rect (e.g., "m0_p0-0", "m0_p0-1")
         x: rect.x || 0,
         y: rect.y || 0,
-        // 원래 패널 크기를 유지 (회전해도 크기는 변경하지 않음)
-        width: originalPanel.width,
-        height: originalPanel.height,
-        rotated: rect.rotated || false,
+        // 회전된 경우 width와 height를 바꿔서 저장
+        width: isRotated ? originalPanel.height : originalPanel.width,
+        height: isRotated ? originalPanel.width : originalPanel.height,
+        rotated: isRotated,
         quantity: 1,
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,
@@ -403,12 +408,25 @@ export const optimizePanelsMultiple = async (
         name: originalPanel.name
       };
     });
+    
+    // 정밀도 검증
+    const validation = PlacementValidator.validatePlacement(
+      placedPanels,
+      stockPanel.width,
+      stockPanel.height,
+      kerf
+    );
+    
+    if (!validation.valid) {
+    } else {
+    }
 
     results.push({
       stockPanel: { ...stockPanel, id: `${stockPanel.id}-${index}` },
       panels: placedPanels,
       efficiency: bin.efficiency,
-      wasteArea: bin.width * bin.height - bin.usedArea
+      wasteArea: bin.width * bin.height - bin.usedArea,
+      usedArea: bin.usedArea
     });
   });
 
@@ -460,6 +478,7 @@ export const optimizePanelsMultipleImproved = async (
       const originalPanel = panelMap.get(rect.id!)!;
       return {
         ...originalPanel,
+        id: rect.id!, // Use the unique ID from rect
         x: rect.x || 0,
         y: rect.y || 0,
         width: originalPanel.width,
@@ -477,7 +496,8 @@ export const optimizePanelsMultipleImproved = async (
       stockPanel: { ...stockPanel, id: `${stockPanel.id}-${index}` },
       panels: placedPanels,
       efficiency: bin.efficiency,
-      wasteArea: bin.width * bin.height - bin.usedArea
+      wasteArea: bin.width * bin.height - bin.usedArea,
+      usedArea: bin.usedArea
     });
   });
 

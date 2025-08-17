@@ -18,6 +18,7 @@ export interface StockPanel {
   color: string;
   price: number;
   stock: number;
+  thickness?: number;
 }
 
 export interface OptimizedResult {
@@ -25,6 +26,7 @@ export interface OptimizedResult {
   panels: PlacedPanel[];
   efficiency: number;
   wasteArea: number;
+  usedArea: number;
 }
 
 export interface PlacedPanel extends Panel {
@@ -32,6 +34,8 @@ export interface PlacedPanel extends Panel {
   y: number;
   rotated: boolean;
   grain?: 'NONE' | 'LENGTH' | 'WIDTH' | 'HORIZONTAL' | 'VERTICAL';
+  thickness?: number;
+  label?: string;
 }
 
 export interface CuttingGuide {
