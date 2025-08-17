@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User } from 'lucide-react';
+import { Settings, Menu, User, ChevronDown } from 'lucide-react';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -64,8 +64,10 @@ const Header: React.FC<HeaderProps> = ({
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+  const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const convertMenuRef = useRef<HTMLDivElement>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -146,6 +148,23 @@ const Header: React.FC<HeaderProps> = ({
     }
     setIsProfilePopupOpen(!isProfilePopupOpen);
   };
+
+  // 컨버팅 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (convertMenuRef.current && !convertMenuRef.current.contains(event.target as Node)) {
+        setIsConvertMenuOpen(false);
+      }
+    };
+
+    if (isConvertMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isConvertMenuOpen]);
 
   return (
     <header className={styles.header}>
@@ -305,25 +324,53 @@ const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* CNC 옵티마이저 버튼 */}
-          <button 
-            className={styles.convertButton} 
-            onClick={() => {
-              console.log('CNC 옵티마이저 버튼 클릭됨');
-              navigate('/cnc-optimizer');
-            }}
-            style={{ marginRight: '8px' }}
-          >
-            컷팅 옵티마이저
-          </button>
-
-          {onConvert && (
-            <button className={styles.convertButton} onClick={onConvert}>
-              도면 편집기
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <polyline points="9,18 15,12 9,6" stroke="currentColor" strokeWidth="2"/>
-              </svg>
+          <div className={styles.convertButtonContainer} ref={convertMenuRef}>
+            <button 
+              className={styles.convertButton} 
+              onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
+            >
+              컨버팅
+              <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
-          )}
+            
+            {isConvertMenuOpen && (
+              <div className={styles.dropdownMenu}>
+                <button 
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    console.log('CNC 옵티마이저 버튼 클릭됨');
+                    navigate('/cnc-optimizer');
+                    setIsConvertMenuOpen(false);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                    <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  컷팅 옵티마이저
+                </button>
+                
+                {onConvert && (
+                  <button 
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      onConvert();
+                      setIsConvertMenuOpen(false);
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                      <rect x="3" y="3" width="18" height="18" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    도면 편집기
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           {user ? (
             <>

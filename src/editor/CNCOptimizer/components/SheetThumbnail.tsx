@@ -122,6 +122,15 @@ export default function SheetThumbnail({
       ctx.strokeRect(x, y, width, height);
     });
     
+    // 재질 표시 (좌측 상단)
+    ctx.save();
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(result.stockPanel.material || 'PB', 6, 6);
+    ctx.restore();
+    
     // 효율성 뱃지
     if (result.efficiency > 0) {
       ctx.save();
@@ -151,10 +160,12 @@ export default function SheetThumbnail({
 
   // Get panel thickness (assuming all panels have same thickness)
   const thickness = result.panels.length > 0 ? result.panels[0].thickness : 18;
+  // Get material from stockPanel
+  const material = result.stockPanel.material || 'PB';
   
   return (
     <div className={styles.thumbnailWrapper}>
-      <div className={styles.thumbnailTitle}>시트 {index + 1} ({thickness}T)</div>
+      <div className={styles.thumbnailTitle}>시트 {index + 1} - {material} ({thickness}T)</div>
       <div
         className={`${styles.thumbnail} ${isActive ? styles.activeThumbnail : ''}`}
         onClick={onClick}

@@ -171,14 +171,14 @@ export const calculatePanelDetails = (
           const drawerBodyHeight = individualDrawerHeight - 30;
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness;
           
-          // 서랍 손잡이판
+          // 서랍 손잡이판 (도어와 같은 역할이므로 PET 재질)
           panels.push({
             id: `panel-${panelId++}`,
             name: `${moduleData.name} - 서랍${drawerNum} 손잡이판`,
             width: customWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,  // 18mm
-            material: 'PB',
+            material: 'PET',  // 서랍 손잡이판은 PET 재질
             color: 'MW',
             quantity: 1,
             grain: 'VERTICAL'  // 서랍도 세로 결방향
@@ -363,7 +363,7 @@ export const calculatePanelDetails = (
     });
   }
   
-  // 도어 패널
+  // 도어 패널 (PET 재질)
   if (hasDoor) {
     const doorGap = 2;
     
@@ -375,7 +375,7 @@ export const calculatePanelDetails = (
         width: doorWidth,
         height: height - doorGap * 2,
         thickness: basicThickness,  // 18mm
-        material: 'PB',
+        material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1
       });
@@ -385,7 +385,7 @@ export const calculatePanelDetails = (
         width: doorWidth,
         height: height - doorGap * 2,
         thickness: basicThickness,  // 18mm
-        material: 'PB',
+        material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1
       });
@@ -396,7 +396,7 @@ export const calculatePanelDetails = (
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
         thickness: basicThickness,  // 18mm
-        material: 'PB',
+        material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1
       });

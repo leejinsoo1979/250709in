@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OptimizedResult } from '../types';
+import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall } from 'lucide-react';
+import { useCNCStore } from '../store';
 import styles from './CuttingLayoutPreview2.module.css';
 
 interface CuttingLayoutPreview2Props {
@@ -21,6 +23,7 @@ interface CuttingLayoutPreview2Props {
     totalSheets: number;
     onOptimize: () => void;
     isOptimizing: boolean;
+    stock?: any[];
   };
 }
 
@@ -41,9 +44,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // 시트가 세로형인지 확인 (height > width)
+  const isPortraitSheet = result && result.stockPanel.height > result.stockPanel.width;
+  
   // 외부 상태가 있으면 사용, 없으면 내부 상태 사용
+  // 기본적으로 -90도 회전하여 가로로 표시 (모든 시트를 가로보기로)
   const [internalScale, setInternalScale] = useState(1);
-  const [internalRotation, setInternalRotation] = useState(0);
+  const [internalRotation, setInternalRotation] = useState(-90); // 항상 가로보기를 기본으로
   const [internalOffset, setInternalOffset] = useState({ x: 0, y: 0 });
   
   const scale = externalScale ?? internalScale;
@@ -57,6 +64,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const [hoveredPanelId, setHoveredPanelId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  // Font size scale
+  const [fontScale, setFontScale] = useState(1);
+  
+  // Toggle ruler display
+  const [showRuler, setShowRuler] = useState(false);
+  
+  // Get settings from store
+  const { settings, setSettings } = useCNCStore();
 
   // Drawing function
   const draw = () => {
@@ -188,65 +204,60 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       ctx.restore();
     }
     
-    // Draw dimensions while still in panel coordinate system (without guide lines)
+    // 패널을 그리기 위해 다시 변환 적용 (치수 표기도 시트와 함께 움직이도록)
+    // 이미 변환이 적용된 상태이므로 계속 진행
+    
+    // Draw dimensions - 시트와 함께 움직이고 크기도 같이 변경
     ctx.save();
-    // Enable text anti-aliasing
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = `bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = '#1f2937'; // 더 진한 색상으로 변경
+    const fontSize = Math.max(32 * fontScale / scale, 24 * fontScale); // fontScale 적용
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
     ctx.textAlign = 'center';
     
-    const dimOffset = 50;
+    const dimOffset = 20 / (baseScale * scale); // 간격 줄임 (45 → 20)
     
-    // Top dimension text
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(
-      `${result.stockPanel.width} mm`,
-      offsetX + result.stockPanel.width / 2,
-      offsetY - dimOffset
-    );
-    
-    // Left dimension text (rotated)
-    ctx.save();
-    ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
-    // 전체 회전이 -90도일 때는 반대로 회전
+    // 가로 모드일 때 (rotation === -90) 텍스트를 180도 회전
     if (rotation === -90) {
-      ctx.rotate(Math.PI / 2);  // 시계 방향으로 90도
+      // Top dimension (W 치수 - 1220) - 180도 회전
+      ctx.save();
+      ctx.translate(offsetX + result.stockPanel.width / 2, offsetY - dimOffset);
+      ctx.rotate(Math.PI); // 180도 회전
+      ctx.textBaseline = 'top';  // bottom을 top으로 변경하여 텍스트가 정상적으로 보이도록
+      ctx.fillText(`${result.stockPanel.width}mm`, 0, 0);
+      ctx.restore();
+      
+      // Left dimension (L 치수) - 90도 회전 (읽기 쉽게)
+      ctx.save();
+      ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
+      ctx.rotate(Math.PI / 2); // 90도 회전
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${result.stockPanel.height}mm`, 0, 0);
+      ctx.restore();
     } else {
-      ctx.rotate(-Math.PI / 2); // 반시계 방향으로 90도
+      // 세로 모드일 때 (기본)
+      // Top dimension
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(
+        `${result.stockPanel.width}mm`,
+        offsetX + result.stockPanel.width / 2,
+        offsetY - dimOffset
+      );
+      
+      // Left dimension (rotated)
+      ctx.save();
+      ctx.translate(offsetX - dimOffset, offsetY + result.stockPanel.height / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(
+        `${result.stockPanel.height}mm`,
+        0, 0
+      );
+      ctx.restore();
     }
-    ctx.textBaseline = 'middle';
-    ctx.fillText(
-      `${result.stockPanel.height} mm`,
-      0, 0
-    );
-    ctx.restore();
     
     ctx.restore();
 
-    // Draw grid
-    ctx.save();
-    ctx.strokeStyle = '#f3f4f6';
-    ctx.lineWidth = 0.5 / (baseScale * scale);
-    ctx.setLineDash([5 / (baseScale * scale), 5 / (baseScale * scale)]);
-    
-    // Vertical grid lines (every 100mm)
-    for (let x = 100; x < result.stockPanel.width; x += 100) {
-      ctx.beginPath();
-      ctx.moveTo(offsetX + x, offsetY);
-      ctx.lineTo(offsetX + x, offsetY + result.stockPanel.height);
-      ctx.stroke();
-    }
-    
-    // Horizontal grid lines (every 100mm)
-    for (let y = 100; y < result.stockPanel.height; y += 100) {
-      ctx.beginPath();
-      ctx.moveTo(offsetX, offsetY + y);
-      ctx.lineTo(offsetX + result.stockPanel.width, offsetY + y);
-      ctx.stroke();
-    }
-    ctx.restore();
+    // Grid removed - no more grid lines
 
     // Material colors with theme integration
     const themeColor = getComputedStyle(document.documentElement)
@@ -257,6 +268,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const materialColors: { [key: string]: { fill: string; stroke: string } } = {
       'PB': { fill: `hsl(${themeColor} / 0.08)`, stroke: `hsl(${themeColor} / 0.5)` },
       'MDF': { fill: `hsl(${themeColor} / 0.10)`, stroke: `hsl(${themeColor} / 0.6)` },
+      'PET': { fill: `hsl(${themeColor} / 0.15)`, stroke: `hsl(${themeColor} / 0.8)` },
       'PLY': { fill: `hsl(${themeColor} / 0.12)`, stroke: `hsl(${themeColor} / 0.7)` },
       'HPL': { fill: `hsl(${themeColor} / 0.14)`, stroke: `hsl(${themeColor} / 0.8)` },
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
@@ -293,37 +305,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       ctx.lineWidth = (isHighlighted ? 3 : isHovered ? 2 : 1.5) / (baseScale * scale);
       ctx.strokeRect(x, y, width, height);
 
-      // Grain direction
-      if (panel.grain && panel.grain !== 'NONE') {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.lineWidth = 0.5;
-        
-        if (panel.grain === 'HORIZONTAL' || panel.grain === 'LENGTH') {
-          // Horizontal grain lines
-          for (let i = 1; i <= 3; i++) {
-            const lineY = y + height * i / 4;
-            ctx.beginPath();
-            ctx.moveTo(x + 10, lineY);
-            ctx.lineTo(x + width - 10, lineY);
-            ctx.stroke();
-          }
-          // Arrow
-          drawArrow(ctx, x + width - 25, y + height / 2, x + width - 10, y + height / 2);
-        } else {
-          // Vertical grain lines
-          for (let i = 1; i <= 3; i++) {
-            const lineX = x + width * i / 4;
-            ctx.beginPath();
-            ctx.moveTo(lineX, y + 10);
-            ctx.lineTo(lineX, y + height - 10);
-            ctx.stroke();
-          }
-          // Arrow
-          drawArrow(ctx, x + width / 2, y + height - 25, x + width / 2, y + height - 10);
-        }
-        ctx.restore();
-      }
+      // Grain direction removed - no grain lines
 
       // Rotation indicator
       if (panel.rotated) {
@@ -345,128 +327,151 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
-      // Labels - 치수만 표시 (줌에 따라 크기 조절)
+      // Labels - 패널 이름을 중앙에, 치수는 가장자리에 표시
       if (showLabels && width > 20 && height > 20) {
         ctx.save();
         // Enable text anti-aliasing
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.fillStyle = '#333';
+        
+        // 패널 중앙에 이름 표시
+        if (panel.name) {
+          ctx.save();
+          ctx.fillStyle = '#9ca3af'; // 더 흐린 회색으로 변경
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          // 가로 모드일 때 텍스트를 시계방향 90도 회전
+          if (rotation === -90) {
+            ctx.save();
+            ctx.translate(x + width / 2, y + height / 2);
+            ctx.rotate(Math.PI / 2); // 시계방향 90도 회전
+            
+            let fontSize = 32 * fontScale;
+            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            ctx.fillText(panel.name, 0, 0);
+            
+            ctx.restore();
+          } else {
+            let fontSize = 32 * fontScale;
+            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            
+            // 패널이 좁으면 텍스트를 회전시킴
+            const nameWidth = ctx.measureText(panel.name).width;
+            if (nameWidth > width * 0.9 && height > width) {
+              // 세로로 긴 패널 - 텍스트를 90도 회전
+              ctx.save();
+              ctx.translate(x + width / 2, y + height / 2);
+              ctx.rotate(-Math.PI / 2);
+              ctx.fillText(panel.name, 0, 0);
+              ctx.restore();
+            } else {
+              ctx.fillText(panel.name, x + width / 2, y + height / 2);
+            }
+          }
+          ctx.restore();
+        }
+        
+        // 치수 텍스트만 표시 (선 없이)
+        ctx.save();
+        ctx.fillStyle = '#111827'; // 더 진한 색상으로 변경
+        const fontSize = 32 * fontScale; // 크기 더 증가 (24 -> 32)
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // 회전 여부와 관계없이 항상 원래 크기를 표시 (두께 포함)
-        const thickness = panel.thickness || 18;
-        const dimensionText = `${Math.round(panel.width)} × ${Math.round(panel.height)} × ${thickness}T`;
-        
-        // 텍스트가 패널에 맞는지 확인 - 기본 크기를 28px로 증가
-        ctx.font = `bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        const textWidth = ctx.measureText(dimensionText).width;
-        
-        // 패널이 좁으면 텍스트를 회전시킴
-        if (textWidth > width * 0.9 && height > width) {
-          // 세로로 긴 패널 - 텍스트를 90도 회전
-          ctx.save();
-          ctx.translate(x + width / 2, y + height / 2);
-          ctx.rotate(-Math.PI / 2);
-          
-          // 회전 후 텍스트가 맞는지 다시 확인하고 크기 조정
-          let fontSize = 28;
-          ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-          let rotatedTextWidth = ctx.measureText(dimensionText).width;
-          
-          while (rotatedTextWidth > height * 0.9 && fontSize > 14) {
-            fontSize -= 2;
-            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-            rotatedTextWidth = ctx.measureText(dimensionText).width;
-          }
-          
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(dimensionText, 0, -5);
-          
-          // 패널명 (더 작은 크기로)
-          if (panel.name && fontSize > 10) {
-            ctx.font = `${fontSize * 0.6}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-            ctx.fillStyle = '#666';
-            ctx.textBaseline = 'top';
-            ctx.fillText(panel.name, 0, 5);
-          }
-          
-          ctx.restore();
-        } else {
-          // 일반적인 경우 - 텍스트 크기를 패널 너비에 맞춤
-          let fontSize = 28;
-          ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-          let normalTextWidth = ctx.measureText(dimensionText).width;
-          
-          while (normalTextWidth > width * 0.9 && fontSize > 14) {
-            fontSize -= 2;
-            ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-            normalTextWidth = ctx.measureText(dimensionText).width;
-          }
+        // L방향 치수 (패널 중앙 상단) - 항상 panel.width 표시
+        if (width > 50) {
+          const widthText = `${Math.round(panel.width)}`;
+          const textY = y + 35; // 패널 상단에서 35px 아래
           
           // 치수 텍스트
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(dimensionText, x + width / 2, y + height / 2 - 5);
-          
-          // 패널명 (더 작은 크기로)
-          if (panel.name && fontSize > 10) {
-            ctx.font = `${fontSize * 0.6}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-            ctx.fillStyle = '#666';
-            ctx.textBaseline = 'top';
-            
-            // 긴 이름은 잘라서 표시
-            let displayName = panel.name;
-            let nameWidth = ctx.measureText(displayName).width;
-            while (nameWidth > width * 0.9 && displayName.length > 10) {
-              displayName = displayName.slice(0, -1);
-              nameWidth = ctx.measureText(displayName + '...').width;
-            }
-            if (displayName !== panel.name) {
-              displayName += '...';
-            }
-            
-            ctx.fillText(displayName, x + width / 2, y + height / 2 + 5);
+          if (rotation === -90) {
+            // 가로보기일 때 L방향은 180도 회전
+            ctx.save();
+            ctx.translate(x + width / 2, textY);
+            ctx.rotate(Math.PI); // 180도 회전
+            ctx.fillText(widthText, 0, 0);
+            ctx.restore();
+          } else {
+            // 세로보기일 때는 그대로
+            ctx.fillText(widthText, x + width / 2, textY);
           }
         }
         
+        // W방향 치수 (패널 중앙 왼쪽) - 항상 panel.height 표시
+        if (height > 50) {
+          const heightText = `${Math.round(panel.height)}`;
+          const textX = x + 35; // 패널 왼쪽에서 35px 오른쪽
+          
+          // 치수 텍스트
+          ctx.save();
+          ctx.translate(textX, y + height / 2);
+          
+          if (rotation === -90) {
+            // 가로보기일 때 W방향은 시계방향 90도
+            ctx.rotate(Math.PI / 2); // 시계방향 90도
+          } else {
+            // 세로보기일 때는 반시계방향 90도
+            ctx.rotate(-Math.PI / 2);
+          }
+          
+          ctx.fillText(heightText, 0, 0);
+          ctx.restore();
+        }
+        
+        ctx.restore();
         ctx.restore();
       }
     });
 
     ctx.restore(); // Restore main transformation
 
-    // Statistics badge
+    // Statistics badge and info - 회전과 관계없이 항상 정상 위치에
     const efficiency = result.efficiency.toFixed(1);
     const wasteArea = (result.wasteArea / 1000000).toFixed(2);
     
-    // Efficiency badge
+    // Efficiency badge - 우측 상단 모서리에 더 가깝게
     ctx.save();
-    const badgeX = canvasWidth - 100;
-    const badgeY = 20; // Always same position since canvas is adjusted for header
+    const badgeWidth = 70;
+    const badgeHeight = 24;
+    const badgeX = canvasWidth - badgeWidth - 10; // 우측에서 10px 여백만
+    const badgeY = headerHeight + 10; // 헤더 아래 10px만
     
-    // Badge background
+    // Badge background with shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
+    
     const effColor = result.efficiency > 80 ? '#10b981' : 
                      result.efficiency > 60 ? '#f59e0b' : '#ef4444';
     ctx.fillStyle = effColor;
-    ctx.roundRect(badgeX, badgeY, 70, 24, 12);
+    ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 8);
     ctx.fill();
+    
+    // Reset shadow for text
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
     
     // Badge text
     ctx.fillStyle = 'white';
     ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${efficiency}%`, badgeX + 35, badgeY + 12);
+    ctx.fillText(`${efficiency}%`, badgeX + badgeWidth/2, badgeY + badgeHeight/2);
     ctx.restore();
 
-    // Info text
+    // Info text - 항상 좌측 하단
     ctx.save();
     ctx.fillStyle = '#6b7280';
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(`Panels: ${result.panels.length}`, 20, canvasHeight - 40);
-    ctx.fillText(`Waste: ${wasteArea} m²`, 20, canvasHeight - 25);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`Panels: ${result.panels.length}`, 20, canvasHeight - 25);
+    ctx.fillText(`Waste: ${wasteArea} m²`, 20, canvasHeight - 10);
     ctx.restore();
   };
 
@@ -480,10 +485,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 시트가 변경될 때 항상 가로보기로 설정
+  useEffect(() => {
+    if (result && !externalRotation) { // 외부에서 rotation을 제어하지 않을 때만
+      // 항상 가로보기(-90도)로 설정
+      setInternalRotation(-90);
+    }
+  }, [result?.stockPanel.id]); // result의 id가 변경될 때만 실행
+
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
-  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation]);
+  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale]);
 
   // Handle wheel zoom with mouse position as center
   const handleWheel = (e: React.WheelEvent) => {
@@ -553,7 +566,57 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const handleReset = () => {
     setScale(1);
     setOffset({ x: 0, y: 0 });
-    setRotation(0);
+    setRotation(-90); // 리셋 시에도 가로보기를 기본으로
+  };
+
+  // Handle fit to screen
+  const handleFitToScreen = () => {
+    if (!result || !containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height - 80; // 헤더바 높이 제외
+    
+    const padding = 40;
+    const maxWidth = containerWidth - padding * 2;
+    const maxHeight = containerHeight - padding * 2;
+    
+    // 현재 회전 상태에 따른 크기
+    const rotatedWidth = rotation % 180 === 0 ? result.stockPanel.width : result.stockPanel.height;
+    const rotatedHeight = rotation % 180 === 0 ? result.stockPanel.height : result.stockPanel.width;
+    
+    const scaleX = maxWidth / rotatedWidth;
+    const scaleY = maxHeight / rotatedHeight;
+    const fitScale = Math.min(scaleX, scaleY, 1);
+    
+    setScale(fitScale);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  // Handle zoom in
+  const handleZoomIn = () => {
+    const newScale = Math.min(scale * 1.2, 10);
+    setScale(newScale);
+  };
+
+  // Handle zoom out
+  const handleZoomOut = () => {
+    const newScale = Math.max(scale * 0.8, 0.1);
+    setScale(newScale);
+  };
+  
+  // Handle font size increase
+  const handleFontIncrease = () => {
+    const newScale = Math.min(fontScale * 1.2, 2);
+    setFontScale(newScale);
+    draw(); // Redraw with new font size
+  };
+  
+  // Handle font size decrease
+  const handleFontDecrease = () => {
+    const newScale = Math.max(fontScale * 0.8, 0.5);
+    setFontScale(newScale);
+    draw(); // Redraw with new font size
   };
 
   // Helper function to draw arrow
@@ -628,10 +691,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
   return (
     <div ref={containerRef} className={`${styles.container} panel-clickable`}>
-      {sheetInfo && (
+      {sheetInfo && result && (
         <div className={styles.headerBar}>
           <span className={styles.sheetInfo}>
-            시트 {sheetInfo.currentIndex + 1} / {sheetInfo.totalSheets}
+            {(() => {
+              // stock 정보에서 매칭되는 원자재 찾기
+              const matchingStock = sheetInfo.stock?.find(s => 
+                s.material === result.stockPanel.material &&
+                s.width === result.stockPanel.width &&
+                s.length === result.stockPanel.height
+              );
+              const thickness = matchingStock?.thickness || 18;
+              const stockName = result.stockPanel.id || `${result.stockPanel.width}x${result.stockPanel.height}`;
+              
+              return `시트 ${sheetInfo.currentIndex + 1} / ${sheetInfo.totalSheets} - ${result.stockPanel.material || 'PB'} ${stockName} (${thickness}T)`;
+            })()}
           </span>
           <button
             className={styles.optimizeButton}
@@ -645,6 +719,109 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           </button>
         </div>
       )}
+      
+      {/* 툴바 추가 */}
+      <div className={styles.toolbar}>
+        <div className={styles.toolGroup}>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleZoomOut}
+            title="축소 (Zoom Out)"
+          >
+            <ZoomOut size={18} />
+          </button>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleZoomIn}
+            title="확대 (Zoom In)"
+          >
+            <ZoomIn size={18} />
+          </button>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleReset}
+            title="초기화 (Reset View)"
+          >
+            <Home size={18} />
+          </button>
+        </div>
+        
+        <div className={styles.toolGroup}>
+          <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
+        </div>
+        
+        <div className={styles.toolGroup}>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleFitToScreen}
+            title="화면에 맞추기 (Fit to Screen)"
+          >
+            <Maximize size={18} />
+          </button>
+        </div>
+        
+        <div className={styles.toolGroup}>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleFontDecrease}
+            title="글자 크기 줄이기"
+          >
+            <Type size={16} />
+          </button>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleFontIncrease}
+            title="글자 크기 키우기"
+          >
+            <ALargeSmall size={18} />
+          </button>
+        </div>
+        
+        <div className={styles.toolGroup}>
+          <button 
+            className={styles.toolButton} 
+            onClick={handleRotate}
+            title="회전 (Rotate)"
+          >
+            <RotateCw size={18} />
+          </button>
+          <button 
+            className={`${styles.toolButton} ${showRuler ? styles.active : ''}`}
+            onClick={() => setShowRuler(!showRuler)}
+            title="자 (Ruler)"
+          >
+            <Ruler size={18} />
+          </button>
+        </div>
+        
+        {/* 최적화 타입 선택 - 오른쪽 끝에 배치 */}
+        <div className={styles.toolGroup} style={{ marginLeft: 'auto', borderLeft: '1px solid #e5e7eb', paddingLeft: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input 
+                type="radio" 
+                name="optimizationType" 
+                value="cnc"
+                checked={settings.optimizationType === 'cnc'}
+                onChange={() => setSettings({ optimizationType: 'cnc' })}
+                style={{ accentColor: 'hsl(var(--theme))' }}
+              />
+              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>CNC (자유 재단)</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input 
+                type="radio" 
+                name="optimizationType" 
+                value="cutsaw"
+                checked={settings.optimizationType === 'cutsaw'}
+                onChange={() => setSettings({ optimizationType: 'cutsaw' })}
+                style={{ accentColor: 'hsl(var(--theme))' }}
+              />
+              <span style={{ fontSize: '12px', fontWeight: '500', color: '#4b5563' }}>컷쏘 (길로틴 컷)</span>
+            </label>
+          </div>
+        </div>
+      </div>
       <canvas 
         ref={canvasRef}
         className={`${styles.canvas} panel-clickable`}
@@ -660,34 +837,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
-      {result && (
-        <div className={styles.viewControls}>
-          <button
-            className={styles.rotateButton}
-            onClick={handleRotate}
-            title={rotation === 0 ? "반시계 90° 회전" : "원래대로"}
-            style={{ 
-              transform: rotation === -90 ? 'rotate(-90deg)' : 'none',
-              transition: 'transform 0.3s ease'
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M23 4v6h-6M1 20v-6h6" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          </button>
-          <button
-            className={styles.resetButton}
-            onClick={handleReset}
-            title="뷰 초기화"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-            </svg>
-          </button>
-        </div>
-      )}
       {!result && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📐</div>

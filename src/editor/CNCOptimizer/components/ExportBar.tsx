@@ -56,14 +56,11 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
     setIsOpen(false);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (optimizationResults.length === 0) {
       alert('최적화 결과가 없습니다. 먼저 최적화를 실행하세요.');
       return;
     }
-    
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `cutting_layout_${timestamp}.pdf`;
     
     const panelsArray = Array.isArray(panels) ? panels : [];
     
@@ -75,7 +72,8 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
       needsConfiguratorView: true
     };
     
-    PDFExporter.exportToPDF(optimizationResults, furnitureData, filename);
+    // ZIP 파일로 내보내기 (전체 PDF + 개별 시트 PDF들)
+    await PDFExporter.exportToZIP(optimizationResults, furnitureData);
     setIsOpen(false);
   };
 
@@ -161,8 +159,8 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
           >
             <FileText size={16} />
             <div className={styles.menuItemContent}>
-              <span className={styles.menuItemTitle}>종합 리포트 (PDF)</span>
-              <span className={styles.menuItemDesc}>컷팅 레이아웃 및 최적화 결과</span>
+              <span className={styles.menuItemTitle}>종합 리포트 (ZIP)</span>
+              <span className={styles.menuItemDesc}>전체 PDF + 개별 시트 PDF + CSV + 요약</span>
             </div>
             <span className={styles.badge}>추천</span>
           </button>

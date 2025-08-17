@@ -103,6 +103,7 @@ export default function StockTable(){
                     >
                       <option value="PB">PB</option>
                       <option value="MDF">MDF</option>
+                      <option value="PET">PET</option>
                       <option value="PLY">PLY</option>
                       <option value="HPL">HPL</option>
                       <option value="LPM">LPM</option>

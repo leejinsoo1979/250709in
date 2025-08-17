@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import JSZip from 'jszip';
 import { OptimizedResult, Panel } from '../types';
 
 interface FurnitureData {
@@ -25,6 +26,10 @@ export class PDFExporter {
       format: 'a3'
     });
     
+    // 한글 폰트 처리를 위한 설정
+    // jsPDF는 기본적으로 한글을 지원하지 않으므로 영문으로 대체
+    this.pdf.setFont('helvetica');
+    
     this.pageWidth = this.pdf.internal.pageSize.getWidth();
     this.pageHeight = this.pdf.internal.pageSize.getHeight();
     
@@ -36,10 +41,10 @@ export class PDFExporter {
     }
   }
   
-  private drawSheet(result: OptimizedResult, sheetNumber: number) {
-    // Add new page for all sheets except the first one
-    // First sheet uses the initial page created by jsPDF
-    if (sheetNumber > 0) {
+  private drawSheet(result: OptimizedResult, sheetNumber: number, addNewPage: boolean = true) {
+    // Add new page only if requested
+    // This allows more flexible usage
+    if (addNewPage && sheetNumber > 0) {
       this.pdf.addPage();
     }
     
@@ -133,9 +138,11 @@ export class PDFExporter {
         this.pdf.setFontSize(6);
         this.pdf.setTextColor(50, 50, 50);
         
-        // Panel name (if available)
+        // Panel name (if available) - ASCII 문자만 표시
         if (panel.name) {
-          const nameText = panel.name.length > 20 ? panel.name.substring(0, 17) + '...' : panel.name;
+          // 한글이 포함된 경우 패널 ID로 대체
+          const cleanName = /^[\x00-\x7F]*$/.test(panel.name) ? panel.name : `Panel_${panel.id}`;
+          const nameText = cleanName.length > 20 ? cleanName.substring(0, 17) + '...' : cleanName;
           const nameWidth = this.pdf.getTextWidth(nameText);
           this.pdf.text(
             nameText,
@@ -175,15 +182,15 @@ export class PDFExporter {
       offsetY - 5
     );
     
-    // Height dimension (rotated text)
-    this.pdf.save();
+    // Height dimension (written horizontally next to the sheet)
     const heightText = `${result.stockPanel.height} mm`;
-    const textX = offsetX - 15;
-    const textY = offsetY + (result.stockPanel.height * scale) / 2;
-    this.pdf.translate(textX, textY);
-    this.pdf.rotate(-Math.PI / 2);
-    this.pdf.text(heightText, 0, 0);
-    this.pdf.restore();
+    this.pdf.setFontSize(8);
+    // Write height dimension to the left of the sheet
+    this.pdf.text(
+      heightText,
+      offsetX - 35,
+      offsetY + (result.stockPanel.height * scale) / 2
+    );
     
     // Statistics at bottom
     this.pdf.setFontSize(8);
@@ -257,11 +264,13 @@ export class PDFExporter {
       }
       
       const panelName = key.split('_')[0];
+      // 한글이 포함된 경우 영문으로 대체
+      const cleanPanelName = /^[\x00-\x7F]*$/.test(panelName) ? panelName : `Panel_${rowIndex}`;
       
       xPos = offsetX;
       const rowData = [
         data.count.toString(),
-        panelName.length > 20 ? panelName.substring(0, 17) + '...' : panelName,
+        cleanPanelName.length > 20 ? cleanPanelName.substring(0, 17) + '...' : cleanPanelName,
         Math.round(data.width).toString(),
         Math.round(data.height).toString(),
         data.material
@@ -365,7 +374,7 @@ export class PDFExporter {
     // Add text in center of placeholder
     this.pdf.setTextColor(150, 150, 150);
     this.pdf.setFontSize(12);
-    const text = 'Configurator 페이지에서 3D 뷰를 확인하세요';
+    const text = 'View 3D visualization in Configurator';
     const textWidth = this.pdf.getTextWidth(text);
     this.pdf.text(text, this.margin + (180 - textWidth) / 2, yPos + 50);
     
@@ -459,8 +468,12 @@ export class PDFExporter {
         
         // Row data
         xPos = this.margin;
+        // 한글이 포함된 경우 영문으로 대체
+        const cleanName = data.panel.name && /^[\x00-\x7F]*$/.test(data.panel.name) 
+          ? data.panel.name 
+          : `Panel_${data.panel.id}`;
         const rowData = [
-          data.panel.name || `Panel ${data.panel.id}`,
+          cleanName,
           Math.round(data.panel.width).toString(),
           Math.round(data.panel.height).toString(),
           data.panel.material,
@@ -507,24 +520,142 @@ export class PDFExporter {
     this.pdf.text(`Average Efficiency: ${avgEfficiency.toFixed(1)}%`, this.margin, yPos);
   }
 
+  private drawAllSheetsOnOnePage(results: OptimizedResult[]) {
+    // Title
+    this.pdf.setFontSize(16);
+    this.pdf.text(`Cutting Layout - Total ${results.length} Sheets`, this.margin, this.margin);
+    
+    // Calculate grid layout
+    const cols = Math.ceil(Math.sqrt(results.length));
+    const rows = Math.ceil(results.length / cols);
+    
+    // Calculate cell size
+    const cellWidth = (this.pageWidth - (this.margin * 2) - (cols - 1) * 5) / cols;
+    const cellHeight = (this.pageHeight - (this.margin * 2) - 30) / rows;
+    
+    // Draw each sheet in grid
+    results.forEach((result, index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      
+      const cellX = this.margin + col * (cellWidth + 5);
+      const cellY = this.margin + 30 + row * (cellHeight + 5);
+      
+      // Calculate scale for this sheet
+      const scaleX = (cellWidth - 10) / result.stockPanel.width;
+      const scaleY = (cellHeight - 20) / result.stockPanel.height;
+      const scale = Math.min(scaleX, scaleY, 0.15);
+      
+      // Sheet number and info
+      this.pdf.setFontSize(8);
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(`Sheet ${index + 1}`, cellX + 2, cellY - 2);
+      this.pdf.setFontSize(6);
+      this.pdf.text(`${result.panels.length} panels (${result.efficiency.toFixed(0)}%)`, cellX + 2, cellY + 3);
+      
+      const offsetX = cellX + 5;
+      const offsetY = cellY + 8;
+      
+      // Draw stock panel outline
+      this.pdf.setDrawColor(200, 200, 200);
+      this.pdf.setLineWidth(0.3);
+      this.pdf.rect(
+        offsetX,
+        offsetY,
+        result.stockPanel.width * scale,
+        result.stockPanel.height * scale
+      );
+      
+      // Material colors
+      const materialColors: { [key: string]: [number, number, number] } = {
+        'PB': [232, 245, 233],
+        'PET': [255, 248, 220],
+        'MDF': [255, 243, 224],
+        'PLY': [227, 242, 253],
+        'HPL': [243, 229, 245],
+        'LPM': [252, 228, 236]
+      };
+      
+      // Draw panels
+      result.panels.forEach(panel => {
+        const x = offsetX + (panel.x * scale);
+        const y = offsetY + (panel.y * scale);
+        const width = (panel.rotated ? panel.height : panel.width) * scale;
+        const height = (panel.rotated ? panel.width : panel.height) * scale;
+        
+        // Panel fill
+        const color = materialColors[panel.material] || [243, 244, 246];
+        this.pdf.setFillColor(color[0], color[1], color[2]);
+        this.pdf.rect(x, y, width, height, 'F');
+        
+        // Panel border
+        this.pdf.setDrawColor(150, 150, 150);
+        this.pdf.setLineWidth(0.1);
+        this.pdf.rect(x, y, width, height, 'S');
+      });
+      
+      // Stock dimensions
+      this.pdf.setFontSize(5);
+      this.pdf.setTextColor(100, 100, 100);
+      this.pdf.text(
+        `${result.stockPanel.width}x${result.stockPanel.height}`,
+        offsetX + (result.stockPanel.width * scale) / 2 - 8,
+        offsetY + result.stockPanel.height * scale + 3
+      );
+    });
+    
+    // Summary at bottom
+    const totalPanels = results.reduce((sum, r) => sum + r.panels.length, 0);
+    const avgEfficiency = results.reduce((sum, r) => sum + r.efficiency, 0) / results.length;
+    
+    this.pdf.setFontSize(9);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text(
+      `Total: ${totalPanels} panels across ${results.length} sheets | Average efficiency: ${avgEfficiency.toFixed(1)}%`,
+      this.margin,
+      this.pageHeight - 10
+    );
+  }
+  
   public addSheets(results: OptimizedResult[]) {
     console.log(`=== addSheets called with ${results.length} results ===`);
     
-    // Add cutting layout sheets first - 미리보기에 있는 모든 시트 추가
+    if (!results || results.length === 0) {
+      console.error('No results provided to addSheets');
+      return;
+    }
+    
+    // 1. First page: Draw all sheets on one page in grid layout
+    try {
+      this.drawAllSheetsOnOnePage(results);
+      console.log('All sheets drawn on one page');
+    } catch (error) {
+      console.error('Error drawing sheets:', error);
+    }
+    
+    // 2. Following pages: Draw each sheet in detail
     results.forEach((result, index) => {
-      console.log(`Adding sheet ${index + 1} of ${results.length}`);
-      this.drawSheet(result, index);
+      console.log(`Adding detailed sheet ${index + 1} of ${results.length}`);
+      try {
+        // Always add new page for detailed sheets (after overview page)
+        this.pdf.addPage();
+        // Don't add another page inside drawSheet
+        this.drawSheet(result, index, false);
+        console.log(`Detailed sheet ${index + 1} added successfully`);
+      } catch (error) {
+        console.error(`Error adding detailed sheet ${index + 1}:`, error);
+      }
     });
     
-    console.log('All sheets added, now adding furniture info page');
-    
-    // Add furniture information page
-    this.addFurnitureInfoPage();
-    
-    // Then add panel details page at the end
+    // 3. Last page: Add panel details table
     if (results.length > 0) {
       console.log('Adding panel details page');
-      this.addPanelDetailsPage(results);
+      try {
+        this.addPanelDetailsPage(results);
+        console.log('Panel details page added');
+      } catch (error) {
+        console.error('Error adding panel details page:', error);
+      }
     }
     
     console.log(`Total pages in PDF: ${this.pdf.getNumberOfPages()}`);
@@ -536,7 +667,7 @@ export class PDFExporter {
   
   public static exportToPDF(results: OptimizedResult[], furnitureData?: FurnitureData, filename?: string) {
     console.log('=== PDF Export ===');
-    console.log('Original sheets count:', results.length);
+    console.log('Total sheets to export:', results.length);
     
     // 결과가 없으면 경고
     if (!results || results.length === 0) {
@@ -545,38 +676,166 @@ export class PDFExporter {
       return;
     }
     
-    // 테스트: 1장만 있으면 강제로 3장으로 만들기
-    let finalResults = [...results];
-    if (results.length === 1) {
-      console.warn('Only 1 sheet found, creating test copies');
-      const baseSheet = results[0];
-      
-      // 2번째 시트 (동일한 패널들 복사)
-      const sheet2: OptimizedResult = {
-        ...baseSheet,
-        stockPanel: { ...baseSheet.stockPanel, id: 'sheet-2' },
-        panels: baseSheet.panels.map(p => ({ ...p }))
-      };
-      
-      // 3번째 시트 (동일한 패널들 복사)
-      const sheet3: OptimizedResult = {
-        ...baseSheet,
-        stockPanel: { ...baseSheet.stockPanel, id: 'sheet-3' },
-        panels: baseSheet.panels.map(p => ({ ...p }))
-      };
-      
-      finalResults = [baseSheet, sheet2, sheet3];
-      console.log('Created 3 test sheets from 1 original sheet');
-    }
-    
     // panels 데이터를 furnitureData에서 추출
     const panels = furnitureData?.panels || [];
     const exporter = new PDFExporter(Array.isArray(panels) ? panels : []);
     exporter.furnitureData = furnitureData;
     
-    // PDF에 추가
-    console.log(`Exporting ${finalResults.length} sheets to PDF`);
-    exporter.addSheets(finalResults);
+    // PDF에 모든 시트 추가
+    console.log(`Exporting ${results.length} sheets to PDF`);
+    exporter.addSheets(results);
     exporter.save(filename);
+  }
+  
+  // 개별 시트 PDF 생성 메서드 (가로 방향)
+  private static createIndividualSheetPDF(result: OptimizedResult, sheetNumber: number, panels?: Panel[]): jsPDF {
+    // 개별 시트는 가로(landscape) 방향으로 생성
+    const individualPdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a3'
+    });
+    
+    individualPdf.setFont('helvetica');
+    
+    // PDFExporter 인스턴스 생성하고 pdf 객체 교체
+    const exporter = new PDFExporter(panels);
+    exporter.pdf = individualPdf;
+    exporter.pageWidth = individualPdf.internal.pageSize.getWidth();
+    exporter.pageHeight = individualPdf.internal.pageSize.getHeight();
+    
+    // 개별 시트 그리기 (첫 페이지에)
+    exporter.drawSheet(result, sheetNumber, false);
+    
+    return individualPdf;
+  }
+  
+  // ZIP 파일로 내보내기 메서드
+  public static async exportToZIP(results: OptimizedResult[], furnitureData?: FurnitureData) {
+    console.log('=== ZIP Export with PDFs ===');
+    console.log('Total sheets to export:', results.length);
+    
+    // 결과가 없으면 경고
+    if (!results || results.length === 0) {
+      console.error('No optimization results to export');
+      alert('최적화 결과가 없습니다.');
+      return;
+    }
+    
+    const zip = new JSZip();
+    const timestamp = new Date().toISOString().slice(0, 10);
+    
+    try {
+      // 1. 전체 시트 PDF 생성 (모든 시트가 포함된 하나의 PDF)
+      console.log('Creating overview PDF with all sheets...');
+      const panels = furnitureData?.panels || [];
+      const validPanels = Array.isArray(panels) ? panels : [];
+      const overviewExporter = new PDFExporter(validPanels);
+      overviewExporter.furnitureData = furnitureData;
+      overviewExporter.addSheets(results);
+      const overviewBlob = overviewExporter.pdf.output('blob');
+      zip.file(`00_전체_시트_${timestamp}.pdf`, overviewBlob);
+      
+      // 2. 개별 시트 PDF들 생성 (가로 방향)
+      console.log('Creating individual sheet PDFs...');
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        const sheetNumber = i + 1;
+        
+        // 개별 시트 PDF 생성 (가로 방향)
+        const individualPdf = PDFExporter.createIndividualSheetPDF(result, i, validPanels);
+        
+        // PDF를 Blob으로 변환
+        const sheetBlob = individualPdf.output('blob');
+        const sheetFileName = `시트_${String(sheetNumber).padStart(2, '0')}_${result.stockPanel.material || 'PB'}_${result.stockPanel.width}x${result.stockPanel.height}.pdf`;
+        
+        zip.file(sheetFileName, sheetBlob);
+        console.log(`Added sheet ${sheetNumber} to ZIP`);
+      }
+      
+      // 3. 패널 목록 CSV 파일 추가 (보너스)
+      if (validPanels && validPanels.length > 0) {
+        const csvContent = PDFExporter.generatePanelCSV(validPanels);
+        zip.file(`패널_목록_${timestamp}.csv`, csvContent);
+      }
+      
+      // 4. 최적화 결과 요약 텍스트 파일 추가
+      const summaryContent = PDFExporter.generateSummary(results, furnitureData);
+      zip.file(`최적화_요약_${timestamp}.txt`, summaryContent);
+      
+      // ZIP 파일 생성 및 다운로드
+      console.log('Generating ZIP file...');
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 9 }
+      });
+      
+      console.log('ZIP file created, size:', zipBlob.size);
+      
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cutting_layout_${timestamp}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      console.log('ZIP file downloaded successfully');
+    } catch (error) {
+      console.error('Error creating ZIP file:', error);
+      console.error('Error stack:', error.stack);
+      alert(`ZIP 파일 생성 중 오류가 발생했습니다: ${error.message}`);
+    }
+  }
+  
+  // 패널 CSV 생성 헬퍼 메서드
+  private static generatePanelCSV(panels: any[]): string {
+    let csv = 'ID,이름,가로,세로,두께,재질,수량\n';
+    panels.forEach(panel => {
+      const name = panel.label || panel.name || `Panel_${panel.id}`;
+      csv += `${panel.id},"${name}",${panel.width},${panel.length || panel.height},${panel.thickness || 18},${panel.material || 'PB'},${panel.quantity || 1}\n`;
+    });
+    return csv;
+  }
+  
+  // 요약 정보 생성 헬퍼 메서드
+  private static generateSummary(results: OptimizedResult[], furnitureData?: FurnitureData): string {
+    const projectName = furnitureData?.projectName || 'Project';
+    const totalSheets = results.length;
+    const totalPanels = results.reduce((sum, r) => sum + r.panels.length, 0);
+    const avgEfficiency = results.reduce((sum, r) => sum + r.efficiency, 0) / results.length;
+    const totalWaste = results.reduce((sum, r) => sum + r.wasteArea, 0) / 1000000;
+    
+    let summary = `========================================\n`;
+    summary += `컷팅 최적화 결과 요약\n`;
+    summary += `========================================\n\n`;
+    summary += `프로젝트: ${projectName}\n`;
+    summary += `생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    summary += `----------------------------------------\n`;
+    summary += `전체 통계\n`;
+    summary += `----------------------------------------\n`;
+    summary += `총 시트 수: ${totalSheets}장\n`;
+    summary += `총 패널 수: ${totalPanels}개\n`;
+    summary += `평균 효율: ${avgEfficiency.toFixed(1)}%\n`;
+    summary += `총 폐기량: ${totalWaste.toFixed(2)} m²\n\n`;
+    summary += `----------------------------------------\n`;
+    summary += `시트별 상세\n`;
+    summary += `----------------------------------------\n`;
+    
+    results.forEach((result, index) => {
+      summary += `\n[시트 ${index + 1}]\n`;
+      summary += `원자재: ${result.stockPanel.material} ${result.stockPanel.width}x${result.stockPanel.height}mm\n`;
+      summary += `패널 수: ${result.panels.length}개\n`;
+      summary += `효율: ${result.efficiency.toFixed(1)}%\n`;
+      summary += `사용 면적: ${(result.usedArea / 1000000).toFixed(2)} m²\n`;
+      summary += `폐기 면적: ${(result.wasteArea / 1000000).toFixed(2)} m²\n`;
+    });
+    
+    return summary;
   }
 }

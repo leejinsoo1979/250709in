@@ -22,6 +22,8 @@ export interface StockSheet {
   material?: string;
 }
 
+export type OptimizationType = 'cnc' | 'cutsaw';
+
 export interface CutSettings {
   unit: Unit;
   kerf: number;
@@ -35,4 +37,5 @@ export interface CutSettings {
   edgeBanding?: boolean;
   considerGrain?: boolean;
   alignVerticalCuts?: boolean;
+  optimizationType?: OptimizationType;
 }

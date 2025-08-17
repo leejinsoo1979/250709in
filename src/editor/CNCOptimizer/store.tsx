@@ -34,7 +34,8 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     considerMaterial: true, 
     edgeBanding: false, 
     considerGrain: true,
-    alignVerticalCuts: true // 세로 컷팅 라인 정렬 기본값
+    alignVerticalCuts: true, // 세로 컷팅 라인 정렬 기본값
+    optimizationType: 'cnc' // 기본값: CNC 최적화
   });
 
   const setSettings = (k: Partial<CutSettings>) => setSettingsState(s => ({ ...s, ...k }));

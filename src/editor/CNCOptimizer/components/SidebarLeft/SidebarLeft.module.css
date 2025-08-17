@@ -51,12 +51,12 @@
   padding: 0;
   max-height: 300px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 /* 원자재 테이블 컨테이너는 더 작은 높이 */
 .stockTableContainer {
-  padding: 8px;
+  padding: 0; /* 패딩 제거하여 테이블이 상단에 붙도록 */
   max-height: 180px;
   overflow-y: auto;
   overflow-x: auto;
@@ -87,6 +87,7 @@
 
 .table {
   width: 100%;
+  min-width: 420px; /* 최소 너비 설정 */
   font-size: 11px;
   border-collapse: separate;
   border-spacing: 0;
@@ -96,41 +97,42 @@
 /* 패널 테이블 열 너비 최적화 */
 .table th:first-child,
 .table td:first-child {
-  width: 140px; /* 이름 - 가구명과 패널명이 모두 보이도록 증가 */
-  min-width: 140px;
+  width: 25%; /* 이름 - 비율로 설정하여 유연하게 */
+  min-width: 80px;
+  max-width: 120px;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  width: 90px; /* 치수 - 약간 줄임 */
+  width: 110px; /* 치수 - 충분한 공간 확보 */
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 38px; /* 두께 - 약간 줄임 */
+  width: 45px; /* 두께 */
   text-align: center;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 36px; /* 수량 - 약간 줄임 */
+  width: 40px; /* 수량 */
   text-align: center;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
-  width: 44px; /* 재질 - 약간 줄임 */
+  width: 50px; /* 재질 */
 }
 
 .table th:nth-child(6),
 .table td:nth-child(6) {
-  width: 32px; /* 결방향 - 약간 줄임 */
+  width: 35px; /* 결방향 */
   text-align: center;
 }
 
 .table th:last-child,
 .table td:last-child {
-  width: 22px; /* 삭제 - 약간 줄임 */
+  width: 24px; /* 삭제 */
   text-align: center;
 }
 
@@ -162,6 +164,14 @@
 }
 
 .table thead {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
+}
+
+/* 원자재 테이블의 헤더도 sticky로 설정 */
+.stockTable thead {
   position: sticky;
   top: 0;
   background: #f8f9fa;
@@ -233,8 +243,8 @@
 }
 
 .inputSmall {
-  width: 50px;
-  padding: 3px 4px;
+  width: 42px;
+  padding: 3px 2px;
   border: 1px solid #e0e0e0;
   background: white;
   font-size: 11px;
@@ -250,8 +260,8 @@
 }
 
 .inputTiny {
-  width: 40px;
-  padding: 3px 4px;
+  width: 32px;
+  padding: 3px 2px;
   border: 1px solid #e0e0e0;
   background: white;
   font-size: 11px;
@@ -502,30 +512,39 @@
 }
 
 .resetLink {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
 }
 
 .link {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: hsl(var(--theme) / 0.8);
-  font-size: 12px;
+  gap: 8px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  padding: 0;
+  padding: 8px 16px;
+  width: 100%;
+  justify-content: center;
 }
 
 .link:hover {
+  background: hsl(var(--theme) / 0.1);
+  border-color: hsl(var(--theme) / 0.3);
   color: hsl(var(--theme));
-  transform: translateX(2px);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .link svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }

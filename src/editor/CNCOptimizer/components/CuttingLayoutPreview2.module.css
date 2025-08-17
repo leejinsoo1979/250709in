@@ -44,6 +44,68 @@
   margin: 0;
 }
 
+/* 툴바 스타일 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.toolGroup:last-child {
+  border-right: none;
+}
+
+.toolButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+.toolButton:active {
+  transform: scale(0.95);
+}
+
+.toolButton.active {
+  background: hsl(var(--theme) / 0.1);
+  border-color: hsl(var(--theme) / 0.3);
+  color: hsl(var(--theme));
+}
+
+.zoomLevel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 45px;
+  text-align: center;
+}
+
 .viewControls {
   position: absolute;
   bottom: 20px;

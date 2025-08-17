@@ -37,6 +37,7 @@
     "@tarikjabiri/dxf": "^2.8.9",
     "@types/fabric": "^5.3.10",
     "@types/jspdf": "^1.3.3",
+    "@types/jszip": "^3.4.0",
     "clsx": "^2.1.1",
     "esbuild": "^0.25.6",
     "fabric": "^6.7.1",

@@ -113,7 +113,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: '안전선반 (칸막이)',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PB'  // 기본 재질
       });
     } else if (sections.length > 1) {
       // 다른 가구의 경우 중간 칸막이로 표시
@@ -121,7 +122,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: '중간 칸막이',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PB'  // 기본 재질
       });
     }
     
@@ -180,7 +182,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: `${sectionName} 좌측판`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PB'  // 기본 재질
       });
       
       // 섹션 우측판
@@ -188,7 +191,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: `${sectionName} 우측판`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PB'  // 기본 재질
       });
       
       // 섹션 상판 (마지막 섹션에만)
@@ -197,7 +201,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           name: `${sectionName} 상판`,
           width: innerWidth,
           depth: customDepth,
-          thickness: basicThickness
+          thickness: basicThickness,
+          material: 'PB'  // 기본 재질
         });
       }
       
@@ -208,7 +213,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           name: `${sectionName} 하판`,
           width: innerWidth,
           depth: customDepth,
-          thickness: basicThickness
+          thickness: basicThickness,
+          material: 'PB'  // 기본 재질
         });
       } else {
         // 상부섹션의 바닥판
@@ -216,7 +222,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           name: `${sectionName} 하판`,
           width: innerWidth,
           depth: customDepth - backPanelThickness - 17, // 안전선반과 같은 깊이
-          thickness: basicThickness
+          thickness: basicThickness,
+          material: 'PB'  // 기본 재질
         });
       }
       
@@ -227,7 +234,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: `${sectionName} 뒷판`,
         width: innerWidth + 10,
         height: Math.round(sectionHeightMm) + 10,
-        thickness: backPanelThickness
+        thickness: backPanelThickness,
+        material: 'MDF'  // 뒷판은 MDF 재질
       });
       if (section.type === 'drawer' && section.count) {
         // 서랍 개별 높이 계산 (DrawerRenderer.tsx 로직 참조)
@@ -247,12 +255,13 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
           }
           
-          // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE)
+          // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE) - PET 재질
           targetPanel.push({
             name: `${sectionName} 서랍${drawerNum} 손잡이판`,
             width: customWidth,
             height: individualDrawerHeight,
-            thickness: drawerHandleThickness
+            thickness: drawerHandleThickness,
+            material: 'PET'  // 서랍 손잡이판은 PET 재질
           });
           
           // 서랍 본체 크기 계산 (DrawerRenderer 참조)
@@ -265,7 +274,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍${drawerNum} 앞판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
           
           // 서랍 뒷판
@@ -273,7 +283,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍${drawerNum} 뒷판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
           
           // 서랍 좌측판
@@ -281,7 +292,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍${drawerNum} 좌측판`,
             depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
           
           // 서랍 우측판
@@ -289,7 +301,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍${drawerNum} 우측판`,
             depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
           
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
@@ -297,7 +310,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍${drawerNum} 바닥판`,
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
-            thickness: drawerBottomThickness
+            thickness: drawerBottomThickness,
+            material: 'MDF'  // 서랍 바닥판은 MDF 재질
           });
         }
         
@@ -307,7 +321,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 서랍 칸막이 ${i}`,
             width: innerWidth,
             depth: customDepth - backPanelThickness - 17, // 뒷판 공간 고려
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 기본 재질
           });
         }
       } else if (section.type === 'hanging') {
@@ -319,7 +334,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
               name: `${sectionName} 선반 ${i + 1}`,
               width: innerWidth,
               depth: customDepth - 8, // adjustedDepthForShelves = depth - 8mm
-              thickness: basicThickness
+              thickness: basicThickness,
+              material: 'PB'  // 기본 재질
             });
           });
         } else {
@@ -339,7 +355,8 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
             name: `${sectionName} 선반 ${i}`,
             width: innerWidth,
             depth: customDepth - 8, // adjustedDepthForShelves
-            thickness: basicThickness
+            thickness: basicThickness,
+            material: 'PB'  // 기본 재질
           });
         }
       } else if (section.type === 'open') {
@@ -365,20 +382,23 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         name: '좌측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PET'  // 도어는 PET 재질
       });
       panels.door.push({
         name: '우측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PET'  // 도어는 PET 재질
       });
     } else {
       panels.door.push({
         name: '도어',
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
-        thickness: basicThickness
+        thickness: basicThickness,
+        material: 'PET'  // 도어는 PET 재질
       });
     }
   }
@@ -906,6 +926,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           `${panel.width || panel.height || panel.depth}mm`
                         )}
                         {panel.thickness && !panel.diameter && ` (T:${panel.thickness})`}
+                        {panel.material && ` [${panel.material}]`}
                       </span>
                     </div>
                   );

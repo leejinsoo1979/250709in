@@ -3,7 +3,7 @@ import { CNCProvider, useCNCStore } from './store';
 import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Zap, Play } from 'lucide-react';
 import { setThemeColor } from '@/theme';
 
 // Components
@@ -43,7 +43,7 @@ function PageInner(){
   
   // 뷰어 상태 (미리보기와 동기화)
   const [viewerScale, setViewerScale] = useState(1);
-  const [viewerRotation, setViewerRotation] = useState(0);
+  const [viewerRotation, setViewerRotation] = useState(-90); // 기본값 -90 (가로뷰)
   const [viewerOffset, setViewerOffset] = useState({ x: 0, y: 0 });
 
   // Handle ESC key to clear selection
@@ -94,6 +94,14 @@ function PageInner(){
         // 결방향은 항상 세로(V)로 설정 - 긴 방향이 결방향
         let grain = 'V'; // 세로 결방향 (긴 방향)
         
+        // 도어와 엔드패널은 자동으로 PET 재질로 설정
+        let material = p.material || 'PB';
+        const panelName = (p.name || '').toLowerCase();
+        if (panelName.includes('도어') || panelName.includes('door') || 
+            panelName.includes('엔드') || panelName.includes('end')) {
+          material = 'PET';
+        }
+        
         return {
           id: p.id,
           label: p.name || `Panel_${p.id}`,
@@ -101,7 +109,7 @@ function PageInner(){
           length: length, // 긴 쪽
           thickness: p.thickness || 18,
           quantity: p.quantity || 1,
-          material: p.material || 'PB',
+          material: material,
           grain: grain,
           canRotate: false // 결방향이 있으므로 회전 불가
         };
@@ -134,6 +142,15 @@ function PageInner(){
           thickness: 18,
           quantity: 999,
           material: 'PB'
+        },
+        // 18mm PET - 도어 및 엔드패널용
+        {
+          label: 'PET_18T_2440x1220',
+          width: 1220,
+          length: 2440,
+          thickness: 18,
+          quantity: 999,
+          material: 'PET'
         },
         // 15mm PB - 서랍용
         {
@@ -311,7 +328,8 @@ function PageInner(){
             adjustedStockPanel, // 여백을 제외한 크기 사용
             settings.singleSheetOnly ? 1 : 999, // 제한 없음
             settings.alignVerticalCuts !== false, // Use aligned packing by default
-            settings.kerf || 5 // 톱날 두께 전달
+            settings.kerf || 5, // 톱날 두께 전달
+            settings.optimizationType || 'cnc' // 최적화 타입 전달
           );
           
           // 패널 위치를 여백만큼 오프셋
@@ -330,16 +348,93 @@ function PageInner(){
         }
       }
 
-      console.log('=== Optimization Complete ===');
+      console.log('=== Initial Optimization Complete ===');
       console.log('Total sheets generated:', allResults.length);
-      console.log('All results:', allResults);
+      
+      // 재최적화: 낮은 효율 시트 감지 및 재배치
+      let finalResults = [...allResults];
+      const lowEfficiencySheets = allResults.filter(r => r.efficiency < 20);
+      
+      if (lowEfficiencySheets.length > 0) {
+        console.log(`Found ${lowEfficiencySheets.length} low efficiency sheets, attempting redistribution...`);
+        
+        // 모든 패널을 수집
+        const allPanelsToRedistribute: PlacedPanel[] = [];
+        allResults.forEach(result => {
+          allPanelsToRedistribute.push(...result.panels);
+        });
+        
+        console.log(`Total panels to redistribute: ${allPanelsToRedistribute.length}`);
+        
+        // 패널을 다시 최적화용 형식으로 변환
+        const panelsForRepack: Panel[] = allPanelsToRedistribute.map(p => ({
+          ...p,
+          quantity: 1
+        }));
+        
+        // 첫 번째 원자재 사용 (일반적으로 가장 많이 사용되는 원자재)
+        const mainStock = stock[0];
+        if (mainStock) {
+          const stockPanel = {
+            id: mainStock.label || 'stock',
+            width: mainStock.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+            height: mainStock.length - (settings.trimTop || 10) - (settings.trimBottom || 10),
+            material: mainStock.material || 'PB',
+            color: 'MW',
+            price: 50000,
+            stock: mainStock.quantity
+          };
+          
+          // 재최적화 실행
+          const reoptimizedResults = await optimizePanelsMultiple(
+            panelsForRepack,
+            stockPanel,
+            999,
+            settings.alignVerticalCuts !== false,
+            settings.kerf || 5,
+            settings.optimizationType || 'cnc'
+          );
+          
+          // 패널 위치 오프셋 조정
+          reoptimizedResults.forEach(result => {
+            result.panels.forEach(panel => {
+              panel.x += (settings.trimLeft || 10);
+              panel.y += (settings.trimBottom || 10);
+            });
+            // 원본 크기 정보 복원
+            result.stockPanel = {
+              ...stockPanel,
+              width: mainStock.width,
+              height: mainStock.length
+            };
+          });
+          
+          // 개선되었는지 확인
+          const oldAvgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
+          const newAvgEfficiency = reoptimizedResults.reduce((sum, r) => sum + r.efficiency, 0) / reoptimizedResults.length;
+          
+          console.log(`Redistribution result: ${allResults.length} sheets → ${reoptimizedResults.length} sheets`);
+          console.log(`Average efficiency: ${oldAvgEfficiency.toFixed(1)}% → ${newAvgEfficiency.toFixed(1)}%`);
+          
+          // 개선되었거나 시트 수가 줄었으면 사용
+          if (reoptimizedResults.length < allResults.length || newAvgEfficiency > oldAvgEfficiency + 10) {
+            console.log('Using redistributed layout');
+            finalResults = reoptimizedResults;
+          } else {
+            console.log('Keeping original layout');
+          }
+        }
+      }
+      
+      console.log('=== Final Optimization Complete ===');
+      console.log('Total sheets:', finalResults.length);
       
       // 각 시트의 패널 수 출력
-      allResults.forEach((result, index) => {
+      finalResults.forEach((result, index) => {
         console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
       });
       
-      setOptimizationResults(allResults);
+      setOptimizationResults(finalResults);
       setCurrentSheetIndex(0);
       
       if (allResults.length > 0) {
@@ -366,6 +461,14 @@ function PageInner(){
         </div>
         
         <div className={styles.headerRight}>
+          <button 
+            className={styles.calculateButton}
+            onClick={handleOptimize}
+            disabled={isOptimizing || panels.length === 0}
+          >
+            <Play size={18} />
+            Calculate
+          </button>
           <div className={styles.exportGroup}>
             <ExportBar optimizationResults={optimizationResults} />
           </div>
@@ -410,7 +513,8 @@ function PageInner(){
                     currentIndex: currentSheetIndex,
                     totalSheets: optimizationResults.length,
                     onOptimize: handleOptimize,
-                    isOptimizing: isOptimizing
+                    isOptimizing: isOptimizing,
+                    stock: stock
                   }}
                 />
               </div>

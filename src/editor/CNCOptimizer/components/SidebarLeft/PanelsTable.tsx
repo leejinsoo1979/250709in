@@ -28,6 +28,39 @@ export default function PanelsTable(){
     }
   }, [selectedPanelId]);
 
+  // 마우스 휠 스크롤 이벤트 추가
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // 컨테이너가 스크롤 가능한 경우에만 기본 동작 방지
+      const hasVerticalScroll = container.scrollHeight > container.clientHeight;
+      
+      if (hasVerticalScroll) {
+        // 이미 맨 위나 맨 아래에 있을 때 페이지 스크롤 방지
+        const isAtTop = container.scrollTop === 0 && e.deltaY < 0;
+        const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 1 && e.deltaY > 0;
+        
+        if (!isAtTop && !isAtBottom) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        // 부드러운 스크롤
+        const scrollSpeed = 0.8; // 스크롤 속도 조절 (더 부드럽게)
+        container.scrollTop += e.deltaY * scrollSpeed;
+      }
+    };
+
+    // passive: false로 설정하여 preventDefault가 작동하도록 함
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
   const onChange = (i:number, key: keyof Panel, val:any) => {
     const next = panels.map((panel, index) => {
       if (index === i) {
@@ -171,6 +204,7 @@ export default function PanelsTable(){
                     >
                       <option value="PB">PB</option>
                       <option value="MDF">MDF</option>
+                      <option value="PET">PET</option>
                       <option value="PLY">PLY</option>
                       <option value="HPL">HPL</option>
                       <option value="LPM">LPM</option>
@@ -183,7 +217,24 @@ export default function PanelsTable(){
                         e.stopPropagation();
                         // 현재 값이 V면 H로, 그 외에는 V로 토글
                         const newGrain = p.grain === 'V' ? 'H' : 'V';
-                        onChange(i, 'grain', newGrain);
+                        
+                        // 결방향이 변경되면 width와 length를 바꿈
+                        const currentWidth = p.width;
+                        const currentLength = p.length;
+                        
+                        // 패널을 업데이트
+                        const next = panels.map((panel, index) => {
+                          if (index === i) {
+                            return {
+                              ...panel,
+                              grain: newGrain,
+                              width: currentLength, // width와 length를 바꿈
+                              length: currentWidth
+                            };
+                          }
+                          return panel;
+                        });
+                        setPanels(next);
                       }}
                       title={p.grain === 'V' ? '세로 결방향 (클릭하여 가로로 변경)' : '가로 결방향 (클릭하여 세로로 변경)'}
                     >
