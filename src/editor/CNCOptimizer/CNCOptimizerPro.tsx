@@ -16,6 +16,7 @@ import CuttingLayoutPreview2 from './components/CuttingLayoutPreview2';
 import SheetThumbnail from './components/SheetThumbnail';
 import ModeTabs from './components/ModeTabs';
 import AILoadingModal from './components/AILoadingModal';
+import ExitConfirmModal from './components/ExitConfirmModal';
 
 // Utils
 import { optimizePanelsMultiple } from './utils/optimizer';
@@ -66,13 +67,28 @@ function PageInner(){
   // AI Loading state
   const [showAILoading, setShowAILoading] = useState(false);
   const [aiLoadingProgress, setAILoadingProgress] = useState(0);
+  const [aiLoadingDuration, setAILoadingDuration] = useState(5000);
+  
+  // Exit confirmation state
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
 
-  // Handle ESC key to clear selection
+  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectedPanelId(null);
+      }
+      
+      // Arrow key navigation for sheets
+      if (optimizationResults.length > 0) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setCurrentSheetIndex(prev => Math.max(0, prev - 1));
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setCurrentSheetIndex(prev => Math.min(optimizationResults.length - 1, prev + 1));
+        }
       }
     };
 
@@ -91,7 +107,7 @@ function PageInner(){
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [setSelectedPanelId]);
+  }, [setSelectedPanelId, optimizationResults.length, setCurrentSheetIndex]);
 
   // Auto-optimization trigger ref to ensure it only runs once
   const hasAutoOptimized = useRef(false);
@@ -307,6 +323,9 @@ function PageInner(){
     setIsOptimizing(true);
     setMethodChanged(false); // Calculate 시 강조 제거
     
+    // Clear previous results immediately for cleaner experience
+    setOptimizationResults([]);
+    
     // AI 로딩 모달 표시
     setShowAILoading(true);
     setAILoadingProgress(0);
@@ -317,17 +336,42 @@ function PageInner(){
     // 설정값을 전역 변수로 저장 (뷰어에서 접근 가능하도록)
     (window as any).cncSettings = settings;
     
-    // Simulate progress updates - slower for better visibility
+    // Calculate total panels to estimate loading time
+    const totalPanels = panels.reduce((sum, p) => sum + (p.quantity || 1), 0);
+    
+    // Determine loading duration based on estimated sheet count
+    // Rough estimate: ~10 panels per sheet
+    const estimatedSheets = Math.ceil(totalPanels / 10);
+    let loadingDuration = 3000; // Default 3 seconds for <5 sheets
+    
+    if (estimatedSheets >= 30) {
+      loadingDuration = 8000; // 8 seconds for 30+ sheets
+    } else if (estimatedSheets >= 20) {
+      loadingDuration = 6000; // 6 seconds for 20-30 sheets
+    } else if (estimatedSheets >= 10) {
+      loadingDuration = 4000; // 4 seconds for 10-20 sheets
+    } else if (estimatedSheets >= 5) {
+      loadingDuration = 3500; // 3.5 seconds for 5-10 sheets
+    }
+    
+    // Set the loading duration for the modal
+    setAILoadingDuration(loadingDuration);
+    
+    // Smooth progress based on calculated duration
     const progressInterval = setInterval(() => {
-      setAILoadingProgress(prev => {
-        const next = prev + Math.random() * 5; // Even smaller increments for 4 seconds
-        return next > 85 ? 85 : next; // Cap at 85% until completion
-      });
-    }, 400); // Even slower interval for 4 second duration
+      const elapsed = Date.now() - animationStartTime;
+      const progress = Math.min((elapsed / loadingDuration) * 100, 95); // 0 to 95% over duration
+      setAILoadingProgress(progress);
+      
+      if (elapsed >= loadingDuration) {
+        clearInterval(progressInterval);
+      }
+    }, 50); // Update every 50ms for smooth animation
+    
+    // Delay the actual optimization to make loading feel more natural
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
-      // Progress: 10% - Starting analysis
-      setAILoadingProgress(10);
       
       // Group panels by material AND thickness
       const panelGroups = new Map<string, Panel[]>();
@@ -366,9 +410,6 @@ function PageInner(){
       });
 
       const allResults: OptimizedResult[] = [];
-      
-      // Progress: 30% - Processing panels
-      setAILoadingProgress(30);
 
       // Optimize each material/thickness group
       for (const [key, groupPanels] of panelGroups) {
@@ -440,8 +481,8 @@ function PageInner(){
             height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10)
           };
           
-          // Progress: 50% - Running optimization algorithm
-          setAILoadingProgress(50);
+          // Add small delay to make process feel more substantial
+          await new Promise(resolve => setTimeout(resolve, 300));
           
           // Run optimization with adjusted stock size
           const results = await optimizePanelsMultiple(
@@ -472,9 +513,6 @@ function PageInner(){
       // console.log('=== Initial Optimization Complete ===');
       // console.log('Total sheets generated:', allResults.length);
       
-      // Progress: 80% - Finalizing optimization
-      setAILoadingProgress(80);
-      
       // 재최적화 비활성화 - 시트 낭비 방지
       let finalResults = [...allResults];
       
@@ -485,9 +523,6 @@ function PageInner(){
       // finalResults.forEach((result, index) => {
       //   console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
       // });
-      
-      // Progress: 95% - Generating results
-      setAILoadingProgress(95);
       
       setOptimizationResults(finalResults);
       
@@ -519,15 +554,30 @@ function PageInner(){
       });
       setPlacements(placements);
       
-      // Clear progress interval
-      clearInterval(progressInterval);
+      // Calculate actual loading duration based on actual sheet count
+      const actualSheetCount = allResults.length;
+      let actualLoadingDuration = 3000; // Default 3 seconds for <5 sheets
       
-      // Ensure minimum 4 seconds of loading animation
+      if (actualSheetCount >= 30) {
+        actualLoadingDuration = 8000; // 8 seconds for 30+ sheets
+      } else if (actualSheetCount >= 20) {
+        actualLoadingDuration = 6000; // 6 seconds for 20-30 sheets
+      } else if (actualSheetCount >= 10) {
+        actualLoadingDuration = 4000; // 4 seconds for 10-20 sheets
+      } else if (actualSheetCount >= 5) {
+        actualLoadingDuration = 3500; // 3.5 seconds for 5-10 sheets
+      }
+      
+      // Ensure minimum loading duration based on sheet count
       const elapsedTime = Date.now() - animationStartTime;
-      const remainingTime = Math.max(0, 4000 - elapsedTime); // Minimum 4 seconds total
+      const remainingTime = Math.max(0, actualLoadingDuration - elapsedTime);
       
-      // Animate to 100% after ensuring minimum time
+      // Complete to 100% after minimum time
       setTimeout(() => {
+        // Clear any remaining interval
+        clearInterval(progressInterval);
+        
+        // Animate to 100%
         setAILoadingProgress(100);
         
         // Hide AI loading modal after showing 100% briefly
@@ -542,7 +592,7 @@ function PageInner(){
           } else {
             showToast('최적화 실패: 패널을 배치할 수 없습니다', 'error');
           }
-        }, 500); // Show 100% for 500ms
+        }, 300); // Show 100% for 300ms
       }, remainingTime);
     } catch (error) {
       // console.error('Optimization error:', error);
@@ -719,9 +769,7 @@ function PageInner(){
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Exit button clicked! Navigating to configurator...');
-              // 직접 URL 변경
-              window.location.href = '/configurator';
+              setShowExitConfirm(true);
             }}
             type="button"
           >
@@ -744,6 +792,12 @@ function PageInner(){
         <div className={styles.centerPanel}>
           {optimizationResults.length > 0 ? (
             <div className={styles.viewerContainer}>
+              {/* Keyboard navigation hint */}
+              {optimizationResults.length > 1 && (
+                <div className={styles.keyboardHint}>
+                  <span>← → 방향키로 시트 이동</span>
+                </div>
+              )}
               <div className={styles.mainViewer}>
                 <CuttingLayoutPreview2
                   result={optimizationResults[currentSheetIndex]}
@@ -1164,6 +1218,17 @@ function PageInner(){
         isOpen={showAILoading}
         progress={aiLoadingProgress}
         message="AI 최적화 계산 중"
+        duration={aiLoadingDuration}
+      />
+      
+      {/* Exit Confirmation Modal */}
+      <ExitConfirmModal 
+        isOpen={showExitConfirm}
+        onConfirm={() => {
+          console.log('Exit confirmed! Navigating to configurator...');
+          window.location.href = '/configurator';
+        }}
+        onCancel={() => setShowExitConfirm(false)}
       />
     </div>
   );

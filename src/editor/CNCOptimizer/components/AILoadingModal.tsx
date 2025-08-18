@@ -5,12 +5,14 @@ interface AILoadingModalProps {
   isOpen: boolean;
   progress?: number;
   message?: string;
+  duration?: number; // Duration in milliseconds
 }
 
 const AILoadingModal: React.FC<AILoadingModalProps> = ({ 
   isOpen, 
   progress = 0,
-  message = "AI 최적화 계산 중..." 
+  message = "AI 최적화 계산 중...",
+  duration = 5000
 }) => {
   const [dots, setDots] = useState(0);
   const [currentPhase, setCurrentPhase] = useState(0);
@@ -32,10 +34,11 @@ const AILoadingModal: React.FC<AILoadingModalProps> = ({
       setDots(prev => (prev + 1) % 4);
     }, 500);
     
-    // 단계 변경 - adjusted for 4 second duration
+    // 단계 변경 - adjust based on duration
+    const phaseIntervalTime = Math.max(500, duration / phases.length);
     const phaseInterval = setInterval(() => {
       setCurrentPhase(prev => (prev + 1) % phases.length);
-    }, 800); // Show each phase for 800ms (5 phases in 4 seconds)
+    }, phaseIntervalTime);
     
     return () => {
       clearInterval(dotsInterval);
