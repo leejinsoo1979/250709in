@@ -14,6 +14,7 @@ import 'svg2pdf.js';
 import { Settings, ChevronDown, Edit3 } from 'lucide-react';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import * as fabric from 'fabric';
+import { getThemeHex } from '@/theme';
 
 // 용지 규격 타입
 type PaperSize = 'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'A5';
@@ -1359,7 +1360,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'F');
           
           if (viewType === 'info') {
-            pdf.setTextColor('#00ffcc');
+            const themeColor = getThemeHex();
+            pdf.setTextColor(themeColor);
             pdf.setFontSize(18);
             pdf.text('INSHOW', textXMm + 5, textYMm + 10);
             
@@ -1370,17 +1372,17 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
             pdf.setFontSize(10);
             pdf.setTextColor('#888888');
             pdf.text('Size:', textXMm + 5, textYMm + 30);
-            pdf.setTextColor('#00ffcc');
+            pdf.setTextColor(themeColor);
             pdf.text(infoTexts.size, textXMm + 20, textYMm + 30);
             
             pdf.setTextColor('#888888');
             pdf.text('Door:', textXMm + 5, textYMm + 37);
-            pdf.setTextColor('#00ffcc');
+            pdf.setTextColor(themeColor);
             pdf.text(infoTexts.door, textXMm + 20, textYMm + 37);
             
             pdf.setTextColor('#888888');
             pdf.text('Body:', textXMm + 5, textYMm + 44);
-            pdf.setTextColor('#00ffcc');
+            pdf.setTextColor(themeColor);
             pdf.text(infoTexts.body, textXMm + 20, textYMm + 44);
           } else if (viewType === 'title') {
             pdf.setTextColor('#ffffff');
@@ -2580,14 +2582,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               top: `${dragPreviewPos.y}px`,
               width: '200px',
               height: '150px',
-              border: '2px dashed #00ffcc',
-              backgroundColor: 'rgba(0, 255, 204, 0.1)',
+              border: `2px dashed ${getThemeHex()}`,
+              backgroundColor: `${getThemeHex()}20`, // 20 = 12.5% opacity in hex
               pointerEvents: 'none',
               zIndex: 10000,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#00ffcc',
+              color: getThemeHex(),
               fontSize: '14px'
             }}
           >

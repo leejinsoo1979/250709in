@@ -225,25 +225,17 @@ export function runSimulation(
   }
 ): void {
   const { onTick, onDone, speed, cancelRef } = controls;
-  const baseDelay = 500 / speed; // Base delay in ms (slower for better visibility)
+  const baseDelay = 1000 / speed; // Base delay in ms (1 second per cut at speed 1)
   
-  console.log('runSimulation started:', { 
-    stepsCount: steps.length, 
-    speed, 
-    baseDelay,
-    cancelRef: cancelRef.current 
-  });
   
   let currentIndex = 0;
   
   const animate = () => {
     if (cancelRef.current || currentIndex >= steps.length) {
-      console.log('Animation ended:', { currentIndex, canceled: cancelRef.current });
       onDone();
       return;
     }
     
-    console.log('Animation tick:', currentIndex);
     onTick(currentIndex);
     currentIndex++;
     

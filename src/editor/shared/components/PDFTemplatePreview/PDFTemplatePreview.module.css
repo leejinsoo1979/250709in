@@ -3146,11 +3146,11 @@
 }
 
 .lightTheme .exportFormatItem.selected {
-  background-color: rgba(0, 255, 204, 0.1);
+  background-color: hsl(var(--theme) / 0.1);
   border-color: var(--theme-primary);
 }
 
 .darkTheme .exportFormatItem.selected {
-  background-color: rgba(0, 255, 204, 0.15);
+  background-color: hsl(var(--theme) / 0.15);
   border-color: var(--theme-primary);
 }

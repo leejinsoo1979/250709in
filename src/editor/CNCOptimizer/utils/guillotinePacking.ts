@@ -34,9 +34,9 @@ export class GuillotinePacker {
   
   /**
    * 길로틴 방식으로 패널 배치
-   * 가로 우선과 세로 우선 둘 다 시도해서 더 나은 결과 선택
+   * stripDirection이 지정되면 해당 방향만, auto면 모든 방법 시도
    */
-  packAll(panels: Rect[]): PackedBin {
+  packAll(panels: Rect[], stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'): PackedBin {
     // 더 큰 패널들을 먼저 배치하기 위해 정렬
     const sortedPanels = [...panels].sort((a, b) => {
       const areaA = a.width * a.height;
@@ -44,36 +44,47 @@ export class GuillotinePacker {
       return areaB - areaA;
     });
     
-    // 가로 스트립 우선 시도
-    const horizontalResult = this.packWithStrips(sortedPanels, true);
-    const horizontalEfficiency = this.calculateEfficiency(horizontalResult);
+    let bestResult, bestEfficiency, bestStrategy;
     
-    // 세로 스트립 우선 시도
-    const verticalResult = this.packWithStrips(sortedPanels, false);
-    const verticalEfficiency = this.calculateEfficiency(verticalResult);
-    
-    // 혼합 전략 시도 (큰 패널은 가로, 작은 패널은 세로)
-    const mixedResult = this.packWithMixedStrategy(sortedPanels);
-    const mixedEfficiency = this.calculateEfficiency(mixedResult);
-    
-    // 가장 효율적인 레이아웃 선택
-    let bestResult = horizontalResult;
-    let bestEfficiency = horizontalEfficiency;
-    let bestStrategy = 'horizontal';
-    
-    if (verticalEfficiency > bestEfficiency) {
-      bestResult = verticalResult;
-      bestEfficiency = verticalEfficiency;
+    if (stripDirection === 'horizontal') {
+      // 가로 스트립만 사용 (BY_WIDTH)
+      bestResult = this.packWithStrips(sortedPanels, true);
+      bestEfficiency = this.calculateEfficiency(bestResult);
+      bestStrategy = 'horizontal';
+    } else if (stripDirection === 'vertical') {
+      // 세로 스트립만 사용 (BY_LENGTH)
+      bestResult = this.packWithStrips(sortedPanels, false);
+      bestEfficiency = this.calculateEfficiency(bestResult);
       bestStrategy = 'vertical';
+    } else {
+      // auto: 모든 방법 시도하고 최적 선택
+      const horizontalResult = this.packWithStrips(sortedPanels, true);
+      const horizontalEfficiency = this.calculateEfficiency(horizontalResult);
+      
+      const verticalResult = this.packWithStrips(sortedPanels, false);
+      const verticalEfficiency = this.calculateEfficiency(verticalResult);
+      
+      const mixedResult = this.packWithMixedStrategy(sortedPanels);
+      const mixedEfficiency = this.calculateEfficiency(mixedResult);
+      
+      // 가장 효율적인 레이아웃 선택
+      bestResult = horizontalResult;
+      bestEfficiency = horizontalEfficiency;
+      bestStrategy = 'horizontal';
+      
+      if (verticalEfficiency > bestEfficiency) {
+        bestResult = verticalResult;
+        bestEfficiency = verticalEfficiency;
+        bestStrategy = 'vertical';
+      }
+      
+      if (mixedEfficiency > bestEfficiency) {
+        bestResult = mixedResult;
+        bestEfficiency = mixedEfficiency;
+        bestStrategy = 'mixed';
+      }
     }
     
-    if (mixedEfficiency > bestEfficiency) {
-      bestResult = mixedResult;
-      bestEfficiency = mixedEfficiency;
-      bestStrategy = 'mixed';
-    }
-    
-    console.log(`Guillotine: Using ${bestStrategy} strategy (${bestEfficiency.toFixed(1)}% efficiency)`);
     this.strips = bestResult;
     this.bestLayout = { strips: bestResult, efficiency: bestEfficiency };
     
@@ -420,9 +431,8 @@ export class GuillotinePacker {
     
     for (const strip of strips) {
       for (const panel of strip.panels) {
-        const width = panel.rotated ? panel.height : panel.width;
-        const height = panel.rotated ? panel.width : panel.height;
-        usedArea += width * height;
+        // 회전 여부와 관계없이 원본 크기로 면적 계산
+        usedArea += panel.width * panel.height;
       }
     }
     
@@ -469,13 +479,12 @@ export class GuillotinePacker {
         }
         
         panels.push(finalPanel);
-        usedArea += actualWidth * actualHeight;
+        // 회전 여부와 관계없이 원본 크기로 면적 계산
+        usedArea += finalPanel.width * finalPanel.height;
       }
     }
     
     const efficiency = this.bestLayout?.efficiency || 0;
-    
-    console.log(`Guillotine result: ${panels.length} panels in ${this.strips.length} strips, efficiency: ${efficiency.toFixed(1)}%`);
     
     return {
       width: this.binWidth,
@@ -495,23 +504,18 @@ export function packGuillotine(
   binWidth: number,
   binHeight: number,
   kerf: number = 5,
-  maxBins: number = 999
+  maxBins: number = 999,
+  stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  console.log(`\n=== Starting Guillotine Packing ===`);
-  console.log(`Total panels: ${panels.length}`);
-  console.log(`Bin size: ${binWidth}x${binHeight}mm`);
-  console.log(`GUILLOTINE MODE ACTIVATED!`);
   
   const bins: PackedBin[] = [];
   let currentBin = 0;
   let remainingPanels = [...panels];
   
   while (remainingPanels.length > 0 && currentBin < maxBins) {
-    console.log(`\n--- Creating Guillotine Bin ${currentBin + 1} ---`);
-    console.log(`Remaining panels: ${remainingPanels.length}`);
     
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
-    const result = packer.packAll(remainingPanels);
+    const result = packer.packAll(remainingPanels, stripDirection);
     
     if (result.panels.length === 0) {
       console.warn('Cannot place any more panels in guillotine mode');
@@ -532,14 +536,9 @@ export function packGuillotine(
     }
     
     bins.push(result);
-    console.log(`Guillotine Bin ${currentBin + 1}: ${result.panels.length} panels, ${result.efficiency.toFixed(1)}% efficiency`);
     
     currentBin++;
   }
-  
-  console.log(`\n=== Guillotine Packing Complete ===`);
-  console.log(`Total bins: ${bins.length}`);
-  console.log(`Unpacked panels: ${remainingPanels.length}`);
   
   return bins;
 }

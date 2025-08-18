@@ -132,7 +132,7 @@
 }
 
 .itemContainer:hover {
-  border-color: rgba(0, 255, 204, 0.3);
+  border-color: hsl(var(--theme) / 0.3);
 }
 
 .itemContainer.selected {

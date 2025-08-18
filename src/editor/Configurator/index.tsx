@@ -12,6 +12,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { initializeTheme } from '@/theme';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -99,6 +100,11 @@ const Configurator: React.FC = () => {
     }
     return initialSpaceInfo;
   });
+
+  // Initialize theme when component mounts
+  useEffect(() => {
+    initializeTheme();
+  }, []);
 
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {

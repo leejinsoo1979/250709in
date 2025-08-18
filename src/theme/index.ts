@@ -121,3 +121,38 @@ export function initializeTheme(): void {
   const savedColor = getThemeColor();
   setThemeColor(savedColor);
 }
+
+/**
+ * Get the current theme color as HSL string for use in JavaScript
+ */
+export function getThemeHsl(): string {
+  const root = document.documentElement;
+  const themeValue = getComputedStyle(root).getPropertyValue('--theme').trim();
+  
+  if (themeValue) {
+    // Convert CSS variable format (h s% l%) to HSL string
+    const parts = themeValue.split(' ');
+    if (parts.length === 3) {
+      const h = parts[0];
+      const s = parts[1].replace('%', '');
+      const l = parts[2].replace('%', '');
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+  }
+  
+  // Fallback to default theme color
+  return 'hsl(249, 100%, 68%)'; // Default purple theme
+}
+
+/**
+ * Get the current theme color as hex string for use in JavaScript
+ */
+export function getThemeHex(): string {
+  const savedColor = getThemeColor();
+  if (savedColor.startsWith('#')) {
+    return savedColor;
+  }
+  
+  // If it's HSL, convert to hex (for now just return the default)
+  return '#7C5CFF'; // Default purple theme
+}

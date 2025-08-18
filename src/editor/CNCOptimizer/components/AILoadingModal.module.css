@@ -1,0 +1,334 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 24px;
+  padding: 48px;
+  min-width: 500px;
+  max-width: 600px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+              0 0 100px rgba(0, 255, 204, 0.1);
+  animation: scaleIn 0.4s ease-out;
+  border: 1px solid rgba(0, 255, 204, 0.2);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* AI 아이콘 컨테이너 */
+.aiIconContainer {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 32px;
+}
+
+.aiIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, hsl(var(--theme)), hsl(var(--theme) / 0.6));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rotate 4s linear infinite;
+  box-shadow: 0 0 40px hsl(var(--theme) / 0.5);
+}
+
+.aiIcon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+@keyframes rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* 펄스 링 효과 */
+.pulseRing,
+.pulseRing2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 2px solid hsl(var(--theme) / 0.4);
+  border-radius: 50%;
+  animation: pulse 2s ease-out infinite;
+}
+
+.pulseRing2 {
+  animation-delay: 1s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* 제목 */
+.title {
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 20px rgba(0, 255, 204, 0.3);
+}
+
+.dots {
+  display: inline-block;
+  width: 30px;
+  text-align: left;
+  color: hsl(var(--theme));
+}
+
+/* 단계 표시 */
+.phase {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  text-align: center;
+  margin: 0 0 32px 0;
+  font-weight: 500;
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 진행률 바 */
+.progressContainer {
+  position: relative;
+  margin: 32px 0;
+}
+
+.progressBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    hsl(var(--theme) / 0.8), 
+    hsl(var(--theme)),
+    hsl(var(--theme) / 0.8)
+  );
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+  position: relative;
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.progressGlow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: sweep 2s linear infinite;
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100px);
+  }
+  100% {
+    transform: translateX(600px);
+  }
+}
+
+.progressText {
+  position: absolute;
+  right: 0;
+  top: -24px;
+  color: hsl(var(--theme));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 데이터 스트림 효과 */
+.dataStream {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  height: 40px;
+  overflow: hidden;
+  opacity: 0.15;
+  font-family: 'Courier New', monospace;
+}
+
+.dataLine {
+  position: absolute;
+  white-space: nowrap;
+  color: hsl(var(--theme));
+  font-size: 10px;
+  animation: dataFlow 3s linear infinite;
+}
+
+.dataLine:nth-child(1) { top: 0; }
+.dataLine:nth-child(2) { top: 8px; }
+.dataLine:nth-child(3) { top: 16px; }
+.dataLine:nth-child(4) { top: 24px; }
+.dataLine:nth-child(5) { top: 32px; }
+
+@keyframes dataFlow {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.dataChar {
+  display: inline-block;
+  margin: 0 2px;
+  animation: flicker 0.5s ease-in-out infinite;
+}
+
+.dataChar:nth-child(even) {
+  animation-delay: 0.25s;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 뉴럴 네트워크 비주얼 */
+.neuralNetwork {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 200px;
+  height: 100px;
+  opacity: 0.1;
+}
+
+.networkSvg {
+  width: 100%;
+  height: 100%;
+}
+
+.node {
+  fill: hsl(var(--theme));
+  animation: nodeGlow 2s ease-in-out infinite;
+}
+
+.node:nth-child(odd) {
+  animation-delay: 0.5s;
+}
+
+.node:nth-child(even) {
+  animation-delay: 1s;
+}
+
+@keyframes nodeGlow {
+  0%, 100% {
+    opacity: 0.3;
+    r: 4;
+  }
+  50% {
+    opacity: 1;
+    r: 5;
+  }
+}
+
+.connection {
+  stroke: hsl(var(--theme) / 0.3);
+  stroke-width: 0.5;
+  animation: connectionFlow 3s linear infinite;
+}
+
+@keyframes connectionFlow {
+  0% {
+    stroke-dasharray: 0 100;
+  }
+  50% {
+    stroke-dasharray: 50 50;
+  }
+  100% {
+    stroke-dasharray: 100 0;
+  }
+}

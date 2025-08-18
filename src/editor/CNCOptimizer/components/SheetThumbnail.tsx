@@ -115,8 +115,8 @@ export default function SheetThumbnail({
           stroke: 'rgba(139, 98, 57, 0.5)'   // MDF 테두리 색상
         },
         'PET': { 
-          fill: `hsl(${themeColor} / 0.10)`,
-          stroke: `hsl(${themeColor} / 0.4)`
+          fill: 'rgba(209, 213, 219, 0.6)',  // 그레이색 (투명도 적용)
+          stroke: 'rgba(107, 114, 128, 0.6)'  // 그레이 테두리
         },
         'PLY': { 
           fill: 'rgba(232, 212, 176, 0.3)', // 합판 밝은 나무색 (투명도 적용)

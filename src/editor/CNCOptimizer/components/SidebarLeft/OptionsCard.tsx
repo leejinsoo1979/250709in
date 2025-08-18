@@ -20,7 +20,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
       
       <div className={styles.options}>
         <div className={styles.optionGroup}>
-          <label className={styles.numberInput}>
+          <label className={styles.inlineNumberInput}>
             <span>톱날 두께</span>
             <div className={styles.inputWrapper}>
               <input 
@@ -45,7 +45,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
           className={styles.gapToggleButton}
           onClick={() => setShowGapSettings(!showGapSettings)}
         >
-          갭 설정
+          엣지 갭 설정
           {showGapSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
@@ -57,7 +57,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
-                  value={settings.trimTop ?? 10}
+                  value={settings.trimTop ?? 5}
                   onChange={e => setSettings({ trimTop: Number(e.target.value) })}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && onSettingsChange) {
@@ -75,7 +75,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
-                  value={settings.trimBottom ?? 10}
+                  value={settings.trimBottom ?? 5}
                   onChange={e => setSettings({ trimBottom: Number(e.target.value) })}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && onSettingsChange) {
@@ -95,7 +95,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
-                  value={settings.trimLeft ?? 10}
+                  value={settings.trimLeft ?? 5}
                   onChange={e => setSettings({ trimLeft: Number(e.target.value) })}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && onSettingsChange) {
@@ -113,7 +113,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
-                  value={settings.trimRight ?? 10}
+                  value={settings.trimRight ?? 5}
                   onChange={e => setSettings({ trimRight: Number(e.target.value) })}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && onSettingsChange) {

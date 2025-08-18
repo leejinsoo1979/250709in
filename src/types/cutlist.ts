@@ -22,7 +22,7 @@ export interface StockSheet {
   material?: string;
 }
 
-export type OptimizationType = 'cnc' | 'cutsaw';
+export type OptimizationType = 'BY_LENGTH' | 'BY_WIDTH' | 'OPTIMAL_CNC';
 
 export interface CutSettings {
   unit: Unit;

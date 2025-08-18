@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNC Optimizer Storage Clear</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .storage-info {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .storage-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .storage-key {
+            font-weight: bold;
+            color: #007AFF;
+            margin-bottom: 5px;
+        }
+        .storage-value {
+            color: #666;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        button {
+            background: #FF3B30;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        button:hover {
+            background: #FF6B60;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255,59,48,0.3);
+        }
+        button.refresh {
+            background: #007AFF;
+        }
+        button.refresh:hover {
+            background: #3A9AFF;
+            box-shadow: 0 4px 8px rgba(0,122,255,0.3);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        #result.success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+            display: block;
+        }
+        .empty {
+            color: #999;
+            font-style: italic;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ CNC Optimizer Storage Manager</h1>
+        
+        <div class="storage-info" id="storageInfo">
+            <div class="empty">Loading storage data...</div>
+        </div>
+        
+        <div class="button-group">
+            <button onclick="clearStorage()" title="Clear all CNC Optimizer data">
+                🗑️ Clear All CNC Storage
+            </button>
+            <button onclick="clearPanelsOnly()" title="Clear panels only">
+                📦 Clear Panels Only
+            </button>
+            <button onclick="clearStockOnly()" title="Clear stock only">
+                📋 Clear Stock Only
+            </button>
+            <button class="refresh" onclick="refreshStorage()" title="Refresh view">
+                🔄 Refresh
+            </button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function displayStorage() {
+            const storageInfo = document.getElementById('storageInfo');
+            const keys = ['cnc_panels', 'cnc_stock', 'cnc_settings'];
+            let html = '';
+            let hasData = false;
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    hasData = true;
+                    let displayValue = value;
+                    try {
+                        const parsed = JSON.parse(value);
+                        displayValue = JSON.stringify(parsed, null, 2);
+                        
+                        // Add count info
+                        let countInfo = '';
+                        if (key === 'cnc_panels' && Array.isArray(parsed)) {
+                            countInfo = ` (${parsed.length} panels)`;
+                        } else if (key === 'cnc_stock' && Array.isArray(parsed)) {
+                            countInfo = ` (${parsed.length} sheets)`;
+                        }
+                        
+                        html += `
+                            <div class="storage-item">
+                                <div class="storage-key">${key}${countInfo}:</div>
+                                <div class="storage-value">${displayValue}</div>
+                            </div>
+                        `;
+                    } catch (e) {
+                        html += `
+                            <div class="storage-item">
+                                <div class="storage-key">${key}:</div>
+                                <div class="storage-value">${displayValue}</div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+            
+            if (!hasData) {
+                html = '<div class="empty">No CNC Optimizer data found in localStorage</div>';
+            }
+            
+            storageInfo.innerHTML = html;
+        }
+        
+        function clearStorage() {
+            if (confirm('Are you sure you want to clear all CNC Optimizer storage data?')) {
+                localStorage.removeItem('cnc_panels');
+                localStorage.removeItem('cnc_stock');
+                localStorage.removeItem('cnc_settings');
+                showResult('✅ All CNC storage cleared successfully!');
+                displayStorage();
+            }
+        }
+        
+        function clearPanelsOnly() {
+            if (confirm('Are you sure you want to clear panels data only?')) {
+                localStorage.removeItem('cnc_panels');
+                showResult('✅ Panels data cleared successfully!');
+                displayStorage();
+            }
+        }
+        
+        function clearStockOnly() {
+            if (confirm('Are you sure you want to clear stock data only?')) {
+                localStorage.removeItem('cnc_stock');
+                showResult('✅ Stock data cleared successfully!');
+                displayStorage();
+            }
+        }
+        
+        function refreshStorage() {
+            displayStorage();
+            showResult('🔄 Storage data refreshed!');
+        }
+        
+        function showResult(message) {
+            const result = document.getElementById('result');
+            result.innerHTML = message;
+            result.className = 'success';
+            setTimeout(() => {
+                result.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Initial load
+        displayStorage();
+        
+        // Auto-refresh every 5 seconds
+        setInterval(displayStorage, 5000);
+    </script>
+</body>
+</html>

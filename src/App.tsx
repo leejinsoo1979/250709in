@@ -23,6 +23,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import CNCOptimizer from '@/editor/CNCOptimizer';
 import CNCOptimizerNew from '@/editor/CNCOptimizer/CNCOptimizerNew';
 import CNCOptimizerPro from '@/editor/CNCOptimizer/CNCOptimizerPro';
+import CNCOptimizerTest from '@/editor/CNCOptimizer/CNCOptimizerTest';
 import { initializeTheme } from '@/theme';
 
 // AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
@@ -98,6 +99,7 @@ function AppContent() {
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
         <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
+        <Route path="/cnc-test" element={<CNCOptimizerTest />} />
         <Route path="/step0" element={<Navigate to="/step1" replace />} />
         <Route path="/step2" element={<Navigate to="/configurator" replace />} />
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />

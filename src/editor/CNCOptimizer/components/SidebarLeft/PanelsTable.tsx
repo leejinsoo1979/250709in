@@ -1,14 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
 import { Package, Plus, Trash2, Upload } from 'lucide-react';
 import styles from './SidebarLeft.module.css';
 
 export default function PanelsTable(){
-  const { panels, setPanels, selectedPanelId, setSelectedPanelId } = useCNCStore();
+  const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings } = useCNCStore();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newlyAddedPanelId, setNewlyAddedPanelId] = useState<string | null>(null);
 
   // Auto-scroll to selected panel
   useEffect(() => {
@@ -28,6 +29,28 @@ export default function PanelsTable(){
       }
     }
   }, [selectedPanelId]);
+
+  // Auto-focus on name input when a new panel is added
+  useEffect(() => {
+    if (newlyAddedPanelId) {
+      // Small delay to ensure the DOM is updated
+      setTimeout(() => {
+        // Scroll to the new panel
+        const newRow = document.querySelector(`tr[data-panel-id="${newlyAddedPanelId}"]`) as HTMLElement;
+        if (newRow) {
+          newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Focus on the name input
+        const nameInput = document.querySelector(`input[data-panel-id="${newlyAddedPanelId}"][data-field="label"]`) as HTMLInputElement;
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.select();
+        }
+        setNewlyAddedPanelId(null);
+      }, 100);
+    }
+  }, [newlyAddedPanelId]);
 
   // 마우스 휠 스크롤 이벤트 추가
   useEffect(() => {
@@ -70,43 +93,63 @@ export default function PanelsTable(){
           [key]: key==='quantity' || key==='width' || key==='length' || key==='thickness' ? Number(val) : val
         };
         
-        // width나 length가 변경되면 긴 쪽이 length가 되도록 자동 조정
-        if (key === 'width' || key === 'length') {
-          const newWidth = key === 'width' ? Number(val) : updatedPanel.width;
-          const newLength = key === 'length' ? Number(val) : updatedPanel.length;
-          
-          // 가로가 더 길면 값을 바꿔서 세로가 더 길게
-          if (newWidth > newLength) {
-            updatedPanel.width = newLength;
-            updatedPanel.length = newWidth;
-          }
-        }
+        // 자동 조정 로직 제거 - 사용자가 입력한 값 그대로 유지
+        // 필요한 경우 onBlur 이벤트에서 처리하도록 변경
         
         return updatedPanel;
       }
       return panel;
     });
-    setPanels(next);
+    setPanels(next, true); // Mark as user modified
+    setUserHasModifiedPanels(true);
+  };
+
+  // 입력 완료 시 가로/세로 검증 (선택적으로 사용)
+  const onBlurDimension = (i: number) => {
+    const panel = panels[i];
+    if (panel && panel.width > 0 && panel.length > 0 && panel.width > panel.length) {
+      // 사용자에게 알림 (선택사항)
+      // console.log('참고: 일반적으로 세로(L)가 가로(W)보다 큽니다.');
+      // 자동 조정을 원한다면 아래 코드 활성화
+      /*
+      const next = panels.map((p, index) => {
+        if (index === i) {
+          return {
+            ...p,
+            width: panel.length,
+            length: panel.width
+          };
+        }
+        return p;
+      });
+      setPanels(next, true);
+      */
+    }
   };
 
   const addRow = () => {
     const newPanel: Panel = {
       id: String(Date.now()),
-      label: `Panel_${panels.length + 1}`,
-      width: 600,  // 짧은 쪽 (W)
-      length: 800, // 긴 쪽 (L) - 항상 더 큰 값
-      thickness: 18,
-      quantity: 1,
-      material: 'PB',
-      grain: 'V'  // 세로 결방향 (긴 방향이 결방향)
+      label: '',  // 빈 이름
+      width: 0,   // 빈 가로
+      length: 0,  // 빈 세로
+      thickness: 18,  // 기본 두께만 설정
+      quantity: 1,    // 기본 수량 1
+      material: 'PB', // 기본 재질
+      grain: 'V'      // 기본 결방향
     };
-    setPanels([...panels, newPanel]);
+    setPanels([...panels, newPanel], true); // Mark as user modified
+    setUserHasModifiedPanels(true);
+    // 새로 추가된 패널을 자동으로 선택하여 편집하기 쉽게 함
+    setSelectedPanelId(newPanel.id);
+    setNewlyAddedPanelId(newPanel.id);
   };
 
   const delRow = (i:number) => { 
     const next = panels.slice(); 
     next.splice(i,1); 
-    setPanels(next); 
+    setPanels(next, true); // Mark as user modified
+    setUserHasModifiedPanels(true);
   };
 
   const selectPanel = (id: string) => {
@@ -193,10 +236,12 @@ export default function PanelsTable(){
           confirm(`기존 패널 ${panels.length}개가 있습니다. 대체하시겠습니까?\n\n'확인': CSV 파일로 대체\n'취소': 기존 패널에 추가`);
         
         if (shouldReplace) {
-          setPanels(newPanels);
+          setPanels(newPanels, true); // Mark as user modified
+          setUserHasModifiedPanels(true);
           alert(`${newPanels.length}개의 패널을 CSV 파일에서 가져왔습니다.`);
         } else {
-          setPanels([...panels, ...newPanels]);
+          setPanels([...panels, ...newPanels], true); // Mark as user modified
+          setUserHasModifiedPanels(true);
           alert(`${newPanels.length}개의 패널을 추가했습니다.`);
         }
       } else {
@@ -244,22 +289,25 @@ export default function PanelsTable(){
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>이름</th>
-                <th>치수 (L×W)</th>
-                <th>두께</th>
-                <th>수량</th>
-                <th>재질</th>
-                <th>결방향</th>
-                <th></th>
+                <th style={{ width: '28%', textAlign: 'center' }}>이름</th>
+                <th style={{ width: '20%', textAlign: 'center' }}>치수 (L×W)</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>두께</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>수량</th>
+                <th style={{ width: '21%', textAlign: 'center' }}>재질</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingRight: '3px' }}>결방향</th>
+                <th style={{ width: '7%', textAlign: 'center' }}></th>
               </tr>
             </thead>
             <tbody>
-              {panels.map((p, i) => (
+              {panels.map((p, i) => {
+                const isNewPanel = p.label === '' && p.width === 0 && p.length === 0;
+                return (
                 <tr 
                   key={p.id} 
                   ref={selectedPanelId === p.id ? selectedRowRef : null}
-                  className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''}`}
+                  className={`panel-clickable ${selectedPanelId === p.id ? styles.selected : ''} ${isNewPanel ? styles.newPanel : ''}`}
                   onClick={() => selectPanel(p.id)}
+                  data-panel-id={p.id}
                 >
                   <td>
                     <input 
@@ -268,24 +316,45 @@ export default function PanelsTable(){
                       onClick={e => e.stopPropagation()}
                       className={styles.input}
                       title={p.label}  // 툴팁으로 전체 이름 표시
+                      data-panel-id={p.id}
+                      data-field="label"
+                      placeholder="패널 이름"
                     />
                   </td>
                   <td>
                     <div className={styles.dimensions}>
                       <input 
                         type="number"
-                        value={p.length} 
-                        onChange={e => onChange(i, 'length', e.target.value)}
+                        value={p.length === 0 ? '' : p.length} 
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          const maxLength = 2440 - (settings.trimTop || 0) - (settings.trimBottom || 0);
+                          if (val <= maxLength) {
+                            onChange(i, 'length', e.target.value);
+                          }
+                        }}
                         onClick={e => e.stopPropagation()}
                         className={styles.inputSmall}
+                        placeholder="세로"
+                        max={2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}
+                        title={`최대 ${2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}mm`}
                       />
                       ×
                       <input 
                         type="number"
-                        value={p.width} 
-                        onChange={e => onChange(i, 'width', e.target.value)}
+                        value={p.width === 0 ? '' : p.width} 
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          const maxWidth = 1220 - (settings.trimLeft || 0) - (settings.trimRight || 0);
+                          if (val <= maxWidth) {
+                            onChange(i, 'width', e.target.value);
+                          }
+                        }}
                         onClick={e => e.stopPropagation()}
                         className={styles.inputSmall}
+                        placeholder="가로"
+                        max={1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}
+                        title={`최대 ${1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}mm`}
                       />
                     </div>
                   </td>
@@ -298,7 +367,7 @@ export default function PanelsTable(){
                       className={styles.inputTiny}
                     />
                   </td>
-                  <td>
+                  <td style={{ paddingLeft: '15px' }}>
                     <input 
                       type="number"
                       value={p.quantity} 
@@ -307,7 +376,7 @@ export default function PanelsTable(){
                       className={styles.inputTiny}
                     />
                   </td>
-                  <td>
+                  <td style={{ paddingLeft: '20px', paddingRight: '2px' }}>
                     <select 
                       value={p.material} 
                       onChange={e => onChange(i, 'material', e.target.value)}
@@ -322,7 +391,7 @@ export default function PanelsTable(){
                       <option value="LPM">LPM</option>
                     </select>
                   </td>
-                  <td>
+                  <td style={{ paddingLeft: '2px' }}>
                     <button
                       className={styles.grainToggle}
                       onClick={(e) => {
@@ -346,14 +415,15 @@ export default function PanelsTable(){
                           }
                           return panel;
                         });
-                        setPanels(next);
+                        setPanels(next, true); // Mark as user modified
+                        setUserHasModifiedPanels(true);
                       }}
                       title={p.grain === 'V' ? '세로 결방향 (클릭하여 가로로 변경)' : '가로 결방향 (클릭하여 세로로 변경)'}
                     >
                       {p.grain === 'V' ? '↑' : '→'}
                     </button>
                   </td>
-                  <td>
+                  <td style={{ padding: '6px 6px 6px 0', textAlign: 'center' }}>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -365,7 +435,8 @@ export default function PanelsTable(){
                     </button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         )}

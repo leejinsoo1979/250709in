@@ -18,6 +18,16 @@ export function useLivePanelData() {
 
   // Extract panels from placed modules
   useEffect(() => {
+    console.log('=== useLivePanelData extracting panels ===');
+    console.log('placedModules:', placedModules);
+    console.log('placedModules.length:', placedModules.length);
+    console.log('spaceInfo:', spaceInfo);
+    
+    // Debug: Check if placedModules is actually an array
+    if (!Array.isArray(placedModules)) {
+      console.error('placedModules is not an array:', typeof placedModules, placedModules);
+      return;
+    }
 
     const extractPanels = () => {
       setIsLoading(true);
@@ -30,11 +40,14 @@ export function useLivePanelData() {
         depth: spaceInfo.depth
       };
 
+      console.log('internalSpace:', internalSpace);
 
       placedModules.forEach((placedModule, moduleIndex) => {
         // Get module ID
         const moduleId = placedModule.moduleId || placedModule.moduleType;
+        console.log(`Module ${moduleIndex}: moduleId = ${moduleId}`);
         if (!moduleId) {
+          console.warn(`Module ${moduleIndex} has no moduleId`);
           return;
         }
         
@@ -42,8 +55,10 @@ export function useLivePanelData() {
         // Find module data with dynamic sizing
         const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
         if (!moduleData) {
+          console.warn(`Module ${moduleIndex}: No module data found for ${moduleId}`);
           return;
         }
+        console.log(`Module ${moduleIndex}: Found module data`, moduleData);
 
         // Get actual module configuration
         const width = placedModule.width || moduleData.dimensions.width;
@@ -55,6 +70,7 @@ export function useLivePanelData() {
 
         // Extract panel details using the panel extractor
         const modulePanels = calculatePanelDetails(moduleData, width, depth, hasDoor);
+        console.log(`Module ${moduleIndex}: Extracted ${modulePanels.length} panels`);
         
         
         // Update material, color info and ensure unique IDs
@@ -72,6 +88,8 @@ export function useLivePanelData() {
         allPanels.push(...modulePanels);
       });
 
+      console.log('Total panels extracted:', allPanels.length);
+      console.log('All panels:', allPanels);
 
       setPanels(allPanels);
       setIsLoading(false);

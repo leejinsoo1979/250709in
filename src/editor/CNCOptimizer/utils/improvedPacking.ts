@@ -134,7 +134,10 @@ export class ImprovedPacker {
   getResult(): PackedBin {
     let usedArea = 0;
     for (const panel of this.panels) {
-      usedArea += panel.width * panel.height;
+      // 실제 배치된 크기로 면적 계산 (회전 고려)
+      const actualWidth = panel.rotated ? panel.height : panel.width;
+      const actualHeight = panel.rotated ? panel.width : panel.height;
+      usedArea += actualWidth * actualHeight;
     }
     
     const totalArea = this.binWidth * this.binHeight;

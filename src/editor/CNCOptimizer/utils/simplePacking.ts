@@ -18,26 +18,22 @@ export class SimplePacker {
   }
   
   /**
-   * Bottom-Left 알고리즘으로 패널 배치
+   * Best Fit 알고리즘으로 패널 배치 - 빈 공간을 최소화하는 위치 선택
    */
   pack(panel: Rect): Rect | null {
     // 가능한 모든 위치 찾기
     const positions = this.getPossiblePositions();
     
+    let bestPosition: { x: number; y: number; rotated: boolean; waste: number } | null = null;
+    
     // 원래 방향으로 배치 시도
     for (const pos of positions) {
       if (this.canPlacePanel(panel.width, panel.height, pos.x, pos.y)) {
-        const packed: Rect = {
-          ...panel,
-          x: pos.x,
-          y: pos.y,
-          width: panel.width,
-          height: panel.height,
-          rotated: false
-        };
-        this.panels.push(packed);
-        // console.log(`Placed panel ${panel.id} at (${pos.x}, ${pos.y}) size: ${panel.width}x${panel.height}`);
-        return packed;
+        // 이 위치에 배치했을 때 낭비되는 공간 계산
+        const waste = this.calculateWaste(panel.width, panel.height, pos.x, pos.y);
+        if (!bestPosition || waste < bestPosition.waste) {
+          bestPosition = { x: pos.x, y: pos.y, rotated: false, waste };
+        }
       }
     }
     
@@ -45,23 +41,44 @@ export class SimplePacker {
     if (panel.canRotate === true) {
       for (const pos of positions) {
         if (this.canPlacePanel(panel.height, panel.width, pos.x, pos.y)) {
-          const packed: Rect = {
-            ...panel,
-            x: pos.x,
-            y: pos.y,
-            width: panel.width,  // 원본 크기 유지
-            height: panel.height,  // 원본 크기 유지
-            rotated: true
-          };
-          this.panels.push(packed);
-          // console.log(`Placed rotated panel ${panel.id} at (${pos.x}, ${pos.y}) size: ${panel.height}x${panel.width}`);
-          return packed;
+          const waste = this.calculateWaste(panel.height, panel.width, pos.x, pos.y);
+          if (!bestPosition || waste < bestPosition.waste) {
+            bestPosition = { x: pos.x, y: pos.y, rotated: true, waste };
+          }
         }
       }
     }
     
-    // console.log(`Could not place panel ${panel.id} (${panel.width}x${panel.height})`);
+    // 최적 위치에 배치
+    if (bestPosition) {
+      const packed: Rect = {
+        ...panel,
+        x: bestPosition.x,
+        y: bestPosition.y,
+        width: panel.width,
+        height: panel.height,
+        rotated: bestPosition.rotated
+      };
+      this.panels.push(packed);
+      return packed;
+    }
+    
     return null;
+  }
+  
+  /**
+   * 특정 위치에 패널을 배치했을 때 낭비되는 공간 계산
+   */
+  private calculateWaste(width: number, height: number, x: number, y: number): number {
+    // 주변 빈 공간 계산 (작을수록 좋음)
+    const rightSpace = this.binWidth - (x + width);
+    const topSpace = this.binHeight - (y + height);
+    
+    // 코너에 가까울수록 좋음 (빈 공간 최소화)
+    const cornerDistance = x + y;
+    
+    // 종합 점수 (낮을수록 좋음)
+    return rightSpace * topSpace + cornerDistance * 0.1;
   }
   
   /**
@@ -168,19 +185,19 @@ export class SimplePacker {
     let maxY = 0;
     
     for (const panel of this.panels) {
-      // 면적은 원본 크기로 계산
+      // 회전 여부와 관계없이 원본 크기로 면적 계산
       usedArea += panel.width * panel.height;
       
-      // 실제 차지하는 공간으로 경계 계산
+      // 실제 차지하는 공간으로 경계 계산 (회전 고려)
       const actualWidth = panel.rotated ? panel.height : panel.width;
       const actualHeight = panel.rotated ? panel.width : panel.height;
-      
       maxX = Math.max(maxX, panel.x + actualWidth);
       maxY = Math.max(maxY, panel.y + actualHeight);
     }
     
     const totalArea = this.binWidth * this.binHeight;
     const efficiency = totalArea > 0 ? (usedArea / totalArea) * 100 : 0;
+    
     
     // console.log(`Bin result: ${this.panels.length} panels, efficiency: ${efficiency.toFixed(1)}%, bounds: ${maxX}x${maxY}`);
     
@@ -210,14 +227,17 @@ export function packSimple(
   // console.log(`Kerf: ${kerf}mm`);
   // console.log(`Max bins: ${maxBins}`);
   
-  // 패널을 정렬 - 세로로 긴 패널 우선, 그 다음 면적 순
+  // 패널을 정렬 - 면적이 큰 것부터 (Best Fit Decreasing)
   const sortedPanels = [...panels].sort((a, b) => {
-    // 먼저 높이(세로 길이)가 긴 것 우선
-    const heightDiff = b.height - a.height;
-    if (heightDiff !== 0) return heightDiff;
+    // 면적이 큰 것 우선
+    const areaA = a.width * a.height;
+    const areaB = b.width * b.height;
+    if (areaB !== areaA) return areaB - areaA;
     
-    // 높이가 같으면 면적이 큰 것 우선
-    return b.width * b.height - a.width * a.height;
+    // 면적이 같으면 더 긴 변이 긴 것 우선
+    const maxA = Math.max(a.width, a.height);
+    const maxB = Math.max(b.width, b.height);
+    return maxB - maxA;
   });
   
   const bins: PackedBin[] = [];

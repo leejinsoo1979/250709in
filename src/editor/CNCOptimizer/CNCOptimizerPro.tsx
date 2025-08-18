@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { CNCProvider, useCNCStore } from './store';
 import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
-import { setThemeColor } from '@/theme';
+import { initializeTheme } from '@/theme';
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
@@ -14,6 +14,8 @@ import OptionsCard from './components/SidebarLeft/OptionsCard';
 import ExportBar from './components/ExportBar';
 import CuttingLayoutPreview2 from './components/CuttingLayoutPreview2';
 import SheetThumbnail from './components/SheetThumbnail';
+import ModeTabs from './components/ModeTabs';
+import AILoadingModal from './components/AILoadingModal';
 
 // Utils
 import { optimizePanelsMultiple } from './utils/optimizer';
@@ -35,9 +37,10 @@ function PageInner(){
   const { 
     panels, setPanels, 
     stock, setStock, 
-    settings,
+    settings, setSettings,
     selectedPanelId, setSelectedPanelId,
     currentSheetIndex, setCurrentSheetIndex,
+    userHasModifiedPanels, setUserHasModifiedPanels,
     setPlacements, selectPanel,
     simulating, setSimulating, simSpeed, setSimSpeed,
     selectedCutIndex, selectCutIndex,
@@ -56,6 +59,13 @@ function PageInner(){
   const [viewerOffset, setViewerOffset] = useState({ x: 0, y: 0 });
   const [showCuttingList, setShowCuttingList] = useState(true); // 컷팅 리스트 탭 기본 선택
   const [expandedSheets, setExpandedSheets] = useState<Set<number>>(new Set()); // 펼쳐진 시트 인덱스들
+  const [showTotalStats, setShowTotalStats] = useState(true); // 전체 통계 표시 여부
+  const [showSheetStats, setShowSheetStats] = useState(true); // 시트 통계 표시 여부
+  const [methodChanged, setMethodChanged] = useState(false); // 메소드 변경 여부
+  
+  // AI Loading state
+  const [showAILoading, setShowAILoading] = useState(false);
+  const [aiLoadingProgress, setAILoadingProgress] = useState(0);
 
 
   // Handle ESC key to clear selection
@@ -83,58 +93,93 @@ function PageInner(){
     };
   }, [setSelectedPanelId]);
 
-  // Initialize with live data - only run once on mount or when livePanels changes
+  // Auto-optimization trigger ref to ensure it only runs once
+  const hasAutoOptimized = useRef(false);
+  // Track if panels have been initialized from livePanels
+  const hasInitializedFromLive = useRef(false);
+
+  // Initialize with live data - only run once on mount
   useEffect(() => {
-    // Convert live panels to CutList format
-    if (livePanels.length > 0) {
+    // Skip initialization if user has already modified panels
+    if (userHasModifiedPanels) {
+      console.log('User has modified panels, skipping initialization');
+      return;
+    }
+    
+    console.log('=== CNCOptimizerPro Initialization ===');
+    console.log('livePanels from hook:', livePanels);
+    console.log('livePanels.length:', livePanels.length);
+    console.log('current panels in store:', panels);
+    console.log('current stock in store:', stock);
+    
+    // Clear panels if no furniture is placed and panels are from old localStorage
+    // But don't clear if user manually added panels (empty panels with width/length = 0)
+    if (livePanels.length === 0 && panels.length > 0) {
+      // Check if panels are user-added empty panels
+      const hasEmptyPanels = panels.some(p => p.width === 0 || p.length === 0 || p.label === '');
       
-      const cutlistPanels: Panel[] = livePanels.map(p => {
-        // 패널의 긴 방향을 L(세로) 방향으로 배치
-        // 긴 쪽이 length가 되도록 설정
-        let width = p.width;
-        let length = p.height;
-        
-        // 가로가 더 길면 회전시켜서 세로가 더 길게 만들기
-        if (width > length) {
-          width = p.height;
-          length = p.width;
+      if (!hasEmptyPanels) {
+        // Only clear if there are no user-added empty panels
+        const savedPanels = localStorage.getItem('cnc_panels');
+        if (savedPanels) {
+          // Clear old panels since no furniture is currently placed
+          console.log('Clearing old panels from localStorage');
+          setPanels([]);
+          localStorage.removeItem('cnc_panels');
         }
+      }
+    }
+    
+    // Convert live panels to CutList format - only if not already initialized and user hasn't modified
+    if (livePanels.length > 0 && !hasInitializedFromLive.current && !userHasModifiedPanels) {
+        const cutlistPanels: Panel[] = livePanels.map(p => {
+          // 패널의 긴 방향을 L(세로) 방향으로 배치
+          // 긴 쪽이 length가 되도록 설정
+          let width = p.width;
+          let length = p.height;
+          
+          // 가로가 더 길면 회전시켜서 세로가 더 길게 만들기
+          if (width > length) {
+            width = p.height;
+            length = p.width;
+          }
+          
+          // 결방향은 항상 세로(V)로 설정 - 긴 방향이 결방향
+          let grain = 'V'; // 세로 결방향 (긴 방향)
+          
+          // 도어와 엔드패널은 자동으로 PET 재질로 설정
+          let material = p.material || 'PB';
+          const panelName = (p.name || '').toLowerCase();
+          if (panelName.includes('도어') || panelName.includes('door') || 
+              panelName.includes('엔드') || panelName.includes('end')) {
+            material = 'PET';
+          }
+          
+          return {
+            id: p.id,
+            label: p.name || `Panel_${p.id}`,
+            width: width,   // 짧은 쪽
+            length: length, // 긴 쪽
+            thickness: p.thickness || 18,
+            quantity: p.quantity || 1,
+            material: material,
+            grain: grain,
+            canRotate: true // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
+          };
+        });
         
-        // 결방향은 항상 세로(V)로 설정 - 긴 방향이 결방향
-        let grain = 'V'; // 세로 결방향 (긴 방향)
-        
-        // 도어와 엔드패널은 자동으로 PET 재질로 설정
-        let material = p.material || 'PB';
-        const panelName = (p.name || '').toLowerCase();
-        if (panelName.includes('도어') || panelName.includes('door') || 
-            panelName.includes('엔드') || panelName.includes('end')) {
-          material = 'PET';
-        }
-        
-        return {
-          id: p.id,
-          label: p.name || `Panel_${p.id}`,
-          width: width,   // 짧은 쪽
-          length: length, // 긴 쪽
-          thickness: p.thickness || 18,
-          quantity: p.quantity || 1,
-          material: material,
-          grain: grain,
-          canRotate: false // 결방향이 있으므로 회전 불가
-        };
-      });
+        console.log('Setting panels from livePanels:', cutlistPanels);
+        setPanels(cutlistPanels);
+        hasInitializedFromLive.current = true;
+    } else if (livePanels.length === 0 && !userHasModifiedPanels) {
+      // No furniture placed and user hasn't modified - check for old panels
+      const hasEmptyPanels = panels.some(p => p.width === 0 || p.length === 0 || p.label === '');
       
-      setPanels(cutlistPanels);
-    } else if (livePanels.length === 0 && panels.length === 0) {
-      // 테스트용 패널 추가 (live panels가 없고 panels도 비어있을 때만)
-      const testPanels: Panel[] = [
-        { id: '1', label: 'Panel_1', width: 600, length: 800, thickness: 18, quantity: 2, material: 'PB', grain: 'V' },
-        { id: '2', label: 'Panel_2', width: 450, length: 600, thickness: 18, quantity: 3, material: 'PB', grain: 'V' },
-        { id: '3', label: 'Panel_3', width: 300, length: 400, thickness: 18, quantity: 4, material: 'MDF', grain: 'V' },
-        { id: '4', label: 'Panel_4', width: 800, length: 1000, thickness: 18, quantity: 1, material: 'MDF', grain: 'V' },
-        { id: '5', label: 'Panel_5', width: 550, length: 750, thickness: 18, quantity: 2, material: 'PB', grain: 'V' },
-      ];
-      setPanels(testPanels);
+      if (!hasEmptyPanels && panels.length > 0) {
+        // Only clear if there are no user-added empty panels
+        console.log('No furniture placed and no user panels - clearing panels');
+        setPanels([]);
+      }
     }
 
     // Initialize default stock if empty
@@ -198,44 +243,57 @@ function PageInner(){
       setStock(defaultStock);
     }
 
-    // Set theme color and CSS variables for Logo
-    const theme = getComputedStyle(document.documentElement)
-      .getPropertyValue('--theme')
-      .trim();
-    if (theme) {
-      setThemeColor(`hsl(${theme})`);
-      // Set CSS variable for Logo component
-      document.documentElement.style.setProperty('--theme-primary', `hsl(${theme})`);
-    }
-  }, [livePanels, setPanels, setStock]); // setPanels and setStock are stable from store
-
-  // Auto-optimize when data changes with debouncing - DISABLED to prevent infinite loop
-  // Uncomment below to enable auto-optimization (but fix the infinite loop first)
-  /*
+    // Initialize theme from localStorage
+    initializeTheme();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
+  
+  // Separate effect for live panels initialization - only when they change and user hasn't modified
   useEffect(() => {
-    if (panels.length > 0 && stock.length > 0) {
-      // Clear previous timeout
-      if (optimizeTimeoutRef.current) {
-        clearTimeout(optimizeTimeoutRef.current);
-      }
-      
-      // Set new timeout for optimization (debounce 500ms)
-      optimizeTimeoutRef.current = setTimeout(() => {
-        handleOptimize();
-      }, 500);
+    if (userHasModifiedPanels) {
+      console.log('User has modified panels, skipping livePanels sync');
+      return;
     }
     
-    // Cleanup
-    return () => {
-      if (optimizeTimeoutRef.current) {
-        clearTimeout(optimizeTimeoutRef.current);
-      }
-    };
-  }, [panels, stock, settings]);
-  */
+    if (livePanels.length > 0 && !hasInitializedFromLive.current) {
+      console.log('Initializing from livePanels');
+      const cutlistPanels: Panel[] = livePanels.map(p => {
+        let width = p.width;
+        let length = p.height;
+        
+        if (width > length) {
+          width = p.height;
+          length = p.width;
+        }
+        
+        let grain = 'V';
+        let material = p.material || 'PB';
+        const panelName = (p.name || '').toLowerCase();
+        if (panelName.includes('도어') || panelName.includes('door') || 
+            panelName.includes('엔드') || panelName.includes('end')) {
+          material = 'PET';
+        }
+        
+        return {
+          id: p.id,
+          label: p.name || `Panel_${p.id}`,
+          width: width,
+          length: length,
+          thickness: p.thickness || 18,
+          quantity: p.quantity || 1,
+          material: material,
+          grain: grain,
+          canRotate: true
+        };
+      });
+      
+      setPanels(cutlistPanels);
+      hasInitializedFromLive.current = true;
+    }
+  }, [livePanels, userHasModifiedPanels, setPanels]);
 
-
-  const handleOptimize = async () => {
+  const handleOptimize = useCallback(async () => {
+    
     if (panels.length === 0) {
       showToast('No panels to optimize', 'error');
       return;
@@ -247,11 +305,30 @@ function PageInner(){
     }
 
     setIsOptimizing(true);
+    setMethodChanged(false); // Calculate 시 강조 제거
+    
+    // AI 로딩 모달 표시
+    setShowAILoading(true);
+    setAILoadingProgress(0);
+    
+    // Track animation start time for minimum duration
+    const animationStartTime = Date.now();
     
     // 설정값을 전역 변수로 저장 (뷰어에서 접근 가능하도록)
     (window as any).cncSettings = settings;
     
+    // Simulate progress updates - slower for better visibility
+    const progressInterval = setInterval(() => {
+      setAILoadingProgress(prev => {
+        const next = prev + Math.random() * 5; // Even smaller increments for 4 seconds
+        return next > 85 ? 85 : next; // Cap at 85% until completion
+      });
+    }, 400); // Even slower interval for 4 second duration
+    
     try {
+      // Progress: 10% - Starting analysis
+      setAILoadingProgress(10);
+      
       // Group panels by material AND thickness
       const panelGroups = new Map<string, Panel[]>();
       
@@ -262,16 +339,20 @@ function PageInner(){
         // 패널 치수를 그대로 사용 (width와 length를 변경하지 않음)
         // console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
         
-        // 결방향 고려 설정이 켜져있고 결방향이 설정되어 있으면 회전 불가
-        // 결방향이 V(세로) 또는 H(가로)이면 회전 불가
-        if (settings.considerGrain && panel.grain && (panel.grain === 'V' || panel.grain === 'H')) {
-          processedPanel.canRotate = false;
-        } else if (!settings.considerGrain) {
-          // 결방향 고려하지 않으면 회전 가능
+        // CNC 최적화 모드에서는 결방향 무시하고 무조건 회전 가능 (효율 극대화)
+        // BY_LENGTH, BY_WIDTH 모드에서만 결방향 고려
+        if (settings.optimizationType === 'OPTIMAL_CNC') {
+          // CNC 최적화: 테트리스처럼 최대 효율로 배치 - 결방향 무시
           processedPanel.canRotate = true;
         } else {
-          // 그 외의 경우 (grain이 NONE이거나 없는 경우)
-          processedPanel.canRotate = true;
+          // 세로/가로 절단 모드: 결방향 고려 설정에 따름
+          if (settings.considerGrain && panel.grain && (panel.grain === 'V' || panel.grain === 'H')) {
+            processedPanel.canRotate = false;
+          } else if (!settings.considerGrain) {
+            processedPanel.canRotate = true;
+          } else {
+            processedPanel.canRotate = true;
+          }
         }
         
         // 재질과 두께를 모두 고려하여 그룹화
@@ -285,6 +366,9 @@ function PageInner(){
       });
 
       const allResults: OptimizedResult[] = [];
+      
+      // Progress: 30% - Processing panels
+      setAILoadingProgress(30);
 
       // Optimize each material/thickness group
       for (const [key, groupPanels] of panelGroups) {
@@ -356,6 +440,9 @@ function PageInner(){
             height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10)
           };
           
+          // Progress: 50% - Running optimization algorithm
+          setAILoadingProgress(50);
+          
           // Run optimization with adjusted stock size
           const results = await optimizePanelsMultiple(
             optimizerPanels,
@@ -363,7 +450,7 @@ function PageInner(){
             settings.singleSheetOnly ? 1 : 999, // 제한 없음
             settings.alignVerticalCuts !== false, // Use aligned packing by default
             settings.kerf || 5, // 톱날 두께 전달
-            settings.optimizationType || 'cnc' // 최적화 타입 전달
+            settings.optimizationType || 'OPTIMAL_CNC' // 최적화 타입 전달
           );
           
           // 패널 위치를 여백만큼 오프셋
@@ -385,6 +472,9 @@ function PageInner(){
       // console.log('=== Initial Optimization Complete ===');
       // console.log('Total sheets generated:', allResults.length);
       
+      // Progress: 80% - Finalizing optimization
+      setAILoadingProgress(80);
+      
       // 재최적화 비활성화 - 시트 낭비 방지
       let finalResults = [...allResults];
       
@@ -396,8 +486,21 @@ function PageInner(){
       //   console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
       // });
       
+      // Progress: 95% - Generating results
+      setAILoadingProgress(95);
+      
       setOptimizationResults(finalResults);
-      setCurrentSheetIndex(0);
+      
+      // 현재 시트 인덱스 유지 (범위 체크)
+      // 새로운 결과의 시트 수보다 현재 인덱스가 크면 마지막 시트로 이동
+      if (currentSheetIndex >= finalResults.length && finalResults.length > 0) {
+        setCurrentSheetIndex(finalResults.length - 1);
+      }
+      // 현재 인덱스는 유지하되, 최소한 0으로 설정
+      else if (currentSheetIndex < 0 && finalResults.length > 0) {
+        setCurrentSheetIndex(0);
+      }
+      // 그 외의 경우는 현재 인덱스 유지
       
       // Generate placements for simulation
       const placements: Placement[] = [];
@@ -416,19 +519,118 @@ function PageInner(){
       });
       setPlacements(placements);
       
-      if (allResults.length > 0) {
-        const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
-        showToast(`Optimized ${totalPanels} panels across ${allResults.length} sheets`, 'success');
-      }
+      // Clear progress interval
+      clearInterval(progressInterval);
+      
+      // Ensure minimum 4 seconds of loading animation
+      const elapsedTime = Date.now() - animationStartTime;
+      const remainingTime = Math.max(0, 4000 - elapsedTime); // Minimum 4 seconds total
+      
+      // Animate to 100% after ensuring minimum time
+      setTimeout(() => {
+        setAILoadingProgress(100);
+        
+        // Hide AI loading modal after showing 100% briefly
+        setTimeout(() => {
+          setShowAILoading(false);
+          setAILoadingProgress(0);
+          
+          if (allResults.length > 0) {
+            const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
+            const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
+            showToast(`최적화 완료! ${totalPanels}개 패널, ${allResults.length}개 시트 (평균 효율: ${avgEfficiency.toFixed(1)}%)`, 'success');
+          } else {
+            showToast('최적화 실패: 패널을 배치할 수 없습니다', 'error');
+          }
+        }, 500); // Show 100% for 500ms
+      }, remainingTime);
     } catch (error) {
       // console.error('Optimization error:', error);
+      clearInterval(progressInterval);
+      setShowAILoading(false);
+      setAILoadingProgress(0);
       showToast('Optimization failed', 'error');
     } finally {
       setIsOptimizing(false);
     }
-  };
+  }, [panels, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
+  
+  // Auto-optimize effect - must be after handleOptimize definition
+  useEffect(() => {
+    // Run auto-optimization when we first get both panels and stock
+    // Use ref to ensure it only runs once
+    if (!hasAutoOptimized.current && panels.length > 0 && stock.length > 0) {
+      hasAutoOptimized.current = true;
+      
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        handleOptimize();
+      }, 100);
+    }
+  }, [panels, stock, handleOptimize]);
 
   const projectName = basicInfo?.title || 'New Project';
+  
+  // 컷팅 메소드 드롭다운 컴포넌트
+  const CuttingMethodDropdown = () => {
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    
+    const methodLabels = {
+      'OPTIMAL_L': 'L방향 우선',
+      'OPTIMAL_W': 'W방향 우선', 
+      'OPTIMAL_CNC': 'CNC 최적화'
+    };
+
+    // 드롭다운 외부 클릭 감지
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setShowDropdown(false);
+        }
+      };
+
+      if (showDropdown) {
+        document.addEventListener('mousedown', handleClickOutside);
+      }
+      
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [showDropdown]);
+
+    const handleMethodChange = (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+      setSettings({ optimizationType: method });
+      setShowDropdown(false);
+      setMethodChanged(true); // Calculate 버튼 강조를 위한 플래그
+    };
+
+    return (
+      <div className={styles.dropdownContainer} ref={dropdownRef}>
+        <button 
+          className={styles.dropdownButton}
+          onClick={() => setShowDropdown(!showDropdown)}
+        >
+          <span>{methodLabels[settings.optimizationType || 'OPTIMAL_CNC']}</span>
+          <ChevronDown size={14} className={showDropdown ? styles.rotated : ''} />
+        </button>
+        
+        {showDropdown && (
+          <div className={styles.dropdownMenu}>
+            {Object.entries(methodLabels).map(([key, label]) => (
+              <button
+                key={key}
+                className={`${styles.dropdownItem} ${settings.optimizationType === key ? styles.active : ''}`}
+                onClick={() => handleMethodChange(key as 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Memoize cut steps to avoid recalculation during render
   const allCutSteps = useMemo(() => {
@@ -454,7 +656,7 @@ function PageInner(){
         
         // 각 패널의 재단 단계 생성
         const panelCuts = buildSequenceForPanel({
-          mode: settings.optimizationType === 'cnc' ? 'free' : 'guillotine',
+          mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
           sheetW: result.stockPanel.width,
           sheetH: result.stockPanel.height,
           kerf: settings.kerf || 5,
@@ -498,23 +700,33 @@ function PageInner(){
         </div>
         
         <div className={styles.headerRight}>
+          <CuttingMethodDropdown />
+          <div className={styles.divider} />
           <button 
-            className={styles.calculateButton}
+            className={`${styles.calculateButton} ${methodChanged ? styles.highlighted : ''}`}
             onClick={handleOptimize}
             disabled={isOptimizing || panels.length === 0}
           >
             <Play size={18} />
-            Calculate
+            <span>Calculate</span>
           </button>
           <div className={styles.exportGroup}>
             <ExportBar optimizationResults={optimizationResults} />
           </div>
+          <div className={styles.divider} />
           <button 
             className={styles.exitButton}
-            onClick={() => navigate('/configurator')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Exit button clicked! Navigating to configurator...');
+              // 직접 URL 변경
+              window.location.href = '/configurator';
+            }}
+            type="button"
           >
+            <LogOut size={16} />
             나가기
-            <ArrowRight size={18} />
           </button>
         </div>
       </div>
@@ -580,7 +792,7 @@ function PageInner(){
             </div>
           ) : (
             <div className={styles.emptyPreview}>
-              <Zap size={48} />
+              <Cpu size={48} />
               <h3>최적화 결과가 없습니다</h3>
               <p>패널과 원자재를 설정한 후 "최적화" 버튼을 클릭하세요</p>
               <button 
@@ -588,7 +800,6 @@ function PageInner(){
                 onClick={handleOptimize}
                 disabled={isOptimizing}
               >
-                <Zap size={20} />
                 {isOptimizing ? '최적화 중...' : '패널생성'}
               </button>
             </div>
@@ -599,44 +810,99 @@ function PageInner(){
         <div className={styles.rightSidebar}>
           <div className={styles.rightSidebarContent}>
             <div className={styles.statsCard}>
-              <h3>전체 통계</h3>
-              <div className={styles.stats}>
-                <div className={styles.statItem}>
-                  <span>총 시트 수</span>
-                  <strong>{optimizationResults.length}</strong>
-                </div>
-                <div className={styles.statItem}>
-                  <span>총 패널 수</span>
-                  <strong>{panels.reduce((sum, p) => sum + p.quantity, 0)}</strong>
-                </div>
-                <div className={styles.statItem}>
-                  <span>평균 효율</span>
-                  <strong>
-                    {optimizationResults.length > 0
-                      ? (optimizationResults.reduce((sum, r) => sum + r.efficiency, 0) / optimizationResults.length).toFixed(1)
-                      : 0}%
-                  </strong>
-                </div>
-                <div className={styles.statItem}>
-                  <span>총 폐기량</span>
-                  <strong>
-                    {(optimizationResults.reduce((sum, r) => sum + r.wasteArea, 0) / 1000000).toFixed(2)} m²
-                  </strong>
-                </div>
-                {showCuttingList && (
-                  <div className={styles.statItem}>
-                    <span>톱날 이동</span>
-                    <strong>
-                      {sawStats.total.toFixed(2)} {sawStats.unit}
-                    </strong>
-                  </div>
-                )}
+              <div className={styles.statsCardTitle}>
+                <h3>전체 통계</h3>
+                <button
+                  className={styles.foldButton}
+                  onClick={() => setShowTotalStats(!showTotalStats)}
+                >
+                  {showTotalStats ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
               </div>
+              {showTotalStats && (
+              <div className={styles.statsDetail}>
+                <div className={styles.statRow}>
+                  <span>시트 수</span>
+                  <div className={styles.statValue}>
+                    <strong>{optimizationResults.length}</strong>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>사용 면적</span>
+                  <div className={styles.statValue}>
+                    <strong>{(optimizationResults.reduce((sum, r) => sum + r.usedArea, 0) / 1000000).toFixed(1)}</strong>
+                    <span className={styles.statPercent}>
+                      {optimizationResults.length > 0
+                        ? Math.round(optimizationResults.reduce((sum, r) => sum + r.efficiency, 0) / optimizationResults.length)
+                        : 0}%
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>폐기 면적</span>
+                  <div className={styles.statValue}>
+                    <strong>{(optimizationResults.reduce((sum, r) => sum + r.wasteArea, 0) / 1000000).toFixed(1)}</strong>
+                    <span className={styles.statPercent}>
+                      {optimizationResults.length > 0
+                        ? Math.round((100 - optimizationResults.reduce((sum, r) => sum + r.efficiency, 0) / optimizationResults.length))
+                        : 0}%
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>총 패널</span>
+                  <div className={styles.statValue}>
+                    <strong>{optimizationResults.reduce((sum, r) => sum + r.panels.length, 0)}</strong>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>절단 횟수</span>
+                  <div className={styles.statValue}>
+                    <strong>{allCutSteps.length}</strong>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>절단 길이</span>
+                  <div className={styles.statValue}>
+                    <strong>{Math.round(sawStats.total)}m</strong>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>톱날 두께</span>
+                  <div className={styles.statValue}>
+                    <strong>{settings.kerf || 5}mm</strong>
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>원자재</span>
+                  <div className={styles.statValue}>
+                    {stock.length > 0 ? `${stock[0].width}×${stock[0].length}` : '-'}
+                  </div>
+                </div>
+                <div className={styles.statRow}>
+                  <span>최적화</span>
+                  <div className={styles.statValue}>
+                    {settings.optimizationType === 'OPTIMAL_CNC' ? '최소폐기' : 
+                     settings.optimizationType === 'BY_LENGTH' ? '세로절단' : '가로절단'}
+                  </div>
+                </div>
+              </div>
+              )}
             </div>
 
             {optimizationResults[currentSheetIndex] && (
               <div className={styles.statsCard}>
-                <h3>시트 통계</h3>
+                <div className={styles.statsCardTitle}>
+                  <h3>시트 통계</h3>
+                  <button
+                    className={styles.foldButton}
+                    onClick={() => setShowSheetStats(!showSheetStats)}
+                  >
+                    {showSheetStats ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                </div>
+                {showSheetStats && (
+                <>
                 <div className={styles.statsCardHeader}>
                   <button 
                     className={styles.statsNavButton}
@@ -656,13 +922,6 @@ function PageInner(){
                   <button 
                     className={`${styles.playButton} ${simulating ? styles.playing : ''}`}
                     onClick={() => {
-                      console.log('Play button clicked', { 
-                        simulating, 
-                        currentSheetIndex,
-                        hasOptimizationResults: optimizationResults.length > 0,
-                        allCutStepsLength: allCutSteps.length
-                      });
-                      
                       if (simulating) {
                         // 시뮬레이션 정지
                         setSimulating(false);
@@ -671,7 +930,6 @@ function PageInner(){
                         setSelectedPanelId(null); // Clear selected panel for full sheet simulation
                         setSelectedSheetId(String(currentSheetIndex + 1));
                         setSimulating(true);
-                        console.log('Simulation started');
                       }
                     }}
                     title={simulating ? "시뮬레이션 정지" : "컷팅 시뮬레이션"}
@@ -679,30 +937,50 @@ function PageInner(){
                     {simulating ? <Pause size={14} /> : <Play size={14} />}
                   </button>
                 </div>
-                <div className={styles.stats}>
-                  <div className={styles.statItem}>
+                <div className={styles.statsDetail}>
+                  <div className={styles.statRow}>
                     <span>패널 수</span>
-                    <strong>{optimizationResults[currentSheetIndex].panels.length}</strong>
-                  </div>
-                  <div className={styles.statItem}>
-                    <span>효율</span>
-                    <strong>{optimizationResults[currentSheetIndex].efficiency.toFixed(1)}%</strong>
-                  </div>
-                  <div className={styles.statItem}>
-                    <span>사용 면적</span>
-                    <strong>{(optimizationResults[currentSheetIndex].usedArea / 1000000).toFixed(2)} m²</strong>
-                  </div>
-                  <div className={styles.statItem}>
-                    <span>폐기 면적</span>
-                    <strong>{(optimizationResults[currentSheetIndex].wasteArea / 1000000).toFixed(2)} m²</strong>
-                  </div>
-                  {showCuttingList && sawStats.bySheet[String(currentSheetIndex + 1)] && (
-                    <div className={styles.statItem}>
-                      <span>톱날 이동</span>
-                      <strong>{sawStats.bySheet[String(currentSheetIndex + 1)].toFixed(2)} {sawStats.unit}</strong>
+                    <div className={styles.statValue}>
+                      <strong>{optimizationResults[currentSheetIndex].panels.length}</strong>
                     </div>
-                  )}
+                  </div>
+                  <div className={styles.statRow}>
+                    <span>효율</span>
+                    <div className={styles.statValue}>
+                      <strong>{optimizationResults[currentSheetIndex].efficiency.toFixed(1)}%</strong>
+                    </div>
+                  </div>
+                  <div className={styles.statRow}>
+                    <span>사용 면적</span>
+                    <div className={styles.statValue}>
+                      <strong>{(optimizationResults[currentSheetIndex].usedArea / 1000000).toFixed(2)}㎡</strong>
+                    </div>
+                  </div>
+                  <div className={styles.statRow}>
+                    <span>폐기 면적</span>
+                    <div className={styles.statValue}>
+                      <strong>{(optimizationResults[currentSheetIndex].wasteArea / 1000000).toFixed(2)}㎡</strong>
+                    </div>
+                  </div>
+                  <div className={styles.statRow}>
+                    <span>절단 횟수</span>
+                    <div className={styles.statValue}>
+                      <strong>{
+                        allCutSteps.filter(step => step.sheetNumber === currentSheetIndex + 1).length
+                      }</strong>
+                    </div>
+                  </div>
+                  <div className={styles.statRow}>
+                    <span>절단 길이</span>
+                    <div className={styles.statValue}>
+                      <strong>{sawStats.bySheet[String(currentSheetIndex + 1)] 
+                        ? Math.round(sawStats.bySheet[String(currentSheetIndex + 1)]) + 'm'
+                        : '0m'}</strong>
+                    </div>
+                  </div>
                 </div>
+                </>
+                )}
               </div>
             )}
 
@@ -880,6 +1158,13 @@ function PageInner(){
           </div>
         </div>
       </div>
+      
+      {/* AI Loading Modal */}
+      <AILoadingModal 
+        isOpen={showAILoading}
+        progress={aiLoadingProgress}
+        message="AI 최적화 계산 중"
+      />
     </div>
   );
 }

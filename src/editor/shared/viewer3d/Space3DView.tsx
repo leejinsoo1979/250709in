@@ -28,6 +28,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
+import { getThemeHex } from '@/theme';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -623,7 +624,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'front' ? '3px solid #00ffcc' : '1px solid transparent',
+              border: activeQuadrant === 'front' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -707,7 +708,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'top' ? '3px solid #00ffcc' : '1px solid transparent',
+              border: activeQuadrant === 'top' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -791,7 +792,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'left' ? '3px solid #00ffcc' : '1px solid transparent',
+              border: activeQuadrant === 'left' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -875,7 +876,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'right' ? '3px solid #00ffcc' : '1px solid transparent',
+              border: activeQuadrant === 'right' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'

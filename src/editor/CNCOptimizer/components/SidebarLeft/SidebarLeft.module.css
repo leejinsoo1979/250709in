@@ -69,9 +69,19 @@
   transition: all 0.2s;
 }
 
+.addButton svg {
+  color: hsl(var(--theme));
+  width: 14px;
+  height: 14px;
+}
+
 .addButton:hover {
   background: hsl(var(--theme) / 0.15);
   border-color: hsl(var(--theme) / 0.3);
+}
+
+.addButton:hover svg {
+  color: hsl(var(--theme));
 }
 
 .tableContainer {
@@ -119,7 +129,7 @@
 
 .table {
   width: 100%;
-  min-width: 420px; /* 최소 너비 설정 */
+  min-width: 0;
   font-size: 11px;
   border-collapse: separate;
   border-spacing: 0;
@@ -211,8 +221,7 @@
 }
 
 .table th {
-  padding: 8px 6px;
-  text-align: left;
+  padding: 8px 4px;
   color: #6b7280;
   font-weight: 600;
   font-size: 10px;
@@ -248,8 +257,30 @@
   background: hsl(var(--theme));
 }
 
+.table tbody tr.newPanel {
+  background: hsl(var(--theme) / 0.08);
+  animation: highlight 1s ease-in-out;
+  border: 2px solid hsl(var(--theme) / 0.3) !important;
+  box-shadow: 0 2px 8px hsl(var(--theme) / 0.15);
+}
+
+@keyframes highlight {
+  0% {
+    background: hsl(var(--theme) / 0.2);
+    transform: scale(1.02);
+  }
+  50% {
+    background: hsl(var(--theme) / 0.15);
+    transform: scale(1.01);
+  }
+  100% {
+    background: hsl(var(--theme) / 0.08);
+    transform: scale(1);
+  }
+}
+
 .table td {
-  padding: 6px 6px;
+  padding: 6px 10px;
   color: #374151;
   vertical-align: middle;
   font-size: 11px;
@@ -267,6 +298,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.input:placeholder-shown {
+  background: hsl(var(--theme) / 0.05) !important;
+  border-color: hsl(var(--theme) / 0.3);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--theme) / 0.1);
 }
 
 .input:focus {
@@ -288,6 +326,13 @@
   border-radius: 3px;
 }
 
+.inputSmall:placeholder-shown {
+  background: hsl(var(--theme) / 0.05) !important;
+  border-color: hsl(var(--theme) / 0.3);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--theme) / 0.1);
+}
+
 .inputSmall:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
@@ -307,6 +352,11 @@
   border-radius: 3px;
 }
 
+.inputTiny:placeholder-shown {
+  background: hsl(var(--theme) / 0.05) !important;
+  border-color: hsl(var(--theme) / 0.3);
+}
+
 .inputTiny:focus {
   outline: none;
   border-color: hsl(var(--theme) / 0.3);
@@ -316,7 +366,7 @@
 
 .select {
   width: 100%;
-  padding: 3px 4px;
+  padding: 3px 6px;
   border: 1px solid #e0e0e0;
   background: white !important;
   color: #333 !important;
@@ -336,14 +386,15 @@
 .dimensions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 11px;
   color: #666;
+  justify-content: center;
 }
 
 .deleteButton {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -462,16 +513,16 @@
 }
 
 .grainToggle {
-  width: 26px;
+  width: 24px;
   height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  border-radius: 3px;
   color: #6b7280;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -559,14 +610,27 @@
   justify-content: space-between !important;
 }
 
+.inlineNumberInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #333;
+}
+
+.inlineNumberInput span {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
 .inputWrapper {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: white;
   border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 2px 8px 2px 4px;
+  border-radius: 4px;
+  padding: 2px 6px 2px 4px;
   transition: all 0.2s ease;
 }
 
@@ -580,11 +644,11 @@
 }
 
 .optionGroup input[type="number"] {
-  width: 50px;
-  padding: 4px;
+  width: 35px;
+  padding: 4px 2px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: hsl(var(--theme));
   outline: none;
@@ -699,8 +763,37 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: hsl(var(--theme));
   flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.checkboxCompact input[type="checkbox"]:checked {
+  background-color: white;
+  border-color: hsl(var(--theme));
+  border-width: 1px;
+}
+
+.checkboxCompact input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: hsl(var(--theme));
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.checkboxCompact input[type="checkbox"]:hover {
+  border-color: hsl(var(--theme) / 0.6);
 }
 
 .checkboxCompact span {
@@ -716,19 +809,37 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: hsl(var(--theme));
   position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  transition: all 0.2s ease;
 }
 
 .optionGroup input[type="checkbox"]:checked {
-  background-color: hsl(var(--theme));
+  background-color: white;
   border-color: hsl(var(--theme));
+  border-width: 1px;
+}
+
+.optionGroup input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: hsl(var(--theme));
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
 }
 
 .optionGroup input[type="checkbox"]:hover {
   border-color: hsl(var(--theme) / 0.6);
   transform: scale(1.05);
-  transition: all 0.2s ease;
 }
 
 .resetLink {
@@ -743,10 +854,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background: hsl(var(--theme) / 0.08);
+  border: 1px solid hsl(var(--theme) / 0.2);
   border-radius: 6px;
-  color: #4b5563;
+  color: hsl(var(--theme));
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -757,8 +868,8 @@
 }
 
 .link:hover {
-  background: hsl(var(--theme) / 0.1);
-  border-color: hsl(var(--theme) / 0.3);
+  background: hsl(var(--theme) / 0.15);
+  border-color: hsl(var(--theme) / 0.4);
   color: hsl(var(--theme));
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

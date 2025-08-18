@@ -1,0 +1,116 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px 16px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.tab {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+}
+
+.tab:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.activeTab {
+  background: hsl(var(--theme) / 0.1);
+  border-color: hsl(var(--theme) / 0.4);
+  color: hsl(var(--theme));
+  font-weight: 500;
+}
+
+.activeTab:hover {
+  background: hsl(var(--theme) / 0.15);
+}
+
+.sheetInfo {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.preview {
+  flex: 1;
+  position: relative;
+  background: #f5f6f7;
+  overflow: hidden;
+  margin: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sheet {
+  position: absolute;
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.panel {
+  position: absolute;
+  background: hsl(var(--theme) / 0.08);
+  border: 1px solid hsl(var(--theme) / 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cut {
+  position: absolute;
+  background: rgba(255, 77, 79, 0.3);
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.2s;
+}
+
+.cutX {
+  /* Vertical cuts */
+}
+
+.cutY {
+  /* Horizontal cuts */
+}
+
+.cut.selected {
+  background: rgba(255, 77, 79, 0.5);
+}
+
+.selectedCut {
+  position: absolute;
+  background: #FF4D4F;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(255, 77, 79, 0.5);
+}

@@ -100,12 +100,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Generate cut sequence when panel is selected or for entire sheet simulation
   useEffect(() => {
-    console.log('Simulation state:', { 
-      simulating, 
-      selectedPanelId, 
-      hasResult: !!result, 
-      allCutStepsLength: allCutSteps?.length || 0 
-    });
     
     if (simulating && !selectedPanelId && result && allCutSteps && allCutSteps.length > 0) {
       // Full sheet simulation - use all cut steps for current sheet
@@ -114,14 +108,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         cut.sheetNumber === currentSheetNumber
       );
       
-      console.log('Sheet cuts:', { currentSheetNumber, sheetCutsLength: sheetCuts.length });
+      console.log('Setting up simulation:', { 
+        currentSheetNumber, 
+        totalCuts: sheetCuts.length,
+        panelsInSheet: result.panels.length,
+        cutsWithYields: sheetCuts.filter(c => c.yieldsPanelId).length,
+        panelIds: result.panels.map(p => p.id),
+        yieldIds: sheetCuts.filter(c => c.yieldsPanelId).map(c => c.yieldsPanelId)
+      });
+      
+      // Log the sequence of cuts with their yield panel IDs
+      console.log('Cut sequence order:');
+      sheetCuts.forEach((cut, idx) => {
+        if (cut.yieldsPanelId) {
+          console.log(`  Cut ${idx}: yields panel ${cut.yieldsPanelId}`);
+        }
+      });
       
       if (sheetCuts.length > 0) {
         setCutSequence(sheetCuts);
         setCurrentCutIndex(0);
       } else {
-        // 컷이 없는 경우 시뮬레이션 종료
-        console.log('No cuts found, stopping simulation');
         setSimulating(false);
       }
     } else if (selectedPanelId && selectedSheetId && result) {
@@ -133,7 +140,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       if (placement) {
         // Generate cut sequence
         const sequence = buildSequenceForPanel({
-          mode: settings.optimizationType === 'cnc' ? 'free' : 'guillotine',
+          mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
           sheetW: result.stockPanel.width,
           sheetH: result.stockPanel.height,
           kerf: settings.kerf || 5,
@@ -157,10 +164,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Run simulation when simulating flag is set
   useEffect(() => {
-    console.log('Run simulation check:', { simulating, cutSequenceLength: cutSequence.length });
-    
     if (simulating && cutSequence.length > 0) {
-      console.log('Starting simulation with', cutSequence.length, 'cuts');
+      // Reset to initial state
+      setCurrentCutIndex(0);
+      
       // Cancel any existing simulation
       if (cancelSimRef.current) {
         cancelSimRef.current.current = true;
@@ -170,19 +177,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
       
-      // Start new simulation with faster speed
-      runSimulation(cutSequence, {
-        onTick: (i) => {
-          console.log('Setting cut index:', i);
-          setCurrentCutIndex(i);
-          selectCutIndex(i);
-        },
-        onDone: () => {
-          console.log('Simulation done');
-          setSimulating(false);
-        },
-        speed: 2.0, // Faster default speed
-        cancelRef: newCancelRef
+      // Wait a frame to ensure clean state
+      requestAnimationFrame(() => {
+        // Start new simulation with faster speed
+        console.log('Starting runSimulation with', cutSequence.length, 'cuts');
+          runSimulation(cutSequence, {
+          onTick: (i) => {
+            console.log('Simulation tick:', i, '/', cutSequence.length - 1);
+            setCurrentCutIndex(i);
+            selectCutIndex(i);
+          },
+          onDone: () => {
+            console.log('Simulation completed');
+            setSimulating(false);
+          },
+          speed: 0.5, // Moderate speed (2 seconds per cut)
+          cancelRef: newCancelRef
+        });
       });
     } else if (!simulating && cancelSimRef.current) {
       cancelSimRef.current.current = true;
@@ -402,47 +413,87 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const materialColors: { [key: string]: { fill: string; stroke: string } } = {
       'PB': { fill: `hsl(${themeColor} / 0.08)`, stroke: `hsl(${themeColor} / 0.5)` },
       'MDF': { fill: '#e8d4b0', stroke: '#8b6239' }, // MDF 더 밝은 갈색으로 변경
-      'PET': { fill: `hsl(${themeColor} / 0.15)`, stroke: `hsl(${themeColor} / 0.8)` },
+      'PET': { fill: '#d1d5db', stroke: '#6b7280' }, // PET 그레이색으로 변경
       'PLY': { fill: '#f5e6d3', stroke: '#a68966' }, // 합판 더 밝은 나무색
       'HPL': { fill: `hsl(${themeColor} / 0.14)`, stroke: `hsl(${themeColor} / 0.8)` },
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
     };
 
+    // Count visible panels during simulation
+    let visiblePanelCount = 0;
+    
     // Draw panels (show progressively during simulation)
     result.panels.forEach((panel, panelIndex) => {
       // During simulation, hide panels initially and show them as they are cut
-      if (simulating && cutSequence.length > 0) {
-        // Check if this panel has been yielded by any completed cut
-        let panelYielded = false;
+      if (simulating) {
+        // If no cut sequence, skip all panels during simulation
+        if (cutSequence.length === 0) {
+          return; // Hide all panels if no cuts
+        }
         
-        // Debug first panel
+        // Debug: Log panel ID matching for first render
         if (panelIndex === 0 && currentCutIndex === 0) {
-          console.log('Panel visibility check:', {
+          console.log('Panel ID matching debug:', {
             panelId: panel.id,
-            simulating,
-            currentCutIndex,
-            cutSequenceLength: cutSequence.length,
-            allYieldIds: cutSequence.map(c => c.yieldsPanelId).filter(id => id)
+            panelIdType: typeof panel.id,
+            yieldsPanelIds: cutSequence.filter(c => c.yieldsPanelId).map(c => ({
+              id: c.yieldsPanelId,
+              type: typeof c.yieldsPanelId,
+              cutIndex: cutSequence.indexOf(c)
+            }))
           });
         }
         
-        for (let i = 0; i <= currentCutIndex && i < cutSequence.length; i++) {
-          if (cutSequence[i].yieldsPanelId === panel.id) {
-            panelYielded = true;
+        // Find when this panel will be completed (yielded)
+        // Try exact match first, then try flexible matching
+        let yieldCutIndex = -1;
+        for (let i = 0; i < cutSequence.length; i++) {
+          const yieldId = cutSequence[i].yieldsPanelId;
+          if (yieldId === panel.id) {
+            yieldCutIndex = i;
+            break;
+          }
+          // Try flexible matching if exact match fails
+          // Sometimes panel.id might be "m0_p0-0" and yieldId might be "m0_p0-0" or vice versa
+          if (yieldId && panel.id && (
+            yieldId.toString() === panel.id.toString() ||
+            yieldId.toString().includes(panel.id.toString()) ||
+            panel.id.toString().includes(yieldId.toString())
+          )) {
+            yieldCutIndex = i;
             break;
           }
         }
         
-        // If panel hasn't been yielded yet, skip drawing it completely
-        if (!panelYielded) {
-          return; // Skip this panel entirely
+        // If panel ID not found in cut sequence, hide it
+        if (yieldCutIndex === -1) {
+          if (panelIndex === 0) {
+            console.warn('Panel not found in cut sequence:', panel.id);
+          }
+          return;
         }
         
-        // Check if this panel is currently being cut (next to be yielded)
-        const nextCut = currentCutIndex < cutSequence.length - 1 ? cutSequence[currentCutIndex + 1] : null;
-        if (nextCut && nextCut.yieldsPanelId === panel.id) {
-          ctx.globalAlpha = 0.5; // Show partial transparency for panel being cut
+        // Check if panel has been completed
+        if (currentCutIndex < yieldCutIndex) {
+          // Panel not yet completed - hide it completely
+          return;
+        } else if (currentCutIndex === yieldCutIndex) {
+          // Panel is being completed right now - show with animation
+          ctx.globalAlpha = 0.9;
+          visiblePanelCount++;
+          
+          // Add a strong glow effect for newly completed panel
+          ctx.shadowColor = `hsl(${themeColor})`;
+          ctx.shadowBlur = 30;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+        } else {
+          // Panel already completed
+          visiblePanelCount++;
         }
+        // If currentCutIndex > yieldCutIndex, panel is fully visible (globalAlpha remains 1)
+      } else if (!simulating) {
+        visiblePanelCount++;
       }
       
       const x = offsetX + panel.x;
@@ -461,18 +512,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       
       // Draw panel border - clean and simple highlight
       if (isHighlighted) {
-        // Simple, clean highlight with theme color
+        // Simple, clean highlight with theme color for border only
         ctx.strokeStyle = `hsl(${themeColor})`;
         ctx.lineWidth = 3 / (baseScale * scale);
         ctx.strokeRect(x, y, width, height);
         
-        // Subtle inner glow
-        ctx.save();
-        ctx.fillStyle = `hsl(${themeColor} / 0.08)`;
-        ctx.fillRect(x, y, width, height);
-        ctx.restore();
+        // Subtle inner glow - skip for MDF to preserve its color
+        if (panel.material !== 'MDF') {
+          ctx.save();
+          ctx.fillStyle = `hsl(${themeColor} / 0.08)`;
+          ctx.fillRect(x, y, width, height);
+          ctx.restore();
+        }
       } else if (isHovered) {
-        ctx.strokeStyle = `hsl(${themeColor} / 0.5)`;
+        ctx.strokeStyle = panel.material === 'MDF' ? '#8b6239' : `hsl(${themeColor} / 0.5)`;
         ctx.lineWidth = 2 / (baseScale * scale);
         ctx.strokeRect(x, y, width, height);
       } else {
@@ -637,9 +690,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         } // End of showDimensions check
         
         ctx.restore();
+        
+        // Reset shadow and transparency effects
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1; // Reset transparency after drawing panel
       }
     });
+    
+    // Log visible panel count during simulation
+    if (simulating && currentCutIndex % 4 === 0) { // Log every 4 cuts
+      console.log(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
+    }
 
     // Draw cutting line animation during simulation
     if (simulating && cutSequence.length > 0 && currentCutIndex < cutSequence.length) {
@@ -915,16 +977,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     setOffset({ x: 0, y: 0 });
   };
 
-  // Handle zoom in
+  // 고정된 줌 레벨 단계
+  const zoomLevels = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
+  
+  // Handle zoom in - 다음 줌 레벨로 이동
   const handleZoomIn = () => {
-    const newScale = Math.min(scale * 1.2, 10);
-    setScale(newScale);
+    const currentIndex = zoomLevels.findIndex(level => level >= scale);
+    const nextIndex = Math.min(currentIndex + 1, zoomLevels.length - 1);
+    setScale(zoomLevels[nextIndex]);
   };
 
-  // Handle zoom out
+  // Handle zoom out - 이전 줌 레벨로 이동
   const handleZoomOut = () => {
-    const newScale = Math.max(scale * 0.8, 0.1);
-    setScale(newScale);
+    const currentIndex = zoomLevels.findIndex(level => level >= scale);
+    const prevIndex = Math.max(currentIndex - 1, 0);
+    setScale(zoomLevels[prevIndex]);
   };
   
   // Handle font size increase
@@ -1106,30 +1173,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 <span className={styles.textLarge}>A</span>
               </button>
             </div>
-            
-            <div className={styles.headerDivider} />
-            
-            {/* 최적화 타입 */}
-            <label className={styles.optimizationTypeLabel}>
-              <input 
-                type="radio" 
-                name="optimizationType" 
-                value="cnc"
-                checked={settings.optimizationType === 'cnc'}
-                onChange={() => setSettings({ optimizationType: 'cnc' })}
-              />
-              <span>Free Cut</span>
-            </label>
-            <label className={styles.optimizationTypeLabel}>
-              <input 
-                type="radio" 
-                name="optimizationType" 
-                value="cutsaw"
-                checked={settings.optimizationType === 'cutsaw'}
-                onChange={() => setSettings({ optimizationType: 'cutsaw' })}
-              />
-              <span>Guillotine</span>
-            </label>
           </div>
         </div>
       )}

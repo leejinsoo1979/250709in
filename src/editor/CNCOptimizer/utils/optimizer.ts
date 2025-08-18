@@ -1,4 +1,5 @@
 import { Panel, StockPanel, OptimizedResult, PlacedPanel } from '../types';
+import type { OptimizationType } from '../../../types/cutlist';
 import { SimplePacker, Rect, packIntoBins, PackedBin } from './simpleBinPacking';
 import { AlignedPacker, packWithAlignment } from './alignedPacking';
 import { ImprovedPacker, packWithImprovedAlgorithm } from './improvedPacking';
@@ -6,6 +7,7 @@ import { packSimple, SimplePacker as SimplePackerClass } from './simplePacking';
 import { packColumns } from './columnPacking';
 import { packCutsaw } from './cutsawPacking';
 import { packGuillotine } from './guillotinePacking';
+import { packMaxRects } from './improvedBinPacking';
 import { PlacementValidator, PrecisionReport } from './precision';
 
 /**
@@ -334,7 +336,7 @@ export const optimizePanelsMultiple = async (
   maxSheets: number = 999,  // 제한 없음
   useAlignedPacking: boolean = true,
   kerf: number = 5,  // 톱날 두께 매개변수 추가
-  optimizationType: 'cnc' | 'cutsaw' = 'cnc'  // 최적화 타입 추가
+  optimizationType: OptimizationType = 'OPTIMAL_CNC'  // 최적화 타입 추가
 ): Promise<OptimizedResult[]> => {
   // 모든 패널을 Rect 형식으로 변환
   const rectangles: Rect[] = [];
@@ -363,25 +365,35 @@ export const optimizePanelsMultiple = async (
   let bins: PackedBin[];
   
   
-  if (optimizationType === 'cutsaw') {
+  if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
+    // L방향 우선 (세로 절단 우선): 세로 스트립을 만들고 각 스트립 내에서 가로로 자름
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
-      maxSheets
+      maxSheets,
+      'vertical' // 세로 스트립만 사용
+    );
+  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
+    // W방향 우선 (가로 절단 우선): 가로 밴드를 만들고 각 밴드 내에서 세로로 자름
+    bins = packGuillotine(
+      rectangles,
+      stockPanel.width,
+      stockPanel.height,
+      kerf,
+      maxSheets,
+      'horizontal' // 가로 스트립만 사용
     );
   } else {
-    bins = packSimple(
+    // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
+    bins = packMaxRects(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
       maxSheets
     );
-    
-    // CNC 모드에서만 재최적화 수행
-    bins = optimizeBins(bins, stockPanel.width, stockPanel.height, kerf);
   }
 
   // 결과 변환
@@ -397,9 +409,9 @@ export const optimizePanelsMultiple = async (
         id: rect.id!, // Use the unique ID from rect (e.g., "m0_p0-0", "m0_p0-1")
         x: rect.x || 0,
         y: rect.y || 0,
-        // 회전된 경우 width와 height를 바꿔서 저장
-        width: isRotated ? originalPanel.height : originalPanel.width,
-        height: isRotated ? originalPanel.width : originalPanel.height,
+        // 원본 크기를 유지하고 rotated 플래그로 회전 표시
+        width: originalPanel.width,
+        height: originalPanel.height,
         rotated: isRotated,
         quantity: 1,
         grain: originalPanel.grain || 'NONE',
@@ -421,12 +433,30 @@ export const optimizePanelsMultiple = async (
     } else {
     }
 
+    
+    // 효율 재계산 확인
+    const recalculatedUsedArea = placedPanels.reduce((sum, panel) => {
+      return sum + (panel.width * panel.height);
+    }, 0);
+    const totalArea = bin.width * bin.height;
+    const recalculatedEfficiency = (recalculatedUsedArea / totalArea) * 100;
+    
+    // 효율이 이상하게 높고 패널이 적은 경우 경고
+    if (recalculatedEfficiency > 95 && placedPanels.length <= 3) {
+      console.warn('Suspicious efficiency in optimizer:');
+      console.warn('Bin efficiency:', bin.efficiency.toFixed(2) + '%');
+      console.warn('Recalculated efficiency:', recalculatedEfficiency.toFixed(2) + '%');
+      console.warn('Panels:', placedPanels.length);
+      console.warn('Used area:', recalculatedUsedArea, 'vs bin.usedArea:', bin.usedArea);
+      console.warn('Total area:', totalArea);
+    }
+    
     results.push({
       stockPanel: { ...stockPanel, id: `${stockPanel.id}-${index}` },
       panels: placedPanels,
-      efficiency: bin.efficiency,
-      wasteArea: bin.width * bin.height - bin.usedArea,
-      usedArea: bin.usedArea
+      efficiency: recalculatedEfficiency, // 재계산된 효율 사용
+      wasteArea: totalArea - recalculatedUsedArea,
+      usedArea: recalculatedUsedArea
     });
   });
 
@@ -492,12 +522,30 @@ export const optimizePanelsMultipleImproved = async (
       };
     });
 
+    
+    // 효율 재계산 확인
+    const recalculatedUsedArea = placedPanels.reduce((sum, panel) => {
+      return sum + (panel.width * panel.height);
+    }, 0);
+    const totalArea = bin.width * bin.height;
+    const recalculatedEfficiency = (recalculatedUsedArea / totalArea) * 100;
+    
+    // 효율이 이상하게 높고 패널이 적은 경우 경고
+    if (recalculatedEfficiency > 95 && placedPanels.length <= 3) {
+      console.warn('Suspicious efficiency in optimizer:');
+      console.warn('Bin efficiency:', bin.efficiency.toFixed(2) + '%');
+      console.warn('Recalculated efficiency:', recalculatedEfficiency.toFixed(2) + '%');
+      console.warn('Panels:', placedPanels.length);
+      console.warn('Used area:', recalculatedUsedArea, 'vs bin.usedArea:', bin.usedArea);
+      console.warn('Total area:', totalArea);
+    }
+    
     results.push({
       stockPanel: { ...stockPanel, id: `${stockPanel.id}-${index}` },
       panels: placedPanels,
-      efficiency: bin.efficiency,
-      wasteArea: bin.width * bin.height - bin.usedArea,
-      usedArea: bin.usedArea
+      efficiency: recalculatedEfficiency, // 재계산된 효율 사용
+      wasteArea: totalArea - recalculatedUsedArea,
+      usedArea: recalculatedUsedArea
     });
   });
 

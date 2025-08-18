@@ -6,7 +6,7 @@ import styles from './SidebarLeft.module.css';
 import { showToast } from '@/utils/cutlist/csv';
 
 export default function StockTable(){
-  const { stock, setStock } = useCNCStore();
+  const { stock, setStock, settings } = useCNCStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onChange = (i:number, key: keyof StockSheet, val:any) => {
@@ -116,12 +116,12 @@ export default function StockTable(){
           <table className={`${styles.table} ${styles.stockTable}`}>
             <thead>
               <tr>
-                <th>이름</th>
-                <th>치수 (L×W)</th>
-                <th>두께</th>
-                <th>수량</th>
-                <th>재질</th>
-                <th></th>
+                <th style={{ width: '28%', textAlign: 'center' }}>이름</th>
+                <th style={{ width: '22%', textAlign: 'center' }}>치수 (L×W)</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>두께</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>수량</th>
+                <th style={{ width: '21%', textAlign: 'center' }}>재질</th>
+                <th style={{ width: '7%', textAlign: 'center' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -140,15 +140,31 @@ export default function StockTable(){
                       <input 
                         type="number"
                         value={s.length} 
-                        onChange={e => onChange(i, 'length', e.target.value)}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          const maxLength = 2440 - (settings.trimTop || 0) - (settings.trimBottom || 0);
+                          if (val <= maxLength) {
+                            onChange(i, 'length', e.target.value);
+                          }
+                        }}
                         className={styles.inputSmall}
+                        max={2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}
+                        title={`최대 ${2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}mm`}
                       />
                       ×
                       <input 
                         type="number"
                         value={s.width} 
-                        onChange={e => onChange(i, 'width', e.target.value)}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          const maxWidth = 1220 - (settings.trimLeft || 0) - (settings.trimRight || 0);
+                          if (val <= maxWidth) {
+                            onChange(i, 'width', e.target.value);
+                          }
+                        }}
                         className={styles.inputSmall}
+                        max={1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}
+                        title={`최대 ${1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}mm`}
                       />
                     </div>
                   </td>
@@ -161,7 +177,7 @@ export default function StockTable(){
                       placeholder="18"
                     />
                   </td>
-                  <td>
+                  <td style={{ paddingLeft: '15px' }}>
                     <input 
                       type="number"
                       value={s.quantity} 
@@ -169,7 +185,7 @@ export default function StockTable(){
                       className={styles.inputTiny}
                     />
                   </td>
-                  <td>
+                  <td style={{ paddingLeft: '20px', paddingRight: '4px' }}>
                     <select 
                       value={s.material || 'PB'} 
                       onChange={e => onChange(i, 'material', e.target.value)}
@@ -183,7 +199,7 @@ export default function StockTable(){
                       <option value="LPM">LPM</option>
                     </select>
                   </td>
-                  <td>
+                  <td style={{ padding: '6px 6px 6px 0', textAlign: 'center' }}>
                     <button 
                       onClick={() => delRow(i)}
                       className={styles.deleteButton}

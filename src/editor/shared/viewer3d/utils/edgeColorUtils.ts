@@ -2,6 +2,8 @@
  * Edge 색상을 관리하는 유틸리티 함수
  */
 
+import { getThemeHex } from '@/theme';
+
 interface EdgeColorOptions {
   isDragging?: boolean;
   isEditMode?: boolean;
@@ -28,7 +30,7 @@ export function getEdgeColor(options: EdgeColorOptions): string {
 
   // 우선순위에 따른 색상 결정
   if (isDragging) {
-    return '#00ff00'; // 드래그 중: 초록색
+    return getThemeHex(); // 드래그 중: 테마 색상
   }
   
   if (isEditMode) {
