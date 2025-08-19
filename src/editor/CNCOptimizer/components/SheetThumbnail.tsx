@@ -34,8 +34,8 @@ export default function SheetThumbnail({
     const stockHeight = isPortrait ? originalWidth : originalHeight;
     
     // 고정 캔버스 크기 (항상 가로 비율)
-    const canvasWidth = 160;
-    const canvasHeight = 80;
+    const canvasWidth = 120;
+    const canvasHeight = 60;
     const scale = Math.min(canvasWidth / stockWidth, canvasHeight / stockHeight);
     
     // 고화질을 위한 DPR 적용

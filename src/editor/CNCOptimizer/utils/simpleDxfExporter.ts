@@ -5,7 +5,7 @@ export class SimpleDXFExporter {
   public static exportToDXF(results: OptimizedResult[]): string {
     const lines: string[] = [];
     
-    // DXF Header section - Minimal for compatibility
+    // DXF Header section - Complete for AutoCAD compatibility
     lines.push('0');
     lines.push('SECTION');
     lines.push('2');
@@ -13,7 +13,79 @@ export class SimpleDXFExporter {
     lines.push('9');
     lines.push('$ACADVER');
     lines.push('1');
-    lines.push('AC1009'); // AutoCAD R12 - most compatible
+    lines.push('AC1009'); // AutoCAD R12 format
+    lines.push('9');
+    lines.push('$INSBASE');
+    lines.push('10');
+    lines.push('0.0');
+    lines.push('20');
+    lines.push('0.0');
+    lines.push('30');
+    lines.push('0.0');
+    lines.push('9');
+    lines.push('$EXTMIN');
+    lines.push('10');
+    lines.push('0.0');
+    lines.push('20');
+    lines.push('0.0');
+    lines.push('30');
+    lines.push('0.0');
+    lines.push('9');
+    lines.push('$EXTMAX');
+    lines.push('10');
+    lines.push('10000.0');
+    lines.push('20');
+    lines.push('5000.0');
+    lines.push('30');
+    lines.push('0.0');
+    lines.push('0');
+    lines.push('ENDSEC');
+    
+    // Tables section (required for AutoCAD)
+    lines.push('0');
+    lines.push('SECTION');
+    lines.push('2');
+    lines.push('TABLES');
+    lines.push('0');
+    lines.push('TABLE');
+    lines.push('2');
+    lines.push('LTYPE');
+    lines.push('70');
+    lines.push('1');
+    lines.push('0');
+    lines.push('LTYPE');
+    lines.push('2');
+    lines.push('CONTINUOUS');
+    lines.push('70');
+    lines.push('64');
+    lines.push('3');
+    lines.push('Solid line');
+    lines.push('72');
+    lines.push('65');
+    lines.push('73');
+    lines.push('0');
+    lines.push('40');
+    lines.push('0.0');
+    lines.push('0');
+    lines.push('ENDTAB');
+    lines.push('0');
+    lines.push('TABLE');
+    lines.push('2');
+    lines.push('LAYER');
+    lines.push('70');
+    lines.push('1');
+    lines.push('0');
+    lines.push('LAYER');
+    lines.push('2');
+    lines.push('0');
+    lines.push('70');
+    lines.push('0');
+    lines.push('62');
+    lines.push('7');
+    lines.push('6');
+    lines.push('CONTINUOUS');
+    lines.push('0');
+    lines.push('ENDTAB');
     lines.push('0');
     lines.push('ENDSEC');
     

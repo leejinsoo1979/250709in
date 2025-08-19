@@ -938,26 +938,6 @@ function PageInner(){
                     <strong>{sawStats.total.toFixed(2)}m</strong>
                   </div>
                 </div>
-                {sawStats.details && (
-                  <>
-                    <div className={styles.statRow}>
-                      <span style={{ fontSize: '12px', marginLeft: '8px' }}>├ 가로 합계</span>
-                      <div className={styles.statValue}>
-                        <span style={{ fontSize: '12px' }}>
-                          {Object.values(sawStats.details).reduce((sum, d) => sum + d.horizontal, 0).toFixed(2)}m
-                        </span>
-                      </div>
-                    </div>
-                    <div className={styles.statRow}>
-                      <span style={{ fontSize: '12px', marginLeft: '8px' }}>└ 세로 합계</span>
-                      <div className={styles.statValue}>
-                        <span style={{ fontSize: '12px' }}>
-                          {Object.values(sawStats.details).reduce((sum, d) => sum + d.vertical, 0).toFixed(2)}m
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                )}
                 <div className={styles.statRow}>
                   <span>톱날 두께</span>
                   <div className={styles.statValue}>
@@ -1069,26 +1049,6 @@ function PageInner(){
                         : '0.00m'}</strong>
                     </div>
                   </div>
-                  {sawStats.details && sawStats.details[String(currentSheetIndex + 1)] && (
-                    <>
-                      <div className={styles.statRow}>
-                        <span style={{ fontSize: '12px', marginLeft: '8px' }}>├ 가로</span>
-                        <div className={styles.statValue}>
-                          <span style={{ fontSize: '12px' }}>
-                            {sawStats.details[String(currentSheetIndex + 1)].horizontal.toFixed(2)}m
-                          </span>
-                        </div>
-                      </div>
-                      <div className={styles.statRow}>
-                        <span style={{ fontSize: '12px', marginLeft: '8px' }}>└ 세로</span>
-                        <div className={styles.statValue}>
-                          <span style={{ fontSize: '12px' }}>
-                            {sawStats.details[String(currentSheetIndex + 1)].vertical.toFixed(2)}m
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  )}
                 </div>
                 </>
                 )}

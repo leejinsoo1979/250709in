@@ -488,7 +488,7 @@
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 4px;
+  padding-bottom: 10px;
   align-items: center;
 }
 
@@ -567,16 +567,23 @@
 .thumbnailWrapper {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
   align-items: flex-start;
+  width: 128px; /* 캔버스 너비 120px + 패딩 8px */
 }
 
 .thumbnailTitle {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: #374151;
   padding-left: 2px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  height: 14px;
 }
 
 .thumbnail {

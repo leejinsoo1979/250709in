@@ -88,28 +88,32 @@ export class PDFExporter {
       displayHeight * scale
     );
     
-    // Draw grid (가로 방향 고려)
-    this.pdf.setDrawColor(240, 240, 240);
+    // 원장에 빗살무늬 해치 추가
+    this.pdf.setDrawColor(100, 100, 100); // 진한 회색
     this.pdf.setLineWidth(0.1);
     
-    // Vertical grid lines (every 100mm)
-    for (let x = 100; x < displayWidth; x += 100) {
-      this.pdf.line(
-        offsetX + (x * scale),
-        offsetY,
-        offsetX + (x * scale),
-        offsetY + (displayHeight * scale)
-      );
-    }
+    // 대각선 해치 그리기 (45도 각도)
+    const hatchSpacing = 5; // 해치 간격 (mm)
+    const panelWidth = displayWidth * scale;
+    const panelHeight = displayHeight * scale;
+    const maxDimension = Math.max(panelWidth, panelHeight);
     
-    // Horizontal grid lines (every 100mm)
-    for (let y = 100; y < displayHeight; y += 100) {
-      this.pdf.line(
-        offsetX,
-        offsetY + (y * scale),
-        offsetX + (displayWidth * scale),
-        offsetY + (y * scale)
-      );
+    // 왼쪽 아래에서 오른쪽 위로 가는 대각선 해치
+    for (let i = -maxDimension; i < maxDimension * 2; i += hatchSpacing) {
+      const x1 = offsetX + i;
+      const y1 = offsetY;
+      const x2 = offsetX + i + panelHeight;
+      const y2 = offsetY + panelHeight;
+      
+      // 클리핑: 패널 영역 내에서만 그리기
+      const clippedX1 = Math.max(offsetX, Math.min(offsetX + panelWidth, x1));
+      const clippedY1 = x1 < offsetX ? offsetY + (offsetX - x1) : y1;
+      const clippedX2 = Math.max(offsetX, Math.min(offsetX + panelWidth, x2));
+      const clippedY2 = x2 > offsetX + panelWidth ? offsetY + panelHeight - (x2 - offsetX - panelWidth) : y2;
+      
+      if (clippedX1 < offsetX + panelWidth && clippedX2 > offsetX) {
+        this.pdf.line(clippedX1, clippedY1, clippedX2, clippedY2);
+      }
     }
     
     // Material colors
@@ -120,6 +124,7 @@ export class PDFExporter {
       'HPL': [243, 229, 245],   // Light purple
       'LPM': [252, 228, 236]    // Light pink
     };
+    
     
     // Draw panels (가로 방향 고려)
     result.panels.forEach((panel, index) => {
