@@ -418,7 +418,60 @@ input:focus, textarea:focus, select:focus {
   color: var(--theme-text) !important;
 }
 
-/* 스크롤바 테마 (웹킷 기반 브라우저) */
+/* 전역 스크롤바 테마 (Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-text-muted) var(--theme-background-secondary);
+}
+
+[data-theme="dark"] * {
+  scrollbar-color: #555 #2a2a2a;
+}
+
+/* 전역 스크롤바 테마 (웹킷 기반 브라우저) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--theme-background-secondary);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--theme-text-muted);
+  border-radius: 4px;
+  border: 1px solid var(--theme-background-secondary);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-text-secondary);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--theme-background-secondary);
+}
+
+/* 다크모드에서 스크롤바 강조 */
+[data-theme="dark"] *::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 1px solid #2a2a2a;
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-corner {
+  background: #2a2a2a;
+}
+
+/* 기존 클래스 기반 스크롤바 스타일 (호환성 유지) */
 .theme-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
