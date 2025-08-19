@@ -53,6 +53,7 @@ function PageInner(){
   const [isOptimizing, setIsOptimizing] = useState(false);
   const optimizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pendingResultsRef = useRef<OptimizedResult[]>([]); // Store results temporarily in ref
   
   // 뷰어 상태 (미리보기와 동기화)
   const [viewerScale, setViewerScale] = useState(1);
@@ -325,6 +326,7 @@ function PageInner(){
     
     // Clear previous results immediately for cleaner experience
     setOptimizationResults([]);
+    pendingResultsRef.current = []; // Clear any pending results
     
     // AI 로딩 모달 표시
     setShowAILoading(true);
@@ -524,18 +526,8 @@ function PageInner(){
       //   console.log(`Sheet ${index + 1}: ${result.panels.length} panels, efficiency: ${result.efficiency.toFixed(1)}%`);
       // });
       
-      setOptimizationResults(finalResults);
-      
-      // 현재 시트 인덱스 유지 (범위 체크)
-      // 새로운 결과의 시트 수보다 현재 인덱스가 크면 마지막 시트로 이동
-      if (currentSheetIndex >= finalResults.length && finalResults.length > 0) {
-        setCurrentSheetIndex(finalResults.length - 1);
-      }
-      // 현재 인덱스는 유지하되, 최소한 0으로 설정
-      else if (currentSheetIndex < 0 && finalResults.length > 0) {
-        setCurrentSheetIndex(0);
-      }
-      // 그 외의 경우는 현재 인덱스 유지
+      // Store results temporarily instead of showing immediately
+      pendingResultsRef.current = finalResults;
       
       // Generate placements for simulation
       const placements: Placement[] = [];
@@ -581,16 +573,31 @@ function PageInner(){
         setAILoadingProgress(100);
         
         // Hide AI loading modal after showing 100% briefly
-        setTimeout(() => {
+        setTimeout(async () => {
           setShowAILoading(false);
           setAILoadingProgress(0);
           
           if (allResults.length > 0) {
             const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
             const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
-            showToast(`최적화 완료! ${totalPanels}개 패널, ${allResults.length}개 시트 (평균 효율: ${avgEfficiency.toFixed(1)}%)`, 'success');
+            
+            // Show success popup and wait for confirmation
+            await showToast(`최적화 완료! ${totalPanels}개 패널, ${allResults.length}개 시트 (평균 효율: ${avgEfficiency.toFixed(1)}%)`, 'success');
+            
+            // After user clicks confirm, show the results
+            setOptimizationResults(pendingResultsRef.current);
+            
+            // Set appropriate sheet index
+            if (currentSheetIndex >= pendingResultsRef.current.length && pendingResultsRef.current.length > 0) {
+              setCurrentSheetIndex(pendingResultsRef.current.length - 1);
+            } else if (currentSheetIndex < 0 && pendingResultsRef.current.length > 0) {
+              setCurrentSheetIndex(0);
+            }
+            
+            // Clear pending results
+            pendingResultsRef.current = [];
           } else {
-            showToast('최적화 실패: 패널을 배치할 수 없습니다', 'error');
+            await showToast('최적화 실패: 패널을 배치할 수 없습니다', 'error');
           }
         }, 300); // Show 100% for 300ms
       }, remainingTime);

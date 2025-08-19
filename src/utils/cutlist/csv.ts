@@ -70,8 +70,10 @@ export function downloadCsv(content: string, filename: string): void {
 
 /**
  * Show toast notification - Center popup version
+ * Returns a promise that resolves when the popup is closed
  */
-export function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+export function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): Promise<void> {
+  return new Promise((resolve) => {
   // Remove any existing popups
   const existingOverlay = document.querySelector('.popup-overlay');
   if (existingOverlay) {
@@ -190,6 +192,7 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
       }
+      resolve(); // Resolve the promise when popup is closed
     }, 200);
   };
   
@@ -249,17 +252,21 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
     document.head.appendChild(style);
   }
   
-  // Auto-remove after duration
-  const duration = type === 'error' ? 4000 : 3000;
-  setTimeout(() => {
-    if (document.body.contains(overlay)) {
-      overlay.style.animation = 'fadeOut 0.2s ease-out';
-      popup.style.animation = 'scaleOut 0.2s ease-out';
-      setTimeout(() => {
-        if (document.body.contains(overlay)) {
-          document.body.removeChild(overlay);
-        }
-      }, 200);
-    }
-  }, duration);
+  // Auto-remove after duration (except for success type - wait for user confirmation)
+  if (type !== 'success') {
+    const duration = type === 'error' ? 4000 : 3000;
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        overlay.style.animation = 'fadeOut 0.2s ease-out';
+        popup.style.animation = 'scaleOut 0.2s ease-out';
+        setTimeout(() => {
+          if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+          }
+          resolve(); // Resolve even on auto-close
+        }, 200);
+      }
+    }, duration);
+  }
+  });
 }

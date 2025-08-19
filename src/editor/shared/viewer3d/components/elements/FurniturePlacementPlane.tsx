@@ -95,7 +95,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               <meshBasicMaterial 
                 color={themeColorHex}
                 transparent 
-                opacity={0.3}
+                opacity={0.05}
                 side={2}
               />
             </mesh>
@@ -117,7 +117,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               <meshBasicMaterial 
                 color={themeColorHex}
                 transparent 
-                opacity={0.3}
+                opacity={0.05}
                 side={2}
               />
             </mesh>
@@ -142,7 +142,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
           <meshBasicMaterial 
             color={themeColorHex}
             transparent 
-            opacity={0.3}
+            opacity={0.05}
             side={2} // DoubleSide
           />
         </mesh>

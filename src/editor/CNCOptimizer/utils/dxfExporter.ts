@@ -36,9 +36,9 @@ export class DXFExporter {
     this.lines.push('9');
     this.lines.push('$EXTMAX');
     this.lines.push('10');
-    this.lines.push('5000.0');
+    this.lines.push('20000.0'); // 가로로 더 넓게 설정
     this.lines.push('20');
-    this.lines.push('5000.0');
+    this.lines.push('3000.0'); // 세로는 줄임
     this.lines.push('30');
     this.lines.push('0.0');
     this.lines.push('9');
@@ -50,9 +50,9 @@ export class DXFExporter {
     this.lines.push('9');
     this.lines.push('$LIMMAX');
     this.lines.push('10');
-    this.lines.push('5000.0');
+    this.lines.push('20000.0'); // 가로로 더 넓게 설정
     this.lines.push('20');
-    this.lines.push('5000.0');
+    this.lines.push('3000.0'); // 세로는 줄임
     this.lines.push('0');
     this.lines.push('ENDSEC');
     
@@ -249,15 +249,17 @@ export class DXFExporter {
   }
   
   public addSheet(result: OptimizedResult, sheetNumber: number) {
-    const offsetY = sheetNumber * (result.stockPanel.height + 200);
+    // 가로로 배열 - X축 오프셋 사용
+    const offsetX = sheetNumber * (result.stockPanel.width + 200);
+    const offsetY = 150; // 상단에 라벨을 위한 고정 Y 오프셋
     
     // Draw stock panel outline
-    this.addRectangle(0, offsetY, result.stockPanel.width, result.stockPanel.height, 'CUTS');
+    this.addRectangle(offsetX, offsetY, result.stockPanel.width, result.stockPanel.height, 'CUTS');
     
     // Add sheet label
     this.addText(
       `Sheet ${sheetNumber + 1}`,
-      result.stockPanel.width / 2,
+      offsetX + result.stockPanel.width / 2,
       offsetY - 50,
       30,
       'TEXT'
@@ -266,7 +268,7 @@ export class DXFExporter {
     // Add stock dimensions
     this.addText(
       `Stock: ${result.stockPanel.width} x ${result.stockPanel.height} mm`,
-      result.stockPanel.width / 2,
+      offsetX + result.stockPanel.width / 2,
       offsetY - 100,
       20,
       'TEXT'
@@ -276,7 +278,7 @@ export class DXFExporter {
     result.panels.forEach((panel, idx) => {
       // Panel outline
       this.addRectangle(
-        panel.x,
+        offsetX + panel.x,
         offsetY + panel.y,
         panel.width,
         panel.height,
@@ -287,7 +289,7 @@ export class DXFExporter {
       const panelText = panel.id ? `${panel.id}\n${Math.round(panel.width)}x${Math.round(panel.height)}` : `P${idx + 1}\n${Math.round(panel.width)}x${Math.round(panel.height)}`;
       this.addText(
         panelText.split('\n')[0], // ID
-        panel.x + panel.width / 2,
+        offsetX + panel.x + panel.width / 2,
         offsetY + panel.y + panel.height / 2 + 10,
         Math.min(panel.height / 10, 15),
         'TEXT'
@@ -296,18 +298,18 @@ export class DXFExporter {
       // Dimensions on separate line
       this.addText(
         panelText.split('\n')[1] || `${Math.round(panel.width)}x${Math.round(panel.height)}`, // Dimensions
-        panel.x + panel.width / 2,
+        offsetX + panel.x + panel.width / 2,
         offsetY + panel.y + panel.height / 2 - 10,
         Math.min(panel.height / 12, 12),
         'TEXT'
       );
     });
     
-    // Add efficiency info
+    // Add efficiency info (아래쪽에 배치)
     this.addText(
       `Efficiency: ${result.efficiency.toFixed(1)}%`,
-      result.stockPanel.width + 100,
-      offsetY + result.stockPanel.height / 2,
+      offsetX + result.stockPanel.width / 2,
+      offsetY + result.stockPanel.height + 50,
       20,
       'TEXT'
     );

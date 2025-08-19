@@ -145,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           title="대시보드로 나가기"
           onClick={handleExitClick}
         >
-          <LogOut size={24} />
+          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} />
         </button>
       </div>
       

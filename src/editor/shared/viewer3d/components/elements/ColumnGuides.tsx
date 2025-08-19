@@ -192,7 +192,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
   // 테마 기반 가이드 라인 색상 - 2D/3D 모두 동일한 색상 사용
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
-  const lineWidth = viewMode === '2D' ? 0.5 : 1; // 2D 모드: 더 얇은 선
+  const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 선
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
   // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
@@ -306,7 +306,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     const zoneColor = viewMode === '2D' && view2DTheme === 'dark' 
       ? '#FFFFFF' // 2D 다크모드에서는 항상 흰색
       : guideColor; // 모든 영역 동일한 색상
-    const zoneLineWidth = lineWidth * 2; // 모든 영역 동일한 굵기
+    const zoneLineWidth = lineWidth; // 더 얇은 선 유지
     const zoneOpacity = 1; // 모든 영역 완전 불투명
     
     // 각 슬롯 경계 계산
@@ -415,8 +415,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           color={zoneColor}
           lineWidth={zoneLineWidth}
           dashed
-          dashSize={0.2}
-          gapSize={0.1}
+          dashSize={0.15}
+          gapSize={0.15}
           opacity={zoneOpacity}
           transparent
         />
@@ -450,7 +450,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.15}
+                opacity={viewMode === '2D' ? 0.05 : 0.10}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}
@@ -471,8 +471,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           color={zoneColor}
           lineWidth={zoneLineWidth}
           dashed
-          dashSize={0.2}
-          gapSize={0.1}
+          dashSize={0.15}
+          gapSize={0.15}
           opacity={zoneOpacity}
           transparent
         />
@@ -506,7 +506,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={0.15}
+                opacity={0.10}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}
@@ -544,7 +544,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.15}
+                opacity={viewMode === '2D' ? 0.05 : 0.10}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}

@@ -1316,7 +1316,7 @@ const Room: React.FC<RoomProps> = ({
               <meshBasicMaterial 
                 color="#10b981"
                 transparent
-                opacity={0.3}
+                opacity={0.10}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}

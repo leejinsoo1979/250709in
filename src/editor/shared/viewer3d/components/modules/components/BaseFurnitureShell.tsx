@@ -63,7 +63,7 @@ const ManualDashedBox: React.FC<{
             <lineBasicMaterial 
               color={color} 
               transparent={true}
-              opacity={0.3}
+              opacity={0.01}
             />
           </line>
         );
