@@ -79,4 +79,11 @@ export interface SawStats {
   bySheet: Record<string, number>;  // 시트별 톱날 이동 길이
   total: number;                    // 전체 톱날 이동 길이
   unit: 'mm' | 'm';                // 단위
+  totalCuts?: number;              // 총 절단 횟수
+  avgKerf?: number;                // 평균 kerf 두께
+  details?: Record<string, {       // 시트별 상세 통계
+    horizontal: number;            // 가로 절단 길이
+    vertical: number;              // 세로 절단 길이
+    cuts: number;                  // 절단 횟수
+  }>;
 }

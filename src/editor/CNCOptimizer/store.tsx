@@ -58,7 +58,15 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     const saved = localStorage.getItem('cnc_stock');
     return saved ? JSON.parse(saved) : [];
   });
-  const [userHasModifiedPanels, setUserHasModifiedPanels] = useState(false);
+  const [userHasModifiedPanels, setUserHasModifiedPanelsState] = useState(() => {
+    const saved = localStorage.getItem('cnc_user_modified');
+    return saved === 'true';
+  });
+  
+  const setUserHasModifiedPanels = (value: boolean) => {
+    setUserHasModifiedPanelsState(value);
+    localStorage.setItem('cnc_user_modified', value.toString());
+  };
   
   // Wrapper functions to save to localStorage
   const setPanels = (newPanels: Panel[], isUserModified: boolean = false) => {

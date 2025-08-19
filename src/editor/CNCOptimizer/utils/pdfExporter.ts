@@ -167,7 +167,7 @@ export class PDFExporter {
           );
         }
         
-        // Panel dimensions
+        // Panel dimensions (keep center display as is)
         this.pdf.setFontSize(7);
         this.pdf.setTextColor(100, 100, 100);
         const dimText = `${Math.round(panel.width)} × ${Math.round(panel.height)}`;
@@ -177,6 +177,41 @@ export class PDFExporter {
           x + (width - dimWidth) / 2,
           y + height / 2 + (panel.name ? 2 : 0)
         );
+        
+        // 패널 가장자리에 치수 표시
+        // 화면에 그려진 크기를 그대로 표시
+        
+        // 화면에 그려진 실제 크기 계산
+        // width와 height는 이미 위에서 계산된 화면에 표시되는 크기
+        const actualDisplayWidth = Math.round(width / scale);  // 스케일을 역산하여 실제 크기 계산
+        const actualDisplayHeight = Math.round(height / scale);
+        
+        // L방향 치수 - 상단에 표시 (화면의 가로 치수)
+        if (width > 10) {
+          this.pdf.setFontSize(10);
+          this.pdf.setTextColor(0, 0, 0);
+          const topText = String(actualDisplayWidth);
+          const topTextWidth = this.pdf.getTextWidth(topText);
+          this.pdf.text(
+            topText,
+            x + (width - topTextWidth) / 2,
+            y + 7
+          );
+        }
+        
+        // W방향 치수 - 패널 안쪽 좌측에 90도 회전하여 표시
+        if (height > 10) {
+          this.pdf.setFontSize(10);
+          this.pdf.setTextColor(0, 0, 0);
+          const leftText = String(actualDisplayHeight);
+          
+          // 패널 안쪽 좌측 중앙에 90도 회전하여 표시
+          const textX = x + 7;
+          const textY = y + height / 2;
+          
+          // jsPDF의 angle 파라미터 사용 (90도 회전)
+          this.pdf.text(leftText, textX, textY, { angle: 90 });
+        }
         
         // Material label in corner
         if (width > 25) {
@@ -755,18 +790,25 @@ export class PDFExporter {
       // 2. 개별 시트 PDF들 생성 (가로 방향)
       console.log('Creating individual sheet PDFs...');
       for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        const sheetNumber = i + 1;
-        
-        // 개별 시트 PDF 생성 (가로 방향)
-        const individualPdf = PDFExporter.createIndividualSheetPDF(result, i, validPanels);
-        
-        // PDF를 Blob으로 변환
-        const sheetBlob = individualPdf.output('blob');
-        const sheetFileName = `시트_${String(sheetNumber).padStart(2, '0')}_${result.stockPanel.material || 'PB'}_${result.stockPanel.width}x${result.stockPanel.height}.pdf`;
-        
-        zip.file(sheetFileName, sheetBlob);
-        console.log(`Added sheet ${sheetNumber} to ZIP`);
+        try {
+          const result = results[i];
+          const sheetNumber = i + 1;
+          
+          console.log(`Creating PDF for sheet ${sheetNumber}...`);
+          
+          // 개별 시트 PDF 생성 (가로 방향)
+          const individualPdf = PDFExporter.createIndividualSheetPDF(result, i, validPanels);
+          
+          // PDF를 Blob으로 변환
+          const sheetBlob = individualPdf.output('blob');
+          const sheetFileName = `시트_${String(sheetNumber).padStart(2, '0')}_${result.stockPanel.material || 'PB'}_${result.stockPanel.width}x${result.stockPanel.height}.pdf`;
+          
+          zip.file(sheetFileName, sheetBlob);
+          console.log(`Added sheet ${sheetNumber} to ZIP`);
+        } catch (sheetError) {
+          console.error(`Error creating sheet ${i + 1}:`, sheetError);
+          // 개별 시트 오류는 무시하고 계속 진행
+        }
       }
       
       // 3. 패널 목록 CSV 파일 추가 (보너스)
@@ -804,8 +846,14 @@ export class PDFExporter {
       console.log('ZIP file downloaded successfully');
     } catch (error) {
       console.error('Error creating ZIP file:', error);
-      console.error('Error stack:', error.stack);
-      alert(`ZIP 파일 생성 중 오류가 발생했습니다: ${error.message}`);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        alert(`ZIP 파일 생성 중 오류가 발생했습니다: ${error.message}`);
+      } else {
+        console.error('Unknown error:', error);
+        alert('ZIP 파일 생성 중 알 수 없는 오류가 발생했습니다.');
+      }
     }
   }
   

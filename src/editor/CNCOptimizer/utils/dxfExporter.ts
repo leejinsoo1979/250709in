@@ -16,7 +16,7 @@ export class DXFExporter {
     this.lines.push('9');
     this.lines.push('$ACADVER');
     this.lines.push('1');
-    this.lines.push('AC1009'); // AutoCAD R12 format - most compatible
+    this.lines.push('AC1015'); // AutoCAD 2000 format - better compatibility with modern AutoCAD
     this.lines.push('9');
     this.lines.push('$INSBASE');
     this.lines.push('10');
@@ -276,31 +276,35 @@ export class DXFExporter {
     
     // Draw panels
     result.panels.forEach((panel, idx) => {
-      // Panel outline
+      // 회전 여부에 따른 실제 표시 크기
+      const displayWidth = panel.rotated ? panel.height : panel.width;
+      const displayHeight = panel.rotated ? panel.width : panel.height;
+      
+      // Panel outline - 실제 표시 크기 사용
       this.addRectangle(
         offsetX + panel.x,
         offsetY + panel.y,
-        panel.width,
-        panel.height,
+        displayWidth,
+        displayHeight,
         'PANELS'
       );
       
-      // Panel ID and dimensions
-      const panelText = panel.id ? `${panel.id}\n${Math.round(panel.width)}x${Math.round(panel.height)}` : `P${idx + 1}\n${Math.round(panel.width)}x${Math.round(panel.height)}`;
+      // Panel ID and dimensions - 원래 치수 표시 (L×W)
+      const panelText = panel.id ? `${panel.id}\n${Math.round(panel.width)}×${Math.round(panel.height)}` : `P${idx + 1}\n${Math.round(panel.width)}×${Math.round(panel.height)}`;
       this.addText(
         panelText.split('\n')[0], // ID
-        offsetX + panel.x + panel.width / 2,
-        offsetY + panel.y + panel.height / 2 + 10,
-        Math.min(panel.height / 10, 15),
+        offsetX + panel.x + displayWidth / 2,
+        offsetY + panel.y + displayHeight / 2 + 10,
+        Math.min(displayHeight / 10, 15),
         'TEXT'
       );
       
-      // Dimensions on separate line
+      // Dimensions on separate line - 원래 치수 표시 (L×W)
       this.addText(
-        panelText.split('\n')[1] || `${Math.round(panel.width)}x${Math.round(panel.height)}`, // Dimensions
-        offsetX + panel.x + panel.width / 2,
-        offsetY + panel.y + panel.height / 2 - 10,
-        Math.min(panel.height / 12, 12),
+        panelText.split('\n')[1] || `${Math.round(panel.width)}×${Math.round(panel.height)}`, // 원래 치수
+        offsetX + panel.x + displayWidth / 2,
+        offsetY + panel.y + displayHeight / 2 - 10,
+        Math.min(displayHeight / 12, 12),
         'TEXT'
       );
     });

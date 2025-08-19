@@ -117,17 +117,24 @@ function PageInner(){
 
   // Initialize with live data - only run once on mount
   useEffect(() => {
-    // Skip initialization if user has already modified panels
-    if (userHasModifiedPanels) {
-      console.log('User has modified panels, skipping initialization');
-      return;
-    }
-    
     console.log('=== CNCOptimizerPro Initialization ===');
     console.log('livePanels from hook:', livePanels);
     console.log('livePanels.length:', livePanels.length);
     console.log('current panels in store:', panels);
     console.log('current stock in store:', stock);
+    
+    // If livePanels changed and we have panels from furniture, reset the user modified flag
+    if (livePanels.length > 0) {
+      // Reset user modified flag since we're getting fresh data from configurator
+      setUserHasModifiedPanels(false);
+      localStorage.removeItem('cnc_user_modified');
+    }
+    
+    // Skip initialization if user has already modified panels AFTER checking livePanels
+    if (userHasModifiedPanels && livePanels.length === 0) {
+      console.log('User has modified panels and no live panels, keeping user panels');
+      return;
+    }
     
     // Clear panels if no furniture is placed and panels are from old localStorage
     // But don't clear if user manually added panels (empty panels with width/length = 0)
@@ -147,8 +154,10 @@ function PageInner(){
       }
     }
     
-    // Convert live panels to CutList format - only if not already initialized and user hasn't modified
-    if (livePanels.length > 0 && !hasInitializedFromLive.current && !userHasModifiedPanels) {
+    // Convert live panels to CutList format - always update when we have live panels
+    if (livePanels.length > 0) {
+      // Always use live panels when they exist (even after refresh)
+      if (!hasInitializedFromLive.current || panels.length === 0) {
         const cutlistPanels: Panel[] = livePanels.map(p => {
           // 패널의 긴 방향을 L(세로) 방향으로 배치
           // 긴 쪽이 length가 되도록 설정
@@ -188,6 +197,7 @@ function PageInner(){
         console.log('Setting panels from livePanels:', cutlistPanels);
         setPanels(cutlistPanels);
         hasInitializedFromLive.current = true;
+      }
     } else if (livePanels.length === 0 && !userHasModifiedPanels) {
       // No furniture placed and user hasn't modified - check for old panels
       const hasEmptyPanels = panels.some(p => p.width === 0 || p.length === 0 || p.label === '');
@@ -925,9 +935,29 @@ function PageInner(){
                 <div className={styles.statRow}>
                   <span>절단 길이</span>
                   <div className={styles.statValue}>
-                    <strong>{Math.round(sawStats.total)}m</strong>
+                    <strong>{sawStats.total.toFixed(2)}m</strong>
                   </div>
                 </div>
+                {sawStats.details && (
+                  <>
+                    <div className={styles.statRow}>
+                      <span style={{ fontSize: '12px', marginLeft: '8px' }}>├ 가로 합계</span>
+                      <div className={styles.statValue}>
+                        <span style={{ fontSize: '12px' }}>
+                          {Object.values(sawStats.details).reduce((sum, d) => sum + d.horizontal, 0).toFixed(2)}m
+                        </span>
+                      </div>
+                    </div>
+                    <div className={styles.statRow}>
+                      <span style={{ fontSize: '12px', marginLeft: '8px' }}>└ 세로 합계</span>
+                      <div className={styles.statValue}>
+                        <span style={{ fontSize: '12px' }}>
+                          {Object.values(sawStats.details).reduce((sum, d) => sum + d.vertical, 0).toFixed(2)}m
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className={styles.statRow}>
                   <span>톱날 두께</span>
                   <div className={styles.statValue}>
@@ -1035,10 +1065,30 @@ function PageInner(){
                     <span>절단 길이</span>
                     <div className={styles.statValue}>
                       <strong>{sawStats.bySheet[String(currentSheetIndex + 1)] 
-                        ? Math.round(sawStats.bySheet[String(currentSheetIndex + 1)]) + 'm'
-                        : '0m'}</strong>
+                        ? sawStats.bySheet[String(currentSheetIndex + 1)].toFixed(2) + 'm'
+                        : '0.00m'}</strong>
                     </div>
                   </div>
+                  {sawStats.details && sawStats.details[String(currentSheetIndex + 1)] && (
+                    <>
+                      <div className={styles.statRow}>
+                        <span style={{ fontSize: '12px', marginLeft: '8px' }}>├ 가로</span>
+                        <div className={styles.statValue}>
+                          <span style={{ fontSize: '12px' }}>
+                            {sawStats.details[String(currentSheetIndex + 1)].horizontal.toFixed(2)}m
+                          </span>
+                        </div>
+                      </div>
+                      <div className={styles.statRow}>
+                        <span style={{ fontSize: '12px', marginLeft: '8px' }}>└ 세로</span>
+                        <div className={styles.statValue}>
+                          <span style={{ fontSize: '12px' }}>
+                            {sawStats.details[String(currentSheetIndex + 1)].vertical.toFixed(2)}m
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 </>
                 )}
