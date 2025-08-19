@@ -406,78 +406,152 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 문 높이 계산 ===
-  // 문 높이 = 전체 공간 높이 - 바닥재 높이 (내경 공간 높이)
+  // 상부장/하부장은 가구 자체 높이에 맞춤, 일반 가구는 전체 공간 높이 사용
   let fullSpaceHeight = spaceInfo.height;
   let floatHeight = 0;
+  let actualDoorHeight: number;
+  let doorHeightAdjusted: number;
   
-  // 띄워서 배치인 경우 floatHeight 가져오기
-  if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
-    floatHeight = spaceInfo.baseConfig.floatHeight || 0;
-  }
+  // 상부장/하부장 체크
+  const isUpperCabinet = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
+  const isLowerCabinet = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
   
-  // 단내림 구간인 경우 높이 조정
-  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-    const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-    fullSpaceHeight = spaceInfo.height - dropHeight;
-    console.log('🚪📏 단내림 도어 높이 조정:', {
-      originalHeight: spaceInfo.height,
-      dropHeight,
-      adjustedHeight: fullSpaceHeight,
-      zone: (spaceInfo as any).zone
+  if (isUpperCabinet || isLowerCabinet) {
+    // 상부장/하부장은 가구 높이에 맞춤
+    actualDoorHeight = moduleData?.dimensions?.height || (isUpperCabinet ? 600 : 1000);
+    doorHeightAdjusted = actualDoorHeight;
+    console.log('🚪📏 상하부장 도어 높이:', {
+      category: moduleData?.category,
+      furnitureHeight: actualDoorHeight,
+      doorHeight: actualDoorHeight,
+      type: isUpperCabinet ? '상부장' : '하부장'
     });
+  } else {
+    // 일반 가구(키큰장 등)는 전체 공간 높이 사용
+    // 띄워서 배치인 경우 floatHeight 가져오기
+    if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+      floatHeight = spaceInfo.baseConfig.floatHeight || 0;
+    }
+    
+    // 단내림 구간인 경우 높이 조정
+    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+      fullSpaceHeight = spaceInfo.height - dropHeight;
+      console.log('🚪📏 단내림 도어 높이 조정:', {
+        originalHeight: spaceInfo.height,
+        dropHeight,
+        adjustedHeight: fullSpaceHeight,
+        zone: (spaceInfo as any).zone
+      });
+    }
+    
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+    actualDoorHeight = fullSpaceHeight - floorHeight;
+    
+    // 띄워서 배치인 경우 도어 높이에서 floatHeight 빼기 (아래에서만 줄어듦)
+    doorHeightAdjusted = floatHeight > 0 ? actualDoorHeight - floatHeight : actualDoorHeight;
   }
   
-  const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-  const actualDoorHeight = fullSpaceHeight - floorHeight;
-  
-  // 띄워서 배치인 경우 도어 높이에서 floatHeight 빼기 (아래에서만 줄어듦)
-  const doorHeightAdjusted = floatHeight > 0 ? actualDoorHeight - floatHeight : actualDoorHeight;
-  const doorHeight = mmToThreeUnits(doorHeightAdjusted - 5); // 5mm 줄임 (20mm에서 15mm 확장)
-  
-  console.log('🚪📐 도어 높이 계산:', {
-    fullSpaceHeight,
-    floatHeight,
-    actualDoorHeight,
-    doorHeightAdjusted,
-    doorHeight_mm: doorHeightAdjusted - 30,
-    isFloating: floatHeight > 0,
-    note: floatHeight > 0 ? '띄워서 배치 - 아래에서 줄어듦' : '바닥 배치'
-  });
-  
-  // === 문 Y 위치 계산 (기존 작동하던 로직으로 복원) ===
-  // 
-  // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
-  // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
-  // 
-  // 조정 로직:
-  // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
-  // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
-  // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
-  //
+  // === 문 Y 위치 계산 (높이 계산 전에 위치 먼저 계산) ===
   let doorYPosition: number;
+  let finalDoorHeight = doorHeightAdjusted; // 최종 도어 높이 변수
   
-  if (spaceInfo.baseConfig?.type === 'floor') {
-    // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
-    const topFrameHeight = spaceInfo.frameSize?.top || 50;
-    const baseFrameHeight = spaceInfo.baseConfig.height || 65;
-    doorYPosition = floorHeight > 0 
-      ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
-      : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
-  } else {
-    // 받침대 없음: 상단 프레임 높이 조정 없음 (0으로 설정)
-    const topFrameHeight = spaceInfo.frameSize?.top || 50;
-    doorYPosition = 0;
+  if (isUpperCabinet) {
+    // 상부장 도어: 위로 5mm, 아래로 18mm 확장
+    const upperExtension = 5;  // 위로 5mm
+    const lowerExtension = 18; // 아래로 18mm
+    const furnitureHeight = moduleData?.dimensions?.height || 600;
     
-    // 띄워서 배치인 경우 Y 위치를 아래로 조정 (15mm 아래로 확장)
-    if (floatHeight > 0) {
-      // 도어를 7.5mm 아래로 이동 (15mm 확장의 절반)
-      doorYPosition = mmToThreeUnits(-7.5);
-      console.log('🚪📍 띄워서 배치 도어 위치 조정:', {
-        floatHeight,
-        doorYPosition,
-        doorYPosition_mm: -7.5,
-        note: '도어 아래로 15mm 확장을 위해 7.5mm 아래로 이동'
-      });
+    // 도어 높이 = 가구 높이 + 확장분
+    finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
+    
+    // 상부장 도어는 가구 중심 기준으로 확장
+    // 가구 중심이 Y=0이므로, 도어는 아래로 더 확장됨
+    // 도어 중심 = (아래확장 - 위확장) / 2 만큼 아래로 이동 + 추가로 23mm 더 아래로
+    doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 23);
+    
+    console.log('🚪📍 상부장 도어 위치:', {
+      type: '상부장',
+      가구높이: furnitureHeight,
+      위확장: upperExtension,
+      아래확장: lowerExtension,
+      도어높이: finalDoorHeight,
+      doorYPosition,
+      doorYPosition_mm: (lowerExtension - upperExtension) / 2 - 23,
+      가구상단: mmToThreeUnits(furnitureHeight / 2),
+      도어상단: doorYPosition + mmToThreeUnits(finalDoorHeight / 2),
+      note: '가구 기준 위 5mm, 아래 18mm 확장, Y축 23mm 추가 하향'
+    });
+  } else if (isLowerCabinet) {
+    // 하부장 도어: 위로 18mm, 아래로 40mm 확장
+    const furnitureHeight = moduleData?.dimensions?.height || 1000;
+    const upperExtension = 18;  // 위로 18mm
+    const lowerExtension = 40; // 아래로 40mm
+    
+    // 도어 높이 = 가구 높이 + 확장분
+    finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
+    
+    // 하부장 도어는 가구 중심 기준으로 확장
+    // 가구 중심이 Y=0이므로, 도어는 아래로 더 확장됨
+    // 도어 중심 = (아래확장 - 위확장) / 2 만큼 아래로 이동 + 추가로 32mm 더 아래로
+    doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 32);
+    
+    console.log('🚪📍 하부장 도어 위치:', {
+      type: '하부장',
+      가구높이: furnitureHeight,
+      위확장: upperExtension,
+      아래확장: lowerExtension,
+      도어높이: finalDoorHeight,
+      doorYPosition,
+      doorYPosition_mm: (lowerExtension - upperExtension) / 2 - 32,
+      가구하단: mmToThreeUnits(-furnitureHeight / 2),
+      도어하단: doorYPosition - mmToThreeUnits(finalDoorHeight / 2),
+      note: '가구 기준 위 18mm, 아래 40mm 확장, Y축 32mm 추가 하향'
+    });
+    
+    console.log('🚪📍 하부장 도어 최종:', {
+      type: '하부장',
+      doorYPosition,
+      doorYPosition_mm: doorYPosition / 0.01,
+      adjustedHeight: doorHeightAdjusted,
+      받침대: spaceInfo.baseConfig?.type === 'floor',
+      note: '키큰장 도어와 동일한 Y 위치 사용'
+    });
+  } else {
+    // 일반 가구는 기존 로직 사용
+    // 
+    // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
+    // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
+    // 
+    // 조정 로직:
+    // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
+    // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
+    // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
+    //
+    if (spaceInfo.baseConfig?.type === 'floor') {
+      // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      doorYPosition = floorHeight > 0 
+        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
+        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+    } else {
+      // 받침대 없음: 상단 프레임 높이 조정 없음 (0으로 설정)
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      doorYPosition = 0;
+      
+      // 띄워서 배치인 경우 Y 위치를 아래로 조정 (15mm 아래로 확장)
+      if (floatHeight > 0) {
+        // 도어를 7.5mm 아래로 이동 (15mm 확장의 절반)
+        doorYPosition = mmToThreeUnits(-7.5);
+        console.log('🚪📍 띄워서 배치 도어 위치 조정:', {
+          floatHeight,
+          doorYPosition,
+          doorYPosition_mm: -7.5,
+          note: '도어 아래로 15mm 확장을 위해 7.5mm 아래로 이동'
+        });
+      }
     }
   }
   
@@ -499,6 +573,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
   // 추가로 2mm 더 띄워서 캐비닛과 분리
+  // 도어 높이 최종 계산 - 상부장은 여백 없이, 하부장은 확장된 높이, 일반 가구는 30mm 줄임
+  const doorHeight = isUpperCabinet 
+    ? mmToThreeUnits(finalDoorHeight) // 상부장은 가구 크기 그대로
+    : isLowerCabinet
+    ? mmToThreeUnits(finalDoorHeight) // 하부장은 확장된 높이 (위에서 계산됨)
+    : mmToThreeUnits(finalDoorHeight - 30); // 일반 가구는 30mm 줄임 (원래 로직)
+  
+  console.log('🚪📐 도어 높이 최종 계산:', {
+    category: moduleData?.category,
+    isUpperCabinet,
+    isLowerCabinet,
+    finalDoorHeight,
+    doorHeight_mm: isLowerCabinet ? finalDoorHeight : (finalDoorHeight - 30),
+    doorHeight_units: doorHeight,
+    doorYPosition
+  });
+
   // 노서라운드와 서라운드 모드에서 동일한 Z축 위치 유지
   const baseDepthOffset = mmToThreeUnits(20) + mmToThreeUnits(2);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset; // 서라운드와 노서라운드 동일하게 처리

@@ -55,12 +55,14 @@ export const getModuleById = (
   internalSpace?: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
-  // ID에서 너비 추출 (예: single-2drawer-hanging-442 → 442)
+  // baseModuleType 처리: ID에서 너비를 제외한 기본 타입 추출
+  const baseType = id.replace(/-\d+$/, '');
   const widthMatch = id.match(/-(\d+)$/);
   const requestedWidth = widthMatch ? parseInt(widthMatch[1]) : null;
   
   console.log('🔍 [getModuleById] 모듈 검색:', {
     id,
+    baseType,
     requestedWidth,
     hasInternalSpace: !!internalSpace
   });
@@ -71,7 +73,6 @@ export const getModuleById = (
     let modifiedSpaceInfo = spaceInfo;
     if (requestedWidth && spaceInfo) {
       // 임시로 슬롯 너비 정보를 추가
-      const baseType = id.replace(/-\d+$/, '');
       const isDual = baseType.includes('dual-');
       
       if (isDual) {

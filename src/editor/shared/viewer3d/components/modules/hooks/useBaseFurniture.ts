@@ -126,6 +126,19 @@ export const useBaseFurniture = (
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
   
+  // 테마 색상 가져오기 함수를 먼저 정의
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
+  
+  
   console.log('🔧 useBaseFurniture 폭 결정:', {
     moduleId: moduleData.id,
     isDualFurniture,
@@ -154,18 +167,6 @@ export const useBaseFurniture = (
   // 재질 설정 (도어와 완전히 동일한 재질로 통일)
   const { renderMode, viewMode } = useSpace3DView();
   const { theme } = useTheme();
-  
-  // 테마 색상 가져오기
-  const getThemeColor = () => {
-    if (typeof window !== 'undefined') {
-      const computedStyle = getComputedStyle(document.documentElement);
-      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-      if (primaryColor) {
-        return primaryColor;
-      }
-    }
-    return '#10b981'; // 기본값 (green)
-  };
   
   // 색상 결정: 드래그 중일 때만 테마 색상 사용, 편집 모드는 기본 색상 유지
   const furnitureColor = isDragging ? getThemeColor() : (
@@ -341,6 +342,7 @@ export const useBaseFurniture = (
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;
+  
   
   // 높이 계산 헬퍼 함수
   const calculateSectionHeight = (section: SectionConfig, availableHeight: number) => {

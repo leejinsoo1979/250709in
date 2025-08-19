@@ -30,7 +30,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   slotWidths,
-  showFurniture = true
+  showFurniture = true,
+  adjacentCabinets,
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -42,7 +43,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
+    adjacentCabinets,
   });
 
   const {

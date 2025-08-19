@@ -81,7 +81,7 @@
 /* 썸네일 아이템 */
 .thumbnailItem {
   position: relative;
-  aspect-ratio: 1 / 1; /* 정사각형으로 변경해서 더 작게 */
+  aspect-ratio: 3 / 4; /* 모든 탭에서 동일한 비율로 통일 */
   background-color: var(--theme-surface);
   border: 1px solid #e5e7eb; /* 테두리 얇게 */
   border-radius: 4px;
@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px; /* 패딩 최소화 */
+  padding: 6px; /* 패딩 통일 */
   user-select: none;
 }
 
@@ -286,7 +286,7 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* 모든 화면에서 동일한 비율 유지 */
     padding: 4px;
   }
   
@@ -309,7 +309,7 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* 모든 화면에서 동일한 비율 유지 */
     padding: 3px;
   }
   
@@ -332,7 +332,7 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* 모든 화면에서 동일한 비율 유지 */
     padding: 2px;
   }
   
@@ -354,7 +354,7 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* 모든 화면에서 동일한 비율 유지 */
     padding: 2px;
   }
 }
@@ -366,7 +366,7 @@
   }
   
   .thumbnailItem {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* 모든 화면에서 동일한 비율 유지 */
     padding: 1px;
   }
   

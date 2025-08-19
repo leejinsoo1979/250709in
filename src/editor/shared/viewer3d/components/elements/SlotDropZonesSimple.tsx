@@ -233,9 +233,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
     
-    // needsWarning 확인
+    // needsWarning 확인 - 콘솔 로그만 출력하고 alert는 제거
     if (dragData.moduleData?.needsWarning) {
-      showAlert('배치슬롯의 사이즈를 늘려주세요', { title: '배치 불가' });
+      console.log('⚠️ 슬롯 사이즈 부족 - 배치 불가');
       return false;
     }
     
@@ -974,11 +974,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             console.log('🚫 기둥 침범으로 인해 배치 불가:', {
               이유: '공간 부족'
             });
-            showAlert?.({
-              type: 'error',
-              message: '기둥 침범으로 인해 공간이 부족합니다.',
-              duration: 3000
-            });
+            // 기둥 침범 경고는 제거 - 너무 자주 표시되어 사용자 경험 저하
+            // showAlert('기둥 침범으로 인해 공간이 부족합니다.', { title: '배치 불가' });
             return false;
           }
         } else {
@@ -990,11 +987,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               totalAvailableWidth,
               최소필요너비: 300
             });
-            showAlert?.({
-              type: 'error',
-              message: '기둥 침범으로 인해 듀얼 가구를 배치할 공간이 부족합니다.',
-              duration: 3000
-            });
+            // 듀얼 가구 기둥 침범 경고도 제거 - 너무 자주 표시됨
+            // showAlert('기둥 침범으로 인해 듀얼 가구를 배치할 공간이 부족합니다.', { title: '배치 불가' });
             return false;
           }
         }
@@ -2199,7 +2193,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let targetModuleId = activeModuleData.moduleData.id; // 기본값 설정
         
         // 단내림이 활성화된 경우 영역별 모듈 생성
-        let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
+        let zoneInternalSpace = internalSpace; // 기본값으로 internalSpace 사용
         // slotZone 정보로 영역 판단
         const effectiveZone = slotZone;
         
@@ -2406,15 +2400,39 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         const customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
         // 단내림 구간의 경우 moduleData가 이미 조정된 높이를 가지고 있어야 함
-        const furnitureHeightMm = moduleData.dimensions.height;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600; // 기본값 600mm (상부장 기본 높이)
         const furnitureHeight = furnitureHeightMm * 0.01;
         
-        // 가구 Y 위치 계산 - 가구는 항상 바닥(slotStartY)에서 시작
-        const furnitureY = slotStartY + furnitureHeight / 2;
+        // 상부장/하부장 체크
+        const isUpperCabinet = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
+        const isLowerCabinet = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
+        
+        // 가구 Y 위치 계산
+        let furnitureY: number;
+        
+        if (isUpperCabinet) {
+          // 상부장: 내경 공간 상단에 배치
+          const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
+          const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+          
+          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+          furnitureY = slotStartY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+          
+          console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
+            slotStartY,
+            internalHeightMm,
+            furnitureHeightMm,
+            furnitureY,
+            category: moduleData.category
+          });
+        } else {
+          // 하부장 및 일반 가구: 바닥에서 시작
+          furnitureY = slotStartY + furnitureHeight / 2;
+        }
         
         console.log('👻 [Ghost Preview] 가구 높이 계산:', {
           effectiveZone,
-          moduleDataHeight: moduleData.dimensions.height,
+          moduleDataHeight: moduleData?.dimensions?.height,
           moduleDataId: moduleData.id,
           zoneInternalSpaceHeight: zoneInternalSpace?.height,
           furnitureHeightMm,

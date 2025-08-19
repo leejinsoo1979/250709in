@@ -92,6 +92,22 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleInfo) return;
 
+      // 상부장/하부장 카테고리 확인
+      const movingModuleInfo = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
+      const isMovingUpper = movingModuleInfo?.category === 'upper' || movingModule.moduleId.includes('upper-cabinet');
+      const isMovingLower = movingModuleInfo?.category === 'lower' || movingModule.moduleId.includes('lower-cabinet');
+      const isExistingUpper = moduleInfo.category === 'upper' || module.moduleId.includes('upper-cabinet');
+      const isExistingLower = moduleInfo.category === 'lower' || module.moduleId.includes('lower-cabinet');
+      
+      // 상부장과 하부장은 같은 슬롯에 공존 가능
+      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+        console.log('✅ 상부장/하부장 공존 가능:', {
+          moving: { id: movingModuleId, category: isMovingUpper ? 'upper' : 'lower' },
+          existing: { id: module.id, category: isExistingUpper ? 'upper' : 'lower' }
+        });
+        return; // 충돌로 간주하지 않음
+      }
+
       // 기존 가구의 isDualSlot 속성을 우선 사용
       const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot :
                           Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
@@ -111,12 +127,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           이동하는가구: {
             id: movingModuleId,
             isDual: isDualFurniture,
-            targetSlots: occupiedSlots
+            targetSlots: occupiedSlots,
+            category: isMovingUpper ? 'upper' : (isMovingLower ? 'lower' : 'normal')
           },
           기존가구: {
             id: module.id,
             isDual: isModuleDual,
-            occupiedSlots: moduleSlots
+            occupiedSlots: moduleSlots,
+            category: isExistingUpper ? 'upper' : (isExistingLower ? 'lower' : 'normal')
           }
         });
         collidingModules.push(module.id);
@@ -499,7 +517,68 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth와 adjustedWidth 계산
       let newCustomDepth: number | undefined = undefined;
       let newAdjustedWidth: number | undefined = undefined;
-      let adjustedPosition = { x: finalX, y: currentModule.position.y, z: currentModule.position.z };
+      
+      // Y 위치 계산 - 상부장은 상부 프레임에 붙여서 배치
+      let calculatedY = currentModule.position.y;
+      
+      // mm를 Three.js 단위로 변환
+      const mmToThreeUnits = (mm: number) => mm * 0.01;
+      
+      // 내경 공간 시작점 계산
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 
+                        spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float' ? 
+                        (spaceInfo.baseConfig.floatHeight || 0) : 0;
+      const furnitureStartY = mmToThreeUnits(floorHeight + baseHeight);
+      
+      // 상부장인지 확인 (카테고리 또는 ID로 확인)
+      const isUpperCabinet = moduleData.category === 'upper' || 
+                            currentModule.moduleId.includes('upper-cabinet') ||
+                            moduleData.id?.includes('upper-cabinet');
+      
+      const isLowerCabinet = moduleData.category === 'lower' || 
+                            currentModule.moduleId.includes('lower-cabinet') ||
+                            moduleData.id?.includes('lower-cabinet');
+      
+      if (isUpperCabinet) {
+        // 상부장은 내경 공간 상단에 배치
+        const internalHeightMm = internalSpace.height;
+        const furnitureHeightMm = moduleData.dimensions.height;
+        
+        // 상부장 Y 위치: 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+        calculatedY = furnitureStartY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+        
+        console.log('🔝 드래그 중 상부장 Y 위치 계산:', {
+          moduleId: moduleData.id,
+          currentModuleId: currentModule.moduleId,
+          category: moduleData.category,
+          isUpperCabinet,
+          furnitureStartY,
+          internalHeightMm,
+          furnitureHeightMm,
+          calculatedY,
+          previousY: currentModule.position.y
+        });
+      } else {
+        // 하부장 및 일반 가구는 바닥에 배치
+        const furnitureHeightMm = moduleData.dimensions.height;
+        calculatedY = furnitureStartY + mmToThreeUnits(furnitureHeightMm / 2);
+        
+        if (isLowerCabinet) {
+          console.log('📦 드래그 중 하부장 Y 위치 계산:', {
+            moduleId: moduleData.id,
+            currentModuleId: currentModule.moduleId,
+            category: moduleData.category,
+            isLowerCabinet,
+            furnitureStartY,
+            furnitureHeightMm,
+            calculatedY,
+            previousY: currentModule.position.y
+          });
+        }
+      }
+      
+      let adjustedPosition = { x: finalX, y: calculatedY, z: currentModule.position.z };
       
       if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
         const columnDepth = targetSlotInfo.column.depth;

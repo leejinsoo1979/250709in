@@ -130,6 +130,23 @@ export const isSlotAvailable = (
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData) continue;
       
+      // 상부장/하부장 카테고리 확인
+      const newModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
+      const isNewUpper = newModuleData?.category === 'upper' || moduleId.includes('upper-cabinet');
+      const isNewLower = newModuleData?.category === 'lower' || moduleId.includes('lower-cabinet');
+      const isExistingUpper = moduleData.category === 'upper' || placedModule.moduleId.includes('upper-cabinet');
+      const isExistingLower = moduleData.category === 'lower' || placedModule.moduleId.includes('lower-cabinet');
+      
+      // 상부장과 하부장은 같은 슬롯에 공존 가능
+      if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+        console.log('✅ 상부장/하부장 공존 가능 (슬롯 가용성 검사):', {
+          new: { moduleId, category: isNewUpper ? 'upper' : 'lower' },
+          existing: { id: placedModule.id, category: isExistingUpper ? 'upper' : 'lower' },
+          targetSlots
+        });
+        continue; // 충돌로 간주하지 않고 다음 가구 검사
+      }
+      
       // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
       const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
                           Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
@@ -162,9 +179,14 @@ export const isSlotAvailable = (
               moduleId: placedModule.moduleId,
               slotIndex: moduleSlot,
               isDual: isModuleDual,
-              occupiedSlots: moduleSlots
+              occupiedSlots: moduleSlots,
+              category: isExistingUpper ? 'upper' : (isExistingLower ? 'lower' : 'normal')
             },
-            isDualFurniture,
+            newModule: {
+              moduleId,
+              isDualFurniture,
+              category: isNewUpper ? 'upper' : (isNewLower ? 'lower' : 'normal')
+            },
             conflict: true
           });
           return false; // 충돌 발견

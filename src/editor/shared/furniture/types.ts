@@ -20,6 +20,8 @@ export interface ColumnSlotMetadata {
 export interface PlacedModule {
   id: string;
   moduleId: string;
+  baseModuleType?: string; // 너비를 제외한 기본 모듈 타입 (예: 'single-2drawer-hanging', 'upper-cabinet-shelf')
+  moduleWidth?: number; // 실제 모듈 너비 (mm)
   position: {
     x: number;
     y: number;

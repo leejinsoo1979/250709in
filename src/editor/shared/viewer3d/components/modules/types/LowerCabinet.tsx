@@ -9,11 +9,12 @@ import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
- * 상부장 컴포넌트
- * - 상부장 선반형, 오픈형, 혼합형을 모두 처리
+ * 하부장 컴포넌트
+ * - 하부장 선반형, 오픈형, 혼합형을 모두 처리
  * - 공통 렌더링 로직 사용
+ * - 상부장과 동일한 구조이지만 하부장 높이(1000mm)로 렌더링
  */
-const UpperCabinet: React.FC<FurnitureTypeProps> = ({
+const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   moduleData,
   color,
   isDragging = false,
@@ -90,32 +91,27 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
             )}
           </BaseFurnitureShell>
           
-          {/* 상부장 하단 마감재 (18mm) - 도어 색상과 동일 */}
-          {!isDragging && (() => {
-            const doorMaterial = new THREE.MeshStandardMaterial({
-              color: baseFurniture.doorColor,
-              metalness: 0.0,
-              roughness: 0.6,
-            });
-            
-            return (
-              <BoxWithEdges
-                args={[
-                  baseFurniture.width,  // 전체 너비 사용
-                  0.018, // 18mm
-                  baseFurniture.depth
-                ]}
-                position={[
-                  0,
-                  -(baseFurniture.height / 2) - 0.009, // 하단에 위치 (18mm의 절반만큼 아래로)
-                  0
-                ]}
-                material={doorMaterial}
-                renderMode={renderMode}
-                hideEdges={true} // 엣지 숨김
+          {/* 하부장 상단 마감재 (18mm) - 도어 색상과 동일 */}
+          {!isDragging && (
+            <mesh
+              position={[
+                0,
+                (baseFurniture.height / 2) + 0.009, // 상단에 위치 (18mm의 절반만큼 위로)
+                0
+              ]}
+            >
+              <boxGeometry args={[
+                baseFurniture.width,  // 전체 너비 사용
+                0.018, // 18mm
+                baseFurniture.depth
+              ]} />
+              <meshStandardMaterial
+                color={baseFurniture.doorColor}
+                metalness={0.0}
+                roughness={0.6}
               />
-            );
-          })()}
+            </mesh>
+          )}
         </>
       )}
       
@@ -132,11 +128,11 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           isDragging={isDragging}
           isEditMode={isEditMode}
-        slotIndex={slotIndex}
+          slotIndex={slotIndex}
         />
       )}
     </>
   );
 };
 
-export default UpperCabinet;
+export default LowerCabinet;

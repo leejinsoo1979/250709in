@@ -246,10 +246,53 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const columnSlots = analyzeColumnSlots(spaceInfo);
       console.log('🔧 analyzeColumnSlots 결과:', columnSlots);
       
+      // 상부장/하부장의 moduleId 업데이트 (공간 설정 변경 시 ID가 바뀌므로)
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const newColumnWidth = indexing.columnWidth;
+      
       // 제거할 가구 ID 수집 (듀얼 가구 + 컬럼 수 초과 가구)
       const modulesToRemove: string[] = [];
       
       const updatedModules = state.placedModules.map(module => {
+        // baseModuleType이 있으면 사용, 없으면 moduleId에서 추출
+        const baseType = module.baseModuleType || module.moduleId?.replace(/-\d+$/, '');
+        
+        // 모든 동적 가구의 moduleId 업데이트 (상부장/하부장 뿐만 아니라 모든 가구)
+        if (baseType && module.moduleId) {
+          // zone별로 다른 컬럼 너비 계산
+          let targetColumnWidth = newColumnWidth;
+          
+          if (module.zone && spaceInfo.droppedCeiling?.enabled) {
+            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            if (module.zone === 'dropped' && zoneInfo.dropped) {
+              targetColumnWidth = zoneInfo.dropped.columnWidth;
+            } else if (module.zone === 'normal' && zoneInfo.normal) {
+              targetColumnWidth = zoneInfo.normal.columnWidth;
+            }
+          }
+          
+          // 새로운 너비로 ID 재생성
+          const newModuleId = `${baseType}-${Math.round(targetColumnWidth)}`;
+          
+          // moduleId가 변경되는 경우에만 로그
+          if (newModuleId !== module.moduleId) {
+            console.log('📦 가구 moduleId 업데이트:', {
+              baseType,
+              oldId: module.moduleId,
+              newId: newModuleId,
+              zone: module.zone,
+              targetColumnWidth
+            });
+          }
+          
+          // moduleId와 moduleWidth 업데이트
+          module = {
+            ...module,
+            moduleId: newModuleId,
+            moduleWidth: targetColumnWidth
+          };
+        }
+        
         if (module.slotIndex === undefined) return module;
         
         // zone별 컬럼 수 계산

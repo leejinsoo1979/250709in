@@ -120,7 +120,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   adjustedWidth,
   slotInfo,
-  showFurniture = true
+  showFurniture = true,
+  furnitureId
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {

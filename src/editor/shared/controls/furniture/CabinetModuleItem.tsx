@@ -5,13 +5,12 @@ import { useUIStore } from '@/store/uiStore';
 import DoorIcon from './DoorIcon';
 import styles from './ModuleLibrary.module.css';
 
-
-interface ModuleItemProps {
+interface CabinetModuleItemProps {
   module: ModuleData;
   internalSpace: { width: number; height: number; depth: number };
 }
 
-const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
+const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const { openFurniturePopup } = useUIStore();
@@ -38,12 +37,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     const icon = document.createElement('div');
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
     icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;`;
-    icon.textContent = hasDoor ? '🚪' : '📦'; // 도어 없음: 박스 아이콘으로 변경
+    icon.textContent = hasDoor ? '🚪' : '📦';
     document.body.appendChild(icon);
     return icon;
   };
-
-
 
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
@@ -70,7 +67,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     };
     
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.setData('text/plain', module.id); // 호환성을 위해 추가
+    e.dataTransfer.setData('text/plain', module.id);
     
     e.dataTransfer.effectAllowed = 'copy';
     
@@ -91,12 +88,18 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     setCurrentDragData(null);
   };
 
+  // 카테고리에 따라 라벨 결정
+  const getCategoryLabel = () => {
+    if (module.category === 'upper') return '상부장';
+    if (module.category === 'lower') return '하부장';
+    return '';
+  };
 
   return (
     <div
       ref={itemRef}
       key={module.id}
-      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
+      className={`${styles.moduleItem} ${styles.cabinetModuleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
       tabIndex={-1}
       draggable={isValid || needsWarning}
       onDragStart={handleDragStart}
@@ -106,32 +109,61 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         cursor: (isValid || needsWarning) ? 'grab' : 'not-allowed'
       }}
     >
-      <div className={styles.modulePreview}>
-        <div 
-          className={styles.moduleBox}
-          style={{ 
-            backgroundColor: (isValid || needsWarning) ? module.color : '#ccc',
-            aspectRatio: `${module.dimensions.width} / ${module.dimensions.height}`,
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          {/* 상하부장 구분 표시 */}
-          {(module.category === 'upper' || module.category === 'lower') && (
+      {/* 2D 썸네일 */}
+      <div className={styles.modulePreview3D}>
+        <div className={styles.cabinetThumbnail}>
+          {/* 정면 뷰 */}
+          <div 
+            className={styles.cabinetFront}
+            style={{ 
+              backgroundColor: module.color || '#8B7355',
+              width: '120px',
+              height: module.category === 'upper' ? '80px' : '120px',
+              position: 'relative',
+              borderRadius: '4px',
+              border: '2px solid rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {/* 선반 라인 표시 */}
+            {module.modelConfig?.sections?.[0]?.count && Array.from({ length: module.modelConfig.sections[0].count - 1 }).map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  position: 'absolute',
+                  width: '90%',
+                  height: '2px',
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  top: `${((idx + 1) / module.modelConfig.sections[0].count) * 100}%`
+                }}
+              />
+            ))}
+            
+            {/* 카테고리 아이콘 */}
             <div style={{ 
-              fontSize: '16px', 
-              opacity: 0.6,
-              position: 'absolute'
+              fontSize: '24px', 
+              opacity: 0.5,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
             }}>
-              {module.category === 'upper' ? '상' : '하'}
+              {module.category === 'upper' ? '⬆️' : '⬇️'}
             </div>
-          )}
+          </div>
         </div>
+        
         {!isValid && !needsWarning && <div className={styles.invalidIcon}>✕</div>}
         {needsWarning && <div className={styles.warningIcon}>⚠️</div>}
         {isDynamic && <div className={styles.dynamicIcon}>⚡</div>}
+        
+        {/* 카테고리 라벨 */}
+        <div className={styles.categoryLabel}>
+          {getCategoryLabel()}
+        </div>
       </div>
       
       <div className={styles.moduleInfo}>
@@ -169,4 +201,4 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   );
 };
 
-export default ModuleItem; 
+export default CabinetModuleItem;

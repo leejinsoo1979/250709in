@@ -1652,21 +1652,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 가구 상단에서 치수선까지 (띄움 높이 고려) */}
-            {/* 좌측 연장선 */}
-            <Line
-              points={[[leftX, guideTopY, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={999999}
-            />
-            {/* 우측 연장선 */}
-            <Line
-              points={[[rightX, guideTopY, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={999999}
-            />
+            {/* 연장선 - 공간 밖에서만 표시 */}
+            {/* 상부장과 하부장 모두 공간 밖(상부 프레임 윗선)에서 치수선까지만 연결 */}
+            <>
+              {/* 좌측 연장선 - 공간 상단(상부 프레임 윗선)에서 치수선까지 */}
+              <Line
+                points={[[leftX, spaceHeight, 0.002], [leftX, dimY + mmToThreeUnits(10), 0.002]]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={999999}
+              />
+              {/* 우측 연장선 - 공간 상단(상부 프레임 윗선)에서 치수선까지 */}
+              <Line
+                points={[[rightX, spaceHeight, 0.002], [rightX, dimY + mmToThreeUnits(10), 0.002]]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={999999}
+              />
+            </>
             
           </group>
         );
@@ -2253,17 +2256,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </Text>
               )}
 
-              {/* 연장선 (가구 상단에서 치수선까지 긴 보조선) */}
-              <Line
-                points={[[furnitureX, actualSpaceHeight + mmToThreeUnits(30), furnitureBackZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureBackZ]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              <Line
-                points={[[furnitureX, actualSpaceHeight + mmToThreeUnits(30), furnitureFrontZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureFrontZ]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
+              {/* 연장선 - 공간 밖에서만 표시 (공간 상단에서 치수선까지) */}
+              <>
+                <Line
+                  points={[[furnitureX, actualSpaceHeight, furnitureBackZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureBackZ]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={[[furnitureX, actualSpaceHeight, furnitureFrontZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureFrontZ]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+              </>
             </group>
           );
         })}
@@ -2914,17 +2919,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {actualDepth}
               </Text>
 
-              {/* 연장선 (가구에서 치수선까지 긴 보조선) */}
-              <Line
-                points={[[spaceWidth, spaceHeight, spaceZOffset], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              <Line
-                points={[[spaceWidth, spaceHeight, spaceZOffset + moduleDepth], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset + moduleDepth]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
+              {/* 연장선 - 공간 밖에서만 표시 (공간 상단에서 치수선까지) */}
+              <>
+                <Line
+                  points={[[spaceWidth, spaceHeight, spaceZOffset], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                <Line
+                  points={[[spaceWidth, spaceHeight, spaceZOffset + moduleDepth], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset + moduleDepth]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+              </>
             </group>
           );
         })}

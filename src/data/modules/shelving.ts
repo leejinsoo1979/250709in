@@ -42,7 +42,7 @@ export const validateSectionConfig = (section: unknown): section is SectionConfi
 export interface ModuleData {
   id: string;
   name: string;
-  category: 'full';
+  category: 'full' | 'upper' | 'lower';
   dimensions: {
     width: number;
     height: number;
@@ -176,11 +176,12 @@ const createFurnitureBase = (
   depth: number,
   color: string,
   description: string,
-  defaultDepth?: number
+  defaultDepth?: number,
+  category?: 'full' | 'upper' | 'lower'
 ): Partial<ModuleData> => ({
   id,
   name,
-  category: 'full',
+  category: category || 'full',
   dimensions: { width, height, depth },
   color,
   description,
@@ -629,12 +630,13 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
     600, // 상부장 기본 높이 600mm
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#e8f5e9', // 연한 초록색
-    `상부장 선반 2단형`
+    `상부장 선반 2단형`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
   );
   
   return {
     ...base,
-    category: 'upper' as 'full', // 나중에 'upper'로 변경 예정
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -660,12 +662,13 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
     600,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#fff3e0', // 연한 주황색
-    `상부장 오픈형`
+    `상부장 오픈형`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
   );
   
   return {
     ...base,
-    category: 'upper' as 'full',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -690,12 +693,13 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
     600,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#f3e5f5', // 연한 보라색
-    `상부장 혼합형 (오픈+선반)`
+    `상부장 혼합형 (오픈+선반)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
   );
   
   return {
     ...base,
-    category: 'upper' as 'full',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -709,6 +713,44 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
           type: 'open',
           heightType: 'percentage',
           height: 50
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 하부장 기본형 - W600xD600xH1000
+ * 기본 패널 두께 18mm 적용
+ * 슬롯 너비에 따라 동적으로 조절
+ */
+const createLowerCabinet1 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `lower-cabinet-basic-${columnWidth}`,
+    `하부장 ${columnWidth}mm`,
+    columnWidth,
+    1000, // 하부장 높이 1000mm
+    600, // 하부장 깊이 600mm (기본값)
+    '#fff3e0', // 연한 오렌지색
+    `하부장 기본형 W${columnWidth}xH1000xD600`,
+    600, // 기본 깊이
+    'lower' // 하부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    isDynamic: true, // 동적 크기 조절 가능
+    defaultDepth: 600, // 기본 깊이 600mm
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
+      hasOpenFront: false, // 전면 막힘 (문짝 가능)
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 선반 2단
         }
       ]
     }
@@ -917,6 +959,16 @@ export const generateShelvingModules = (
   modules.push(createUpperCabinet1(columnWidth));
   modules.push(createUpperCabinet2(columnWidth));
   modules.push(createUpperCabinet3(columnWidth));
+  
+  // === 하부장 가구 생성 ===
+  const lowerCabinet = createLowerCabinet1(columnWidth);
+  console.log('🔨 하부장 생성:', {
+    id: lowerCabinet.id,
+    name: lowerCabinet.name,
+    category: lowerCabinet.category,
+    dimensions: lowerCabinet.dimensions
+  });
+  modules.push(lowerCabinet);
   
   return modules;
 };

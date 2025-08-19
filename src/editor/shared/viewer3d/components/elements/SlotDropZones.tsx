@@ -882,6 +882,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     const newModule = {
       id: placedId,
       moduleId: actualModuleId, // 변환된 모듈 ID 사용
+      baseModuleType: actualModuleId.replace(/-\d+$/, ''), // 너비를 제외한 기본 타입 (예: 'single-2drawer-hanging', 'upper-cabinet-shelf')
+      moduleWidth: actualModuleData.dimensions.width, // 실제 모듈 너비 저장
       position: finalPosition,
       rotation: 0,
       hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)

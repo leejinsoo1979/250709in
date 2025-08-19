@@ -5,6 +5,7 @@ import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer } from './shared
 import DoorModule from './DoorModule';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import * as THREE from 'three';
 import IndirectLight from './IndirectLight';
 import SingleType1 from './types/SingleType1';
@@ -16,6 +17,7 @@ import DualType4 from './types/DualType4';
 import DualType5 from './types/DualType5';
 import DualType6 from './types/DualType6';
 import UpperCabinet from './types/UpperCabinet';
+import LowerCabinet from './types/LowerCabinet';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -88,6 +90,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // === React Hooks는 항상 최상단에서 호출 ===
   const spaceConfigStore = useSpaceConfigStore();
   const { indirectLightEnabled, indirectLightIntensity, indirectLightColor } = useUIStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
+  
   
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -170,6 +174,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
           onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
         />
       </>
     );
@@ -212,6 +217,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
       />
       </>
     );
@@ -254,6 +260,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
       />
       </>
     );
@@ -287,7 +294,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
-        showFurniture={showFurniture} // 가구 본체 표시 여부
+        showFurniture={showFurniture}
+        furnitureId={furnitureId} // 가구 본체 표시 여부
       />
       </>
     );
@@ -323,6 +331,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
+        furnitureId={furnitureId} // 가구 ID 전달
       />
       </>
     );
@@ -356,7 +365,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
-        showFurniture={showFurniture} // 가구 본체 표시 여부
+        showFurniture={showFurniture}
+        furnitureId={furnitureId} // 가구 본체 표시 여부
       />
       </>
     );
@@ -410,6 +420,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
       />
       </>
     );
@@ -463,6 +474,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
       />
       </>
     );
@@ -503,6 +515,41 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
+  // === 하부장 타입들 ===
+  if (moduleData.id.includes('lower-cabinet-')) {
+    return (
+      <>
+        {/* 모든 타입에서 간접조명 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
+        <LowerCabinet
+        moduleData={moduleData}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        internalHeight={internalHeight}
+        hasDoor={hasDoor}
+        customDepth={customDepth}
+        hingePosition={hingePosition}
+        spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0}
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth}
+        slotIndex={slotIndex}
+        showFurniture={showFurniture} // 가구 본체 표시 여부
+      />
+      </>
+    );
+  }
+
   // === 2단계: 일반 폴백 케이스 (공통 로직 사용) ===
   // 나머지 케이스들을 공통 로직으로 처리
   return (
@@ -519,7 +566,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} isHighlighted={isHighlighted}>
+        <BaseFurnitureShell 
+          {...baseFurniture} 
+          isDragging={isDragging} 
+          isEditMode={isEditMode} 
+          isHighlighted={isHighlighted}
+        >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <SectionsRenderer
@@ -559,7 +611,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               hingePosition={hingePosition}
               spaceInfo={spaceInfo}
               color={baseFurniture.doorColor}
-              doorXOffset={0} // 사용하지 않음
+              doorXOffset={doorXOffset} // FurnitureItem에서 전달받은 오프셋 사용
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX}
               slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들

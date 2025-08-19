@@ -263,10 +263,14 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
       
       // 컬럼 수 변경 감지 (customColumnCount, mainDoorCount, droppedCeilingDoorCount)
+      // 또는 공간 너비, 서라운드 타입, 프레임 크기 변경 시에도 상부장/하부장 ID 업데이트 필요
       const columnCountChanged = 
         processedInfo.customColumnCount !== undefined && processedInfo.customColumnCount !== state.spaceInfo.customColumnCount ||
         processedInfo.mainDoorCount !== undefined && processedInfo.mainDoorCount !== state.spaceInfo.mainDoorCount ||
-        processedInfo.droppedCeilingDoorCount !== undefined && processedInfo.droppedCeilingDoorCount !== state.spaceInfo.droppedCeilingDoorCount;
+        processedInfo.droppedCeilingDoorCount !== undefined && processedInfo.droppedCeilingDoorCount !== state.spaceInfo.droppedCeilingDoorCount ||
+        processedInfo.width !== undefined && processedInfo.width !== state.spaceInfo.width ||
+        processedInfo.surroundType !== undefined && processedInfo.surroundType !== state.spaceInfo.surroundType ||
+        processedInfo.frameSize !== undefined;
       
       // 띄워서 배치 설정 변경 감지
       const placementChanged = 

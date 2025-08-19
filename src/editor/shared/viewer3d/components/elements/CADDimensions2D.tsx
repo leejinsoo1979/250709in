@@ -1132,44 +1132,78 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               </Html>
             )}
             
+            {/* 세로 연장선 - 가구 상단에서 치수선까지 */}
+            {/* 하부장은 아래쪽 연장선도 표시하지 않음 */}
+            {moduleData.category !== 'lower' && (
+              <>
+                <Line
+                  points={[
+                    [leftX, furnitureTopY, 0.01],
+                    [leftX, dimY, 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+                <Line
+                  points={[
+                    [rightX, furnitureTopY, 0.01],
+                    [rightX, dimY, 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+              </>
+            )}
+            
             {/* 위쪽 연장선 - 가구 상단에서 위쪽 외부 영역으로 */}
-            <Line
-              points={[
-                [leftX, furnitureTopY, 0.01],
-                [leftX, furnitureTopY + mmToThreeUnits(30), 0.01]
-              ]}
-              color={dimensionColors.furniture}
-              lineWidth={1}
-              dashed={false}
-            />
-            <Line
-              points={[
-                [rightX, furnitureTopY, 0.01],
-                [rightX, furnitureTopY + mmToThreeUnits(30), 0.01]
-              ]}
-              color={dimensionColors.furniture}
-              lineWidth={1}
-              dashed={false}
-            />
-            {/* 아래쪽 연장선 - 치수선 위아래로 짧게만 */}
-            <Line
-              points={[
-                [leftX, dimY + mmToThreeUnits(5), 0.01],
-                [leftX, dimY - mmToThreeUnits(5), 0.01]
-              ]}
-              color={dimensionColors.furniture}
-              lineWidth={1}
-              dashed={false}
-            />
-            <Line
-              points={[
-                [rightX, dimY + mmToThreeUnits(5), 0.01],
-                [rightX, dimY - mmToThreeUnits(5), 0.01]
-              ]}
-              color={dimensionColors.furniture}
-              lineWidth={1}
-              dashed={false}
-            />
+            {/* 하부장은 위쪽 연장선도 표시하지 않음 */}
+            {moduleData.category !== 'lower' && (
+              <>
+                <Line
+                  points={[
+                    [leftX, furnitureTopY, 0.01],
+                    [leftX, furnitureTopY + mmToThreeUnits(30), 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+                <Line
+                  points={[
+                    [rightX, furnitureTopY, 0.01],
+                    [rightX, furnitureTopY + mmToThreeUnits(30), 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+              </>
+            )}
+            {/* 아래쪽 연장선 - 치수선 위아래로 짧게만 (하부장은 표시하지 않음) */}
+            {moduleData.category !== 'lower' && (
+              <>
+                <Line
+                  points={[
+                    [leftX, dimY + mmToThreeUnits(5), 0.01],
+                    [leftX, dimY - mmToThreeUnits(5), 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+                <Line
+                  points={[
+                    [rightX, dimY + mmToThreeUnits(5), 0.01],
+                    [rightX, dimY - mmToThreeUnits(5), 0.01]
+                  ]}
+                  color={dimensionColors.furniture}
+                  lineWidth={1}
+                  dashed={false}
+                />
+              </>
+            )}
           </group>
         );
       });

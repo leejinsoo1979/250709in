@@ -29,7 +29,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   slotInfo,
   slotCenterX,
   showFurniture = true,
-  isHighlighted = false
+  isHighlighted = false,
+  furnitureId
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -42,7 +43,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    isHighlighted
+    isHighlighted,
+    
   });
 
   const {
@@ -103,7 +105,14 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} isHighlighted={isHighlighted}>
+        <BaseFurnitureShell 
+          {...baseFurniture} 
+          isDragging={isDragging} 
+          isEditMode={isEditMode} 
+          isHighlighted={isHighlighted}
+          
+          
+        >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <SectionsRenderer

@@ -585,6 +585,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const newModule = {
         id: placedId,
         moduleId: targetModuleId, // 정확한 너비의 모듈 ID 사용
+        baseModuleType: module.id.replace(/-\d+$/, ''), // 너비를 제외한 기본 타입
+        moduleWidth: module.dimensions.width, // 실제 모듈 너비 저장
         position: {
           x: positionX,
           y: 0,
@@ -675,6 +677,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     }
   };
 
+  // 상하부장 모듈인지 확인
+  const isCabinetModule = module.category === 'upper' || module.category === 'lower';
+
   return (
     <>
       <div 
@@ -687,18 +692,51 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
         <div className={styles.thumbnailImage}>
-          <img 
-            src={iconPath} 
-            alt={module.name}
-            onError={(e) => {
-              // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
-              const img = e.target as HTMLImageElement;
-              if (!img.dataset.fallbackAttempted) {
-                img.dataset.fallbackAttempted = 'true';
-                img.src = getImagePath('single-2drawer-hanging.png');
-              }
-            }}
-          />
+          {isCabinetModule ? (
+            // 상하부장용 커스텀 썸네일
+            <div style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: module.color || '#8B7355',
+              borderRadius: '4px',
+              border: '2px solid rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}>
+              {/* 카테고리 아이콘 */}
+              <div style={{ 
+                fontSize: '24px', 
+                opacity: 0.7
+              }}>
+                {module.category === 'upper' ? '⬆️' : '⬇️'}
+              </div>
+              {/* 카테고리 라벨 */}
+              <div style={{
+                fontSize: '12px',
+                marginTop: '4px',
+                opacity: 0.8
+              }}>
+                {module.category === 'upper' ? '상부장' : '하부장'}
+              </div>
+            </div>
+          ) : (
+            // 기존 이미지 기반 썸네일
+            <img 
+              src={iconPath} 
+              alt={module.name}
+              onError={(e) => {
+                // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
+                const img = e.target as HTMLImageElement;
+                if (!img.dataset.fallbackAttempted) {
+                  img.dataset.fallbackAttempted = 'true';
+                  img.src = getImagePath('single-2drawer-hanging.png');
+                }
+              }}
+            />
+          )}
         </div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
@@ -745,8 +783,33 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   // 단일 컬럼의 너비 계산
   const columnWidth = indexing.columnWidth;
   
-  // 전체 높이 모듈들만 가져오기 (내경 공간 정보 전달) - 영역별 공간 정보 사용
-  const fullModules = getModulesByCategory('full', zoneInternalSpace, zoneSpaceInfo);
+  // 카테고리에 따라 모듈 가져오기
+  let categoryModules: ModuleData[] = [];
+  if (moduleCategory === 'upperlower') {
+    // 상하부장 카테고리 선택시
+    const upperModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
+    const lowerModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
+    
+    // upperLowerTab에 따라 필터링
+    if (upperLowerTab === 'upper') {
+      categoryModules = upperModules;
+    } else {
+      categoryModules = lowerModules;
+    }
+    
+    console.log('🎯 상하부장 모듈 로드:', {
+      upperLowerTab,
+      upperCount: upperModules.length,
+      lowerCount: lowerModules.length,
+      selectedCount: categoryModules.length,
+      modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
+    });
+  } else {
+    // 키큰장(전체형) 모듈
+    categoryModules = getModulesByCategory('full', zoneInternalSpace, zoneSpaceInfo);
+  }
+  
+  const fullModules = categoryModules;
   
   console.log('🔍 [ModuleGallery] Debug info:', {
     activeDroppedCeilingTab,
@@ -805,9 +868,21 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 현재 선택된 탭에 따른 모듈 목록 (moduleCategory 필터링 추가)
   const currentModules = useMemo(() => {
-    // 상하부장이 선택된 경우 빈 배열 반환 (현재 상하부장 모듈이 없음)
+    // 상하부장이 선택된 경우
     if (moduleCategory === 'upperlower') {
-      return [];
+      const upperModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
+      const lowerModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
+      
+      console.log('🎯 상하부장 모듈 로드:', {
+        upperCount: upperModules.length,
+        lowerCount: lowerModules.length,
+        upperLowerTab,
+        upperModules: upperModules.map(m => ({ id: m.id, name: m.name })),
+        lowerModules: lowerModules.map(m => ({ id: m.id, name: m.name }))
+      });
+      
+      // upperLowerTab에 따라 상부장 또는 하부장 반환
+      return upperLowerTab === 'upper' ? upperModules : lowerModules;
     }
     
     // 키큰장인 경우 기존 로직 적용
@@ -828,7 +903,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     });
     
     return modules;
-  }, [selectedType, singleModules, dualModules, moduleCategory]);
+  }, [selectedType, singleModules, dualModules, moduleCategory, upperLowerTab, zoneInternalSpace, zoneSpaceInfo]);
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {

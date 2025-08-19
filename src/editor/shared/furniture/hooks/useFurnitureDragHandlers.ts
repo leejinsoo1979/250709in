@@ -57,9 +57,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         const indexing = calculateSpaceIndexing(spaceInfo);
         
-        // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
+        // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우 - 콘솔 로그만 출력
         if (isSpecialDualFurniture && indexing.columnWidth < 550) {
-          showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+          console.log('⚠️ 특수 듀얼 가구는 550mm 이상 슬롯에만 배치 가능');
           setFurniturePlacementMode(false);
           return;
         }
@@ -359,6 +359,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         let newModuleData: any = {
           id: placedId,
           moduleId: currentDragData.moduleData.id,
+          baseModuleType: currentDragData.moduleData.id.replace(/-\d+$/, ''), // 너비를 제외한 기본 타입
+          moduleWidth: currentDragData.moduleData.dimensions.width, // 실제 모듈 너비 저장
           position: adjustedPosition,
           rotation: 0,
           slotIndex: dropPosition.column, // 슬롯 인덱스 저장
