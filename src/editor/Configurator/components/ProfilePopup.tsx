@@ -3,6 +3,7 @@ import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight } from 
 import { useAuth } from '@/auth/AuthProvider';
 import { signOutUser } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -14,6 +15,7 @@ interface ProfilePopupProps {
 const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, currentLanguage } = useTranslation();
 
   if (!isOpen || !user) return null;
 
@@ -78,24 +80,24 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
 
           {/* 사용자 정보 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>계정 정보</h4>
+            <h4 className={styles.sectionTitle}>{t('profile.accountInfo')}</h4>
             <div className={styles.infoSection}>
             <div className={styles.infoRow}>
               <div className={styles.infoLabel}>
                 <Shield size={18} />
-                <span>인증 방법</span>
+                <span>{t('profile.authMethod')}</span>
               </div>
               <span className={styles.infoValue}>
-                {user.providerData?.[0]?.providerId === 'google.com' ? 'Google 계정' : 
-                 user.providerData?.[0]?.providerId === 'password' ? '이메일 인증' : 
-                 '기타'}
+                {user.providerData?.[0]?.providerId === 'google.com' ? t('profile.googleAccount') : 
+                 user.providerData?.[0]?.providerId === 'password' ? t('profile.emailAuth') : 
+                 t('profile.other')}
               </span>
             </div>
 
             <div className={styles.infoRow}>
               <div className={styles.infoLabel}>
                 <Calendar size={18} />
-                <span>가입일</span>
+                <span>{t('profile.joinDate')}</span>
               </div>
               <span className={styles.infoValue}>
                 {formatCreatedDate(user.metadata?.creationTime)}
@@ -105,7 +107,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             <div className={styles.infoRow}>
               <div className={styles.infoLabel}>
                 <Calendar size={18} />
-                <span>마지막 활동</span>
+                <span>{t('profile.lastActivity')}</span>
               </div>
               <span className={styles.infoValue}>
                 {formatLastSignIn(user.metadata?.lastSignInTime)}
@@ -116,12 +118,12 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
 
           {/* 빠른 메뉴 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>빠른 메뉴</h4>
+            <h4 className={styles.sectionTitle}>{t('profile.quickMenu')}</h4>
             <div className={styles.menuSection}>
               <button className={styles.menuItem}>
                 <div className={styles.menuLeft}>
                   <Settings size={18} />
-                  <span>계정 설정</span>
+                  <span>{t('profile.accountSettings')}</span>
                 </div>
                 <ChevronRight size={16} />
               </button>
@@ -132,7 +134,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
               }}>
                 <div className={styles.menuLeft}>
                   <LogOut size={18} />
-                  <span>로그아웃</span>
+                  <span>{t('common.logout')}</span>
                 </div>
                 <ChevronRight size={16} />
               </button>

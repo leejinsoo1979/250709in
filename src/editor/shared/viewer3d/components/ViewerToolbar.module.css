@@ -1,0 +1,74 @@
+.toolbar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+  background: transparent;
+}
+
+.toolbarButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 2px solid var(--theme-primary);
+  color: var(--theme-primary) !important; /* 항상 테마 색상 - important 추가 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.toolbarButton:hover {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--theme-primary);
+  transform: translateY(-1px);
+}
+
+.toolbarButton:active {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transform: translateY(0);
+}
+
+.toolbarButton.active {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--theme-primary) !important; /* 켜진 상태 - 테마 색상 */
+}
+
+.toolbarButton.active:hover {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--theme-primary-hover); /* 호버 시 테마 호버 색상 */
+}
+
+/* 다크 테마 대응 */
+@media (prefers-color-scheme: dark) {
+  .toolbarButton {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .toolbarButton:hover {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: rgba(255, 255, 255, 0.9);
+  }
+}

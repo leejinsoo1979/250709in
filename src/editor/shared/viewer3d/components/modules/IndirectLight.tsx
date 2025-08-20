@@ -36,8 +36,8 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
         imagePath,
         (loadedTexture) => {
           console.log('✅ Three.js 텍스처 로드 성공');
-          loadedTexture.wrapS = THREE.RepeatWrapping;
-          loadedTexture.wrapT = THREE.RepeatWrapping;
+          loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
+          loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
           loadedTexture.repeat.set(1, 1);
           loadedTexture.needsUpdate = true;
           setTexture(loadedTexture);
@@ -77,6 +77,11 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
     y위치: position[1]
   });
 
+  // 텍스처가 로드되지 않았으면 렌더링하지 않음
+  if (!texture) {
+    return null;
+  }
+
   // 실제 간접조명 렌더링
   return (
     <group position={position}>
@@ -87,7 +92,7 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
           map={texture}
           color={new THREE.Color(1, 0.6, 0.2)} // 더 진한 오렌지색
           transparent={true}
-          opacity={texture ? intensity * 0.6 : 0.2}
+          opacity={intensity * 0.5} // 투명도를 0.6에서 0.5로 낮춤
           side={THREE.DoubleSide}
           depthWrite={false}
           depthTest={false}

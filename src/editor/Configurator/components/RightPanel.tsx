@@ -4,6 +4,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { useTranslation } from '@/i18n/useTranslation';
 
 // Window 인터페이스 확장
 declare global {
@@ -566,6 +567,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
+  const { t, currentLanguage } = useTranslation();
+  
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layout', 'floor', 'frame'])
   );
@@ -648,17 +651,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const maxDoors = doorRange.max;
 
   const tabs = spaceInfo.droppedCeiling?.enabled ? [
-    { id: 'placement' as RightPanelTab, label: '메인구간' },
-    { id: 'module' as RightPanelTab, label: '단내림 구간' }
+    { id: 'placement' as RightPanelTab, label: t('space.mainSection') },
+    { id: 'module' as RightPanelTab, label: t('space.droppedSection') }
   ] : [
-    { id: 'placement' as RightPanelTab, label: '배치 속성' },
-    { id: 'module' as RightPanelTab, label: '모듈 속성' }
+    { id: 'placement' as RightPanelTab, label: t('placement.properties') },
+    { id: 'module' as RightPanelTab, label: t('furniture.moduleProperties') }
   ];
 
   const installTypes = [
-    { id: 'builtin', label: '양쪽벽' },
-    { id: 'semistanding', label: '한쪽벽' },
-    { id: 'freestanding', label: '벽없음' }
+    { id: 'builtin', label: t('space.wallMount') },
+    { id: 'semistanding', label: t('space.semiStanding') },
+    { id: 'freestanding', label: t('space.standing') }
   ];
 
   const materialOptions = [
@@ -668,13 +671,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
   ];
 
   const floorOptions = [
-    { id: 'yes', label: '있음' },
-    { id: 'no', label: '없음' }
+    { id: 'yes', label: t('common.enabled') },
+    { id: 'no', label: t('common.none') }
   ];
 
   const frameTypeOptions = [
-    { id: 'surround', label: '서라운드' },
-    { id: 'no-surround', label: '노서라운드' }
+    { id: 'surround', label: t('space.surround') },
+    { id: 'no-surround', label: t('space.noSurround') }
   ];
 
   return (
@@ -706,7 +709,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           <div className={styles.formContainer}>
             {/* 브랜드 타입 */}
             <FormControl
-              label="브랜드 타입"
+              label={currentLanguage === 'ko' ? "브랜드 타입" : t('common.brandType')}
               expanded={expandedSections.has('brand')}
               onToggle={() => toggleSection('brand')}
             >
@@ -721,7 +724,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 가격 정보 */}
             <FormControl
-              label="가격 정보"
+              label={currentLanguage === 'ko' ? "가격 정보" : t('common.priceInfo')}
               expanded={expandedSections.has('price')}
               onToggle={() => toggleSection('price')}
             >
@@ -733,7 +736,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 다재 선택 */}
             <FormControl
-              label="다재 선택"
+              label={currentLanguage === 'ko' ? "다재 선택" : t('material.selection')}
               expanded={expandedSections.has('material')}
               onToggle={() => toggleSection('material')}
             >
@@ -750,12 +753,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 공간 설정 */}
             <FormControl
-              label="공간 설정"
+              label={currentLanguage === 'ko' ? "공간 설정" : t('space.title')}
               expanded={expandedSections.has('space')}
               onToggle={() => toggleSection('space')}
             >
               <NumberInput
-                label="전체 폭"
+                label={currentLanguage === 'ko' ? "전체 폭" : t('space.totalWidth')}
                 value={width}
                 onChange={(newWidth) => {
                   onWidthChange(newWidth);
@@ -766,7 +769,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 step={100}
               />
               <NumberInput
-                label="높이"
+                label={currentLanguage === 'ko' ? "높이" : t('space.height')}
                 value={height}
                 onChange={onHeightChange}
                 min={2000}
@@ -791,7 +794,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
             <FormControl
-              label="단내림"
+              label={currentLanguage === 'ko' ? "단내림" : t('space.droppedCeiling')}
               expanded={expandedSections.has('droppedCeiling')}
               onToggle={() => toggleSection('droppedCeiling')}
             >
@@ -882,7 +885,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {/* 메인구간 사이즈 - 단내림 활성화되고 메인구간 탭일 때만 표시 */}
             {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && (
               <FormControl
-                label="메인구간 사이즈"
+                label={currentLanguage === 'ko' ? "메인구간 사이즈" : t('space.mainSectionSize')}
                 expanded={expandedSections.has('mainSpace')}
                 onToggle={() => toggleSection('mainSpace')}
               >
@@ -919,7 +922,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 컬럼수 */}
             <FormControl
-              label="컬럼수"
+              label={currentLanguage === 'ko' ? "컬럼수" : t('space.columnCount')}
               expanded={expandedSections.has('layout')}
               onToggle={() => toggleSection('layout')}
             >
@@ -943,7 +946,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 바닥 마감재 */}
             <FormControl
-              label="바닥 마감재"
+              label={currentLanguage === 'ko' ? "바닥 마감재" : t('material.floorFinish')}
               expanded={expandedSections.has('floor')}
               onToggle={() => toggleSection('floor')}
             >
@@ -956,7 +959,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 프레임 속성 */}
             <FormControl
-              label="프레임 속성"
+              label={currentLanguage === 'ko' ? "프레임 속성" : t('frame.properties')}
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
             >
@@ -975,7 +978,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {spaceInfo.droppedCeiling?.enabled && (
               <div className={styles.formContainer}>
                 <FormControl
-                  label="단내림 구간 컬럼수"
+                  label={currentLanguage === 'ko' ? "단내림 구간 컬럼수" : t('space.droppedColumnCount')}
                   expanded={expandedSections.has('droppedLayout')}
                   onToggle={() => toggleSection('droppedLayout')}
                 >

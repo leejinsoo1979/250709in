@@ -10,6 +10,7 @@ import styles from './ModuleGallery.module.css';
 import Button from '@/components/common/Button';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
+import { useTranslation } from '@/i18n/useTranslation';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -750,6 +751,7 @@ interface ModuleGalleryProps {
 }
 
 const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
+  const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
@@ -939,19 +941,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
           className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
           onClick={() => setSelectedType('all')}
         >
-          전체 ({moduleCategory === 'upperlower' ? 0 : singleModules.length + dualModules.length})
+          {t('furniture.all')} ({moduleCategory === 'upperlower' ? 0 : singleModules.length + dualModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
           onClick={() => setSelectedType('single')}
         >
-          싱글 ({moduleCategory === 'upperlower' ? 0 : singleModules.length})
+          {t('furniture.single')} ({moduleCategory === 'upperlower' ? 0 : singleModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
           onClick={() => setSelectedType('dual')}
         >
-          듀얼 ({moduleCategory === 'upperlower' ? 0 : dualModules.length})
+          {t('furniture.dual')} ({moduleCategory === 'upperlower' ? 0 : dualModules.length})
         </button>
       </div>
       
@@ -974,8 +976,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
         ) : (
           <div className={styles.emptyMessage}>
             {moduleCategory === 'upperlower' 
-              ? `${upperLowerTab === 'lower' ? '하부장' : '상부장'} 모듈은 아직 준비 중입니다` 
-              : '이 유형에 맞는 가구가 없습니다'}
+              ? `${upperLowerTab === 'lower' ? t('furniture.lowerCabinet') : t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}` 
+              : t('furniture.noModulesAvailable')}
           </div>
         )}
       </div>

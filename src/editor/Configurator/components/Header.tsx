@@ -7,6 +7,7 @@ import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface HeaderProps {
   title: string;
@@ -58,6 +59,8 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, currentLanguage } = useTranslation();
+  
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -130,8 +133,8 @@ const Header: React.FC<HeaderProps> = ({
 
   // 프로젝트 이름 변경 핸들러
   const handleProjectNameClick = () => {
-    const currentName = projectName || 'Untitled';
-    const newName = prompt('프로젝트 이름을 입력하세요:', currentName);
+    const currentName = projectName || t('project.untitled');
+    const newName = prompt(t('project.enterName'), currentName);
     if (newName && newName.trim() && newName.trim() !== currentName) {
       onProjectNameChange?.(newName.trim());
     }
@@ -211,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({
                 <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2"/>
                 <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              파일
+              {t('common.file')}
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
                 <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
               </svg>
@@ -234,7 +237,7 @@ const Header: React.FC<HeaderProps> = ({
                     <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" strokeWidth="2"/>
                     <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  새 디자인
+                  {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
                 </button>
                 <button 
                   className={styles.dropdownItem} 
@@ -251,7 +254,7 @@ const Header: React.FC<HeaderProps> = ({
                     <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2"/>
                     <path d="M7 16h2v2H7z" stroke="currentColor" strokeWidth="1"/>
                   </svg>
-                  다른이름으로 저장
+                  {t('project.saveAs')}
                 </button>
               </div>
             )}
@@ -267,7 +270,7 @@ const Header: React.FC<HeaderProps> = ({
               <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2"/>
               <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2"/>
             </svg>
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
 
 
@@ -276,7 +279,7 @@ const Header: React.FC<HeaderProps> = ({
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <polyline points="15,18 9,12 15,6" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              이전
+              {t('common.back')}
             </button>
           )}
 
@@ -286,7 +289,7 @@ const Header: React.FC<HeaderProps> = ({
                 <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" fill="none"/>
                 <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" fill="none"/>
               </svg>
-              완료
+              {t('common.finish')}
             </button>
           )}
 
@@ -297,7 +300,7 @@ const Header: React.FC<HeaderProps> = ({
                 <path d="m9,9a3,3 0 1 1 5.83,1c0,2-3,3-3,3" stroke="currentColor" strokeWidth="2"/>
                 <circle cx="12" cy="17" r="1" fill="currentColor"/>
               </svg>
-              도움말
+              {t('common.help')}
             </button>
           )}
 
@@ -308,7 +311,7 @@ const Header: React.FC<HeaderProps> = ({
               <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
               <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
             </svg>
-            조작법
+            {t('help.title')}
           </button>
         </div>
 
@@ -318,7 +321,7 @@ const Header: React.FC<HeaderProps> = ({
           <button 
             className={styles.actionButton}
             onClick={() => setIsSettingsPanelOpen(true)}
-            title="설정"
+            title={t('settings.title')}
           >
             <Settings size={20} />
           </button>
@@ -329,7 +332,7 @@ const Header: React.FC<HeaderProps> = ({
               className={styles.convertButton} 
               onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
             >
-              컨버팅
+              {t('common.converting')}
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
             
@@ -349,7 +352,7 @@ const Header: React.FC<HeaderProps> = ({
                     <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
                     <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  컷팅 옵티마이저
+                  {t('export.cuttingOptimizer')}
                 </button>
                 
                 {onConvert && (
@@ -365,7 +368,7 @@ const Header: React.FC<HeaderProps> = ({
                       <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
                       <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2"/>
                     </svg>
-                    도면 편집기
+                    {t('export.drawingEditor')}
                   </button>
                 )}
               </div>
@@ -381,7 +384,7 @@ const Header: React.FC<HeaderProps> = ({
                     <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2"/>
                     <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  로그아웃
+                  {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
                 </button>
               )}
 
@@ -421,7 +424,7 @@ const Header: React.FC<HeaderProps> = ({
                 <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2"/>
                 <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
               </svg>
-              로그인
+              {currentLanguage === 'ko' ? '로그인' : t('common.login')}
             </button>
           )}
         </div>
@@ -430,12 +433,12 @@ const Header: React.FC<HeaderProps> = ({
       {/* 저장 상태 표시 */}
       {saveStatus === 'success' && (
         <div className={styles.saveSuccess}>
-          ✓ 저장되었습니다
+          ✓ {t('messages.saveSuccess')}
         </div>
       )}
       {saveStatus === 'error' && (
         <div className={styles.saveError}>
-          ✕ 저장에 실패했습니다
+          ✕ {t('messages.saveFailed')}
         </div>
       )}
       

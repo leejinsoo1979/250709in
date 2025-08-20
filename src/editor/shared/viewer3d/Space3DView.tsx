@@ -36,6 +36,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import { useThrottle } from '@/editor/shared/hooks/useThrottle';
+import ViewerToolbar from './components/ViewerToolbar';
 
 /**
  * Space3DView 컴포넌트
@@ -973,6 +974,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         onDragOver={handleDragOver}
         data-viewer-container="true"
       >
+        {/* 뷰어 툴바 - 3D 모드에서만 표시 */}
+        <ViewerToolbar viewMode={viewMode} />
+        
         <ThreeCanvas 
           cameraPosition={cameraPosition}
           cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}

@@ -1,6 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { INSTALL_TYPES, InstallType } from '../types';
+import { InstallType } from '../types';
 import styles from '../styles/common.module.css';
 
 interface InstallTypeControlsProps {
@@ -9,6 +10,7 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
+  const { t } = useTranslation();
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
@@ -126,34 +128,46 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     <div className={styles.container}>
       <div className={styles.section}>
         <div className={styles.toggleButtonGroup}>
-          {INSTALL_TYPES.map((type) => (
-            <button
-              key={type.type}
-              className={`${styles.toggleButton} ${spaceInfo.installType === type.type ? styles.toggleButtonActive : ''}`}
-              onClick={() => handleInstallTypeChange(type.type)}
-            >
-              {type.label}
-            </button>
-          ))}
+          <button
+            className={`${styles.toggleButton} ${spaceInfo.installType === 'builtin' ? styles.toggleButtonActive : ''}`}
+            onClick={() => handleInstallTypeChange('builtin')}
+            title={t('space.builtinDesc')}
+          >
+            {t('space.builtin')}
+          </button>
+          <button
+            className={`${styles.toggleButton} ${spaceInfo.installType === 'semistanding' ? styles.toggleButtonActive : ''}`}
+            onClick={() => handleInstallTypeChange('semistanding')}
+            title={t('space.semistandingDesc')}
+          >
+            {t('space.semistanding')}
+          </button>
+          <button
+            className={`${styles.toggleButton} ${spaceInfo.installType === 'freestanding' ? styles.toggleButtonActive : ''}`}
+            onClick={() => handleInstallTypeChange('freestanding')}
+            title={t('space.freestandingDesc')}
+          >
+            {t('space.freestanding')}
+          </button>
         </div>
       </div>
 
       {/* 세미스탠딩일 때만 벽 위치 선택 UI 표시 */}
       {spaceInfo.installType === 'semistanding' && (
         <div className={styles.section}>
-          <span className={styles.label}>벽 위치</span>
+          <span className={styles.label}>{t('space.wallPosition')}</span>
           <div className={styles.toggleButtonGroup}>
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.left ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('left')}
             >
-              좌측
+              {t('furniture.left')}
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.right ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('right')}
             >
-              우측
+              {t('furniture.right')}
             </button>
           </div>
         </div>

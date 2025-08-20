@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -103,6 +104,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     setView2DTheme(desiredTheme);
   }, [theme, setView2DTheme]); // theme 변경 시 동기화
   
+  const { t } = useTranslation();
 
   const viewModes = [
     { id: '3D' as ViewMode, label: '3D' },
@@ -110,21 +112,21 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   ];
 
   const viewDirections = [
-    { id: 'front' as ViewDirection, label: 'front' },
-    { id: 'top' as ViewDirection, label: 'top' },
-    { id: 'left' as ViewDirection, label: 'left' },
-    { id: 'right' as ViewDirection, label: 'right' }
+    { id: 'front' as ViewDirection, label: t('viewer.front') },
+    { id: 'top' as ViewDirection, label: t('viewer.top') },
+    { id: 'left' as ViewDirection, label: t('viewer.left') },
+    { id: 'right' as ViewDirection, label: t('viewer.right') }
   ];
 
   // 2D 모드에서 사용할 뷰 방향들 (all 포함)
   const viewDirectionsWithAll = [
-    { id: 'all' as ViewDirection, label: 'all' },
+    { id: 'all' as ViewDirection, label: t('viewer.all') },
     ...viewDirections
   ];
 
   const renderModes = [
-    { id: 'solid' as RenderMode, label: 'Solid' },
-    { id: 'wireframe' as RenderMode, label: 'Wireframe' }
+    { id: 'solid' as RenderMode, label: t('viewer.solid') },
+    { id: 'wireframe' as RenderMode, label: t('viewer.wireframe') }
   ];
 
   // 2D 뷰 방향 변경 핸들러 - UIStore 직접 업데이트
@@ -147,7 +149,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             }}
             style={{ cursor: 'pointer' }}
           >
-            {showDimensions ? 'ON' : 'OFF'}
+            {showDimensions ? t('viewer.on').toUpperCase() : t('viewer.off').toUpperCase()}
           </span>
           <button 
             className={`${styles.switch} ${showDimensions ? styles.on : styles.off}`}
@@ -173,7 +175,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={styles.checkbox}
               />
               <span className={styles.checkmark}></span>
-              가구
+              {t('furniture.title')}
             </label>
           )}
 
@@ -185,7 +187,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            컬럼
+            {t('viewer.column')}
           </label>
 
           <label className={styles.checkboxLabel}>
@@ -196,7 +198,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            치수
+            {t('viewer.dimensions')}
           </label>
 
           <label className={styles.checkboxLabel}>
@@ -207,7 +209,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            그리드
+            {t('viewer.grid')}
           </label>
 
           <label className={styles.checkboxLabel}>
@@ -218,7 +220,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={styles.checkbox}
             />
             <span className={styles.checkmark}></span>
-            축
+            {t('viewer.axis')}
           </label>
         </div>
         )}
@@ -282,7 +284,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   <path d="M8 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
                 )}
               </svg>
-              도어설치
+              {t('viewer.doorInstallation')}
             </button>
           </div>
         )}

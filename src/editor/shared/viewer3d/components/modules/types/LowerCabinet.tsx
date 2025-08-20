@@ -66,7 +66,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 간접조명 렌더링 (띄워서 배치 시) */}
       {showIndirectLight && (
         <IndirectLight
-          width={baseFurniture.innerWidth}
+          width={adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width} // 조정된 너비 우선 사용 (mm를 Three.js 단위로 변환)
           depth={baseFurniture.depth}
           intensity={indirectLightIntensity || 0.8}
           position={[0, lightY, 0]}

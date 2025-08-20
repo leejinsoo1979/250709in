@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styles from './ConvertModal.module.css';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { useUIStore } from '@/store/uiStore';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ConvertModalProps {
 }
 
 const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
@@ -100,7 +102,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
       setIsCapturing(false);
-      alert('뷰 캡처에 실패했습니다. 다시 시도해주세요.');
+      alert(t('messages.captureFailure'));
     }
   };
 
@@ -135,7 +137,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.header}>
-            <h2>컨버팅 옵션</h2>
+            <h2>{t('export.title')}</h2>
             <button className={styles.closeButton} onClick={onClose}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -159,10 +161,10 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                   </svg>
                 </div>
                 <div className={styles.optionInfo}>
-                  <h3>PDF 템플릿</h3>
-                  <p>기술 도면 템플릿으로 PDF 생성</p>
+                  <h3>{t('export.pdf')}</h3>
+                  <p>{t('export.pdfDesc')}</p>
                 </div>
-                {isCapturing && <span className={styles.loading}>캡처 중...</span>}
+                {isCapturing && <span className={styles.loading}>{t('export.capturing')}</span>}
               </button>
 
               <button className={styles.optionButton} disabled>
@@ -174,8 +176,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                   </svg>
                 </div>
                 <div className={styles.optionInfo}>
-                  <h3>DXF 도면</h3>
-                  <p>CAD 프로그램용 도면 파일 (준비 중)</p>
+                  <h3>{t('export.dxf')}</h3>
+                  <p>{t('export.dxfDesc')}</p>
                 </div>
               </button>
 
@@ -188,8 +190,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                   </svg>
                 </div>
                 <div className={styles.optionInfo}>
-                  <h3>이미지 다운로드</h3>
-                  <p>PNG/JPG 형식으로 저장 (준비 중)</p>
+                  <h3>{t('export.image')}</h3>
+                  <p>{t('export.imageDesc')}</p>
                 </div>
               </button>
             </div>

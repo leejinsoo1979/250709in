@@ -14,6 +14,9 @@ interface BackPanelBetweenCabinetsProps {
 // 단위 변환 함수
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
+// 백패널 상수
+const GAP_PANEL_OFFSET = 0.11; // 갭 백패널이 가구 뒷면에서 떨어진 거리 (11mm)
+
 /**
  * 상하부장 사이의 백패널을 렌더링하는 컴포넌트
  * 같은 슬롯에 있는 상부장과 하부장을 찾아서 그 사이에 백패널을 렌더링
@@ -130,10 +133,10 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
           panels.push({
             slotIndex,
             x: group.upper.position.x,
-            y: mmToThreeUnits(lowerTopY + gapHeight / 2), // 갭의 중앙 (Three.js 좌표계)
+            y: mmToThreeUnits(lowerTopY + gapHeight / 2 + 9), // 갭의 중앙에서 9mm 위로
             z: group.upper.position.z,
             width: mmToThreeUnits(width),
-            height: mmToThreeUnits(gapHeight),
+            height: mmToThreeUnits(gapHeight + 18), // 높이 18mm 확장
             depth: mmToThreeUnits(18), // 18mm 두께
             furnitureDepth: mmToThreeUnits(depth) // 가구 깊이 추가
           });
@@ -158,7 +161,7 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
           position={[
             panel.x,
             panel.y,
-            panel.z - panel.furnitureDepth // 가구 뒷면 끝 위치
+            panel.z - panel.furnitureDepth - GAP_PANEL_OFFSET // 가구 뒷면에서 GAP_PANEL_OFFSET만큼 뒤로
           ]}
           spaceInfo={spaceInfo}
           doorColor={doorColor}

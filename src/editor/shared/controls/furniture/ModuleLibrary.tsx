@@ -6,6 +6,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import ModuleItem from './ModuleItem';
 import CabinetModuleItem from './CabinetModuleItem';
 import styles from './ModuleLibrary.module.css';
+import { useTranslation } from '@/i18n/useTranslation';
 
 // 모듈 타입 정의
 type ModuleType = 'single' | 'dual';
@@ -14,6 +15,7 @@ type ModuleType = 'single' | 'dual';
 type CategoryType = 'full' | 'upper' | 'lower';
 
 const ModuleLibrary: React.FC = () => {
+  const { t } = useTranslation();
   // 선택된 탭 상태 (싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('single');
   // 선택된 카테고리 상태 (키큰장/상부장/하부장)
@@ -238,19 +240,19 @@ const ModuleLibrary: React.FC = () => {
             className={`${styles.tabButton} ${selectedCategory === 'full' ? styles.activeTab : ''}`}
             onClick={() => setSelectedCategory('full')}
           >
-            키큰장
+            {t('furniture.tallCabinet')}
           </button>
           <button
             className={`${styles.tabButton} ${selectedCategory === 'upper' ? styles.activeTab : ''}`}
             onClick={() => setSelectedCategory('upper')}
           >
-            상부장
+            {t('furniture.upperCabinet')}
           </button>
           <button
             className={`${styles.tabButton} ${selectedCategory === 'lower' ? styles.activeTab : ''}`}
             onClick={() => setSelectedCategory('lower')}
           >
-            하부장
+            {t('furniture.lowerCabinet')}
           </button>
         </div>
         
@@ -260,13 +262,13 @@ const ModuleLibrary: React.FC = () => {
             className={`${styles.tabButton} ${selectedType === 'single' ? styles.activeTab : ''}`}
             onClick={() => setSelectedType('single')}
           >
-            싱글 ({singleModules.length})
+            {t('furniture.single')} ({singleModules.length})
           </button>
           <button
             className={`${styles.tabButton} ${selectedType === 'dual' ? styles.activeTab : ''}`}
             onClick={() => setSelectedType('dual')}
           >
-            듀얼 ({dualModules.length})
+            {t('furniture.dual')} ({dualModules.length})
           </button>
         </div>
         

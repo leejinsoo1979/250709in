@@ -13,6 +13,7 @@ import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { initializeTheme } from '@/theme';
+import { useTranslation } from '@/i18n/useTranslation';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -53,6 +54,7 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t, currentLanguage } = useTranslation();
   // design=new인 경우 로딩을 건너뛰기 위해 초기값 설정
   const isNewDesign = searchParams.get('design') === 'new';
   const [loading, setLoading] = useState(!isNewDesign); // 새 디자인인 경우 로딩 건너뛰기
@@ -1543,19 +1545,19 @@ const Configurator: React.FC = () => {
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('tall')}
                 >
-                  키큰장
+                  {t('furniture.tallCabinet')}
                 </button>
                 <button 
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('upper')}
                 >
-                  상부장
+                  {t('furniture.upperCabinet')}
                 </button>
                 <button 
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('lower')}
                 >
-                  하부장
+                  {t('furniture.lowerCabinet')}
                 </button>
               </div>
               
@@ -1605,7 +1607,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>공간 설정</h3>
+                <h3 className={styles.sectionTitle}>{t('space.title')}</h3>
               </div>
               
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -1636,7 +1638,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>단내림</h3>
+                <h3 className={styles.sectionTitle}>{t('space.droppedCeiling')}</h3>
               </div>
               
               <div className={styles.toggleButtonGroup}>
@@ -1656,7 +1658,7 @@ const Configurator: React.FC = () => {
                     setActiveRightPanelTab('slotA');
                   }}
                 >
-                  없음
+                  {t('common.none')}
                 </button>
                 <button
                   className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
@@ -1691,7 +1693,7 @@ const Configurator: React.FC = () => {
                     }
                   }}
                 >
-                  있음
+                  {t('common.enabled')}
                 </button>
               </div>
               
@@ -1738,7 +1740,7 @@ const Configurator: React.FC = () => {
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
+                  <h3 className={styles.sectionTitle}>{t('space.mainSectionSize')}</h3>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -1887,7 +1889,7 @@ const Configurator: React.FC = () => {
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
+                  <h3 className={styles.sectionTitle}>{t('space.droppedSectionSize')}</h3>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -2035,7 +2037,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>컬럼수</h3>
+                  <h3 className={styles.sectionTitle}>{t('space.columnCount')}</h3>
                 </div>
                 {console.log('🔍 레이아웃 섹션 렌더링:', {
                   activeTab: activeRightPanelTab,
@@ -2088,7 +2090,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>공간 유형</h3>
+                <h3 className={styles.sectionTitle}>{t('space.installType')}</h3>
               </div>
               <InstallTypeControls 
                 spaceInfo={spaceInfo}
@@ -2100,7 +2102,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>프레임 설정</h3>
+                <h3 className={styles.sectionTitle}>{t('frame.title')}</h3>
               </div>
               
               {/* 프레임 타입 */}
@@ -2109,29 +2111,29 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
                 >
-                  서라운드
+                  {t('space.surround')}
                 </button>
                 <button
                   className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
                 >
-                  노서라운드
+                  {t('space.noSurround')}
                 </button>
               </div>
 
               {/* 서라운드 선택 시 - 프레임 속성 설정 */}
               {(spaceInfo.surroundType || 'surround') === 'surround' && (
                 <div className={styles.subSetting}>
-                  <label className={styles.subLabel}>프레임 폭 설정</label>
+                  <label className={styles.subLabel}>{t('frame.frameWidth')}</label>
                   
                   <div className={styles.frameGrid}>
                     {/* 좌측 */}
                     <div className={styles.frameItem}>
                       <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? '좌측' : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
-                         spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
+                        {spaceInfo.installType === 'builtin' ? t('furniture.left') : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? t('furniture.left') :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? `${t('furniture.left')}(${t('frame.endPanel')})` :
+                         spaceInfo.installType === 'freestanding' ? `${t('furniture.left')}(${t('frame.endPanel')})` : t('furniture.left')}
                       </label>
                       <div className={styles.frameItemInput}>
                         <button 
@@ -2185,10 +2187,10 @@ const Configurator: React.FC = () => {
                     {/* 우측 */}
                     <div className={styles.frameItem}>
                       <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? '우측' : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
-                         spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
+                        {spaceInfo.installType === 'builtin' ? t('furniture.right') : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? t('furniture.right') :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? `${t('furniture.right')}(${t('frame.endPanel')})` :
+                         spaceInfo.installType === 'freestanding' ? `${t('furniture.right')}(${t('frame.endPanel')})` : t('furniture.right')}
                       </label>
                       <div className={styles.frameItemInput}>
                         <button 
@@ -2297,7 +2299,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>배치 설정</h3>
+                <h3 className={styles.sectionTitle}>{t('placement.title')}</h3>
               </div>
               <BaseControls 
                 spaceInfo={spaceInfo}
@@ -2310,7 +2312,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>바닥 마감재</h3>
+                <h3 className={styles.sectionTitle}>{t('material.floorFinish')}</h3>
               </div>
               <FloorFinishControls 
                 spaceInfo={spaceInfo}
@@ -2540,7 +2542,7 @@ const Configurator: React.FC = () => {
                 <button
                   className={`${styles.rightPanelTab} ${styles.active}`}
                 >
-                  배치 속성
+                  {currentLanguage === 'ko' ? '배치 속성' : t('placement.properties')}
                 </button>
               </div>
             </div>

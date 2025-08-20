@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -12,7 +13,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // 컨트롤 컴포넌트들 import
-import { INSTALL_TYPES, InstallType } from '@/editor/shared/controls/types';
+import { InstallType } from '@/editor/shared/controls/types';
 import WidthControl from '@/editor/shared/controls/space/WidthControl';
 import HeightControl from '@/editor/shared/controls/space/HeightControl';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -26,6 +27,7 @@ interface Step2SpaceAndCustomizationProps {
 }
 
 const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({ onPrevious, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const viewMode = '3D'; // 3D 뷰만 사용
@@ -227,41 +229,57 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
             <div className={styles.formContent}>
               {/* 공간 유형 */}
               <div className={styles.compactSection}>
-                <label className={styles.compactLabel}>공간 유형</label>
+                <label className={styles.compactLabel}>{t('space.installType')}</label>
                 <div className={styles.toggleButtonsWide}>
-                  {INSTALL_TYPES.map((type) => (
-                    <button
-                      key={type.type}
-                      className={`${styles.toggleButton} ${spaceInfo.installType === type.type ? styles.active : ''}`}
-                      onClick={() => {
-                        const updates: Partial<typeof spaceInfo> = {
-                          installType: type.type,
-                        };
-                        
-                        if (type.type === 'builtin') {
-                          updates.wallConfig = { left: true, right: true };
-                          updates.gapConfig = { left: 2, right: 2 };
-                        } else if (type.type === 'semistanding') {
-                          updates.wallConfig = { left: true, right: false };
-                          updates.gapConfig = { left: 2, right: 20 };
-                        } else if (type.type === 'freestanding') {
-                          updates.wallConfig = { left: false, right: false };
-                          updates.gapConfig = { left: 20, right: 20 };
-                        }
-                        
-                        handleUpdate(updates);
-                      }}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.installType === 'builtin' ? styles.active : ''}`}
+                    onClick={() => {
+                      const updates: Partial<typeof spaceInfo> = {
+                        installType: 'builtin' as InstallType,
+                      };
+                      updates.wallConfig = { left: true, right: true };
+                      updates.gapConfig = { left: 2, right: 2 };
+                      handleUpdate(updates);
+                    }}
+                    title={t('space.builtinDesc')}
+                  >
+                    {t('space.builtin')}
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.installType === 'semistanding' ? styles.active : ''}`}
+                    onClick={() => {
+                      const updates: Partial<typeof spaceInfo> = {
+                        installType: 'semistanding' as InstallType,
+                      };
+                      updates.wallConfig = { left: true, right: false };
+                      updates.gapConfig = { left: 2, right: 20 };
+                      handleUpdate(updates);
+                    }}
+                    title={t('space.semistandingDesc')}
+                  >
+                    {t('space.semistanding')}
+                  </button>
+                  <button
+                    className={`${styles.toggleButton} ${spaceInfo.installType === 'freestanding' ? styles.active : ''}`}
+                    onClick={() => {
+                      const updates: Partial<typeof spaceInfo> = {
+                        installType: 'freestanding' as InstallType,
+                      };
+                      updates.wallConfig = { left: false, right: false };
+                      updates.gapConfig = { left: 20, right: 20 };
+                      handleUpdate(updates);
+                    }}
+                    title={t('space.freestandingDesc')}
+                  >
+                    {t('space.freestanding')}
+                  </button>
                 </div>
               </div>
               
               {/* 세미스탠딩일 때 벽 위치 선택 */}
               {spaceInfo.installType === 'semistanding' && (
                 <div className={styles.compactSection}>
-                  <label className={styles.compactLabel}>벽 위치</label>
+                  <label className={styles.compactLabel}>{t('space.wallPosition')}</label>
                   <div className={styles.toggleButtonsWide}>
                     <button
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
@@ -270,7 +288,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         gapConfig: { left: 2, right: 20 }
                       })}
                     >
-                      좌측
+                      {t('furniture.left')}
                     </button>
                     <button
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
@@ -279,7 +297,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         gapConfig: { left: 20, right: 2 }
                       })}
                     >
-                      우측
+                      {t('furniture.right')}
                     </button>
                   </div>
                 </div>
@@ -287,7 +305,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
               {/* 공간 크기 */}
               <div className={styles.compactSection}>
-                <label className={styles.compactLabel}>공간 크기</label>
+                <label className={styles.compactLabel}>{t('space.title')}</label>
                 <div className={styles.sizeInputs}>
                   <span className={styles.sizeLabel}>W</span>
                   <WidthControl
@@ -304,7 +322,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
               {/* 단내림 */}
               <div className={styles.compactSection}>
-                <label className={styles.compactLabel}>단내림</label>
+                <label className={styles.compactLabel}>{t('space.droppedCeiling')}</label>
                 <div className={styles.toggleButtonsWide}>
                   <button
                     className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.active : ''}`}
@@ -315,7 +333,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       } 
                     })}
                   >
-                    없음
+                    {t('common.none')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.active : ''}`}
@@ -328,7 +346,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       } 
                     })}
                   >
-                    있음
+                    {t('common.enabled')}
                   </button>
                 </div>
               </div>
@@ -336,7 +354,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
               {/* 단내림 위치 - 단내림이 활성화된 경우에만 표시 */}
               {spaceInfo.droppedCeiling?.enabled && (
                 <div className={styles.compactSection}>
-                  <label className={styles.compactLabel}>위치</label>
+                  <label className={styles.compactLabel}>{t('placement.placementType')}</label>
                   <div className={styles.toggleButtonsWide}>
                     <button
                       className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.position === 'left' ? styles.active : ''}`}
@@ -347,7 +365,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         } 
                       })}
                     >
-                      좌측
+                      {t('furniture.left')}
                     </button>
                     <button
                       className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.position === 'right' ? styles.active : ''}`}
@@ -358,7 +376,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         } 
                       })}
                     >
-                      우측
+                      {t('furniture.right')}
                     </button>
                   </div>
                 </div>
@@ -366,7 +384,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
 
               {/* 컬럼수 */}
               <div className={styles.compactSection}>
-                <label className={styles.compactLabel}>{spaceInfo.droppedCeiling?.enabled ? '메인 컬럼수' : '컬럼수'}</label>
+                <label className={styles.compactLabel}>{spaceInfo.droppedCeiling?.enabled ? t('space.columnCount') : t('space.columnCount')}</label>
                 {(() => {
                   const internalSpace = calculateInternalSpace(spaceInfo);
                   let internalWidth = internalSpace.width;
@@ -427,7 +445,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
               {/* 단내림 구간 컬럼수 - 단내림이 활성화된 경우에만 표시 */}
               {spaceInfo.droppedCeiling?.enabled && (
                 <div className={styles.compactSection}>
-                  <label className={styles.compactLabel}>단내림 컬럼수</label>
+                  <label className={styles.compactLabel}>{t('space.droppedColumnCount')}</label>
                   {(() => {
                     const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
                     // 단내림 구간의 내부 너비 계산 (프레임 두께 고려)
@@ -472,7 +490,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       frameSize: spaceInfo.frameSize || { left: 50, right: 50, top: 10 }
                     })}
                   >
-                    서라운드(일반)
+                    {t('space.surround')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${spaceInfo.surroundType === 'no-surround' ? styles.active : ''}`}
@@ -487,7 +505,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       }
                     })}
                   >
-                    노서라운드(타이트)
+                    {t('space.noSurround')}
                   </button>
                 </div>
               </div>
@@ -681,7 +699,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       floorFinish: spaceInfo.floorFinish || { height: 10 }
                     })}
                   >
-                    있음
+                    {t('common.enabled')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.active : ''}`}
@@ -689,7 +707,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       hasFloorFinish: false 
                     })}
                   >
-                    없음
+                    {t('common.none')}
                   </button>
                 </div>
               </div>

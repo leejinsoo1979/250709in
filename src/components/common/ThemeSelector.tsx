@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme, ThemeMode, ThemeColor } from '@/contexts/ThemeContext';
 import { SettingsIcon, SunIcon, MoonIcon } from './Icons';
 import styles from './ThemeSelector.module.css';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface ThemeSelectorProps {
   variant?: 'dropdown' | 'sidebar';
@@ -14,6 +15,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 }) => {
   const { theme, setThemeMode, setThemeColor, toggleMode } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   // 4x7 그리드로 정리된 색상 배열
   const themeColors: { id: ThemeColor; name: string; color: string }[] = [
@@ -55,18 +57,18 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   ];
 
   const themeModes: { id: ThemeMode; name: string; icon: React.ReactNode }[] = [
-    { id: 'light', name: '라이트 모드', icon: <SunIcon size={16} color="white" /> },
-    { id: 'dark', name: '다크 모드', icon: <MoonIcon size={16} color="white" /> },
+    { id: 'light', name: t('settings.lightMode'), icon: <SunIcon size={16} /> },
+    { id: 'dark', name: t('settings.darkMode'), icon: <MoonIcon size={16} /> },
   ];
 
   if (variant === 'sidebar') {
     return (
       <div className={styles.sidebarContainer}>
-        {showLabel && <div className={styles.sidebarLabel}>테마 설정</div>}
+        {showLabel && <div className={styles.sidebarLabel}>{t('settings.themeSettings')}</div>}
         
         {/* 모드 토글 */}
         <div className={styles.sidebarSection}>
-          <div className={styles.sectionTitle}>표시 모드</div>
+          <div className={styles.sectionTitle}>{t('settings.displayMode')}</div>
           <div className={styles.modeToggleTab}>
             {themeModes.map((mode) => (
               <button
@@ -84,7 +86,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
         {/* 색상 선택 */}
         <div className={styles.sidebarSection}>
-          <div className={styles.sectionTitle}>테마 색상</div>
+          <div className={styles.sectionTitle}>{t('settings.themeColor')}</div>
           <div className={styles.colorGrid}>
             {themeColors.map((color) => (
               <button
@@ -110,10 +112,10 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       <button
         className={styles.trigger}
         onClick={() => setIsOpen(!isOpen)}
-        title="테마 설정"
+        title={t('settings.themeSettings')}
       >
         <SettingsIcon size={20} />
-        {showLabel && <span>테마</span>}
+        {showLabel && <span>{t('settings.theme')}</span>}
       </button>
 
       {isOpen && (
@@ -121,7 +123,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           <div className={styles.overlay} onClick={() => setIsOpen(false)} />
           <div className={styles.dropdown}>
             <div className={styles.dropdownHeader}>
-              <h3>테마 설정</h3>
+              <h3>{t('settings.themeSettings')}</h3>
               <button 
                 className={styles.closeButton}
                 onClick={() => setIsOpen(false)}
@@ -132,7 +134,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
             {/* 모드 선택 */}
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>표시 모드</div>
+              <div className={styles.sectionTitle}>{t('settings.displayMode')}</div>
               <div className={styles.modeList}>
                 {themeModes.map((mode) => (
                   <button
@@ -153,7 +155,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
             {/* 색상 선택 */}
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>테마 색상</div>
+              <div className={styles.sectionTitle}>{t('settings.themeColor')}</div>
               <div className={styles.colorList}>
                 {themeColors.map((color) => (
                   <button
@@ -185,8 +187,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   setIsOpen(false);
                 }}
               >
-                {theme.mode === 'light' ? <MoonIcon size={16} color="white" /> : <SunIcon size={16} color="white" />}
-                {theme.mode === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
+                {theme.mode === 'light' ? <MoonIcon size={16} /> : <SunIcon size={16} />}
+                {theme.mode === 'light' ? t('settings.darkMode') : t('settings.lightMode')}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
 import BackPanelBetweenCabinets from './BackPanelBetweenCabinets';
+import UpperCabinetIndirectLight from './UpperCabinetIndirectLight';
 
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
@@ -136,6 +137,14 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   return (
     <group>
+      {/* 상부장 간접조명 렌더링 (연속된 하나의 조명) */}
+      {spaceInfo && (
+        <UpperCabinetIndirectLight 
+          placedModules={placedModules}
+          spaceInfo={spaceInfo}
+        />
+      )}
+      
       {/* 상하부장 사이의 백패널 렌더링 */}
       {spaceInfo && (
         <BackPanelBetweenCabinets 

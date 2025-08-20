@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './HelpModal.module.css';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -7,17 +8,19 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen) return null;
 
   const shortcuts = [
-    { key: '마우스 드래그', action: '카메라 회전' },
-    { key: '마우스 휠', action: '줌 인/아웃' },
-    { key: 'Delete', action: '선택된 가구 삭제' },
-    { key: 'Backspace', action: '선택된 가구 삭제' },
-    { key: 'Esc', action: '편집 모드 종료' },
-    { key: '화살표 키', action: '가구 미세 이동' },
-    { key: '더블클릭', action: '가구 편집 모드' },
-    { key: '드래그 앤 드롭', action: '가구 배치' },
+    { key: t('help.shortcuts.mouseDrag'), action: t('help.shortcuts.cameraRotate') },
+    { key: t('help.shortcuts.mouseWheel'), action: t('help.shortcuts.zoomInOut') },
+    { key: 'Delete', action: t('help.shortcuts.deleteSelected') },
+    { key: 'Backspace', action: t('help.shortcuts.deleteSelected') },
+    { key: 'Esc', action: t('help.shortcuts.exitEditMode') },
+    { key: t('help.shortcuts.arrowKeys'), action: t('help.shortcuts.fineTuneMove') },
+    { key: t('help.shortcuts.doubleClick'), action: t('help.shortcuts.editMode') },
+    { key: t('help.shortcuts.dragDrop'), action: t('help.shortcuts.placeFurniture') },
   ];
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -30,7 +33,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
     <div className={styles.overlay} onClick={handleOverlayClick}>
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h3 className={styles.title}>조작법</h3>
+          <h3 className={styles.title}>{t('help.title')}</h3>
           <button className={styles.closeButton} onClick={onClose}>
             ✕
           </button>
@@ -47,12 +50,12 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </div>
           
           <div className={styles.tips}>
-            <h4>사용 팁</h4>
+            <h4>{t('help.tips.title')}</h4>
             <ul>
-              <li>사이드바에서 가구를 더블클릭하면 빈 슬롯에 자동 배치됩니다</li>
-              <li>가구를 클릭하면 편집 팝업이 열립니다</li>
-              <li>기둥을 더블클릭하면 기둥 속성을 편집할 수 있습니다</li>
-              <li>도어 설치 버튼으로 도어를 추가/제거할 수 있습니다</li>
+              <li>{t('help.tips.autoPlace')}</li>
+              <li>{t('help.tips.editPopup')}</li>
+              <li>{t('help.tips.editColumn')}</li>
+              <li>{t('help.tips.doorInstall')}</li>
             </ul>
           </div>
         </div>

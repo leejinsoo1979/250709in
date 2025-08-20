@@ -4,8 +4,6 @@ import { ModuleData } from '@/data/modules/shelving';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
@@ -37,7 +35,6 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   
   // 공통 가구 로직 사용
-  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
@@ -47,30 +44,12 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
     adjustedWidth
   });
 
-  // 띄워서 배치 여부 확인 (간접조명용)
-  const placementType = spaceInfo?.baseConfig?.placementType;
-  const isFloating = placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  
-  // 2D 모드 체크 - 2D 모드면 간접조명 안 보이게
-  const is2DMode = viewMode === '2D' || viewMode !== '3D';
-  const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
-  
-  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
-  const furnitureBottomY = -baseFurniture.height/2;
-  const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
+  // 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리
+  // 개별 상부장에서는 간접조명을 렌더링하지 않음
 
   return (
     <>
-      {/* 간접조명 렌더링 (띄워서 배치 시) */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, lightY, 0]}
-        />
-      )}
+      {/* 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 렌더링 */}
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
@@ -146,11 +125,11 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
             <FinishingPanelWithTexture
               width={baseFurniture.width}
               height={0.18}
-              depth={baseFurniture.depth}
+              depth={baseFurniture.depth - 0.4} // 깊이 40mm 줄임
               position={[
                 0,
                 -(baseFurniture.height / 2) - 0.09, // 하단에 위치 (18mm의 절반만큼 아래로)
-                0
+                0.2 // z축 앞으로 20mm 이동
               ]}
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}

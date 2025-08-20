@@ -136,7 +136,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
   // 가구 바닥에서 약간 아래에 위치
-  const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
+  const lightY = furnitureBottomY - 0.1;  // 가구 바닥에서 10cm 아래로 수정
+  
+  // 간접조명 Y축 크기 (depth) - 띄워서 배치할 때는 작게
+  const lightDepth = isFloating ? baseFurniture.depth * 0.8 : baseFurniture.depth * 1.5;  // 띄워서 배치 시 0.8배로 더 축소
   
   
   
@@ -148,7 +151,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -191,7 +194,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -234,7 +237,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -277,7 +280,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -312,7 +315,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -348,7 +351,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -394,7 +397,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -448,7 +451,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -492,7 +495,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -528,7 +531,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {showIndirectLight && (
           <IndirectLight
             width={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
+            depth={lightDepth}
             intensity={indirectLightIntensity || 0.8}
             position={[0, lightY, 0]}
           />
@@ -564,7 +567,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       {showIndirectLight && (
         <IndirectLight
           width={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
+          depth={lightDepth}
           intensity={indirectLightIntensity || 0.8}
           position={[0, lightY, 0]}
         />

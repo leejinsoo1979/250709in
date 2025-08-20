@@ -96,6 +96,7 @@ interface UIState {
   toggleDimensionsText: () => void;
   toggleGuides: () => void;
   toggleAxis: () => void;
+  toggleIndirectLight: () => void;
   toggleView2DTheme: () => void;
   toggleAll: () => void;
   
@@ -165,7 +166,7 @@ const initialUIState = {
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
   hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
-  indirectLightEnabled: true,  // 기본값: 간접조명 활성화
+  indirectLightEnabled: false,  // 기본값: 간접조명 비활성화 (띄워서 배치 포함)
   indirectLightIntensity: 0.8,  // 기본값: 강도 0.8
   indirectLightColor: '#ffffff',  // 기본값: 흰색
 };
@@ -219,6 +220,9 @@ export const useUIStore = create<UIState>()(
       
       toggleAxis: () =>
         set((state) => ({ showAxis: !state.showAxis })),
+      
+      toggleIndirectLight: () =>
+        set((state) => ({ indirectLightEnabled: !state.indirectLightEnabled })),
       
       toggleView2DTheme: () =>
         set((state) => ({ view2DTheme: state.view2DTheme === 'dark' ? 'light' : 'dark' })),

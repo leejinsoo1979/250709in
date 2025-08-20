@@ -2,12 +2,14 @@ import React from 'react';
 import styles from './Sidebar.module.css';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
+import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/i18n/useTranslation';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -25,7 +27,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggle
 }) => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
+  const { t, currentLanguage } = useTranslation();
   
   // Store hooks for checking unsaved changes
   const projectStore = useProjectStore();
@@ -84,6 +88,44 @@ const Sidebar: React.FC<SidebarProps> = ({
       navigate('/dashboard');
     }
   };
+  
+  // 테마 색상 맵
+  const themeColorMap = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    purple: '#8b5cf6',
+    vivid: '#a25378',
+    red: '#D2042D',
+    pink: '#ec4899',
+    indigo: '#6366f1',
+    teal: '#14b8a6',
+    yellow: '#eab308',
+    gray: '#6b7280',
+    cyan: '#06b6d4',
+    lime: '#84cc16',
+    black: '#1a1a1a',
+    wine: '#845EC2',
+    gold: '#d97706',
+    navy: '#1e3a8a',
+    emerald: '#059669',
+    violet: '#C128D7',
+    mint: '#0CBA80',
+    neon: '#18CF23',
+    rust: '#FF7438',
+    white: '#D65DB1',
+    plum: '#790963',
+    brown: '#5A2B1D',
+    darkgray: '#2C3844',
+    maroon: '#3F0D0D',
+    turquoise: '#003A7A',
+    slate: '#2E3A47',
+    copper: '#AD4F34',
+    forest: '#1B3924',
+    olive: '#4C462C'
+  };
+  
+  const themeColor = themeColorMap[theme.color] || '#10b981';
+  
   const tabs = [
     {
       id: 'module' as SidebarTab,
@@ -95,18 +137,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
         </svg>
       ),
-      label: '모듈'
+      label: t('sidebar.module')
     },
 
     {
       id: 'material' as SidebarTab,
       icon: <PaletteIcon size={20} />,
-      label: '재질'
+      label: t('sidebar.material')
     },
     {
       id: 'structure' as SidebarTab,
       icon: <StructureIcon size={20} />,
-      label: '구조물'
+      label: t('sidebar.structure')
     },
     {
       id: 'etc' as SidebarTab,
@@ -117,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <circle cx="19" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
         </svg>
       ),
-      label: '기타'
+      label: t('sidebar.etc')
     }
   ];
 
@@ -142,10 +184,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className={styles.userSection}>
         <button 
           className={styles.settingsButton} 
-          title="대시보드로 나가기"
+          title={t('sidebar.exitToDashboard')}
           onClick={handleExitClick}
         >
-          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} />
+          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} color={themeColor} />
         </button>
       </div>
       
@@ -165,19 +207,19 @@ const Sidebar: React.FC<SidebarProps> = ({
               </svg>
             </div>
             <h3 className={styles.modalTitle}>
-              저장하지 않은 변경사항이 있습니다
+              {t('messages.unsavedChanges')}
             </h3>
             <p className={styles.modalDescription}>
-              변경사항을 저장하지 않고 나가시겠습니까?
+              {t('messages.exitConfirm')}
               <br />
-              저장하지 않은 내용은 잃어버리게 됩니다.
+              {t('messages.loseChanges')}
             </p>
             <div className={styles.modalActions}>
               <button
                 className={styles.modalButtonCancel}
                 onClick={() => setShowExitConfirm(false)}
               >
-                취소
+                {t('common.cancel')}
               </button>
               <button
                 className={styles.modalButtonConfirm}
@@ -186,7 +228,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   navigate('/dashboard');
                 }}
               >
-                저장하지 않고 나가기
+                {t('messages.exitWithoutSaving')}
               </button>
             </div>
           </div>
