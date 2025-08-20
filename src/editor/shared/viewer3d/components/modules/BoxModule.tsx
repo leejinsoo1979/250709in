@@ -41,6 +41,7 @@ interface BoxModuleProps {
   furnitureId?: string; // 가구 ID (칸 강조용)
   showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   isHighlighted?: boolean; // 가구 강조 여부
+  adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -79,6 +80,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   furnitureId,
   showFurniture = true, // 기본값은 true (가구 표시)
   isHighlighted = false, // 강조 상태
+  adjacentCabinets, // 인접 상하부장 정보
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -167,6 +169,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           slotIndex={slotIndex} // 슬롯 인덱스 전달
           showFurniture={showFurniture} // 가구 본체 표시 여부
+          adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
           // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -210,6 +213,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -253,6 +257,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -330,6 +335,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
         isHighlighted={isHighlighted} // 강조 상태 전달
         furnitureId={furnitureId} // 가구 ID 전달
       />
@@ -413,6 +419,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -467,6 +474,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -510,6 +518,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth}
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
       />
       </>
     );
@@ -545,6 +554,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         adjustedWidth={adjustedWidth}
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        adjacentCabinets={adjacentCabinets} // 인접 상하부장 정보 전달
       />
       </>
     );

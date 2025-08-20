@@ -33,6 +33,7 @@ export interface FurnitureTypeProps {
   showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   isHighlighted?: boolean; // 가구 강조 여부
   furnitureId?: string; // 가구 ID (인접 확인용)
+  adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

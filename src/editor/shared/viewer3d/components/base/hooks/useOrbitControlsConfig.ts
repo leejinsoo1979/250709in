@@ -29,13 +29,13 @@ export interface OrbitControlsConfig {
  * OrbitControls 설정을 관리하는 훅
  * 
  * 맥북 트랙패드 제스처:
- * - 한 손가락 클릭 후 드래그: 카메라 회전 (3D 모드에서만)
+ * - 한 손가락 클릭 후 드래그: 카메라 회전 (3D 모드) / 팬 (2D 모드)
  * - 두 손가락 스크롤: 줌 인/아웃
  * - 두 손가락 클릭 후 드래그: 화면 팬 이동
  * 
  * 마우스 컨트롤:
- * - 왼쪽 버튼: 비활성화
- * - 중간 버튼(휠 클릭): 카메라 회전 (3D 모드) / 팬 (2D 모드)
+ * - 왼쪽 버튼: 카메라 회전 (3D 모드) / 팬 (2D 모드)
+ * - 중간 버튼(휠 클릭): 줌
  * - 휠 스크롤: 줌 인/아웃
  * - 오른쪽 버튼: 팬
  * 
@@ -99,8 +99,8 @@ export const useOrbitControlsConfig = (
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
       mouseButtons: {
-        LEFT: undefined, // 왼쪽 버튼 회전 기능 제거
-        MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭): 2D에서는 팬, 3D에서는 회전
+        LEFT: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 왼쪽 버튼: 2D에서는 팬, 3D에서는 회전
+        MIDDLE: THREE.MOUSE.DOLLY, // 중간 버튼(휠 클릭): 줌
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼으로 팬
       },
       touches: {

@@ -98,24 +98,29 @@ export const useBaseFurniture = (
   const backPanelThickness = mmToThreeUnits(BACK_PANEL_THICKNESS);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
-  // 듀얼 가구의 경우 slotWidths 합산, adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
+  // adjustedWidth가 있으면 최우선 사용 (엔드패널 조정 등)
   let actualWidthMm: number;
   
   // 듀얼 가구 판별
   const isDualFurniture = moduleData.id.includes('dual');
   
-  if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
+  if (adjustedWidth !== undefined) {
+    // adjustedWidth가 제공된 경우 최우선 사용 (엔드패널, 기둥 조정 등)
+    actualWidthMm = adjustedWidth;
+    console.log('🔧 조정된 너비 사용:', {
+      moduleId: moduleData.id,
+      isDualFurniture,
+      adjustedWidth: actualWidthMm,
+      description: '엔드패널 또는 기둥 조정된 너비'
+    });
+  } else if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
     // 듀얼 가구이고 slotWidths가 제공된 경우: 두 슬롯 너비 합산
     actualWidthMm = slotWidths[0] + slotWidths[1];
     console.log('🔧 듀얼 가구 너비 계산 (slotWidths 합산):', {
       slot1: slotWidths[0],
       slot2: slotWidths[1],
-      total: actualWidthMm,
-      adjustedWidth: adjustedWidth ? `${adjustedWidth}mm (무시됨)` : 'undefined'
+      total: actualWidthMm
     });
-  } else if (adjustedWidth !== undefined) {
-    // adjustedWidth가 제공된 경우 사용
-    actualWidthMm = adjustedWidth;
   } else {
     // 기본값: 원래 모듈 너비 사용
     actualWidthMm = moduleData.dimensions.width;

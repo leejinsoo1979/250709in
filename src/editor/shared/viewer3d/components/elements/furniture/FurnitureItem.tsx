@@ -377,8 +377,46 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const adjacentCheck = actualModuleData 
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
-  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
-  const endPanelSide = adjacentCheck.adjacentSide;
+  let needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
+  let endPanelSide = adjacentCheck.adjacentSide;
+  
+  // 현재 가구가 상하부장인 경우 키큰장/듀얼장과 인접했는지도 확인
+  if (!needsEndPanelAdjustment && actualModuleData && (actualModuleData.category === 'upper' || actualModuleData.category === 'lower')) {
+    const currentSlotIndex = placedModule.slotIndex;
+    if (currentSlotIndex !== undefined) {
+      // 왼쪽 인접 가구 확인
+      const leftAdjacentModule = placedModules.find(m => m.slotIndex === currentSlotIndex - 1);
+      if (leftAdjacentModule) {
+        const leftModuleData = getModuleById(leftAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+        const isLeftDual = leftAdjacentModule.moduleId.includes('dual') || leftAdjacentModule.isDualSlot;
+        if (leftModuleData && (leftModuleData.category === 'full' || isLeftDual)) {
+          needsEndPanelAdjustment = true;
+          endPanelSide = 'left';
+          console.log('🔍 상하부장 왼쪽에 키큰장/듀얼장 감지:', {
+            current: placedModule.moduleId,
+            leftModule: leftAdjacentModule.moduleId
+          });
+        }
+      }
+      
+      // 오른쪽 인접 가구 확인
+      if (!needsEndPanelAdjustment) {
+        const rightAdjacentModule = placedModules.find(m => m.slotIndex === currentSlotIndex + 1);
+        if (rightAdjacentModule) {
+          const rightModuleData = getModuleById(rightAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+          const isRightDual = rightAdjacentModule.moduleId.includes('dual') || rightAdjacentModule.isDualSlot;
+          if (rightModuleData && (rightModuleData.category === 'full' || isRightDual)) {
+            needsEndPanelAdjustment = true;
+            endPanelSide = 'right';
+            console.log('🔍 상하부장 오른쪽에 키큰장/듀얼장 감지:', {
+              current: placedModule.moduleId,
+              rightModule: rightAdjacentModule.moduleId
+            });
+          }
+        }
+      }
+    }
+  }
   
   // 듀얼 가구 인접 체크 디버깅
   if (isDualFurniture && actualModuleData) {
@@ -421,18 +459,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
   }
   
-  // 상부장/하부장과 인접한 키큰장(듀얼 포함)의 경우 너비를 18mm 줄임
-  // 듀얼 가구도 상부장/하부장 옆에서는 18mm 줄어들어야 함
+  // 상부장/하부장과 인접한 가구의 경우 너비 조정
   if (needsEndPanelAdjustment) {
     const originalWidth = furnitureWidthMm;
+    // 모든 가구(싱글/듀얼): 엔드패널 두께(18mm)만큼 줄임
     furnitureWidthMm -= END_PANEL_THICKNESS;
-    console.log('🔧 상부장/하부장과 인접한 가구 - 너비 조정:', {
+    
+    console.log('🔧 상하부장 인접 가구 - 너비 조정:', {
       moduleId: placedModule.moduleId,
       isDualFurniture,
       originalWidth,
       adjustedWidth: furnitureWidthMm,
       endPanelSide,
-      reduction: END_PANEL_THICKNESS
+      reduction: END_PANEL_THICKNESS,
+      description: '가구 + 엔드패널(18mm) = 슬롯 전체 너비'
     });
   }
   
@@ -956,7 +996,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           {moduleData?.type === 'box' ? (
             // 박스형 가구 렌더링 (도어 제외)
             <>
-              {/* 상부장/하부장과 인접한 경우 가구 본체를 이동 */}
+              {/* 상부장/하부장과 인접한 경우 가구 본체를 반대 방향으로 9mm 이동 */}
               <group position={[
                 needsEndPanelAdjustment && endPanelSide
                   ? (endPanelSide === 'left' 
@@ -1002,18 +1042,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
                 slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
                 slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
+                adjacentCabinets={{ hasAdjacentUpperLower: needsEndPanelAdjustment, adjacentSide: endPanelSide }} // 인접 상하부장 정보 전달
                 slotWidths={(() => {
                   // 듀얼 가구인 경우 개별 슬롯 너비 전달
                   if (isDualFurniture) {
+                    let widths;
                     if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
                       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                       if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-                        return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
+                        widths = [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
                       }
                     } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
-                      return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
+                      widths = [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
                     }
+                    
+                    // 상하부장과 인접한 경우 슬롯 너비도 조정 (듀얼 가구가 양쪽 슬롯을 고르게 줄임)
+                    if (widths && needsEndPanelAdjustment) {
+                      // 전체 18mm를 두 슬롯에 고르게 분배 (각 9mm씩)
+                      return [widths[0] - END_PANEL_THICKNESS/2, widths[1] - END_PANEL_THICKNESS/2];
+                    }
+                    
+                    return widths;
                   }
                   return undefined;
                 })()}
@@ -1061,23 +1111,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               
               {/* 상부장/하부장과 인접한 키큰장의 엔드패널 렌더링 */}
               {needsEndPanelAdjustment && endPanelSide && (() => {
-                // 가구 이동 오프셋 (BoxModule과 동일)
+                // 가구가 9mm 이동했으므로 엔드패널은 원래 슬롯 경계와 이동된 가구 사이에 위치
                 const furnitureOffset = endPanelSide === 'left' 
-                  ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 왼쪽에 상/하부장 -> 가구를 오른쪽으로 9mm
-                  : -mmToThreeUnits(END_PANEL_THICKNESS/2);  // 오른쪽에 상/하부장 -> 가구를 왼쪽으로 9mm
+                  ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 가구가 오른쪽으로 9mm 이동
+                  : -mmToThreeUnits(END_PANEL_THICKNESS/2);  // 가구가 왼쪽으로 9mm 이동
                 
-                // 엔드패널 위치 계산 (이동된 가구 기준)
+                // 줄어든 가구의 실제 너비
+                const reducedFurnitureWidth = mmToThreeUnits(furnitureWidthMm);
+                
+                // 엔드패널 위치: 이동된 가구의 가장자리 바로 옆
                 const endPanelX = endPanelSide === 'left' 
-                  ? furnitureOffset - width/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 왼쪽 엔드패널
-                  : furnitureOffset + width/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2;  // 오른쪽 엔드패널
+                  ? furnitureOffset - reducedFurnitureWidth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 왼쪽 엔드패널
+                  : furnitureOffset + reducedFurnitureWidth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2;   // 오른쪽 엔드패널
                 
                 console.log('🔧 엔드패널 렌더링:', {
                   moduleId: placedModule.id,
                   side: endPanelSide,
-                  furnitureOffset,
+                  isDualFurniture,
+                  reducedFurnitureWidth: furnitureWidthMm,
                   endPanelX,
-                  furnitureWidth: width,
-                  endPanelThickness: END_PANEL_THICKNESS
+                  endPanelThickness: END_PANEL_THICKNESS,
+                  description: '엔드패널은 줄어든 가구 바로 옆에 위치'
                 });
                 
                 return (
