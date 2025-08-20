@@ -20,6 +20,7 @@ import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/ind
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -186,6 +187,16 @@ const Room: React.FC<RoomProps> = ({
     return null;
   }
   const { theme } = useViewerTheme();
+  
+  // furnitureStore에서 배치된 가구 정보 가져오기
+  const placedModulesFromStore = useFurnitureStore((state) => state.placedModules);
+  const actualPlacedModules = placedModules || placedModulesFromStore;
+  
+  console.log('🔵 Room Component - Placed Modules:', {
+    placedModules,
+    placedModulesFromStore,
+    actualPlacedModules
+  });
   const { colors } = useThemeColors();
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
@@ -2087,30 +2098,95 @@ const Room: React.FC<RoomProps> = ({
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
         
-        // 단내림 설정 확인
-        const droppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
-        const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
+        // 왼쪽 서브프레임과 맞닿는 위치에 상하부장이 있는지 확인
+        // 가장 왼쪽에 있는 상하부장을 찾기 (위치 기준)
+        const leftmostCabinet = actualPlacedModules?.filter(m => 
+          m.moduleId?.toLowerCase().includes('upper-cabinet') || 
+          m.moduleId?.toLowerCase().includes('lower-cabinet') ||
+          m.moduleId?.toLowerCase().includes('upper_cabinet') || 
+          m.moduleId?.toLowerCase().includes('lower_cabinet') ||
+          m.moduleId?.toLowerCase().includes('uppercabinet') || 
+          m.moduleId?.toLowerCase().includes('lowercabinet')
+        ).sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0))[0];
+        
+        // 왼쪽 프레임과 실제로 맞닿는지 확인 (위치 기준)
+        // 왼쪽 프레임의 오른쪽 경계와 캐비닛의 왼쪽 경계가 맞닿는지 확인
+        const leftFrameRightEdge = xOffset + frameThickness.left;
+        
+        // 듀얼 가구인지 확인
+        const isLeftDual = leftmostCabinet?.isDualSlot || leftmostCabinet?.moduleId?.includes('dual-');
+        
+        // 가구 너비 계산 (듀얼인 경우 2배)
+        let cabinetWidth = 0;
+        if (leftmostCabinet) {
+          if (leftmostCabinet.adjustedWidth) {
+            cabinetWidth = mmToThreeUnits(leftmostCabinet.adjustedWidth);
+          } else if (leftmostCabinet.moduleWidth) {
+            cabinetWidth = mmToThreeUnits(leftmostCabinet.moduleWidth);
+          } else {
+            // moduleId에서 너비 추출 (예: upper-cabinet-600 -> 600)
+            const widthMatch = leftmostCabinet.moduleId?.match(/(\d+)$/);
+            const baseWidth = widthMatch ? parseInt(widthMatch[1]) : 600;
+            cabinetWidth = mmToThreeUnits(baseWidth);
+          }
+        }
+        
+        const cabinetLeftEdge = leftmostCabinet ? (leftmostCabinet.position?.x || 0) - cabinetWidth/2 : 0;
+        const hasLeftCabinet = !!(leftmostCabinet && 
+          Math.abs(cabinetLeftEdge - leftFrameRightEdge) < 0.2); // 0.2m(200mm) 이내면 맞닿은 것으로 판단
+        
+        console.log('🔍🔍🔍 LEFT Subframe Debug:', {
+          actualPlacedModules: actualPlacedModules?.length,
+          leftmostCabinet,
+          isLeftDual,
+          cabinetWidth,
+          leftFrameRightEdge,
+          cabinetLeftEdge,
+          distance: leftmostCabinet ? Math.abs(cabinetLeftEdge - leftFrameRightEdge) : null,
+          hasLeftCabinet,
+          moduleId: leftmostCabinet?.moduleId
+        });
+        
+        // 상하부장의 깊이는 600mm, 일반 서브프레임은 40mm
+        const leftFrameDepth = hasLeftCabinet ? 602 : 40;  // 602mm로 2mm 더 확장
+        
+        console.log('🔥🔥🔥 LEFT Subframe Final Depth:', {
+          hasLeftCabinet,
+          leftFrameDepth,
+          leftFrameDepthMm: hasLeftCabinet ? 602 : 40,
+          leftFrameDepthInThreeUnits: mmToThreeUnits(leftFrameDepth),
+          actualDepthBeingUsed: leftFrameDepth
+        });
+        
+        // 단내림 설정 확인 (좌측 서브프레임용)
+        const leftDroppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
+        const leftDroppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
+        const leftDropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
         
         // 왼쪽이 단내림 영역인 경우
-        if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
+        if (leftDroppedCeilingEnabled && leftDroppedCeilingPosition === 'left') {
           // 바닥 마감재와 띄움 높이를 반영한 높이 계산
-          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const leftDroppedHeight = adjustedPanelHeight - mmToThreeUnits(leftDropHeight);
+          const leftDroppedCenterY = panelStartY + floatHeight + leftDroppedHeight/2;
+          
+          // 상하부장이 있을 때 Z 위치 조정 (상하부장의 뒷면 끝과 맞추기)
+          const leftSubFrameZ = hasLeftCabinet 
+            ? furnitureZOffset - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) + mmToThreeUnits(19)  // 1mm 더 뒤로
+            : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29);
           
           return (
             <group 
               position={[
                 xOffset + frameThickness.left - mmToThreeUnits(10) + mmToThreeUnits(1), // 우측으로 1mm 이동
-                droppedCenterY, 
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
+                leftDroppedCenterY, 
+                leftSubFrameZ // 상하부장 깊이에 맞춰 조정
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
                 args={[
-                  mmToThreeUnits(40),
-                  droppedHeight, // 단내림 영역 높이
+                  mmToThreeUnits(leftFrameDepth),
+                  leftDroppedHeight, // 단내림 영역 높이
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
                 position={[0, 0, 0]}
@@ -2122,18 +2198,30 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 오른쪽에 있는 경우
+        // 상하부장이 있을 때 Z 위치 조정 (상하부장의 뒷면 끝과 맞추기)
+        // 기본 위치에서 상하부장 깊이의 절반만큼 뒤로 이동
+        const leftSubFrameZ = hasLeftCabinet 
+          ? furnitureZOffset - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) + mmToThreeUnits(19)  // 1mm 더 뒤로
+          : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29);
+        
         return (
           <group 
             position={[
               xOffset + frameThickness.left - mmToThreeUnits(10) + mmToThreeUnits(1), // 우측으로 1mm 이동
               sideFrameCenterY, 
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
+              leftSubFrameZ // 상하부장 깊이에 맞춰 조정
             ]}
             rotation={[0, Math.PI / 2, 0]}
           >
+            {console.log('🔴🔴 LEFT BoxWithEdges rendering with depth:', {
+              leftFrameDepth,
+              hasLeftCabinet,
+              depthInThreeUnits: mmToThreeUnits(leftFrameDepth),
+              depthInMm: leftFrameDepth
+            })}
             <BoxWithEdges
               args={[
-                mmToThreeUnits(40),
+                mmToThreeUnits(leftFrameDepth),
                 adjustedPanelHeight,
                 mmToThreeUnits(END_PANEL_THICKNESS)
               ]}
@@ -2155,30 +2243,95 @@ const Room: React.FC<RoomProps> = ({
         (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
         (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
         
-        // 단내림 설정 확인
-        const droppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
-        const droppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
+        // 오른쪽 서브프레임과 맞닿는 위치에 상하부장이 있는지 확인
+        // 가장 오른쪽에 있는 상하부장을 찾기 (위치 기준)
+        const rightmostCabinet = actualPlacedModules?.filter(m => 
+          m.moduleId?.toLowerCase().includes('upper-cabinet') || 
+          m.moduleId?.toLowerCase().includes('lower-cabinet') ||
+          m.moduleId?.toLowerCase().includes('upper_cabinet') || 
+          m.moduleId?.toLowerCase().includes('lower_cabinet') ||
+          m.moduleId?.toLowerCase().includes('uppercabinet') || 
+          m.moduleId?.toLowerCase().includes('lowercabinet')
+        ).sort((a, b) => (b.position?.x || 0) - (a.position?.x || 0))[0]; // 내림차순 정렬로 가장 오른쪽 찾기
+        
+        // 오른쪽 프레임과 실제로 맞닿는지 확인 (위치 기준)
+        // 오른쪽 프레임의 왼쪽 경계와 캐비닛의 오른쪽 경계가 맞닿는지 확인
+        const rightFrameLeftEdge = xOffset + width - frameThickness.right;
+        
+        // 듀얼 가구인지 확인
+        const isRightDual = rightmostCabinet?.isDualSlot || rightmostCabinet?.moduleId?.includes('dual-');
+        
+        // 가구 너비 계산 (듀얼인 경우 2배)
+        let rightCabinetWidth = 0;
+        if (rightmostCabinet) {
+          if (rightmostCabinet.adjustedWidth) {
+            rightCabinetWidth = mmToThreeUnits(rightmostCabinet.adjustedWidth);
+          } else if (rightmostCabinet.moduleWidth) {
+            rightCabinetWidth = mmToThreeUnits(rightmostCabinet.moduleWidth);
+          } else {
+            // moduleId에서 너비 추출 (예: dual-upper-cabinet-1200 -> 1200)
+            const widthMatch = rightmostCabinet.moduleId?.match(/(\d+)$/);
+            const baseWidth = widthMatch ? parseInt(widthMatch[1]) : 600;
+            rightCabinetWidth = mmToThreeUnits(baseWidth);
+          }
+        }
+        
+        const cabinetRightEdge = rightmostCabinet ? (rightmostCabinet.position?.x || 0) + rightCabinetWidth/2 : 0;
+        const hasRightCabinet = !!(rightmostCabinet && 
+          Math.abs(cabinetRightEdge - rightFrameLeftEdge) < 0.2); // 0.2m(200mm) 이내면 맞닿은 것으로 판단
+        
+        console.log('🔍🔍🔍 RIGHT Subframe Debug:', {
+          actualPlacedModules: actualPlacedModules?.length,
+          rightmostCabinet,
+          isRightDual,
+          rightCabinetWidth,
+          rightFrameLeftEdge,
+          cabinetRightEdge,
+          distance: rightmostCabinet ? Math.abs(cabinetRightEdge - rightFrameLeftEdge) : null,
+          hasRightCabinet,
+          moduleId: rightmostCabinet?.moduleId
+        });
+        
+        // 상하부장의 깊이는 600mm, 일반 서브프레임은 40mm
+        const rightFrameDepth = hasRightCabinet ? 602 : 40;  // 602mm로 2mm 더 확장
+        
+        console.log('🔥🔥🔥 RIGHT Subframe Final Depth:', {
+          hasRightCabinet,
+          rightFrameDepth,
+          rightFrameDepthMm: hasRightCabinet ? 602 : 40,
+          rightFrameDepthInThreeUnits: mmToThreeUnits(rightFrameDepth),
+          actualDepthBeingUsed: rightFrameDepth
+        });
+        
+        // 단내림 설정 확인 (우측 서브프레임용)
+        const rightDroppedCeilingEnabled = spaceInfo.droppedCeiling?.enabled ?? false;
+        const rightDroppedCeilingPosition = spaceInfo.droppedCeiling?.position ?? 'right';
+        const rightDropHeight = spaceInfo.droppedCeiling?.dropHeight ?? 200;
         
         // 오른쪽이 단내림 영역인 경우
-        if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
+        if (rightDroppedCeilingEnabled && rightDroppedCeilingPosition === 'right') {
           // 바닥 마감재와 띄움 높이를 반영한 높이 계산
-          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const rightDroppedHeight = adjustedPanelHeight - mmToThreeUnits(rightDropHeight);
+          const rightDroppedCenterY = panelStartY + floatHeight + rightDroppedHeight/2;
+          
+          // 상하부장이 있을 때 Z 위치 조정 (상하부장의 뒷면 끝과 맞추기)
+          const rightSubFrameZ = hasRightCabinet 
+            ? furnitureZOffset - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) + mmToThreeUnits(19)  // 1mm 더 뒤로
+            : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29);
           
           return (
             <group 
               position={[
                 xOffset + width - frameThickness.right + mmToThreeUnits(10) - mmToThreeUnits(1), // 왼쪽으로 1mm 이동
-                droppedCenterY, 
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
+                rightDroppedCenterY, 
+                rightSubFrameZ // 상하부장 깊이에 맞춰 조정
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
                 args={[
-                  mmToThreeUnits(40),
-                  droppedHeight, // 단내림 영역 높이
+                  mmToThreeUnits(rightFrameDepth),
+                  rightDroppedHeight, // 단내림 영역 높이
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
                 position={[0, 0, 0]}
@@ -2190,18 +2343,29 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 왼쪽에 있는 경우
+        // 상하부장이 있을 때 Z 위치 조정 (상하부장의 뒷면 끝과 맞추기)
+        const rightSubFrameZ = hasRightCabinet 
+          ? furnitureZOffset - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) + mmToThreeUnits(19)  // 1mm 더 뒤로
+          : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29);
+        
         return (
           <group 
             position={[
               xOffset + width - frameThickness.right + mmToThreeUnits(10) - mmToThreeUnits(1), // 왼쪽으로 1mm 이동
               sideFrameCenterY, 
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(29) // 메인프레임과 정확히 맞닿도록
+              rightSubFrameZ // 상하부장 깊이에 맞춰 조정
             ]}
             rotation={[0, Math.PI / 2, 0]}
           >
+            {console.log('🔴🔴 RIGHT BoxWithEdges rendering with depth:', {
+              rightFrameDepth,
+              hasRightCabinet,
+              depthInThreeUnits: mmToThreeUnits(rightFrameDepth),
+              depthInMm: rightFrameDepth
+            })}
             <BoxWithEdges
               args={[
-                mmToThreeUnits(40),
+                mmToThreeUnits(rightFrameDepth),
                 adjustedPanelHeight,
                 mmToThreeUnits(END_PANEL_THICKNESS)
               ]}
