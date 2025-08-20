@@ -20,6 +20,7 @@ import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
+import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 
 

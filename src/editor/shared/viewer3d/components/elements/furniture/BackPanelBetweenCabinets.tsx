@@ -1,0 +1,172 @@
+import React, { useMemo } from 'react';
+import { PlacedModule } from '@/editor/shared/furniture/types';
+import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { getModuleById } from '@/data/modules';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import FinishingPanelWithTexture from '../../modules/components/FinishingPanelWithTexture';
+import { useSpace3DView } from '../../../context/useSpace3DView';
+
+interface BackPanelBetweenCabinetsProps {
+  placedModules: PlacedModule[];
+  spaceInfo: SpaceInfo;
+}
+
+// 단위 변환 함수
+const mmToThreeUnits = (mm: number): number => mm * 0.01;
+
+/**
+ * 상하부장 사이의 백패널을 렌더링하는 컴포넌트
+ * 같은 슬롯에 있는 상부장과 하부장을 찾아서 그 사이에 백패널을 렌더링
+ */
+const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
+  placedModules,
+  spaceInfo
+}) => {
+  const internalSpace = useMemo(() => calculateInternalSpace(spaceInfo), [spaceInfo]);
+  const { renderMode } = useSpace3DView();
+  
+  // 슬롯별로 상부장과 하부장을 그룹화하고 백패널 정보 생성
+  const backPanels = useMemo(() => {
+    const slotGroups: { [key: number]: { upper?: PlacedModule; lower?: PlacedModule; hasPanel?: boolean } } = {};
+    
+    // 모든 배치된 모듈을 순회하면서 상하부장 찾기
+    placedModules.forEach(module => {
+      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      if (!moduleData) return;
+      
+      const isUpper = moduleData.category === 'upper' || module.moduleId.includes('upper-cabinet');
+      const isLower = moduleData.category === 'lower' || module.moduleId.includes('lower-cabinet');
+      
+      if (!isUpper && !isLower) return;
+      
+      const slotIndex = module.slotIndex ?? -1;
+      if (slotIndex < 0) return;
+      
+      if (!slotGroups[slotIndex]) {
+        slotGroups[slotIndex] = {};
+      }
+      
+      if (isUpper) {
+        slotGroups[slotIndex].upper = module;
+        // 상부장에 갭 백패널이 활성화되어 있으면 슬롯에 패널 표시
+        if (module.hasGapBackPanel) {
+          slotGroups[slotIndex].hasPanel = true;
+        }
+      } else if (isLower) {
+        slotGroups[slotIndex].lower = module;
+        // 하부장에 갭 백패널이 활성화되어 있으면 슬롯에 패널 표시
+        if (module.hasGapBackPanel) {
+          slotGroups[slotIndex].hasPanel = true;
+        }
+      }
+    });
+    
+    // 상부장과 하부장이 모두 있는 슬롯에 대해 백패널 정보 생성
+    const panels: Array<{
+      slotIndex: number;
+      x: number;
+      y: number;
+      z: number;
+      width: number;
+      height: number;
+      depth: number;
+      furnitureDepth: number;
+    }> = [];
+    
+    Object.entries(slotGroups).forEach(([slotIndexStr, group]) => {
+      // 상부장과 하부장이 모두 있고, 둘 중 하나라도 hasPanel이 true인 경우에만 백패널 생성
+      if (group.upper && group.lower && group.hasPanel) {
+        const slotIndex = parseInt(slotIndexStr);
+        
+        // 상부장과 하부장의 데이터 가져오기
+        const upperData = getModuleById(group.upper.moduleId, internalSpace, spaceInfo);
+        const lowerData = getModuleById(group.lower.moduleId, internalSpace, spaceInfo);
+        
+        if (!upperData || !lowerData) return;
+        
+        // 위치 계산
+        const upperHeight = upperData.dimensions.height;
+        const lowerHeight = lowerData.dimensions.height;
+        
+        // 바닥재 및 받침대 높이 계산
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+        
+        let furnitureStartYMm: number;
+        if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
+          // 받침대 있음: 바닥재 + 받침대 높이
+          furnitureStartYMm = floorFinishHeightMm + baseFrameHeightMm;
+        } else if (spaceInfo.baseConfig.type === 'stand') {
+          // 받침대 없음
+          if (spaceInfo.baseConfig.placementType === 'float') {
+            // 띄워서 배치: 바닥재 + 띄움 높이
+            const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+            furnitureStartYMm = floorFinishHeightMm + floatHeightMm;
+          } else {
+            // 바닥에 배치: 바닥재만
+            furnitureStartYMm = floorFinishHeightMm;
+          }
+        } else {
+          furnitureStartYMm = 0;
+        }
+        
+        // 하부장의 상단 Y 위치 (Three.js 좌표계) - 하부장 상부 마감재(18mm) 포함
+        const lowerTopY = furnitureStartYMm + lowerHeight + 18; // 하부장 상부 마감재 18mm 추가
+        
+        // 상부장의 하단 Y 위치 (Three.js 좌표계) - 상부장 하부 마감재(18mm) 제외
+        const upperBottomY = furnitureStartYMm + internalSpace.height - upperHeight - 18; // 상부장 하부 마감재 18mm 제외
+        
+        // 갭 높이 계산 (상하부장 마감재 사이의 거리가 백패널 높이)
+        const gapHeight = upperBottomY - lowerTopY;
+        
+        // 갭이 있는 경우만 백패널 생성
+        if (gapHeight > 0) {
+          // 가구의 너비 (조정된 너비 사용)
+          const width = group.upper.adjustedWidth || group.upper.customWidth || upperData.dimensions.width;
+          
+          // 가구의 깊이
+          const depth = group.upper.customDepth || upperData.dimensions.depth;
+          
+          panels.push({
+            slotIndex,
+            x: group.upper.position.x,
+            y: mmToThreeUnits(lowerTopY + gapHeight / 2), // 갭의 중앙 (Three.js 좌표계)
+            z: group.upper.position.z,
+            width: mmToThreeUnits(width),
+            height: mmToThreeUnits(gapHeight),
+            depth: mmToThreeUnits(18), // 18mm 두께
+            furnitureDepth: mmToThreeUnits(depth) // 가구 깊이 추가
+          });
+        }
+      }
+    });
+    
+    return panels;
+  }, [placedModules, spaceInfo, internalSpace]);
+  
+  // 도어 색상 가져오기
+  const doorColor = spaceInfo.materialConfig?.doorColor || '#E0E0E0';
+  
+  return (
+    <>
+      {backPanels.map((panel, index) => (
+        <FinishingPanelWithTexture
+          key={`back-panel-${panel.slotIndex}-${index}`}
+          width={panel.width}
+          height={panel.height}
+          depth={panel.depth}
+          position={[
+            panel.x,
+            panel.y,
+            panel.z - panel.furnitureDepth // 가구 뒷면 끝 위치
+          ]}
+          spaceInfo={spaceInfo}
+          doorColor={doorColor}
+          renderMode={renderMode}
+        />
+      ))}
+    </>
+  );
+};
+
+export default BackPanelBetweenCabinets;

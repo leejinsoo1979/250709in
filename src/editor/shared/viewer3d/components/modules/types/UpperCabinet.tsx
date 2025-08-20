@@ -22,6 +22,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   isEditMode = false,
   internalHeight,
   hasDoor = false,
+  hasBackPanel = true, // 기본값은 true (백패널 있음)
   customDepth,
   hingePosition = 'right',
   spaceInfo,
@@ -74,7 +75,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
               <>

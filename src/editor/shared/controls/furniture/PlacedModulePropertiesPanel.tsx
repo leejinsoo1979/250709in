@@ -509,6 +509,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [widthError, setWidthError] = useState<string>('');
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
+  const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
   const [showWarning, setShowWarning] = useState(false);
   
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
@@ -572,6 +573,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     ? placedModules.find(module => module.id === activePopup.id)
     : null;
 
+  // 같은 슬롯의 반대편 캐비넷이 이미 백패널을 가지고 있는지 확인
+  const isBackPanelAlreadyInSlot = React.useMemo(() => {
+    if (!currentPlacedModule || currentPlacedModule.slotIndex === undefined) return false;
+    
+    const internalSpace = calculateInternalSpace(spaceInfo);
+    const currentModuleData = getModuleById(currentPlacedModule.moduleId, internalSpace, spaceInfo);
+    if (!currentModuleData) return false;
+    
+    const isCurrentUpper = currentModuleData.category === 'upper' || currentPlacedModule.moduleId.includes('upper-cabinet');
+    const isCurrentLower = currentModuleData.category === 'lower' || currentPlacedModule.moduleId.includes('lower-cabinet');
+    
+    if (!isCurrentUpper && !isCurrentLower) return false;
+    
+    // 같은 슬롯의 다른 가구들 확인
+    return placedModules.some(module => {
+      if (module.id === currentPlacedModule.id) return false; // 자기 자신 제외
+      if (module.slotIndex !== currentPlacedModule.slotIndex) return false; // 다른 슬롯 제외
+      
+      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      if (!moduleData) return false;
+      
+      const isUpper = moduleData.category === 'upper' || module.moduleId.includes('upper-cabinet');
+      const isLower = moduleData.category === 'lower' || module.moduleId.includes('lower-cabinet');
+      
+      // 현재가 상부장이면 하부장 확인, 현재가 하부장이면 상부장 확인
+      if (isCurrentUpper && isLower && module.hasGapBackPanel) return true;
+      if (isCurrentLower && isUpper && module.hasGapBackPanel) return true;
+      
+      return false;
+    });
+  }, [currentPlacedModule, placedModules, spaceInfo]);
+
   // 모듈 데이터 가져오기 (조건부 렌더링 전에 미리 계산)
   const moduleData = currentPlacedModule 
     ? (() => {
@@ -632,6 +665,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setWidthInputValue(initialWidth.toString());
       setHingePosition(currentPlacedModule.hingePosition || 'right');
       setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
+      setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
       
       console.log('🔧 팝업 초기값 설정:', {
         moduleId: currentPlacedModule.moduleId,
@@ -816,6 +850,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     setHasDoor(doorEnabled);
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, { hasDoor: doorEnabled });
+    }
+  };
+
+  const handleGapBackPanelChange = (gapBackPanelEnabled: boolean) => {
+    setHasGapBackPanel(gapBackPanelEnabled);
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, { hasGapBackPanel: gapBackPanelEnabled });
     }
   };
 
@@ -1039,6 +1080,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       커버도어는 경첩 위치 변경이 불가합니다
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
+          {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>상하부장 사이 백패널</h5>
+              {isBackPanelAlreadyInSlot ? (
+                <div className={styles.backPanelDisabledNote}>
+                  이미 같은 슬롯의 {moduleData.category === 'upper' ? '하부장' : '상부장'}에서 백패널이 설정되어 있습니다.
+                </div>
+              ) : (
+                <div className={styles.doorTabSelector}>
+                  <button
+                    className={`${styles.doorTab} ${!hasGapBackPanel ? styles.activeDoorTab : ''}`}
+                    onClick={() => handleGapBackPanelChange(false)}
+                  >
+                    없음
+                  </button>
+                  <button
+                    className={`${styles.doorTab} ${hasGapBackPanel ? styles.activeDoorTab : ''}`}
+                    onClick={() => handleGapBackPanelChange(true)}
+                  >
+                    있음
+                  </button>
                 </div>
               )}
             </div>

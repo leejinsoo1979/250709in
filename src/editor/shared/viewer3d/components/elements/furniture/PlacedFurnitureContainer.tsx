@@ -6,6 +6,7 @@ import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
+import BackPanelBetweenCabinets from './BackPanelBetweenCabinets';
 
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
@@ -135,6 +136,15 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   return (
     <group>
+      {/* 상하부장 사이의 백패널 렌더링 */}
+      {spaceInfo && (
+        <BackPanelBetweenCabinets 
+          placedModules={placedModules}
+          spaceInfo={spaceInfo}
+        />
+      )}
+      
+      {/* 개별 가구 렌더링 */}
       {placedModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;

@@ -105,6 +105,9 @@ interface BaseFurnitureShellProps {
   // 강조 상태
   isHighlighted?: boolean;
   
+  // 백패널 유무
+  hasBackPanel?: boolean;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -132,6 +135,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isDragging = false,
   isEditMode = false,
   isHighlighted = false,
+  hasBackPanel = true, // 기본값은 true (백패널 있음)
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -227,15 +231,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         isDragging={isDragging}
       />
       
-      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isBackPanel={true} // 백패널임을 표시
-      />
+      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) - hasBackPanel이 true일 때만 렌더링 */}
+      {hasBackPanel && (
+        <BoxWithEdges
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isBackPanel={true} // 백패널임을 표시
+        />
+      )}
       
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}

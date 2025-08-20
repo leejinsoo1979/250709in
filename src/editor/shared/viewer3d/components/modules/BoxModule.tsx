@@ -26,6 +26,7 @@ interface BoxModuleProps {
   isEditMode?: boolean; // 편집 모드 여부
   internalHeight?: number;
   hasDoor?: boolean;
+  hasBackPanel?: boolean; // 백패널 유무 (상부장/하부장용)
   customDepth?: number;
   hingePosition?: 'left' | 'right';
   spaceInfo?: SpaceInfo;
@@ -65,6 +66,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   isEditMode = false,
   internalHeight,
   hasDoor = false,
+  hasBackPanel = true, // 기본값은 true (백패널 있음)
   customDepth,
   hingePosition = 'right',
   spaceInfo,
@@ -502,6 +504,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
+        hasBackPanel={hasBackPanel} // 백패널 유무 전달
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
@@ -537,6 +540,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         isEditMode={isEditMode}
         internalHeight={internalHeight}
         hasDoor={hasDoor}
+        hasBackPanel={hasBackPanel} // 백패널 유무 전달
         customDepth={customDepth}
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}

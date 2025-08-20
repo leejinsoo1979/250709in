@@ -1094,6 +1094,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   : (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) 
                   ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 도어는 별도 렌더링
                   : (placedModule.hasDoor ?? false)}
+                hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
                 spaceInfo={(() => {
@@ -1550,13 +1551,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
-      
       {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
       {showDimensions && viewMode === '3D' && (
         <Html
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,
-            furnitureStartY - 1.8, // 원래 위치로 (하부 프레임 아래)
+            (() => {
+              // 상부장인 경우 하단에 표시
+              if (actualModuleData?.category === 'upper') {
+                const upperHeight = actualModuleData?.dimensions.height || 800;
+                // 상부장의 하단 Y 위치 (더 아래로 조정)
+                return furnitureStartY + mmToThreeUnits(internalSpace.height - upperHeight) - 2.5;
+              }
+              // 그 외의 경우 기존 위치 (하부 프레임 아래)
+              return furnitureStartY - 1.8;
+            })(),
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
           center

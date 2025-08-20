@@ -15,6 +15,7 @@ export interface FurnitureTypeProps {
   color?: string;
   internalHeight?: number;
   hasDoor?: boolean;
+  hasBackPanel?: boolean; // 백패널 유무 추가
   customDepth?: number;
   hingePosition?: 'left' | 'right';
   spaceInfo?: SpaceInfo;
