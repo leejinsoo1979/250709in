@@ -2,11 +2,13 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { ModuleData } from '@/data/modules/shelving';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
+import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
+import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
+import BoxWithEdges from '../components/BoxWithEdges';
 
 /**
  * 하부장 컴포넌트
@@ -76,50 +78,85 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
-              <SectionsRenderer
-                modelConfig={baseFurniture.modelConfig}
-                height={baseFurniture.height}
-                innerWidth={baseFurniture.innerWidth}
-                depth={baseFurniture.depth}
-                adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-                basicThickness={baseFurniture.basicThickness}
-                shelfZOffset={baseFurniture.shelfZOffset}
-                material={baseFurniture.material}
-                calculateSectionHeight={baseFurniture.calculateSectionHeight}
-                renderMode={renderMode}
-              />
+              <>
+                {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
+                {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (
+                  <>
+                    {/* 왼쪽 섹션 - 왼쪽 구획의 중앙에서 왼쪽으로 basicThickness/2만큼 이동 */}
+                    <group position={[-(baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2)/2 - baseFurniture.basicThickness/2, 0, 0]}>
+                      <SectionsRenderer
+                        modelConfig={{ sections: baseFurniture.modelConfig.leftSections }}
+                        height={baseFurniture.height}
+                        innerWidth={baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2}
+                        depth={baseFurniture.depth}
+                        adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+                        basicThickness={baseFurniture.basicThickness}
+                        shelfZOffset={baseFurniture.shelfZOffset}
+                        material={baseFurniture.material}
+                        calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                        renderMode={renderMode}
+                      />
+                    </group>
+                    
+                    {/* 중앙 분리대 - BoxWithEdges 사용 */}
+                    <BoxWithEdges
+                      args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, baseFurniture.adjustedDepthForShelves]}
+                      position={[0, 0, baseFurniture.shelfZOffset]}
+                      material={baseFurniture.material}
+                      renderMode={renderMode}
+                    />
+                    
+                    {/* 오른쪽 섹션 - 오른쪽 구획의 중앙에서 오른쪽으로 basicThickness/2만큼 이동 */}
+                    <group position={[(baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2)/2 + baseFurniture.basicThickness/2, 0, 0]}>
+                      <SectionsRenderer
+                        modelConfig={{ sections: baseFurniture.modelConfig.rightSections }}
+                        height={baseFurniture.height}
+                        innerWidth={baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2}
+                        depth={baseFurniture.depth}
+                        adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+                        basicThickness={baseFurniture.basicThickness}
+                        shelfZOffset={baseFurniture.shelfZOffset}
+                        material={baseFurniture.material}
+                        calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                        renderMode={renderMode}
+                      />
+                    </group>
+                  </>
+                ) : (
+                  /* 싱글 가구인 경우 기존 방식 */
+                  <SectionsRenderer
+                    modelConfig={baseFurniture.modelConfig}
+                    height={baseFurniture.height}
+                    innerWidth={baseFurniture.innerWidth}
+                    depth={baseFurniture.depth}
+                    adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+                    basicThickness={baseFurniture.basicThickness}
+                    shelfZOffset={baseFurniture.shelfZOffset}
+                    material={baseFurniture.material}
+                    calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                    renderMode={renderMode}
+                  />
+                )}
+              </>
             )}
           </BaseFurnitureShell>
           
           {/* 하부장 상단 마감재 (18mm) - 도어 색상과 동일 */}
-          {!isDragging && (() => {
-            const doorMaterial = new THREE.MeshStandardMaterial({
-              color: baseFurniture.doorColor,
-              metalness: 0.0,
-              roughness: 0.6,
-              transparent: renderMode === 'wireframe',
-              opacity: renderMode === 'wireframe' ? 0.3 : 1.0,
-              wireframe: renderMode === 'wireframe'
-            });
-            
-            return (
-              <BoxWithEdges
-                args={[
-                  baseFurniture.width,  // 전체 너비 사용
-                  0.18, // 18mm
-                  baseFurniture.depth
-                ]}
-                position={[
-                  0,
-                  (baseFurniture.height / 2) + 0.09, // 상단에 위치 (18mm의 절반만큼 위로)
-                  0
-                ]}
-                material={doorMaterial}
-                renderMode={renderMode}
-                hideEdges={false} // 와이어프레임에서 엣지 보이도록
-              />
-            );
-          })()}
+          {!isDragging && (
+            <FinishingPanelWithTexture
+              width={baseFurniture.width}
+              height={0.18}
+              depth={baseFurniture.depth}
+              position={[
+                0,
+                (baseFurniture.height / 2) + 0.09, // 상단에 위치 (18mm의 절반만큼 위로)
+                0
+              ]}
+              spaceInfo={spaceInfo}
+              doorColor={baseFurniture.doorColor}
+              renderMode={renderMode}
+            />
+          )}
         </>
       )}
       

@@ -73,6 +73,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // Cabinet Texture1이 적용된 경우 정확한 색상 사용
+    if (material instanceof THREE.MeshStandardMaterial) {
+      const materialColor = material.color;
+      // RGB 값이 정확히 0.12면 Cabinet Texture1 (오차 허용)
+      if (Math.abs(materialColor.r - 0.12) < 0.01 && 
+          Math.abs(materialColor.g - 0.12) < 0.01 && 
+          Math.abs(materialColor.b - 0.12) < 0.01) {
+        // Cabinet Texture1과 완전히 동일한 색상 사용 (RGB 0.12, 0.12, 0.12 = #1e1e1e)
+        return "#" + new THREE.Color(0.12, 0.12, 0.12).getHexString();
+      }
+    }
+    
     if (viewMode === '3D') {
       return "#505050"; // 3D 모드에서는 회색 엣지
     } else if (renderMode === 'wireframe') {
@@ -87,7 +99,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#999999" : "#444444";
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, material]);
 
   // 디버깅: 2D 솔리드 모드에서 색상 확인
   React.useEffect(() => {
@@ -128,13 +140,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
           <lineBasicMaterial 
-            color={
-              viewMode === '3D' 
-                ? "#505050"  // 3D에서는 항상 회색
-                : renderMode === 'wireframe' 
-                  ? "#ff5500"  // 2D wireframe 모드에서는 테마 색상
-                  : (view2DTheme === 'dark' ? "#999999" : "#444444")
-            }
+            color={edgeColor}
             transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
             opacity={
               isBackPanel && viewMode === '2D' && view2DDirection === 'front' 

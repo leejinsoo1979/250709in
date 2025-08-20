@@ -75,8 +75,7 @@ const Configurator: React.FC = () => {
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
-  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upperlower'>('tall'); // 키큰장/상하부장 토글
-  const [upperLowerTab, setUpperLowerTab] = useState<'upper' | 'lower'>('upper'); // 상부장/하부장 탭
+  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
@@ -1538,7 +1537,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 키큰장/상하부장 토글 탭 */}
+              {/* 키큰장/상부장/하부장 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button 
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
@@ -1547,35 +1546,22 @@ const Configurator: React.FC = () => {
                   키큰장
                 </button>
                 <button 
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upperlower' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('upperlower')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('upper')}
                 >
-                  상하부장
+                  상부장
+                </button>
+                <button 
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('lower')}
+                >
+                  하부장
                 </button>
               </div>
               
-              {/* 상하부장 선택 시 상부장/하부장 탭 표시 */}
-              {moduleCategory === 'upperlower' && (
-                <div className={styles.upperLowerTabs}>
-                  <button 
-                    className={`${styles.upperLowerTab} ${upperLowerTab === 'upper' ? styles.active : ''}`}
-                    onClick={() => setUpperLowerTab('upper')}
-                  >
-                    상부장
-                  </button>
-                  <button 
-                    className={`${styles.upperLowerTab} ${upperLowerTab === 'lower' ? styles.active : ''}`}
-                    onClick={() => setUpperLowerTab('lower')}
-                  >
-                    하부장
-                  </button>
-                </div>
-              )}
-              
               <div className={styles.moduleSection}>
                 <ModuleGallery 
-                  moduleCategory={moduleCategory} 
-                  upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
+                  moduleCategory={moduleCategory}
                 />
               </div>
             </div>

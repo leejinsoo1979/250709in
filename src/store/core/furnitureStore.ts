@@ -271,8 +271,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             }
           }
           
+          // 듀얼 가구인지 확인
+          const isDualFurniture = baseType.includes('dual-');
+          
           // 새로운 너비로 ID 재생성
-          const newModuleId = `${baseType}-${Math.round(targetColumnWidth)}`;
+          const newModuleId = isDualFurniture 
+            ? `${baseType}-${Math.round(targetColumnWidth * 2)}`  // 듀얼은 2배 너비
+            : `${baseType}-${Math.round(targetColumnWidth)}`;
           
           // moduleId가 변경되는 경우에만 로그
           if (newModuleId !== module.moduleId) {
@@ -281,7 +286,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               oldId: module.moduleId,
               newId: newModuleId,
               zone: module.zone,
-              targetColumnWidth
+              targetColumnWidth,
+              isDualFurniture
             });
           }
           
@@ -289,7 +295,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           module = {
             ...module,
             moduleId: newModuleId,
-            moduleWidth: targetColumnWidth
+            moduleWidth: isDualFurniture ? targetColumnWidth * 2 : targetColumnWidth  // 듀얼은 2배 너비
           };
         }
         

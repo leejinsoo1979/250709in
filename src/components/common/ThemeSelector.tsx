@@ -28,18 +28,18 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     
     // 2번째 줄
     { id: 'white', name: '라이트그레이', color: '#D65DB1' },
-    { id: 'silver', name: '미디엄그레이', color: '#808080' },
-    { id: 'orange', name: '피치오렌지', color: '#f97316' },
+    { id: 'plum', name: '플럼', color: '#790963' },
+    { id: 'vivid', name: '비비드', color: '#a25378' },
     { id: 'rust', name: '선셋오렌지', color: '#FF7438' },
     { id: 'brown', name: '다크브라운', color: '#5A2B1D' },
     { id: 'emerald', name: '포레스트그린', color: '#059669' },
     { id: 'darkgray', name: '블루그레이', color: '#2C3844' },
     
     // 3번째 줄
-    { id: 'wine', name: '버건디', color: '#845EC2' },
+    { id: 'wine', name: '바이올렛', color: '#845EC2' },
     { id: 'purple', name: '딥퍼플', color: '#8b5cf6' },
     { id: 'pink', name: '코랄핑크', color: '#ec4899' },
-    { id: 'red', name: '레드', color: '#ef4444' },
+    { id: 'red', name: '레드', color: '#D2042D' },
     { id: 'maroon', name: '다크레드', color: '#3F0D0D' },
     { id: 'turquoise', name: '터콰이즈', color: '#003A7A' },
     { id: 'slate', name: '슬레이트', color: '#2E3A47' },

@@ -652,6 +652,38 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
 };
 
 /**
+ * 상부장 2단형 - 중간 선반 1개
+ */
+const createUpperCabinet4 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `upper-cabinet-2tier-${columnWidth}`,
+    `상부장 2단형 ${columnWidth}mm`,
+    columnWidth,
+    600, // 상부장 기본 높이 600mm
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#e3f2fd', // 연한 파란색
+    `상부장 2단형 (중간 선반 1개)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 중간 선반 1개로 2단 구성
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 상부장 오픈형 - 선반 없음
  */
 const createUpperCabinet2 = (columnWidth: number): ModuleData => {
@@ -744,13 +776,313 @@ const createLowerCabinet1 = (columnWidth: number): ModuleData => {
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
-      hasOpenFront: false, // 전면 막힘 (문짝 가능)
+      hasOpenFront: false, // 전면 막힘 (문짣 가능)
       sections: [
         {
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
           count: 2 // 선반 2단
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 하부장 2단형 - 중간 선반 1개
+ */
+const createLowerCabinet2 = (columnWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `lower-cabinet-2tier-${columnWidth}`,
+    `하부장 2단형 ${columnWidth}mm`,
+    columnWidth,
+    1000, // 하부장 높이 1000mm
+    600, // 하부장 깊이 600mm (기본값)
+    '#fce4ec', // 연한 핑크색
+    `하부장 2단형 (중간 선반 1개)`,
+    600, // 기본 깊이
+    'lower' // 하부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    isDynamic: true, // 동적 크기 조절 가능
+    defaultDepth: 600, // 기본 깊이 600mm
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
+      hasOpenFront: false, // 전면 막힘 (문짣 가능)
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 중간 선반 1개로 2단 구성
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
+// 듀얼 상부장 가구 생성 함수
+// ============================================================================
+
+/**
+ * 듀얼 상부장 선반형 - 선반 2단
+ */
+const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-upper-cabinet-shelf-${dualWidth}`,
+    `듀얼 상부장 선반형 ${dualWidth}mm`,
+    dualWidth,
+    600, // 상부장 기본 높이 600mm
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#c8e6c9', // 진한 초록색
+    `듀얼 상부장 선반 2단형`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 좌측 2단 선반
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 우측 2단 선반
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 상부장 2단형 - 중간 선반 1개
+ */
+const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-upper-cabinet-2tier-${dualWidth}`,
+    `듀얼 상부장 2단형 ${dualWidth}mm`,
+    dualWidth,
+    600, // 상부장 기본 높이 600mm
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#bbdefb', // 진한 파란색
+    `듀얼 상부장 2단형 (중간 선반 1개)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 좌측 중간 선반 1개
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 우측 중간 선반 1개
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 상부장 오픈형 - 선반 없음
+ */
+const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-upper-cabinet-open-${dualWidth}`,
+    `듀얼 상부장 오픈형 ${dualWidth}mm`,
+    dualWidth,
+    600,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#ffe0b2', // 진한 주황색
+    `듀얼 상부장 오픈형`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      leftSections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ],
+      rightSections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 상부장 혼합형 - 상단 오픈 + 하단 선반
+ */
+const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-upper-cabinet-mixed-${dualWidth}`,
+    `듀얼 상부장 혼합형 ${dualWidth}mm`,
+    dualWidth,
+    600,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#e1bee7', // 진한 보라색
+    `듀얼 상부장 혼합형 (오픈+선반)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'upper' // 상부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 50,
+          count: 1
+        },
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 50
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 50,
+          count: 1
+        },
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 50
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
+// 듀얼 하부장 가구 생성 함수
+// ============================================================================
+
+/**
+ * 듀얼 하부장 기본형 - 선반 2단
+ */
+const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-lower-cabinet-basic-${dualWidth}`,
+    `듀얼 하부장 ${dualWidth}mm`,
+    dualWidth,
+    1000, // 하부장 높이 1000mm
+    600, // 하부장 깊이 600mm (기본값)
+    '#ffcc80', // 진한 오렌지색
+    `듀얼 하부장 기본형 W${dualWidth}xH1000xD600`,
+    600, // 기본 깊이
+    'lower' // 하부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    isDynamic: true, // 동적 크기 조절 가능
+    defaultDepth: 600, // 기본 깊이 600mm
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
+      hasOpenFront: false, // 전면 막힘 (문짣 가능)
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 좌측 선반 2단
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 2 // 우측 선반 2단
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 하부장 2단형 - 중간 선반 1개
+ */
+const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-lower-cabinet-2tier-${dualWidth}`,
+    `듀얼 하부장 2단형 ${dualWidth}mm`,
+    dualWidth,
+    1000, // 하부장 높이 1000mm
+    600, // 하부장 깊이 600mm (기본값)
+    '#f8bbd0', // 진한 핑크색
+    `듀얼 하부장 2단형 (중간 선반 1개)`,
+    600, // 기본 깊이
+    'lower' // 하부장 카테고리 명시
+  );
+  
+  return {
+    ...base,
+    isDynamic: true, // 동적 크기 조절 가능
+    defaultDepth: 600, // 기본 깊이 600mm
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
+      hasOpenFront: false, // 전면 막힘 (문짣 가능)
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 좌측 중간 선반 1개
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 1 // 우측 중간 선반 1개
         }
       ]
     }
@@ -785,15 +1117,30 @@ export const generateShelvingModules = (
     maxHeight = maxHeight - floatHeight;
   }
   
-  // SpaceInfo가 제공되면 그대로 사용, 아니면 필요한 속성만 갖는 객체 생성
+  // SpaceInfo가 제공되면 그대로 사용, 아니면 기본값 사용
   let indexingSpaceInfo: SpaceInfo;
   
   if (spaceInfo) {
     indexingSpaceInfo = spaceInfo;
   } else {
-    // 기본값 사용하지 않고 경고만 출력
-    console.error('🚨 [generateShelvingModules] No spaceInfo provided!');
-    return [];
+    // 기본값 사용 - 최소한의 기본 설정으로 상하부장 표시
+    console.warn('⚠️ [generateShelvingModules] No spaceInfo provided, using defaults');
+    indexingSpaceInfo = {
+      width: internalSpace.width,
+      height: 2400, // 기본 높이
+      depth: 600, // 기본 깊이
+      customColumnCount: Math.max(1, Math.floor(internalSpace.width / 600)), // 600mm당 1컬럼
+      columnMode: 'custom',
+      baseConfig: {
+        type: 'wall',
+        placementType: 'floor',
+        floatHeight: 0
+      },
+      materialConfig: {
+        interior: '#FFFFFF',
+        doorColor: '#E0E0E0'
+      }
+    } as SpaceInfo;
   }
   
   // _tempSlotWidths가 있으면 우선 사용 (getModuleById에서 특정 너비로 검색하는 경우)
@@ -953,22 +1300,57 @@ export const generateShelvingModules = (
     modules.push(createDualType4(dualWidth, maxHeight));
     modules.push(createDualType5(dualWidth, maxHeight));
     modules.push(createDualType6(dualWidth, maxHeight));
+    
+    // === 듀얼 상부장 가구 생성 ===
+    modules.push(createDualUpperCabinet1(dualWidth));
+    modules.push(createDualUpperCabinet2(dualWidth));
+    modules.push(createDualUpperCabinet3(dualWidth));
+    modules.push(createDualUpperCabinet4(dualWidth));
+    
+    // === 듀얼 하부장 가구 생성 ===
+    modules.push(createDualLowerCabinet1(dualWidth));
+    modules.push(createDualLowerCabinet2(dualWidth));
   }
   
-  // === 상부장 가구 생성 ===
-  modules.push(createUpperCabinet1(columnWidth));
+  // === 싱글 상부장 가구 생성 ===
+  const upperCabinet1 = createUpperCabinet1(columnWidth);
+  console.log('🔨 상부장 1 생성:', {
+    id: upperCabinet1.id,
+    name: upperCabinet1.name,
+    category: upperCabinet1.category,
+    dimensions: upperCabinet1.dimensions
+  });
+  modules.push(upperCabinet1);
   modules.push(createUpperCabinet2(columnWidth));
   modules.push(createUpperCabinet3(columnWidth));
+  modules.push(createUpperCabinet4(columnWidth)); // 새로운 2단형 추가
   
-  // === 하부장 가구 생성 ===
-  const lowerCabinet = createLowerCabinet1(columnWidth);
+  // === 싱글 하부장 가구 생성 ===
+  const lowerCabinet1 = createLowerCabinet1(columnWidth);
   console.log('🔨 하부장 생성:', {
-    id: lowerCabinet.id,
-    name: lowerCabinet.name,
-    category: lowerCabinet.category,
-    dimensions: lowerCabinet.dimensions
+    id: lowerCabinet1.id,
+    name: lowerCabinet1.name,
+    category: lowerCabinet1.category,
+    dimensions: lowerCabinet1.dimensions
   });
-  modules.push(lowerCabinet);
+  modules.push(lowerCabinet1);
+  
+  const lowerCabinet2 = createLowerCabinet2(columnWidth);
+  console.log('🔨 하부장 2단형 생성:', {
+    id: lowerCabinet2.id,
+    name: lowerCabinet2.name,
+    category: lowerCabinet2.category,
+    dimensions: lowerCabinet2.dimensions
+  });
+  modules.push(lowerCabinet2);
+  
+  console.log('📊 generateShelvingModules 최종 결과:', {
+    totalModulesCount: modules.length,
+    categories: [...new Set(modules.map(m => m.category))],
+    upperCount: modules.filter(m => m.category === 'upper').length,
+    lowerCount: modules.filter(m => m.category === 'lower').length,
+    fullCount: modules.filter(m => m.category === 'full').length
+  });
   
   return modules;
 };

@@ -47,7 +47,21 @@ export const getModulesByCategory = (
   const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
   const staticModules = STATIC_MODULES;
   
-  return [...dynamicModules, ...staticModules].filter(module => module.category === category);
+  const allModules = [...dynamicModules, ...staticModules];
+  const filteredModules = allModules.filter(module => module.category === category);
+  
+  console.log('📦 [getModulesByCategory] 모듈 필터링 결과:', {
+    category,
+    allModulesCount: allModules.length,
+    filteredCount: filteredModules.length,
+    upperModules: allModules.filter(m => m.category === 'upper').map(m => ({ id: m.id, name: m.name, category: m.category })),
+    lowerModules: allModules.filter(m => m.category === 'lower').map(m => ({ id: m.id, name: m.name, category: m.category })),
+    allCategories: [...new Set(allModules.map(m => m.category))],
+    dynamicModulesCount: dynamicModules.length,
+    staticModulesCount: staticModules.length
+  });
+  
+  return filteredModules;
 };
 
 export const getModuleById = (

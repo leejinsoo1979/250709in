@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { setThemeColor as setThemeCssVariables } from '@/theme';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeColor = 'green' | 'blue' | 'purple' | 'orange' | 'red' | 'pink' | 'indigo' | 'teal' | 'yellow' | 'gray' | 'cyan' | 'lime' | 'black' | 'wine' | 'gold' | 'navy' | 'emerald' | 'violet' | 'mint' | 'neon' | 'rust' | 'white' | 'silver' | 'brown' | 'darkgray' | 'maroon' | 'turquoise' | 'slate' | 'copper' | 'forest' | 'olive';
+export type ThemeColor = 'green' | 'blue' | 'purple' | 'vivid' | 'red' | 'pink' | 'indigo' | 'teal' | 'yellow' | 'gray' | 'cyan' | 'lime' | 'black' | 'wine' | 'gold' | 'navy' | 'emerald' | 'violet' | 'mint' | 'neon' | 'rust' | 'white' | 'plum' | 'brown' | 'darkgray' | 'maroon' | 'turquoise' | 'slate' | 'copper' | 'forest' | 'olive';
 
 export interface ThemeConfig {
   mode: ThemeMode;
@@ -69,8 +69,8 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       green: '#10b981',
       blue: '#3b82f6',
       purple: '#8b5cf6',
-      orange: '#f97316',
-      red: '#ef4444',
+      vivid: '#a25378',
+      red: '#D2042D',
       pink: '#ec4899',
       indigo: '#6366f1',
       teal: '#14b8a6',
@@ -88,7 +88,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       neon: '#18CF23',
       rust: '#FF7438',
       white: '#D65DB1',
-      silver: '#808080',
+      plum: '#790963',
       brown: '#5A2B1D',
       darkgray: '#2C3844',
       maroon: '#3F0D0D',
@@ -150,17 +150,17 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryLight: theme.mode === 'dark' ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe',
       primaryDark: '#6d28d9',
     },
-    orange: {
-      primary: '#f97316',
-      primaryHover: '#ea580c',
-      primaryLight: theme.mode === 'dark' ? 'rgba(249, 115, 22, 0.2)' : '#fed7aa',
-      primaryDark: '#c2410c',
+    vivid: {
+      primary: '#a25378',
+      primaryHover: '#82425f',
+      primaryLight: theme.mode === 'dark' ? 'rgba(162, 83, 120, 0.2)' : '#f4e7ee',
+      primaryDark: '#613247',
     },
     red: {
-      primary: '#ef4444',
-      primaryHover: '#dc2626',
-      primaryLight: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fecaca',
-      primaryDark: '#b91c1c',
+      primary: '#D2042D',
+      primaryHover: '#A80324',
+      primaryLight: theme.mode === 'dark' ? 'rgba(210, 4, 45, 0.2)' : '#ffe0e6',
+      primaryDark: '#7E021B',
     },
     pink: {
       primary: '#ec4899',
@@ -264,11 +264,11 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryLight: theme.mode === 'dark' ? 'rgba(214, 93, 177, 0.2)' : '#f5d4ed',
       primaryDark: '#B84D91',
     },
-    silver: {
-      primary: '#808080',
-      primaryHover: '#666666',
-      primaryLight: theme.mode === 'dark' ? 'rgba(128, 128, 128, 0.2)' : '#f5f5f5',
-      primaryDark: '#4d4d4d',
+    plum: {
+      primary: '#790963',
+      primaryHover: '#5f074e',
+      primaryLight: theme.mode === 'dark' ? 'rgba(121, 9, 99, 0.2)' : '#f7e6f3',
+      primaryDark: '#47053b',
     },
     brown: {
       primary: '#5A2B1D',

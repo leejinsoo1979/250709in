@@ -482,8 +482,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  // === 상부장 타입들 ===
-  if (moduleData.id.includes('upper-cabinet-')) {
+  // === 상부장 타입들 (싱글 및 듀얼) ===
+  if (moduleData.id.includes('upper-cabinet-') || moduleData.id.includes('dual-upper-cabinet-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -517,8 +517,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  // === 하부장 타입들 ===
-  if (moduleData.id.includes('lower-cabinet-')) {
+  // === 하부장 타입들 (싱글 및 듀얼) ===
+  if (moduleData.id.includes('lower-cabinet-') || moduleData.id.includes('dual-lower-cabinet-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

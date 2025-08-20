@@ -746,11 +746,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 };
 
 interface ModuleGalleryProps {
-  moduleCategory?: 'tall' | 'upperlower';
-  upperLowerTab?: 'upper' | 'lower';
+  moduleCategory?: 'tall' | 'upper' | 'lower';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
   
@@ -785,23 +784,20 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   
   // 카테고리에 따라 모듈 가져오기
   let categoryModules: ModuleData[] = [];
-  if (moduleCategory === 'upperlower') {
-    // 상하부장 카테고리 선택시
-    const upperModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
-    const lowerModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
+  if (moduleCategory === 'upper') {
+    // 상부장 카테고리 선택시
+    categoryModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
     
-    // upperLowerTab에 따라 필터링
-    if (upperLowerTab === 'upper') {
-      categoryModules = upperModules;
-    } else {
-      categoryModules = lowerModules;
-    }
+    console.log('🎯 상부장 모듈 로드:', {
+      count: categoryModules.length,
+      modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
+    });
+  } else if (moduleCategory === 'lower') {
+    // 하부장 카테고리 선택시
+    categoryModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
     
-    console.log('🎯 상하부장 모듈 로드:', {
-      upperLowerTab,
-      upperCount: upperModules.length,
-      lowerCount: lowerModules.length,
-      selectedCount: categoryModules.length,
+    console.log('🎯 하부장 모듈 로드:', {
+      count: categoryModules.length,
       modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
     });
   } else {
@@ -866,26 +862,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     }, { singleModules: [] as ModuleData[], dualModules: [] as ModuleData[] });
   }, [fullModules, indexing.columnCount]);
 
-  // 현재 선택된 탭에 따른 모듈 목록 (moduleCategory 필터링 추가)
+  // 현재 선택된 탭에 따른 모듈 목록
   const currentModules = useMemo(() => {
-    // 상하부장이 선택된 경우
-    if (moduleCategory === 'upperlower') {
-      const upperModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
-      const lowerModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
-      
-      console.log('🎯 상하부장 모듈 로드:', {
-        upperCount: upperModules.length,
-        lowerCount: lowerModules.length,
-        upperLowerTab,
-        upperModules: upperModules.map(m => ({ id: m.id, name: m.name })),
-        lowerModules: lowerModules.map(m => ({ id: m.id, name: m.name }))
-      });
-      
-      // upperLowerTab에 따라 상부장 또는 하부장 반환
-      return upperLowerTab === 'upper' ? upperModules : lowerModules;
-    }
-    
-    // 키큰장인 경우 기존 로직 적용
+    // 모든 카테고리에서 싱글/듀얼 필터링 적용
     const modules = selectedType === 'all' 
       ? [...singleModules, ...dualModules]
       : selectedType === 'single' 
@@ -903,7 +882,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     });
     
     return modules;
-  }, [selectedType, singleModules, dualModules, moduleCategory, upperLowerTab, zoneInternalSpace, zoneSpaceInfo]);
+  }, [selectedType, singleModules, dualModules, moduleCategory, zoneInternalSpace, zoneSpaceInfo]);
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
