@@ -22,6 +22,7 @@ interface BaseFurnitureOptions {
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
   isHighlighted?: boolean; // 가구 강조 여부
+  adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
 }
 
 // 가구 기본 설정 반환 타입

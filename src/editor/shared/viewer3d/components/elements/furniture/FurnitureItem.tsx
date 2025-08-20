@@ -380,43 +380,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   let endPanelSide = adjacentCheck.adjacentSide;
   
-  // 현재 가구가 상하부장인 경우 키큰장/듀얼장과 인접했는지도 확인
-  if (!needsEndPanelAdjustment && actualModuleData && (actualModuleData.category === 'upper' || actualModuleData.category === 'lower')) {
-    const currentSlotIndex = placedModule.slotIndex;
-    if (currentSlotIndex !== undefined) {
-      // 왼쪽 인접 가구 확인
-      const leftAdjacentModule = placedModules.find(m => m.slotIndex === currentSlotIndex - 1);
-      if (leftAdjacentModule) {
-        const leftModuleData = getModuleById(leftAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-        const isLeftDual = leftAdjacentModule.moduleId.includes('dual') || leftAdjacentModule.isDualSlot;
-        if (leftModuleData && (leftModuleData.category === 'full' || isLeftDual)) {
-          needsEndPanelAdjustment = true;
-          endPanelSide = 'left';
-          console.log('🔍 상하부장 왼쪽에 키큰장/듀얼장 감지:', {
-            current: placedModule.moduleId,
-            leftModule: leftAdjacentModule.moduleId
-          });
-        }
-      }
-      
-      // 오른쪽 인접 가구 확인
-      if (!needsEndPanelAdjustment) {
-        const rightAdjacentModule = placedModules.find(m => m.slotIndex === currentSlotIndex + 1);
-        if (rightAdjacentModule) {
-          const rightModuleData = getModuleById(rightAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-          const isRightDual = rightAdjacentModule.moduleId.includes('dual') || rightAdjacentModule.isDualSlot;
-          if (rightModuleData && (rightModuleData.category === 'full' || isRightDual)) {
-            needsEndPanelAdjustment = true;
-            endPanelSide = 'right';
-            console.log('🔍 상하부장 오른쪽에 키큰장/듀얼장 감지:', {
-              current: placedModule.moduleId,
-              rightModule: rightAdjacentModule.moduleId
-            });
-          }
-        }
-      }
-    }
-  }
+  // 상하부장은 엔드패널이 필요없으므로 인접 체크 불필요
+  // 상하부장 인접 체크 로직 제거됨
   
   // 듀얼 가구 인접 체크 디버깅
   if (isDualFurniture && actualModuleData) {
@@ -1109,8 +1074,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 return null;
               })()}
               
-              {/* 상부장/하부장과 인접한 키큰장의 엔드패널 렌더링 */}
-              {needsEndPanelAdjustment && endPanelSide && (() => {
+              {/* 상부장/하부장과 인접한 키큰장의 엔드패널 렌더링 (상하부장 자체가 아닌 경우만) */}
+              {needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower' && (() => {
                 // 가구가 9mm 이동했으므로 엔드패널은 원래 슬롯 경계와 이동된 가구 사이에 위치
                 const furnitureOffset = endPanelSide === 'left' 
                   ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 가구가 오른쪽으로 9mm 이동

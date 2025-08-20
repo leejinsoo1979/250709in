@@ -30,8 +30,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   adjustedWidth,
-  showFurniture = true,
-  adjacentCabinets
+  showFurniture = true
 }) => {
   const { renderMode, viewMode } = useSpace3DView();
   
@@ -118,45 +117,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 material={doorMaterial}
                 renderMode={renderMode}
                 hideEdges={false} // 와이어프레임에서 엣지 보이도록
-              />
-            );
-          })()}
-          
-          {/* 하부장 측면 엔드패널 - 키큰장/듀얼장과 인접한 경우 */}
-          {!isDragging && adjacentCabinets?.hasAdjacentUpperLower && adjacentCabinets?.adjacentSide && (() => {
-            const endPanelMaterial = new THREE.MeshStandardMaterial({
-              color: baseFurniture.doorColor,
-              metalness: 0.0,
-              roughness: 0.6,
-              transparent: renderMode === 'wireframe',
-              opacity: renderMode === 'wireframe' ? 0.3 : 1.0,
-              wireframe: renderMode === 'wireframe'
-            });
-            
-            const endPanelX = adjacentCabinets.adjacentSide === 'left' 
-              ? -(baseFurniture.width / 2) - 0.09  // 왼쪽 엔드패널 (18mm의 절반)
-              : (baseFurniture.width / 2) + 0.09;   // 오른쪽 엔드패널 (18mm의 절반)
-            
-            console.log('🎨 하부장 엔드패널 렌더링:', {
-              moduleId: moduleData.id,
-              side: adjacentCabinets.adjacentSide,
-              endPanelX,
-              width: baseFurniture.width,
-              height: baseFurniture.height
-            });
-            
-            return (
-              <BoxWithEdges
-                isEndPanel={true}
-                args={[
-                  0.18,  // 두께 18mm
-                  baseFurniture.height,  // 가구와 같은 높이
-                  baseFurniture.depth     // 가구와 같은 깊이
-                ]}
-                position={[endPanelX, 0, 0]}
-                material={endPanelMaterial}
-                renderMode={renderMode}
-                hideEdges={false}
               />
             );
           })()}
