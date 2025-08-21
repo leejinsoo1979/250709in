@@ -102,6 +102,14 @@ export class FurnitureSpaceAdapter {
         // 영역별 모듈 데이터
         const moduleData = getModuleById(module.moduleId, zoneInternalSpace, zoneSpaceInfo);
         if (!moduleData) {
+          console.error('🚨 [FurnitureSpaceAdapter] 모듈을 찾을 수 없어 제거됨:', {
+            moduleId: module.moduleId,
+            furnitureId: module.id,
+            zone: module.zone,
+            zoneInternalSpace,
+            zoneSpaceInfo,
+            isLowerCabinet: module.moduleId.includes('lower-cabinet')
+          });
           removedFurniture.push(module.id);
           return;
         }
@@ -143,9 +151,38 @@ export class FurnitureSpaceAdapter {
       
       // zone 정보가 없는 기존 가구들을 위한 폴백 로직
       const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
-      const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
+      let moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
+      
+      // 만약 oldSpaceInfo로 못 찾았으면 newSpaceInfo로 재시도
+      if (!moduleData) {
+        const isUpperOrLowerCabinet = module.moduleId.includes('lower-cabinet') || module.moduleId.includes('upper-cabinet');
+        
+        if (isUpperOrLowerCabinet) {
+          console.warn('⚠️ [FurnitureSpaceAdapter] 상/하부장을 oldSpaceInfo로 찾지 못해 newSpaceInfo로 재시도:', {
+            moduleId: module.moduleId,
+            oldBaseConfig: oldSpaceInfo.baseConfig,
+            newBaseConfig: newSpaceInfo.baseConfig
+          });
+        }
+        
+        const newInternalSpace = calculateInternalSpace(newSpaceInfo);
+        moduleData = getModuleById(module.moduleId, newInternalSpace, newSpaceInfo);
+      }
       
       if (!moduleData) {
+        console.error('🚨 [FurnitureSpaceAdapter] 폴백 로직에서 모듈을 찾을 수 없어 제거됨:', {
+          moduleId: module.moduleId,
+          furnitureId: module.id,
+          hasZone: !!module.zone,
+          oldInternalSpace,
+          oldSpaceInfo: {
+            width: oldSpaceInfo.width,
+            height: oldSpaceInfo.height,
+            depth: oldSpaceInfo.depth,
+            baseConfig: oldSpaceInfo.baseConfig
+          },
+          isLowerCabinet: module.moduleId.includes('lower-cabinet')
+        });
         removedFurniture.push(module.id);
         return;
       }

@@ -893,6 +893,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 위치 변경 로깅 (adjustedPosition 계산 후)
   useEffect(() => {
+    // 상부장인 경우 더 자세한 로그 출력
+    if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
+      console.log('🔴🔴🔴 상부장 위치 정보:', {
+        id: placedModule.id,
+        moduleId: placedModule.moduleId,
+        category: moduleData?.category || actualModuleData?.category,
+        저장된_Y위치: placedModule.position.y,
+        저장된_Y위치_mm: placedModule.position.y / 0.01,
+        adjustedPosition_Y: adjustedPosition.y,
+        실제_렌더링될_Y: 'furnitureYPosition 값 사용',
+        문제: '저장된 Y 위치가 잘못되었을 가능성'
+      });
+    }
     console.log('📍 FurnitureItem 위치 변경:', {
       id: placedModule.id,
       placedModulePosition: placedModule.position,
@@ -903,7 +916,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         z: adjustedPosition.z - placedModule.position.z
       }
     });
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id]);
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id, moduleData?.category, actualModuleData?.category]);
 
   // 가구의 Y 위치를 계산 (변경될 때마다 업데이트)
   const furnitureYPosition = React.useMemo(() => {
@@ -915,19 +928,48 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
       // 상부장은 항상 천장에 붙어있어야 함
-      // furnitureStartY를 그대로 사용 (PlacedFurnitureContainer에서 올바르게 계산됨)
-      const yPos = furnitureStartY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+      // 바닥재 높이 확인
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      
+      // 받침대 높이 확인 - 받침대가 있을 때만 적용
+      // baseConfig.type === 'floor': 받침대 있음 (65mm)
+      // baseConfig.type === 'stand': 받침대 없음 (0mm)
+      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      
+      // 상부장 Y 위치: 내경높이 + 받침대높이 - 가구높이/2
+      // 받침대가 있을 때만 받침대 높이를 더함
+      const yPos = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
+      
+      // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)
+      console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
+        moduleId: actualModuleData?.id || 'unknown',
+        category: moduleData?.category || actualModuleData?.category || 'unknown',
+        floorFinishHeightMm,
+        baseFrameHeightMm,
+        internalHeightMm,
+        furnitureHeightMm,
+        계산식: `${internalHeightMm} + ${baseFrameHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm + baseFrameHeightMm - furnitureHeightMm/2}`,
+        yPos_Three단위: yPos,
+        yPos_mm: yPos / 0.01,
+        furnitureStartY,
+        adjustedPosition_Y: adjustedPosition.y,
+        adjustedPosition_Y_mm: adjustedPosition.y / 0.01,
+        차이: (yPos - adjustedPosition.y) / 0.01,
+        isDragging: isDraggingThis,
+        baseConfig: spaceInfo?.baseConfig,
+        설명: '내경높이에 받침대 높이를 더해서 천장 위치 계산'
+      });
       
       if (isDraggingThis) {
         console.log('🔝 상부장 드래그 중 Y 위치:', {
           moduleId: actualModuleData?.id || 'unknown',
           category: moduleData?.category || actualModuleData?.category || 'unknown',
-          furnitureStartY,
           internalHeightMm,
           furnitureHeightMm,
           totalY: yPos,
           isDragging: isDraggingThis,
-          baseConfig: spaceInfo?.baseConfig
+          baseConfig: spaceInfo?.baseConfig,
+          설명: '상부장은 천장 기준 (바닥재 높이 제외)'
         });
       }
       

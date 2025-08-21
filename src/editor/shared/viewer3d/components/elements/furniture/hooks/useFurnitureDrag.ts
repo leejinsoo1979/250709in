@@ -548,23 +548,25 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // 내경 높이를 사용하여 계산
         const internalHeightMm = internalSpace.height;
         
-        // 바닥재 높이만 고려 (띄움 높이나 받침대 높이는 제외)
-        const floorFinishHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-        const startY = mmToThreeUnits(floorFinishHeight);
+        // 받침대 높이 확인 - 받침대가 있을 때만 적용
+        // baseConfig.type === 'floor': 받침대 있음 (65mm)
+        // baseConfig.type === 'stand': 받침대 없음 (0mm)
+        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
         
-        // 상부장 Y 위치: 바닥재 + 내경높이 - 가구높이/2
-        calculatedY = startY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+        // 상부장 Y 위치: 내경높이 + 받침대높이 - 가구높이/2
+        calculatedY = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
         
         console.log('🔝 드래그 중 상부장 Y 위치 계산:', {
           moduleId: moduleData.id,
           currentModuleId: currentModule.moduleId,
           category: moduleData.category,
           isUpperCabinet,
-          floorFinishHeight,
           internalHeightMm,
+          baseFrameHeightMm,
           furnitureHeightMm,
           calculatedY,
-          previousY: currentModule.position.y
+          previousY: currentModule.position.y,
+          설명: '상부장은 내경높이 + 받침대높이 기준'
         });
       } else {
         // 하부장 및 일반 가구는 바닥에 배치

@@ -105,6 +105,16 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     // 기본값: 0
     furnitureStartY = 0;
   }
+  
+  // furnitureStartY 디버깅
+  console.log('📍📍📍 PlacedFurnitureContainer - furnitureStartY 계산:', {
+    baseConfig: spaceInfo.baseConfig,
+    floorFinishHeightMm,
+    baseFrameHeightMm,
+    furnitureStartY,
+    furnitureStartY_mm: furnitureStartY / 0.01,
+    설명: '하부장 시작 Y 위치'
+  });
 
   // 커스텀 훅들 사용 - 조건부 호출 제거
   const isViewerOnly = !!propPlacedModules;

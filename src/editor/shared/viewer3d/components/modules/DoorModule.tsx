@@ -671,44 +671,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     if (floatHeight > 0) {
       console.log('🔴🔴🔴 IF 블록 진입 - 띄움 배치');
-      // 띄워서 배치: 키큰장과 동일한 방식으로 계산
+      // 띄워서 배치: 위로 18mm 확장, 아래는 정상
       
-      // 도어 절대 위치 (공간 바닥 기준)
-      // 하부장 도어: 가구 상단 + 18mm 확장, 하단은 floatHeight
-      const doorTopAbsolute = floatHeight + furnitureHeight + upperExtension;  // 띄움높이 + 가구높이 + 18mm
-      const doorBottomAbsolute = floatHeight;  // 띄움 높이 (키큰장과 완전히 동일)
+      // 도어 높이: 가구 높이 + 위 확장(18mm)
+      finalDoorHeight = furnitureHeight + upperExtension;
       
-      // 도어 높이
-      finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+      // 도어 Y 위치 계산:
+      // 도어 하단이 가구 하단과 일치해야 함
+      // 가구 하단 = -furnitureHeight/2
+      // 도어 하단 = doorYPosition - finalDoorHeight/2
+      // 따라서: doorYPosition - finalDoorHeight/2 = -furnitureHeight/2
+      // doorYPosition = finalDoorHeight/2 - furnitureHeight/2
+      // doorYPosition = (finalDoorHeight - furnitureHeight) / 2 = upperExtension / 2 = 18/2 = 9
+      // 하지만 사용자가 10mm 높다고 하므로 -1mm 조정
+      doorYPosition = mmToThreeUnits(-1);  // 도어 중심을 1mm 아래로 (10mm 오프셋 수정)
       
-      // 가구 절대 위치 (공간 바닥 기준)
-      const furnitureTopAbsolute = floatHeight + furnitureHeight;  // 띄움높이 + 가구높이
-      const furnitureBottomAbsolute = floatHeight;  // 띄움높이
-      const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-      
-      // 도어 중심 절대 위치
-      const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-      
-      // 가구 중심 기준 상대 좌표로 변환
-      // 하부장 도어는 가구보다 위로 upperExtension(18mm) 확장
-      // 도어 중심이 위로 올라간 만큼의 절반(9mm)과 추가 1mm = 10mm 조정
-      const lowerCabinetAdjustment = (upperExtension / 2) + 1;
-      doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - lowerCabinetAdjustment) * 0.01; // mm to Three.js units
-      
-      console.log('🔴🔴🔴 하부장 띄움 배치 (키큰장과 동일):', {
+      console.log('🔴🔴🔴 하부장 띄움 배치:', {
         floatHeight,
         furnitureHeight,
-        doorTopAbsolute,
-        doorBottomAbsolute,
         finalDoorHeight,
-        furnitureCenterAbsolute,
-        doorCenterAbsolute,
         doorYPosition,
-        doorYPosition_mm: doorCenterAbsolute - furnitureCenterAbsolute - lowerCabinetAdjustment,
-        도어하단_절대위치: doorBottomAbsolute,
-        upperExtension,
-        lowerCabinetAdjustment,
-        설명: `upperExtension/2 + 1 = ${lowerCabinetAdjustment}mm 조정`
+        doorYPosition_mm: doorYPosition / 0.01,
+        위확장: upperExtension,
+        도어높이계산: `${furnitureHeight} + ${upperExtension} = ${finalDoorHeight}`,
+        가구상단: furnitureHeight / 2,
+        가구하단: -furnitureHeight / 2,
+        도어상단: (doorYPosition / 0.01) + finalDoorHeight / 2,
+        도어하단: (doorYPosition / 0.01) - finalDoorHeight / 2,
+        도어하단_vs_가구하단: ((doorYPosition / 0.01) - finalDoorHeight / 2) - (-furnitureHeight / 2),
+        설명: '띄움 배치시 도어 위 18mm만 확장, 하단은 가구와 일치해야 함'
       });
     } else {
       console.log('🔴🔴🔴 ELSE 블록 진입 - 일반 배치');
@@ -734,11 +725,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       아래확장: lowerExtension,
       도어높이: finalDoorHeight,
       doorYPosition,
-      doorYPosition_mm: floatHeight > 0 ? 20 : (lowerExtension - upperExtension) / 2 - 32,
+      doorYPosition_mm: doorYPosition / 0.01,
       가구하단_mm: -furnitureHeight / 2,
       도어하단_mm: (doorYPosition / 0.01) - finalDoorHeight / 2,
       차이: ((doorYPosition / 0.01) - finalDoorHeight / 2) - (-furnitureHeight / 2),
-      note: floatHeight > 0 ? '띄워서 배치: 위 18mm만 확장, 아래는 가구 하단과 동일' : '일반 배치: 위 18mm, 아래 40mm 확장'
+      note: floatHeight > 0 ? '띄워서 배치: 위 18mm만 확장' : '일반 배치: 위 18mm, 아래 40mm 확장'
     });
     
     console.log('🚪📍 하부장 도어 최종:', {
