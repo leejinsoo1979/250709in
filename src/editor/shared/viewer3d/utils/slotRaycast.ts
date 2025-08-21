@@ -177,7 +177,8 @@ export const calculateSlotStartY = (spaceInfo: SpaceInfo): number => {
   } else if (spaceInfo.baseConfig.type === 'stand') {
     if (spaceInfo.baseConfig.placementType === 'float') {
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-      return mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
+      // 띄워서 배치일 때는 바닥마감재 무관하게 띄움 높이만 사용
+      return mmToThreeUnits(floatHeightMm);
     } else {
       return mmToThreeUnits(floorFinishHeightMm);
     }

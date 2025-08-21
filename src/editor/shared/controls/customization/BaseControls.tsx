@@ -14,21 +14,31 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   
   console.log('🔧 BaseControls - disabled 상태:', disabled);
   
+  // 바닥마감재가 있을 때 받침대 높이 조정해서 표시
+  const getAdjustedBaseHeight = () => {
+    const originalHeight = spaceInfo.baseConfig?.height || 65;
+    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
+      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
+      return Math.max(0, originalHeight - floorFinishHeight);
+    }
+    return originalHeight;
+  };
+
   // 로컬 상태들 - 항상 string으로 관리
   const [baseHeight, setBaseHeight] = useState<string>(
-    String(spaceInfo.baseConfig?.height || 65)
+    String(getAdjustedBaseHeight())
   );
   const [floatHeight, setFloatHeight] = useState<string>(
     String(spaceInfo.baseConfig?.floatHeight || 60)
   );
 
-  // baseConfig 변경 시 로컬 상태 동기화
+  // baseConfig 또는 바닥마감재 변경 시 로컬 상태 동기화
   useEffect(() => {
+    setBaseHeight(String(getAdjustedBaseHeight()));
     if (spaceInfo.baseConfig) {
-      setBaseHeight(String(spaceInfo.baseConfig.height));
       setFloatHeight(String(spaceInfo.baseConfig.floatHeight || 60));
     }
-  }, [spaceInfo.baseConfig]);
+  }, [spaceInfo.baseConfig, spaceInfo.hasFloorFinish, spaceInfo.floorFinish]);
 
   // 받침대 타입 변경 처리
   const handleBaseTypeChange = (type: 'floor' | 'stand') => {
@@ -92,15 +102,19 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       if (!isNaN(Number(value))) {
         let validatedValue = parseInt(value);
         
-        // 범위 검증은 blur 시에만 적용
-        // 여기서는 store에 그대로 저장
+        // 바닥마감재가 있으면 표시된 값에 바닥마감재 높이를 더해서 저장
+        if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
+          const floorFinishHeight = spaceInfo.floorFinish.height || 0;
+          validatedValue = validatedValue + floorFinishHeight;
+        }
         
         // baseConfig가 없으면 기본값으로 생성
         const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
         
         console.log('🔧 BaseControls - store 업데이트:', {
-          현재값: currentBaseConfig.height,
-          새값: validatedValue
+          표시값: value,
+          저장값: validatedValue,
+          바닥마감재: spaceInfo.floorFinish?.height || 0
         });
         
         // 즉시 store 업데이트
@@ -169,15 +183,22 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       value = 500;
     }
 
-    // 로컬 상태 업데이트
+    // 로컬 상태 업데이트 (표시값)
     setBaseHeight(value);
 
+    // 저장할 때는 바닥마감재 높이를 더해서 저장
+    let saveValue = value;
+    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
+      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
+      saveValue = value + floorFinishHeight;
+    }
+
     // 값이 변경된 경우만 업데이트
-    if (value !== currentBaseConfig.height) {
+    if (saveValue !== currentBaseConfig.height) {
       onUpdate({
         baseConfig: {
           ...currentBaseConfig,
-          height: value,
+          height: saveValue,
         },
       });
     }

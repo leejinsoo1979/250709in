@@ -914,8 +914,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const internalHeightMm = internalSpace.height;
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
-      // 상부장은 내경 공간 맨 위에서 아래로 매달림
-      // furnitureStartY는 내경 공간 시작점, 거기에 내경 높이를 더하고 가구 높이의 절반을 뺌
+      // 상부장은 항상 천장에 붙어있어야 함
+      // furnitureStartY를 그대로 사용 (PlacedFurnitureContainer에서 올바르게 계산됨)
       const yPos = furnitureStartY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
       if (isDraggingThis) {
@@ -926,7 +926,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           internalHeightMm,
           furnitureHeightMm,
           totalY: yPos,
-          isDragging: isDraggingThis
+          isDragging: isDraggingThis,
+          baseConfig: spaceInfo?.baseConfig
         });
       }
       

@@ -2,7 +2,6 @@ import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -70,7 +69,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   const placementType = spaceInfo?.baseConfig?.placementType;
   const isFloating = placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
   
   console.log('🔥 SingleType1 간접조명 체크:', {
     moduleId: moduleData.id,
@@ -143,6 +142,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           color={baseFurniture.doorColor}
           isDragging={isDragging}
           isEditMode={isEditMode}
+          moduleData={moduleData}
           originalSlotWidth={originalSlotWidth || doorWidth}
           slotIndex={slotIndex}
           slotCenterX={slotCenterX}

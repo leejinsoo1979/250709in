@@ -102,9 +102,17 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   // 내경 높이 = 전체 높이 - 바닥재 - 상단 프레임 - 받침대
   let internalHeight = spaceInfo.height;
-  if (spaceInfo.hasFloorFinish) {
+  
+  // 띄워서 배치가 아닌 경우에만 바닥마감재 높이를 뺌
+  // 띄워서 배치인 경우 바닥마감재가 있어도 내경 높이에 영향 없음
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  if (spaceInfo.hasFloorFinish && !isFloating) {
     internalHeight -= floorFinishHeight;
   }
+  
+  // 띄워서 배치여도 내경 높이는 변하지 않음 (가구 배치 공간은 동일)
+  // 단지 시작 Y 위치만 올라감
+  
   internalHeight -= topFrameHeight;
   internalHeight -= baseFrameHeight;
   
@@ -133,13 +141,23 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   //   console.log(`📐 [내경계산] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
   // }
   
+  // 배치 시작 Y 위치 계산
+  let startY;
+  if (isFloating) {
+    // 띄워서 배치인 경우: 띄움 높이부터 시작 (바닥마감재 무관)
+    startY = spaceInfo.baseConfig?.floatHeight || 0;
+  } else {
+    // 일반 배치: 받침대 높이 + 바닥마감재 높이
+    startY = baseFrameHeight + floorFinishHeight;
+  }
+  
   return {
     width: internalWidth,
     height: internalHeight,
     depth: internalDepth,
     // 배치 시작 위치
     startX: startX,
-    startY: baseFrameHeight + floorFinishHeight,
+    startY: startY,
     startZ: 0
   };
 };
@@ -364,16 +382,44 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
 /**
  * 받침대 높이 계산 (mm 단위)
  * 기본값은 65mm이고, baseConfig.height 설정이 있으면 그 값을 사용
+ * 바닥마감재가 있으면 받침대 높이에서 바닥마감재 두께를 뺌
  */
 export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
+  console.log('📐 calculateBaseFrameHeight 호출:', {
+    spaceInfo_exists: !!spaceInfo,
+    baseConfig_type: spaceInfo?.baseConfig?.type,
+    baseConfig_height: spaceInfo?.baseConfig?.height,
+    hasFloorFinish: spaceInfo?.hasFloorFinish,
+    floorFinish: spaceInfo?.floorFinish
+  });
+  
   if (!spaceInfo) {
     return 0;
   }
   
   // 받침대가 있는 경우에만 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
-    const height = spaceInfo.baseConfig.height || 65;
-    return height;
+    const baseHeight = spaceInfo.baseConfig.height || 65;
+    
+    // 바닥마감재가 있으면 받침대 높이에서 바닥마감재 두께를 뺌
+    // 이렇게 하면 가구의 전체 높이는 변하지 않음
+    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
+      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
+      const adjustedHeight = Math.max(0, baseHeight - floorFinishHeight);
+      
+      console.log('📐 calculateBaseFrameHeight - 바닥마감재 적용:', {
+        baseHeight,
+        floorFinishHeight,
+        adjustedHeight,
+        '계산식': `${baseHeight} - ${floorFinishHeight} = ${adjustedHeight}`
+      });
+      
+      // 받침대 높이가 바닥마감재보다 큰 경우에만 차감
+      return adjustedHeight;
+    }
+    
+    console.log('📐 calculateBaseFrameHeight - 바닥마감재 없음, 원래 높이 반환:', baseHeight);
+    return baseHeight;
   }
   return 0;
 };

@@ -88,6 +88,31 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
     ? spaceInfo.height - (spaceInfo.floorFinish?.height || 0)
     : spaceInfo.height;
 
+  // 띄워서 배치일 때는 바닥마감재 설정 비활성화
+  const isFloatingMode = spaceInfo.baseConfig?.placementType === 'float' && (spaceInfo.baseConfig?.floatHeight || 0) > 0;
+
+  // 띄워서 배치로 변경되면 바닥마감재 자동 제거
+  useEffect(() => {
+    if (isFloatingMode && spaceInfo.hasFloorFinish) {
+      onUpdate({
+        hasFloorFinish: false,
+        floorFinish: undefined
+      });
+    }
+  }, [isFloatingMode]);
+
+  if (isFloatingMode) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.section}>
+          <p className={styles.disabledMessage}>
+            {t('space.floorFinishDisabledForFloat') || '띄워서 배치 시 바닥마감재 설정이 비활성화됩니다.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.section}>

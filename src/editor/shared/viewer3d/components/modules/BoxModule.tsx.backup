@@ -108,8 +108,40 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     isHighlighted
   });
   
-  // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
-  const showIndirectLight = false;
+  // 띄워서 배치 여부 확인
+  const placementType = spaceInfo?.baseConfig?.placementType;
+  const isFloating = placementType === 'float';
+  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  // 간접조명 표시 조건 (3D 모드에서만)
+  const { viewMode: contextViewMode } = useSpace3DView();
+  const currentViewMode = viewMode || contextViewMode;
+  // 2D 모드 체크 강화 - 2D 모드면 절대 안 보이게
+  const is2DMode = currentViewMode === '2D' || currentViewMode !== '3D';
+  // 상부장은 UpperCabinetIndirectLight에서 처리하므로 BoxModule에서는 제외
+  const isUpperCabinet = moduleData.category === 'upper' || moduleData.id.includes('upper-cabinet');
+  const showIndirectLight = !is2DMode && !isUpperCabinet && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  
+  if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
+    console.log('🔥 간접조명 계산 디버그:', {
+      moduleId: moduleData.id,
+      placementType,
+      isFloating,
+      floatHeight,
+      isDragging,
+      indirectLightEnabled,
+      is2DMode,
+      showIndirectLight,
+      spaceInfo: spaceInfo?.baseConfig
+    });
+  }
+  
+  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
+  const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
+  // 가구 바닥에서 약간 아래에 위치
+  const lightY = furnitureBottomY - 0.1;  // 가구 바닥에서 10cm 아래로 수정
+  
+  // 간접조명 Y축 크기 (depth) - 띄워서 배치할 때는 작게
+  const lightDepth = isFloating ? baseFurniture.depth * 0.8 : baseFurniture.depth * 1.5;  // 띄워서 배치 시 0.8배로 더 축소
   
   
   
@@ -152,7 +184,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <DualType1
         moduleData={moduleData}
         color={color}
@@ -188,7 +227,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <DualType2
         moduleData={moduleData}
         color={color}
@@ -224,7 +270,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <SingleType4
         moduleData={moduleData}
         color={color}
@@ -252,7 +305,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <SingleType1
         moduleData={moduleData}
         color={color}
@@ -281,7 +341,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <SingleType2
         moduleData={moduleData}
         color={color}
@@ -320,7 +387,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <DualType5
         moduleData={moduleData}
         color={color}
@@ -367,7 +441,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <DualType6
         moduleData={moduleData}
         color={color}
@@ -404,7 +485,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <UpperCabinet
         moduleData={moduleData}
         color={color}
@@ -433,7 +521,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
-        {/* IndirectLight는 마지막에 한 번만 렌더링 */}
+        {showIndirectLight && (
+          <IndirectLight
+            width={baseFurniture.innerWidth}
+            depth={lightDepth}
+            intensity={indirectLightIntensity || 0.8}
+            position={[0, lightY, 0]}
+          />
+        )}
         <LowerCabinet
         moduleData={moduleData}
         color={color}
@@ -461,6 +556,16 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // 나머지 케이스들을 공통 로직으로 처리
   return (
     <>
+      {/* 띄워서 배치 시 간접조명 효과 (3D 모드에서만) */}
+      {showIndirectLight && (
+        <IndirectLight
+          width={baseFurniture.innerWidth}
+          depth={lightDepth}
+          intensity={indirectLightIntensity || 0.8}
+          position={[0, lightY, 0]}
+        />
+      )}
+      
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <BaseFurnitureShell 
@@ -521,8 +626,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         }
         return null;
       })()}
-      
-      {/* 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리 */}
     </>
   );
 };

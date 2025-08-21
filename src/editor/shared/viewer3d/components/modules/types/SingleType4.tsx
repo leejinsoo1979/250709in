@@ -62,7 +62,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
 
   return (
     <>

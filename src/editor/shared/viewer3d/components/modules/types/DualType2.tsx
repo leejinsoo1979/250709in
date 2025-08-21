@@ -5,7 +5,6 @@ import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } 
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -70,7 +69,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
 
   return (
     <>

@@ -542,18 +542,25 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       if (isUpperCabinet) {
         // 상부장은 내경 공간 상단에 배치
-        const internalHeightMm = internalSpace.height;
         const furnitureHeightMm = moduleData.dimensions.height;
         
-        // 상부장 Y 위치: 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
-        calculatedY = furnitureStartY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+        // 상부장은 항상 천장에 붙어있어야 함
+        // 내경 높이를 사용하여 계산
+        const internalHeightMm = internalSpace.height;
+        
+        // 바닥재 높이만 고려 (띄움 높이나 받침대 높이는 제외)
+        const floorFinishHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+        const startY = mmToThreeUnits(floorFinishHeight);
+        
+        // 상부장 Y 위치: 바닥재 + 내경높이 - 가구높이/2
+        calculatedY = startY + mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
         
         console.log('🔝 드래그 중 상부장 Y 위치 계산:', {
           moduleId: moduleData.id,
           currentModuleId: currentModule.moduleId,
           category: moduleData.category,
           isUpperCabinet,
-          furnitureStartY,
+          floorFinishHeight,
           internalHeightMm,
           furnitureHeightMm,
           calculatedY,

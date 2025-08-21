@@ -329,6 +329,63 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   //   }
   // }, [viewMode]); // regenerateCanvas 의존성 제거로 무한 루프 방지
 
+  // 2D 모드에서 휠 버튼(가운데 마우스 버튼) 클릭 시 커서 변경
+  useEffect(() => {
+    if (!containerRef.current || viewMode !== '2D') return;
+
+    const container = containerRef.current;
+    
+    // 휠 버튼 이벤트 처리
+    const handleMouseDown = (e: MouseEvent) => {
+      // 가운데 버튼(휠 버튼) = 1
+      if (e.button === 1) {
+        e.preventDefault();
+        // Canvas 요소 찾기
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          canvas.style.cursor = 'grab';
+          console.log('🖱️ 2D 모드: 휠 버튼 누름 - grab 커서');
+        }
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // buttons === 4는 가운데 버튼이 눌린 상태
+      if (e.buttons === 4) {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          canvas.style.cursor = 'grabbing';
+        }
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      // 가운데 버튼 해제
+      if (e.button === 1) {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          canvas.style.cursor = 'auto';
+          console.log('🖱️ 2D 모드: 휠 버튼 해제 - 기본 커서');
+        }
+      }
+    };
+
+    // 이벤트 리스너 등록
+    container.addEventListener('mousedown', handleMouseDown, true);
+    container.addEventListener('mousemove', handleMouseMove, true);
+    container.addEventListener('mouseup', handleMouseUp, true);
+    
+    // 윈도우 레벨에서도 mouseup 처리 (컨테이너 밖에서 버튼 뗄 경우)
+    window.addEventListener('mouseup', handleMouseUp, true);
+
+    return () => {
+      container.removeEventListener('mousedown', handleMouseDown, true);
+      container.removeEventListener('mousemove', handleMouseMove, true);
+      container.removeEventListener('mouseup', handleMouseUp, true);
+      window.removeEventListener('mouseup', handleMouseUp, true);
+    };
+  }, [viewMode]);
+
   // 2D 모드에서 트랙패드 줌 속도 조절
   useEffect(() => {
     if (!containerRef.current || viewMode !== '2D') return;

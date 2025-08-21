@@ -10,7 +10,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
-import { calculateFrameThickness, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
+import { calculateFrameThickness, END_PANEL_THICKNESS, calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
 interface CleanCAD2DProps {
@@ -1277,7 +1277,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
           
           const topFrameHeight = frameSize.top; // 상부 프레임 높이
-          const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
+          const bottomFrameHeight = calculateBaseFrameHeight(spaceInfo); // 하부 프레임 높이 (바닥마감재 반영)
           const floorFinishHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 10) : 0; // 바닥 마감재 높이
           const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight - floorFinishHeight; // 캐비넷 배치 영역 (띄움 높이와 바닥 마감재 제외)
           
@@ -1354,8 +1354,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               )}
               
-              {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있고 탑뷰가 아닌 경우에만 표시 */}
-              {floorFinishHeight > 0 && view2DDirection !== 'top' && (
+              {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있고 탑뷰가 아니며 띄워서 배치가 아닌 경우에만 표시 */}
+              {floorFinishHeight > 0 && view2DDirection !== 'top' && !isFloating && (
                 <group>
                   <Line
                     points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, floorFinishTopY, 0.002]]}
@@ -1480,8 +1480,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor}
                 lineWidth={0.5}
               />
-              {/* 바닥 마감재 상단 연장선 - 바닥 마감재가 있는 경우에만 표시 */}
-              {floorFinishHeight > 0 && (
+              {/* 바닥 마감재 상단 연장선 - 바닥 마감재가 있고 띄워서 배치가 아닌 경우에만 표시 */}
+              {floorFinishHeight > 0 && !isFloating && (
               <Line
                 points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, floorFinishTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), floorFinishTopY, 0.001]]}
                 color={dimensionColor}
@@ -2011,8 +2011,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(80); // 우측 치수선 위치 (간격 조정)
+            const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'; // 띄워서 배치 확인
             const topFrameHeight = frameSize.top; // 상부 프레임 높이
-            const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
+            const bottomFrameHeight = calculateBaseFrameHeight(spaceInfo); // 하부 프레임 높이 (받침대가 있는 경우만, 바닥마감재 반영)
             const floorFinishHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 10) : 0; // 바닥 마감재 높이
             const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight - floorFinishHeight; // 캐비넷 배치 영역 (바닥 마감재 높이 제외)
             
@@ -2041,8 +2042,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             return (
               <>
-                {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있는 경우에만 표시 */}
-                {floorFinishHeight > 0 && (
+                {/* 1. 바닥 마감재 높이 - 바닥 마감재가 있고 띄워서 배치가 아닌 경우에만 표시 */}
+                {floorFinishHeight > 0 && !isFloating && (
                 <group>
                   <Line
                     points={[[0, bottomY, rightDimensionZ], [0, floorFinishTopY, rightDimensionZ]]}
@@ -2728,7 +2729,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const leftDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120);
             const topFrameHeight = frameSize.top;
-            const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+            const bottomFrameHeight = calculateBaseFrameHeight(spaceInfo); // 바닥마감재 반영된 받침대 높이
             const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight;
             
             const bottomY = 0;
@@ -2949,7 +2950,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     // 공간은 중앙에서 -width/2 ~ +width/2, -depth/2 ~ +depth/2로 배치됨
     const spaceXOffset = -spaceWidth / 2;
     const spaceZOffset = -spaceDepth / 2;
-    const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+    const baseFrameHeight = calculateBaseFrameHeight(spaceInfo); // 바닥마감재 반영된 받침대 높이
     const baseFrameThickness = mmToThreeUnits(18); // 하부 프레임 두께
     const baseFrameY = 0; // 바닥 기준
     const baseFrameZ = spaceZOffset + spaceDepth/2 - mmToThreeUnits(20); // 3D와 동일하게 앞쪽에서 20mm 뒤로

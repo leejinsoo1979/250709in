@@ -79,30 +79,31 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
   
   // 받침대 설정에 따른 가구 시작 높이 계산
+  // 바닥마감재는 받침대 높이에 영향을 주지만, 가구 위치는 변하지 않음
   let furnitureStartY: number;
   
   if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-    // 받침대 있음: 바닥재 + 받침대 높이
-    furnitureStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+    // 받침대 있음: 받침대의 원래 높이 사용 (바닥마감재 높이는 포함하지 않음)
+    // 가구는 항상 받침대 위에 위치
+    furnitureStartY = mmToThreeUnits(baseFrameHeightMm);
   } else if (spaceInfo.baseConfig.type === 'stand') {
     // 받침대 없음
     if (spaceInfo.baseConfig.placementType === 'float') {
-      // 띄워서 배치: 바닥재 + 띄움 높이
+      // 띄워서 배치: 띄움 높이만 사용
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-      furnitureStartY = mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
+      furnitureStartY = mmToThreeUnits(floatHeightMm);
       console.log('🔥 띄워서 배치 Y 위치 계산:', {
         placementType: spaceInfo.baseConfig.placementType,
         floatHeightMm,
-        floorFinishHeightMm,
         furnitureStartY
       });
     } else {
-      // 바닥에 배치: 바닥재만
-      furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
+      // 바닥에 배치: 0
+      furnitureStartY = 0;
     }
   } else {
-    // 기본값: 바닥재만
-    furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
+    // 기본값: 0
+    furnitureStartY = 0;
   }
 
   // 커스텀 훅들 사용 - 조건부 호출 제거
@@ -148,6 +149,14 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       {/* 상하부장 사이의 백패널 렌더링 */}
       {spaceInfo && (
         <BackPanelBetweenCabinets 
+          placedModules={placedModules}
+          spaceInfo={spaceInfo}
+        />
+      )}
+      
+      {/* 간접조명 - 상부장과 띄워서 배치 모두 통합 렌더링 */}
+      {viewMode === '3D' && spaceInfo && (
+        <UpperCabinetIndirectLight 
           placedModules={placedModules}
           spaceInfo={spaceInfo}
         />

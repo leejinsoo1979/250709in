@@ -1108,6 +1108,17 @@ export const generateShelvingModules = (
 ): ModuleData[] => {
   let { height: maxHeight } = internalSpace;
   
+  console.log('🔍 generateShelvingModules - 내부 공간 높이:', {
+    internalSpaceHeight: internalSpace.height,
+    maxHeight,
+    spaceInfo: {
+      height: spaceInfo?.height,
+      baseConfig: spaceInfo?.baseConfig,
+      hasFloorFinish: spaceInfo?.hasFloorFinish,
+      floorFinishHeight: spaceInfo?.floorFinish?.height
+    }
+  });
+  
   // 단내림 구간의 경우 internalSpace.height가 이미 조정되어 있음
   // (SlotDropZonesSimple에서 처리됨)
   
@@ -1267,6 +1278,8 @@ export const generateShelvingModules = (
   });
   
   // 갤러리 표시용으로는 평균 너비의 가구만 생성 (중복 방지)
+  // 가구 높이는 internalSpace.height 사용 (이미 위에서 maxHeight 선언됨)
+  
   // === 싱글 가구 생성 ===
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));

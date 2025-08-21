@@ -8,6 +8,7 @@ import { getModuleById } from '@/data/modules';
 import { useTheme } from '@/contexts/ThemeContext';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -65,6 +66,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   
   // 바닥 마감재 높이
   const floorFinishHeight = spaceInfo.hasFloorFinish ? mmToThreeUnits(spaceInfo.floorFinish?.height || 10) : 0;
+  
+  // 받침대 실제 높이 계산 (바닥마감재 반영)
+  const actualBaseFrameHeight = calculateBaseFrameHeight(spaceInfo);
+  
+  // 디버그 로그 - 더 상세하게
+  console.log('🎨 CADDimensions2D - 받침대 높이 상세 분석:', {
+    '원래 받침대 높이': spaceInfo.baseConfig?.height,
+    '바닥마감재 여부': spaceInfo.hasFloorFinish,
+    '바닥마감재 두께': spaceInfo.floorFinish?.height,
+    '계산된 받침대 높이': actualBaseFrameHeight,
+    '받침대 타입': spaceInfo.baseConfig?.type,
+    '전체 spaceInfo': spaceInfo,
+    '계산식': spaceInfo.hasFloorFinish && spaceInfo.floorFinish 
+      ? `${spaceInfo.baseConfig?.height} - ${spaceInfo.floorFinish.height} = ${actualBaseFrameHeight}`
+      : '바닥마감재 없음'
+  });
   
   // 띄워서 배치일 때 프레임 하단 위치 계산
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
@@ -740,13 +757,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       )}
       
       {/* 받침대 높이 치수 - 받침대가 있을 때만 */}
-      {spaceInfo.baseConfig?.type === 'floor' && spaceInfo.baseConfig?.height && (
+      {spaceInfo.baseConfig?.type === 'floor' && actualBaseFrameHeight > 0 && (
         <group>
           {/* 받침대 높이 치수선 */}
           <Line
             points={[
               [rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01],
-              [rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01]
+              [rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight), 0.01]
             ]}
             color={dimensionColors.primary}
             lineWidth={2}
@@ -765,8 +782,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 화살표 (받침대 상단) */}
           <Line
             points={createArrow(
-              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01),
-              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(spaceInfo.baseConfig.height) - 0.03, 0.01)
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight), 0.01),
+              new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight) - 0.03, 0.01)
             )}
             color={dimensionColors.primary}
             lineWidth={2}
@@ -774,7 +791,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           
           {/* 받침대 높이 텍스트 */}
           <Html
-            position={[rightDimensionOffsetX + mmToThreeUnits(180), mmToThreeUnits(spaceInfo.baseConfig.height) / 2, 0.01]}
+            position={[rightDimensionOffsetX + mmToThreeUnits(180), mmToThreeUnits(actualBaseFrameHeight) / 2, 0.01]}
             center
             transform={false}
             occlude={false}
@@ -796,7 +813,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 transform: 'rotate(90deg)'
               }}
             >
-              받침대 {spaceInfo.baseConfig.height}mm
+              받침대 {actualBaseFrameHeight}mm
             </div>
           </Html>
           
@@ -814,8 +831,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 연장선 (받침대 상단) */}
           <Line
             points={[
-              [spaceWidth, mmToThreeUnits(spaceInfo.baseConfig.height), 0.01],
-              [rightDimensionOffsetX + mmToThreeUnits(120), mmToThreeUnits(spaceInfo.baseConfig.height), 0.01]
+              [spaceWidth, mmToThreeUnits(actualBaseFrameHeight), 0.01],
+              [rightDimensionOffsetX + mmToThreeUnits(120), mmToThreeUnits(actualBaseFrameHeight), 0.01]
             ]}
             color={dimensionColors.primary}
             lineWidth={1}

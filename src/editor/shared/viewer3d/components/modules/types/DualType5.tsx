@@ -6,7 +6,6 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
@@ -72,7 +71,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   
   // 간접조명 표시 조건 (3D 모드에서만)
   const is2DMode = viewMode === '2D' || viewMode !== '3D';
-  const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
   
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)

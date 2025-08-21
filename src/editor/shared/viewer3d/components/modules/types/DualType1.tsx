@@ -2,7 +2,6 @@ import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 /**
@@ -50,7 +49,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
   
   console.log('🔥 DualType1 간접조명 체크:', {
     moduleId: moduleData.id,

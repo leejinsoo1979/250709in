@@ -4,7 +4,6 @@ import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 
@@ -68,7 +67,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
 
   return (
     <>

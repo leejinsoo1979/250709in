@@ -193,11 +193,11 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
   const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 선
-  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
-  // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
-  const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
-  const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
+  // 바닥과 천장 높이 (Three.js 단위) - internalSpace.startY가 이미 띄움 높이를 포함
+  const floorY = mmToThreeUnits(internalSpace.startY);
+  // 천장은 전체 높이에서 상단 프레임을 뺀 위치 (띄워서 배치와 무관)
+  const ceilingY = mmToThreeUnits(spaceInfo.height - topFrameHeight);
   
   // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상부프레임 높이
   // 이것이 상부프레임의 하단 위치입니다

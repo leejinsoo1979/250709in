@@ -5,7 +5,6 @@ import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../share
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 
 // 독립적인 엣지 표시를 위한 박스 컴포넌트
@@ -154,7 +153,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
   const { view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore();
   const { theme } = useTheme();
 

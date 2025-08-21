@@ -46,6 +46,17 @@
   font-weight: 600;
 }
 
+/* 비활성화 메시지 */
+.disabledMessage {
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  font-style: italic;
+  padding: 8px;
+  background-color: var(--theme-background-secondary);
+  border-radius: 4px;
+  text-align: center;
+}
+
 .inputLabel {
   font-size: 11px;
   color: var(--theme-text-secondary);

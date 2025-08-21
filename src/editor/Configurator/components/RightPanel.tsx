@@ -1048,25 +1048,31 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             </FormControl>
 
-            {/* 바닥 마감재 */}
-            <FormControl
-              label={t('material.floorFinish')}
-              expanded={expandedSections.has('floor')}
-              onToggle={() => toggleSection('floor')}
-            >
-              {console.log('🚨 Floor Finish Render:', {
-                currentLanguage,
-                floorOptions,
-                translatedEnabled: t('common.enabled'),
-                translatedNone: t('common.none')
-              })}
-              <ToggleGroup
-                key={`floor-${currentLanguage}`}
-                options={floorOptions}
-                selected={hasFloorFinish ? 'yes' : 'no'}
-                onChange={(value) => onFloorFinishToggle()}
-              />
-            </FormControl>
+            {/* 바닥 마감재 - 띄워서 배치일 때는 숨김 */}
+            {(() => {
+              const isFloat = spaceInfo.baseConfig?.placementType === 'float' && (spaceInfo.baseConfig?.floatHeight || 0) > 0;
+              console.log('🔴🔴🔴 바닥마감재 메뉴 조건:', {
+                baseConfig: spaceInfo.baseConfig,
+                placementType: spaceInfo.baseConfig?.placementType,
+                floatHeight: spaceInfo.baseConfig?.floatHeight,
+                isFloat,
+                shouldShow: !isFloat
+              });
+              return !isFloat;
+            })() && (
+              <FormControl
+                label={t('material.floorFinish')}
+                expanded={expandedSections.has('floor')}
+                onToggle={() => toggleSection('floor')}
+              >
+                <ToggleGroup
+                  key={`floor-${currentLanguage}`}
+                  options={floorOptions}
+                  selected={hasFloorFinish ? 'yes' : 'no'}
+                  onChange={(value) => onFloorFinishToggle()}
+                />
+              </FormControl>
+            )}
 
             {/* 프레임 속성 */}
             <FormControl

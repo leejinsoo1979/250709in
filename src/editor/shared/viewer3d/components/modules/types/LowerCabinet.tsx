@@ -5,7 +5,6 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
-import IndirectLight from '../IndirectLight';
 import DoorModule from '../DoorModule';
 import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
@@ -55,7 +54,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   
   // 2D 모드 체크 - 2D 모드면 간접조명 안 보이게
   const is2DMode = viewMode === '2D' || viewMode !== '3D';
-  const showIndirectLight = !is2DMode && !!(isFloating && floatHeight > 0 && !isDragging && indirectLightEnabled);
+  const showIndirectLight = false;
   
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = -baseFurniture.height/2;
