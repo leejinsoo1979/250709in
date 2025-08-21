@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
 type MaterialTab = 'interior' | 'door';
@@ -42,6 +43,7 @@ const materialSwatches = [
 ];
 
 const MaterialPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [materialTab, setMaterialTab] = useState<MaterialTab>('interior');
   const [selectedMaterial, setSelectedMaterial] = useState("Light Oak");
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
@@ -448,7 +450,7 @@ const MaterialPanel: React.FC = () => {
             }
           }}
         >
-          <span className={styles.tabLabel}>내부</span>
+          <span className={styles.tabLabel}>{t('material.interior')}</span>
         </button>
         <button
           className={cn(styles.tab, materialTab === 'door' && styles.activeTab)}
@@ -460,7 +462,7 @@ const MaterialPanel: React.FC = () => {
             }
           }}
         >
-          <span className={styles.tabLabel}>도어</span>
+          <span className={styles.tabLabel}>{t('material.door')}</span>
         </button>
       </div>
 
@@ -615,7 +617,7 @@ const MaterialPanel: React.FC = () => {
           
           {/* 색상 지정하기 섹션 */}
           <div className={styles.colorSection}>
-            <div className={styles.colorSectionTitle}>색상 지정하기</div>
+            <div className={styles.colorSectionTitle}>{t('material.colorPicker')}</div>
             
             {/* 색상 휠 */}
             <div 
@@ -662,7 +664,7 @@ const MaterialPanel: React.FC = () => {
             {/* 밝기 슬라이더 */}
             <div className={styles.opacitySection}>
               <div className={styles.opacityHeader}>
-                <span className={styles.opacityLabel}>밝기 조정</span>
+                <span className={styles.opacityLabel}>{t('material.brightnessAdjust')}</span>
                 <span className={styles.opacityValue}>{colorOpacity}%</span>
               </div>
               <div className={styles.opacitySliderContainer}>
@@ -709,8 +711,8 @@ const MaterialPanel: React.FC = () => {
             {/* 저장된 색상 */}
             <div className={styles.savedColorsSection}>
               <div className={styles.savedColorsHeader}>
-                <span className={styles.savedColorsLabel}>저장된 색상</span>
-                <span className={styles.savedColorsHint}>+ 버튼으로 색상 추가</span>
+                <span className={styles.savedColorsLabel}>{t('material.savedColors')}</span>
+                <span className={styles.savedColorsHint}>{t('material.addColorHint')}</span>
               </div>
               <div className={styles.savedColorsGrid}>
                 {savedColors.map((color) => (

@@ -48,7 +48,7 @@ export default function SheetPreview() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3>시트 미리보기</h3>
+        <h3>Sheet Preview</h3>
         <div className={styles.tabs}>
           {usedSheets.map((s, idx) => (
             <button
@@ -59,7 +59,7 @@ export default function SheetPreview() {
                 setActiveTab(tabIndex);
               }}
             >
-              시트 {idx + 1}
+              Sheet {idx + 1}
             </button>
           ))}
         </div>

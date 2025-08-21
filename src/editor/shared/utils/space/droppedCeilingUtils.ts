@@ -1,4 +1,4 @@
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { mmToThreeUnits, threeUnitsToMm } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceCalculator } from '../indexing/SpaceCalculator';
@@ -12,7 +12,7 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
   
   const { position } = spaceInfo.droppedCeiling;
   // 기본값 처리
-  const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+  const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
   
   // 전체 공간 기준 시작점
@@ -97,7 +97,7 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
   
   const { position } = spaceInfo.droppedCeiling;
   // 기본값 처리
-  const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+  const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
   const normalWidth = spaceInfo.width - droppedWidth;
   
   // 위치에 따른 시작점 계산

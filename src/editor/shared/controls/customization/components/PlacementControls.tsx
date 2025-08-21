@@ -1,6 +1,7 @@
 import React from 'react';
 import { BaseConfig } from '@/store/core/spaceConfigStore';
 import { useUIStore, HighlightedFrame } from '@/store/uiStore';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from '../../styles/common.module.css';
 
 interface PlacementControlsProps {
@@ -30,6 +31,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
   onFloatKeyDown,
   disabled = false
 }) => {
+  const { t } = useTranslation();
   const { setHighlightedFrame } = useUIStore();
   const isFloor = baseConfig?.type === 'floor' || !baseConfig;
   const isStand = baseConfig?.type === 'stand';
@@ -58,7 +60,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 받침대 있음 - 높이 설정 */}
       {isFloor && (
         <div className={styles.section}>
-          <span className={styles.label}>받침대 높이</span>
+          <span className={styles.label}>{t('frame.baseHeight')}</span>
           <div className={styles.inputWrapper}>
             <div className={styles.inputWithUnit}>
               <input
@@ -90,7 +92,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
       {/* 띄워서 배치 - 띄움 높이 설정 */}
       {isStand && (
         <div className={styles.section}>
-          <span className={styles.label}>띄움 높이</span>
+          <span className={styles.label}>{t('frame.floatHeight')}</span>
           <div className={styles.inputWrapper}>
             <div className={styles.inputWithUnit}>
               <input

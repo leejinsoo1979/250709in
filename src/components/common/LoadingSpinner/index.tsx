@@ -1,19 +1,31 @@
 import React from 'react';
 import styles from './style.module.css';
+import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface LoadingSpinnerProps {
   message?: string;
   size?: 'small' | 'medium' | 'large';
   type?: 'spinner' | 'dots';
+  fullscreen?: boolean;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  message = '로딩 중...', 
+  message, 
   size = 'medium',
-  type = 'spinner'
+  type = 'spinner',
+  fullscreen = false
 }) => {
+  const { t } = useTranslation();
+  const { theme } = useTheme();
+  const displayMessage = message || t('common.loading');
+  
+  const containerClass = fullscreen 
+    ? `${styles.container} ${styles.fullscreen} ${styles.gradientBg}` 
+    : styles.container;
+  
   return (
-    <div className={styles.container}>
+    <div className={containerClass} data-theme-color={theme.color}>
       {type === 'spinner' ? (
         <div className={`${styles.spinner} ${styles[size]}`}>
           <div className={styles.spinnerRing}></div>
@@ -25,8 +37,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           <div className={styles.dot}></div>
         </div>
       )}
-      {message && (
-        <p className={styles.message}>{message}</p>
+      {displayMessage && (
+        <p className={styles.message}>{displayMessage}</p>
       )}
     </div>
   );

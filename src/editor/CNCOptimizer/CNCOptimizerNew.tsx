@@ -317,7 +317,7 @@ const CNCOptimizerNew: React.FC = () => {
                   <ChevronLeft />
                 </button>
                 <span>
-                  시트 {currentSheetIndex + 1} / {optimizationResults.length}
+                  Sheet {currentSheetIndex + 1} / {optimizationResults.length}
                 </span>
                 <button 
                   onClick={() => setCurrentSheetIndex(Math.min(optimizationResults.length - 1, currentSheetIndex + 1))}
@@ -353,7 +353,7 @@ const CNCOptimizerNew: React.FC = () => {
             <h3>전체 통계</h3>
             <div className={styles.stats}>
               <div className={styles.statItem}>
-                <span>사용 시트</span>
+                <span>Used Sheets</span>
                 <strong>{totalStats.sheetCount}장</strong>
               </div>
               <div className={styles.statItem}>
@@ -373,7 +373,7 @@ const CNCOptimizerNew: React.FC = () => {
 
           {/* Sheet List */}
           <div className={styles.section}>
-            <h3>시트 목록</h3>
+            <h3>Sheet List</h3>
             <div className={styles.sheetList}>
               {optimizationResults.map((sheet, index) => (
                 <div 
@@ -381,8 +381,8 @@ const CNCOptimizerNew: React.FC = () => {
                   className={`${styles.sheetItem} ${index === currentSheetIndex ? styles.active : ''}`}
                   onClick={() => setCurrentSheetIndex(index)}
                 >
-                  <span>시트 {index + 1}</span>
-                  <span>{sheet.panels.length}개 패널</span>
+                  <span>Sheet {index + 1}</span>
+                  <span>{sheet.panels.length} panels</span>
                   <span>{sheet.efficiency.toFixed(1)}%</span>
                 </div>
               ))}

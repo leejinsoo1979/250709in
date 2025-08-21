@@ -44,14 +44,19 @@ const Ctx = createContext<Store | null>(null);
 export function CNCProvider({ children }: { children: React.ReactNode }){
   // Load from localStorage on mount
   const [panels, setPanelsState] = useState<Panel[]>(() => {
+    // 컨피규레이터에서 온 경우 localStorage의 패널을 사용하지 않음
+    // 사용자가 직접 추가한 패널만 유지
     const saved = localStorage.getItem('cnc_panels');
-    if (saved) {
+    const userModified = localStorage.getItem('cnc_user_modified') === 'true';
+    
+    if (saved && userModified) {
       const parsed = JSON.parse(saved);
-      // Only use saved panels if they exist and are not empty
+      // 사용자가 수정한 패널만 유지
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }
+    // 그 외의 경우 빈 배열로 시작
     return [];
   });
   const [stock, setStockState] = useState<StockSheet[]>(() => {

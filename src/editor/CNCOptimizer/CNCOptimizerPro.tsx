@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
+import { useTranslation } from '@/i18n/useTranslation';
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
@@ -34,6 +35,7 @@ function PageInner(){
   const navigate = useNavigate();
   const { basicInfo } = useProjectStore();
   const { panels: livePanels } = useLivePanelData();
+  const { t, currentLanguage } = useTranslation();
   
   const { 
     panels, setPanels, 
@@ -136,21 +138,21 @@ function PageInner(){
       return;
     }
     
-    // Clear panels if no furniture is placed and panels are from old localStorage
-    // But don't clear if user manually added panels (empty panels with width/length = 0)
-    if (livePanels.length === 0 && panels.length > 0) {
-      // Check if panels are user-added empty panels
-      const hasEmptyPanels = panels.some(p => p.width === 0 || p.length === 0 || p.label === '');
+    // Clear panels if no furniture is placed
+    // Always clear panels when there are no live panels (no furniture placed)
+    if (livePanels.length === 0) {
+      // Check if user has manually added panels
+      const hasUserAddedPanels = userHasModifiedPanels && panels.some(p => 
+        p.width > 0 && p.length > 0 && p.label !== ''
+      );
       
-      if (!hasEmptyPanels) {
-        // Only clear if there are no user-added empty panels
-        const savedPanels = localStorage.getItem('cnc_panels');
-        if (savedPanels) {
-          // Clear old panels since no furniture is currently placed
-          console.log('Clearing old panels from localStorage');
-          setPanels([]);
-          localStorage.removeItem('cnc_panels');
-        }
+      if (!hasUserAddedPanels) {
+        // Clear all panels since no furniture is placed and no user panels
+        console.log('No furniture placed, clearing all panels');
+        setPanels([]);
+        localStorage.removeItem('cnc_panels');
+        localStorage.removeItem('cnc_user_modified');
+        setUserHasModifiedPanels(false);
       }
     }
     
@@ -322,12 +324,12 @@ function PageInner(){
   const handleOptimize = useCallback(async () => {
     
     if (panels.length === 0) {
-      showToast('No panels to optimize', 'error');
+      showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
       return;
     }
 
     if (stock.length === 0) {
-      showToast('No stock sheets defined', 'error');
+      showToast(t('cnc.noStockError'), 'error', t('common.confirm'));
       return;
     }
 
@@ -592,7 +594,7 @@ function PageInner(){
             const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
             
             // Show success popup and wait for confirmation
-            await showToast(`최적화 완료! ${totalPanels}개 패널, ${allResults.length}개 시트 (평균 효율: ${avgEfficiency.toFixed(1)}%)`, 'success');
+            await showToast(t('cnc.optimizationComplete', { panels: totalPanels, sheets: allResults.length, efficiency: avgEfficiency.toFixed(1) }), 'success', t('common.confirm'));
             
             // After user clicks confirm, show the results
             setOptimizationResults(pendingResultsRef.current);
@@ -607,7 +609,7 @@ function PageInner(){
             // Clear pending results
             pendingResultsRef.current = [];
           } else {
-            await showToast('최적화 실패: 패널을 배치할 수 없습니다', 'error');
+            await showToast(t('cnc.optimizationFailed'), 'error', t('common.confirm'));
           }
         }, 300); // Show 100% for 300ms
       }, remainingTime);
@@ -616,7 +618,7 @@ function PageInner(){
       clearInterval(progressInterval);
       setShowAILoading(false);
       setAILoadingProgress(0);
-      showToast('Optimization failed', 'error');
+      showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
     } finally {
       setIsOptimizing(false);
     }
@@ -624,9 +626,9 @@ function PageInner(){
   
   // Auto-optimize effect - must be after handleOptimize definition
   useEffect(() => {
-    // Run auto-optimization when we first get both panels and stock
-    // Use ref to ensure it only runs once
-    if (!hasAutoOptimized.current && panels.length > 0 && stock.length > 0) {
+    // Only auto-optimize when we have actual furniture panels from livePanels
+    // Don't auto-optimize for empty or manually added panels
+    if (!hasAutoOptimized.current && livePanels.length > 0 && panels.length > 0 && stock.length > 0) {
       hasAutoOptimized.current = true;
       
       // Small delay to ensure UI is ready
@@ -634,7 +636,7 @@ function PageInner(){
         handleOptimize();
       }, 100);
     }
-  }, [panels, stock, handleOptimize]);
+  }, [livePanels, panels, stock, handleOptimize]);
 
   const projectName = basicInfo?.title || 'New Project';
   
@@ -644,9 +646,9 @@ function PageInner(){
     const dropdownRef = useRef<HTMLDivElement>(null);
     
     const methodLabels = {
-      'OPTIMAL_L': 'L방향 우선',
-      'OPTIMAL_W': 'W방향 우선', 
-      'OPTIMAL_CNC': 'CNC 최적화'
+      'OPTIMAL_L': t('cnc.optimalL'),
+      'OPTIMAL_W': t('cnc.optimalW'), 
+      'OPTIMAL_CNC': t('cnc.optimalCNC')
     };
 
     // 드롭다운 외부 클릭 감지
@@ -762,7 +764,7 @@ function PageInner(){
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <Logo size="small" />
-          <h1>CNC Optimizer Pro</h1>
+          <h1>{t('cnc.title')}</h1>
           <span className={styles.projectName}>{projectName}</span>
         </div>
         
@@ -775,7 +777,7 @@ function PageInner(){
             disabled={isOptimizing || panels.length === 0}
           >
             <Play size={18} />
-            <span>Calculate</span>
+            <span>{t('cnc.calculate')}</span>
           </button>
           <div className={styles.exportGroup}>
             <ExportBar optimizationResults={optimizationResults} />
@@ -791,7 +793,7 @@ function PageInner(){
             type="button"
           >
             <LogOut size={16} />
-            나가기
+            {t('cnc.exit')}
           </button>
         </div>
       </div>
@@ -812,7 +814,7 @@ function PageInner(){
               {/* Keyboard navigation hint */}
               {optimizationResults.length > 1 && (
                 <div className={styles.keyboardHint}>
-                  <span>← → 방향키로 시트 이동</span>
+                  <span>← → {t('cnc.keyboardNavigationHint')}</span>
                 </div>
               )}
               <div className={styles.mainViewer}>
@@ -864,14 +866,14 @@ function PageInner(){
           ) : (
             <div className={styles.emptyPreview}>
               <Cpu size={48} />
-              <h3>최적화 결과가 없습니다</h3>
-              <p>패널과 원자재를 설정한 후 "최적화" 버튼을 클릭하세요</p>
+              <h3>{t('cnc.noResults')}</h3>
+              <p>{t('cnc.setupHint')}</p>
               <button 
                 className={`${styles.optimizeButtonLarge} ${styles.primary}`}
                 onClick={handleOptimize}
                 disabled={isOptimizing}
               >
-                {isOptimizing ? '최적화 중...' : '패널생성'}
+                {isOptimizing ? t('cnc.optimizing') : t('cnc.generatePanels')}
               </button>
             </div>
           )}
@@ -882,7 +884,7 @@ function PageInner(){
           <div className={styles.rightSidebarContent}>
             <div className={styles.statsCard}>
               <div className={styles.statsCardTitle}>
-                <h3>전체 통계</h3>
+                <h3>{t('cnc.totalStats')}</h3>
                 <button
                   className={styles.foldButton}
                   onClick={() => setShowTotalStats(!showTotalStats)}
@@ -893,13 +895,13 @@ function PageInner(){
               {showTotalStats && (
               <div className={styles.statsDetail}>
                 <div className={styles.statRow}>
-                  <span>시트 수</span>
+                  <span>{t('cnc.sheets')}</span>
                   <div className={styles.statValue}>
                     <strong>{optimizationResults.length}</strong>
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>사용 면적</span>
+                  <span>{t('cnc.usedArea')}</span>
                   <div className={styles.statValue}>
                     <strong>{(optimizationResults.reduce((sum, r) => sum + r.usedArea, 0) / 1000000).toFixed(1)}</strong>
                     <span className={styles.statPercent}>
@@ -910,7 +912,7 @@ function PageInner(){
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>폐기 면적</span>
+                  <span>{t('cnc.wasteArea')}</span>
                   <div className={styles.statValue}>
                     <strong>{(optimizationResults.reduce((sum, r) => sum + r.wasteArea, 0) / 1000000).toFixed(1)}</strong>
                     <span className={styles.statPercent}>
@@ -921,40 +923,40 @@ function PageInner(){
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>총 패널</span>
+                  <span>{t('cnc.totalPanels')}</span>
                   <div className={styles.statValue}>
                     <strong>{optimizationResults.reduce((sum, r) => sum + r.panels.length, 0)}</strong>
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>절단 횟수</span>
+                  <span>{t('cnc.cutCount')}</span>
                   <div className={styles.statValue}>
                     <strong>{allCutSteps.length}</strong>
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>절단 길이</span>
+                  <span>{t('cnc.cutLength')}</span>
                   <div className={styles.statValue}>
                     <strong>{sawStats.total.toFixed(2)}m</strong>
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>톱날 두께</span>
+                  <span>{t('cnc.bladeThickness')}</span>
                   <div className={styles.statValue}>
                     <strong>{settings.kerf || 5}mm</strong>
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>원자재</span>
+                  <span>{t('cnc.stock')}</span>
                   <div className={styles.statValue}>
                     {stock.length > 0 ? `${stock[0].width}×${stock[0].length}` : '-'}
                   </div>
                 </div>
                 <div className={styles.statRow}>
-                  <span>최적화</span>
+                  <span>{t('cnc.optimization')}</span>
                   <div className={styles.statValue}>
-                    {settings.optimizationType === 'OPTIMAL_CNC' ? '최소폐기' : 
-                     settings.optimizationType === 'BY_LENGTH' ? '세로절단' : '가로절단'}
+                    {settings.optimizationType === 'OPTIMAL_CNC' ? t('cnc.minWaste') : 
+                     settings.optimizationType === 'BY_LENGTH' ? t('cnc.verticalCut') : t('cnc.horizontalCut')}
                   </div>
                 </div>
               </div>
@@ -964,7 +966,7 @@ function PageInner(){
             {optimizationResults[currentSheetIndex] && (
               <div className={styles.statsCard}>
                 <div className={styles.statsCardTitle}>
-                  <h3>시트 통계</h3>
+                  <h3>{t('cnc.sheetStats')}</h3>
                   <button
                     className={styles.foldButton}
                     onClick={() => setShowSheetStats(!showSheetStats)}
@@ -982,7 +984,7 @@ function PageInner(){
                   >
                     <ArrowLeft size={14} />
                   </button>
-                  <h3>시트 {currentSheetIndex + 1} / {optimizationResults.length}</h3>
+                  <h3>{t('cnc.sheet')} {currentSheetIndex + 1} / {optimizationResults.length}</h3>
                   <button 
                     className={styles.statsNavButton}
                     onClick={() => setCurrentSheetIndex(Math.min(optimizationResults.length - 1, currentSheetIndex + 1))}
@@ -1010,31 +1012,31 @@ function PageInner(){
                 </div>
                 <div className={styles.statsDetail}>
                   <div className={styles.statRow}>
-                    <span>패널 수</span>
+                    <span>{t('cnc.panelCount')}</span>
                     <div className={styles.statValue}>
                       <strong>{optimizationResults[currentSheetIndex].panels.length}</strong>
                     </div>
                   </div>
                   <div className={styles.statRow}>
-                    <span>효율</span>
+                    <span>{t('cnc.efficiency')}</span>
                     <div className={styles.statValue}>
                       <strong>{optimizationResults[currentSheetIndex].efficiency.toFixed(1)}%</strong>
                     </div>
                   </div>
                   <div className={styles.statRow}>
-                    <span>사용 면적</span>
+                    <span>{t('cnc.usedArea')}</span>
                     <div className={styles.statValue}>
                       <strong>{(optimizationResults[currentSheetIndex].usedArea / 1000000).toFixed(2)}㎡</strong>
                     </div>
                   </div>
                   <div className={styles.statRow}>
-                    <span>폐기 면적</span>
+                    <span>{t('cnc.wasteArea')}</span>
                     <div className={styles.statValue}>
                       <strong>{(optimizationResults[currentSheetIndex].wasteArea / 1000000).toFixed(2)}㎡</strong>
                     </div>
                   </div>
                   <div className={styles.statRow}>
-                    <span>절단 횟수</span>
+                    <span>{t('cnc.cutCount')}</span>
                     <div className={styles.statValue}>
                       <strong>{
                         allCutSteps.filter(step => step.sheetNumber === currentSheetIndex + 1).length
@@ -1042,7 +1044,7 @@ function PageInner(){
                     </div>
                   </div>
                   <div className={styles.statRow}>
-                    <span>절단 길이</span>
+                    <span>{t('cnc.cutLength')}</span>
                     <div className={styles.statValue}>
                       <strong>{sawStats.bySheet[String(currentSheetIndex + 1)] 
                         ? sawStats.bySheet[String(currentSheetIndex + 1)].toFixed(2) + 'm'
@@ -1064,13 +1066,13 @@ function PageInner(){
                       className={`${styles.tabButton} ${!showCuttingList ? styles.active : ''}`}
                       onClick={() => setShowCuttingList(false)}
                     >
-                      시트 목록
+                      {t('cnc.sheetList')}
                     </button>
                     <button 
                       className={`${styles.tabButton} ${showCuttingList ? styles.active : ''}`}
                       onClick={() => setShowCuttingList(true)}
                     >
-                      컷팅 리스트
+                      {t('cnc.cuttingList')}
                     </button>
                   </div>
                 </div>
@@ -1234,7 +1236,7 @@ function PageInner(){
       <AILoadingModal 
         isOpen={showAILoading}
         progress={aiLoadingProgress}
-        message="AI 최적화 계산 중"
+        message={t('cnc.aiOptimizing')}
         duration={aiLoadingDuration}
       />
       

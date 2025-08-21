@@ -1,5 +1,5 @@
 import React from 'react';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import ColumnCountControls from '../customization/components/ColumnCountControls';

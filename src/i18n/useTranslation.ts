@@ -51,7 +51,7 @@ export const useTranslation = () => {
   ];
   
   return {
-    t: translate,
+    t, // translate 대신 원본 t 함수를 직접 반환
     i18n,
     ready,
     currentLanguage,

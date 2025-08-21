@@ -114,4 +114,96 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 그라데이션 백그라운드 */
+.gradientBg {
+  background: linear-gradient(135deg, 
+    var(--theme-background) 0%, 
+    var(--theme-surface) 25%, 
+    var(--theme-background) 50%, 
+    var(--theme-surface) 75%, 
+    var(--theme-background) 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* 테마 컬러별 그라데이션 */
+.gradientBg[data-theme-color="blue"] {
+  background: linear-gradient(135deg, 
+    #1e3a8a 0%, 
+    #3b82f6 25%, 
+    #1e3a8a 50%, 
+    #60a5fa 75%, 
+    #1e3a8a 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.gradientBg[data-theme-color="purple"] {
+  background: linear-gradient(135deg, 
+    #6b21a8 0%, 
+    #8b5cf6 25%, 
+    #6b21a8 50%, 
+    #a78bfa 75%, 
+    #6b21a8 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.gradientBg[data-theme-color="green"] {
+  background: linear-gradient(135deg, 
+    #14532d 0%, 
+    #10b981 25%, 
+    #14532d 50%, 
+    #34d399 75%, 
+    #14532d 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.gradientBg[data-theme-color="red"] {
+  background: linear-gradient(135deg, 
+    #7f1d1d 0%, 
+    #ef4444 25%, 
+    #7f1d1d 50%, 
+    #f87171 75%, 
+    #7f1d1d 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.gradientBg[data-theme-color="indigo"] {
+  background: linear-gradient(135deg, 
+    #312e81 0%, 
+    #6366f1 25%, 
+    #312e81 50%, 
+    #818cf8 75%, 
+    #312e81 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+.gradientBg[data-theme-color="teal"] {
+  background: linear-gradient(135deg, 
+    #134e4a 0%, 
+    #14b8a6 25%, 
+    #134e4a 50%, 
+    #2dd4bf 75%, 
+    #134e4a 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* 그라데이션 애니메이션 */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 } 

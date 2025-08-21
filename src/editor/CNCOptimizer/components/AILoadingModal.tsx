@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './AILoadingModal.module.css';
 
 interface AILoadingModalProps {
@@ -11,20 +12,24 @@ interface AILoadingModalProps {
 const AILoadingModal: React.FC<AILoadingModalProps> = ({ 
   isOpen, 
   progress = 0,
-  message = "AI 최적화 계산 중...",
+  message,
   duration = 5000
 }) => {
+  const { t } = useTranslation();
   const [dots, setDots] = useState(0);
   const [currentPhase, setCurrentPhase] = useState(0);
   
   // AI 계산 단계 메시지
   const phases = [
-    "패널 데이터 분석 중",
-    "최적 배치 알고리즘 실행",
-    "공간 효율성 계산",
-    "절단 경로 최적화",
-    "결과 검증 중"
+    t('cnc.aiPhase1'),
+    t('cnc.aiPhase2'),
+    t('cnc.aiPhase3'),
+    t('cnc.aiPhase4'),
+    t('cnc.aiPhase5')
   ];
+  
+  // Use provided message or default to translation
+  const displayMessage = message || t('cnc.aiOptimizing');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -65,7 +70,7 @@ const AILoadingModal: React.FC<AILoadingModalProps> = ({
         
         {/* 메인 메시지 */}
         <h3 className={styles.title}>
-          {message}
+          {displayMessage}
           <span className={styles.dots}>
             {'.'.repeat(dots)}
           </span>

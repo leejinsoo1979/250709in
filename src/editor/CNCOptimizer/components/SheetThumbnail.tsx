@@ -185,7 +185,7 @@ export default function SheetThumbnail({
   
   return (
     <div className={styles.thumbnailWrapper}>
-      <div className={styles.thumbnailTitle}>시트 {index + 1} - {material} ({thickness}T)</div>
+      <div className={styles.thumbnailTitle}>Sheet {index + 1} - {material} ({thickness}T)</div>
       <div
         className={`${styles.thumbnail} ${isActive ? styles.activeThumbnail : ''}`}
         onClick={onClick}

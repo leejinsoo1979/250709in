@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -250,7 +250,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (zoneToUse === 'dropped' && zoneInfo.dropped) {
         // 단내림 영역용 spaceInfo 생성 - 외경 너비 사용
-        const droppedOuterWidth = spaceInfo.droppedCeiling?.width || 900;
+        const droppedOuterWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
         const droppedSpaceInfo = {
           ...spaceInfo,
           width: droppedOuterWidth,  // 외경 너비 사용
@@ -282,7 +282,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         };
       } else {
         // 메인 영역용 spaceInfo 생성 - 외경 너비 사용
-        const normalOuterWidth = spaceInfo.width - (spaceInfo.droppedCeiling?.width || 900);
+        const normalOuterWidth = spaceInfo.width - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
         const normalSpaceInfo = {
           ...spaceInfo,
           width: normalOuterWidth,  // 외경 너비 사용
@@ -524,7 +524,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 영역별 spaceInfo 생성 (가구 크기 계산용)
       // 단내림 영역별 외경 너비 계산 (프레임 포함)
-      const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+      const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
       const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
       let zoneOuterWidth: number;
       
@@ -2211,7 +2211,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 영역별 외경 너비 계산 (프레임 포함)
-          const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+          const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
           let zoneSpaceInfo;
           
           if (effectiveZone === 'dropped') {
@@ -2457,7 +2457,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const effectiveSpaceInfo = hasDroppedCeiling && effectiveZone === 'dropped' && zoneSlotInfo
           ? {
               ...spaceInfo,
-              width: spaceInfo.droppedCeiling?.width || 900,
+              width: spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
               height: spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0),
               zone: 'dropped' as const
             }

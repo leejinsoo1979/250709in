@@ -63,6 +63,7 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
       y: number;
       z: number;
       depth: number;
+      height: number; // 조명 높이 추가
     }> = [];
     
     let currentGroup: typeof groups[0] | null = null;
@@ -77,31 +78,38 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
       
       // Y 위치 계산 (상부장 하단 또는 띄워서 배치한 모듈 하단)
       let lightY: number;
+      let lightHeight: number; // 조명의 실제 높이
       
       // 띄워서 배치 모드 확인
       const isFloatingMode = spaceInfo?.baseConfig?.placementType === 'float' && 
                             (spaceInfo?.baseConfig?.floatHeight || 0) > 0;
       
-      // 깊이 계산 - 띄워서 배치일 때는 줄임
-      let lightDepth = mmToThreeUnits(depth);
-      
       if (isFloatingMode && !(moduleData.category === 'upper')) {
         // 띄워서 배치한 경우 (상부장이 아닌 경우)
         const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-        const furnitureBottomY = mmToThreeUnits(floatHeight);
-        lightY = furnitureBottomY - 0.5; // 가구 하단에서 50cm 아래
-        lightDepth = lightDepth * 0.8; // 띄워서 배치 시 깊이를 0.8배로 더 축소
+        // 조명 높이 = 띄움 높이
+        lightHeight = mmToThreeUnits(floatHeight);
+        // 조명 Y 위치 = 띄움 높이의 중간
+        lightY = mmToThreeUnits(floatHeight / 2);
       } else {
-        // 상부장인 경우 (기존 로직)
-        const furnitureStartYMm = internalSpace.height - height;
-        const furnitureBottomY = mmToThreeUnits(furnitureStartYMm);
-        lightY = furnitureBottomY - 0.18 - 0.85; // 상부장 하단 마감재(18mm) 아래 85cm로 더 내림
+        // 상부장인 경우 - 하부장과 상부장 사이 간격 계산
+        const lowerCabinetHeight = 820; // 하부장 표준 높이 (mm)
+        const upperCabinetBottomMm = internalSpace.height - height; // 상부장 하단 위치
+        const gapBetweenCabinets = upperCabinetBottomMm - lowerCabinetHeight; // 상하부장 사이 간격
+        
+        // 조명 높이 = 상하부장 사이 간격 (시각적으로 보이도록 2배 확대)
+        lightHeight = mmToThreeUnits(gapBetweenCabinets) * 2.0;
+        // 조명 Y 위치 = 상부장 하단에 더 가깝게 (간격의 80% 위치)
+        lightY = mmToThreeUnits(lowerCabinetHeight + gapBetweenCabinets * 0.8);
       }
       
       // X 위치 계산
       const halfWidth = mmToThreeUnits(width / 2);
       const startX = cabinet.position.x - halfWidth;
       const endX = cabinet.position.x + halfWidth;
+      
+      // 가구 깊이 (Z축 방향)
+      const lightDepth = mmToThreeUnits(depth);
       
       // 첫 번째 캐비넷이거나 이전 그룹과 인접하지 않은 경우
       if (!currentGroup || Math.abs(currentGroup.endX - startX) > 0.01) {
@@ -111,7 +119,8 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
           endX,
           y: lightY,
           z: cabinet.position.z,
-          depth: lightDepth
+          depth: lightDepth,
+          height: lightHeight
         };
         groups.push(currentGroup);
       } else {
@@ -136,8 +145,8 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
         const width = baseWidth * 1.2; // 폭을 1.2배로 확장
         const centerX = (group.startX + group.endX) / 2;
         
-        // 띄워서 배치 모드일 때는 depth가 이미 축소되어 있으므로 작은 배수 사용
-        const depthMultiplier = 1.5; // 기본 1.5배로 축소 (띄워서 배치 시 더 작은 효과)
+        // 조명 높이를 그대로 사용 (띄워서 배치: 띄움 높이, 상하부장: 사이 간격)
+        const lightHeightToUse = group.height;
         
         return (
           <>
@@ -145,17 +154,17 @@ const UpperCabinetIndirectLight: React.FC<UpperCabinetIndirectLightProps> = ({
             <IndirectLight
               key={`upper-indirect-light-back-${index}`}
               width={width}
-              depth={group.depth * depthMultiplier} // Y축 방향으로 확장
+              depth={lightHeightToUse} // 조명 높이 사용 (Y축 방향)
               intensity={indirectLightIntensity || 0.8}
-              position={[centerX, group.y, group.z - group.depth / 2 - 0.1]} // 가구 뒷면에서 10cm 뒤로
+              position={[centerX, group.y, group.z - group.depth / 2 - 2.5]} // 백패널에서 25cm 뒤로
             />
             {/* 앞쪽 조명 (추가) */}
             <IndirectLight
               key={`upper-indirect-light-front-${index}`}
               width={width}
-              depth={group.depth * depthMultiplier} // Y축 방향으로 확장
+              depth={lightHeightToUse} // 조명 높이 사용 (Y축 방향)
               intensity={indirectLightIntensity || 0.8}
-              position={[centerX, group.y, group.z - group.depth / 2 + 0.2]} // 가구 뒷면에서 20cm 앞으로
+              position={[centerX, group.y, group.z + group.depth / 2 - 3.0]} // 가구 앞단에서 30cm 뒤로
             />
           </>
         );

@@ -216,19 +216,19 @@ const ModuleLibrary: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>가구 라이브러리</h3>
+      <h3 className={styles.title}>{t('material.furnitureLibrary')}</h3>
       
       <div className={styles.internalSpaceInfo}>
-        <div className={styles.internalSpaceTitle}>내경 공간 (맞춤형 가구 기준)</div>
+        <div className={styles.internalSpaceTitle}>{t('material.internalSpace')}</div>
         <div className={styles.internalSpaceDimensions}>
-          폭: {internalSpace.width}mm × 높이: {internalSpace.height}mm × 깊이: {internalSpace.depth}mm
+          {t('material.internalSpaceDimensions', { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth })}
         </div>
         <div className={styles.internalSpaceNote}>
-          * 모든 가구는 내경 높이({internalSpace.height}mm)와 깊이({internalSpace.depth}mm)에 맞춰 제작됩니다
+          {t('material.internalSpaceNote', { height: internalSpace.height, depth: internalSpace.depth })}
         </div>
         {indexing.columnCount > 1 && (
           <div className={styles.internalSpaceNote}>
-            * 컬럼 수: {indexing.columnCount}개 / 컬럼당 너비: {columnWidth}mm
+            {t('material.columnInfo', { count: indexing.columnCount, width: columnWidth })}
           </div>
         )}
       </div>
@@ -277,21 +277,21 @@ const ModuleLibrary: React.FC = () => {
         <div className={styles.tabDescription}>
           {selectedCategory === 'full' ? (
             selectedType === 'single' ? (
-              <p>키큰장 - 1개 컬럼을 차지하는 가구 (약 {columnWidth}mm 폭)</p>
+              <p>{t('material.tallSingleDesc', { width: columnWidth })}</p>
             ) : (
-              <p>키큰장 - 2개 컬럼을 차지하는 가구 (약 {columnWidth * 2}mm 폭)</p>
+              <p>{t('material.tallDualDesc', { width: columnWidth * 2 })}</p>
             )
           ) : selectedCategory === 'upper' ? (
             selectedType === 'single' ? (
-              <p>상부장 - 1개 컬럼 (약 {columnWidth}mm 폭)</p>
+              <p>{t('material.upperSingleDesc', { width: columnWidth })}</p>
             ) : (
-              <p>상부장 - 2개 컬럼 (약 {columnWidth * 2}mm 폭)</p>
+              <p>{t('material.upperDualDesc', { width: columnWidth * 2 })}</p>
             )
           ) : (
             selectedType === 'single' ? (
-              <p>하부장 - 1개 컬럼 (약 {columnWidth}mm 폭)</p>
+              <p>{t('material.lowerSingleDesc', { width: columnWidth })}</p>
             ) : (
-              <p>하부장 - 2개 컬럼 (약 {columnWidth * 2}mm 폭)</p>
+              <p>{t('material.lowerDualDesc', { width: columnWidth * 2 })}</p>
             )
           )}
         </div>
@@ -316,7 +316,7 @@ const ModuleLibrary: React.FC = () => {
             ))
           ) : (
             <div className={styles.emptyMessage}>
-              이 유형에 맞는 가구가 없습니다
+              {t('furniture.noModulesAvailable')}
             </div>
           )}
         </div>

@@ -110,12 +110,12 @@ export const useDerivedSpaceStore = create<DerivedSpaceState>((set) => ({
       set({
         internalWidth: Math.max(0, spaceInfo.width - 100), // 대략적인 값
         columnCount: 1,
-        columnWidth: Math.max(300, spaceInfo.width - 100),
+        columnWidth: Math.max(400, spaceInfo.width - 100),
         internalHeight: Math.max(0, spaceInfo.height - 200), // 대략적인 값
         internalDepth: 580,
         columnPositions: [0],
         threeUnitPositions: [0],
-        columnBoundaries: [0, Math.max(300, spaceInfo.width - 100)],
+        columnBoundaries: [0, Math.max(400, spaceInfo.width - 100)],
         dualColumnPositions: [],
         isCalculated: true,
         lastCalculatedSpaceInfo: spaceInfo,

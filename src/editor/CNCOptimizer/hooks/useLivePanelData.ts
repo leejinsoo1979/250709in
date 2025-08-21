@@ -31,6 +31,15 @@ export function useLivePanelData() {
 
     const extractPanels = () => {
       setIsLoading(true);
+      
+      // 가구가 배치되지 않은 경우 빈 배열 반환
+      if (!placedModules || placedModules.length === 0) {
+        console.log('No modules placed, returning empty panels');
+        setPanels([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const allPanels: Panel[] = [];
       
       // Internal space calculation
@@ -163,6 +172,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
 
   useEffect(() => {
+    // 가구가 배치되지 않은 경우 빈 배열 콜백
+    if (!placedModules || placedModules.length === 0) {
+      callback([]);
+      return;
+    }
+    
     // Extract panels and call callback
     const allPanels: Panel[] = [];
     

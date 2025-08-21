@@ -61,15 +61,15 @@ export class SpaceCalculator {
    * 내경 폭에 따른 최소/최대 컬럼 수 계산
    */
   static getColumnCountLimits(internalWidth: number) {
-    const MIN_COLUMN_WIDTH = 300.01; // 300mm 초과 조건
-    const MAX_COLUMN_WIDTH = 600;    // 1개 컬럼 최대 폭
+    const MIN_COLUMN_WIDTH = 400;    // 컬럼 최소 폭 400mm
+    const MAX_COLUMN_WIDTH = 600;    // 컬럼 최대 폭 600mm
     const SINGLE_MAX_WIDTH = 600;    // 싱글장 제한
     const DUAL_MAX_WIDTH = 1200;     // 듀얼장 제한
     
     // 최소 컬럼 수: 각 컬럼이 600mm를 넘지 않도록 보장
     const minColumns = Math.ceil(internalWidth / MAX_COLUMN_WIDTH);
     
-    // 최대 컬럼 수: 각 컬럼이 300mm를 초과하도록 보장
+    // 최대 컬럼 수: 각 컬럼이 400mm 이상이 되도록 보장
     const maxColumns = Math.floor(internalWidth / MIN_COLUMN_WIDTH);
     
     // 가구 타입별 제한 확인
@@ -95,7 +95,8 @@ export class SpaceCalculator {
     return {
       isValid: columnCount >= limits.minColumns && 
                columnCount <= limits.maxColumns && 
-               columnWidth > 300,
+               columnWidth >= 400 && 
+               columnWidth <= 600,
       columnWidth,
       limits
     };

@@ -72,7 +72,7 @@ export function downloadCsv(content: string, filename: string): void {
  * Show toast notification - Center popup version
  * Returns a promise that resolves when the popup is closed
  */
-export function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): Promise<void> {
+export function showToast(message: string, type: 'success' | 'error' | 'info' = 'info', confirmText: string = '확인'): Promise<void> {
   return new Promise((resolve) => {
   // Remove any existing popups
   const existingOverlay = document.querySelector('.popup-overlay');
@@ -180,7 +180,7 @@ export function showToast(message: string, type: 'success' | 'error' | 'info' = 
     " 
     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px hsl(var(--theme) / 0.4)'" 
     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px hsl(var(--theme) / 0.3)'">
-      확인
+      ${confirmText}
     </button>
   `;
   

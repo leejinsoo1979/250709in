@@ -1,8 +1,9 @@
 import React from 'react';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './DroppedCeilingControl.module.css';
 
 interface DroppedCeilingControlProps {
@@ -14,6 +15,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
   expanded = true,
   onToggle
 }) => {
+  const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, removeModule } = useFurnitureStore();
   const droppedCeiling = spaceInfo.droppedCeiling;
@@ -56,7 +58,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
         droppedCeiling: {
           enabled: false,
           position: droppedCeiling.position || 'right',
-          width: droppedCeiling.width || 900,
+          width: droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
           dropHeight: droppedCeiling.dropHeight || 200
         },
         customColumnCount: currentMainDoorCount,
@@ -65,7 +67,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
       });
     } else {
       // 활성화 - 기존 값이 있으면 유지, 없으면 기본값 사용
-      const defaultWidth = droppedCeiling?.width || 900;
+      const defaultWidth = droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
       
       // 단내림 구간의 내경폭으로 기본 도어 개수 계산
       const frameThickness = 50;
@@ -100,10 +102,12 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handleWidthChange = (value: number) => {
     if (droppedCeiling) {
+      // 최소 400mm, 최대 600mm로 제한
+      const clampedValue = Math.max(400, Math.min(600, value));
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
-          width: value
+          width: clampedValue
         }
       });
     }
@@ -125,7 +129,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
     <div className={styles.droppedCeilingControl}>
       <div className={styles.header} onClick={onToggle}>
         <div className={styles.indicator}></div>
-        <h3 className={styles.label}>단내림 설정</h3>
+        <h3 className={styles.label}>{t('space.droppedCeiling')}</h3>
         {onToggle && (
           <svg 
             width="18" 
@@ -151,7 +155,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
                 className={styles.checkbox}
               />
               <span className={styles.toggleSwitch}></span>
-              <span className={styles.toggleText}>단내림 활성화</span>
+              <span className={styles.toggleText}>{t('space.droppedCeilingEnabled')}</span>
             </label>
           </div>
 
@@ -159,31 +163,31 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
             <>
               {/* 위치 선택 */}
               <div className={styles.positionGroup}>
-                <div className={styles.inputLabel}>위치</div>
+                <div className={styles.inputLabel}>{t('placement.droppedCeilingPosition')}</div>
                 <div className={styles.toggleGroup}>
                   <button
                     className={`${styles.toggleButton} ${droppedCeiling.position === 'left' ? styles.active : ''}`}
                     onClick={() => handlePositionChange('left')}
                   >
-                    왼쪽
+                    {t('furniture.left')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${droppedCeiling.position === 'right' ? styles.active : ''}`}
                     onClick={() => handlePositionChange('right')}
                   >
-                    오른쪽
+                    {t('furniture.right')}
                   </button>
                 </div>
               </div>
 
               {/* 폭 설정 */}
               <div className={styles.numberInput}>
-                <div className={styles.inputLabel}>폭</div>
+                <div className={styles.inputLabel}>{t('space.width')}</div>
                 <div className={styles.inputGroup}>
                   <button 
                     className={styles.inputButton}
                     onClick={() => handleWidthChange(droppedCeiling.width - 50)}
-                    disabled={droppedCeiling.width <= 300}
+                    disabled={droppedCeiling.width <= 400}
                   >
                     −
                   </button>
@@ -192,8 +196,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
                       type="number"
                       value={droppedCeiling.width}
                       onChange={(e) => handleWidthChange(Number(e.target.value))}
-                      min={300}
-                      max={2000}
+                      min={400}
+                      max={600}
                       step={50}
                       style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-surface)' }}
                     />
@@ -202,7 +206,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
                   <button 
                     className={styles.inputButton}
                     onClick={() => handleWidthChange(droppedCeiling.width + 50)}
-                    disabled={droppedCeiling.width >= 2000}
+                    disabled={droppedCeiling.width >= 600}
                   >
                     +
                   </button>
@@ -211,7 +215,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
               {/* Drop 높이 설정 */}
               <div className={styles.numberInput}>
-                <div className={styles.inputLabel}>Drop 높이</div>
+                <div className={styles.inputLabel}>{t('space.droppedCeilingHeight')}</div>
                 <div className={styles.inputGroup}>
                   <button 
                     className={styles.inputButton}
@@ -245,25 +249,25 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
               {/* 정보 표시 */}
               <div className={styles.infoPanel}>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>전체 폭:</span>
+                  <span className={styles.infoLabel}>{t('space.totalWidth')}:</span>
                   <span className={styles.infoValue}>
                     {spaceInfo.width} mm
                   </span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>일반 영역:</span>
+                  <span className={styles.infoLabel}>{t('space.mainSection')}:</span>
                   <span className={styles.infoValue}>
                     {spaceInfo.width - droppedCeiling.width} mm
                   </span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>단내림 영역:</span>
+                  <span className={styles.infoLabel}>{t('space.droppedSection')}:</span>
                   <span className={styles.infoValue}>
                     {droppedCeiling.width} mm
                   </span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>단내림 높이:</span>
+                  <span className={styles.infoLabel}>{t('space.droppedCeilingHeight')}:</span>
                   <span className={styles.infoValue}>
                     {spaceInfo.height - droppedCeiling.dropHeight} mm
                   </span>

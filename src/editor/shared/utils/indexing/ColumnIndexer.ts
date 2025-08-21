@@ -1,4 +1,4 @@
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { SpaceCalculator } from './SpaceCalculator';
 import { calculateFrameThickness, SURROUND_FRAME_THICKNESS, END_PANEL_THICKNESS } from '../../viewer3d/utils/geometry';
 
@@ -757,7 +757,7 @@ export class ColumnIndexer {
     
     // 단내림이 활성화된 경우
     const totalWidth = spaceInfo.width;
-    const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+    const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
     
     // 전체 내부 너비 (프레임 제외)

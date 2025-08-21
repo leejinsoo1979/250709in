@@ -2,10 +2,12 @@ import React, { useRef } from 'react';
 import { useCNCStore } from '../../store';
 import type { StockSheet } from '../../../../types/cutlist';
 import { Layers, Plus, Trash2, Upload } from 'lucide-react';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './SidebarLeft.module.css';
 import { showToast } from '@/utils/cutlist/csv';
 
 export default function StockTable(){
+  const { t } = useTranslation();
   const { stock, setStock, settings } = useCNCStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +47,7 @@ export default function StockTable(){
         const lines = text.split('\n').filter(line => line.trim());
         
         if (lines.length < 2) {
-          showToast('CSV 파일에 데이터가 없습니다', 'error');
+          showToast(t('cnc.csvNoData'), 'error', t('common.confirm'));
           return;
         }
 
@@ -69,10 +71,10 @@ export default function StockTable(){
 
         if (newStock.length > 0) {
           setStock([...stock, ...newStock]);
-          showToast(`${newStock.length}개의 원자재를 추가했습니다`, 'success');
+          showToast(t('cnc.stockAddSuccess', { count: newStock.length }), 'success', t('common.confirm'));
         }
       } catch (error) {
-        showToast('CSV 파일 읽기 실패', 'error');
+        showToast(t('cnc.csvReadError'), 'error', t('common.confirm'));
       }
     };
     
@@ -86,7 +88,7 @@ export default function StockTable(){
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <Layers size={16} />
-        <h3>원자재 ({stock.length})</h3>
+        <h3>{t('cnc.stock')} ({stock.length})</h3>
         <input
           ref={fileInputRef}
           type="file"
@@ -103,24 +105,24 @@ export default function StockTable(){
         </button>
         <button className={styles.addButton} onClick={addRow}>
           <Plus size={14} />
-          추가
+          {t('common.add')}
         </button>
       </div>
       
       <div className={styles.stockTableContainer}>
         {stock.length === 0 ? (
           <div className={styles.empty}>
-            원자재가 없습니다. "추가" 버튼을 클릭하여 생성하세요.
+            {t('cnc.noStockMessage')}
           </div>
         ) : (
           <table className={`${styles.table} ${styles.stockTable}`}>
             <thead>
               <tr>
-                <th style={{ width: '28%', textAlign: 'center' }}>이름</th>
-                <th style={{ width: '22%', textAlign: 'center' }}>치수 (L×W)</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>두께</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>수량</th>
-                <th style={{ width: '21%', textAlign: 'center' }}>재질</th>
+                <th style={{ width: '28%', textAlign: 'center' }}>{t('cnc.name')}</th>
+                <th style={{ width: '22%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>{t('cnc.quantity')}</th>
+                <th style={{ width: '21%', textAlign: 'center' }}>{t('cnc.material')}</th>
                 <th style={{ width: '7%', textAlign: 'center' }}></th>
               </tr>
             </thead>
@@ -132,7 +134,7 @@ export default function StockTable(){
                       value={s.label || ''} 
                       onChange={e => onChange(i, 'label', e.target.value)}
                       className={styles.input}
-                      placeholder="원자재 이름"
+                      placeholder={t('cnc.stockNamePlaceholder')}
                     />
                   </td>
                   <td>
@@ -149,7 +151,7 @@ export default function StockTable(){
                         }}
                         className={styles.inputSmall}
                         max={2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}
-                        title={`최대 ${2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}mm`}
+                        title={t('cnc.maxValue', { value: 2440 - (settings.trimTop || 0) - (settings.trimBottom || 0) })}
                       />
                       ×
                       <input 
@@ -164,7 +166,7 @@ export default function StockTable(){
                         }}
                         className={styles.inputSmall}
                         max={1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}
-                        title={`최대 ${1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}mm`}
+                        title={t('cnc.maxValue', { value: 1220 - (settings.trimLeft || 0) - (settings.trimRight || 0) })}
                       />
                     </div>
                   </td>

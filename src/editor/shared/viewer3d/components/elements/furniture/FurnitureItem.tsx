@@ -276,7 +276,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
     
     // 단내림 영역별 외경 너비 계산 (프레임 포함)
-    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+    const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
     let zoneOuterWidth: number;
     
     if (placedModule.zone === 'dropped') {

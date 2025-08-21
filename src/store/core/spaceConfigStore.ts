@@ -146,6 +146,13 @@ export const DEFAULT_MATERIAL_VALUES = {
   DOOR_COLOR: '#E0E0E0',  // 기본값을 밝은 회색으로 변경 (흰색 강제 초기화 방지)
 } as const;
 
+// 단내림 기본값 상수
+export const DEFAULT_DROPPED_CEILING_VALUES = {
+  WIDTH: 1300,  // 단내림 구간 기본 너비
+  DROP_HEIGHT: 200,  // 단내림 높이
+  POSITION: 'right' as const,  // 단내림 기본 위치
+} as const;
+
 // 공간 치수 범위 상수들 (controls에서 사용)
 export const SPACE_LIMITS = {
   WIDTH: {
@@ -211,9 +218,9 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   // 단내림 기본값 설정
   droppedCeiling: {
     enabled: false,
-    position: 'right',
-    width: 900,
-    dropHeight: 200
+    position: DEFAULT_DROPPED_CEILING_VALUES.POSITION,
+    width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+    dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
   },
   // 도어 개수 기본값 설정
   mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
@@ -243,8 +250,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
         processedInfo.droppedCeiling = {
           ...processedInfo.droppedCeiling,
-          width: processedInfo.droppedCeiling.width || 900,
-          dropHeight: processedInfo.droppedCeiling.dropHeight || 200
+          width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+          dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
         };
       }
       

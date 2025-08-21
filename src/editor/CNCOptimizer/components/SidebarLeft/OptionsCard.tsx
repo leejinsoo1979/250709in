@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCNCStore } from '../../store';
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './SidebarLeft.module.css';
 
 interface OptionsCardProps {
@@ -8,6 +9,7 @@ interface OptionsCardProps {
 }
 
 export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {}){
+  const { t } = useTranslation();
   const { settings, setSettings } = useCNCStore();
   const [showGapSettings, setShowGapSettings] = useState(false);
 
@@ -15,13 +17,13 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <Settings size={16} />
-        <h3>설정</h3>
+        <h3>{t('settings.title')}</h3>
       </div>
       
       <div className={styles.options}>
         <div className={styles.optionGroup}>
           <label className={styles.inlineNumberInput}>
-            <span>톱날 두께</span>
+            <span>{t('cnc.bladeThickness')}</span>
             <div className={styles.inputWrapper}>
               <input 
                 type="number" 
@@ -45,7 +47,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
           className={styles.gapToggleButton}
           onClick={() => setShowGapSettings(!showGapSettings)}
         >
-          엣지 갭 설정
+          {t('cnc.edgeGapSettings')}
           {showGapSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
@@ -53,7 +55,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
           <div className={styles.marginGrid}>
             <div className={styles.marginRow}>
               <label className={styles.numberInputCompact}>
-                <span>상단</span>
+                <span>{t('cnc.top')}</span>
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
@@ -71,7 +73,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               </div>
             </label>
             <label className={styles.numberInputCompact}>
-              <span>하단</span>
+              <span>{t('cnc.bottom')}</span>
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
@@ -91,7 +93,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
           </div>
           <div className={styles.marginRow}>
             <label className={styles.numberInputCompact}>
-              <span>좌측</span>
+              <span>{t('cnc.left')}</span>
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
@@ -109,7 +111,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               </div>
             </label>
             <label className={styles.numberInputCompact}>
-              <span>우측</span>
+              <span>{t('cnc.right')}</span>
               <div className={styles.inputWrapper}>
                 <input 
                   type="number" 
@@ -138,7 +140,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.considerGrain}
                 onChange={e => setSettings({ considerGrain: e.target.checked })}
               />
-              <span>결 방향 고려</span>
+              <span>{t('cnc.considerGrain')}</span>
             </label>
             <label className={styles.checkboxCompact}>
               <input 
@@ -146,7 +148,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.considerMaterial}
                 onChange={e => setSettings({ considerMaterial: e.target.checked })}
               />
-              <span>재질별 그룹화</span>
+              <span>{t('cnc.groupByMaterial')}</span>
             </label>
           </div>
           <div className={styles.checkboxRow}>
@@ -156,7 +158,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.labelsOnPanels}
                 onChange={e => setSettings({ labelsOnPanels: e.target.checked })}
               />
-              <span>패널 라벨 표시</span>
+              <span>{t('cnc.showPanelLabels')}</span>
             </label>
             <label className={styles.checkboxCompact}>
               <input 
@@ -164,7 +166,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.edgeBanding}
                 onChange={e => setSettings({ edgeBanding: e.target.checked })}
               />
-              <span>엣지밴드 고려</span>
+              <span>{t('cnc.considerEdgeBanding')}</span>
             </label>
           </div>
           <div className={styles.checkboxRow}>
@@ -174,7 +176,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.singleSheetOnly}
                 onChange={e => setSettings({ singleSheetOnly: e.target.checked })}
               />
-              <span>단일 시트만 사용</span>
+              <span>{t('cnc.singleSheetOnly')}</span>
             </label>
             <label className={styles.checkboxCompact}>
               <input 
@@ -182,7 +184,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
                 checked={settings.alignVerticalCuts !== false}
                 onChange={e => setSettings({ alignVerticalCuts: e.target.checked })}
               />
-              <span>세로 컷팅 정렬</span>
+              <span>{t('cnc.alignVerticalCuts')}</span>
             </label>
           </div>
         </div>
@@ -196,7 +198,7 @@ export default function OptionsCard({ onSettingsChange }: OptionsCardProps = {})
               }
             }}
           >
-            확인
+            {t('common.confirm')}
           </button>
         </div>
       </div>

@@ -341,7 +341,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       droppedCeiling: { 
                         enabled: true,
                         position: spaceInfo.droppedCeiling?.position || 'left',
-                        width: spaceInfo.droppedCeiling?.width || 900,
+                        width: spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
                         dropHeight: spaceInfo.droppedCeiling?.dropHeight || 300
                       } 
                     })}
@@ -392,7 +392,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                   
                   if (spaceInfo.droppedCeiling?.enabled) {
                     // 단내림이 활성화되면 메인 구간의 너비 계산
-                    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
+                    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
                     internalWidth = internalSpace.width - droppedCeilingWidth;
                   }
                   
@@ -447,7 +447,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                 <div className={styles.compactSection}>
                   <label className={styles.compactLabel}>{t('space.droppedColumnCount')}</label>
                   {(() => {
-                    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
+                    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
                     // 단내림 구간의 내부 너비 계산 (프레임 두께 고려)
                     const frameThickness = spaceInfo.surroundType === 'surround' ? 50 : 0;
                     const droppedInternalWidth = droppedCeilingWidth - frameThickness;

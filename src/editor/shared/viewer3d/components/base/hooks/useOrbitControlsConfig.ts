@@ -14,6 +14,9 @@ export interface OrbitControlsConfig {
   enableRotate: boolean;
   minDistance: number;
   maxDistance: number;
+  rotateSpeed?: number; // 회전 속도 조절
+  dampingFactor?: number; // 관성 효과
+  enableDamping?: boolean; // 관성 효과 활성화
   mouseButtons: {
     LEFT: number | undefined;
     MIDDLE: number;
@@ -34,8 +37,8 @@ export interface OrbitControlsConfig {
  * - 두 손가락 클릭 후 드래그: 화면 팬 이동
  * 
  * 마우스 컨트롤:
- * - 왼쪽 버튼: 카메라 회전 (3D 모드) / 팬 (2D 모드)
- * - 중간 버튼(휠 클릭): 줌
+ * - 왼쪽 버튼: 팬 (화면 이동)
+ * - 중간 버튼(휠 클릭/드래그): 카메라 회전 (3D 모드) / 줌 (2D 모드)
  * - 휠 스크롤: 줌 인/아웃
  * - 오른쪽 버튼: 팬
  * 
@@ -98,10 +101,13 @@ export const useOrbitControlsConfig = (
       enableRotate: !is2DMode, // 2D 모드에서는 회전 비활성화, 3D 모드에서만 허용
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
+      rotateSpeed: 0.5, // 회전 속도를 0.5로 낮춤 (기본값 1.0보다 느리게, 더 묵직하게)
+      enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
+      dampingFactor: 0.05, // 관성 정도 (작을수록 더 묵직함)
       mouseButtons: {
-        LEFT: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 왼쪽 버튼: 2D에서는 팬, 3D에서는 회전
-        MIDDLE: THREE.MOUSE.DOLLY, // 중간 버튼(휠 클릭): 줌
-        RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼으로 팬
+        LEFT: THREE.MOUSE.PAN, // 왼쪽 버튼: 팬 (화면 이동)
+        MIDDLE: is2DMode ? THREE.MOUSE.DOLLY : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭): 2D에서는 줌, 3D에서는 회전
+        RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼: 팬
       },
       touches: {
         ONE: is2DMode ? undefined : THREE.TOUCH.ROTATE, // 3D 모드에서만 한 손가락으로 회전

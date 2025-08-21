@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -111,6 +112,7 @@ const AVAILABLE_TEXT_ITEMS: ViewMenuItem[] = [
 // const GRID_SIZE = 20; // 그리드 크기 - 비활성화
 
 const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose, capturedViews }) => {
+  const { t } = useTranslation();
   const [selectedPaperSize, setSelectedPaperSize] = useState<PaperSize>('A3');
   const [orientation, setOrientation] = useState<Orientation>('landscape');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -2602,7 +2604,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           <div className={`${styles.viewerOverlay} ${theme.mode === 'dark' ? styles.darkTheme : styles.lightTheme}`}>
             <div className={styles.viewerContainer}>
               <div className={styles.viewerHeader}>
-                <h3>도면 편집기 - {viewerOverlay.viewType?.toUpperCase()}</h3>
+                <h3>{t('export.drawingEditor')} - {viewerOverlay.viewType?.toUpperCase()}</h3>
                 <button
                   className={styles.closeButton}
                   onClick={() => setViewerOverlay({ isOpen: false, viewId: null, viewType: null })}
@@ -2680,7 +2682,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         className={styles.checkbox}
                       />
                       <span className={styles.checkmark}></span>
-                      가이드
+                      {t('viewer.column')}
                     </label>
 
                     <label className={styles.checkboxLabel}>
@@ -2691,7 +2693,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         className={styles.checkbox}
                       />
                       <span className={styles.checkmark}></span>
-                      치수
+                      {t('viewer.dimensions')}
                     </label>
 
                     <label className={styles.checkboxLabel}>
@@ -2702,7 +2704,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         className={styles.checkbox}
                       />
                       <span className={styles.checkmark}></span>
-                      그리드
+                      {t('viewer.grid')}
                     </label>
 
                     <label className={styles.checkboxLabel}>
@@ -2713,7 +2715,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         className={styles.checkbox}
                       />
                       <span className={styles.checkmark}></span>
-                      축
+                      {t('viewer.axis')}
                     </label>
                   </div>
                   ) : null}

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
@@ -105,7 +106,7 @@ function AppContent() {
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />
         {/* AR 뷰어 라우트 */}
         <Route path="/ar-viewer" element={
-          <Suspense fallback={<div>Loading AR Viewer...</div>}>
+          <Suspense fallback={<LoadingSpinner fullscreen message="Loading AR Viewer..." />}>
             <ARViewer />
           </Suspense>
         } />

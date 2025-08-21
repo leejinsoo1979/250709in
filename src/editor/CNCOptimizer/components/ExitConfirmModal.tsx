@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './ExitConfirmModal.module.css';
 
 interface ExitConfirmModalProps {
@@ -13,13 +14,15 @@ const ExitConfirmModal: React.FC<ExitConfirmModalProps> = ({
   onConfirm, 
   onCancel 
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen) return null;
 
   return (
     <div className={styles.overlay} onClick={onCancel}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h3 className={styles.title}>확인</h3>
+          <h3 className={styles.title}>{t('common.confirm')}</h3>
           <button className={styles.closeButton} onClick={onCancel}>
             <X size={20} />
           </button>
@@ -34,10 +37,10 @@ const ExitConfirmModal: React.FC<ExitConfirmModalProps> = ({
             </svg>
           </div>
           <p className={styles.message}>
-            CNC 옵티마이저를 종료하시겠습니까?
+            {t('cnc.exitConfirmMessage')}
           </p>
           <p className={styles.subMessage}>
-            저장되지 않은 변경사항이 있을 수 있습니다.
+            {t('cnc.unsavedChangesWarning')}
           </p>
         </div>
         
@@ -46,13 +49,13 @@ const ExitConfirmModal: React.FC<ExitConfirmModalProps> = ({
             className={styles.cancelButton}
             onClick={onCancel}
           >
-            취소
+            {t('common.cancel')}
           </button>
           <button 
             className={styles.confirmButton}
             onClick={onConfirm}
           >
-            나가기
+            {t('cnc.exit')}
           </button>
         </div>
       </div>

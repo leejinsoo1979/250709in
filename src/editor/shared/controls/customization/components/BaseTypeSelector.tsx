@@ -1,5 +1,6 @@
 import React from 'react';
 import { BaseConfig } from '@/store/core/spaceConfigStore';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from '../../styles/common.module.css';
 
 interface BaseTypeSelectorProps {
@@ -13,6 +14,7 @@ const BaseTypeSelector: React.FC<BaseTypeSelectorProps> = ({
   onBaseTypeChange,
   disabled = false
 }) => {
+  const { t } = useTranslation();
   const isFloor = baseConfig?.type === 'floor' || !baseConfig;
   const isStand = baseConfig?.type === 'stand';
   
@@ -25,14 +27,14 @@ const BaseTypeSelector: React.FC<BaseTypeSelectorProps> = ({
           onClick={() => onBaseTypeChange('floor')}
           disabled={disabled}
         >
-          바닥에 배치
+          {t('placement.floor')}
         </button>
         <button
           className={`${styles.toggleButton} ${isStand ? styles.toggleButtonActive : ''}`}
           onClick={() => onBaseTypeChange('stand')}
           disabled={disabled}
         >
-          띄워서 배치
+          {t('placement.float')}
         </button>
       </div>
     </div>

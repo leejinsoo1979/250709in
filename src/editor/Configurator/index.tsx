@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -267,7 +267,7 @@ const Configurator: React.FC = () => {
     
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 활성화된 경우 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || 900);
+      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
     }
     
     const range = calculateDoorRange(effectiveWidth);
@@ -1384,7 +1384,7 @@ const Configurator: React.FC = () => {
     if (updates.droppedCeiling?.enabled && !spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 새로 활성화된 경우
       const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
-      const droppedWidth = updates.droppedCeiling.width || 900;
+      const droppedWidth = updates.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
       const mainZoneWidth = currentWidth - droppedWidth;
       const frameThickness = 50;
       const normalAreaInternalWidth = mainZoneWidth - frameThickness;
@@ -1589,8 +1589,8 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.preparingPanel}>
-              <h3>악세서리</h3>
-              <p>준비중입니다.</p>
+              <h3>{t('sidebar.accessories')}</h3>
+              <p>{t('sidebar.preparing')}</p>
             </div>
           </div>
         );
@@ -1700,7 +1700,7 @@ const Configurator: React.FC = () => {
               {/* 단내림이 활성화된 경우 위치 선택 */}
               {spaceInfo.droppedCeiling?.enabled && (
                 <div style={{ marginTop: '16px' }}>
-                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
+                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>{t('placement.droppedCeilingPosition')}</div>
                   <div className={styles.toggleButtonGroup}>
                     <button
                       className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
@@ -1714,7 +1714,7 @@ const Configurator: React.FC = () => {
                         });
                       }}
                     >
-                      좌측
+                      {t('furniture.left')}
                     </button>
                     <button
                       className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
@@ -1728,7 +1728,7 @@ const Configurator: React.FC = () => {
                         });
                       }}
                     >
-                      우측
+                      {t('furniture.right')}
                     </button>
                   </div>
                 </div>
@@ -1753,8 +1753,8 @@ const Configurator: React.FC = () => {
                           min="100"
                           max={(spaceInfo.width || 4800) - 100}
                           step="10"
-                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
-                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
+                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH)}
+                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH)}`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -1764,7 +1764,7 @@ const Configurator: React.FC = () => {
                           onBlur={(e) => {
                             const inputValue = e.target.value;
                             const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
                             const currentMainWidth = totalWidth - currentDroppedWidth;
                             
                             // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
@@ -1902,8 +1902,8 @@ const Configurator: React.FC = () => {
                           min="100"
                           max={(spaceInfo.width || 4800) - 100}
                           step="10"
-                          defaultValue={spaceInfo.droppedCeiling?.width || 900}
-                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
+                          defaultValue={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
+                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -1913,7 +1913,7 @@ const Configurator: React.FC = () => {
                           onBlur={(e) => {
                             const inputValue = e.target.value;
                             const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
                             
                             // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                             if (inputValue === '' || isNaN(parseInt(inputValue))) {
@@ -2078,7 +2078,7 @@ const Configurator: React.FC = () => {
                       onChange={(value) => {
                         handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
                       }}
-                      width={spaceInfo.droppedCeiling?.width || 900}
+                      width={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
                     />
                   </div>
                 </div>
@@ -2243,7 +2243,7 @@ const Configurator: React.FC = () => {
 
                     {/* 상부 */}
                     <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>상부</label>
+                      <label className={styles.frameItemLabel}>{t('viewer.top')}</label>
                       <div className={styles.frameItemInput}>
                         <button 
                           className={styles.frameButton}
@@ -2282,7 +2282,7 @@ const Configurator: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className={styles.frameUnit}>단위: mm</div>
+                  <div className={styles.frameUnit}>{t('common.unit')}: mm</div>
                 </div>
               )}
 
@@ -2328,7 +2328,6 @@ const Configurator: React.FC = () => {
     return (
       <div className={styles.loadingContainer}>
         <LoadingSpinner 
-          message="에디터를 준비하는 중..."
           size="large"
           type="spinner"
         />
@@ -2482,13 +2481,13 @@ const Configurator: React.FC = () => {
                   className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
                   onClick={() => !doorsOpen || toggleDoors()}
                 >
-                  Close
+                  {t('viewer.doorClose')}
                 </button>
                 <button 
                   className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
                   onClick={() => doorsOpen || toggleDoors()}
                 >
-                  Open
+                  {t('viewer.doorOpen')}
                 </button>
               </div>
             )}

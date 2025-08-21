@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useCNCStore } from '../../store';
 import type { Panel } from '../../../../types/cutlist';
 import { Package, Plus, Trash2, Upload } from 'lucide-react';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './SidebarLeft.module.css';
 
 export default function PanelsTable(){
+  const { t } = useTranslation();
   const { panels, setPanels, selectedPanelId, setSelectedPanelId, setUserHasModifiedPanels, settings } = useCNCStore();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -233,22 +235,22 @@ export default function PanelsTable(){
       if (newPanels.length > 0) {
         // 기존 패널에 추가할지 대체할지 확인
         const shouldReplace = panels.length === 0 || 
-          confirm(`기존 패널 ${panels.length}개가 있습니다. 대체하시겠습니까?\n\n'확인': CSV 파일로 대체\n'취소': 기존 패널에 추가`);
+          confirm(t('cnc.csvReplaceConfirm', { count: panels.length }));
         
         if (shouldReplace) {
           setPanels(newPanels, true); // Mark as user modified
           setUserHasModifiedPanels(true);
-          alert(`${newPanels.length}개의 패널을 CSV 파일에서 가져왔습니다.`);
+          alert(t('cnc.csvImportSuccess', { count: newPanels.length }));
         } else {
           setPanels([...panels, ...newPanels], true); // Mark as user modified
           setUserHasModifiedPanels(true);
-          alert(`${newPanels.length}개의 패널을 추가했습니다.`);
+          alert(t('cnc.csvAddSuccess', { count: newPanels.length }));
         }
       } else {
-        alert('CSV 파일에서 유효한 패널 데이터를 찾을 수 없습니다.');
+        alert(t('cnc.csvNoValidData'));
       }
     } catch (error) {
-      alert('CSV 파일을 읽는 중 오류가 발생했습니다.');
+      alert(t('cnc.csvReadError'));
     }
   };
 
@@ -256,7 +258,7 @@ export default function PanelsTable(){
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <Package size={16} />
-        <h3>패널 목록 ({panels.length})</h3>
+        <h3>{t('cnc.panelList')} ({panels.length})</h3>
         <div style={{ display: 'flex', gap: '4px' }}>
           <button 
             className={styles.addButton} 
@@ -268,7 +270,7 @@ export default function PanelsTable(){
           </button>
           <button className={styles.addButton} onClick={addRow}>
             <Plus size={14} />
-            추가
+            {t('common.add')}
           </button>
         </div>
         <input
@@ -283,18 +285,18 @@ export default function PanelsTable(){
       <div className={styles.tableContainer} ref={tableContainerRef}>
         {panels.length === 0 ? (
           <div className={styles.empty}>
-            패널이 없습니다. "추가" 버튼을 클릭하여 생성하세요.
+            {t('cnc.noPanelsMessage')}
           </div>
         ) : (
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '28%', textAlign: 'center' }}>이름</th>
-                <th style={{ width: '20%', textAlign: 'center' }}>치수 (L×W)</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>두께</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>수량</th>
-                <th style={{ width: '21%', textAlign: 'center' }}>재질</th>
-                <th style={{ width: '8%', textAlign: 'center', paddingRight: '3px' }}>결방향</th>
+                <th style={{ width: '28%', textAlign: 'center' }}>{t('cnc.name')}</th>
+                <th style={{ width: '20%', textAlign: 'center' }}>{t('cnc.dimensions')}</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '18px' }}>{t('cnc.thickness')}</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingLeft: '20px' }}>{t('cnc.quantity')}</th>
+                <th style={{ width: '21%', textAlign: 'center' }}>{t('cnc.material')}</th>
+                <th style={{ width: '8%', textAlign: 'center', paddingRight: '3px' }}>{t('cnc.grain')}</th>
                 <th style={{ width: '7%', textAlign: 'center' }}></th>
               </tr>
             </thead>
@@ -318,7 +320,7 @@ export default function PanelsTable(){
                       title={p.label}  // 툴팁으로 전체 이름 표시
                       data-panel-id={p.id}
                       data-field="label"
-                      placeholder="패널 이름"
+                      placeholder={t('cnc.panelNamePlaceholder')}
                     />
                   </td>
                   <td>
@@ -335,7 +337,7 @@ export default function PanelsTable(){
                         }}
                         onClick={e => e.stopPropagation()}
                         className={styles.inputSmall}
-                        placeholder="세로"
+                        placeholder={t('cnc.lengthPlaceholder')}
                         max={2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}
                         title={`최대 ${2440 - (settings.trimTop || 0) - (settings.trimBottom || 0)}mm`}
                       />
@@ -352,7 +354,7 @@ export default function PanelsTable(){
                         }}
                         onClick={e => e.stopPropagation()}
                         className={styles.inputSmall}
-                        placeholder="가로"
+                        placeholder={t('cnc.widthPlaceholder')}
                         max={1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}
                         title={`최대 ${1220 - (settings.trimLeft || 0) - (settings.trimRight || 0)}mm`}
                       />
@@ -418,7 +420,7 @@ export default function PanelsTable(){
                         setPanels(next, true); // Mark as user modified
                         setUserHasModifiedPanels(true);
                       }}
-                      title={p.grain === 'V' ? '세로 결방향 (클릭하여 가로로 변경)' : '가로 결방향 (클릭하여 세로로 변경)'}
+                      title={p.grain === 'V' ? t('cnc.grainVerticalTooltip') : t('cnc.grainHorizontalTooltip')}
                     >
                       {p.grain === 'V' ? '↑' : '→'}
                     </button>

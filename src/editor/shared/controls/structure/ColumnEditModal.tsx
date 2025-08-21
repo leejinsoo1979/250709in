@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Column } from '@/types/space';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './ColumnEditModal.module.css';
 
 interface ColumnEditModalProps {
@@ -15,6 +16,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
   isOpen, 
   onClose 
 }) => {
+  const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { setSelectedColumnId, activePopup, closeAllPopups } = useUIStore();
   
@@ -189,7 +191,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 
 
   const handleDelete = () => {
-    if (window.confirm('기둥을 삭제하시겠습니까?')) {
+    if (window.confirm(t('column.deleteConfirm'))) {
       const updatedColumns = columns.filter(col => col.id !== column.id);
       setSpaceInfo({ columns: updatedColumns });
       setSelectedColumnId(null);
@@ -201,7 +203,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.title}>기둥 편집</h3>
+          <h3 className={styles.title}>{t('column.editColumn')}</h3>
           <button className={styles.closeButton} onClick={onClose}>
             ✕
           </button>
@@ -210,19 +212,19 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
         <div className={styles.modalContent}>
           {/* 기둥 정보 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>기본 정보</h4>
+            <h4 className={styles.sectionTitle}>{t('column.basicInfo')}</h4>
             <div className={styles.infoRow}>
-              <span>기둥 ID:</span>
+              <span>{t('column.columnId')}:</span>
               <span className={styles.columnId}>{column.id.split('-')[1]}</span>
             </div>
           </div>
 
           {/* 크기 설정 - 한 줄로 표시 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>크기</h4>
+            <h4 className={styles.sectionTitle}>{t('column.size')}</h4>
             <div className={styles.inputRow}>
               <div className={styles.inputItem}>
-                <label>폭 (mm)</label>
+                <label>{t('column.width')} (mm)</label>
                 <input
                   type="number"
                   value={editValues.width || column.width}
@@ -233,7 +235,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                 />
               </div>
               <div className={styles.inputItem}>
-                <label>깊이 (mm)</label>
+                <label>{t('column.depth')} (mm)</label>
                 <input
                   type="number"
                   value={editValues.depth || column.depth}
@@ -244,7 +246,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                 />
               </div>
               <div className={styles.inputItem}>
-                <label>높이 (mm)</label>
+                <label>{t('column.height')} (mm)</label>
                 <input
                   type="number"
                   value={editValues.height || column.height}
@@ -259,13 +261,13 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 
           {/* 위치 설정 - 좌측갭, 우측갭으로 표시 */}
           <div className={styles.section}>
-            <h4 className={styles.sectionTitle}>위치</h4>
+            <h4 className={styles.sectionTitle}>{t('column.position')}</h4>
             <div className={styles.keyboardHint}>
-              <small>💡 키보드 조작: ↑↓(좌측갭 1mm/Shift+10mm), ←→(우측갭 10mm/Shift+100mm)</small>
+              <small>💡 {t('column.keyboardHint')}</small>
             </div>
             <div className={styles.inputRow}>
               <div className={styles.inputItem}>
-                <label>좌측갭 (mm)</label>
+                <label>{t('column.leftGap')} (mm)</label>
                 <input
                   type="number"
                   value={Math.round(leftGap)}
@@ -274,7 +276,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                 />
               </div>
               <div className={styles.inputItem}>
-                <label>우측갭 (mm)</label>
+                <label>{t('column.rightGap')} (mm)</label>
                 <input
                   type="number"
                   value={Math.round(rightGap)}
@@ -288,14 +290,14 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 
         <div className={styles.modalFooter}>
           <button className={styles.deleteButton} onClick={handleDelete}>
-            삭제
+            {t('common.delete')}
           </button>
           <div className={styles.actionButtons}>
             <button className={styles.cancelButton} onClick={handleCancel}>
-              취소
+              {t('common.cancel')}
             </button>
             <button className={styles.saveButton} onClick={handleSave}>
-              확인
+              {t('common.confirm')}
             </button>
           </div>
         </div>

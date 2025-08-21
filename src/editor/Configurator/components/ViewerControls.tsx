@@ -263,7 +263,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   setView2DTheme(desiredTheme);
                 }
               }}
-              title={mode.id === '3D' ? '3D 모드 - 휠 버튼 드래그: 회전' : '2D 모드'}
+              title={mode.id === '3D' ? '3D' : '2D'}
             >
               {mode.label}
             </button>
@@ -314,7 +314,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               onClick={() => {
                 toggleView2DTheme();
               }}
-              title={view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              title={view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
             >
               {view2DTheme === 'dark' ? (
                 // 달 아이콘 (다크 모드 상태)

@@ -3,6 +3,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { Column } from '@/types/space';
 import ColumnThumbnail from './ColumnThumbnail';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './ColumnControl.module.css';
 
 interface ColumnControlProps {
@@ -11,6 +12,7 @@ interface ColumnControlProps {
 }
 
 const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange }) => {
+  const { t } = useTranslation();
   const spaceConfig = useSpaceConfigStore();
   const { isColumnCreationMode, setColumnCreationMode, selectedColumnId, setSelectedColumnId } = useUIStore();
 
@@ -67,7 +69,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
 
       {/* 기둥 썸네일 드래그 앤 드롭 */}
       <div className={styles.thumbnailSection}>
-        <h4>구조물 종류</h4>
+        <h4>{t('sidebar.structureTypes')}</h4>
         <div className={styles.thumbnailGrid}>
           <ColumnThumbnail 
             width={300}
@@ -77,7 +79,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="기둥A"
+            title={t('sidebar.columnA')}
           />
           <ColumnThumbnail 
             width={120}
@@ -87,7 +89,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="기둥B"
+            title={t('sidebar.columnB')}
           />
           <ColumnThumbnail 
             width={300}
@@ -97,7 +99,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="기둥C"
+            title={t('sidebar.columnC')}
           />
           <ColumnThumbnail 
             width={20}
@@ -107,7 +109,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#888888"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="패널A"
+            title={t('sidebar.panelA')}
           />
           <ColumnThumbnail 
             width={600}
@@ -117,7 +119,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#8B4513"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="패널B"
+            title={t('sidebar.panelB')}
           />
           <ColumnThumbnail 
             width={120}
@@ -127,7 +129,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
             color="#E0E0E0"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
-            title="가벽"
+            title={t('sidebar.partition')}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './RightPanel.module.css';
 import { useUIStore } from '@/store/uiStore';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -151,19 +151,21 @@ interface ToggleGroupProps {
   onChange: (id: string) => void;
 }
 
-const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }) => (
-  <div className={styles.toggleGroup}>
-    {options.map((option) => (
-      <button
-        key={option.id}
-        className={`${styles.toggleButton} ${selected === option.id ? styles.active : ''}`}
-        onClick={() => onChange(option.id)}
-      >
-        {option.label}
-      </button>
-    ))}
-  </div>
-);
+const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }) => {
+  return (
+    <div className={styles.toggleGroup}>
+      {options.map((option) => (
+        <button
+          key={option.id}
+          className={`${styles.toggleButton} ${selected === option.id ? styles.active : ''}`}
+          onClick={() => onChange(option.id)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 // 도어 슬라이더 컴포넌트
 interface DoorSliderProps {
@@ -174,6 +176,7 @@ interface DoorSliderProps {
 
 const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const sliderTrackRef = React.useRef<HTMLDivElement>(null);
   const { spaceInfo } = useSpaceConfigStore();
   
   // 도어 1개 너비 (588mm)
@@ -183,10 +186,10 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   const getMainZoneWidth = () => {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 900);
+      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
       console.log('🎯 메인 구간 폭 계산 (DoorSlider):', {
         totalWidth: width,
-        droppedWidth: spaceInfo.droppedCeiling.width || 900,
+        droppedWidth: spaceInfo.droppedCeiling.width || 1300,
         mainZoneWidth
       });
       return mainZoneWidth;
@@ -197,14 +200,14 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   // 단내림 구간의 폭 계산 (단내림 구간 도어개수 슬라이더용)
   const getDroppedCeilingWidth = () => {
     if (spaceInfo.droppedCeiling?.enabled) {
-      return spaceInfo.droppedCeiling.width || 900;
+      return spaceInfo.droppedCeiling.width || 1300;
     }
     return width;
   };
   
   // 공간 넓이 기반 최소/최대 도어 개수 계산
-  const calculateDoorRange = (spaceWidth: number) => {
-    // 단내림이 활성화된 경우 ColumnIndexer.ts의 calculateZoneSlotInfo와 동일한 공식 적용
+  const calculateDoorRange = (spaceWidth: number, isForDroppedCeiling: boolean = false) => {
+    // 단내림이 활성화된 경우의 계산 로직
     if (spaceInfo.droppedCeiling?.enabled) {
       const frameThickness = 50; // 프레임 두께
       const normalAreaInternalWidth = spaceWidth - frameThickness;
@@ -216,7 +219,9 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
       // 최대 가능 슬롯 개수 (400mm 제한)
       const maxPossibleSlots = Math.floor(normalAreaInternalWidth / MIN_SLOT_WIDTH);
       
-      console.log('🎯 단내림 활성화 시 슬롯 계산 (ColumnIndexer 공식):', {
+      console.log('🎯 슬롯 계산 (단내림 활성화):', {
+        isForDroppedCeiling,
+        구간: isForDroppedCeiling ? '단내림 구간' : '메인 구간',
         spaceWidth,
         normalAreaInternalWidth,
         minRequiredSlots,
@@ -255,14 +260,21 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   };
   
   // 도어 범위 계산 - 단내림 구간의 도어개수 슬라이더인지 확인
-  // 단내림 구간 슬라이더는 width가 단내림 폭과 같거나, 단내림이 활성화되어 있고 width가 900 이하일 때
+  // 단내림 구간 슬라이더는 width가 단내림 폭과 정확히 같을 때
   const isDroppedCeilingSlider = spaceInfo.droppedCeiling?.enabled && 
-    (width === (spaceInfo.droppedCeiling.width || 900) || width <= 900);
+    width === (spaceInfo.droppedCeiling.width || 1300);
+  
+  console.log('🔍 슬라이더 타입 확인:', {
+    width,
+    droppedWidth: spaceInfo.droppedCeiling?.width,
+    isDroppedCeilingSlider,
+    enabled: spaceInfo.droppedCeiling?.enabled
+  });
   
   let doorRange;
   if (isDroppedCeilingSlider) {
     // 단내림 구간의 도어개수 슬라이더인 경우
-    doorRange = calculateDoorRange(width);
+    doorRange = calculateDoorRange(width, true); // 단내림 구간임을 명시
     console.log('🎯 단내림 구간 도어개수 슬라이더:', {
       width,
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
@@ -273,7 +285,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   } else {
     // 메인 구간의 도어개수 슬라이더인 경우
     const mainZoneWidth = getMainZoneWidth();
-    doorRange = calculateDoorRange(mainZoneWidth);
+    doorRange = calculateDoorRange(mainZoneWidth, false); // 메인 구간임을 명시
     console.log('🎯 메인 구간 도어개수 슬라이더:', {
       mainZoneWidth,
       doorRange,
@@ -304,15 +316,23 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
+    
+    // 클릭 시 바로 위치 계산하여 값 변경 - sliderTrackRef 사용
+    if (sliderTrackRef.current) {
+      const rect = sliderTrackRef.current.getBoundingClientRect();
+      const position = ((e.clientX - rect.left) / rect.width) * 100;
+      const newDoorCount = getDoorCountFromPosition(position);
+      
+      if (newDoorCount !== value) {
+        onChange(newDoorCount);
+      }
+    }
   };
   
   const handleMouseMove = React.useCallback((e: React.MouseEvent | MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !sliderTrackRef.current) return;
     
-    const sliderTrack = document.querySelector(`.${styles.sliderTrack}`);
-    if (!sliderTrack) return;
-    
-    const rect = sliderTrack.getBoundingClientRect();
+    const rect = sliderTrackRef.current.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
     const newDoorCount = getDoorCountFromPosition(position);
     
@@ -353,8 +373,8 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
 
   // width 또는 단내림 설정 변경 시 현재 값이 새로운 범위를 벗어나면 자동 조정
   React.useEffect(() => {
-    const mainZoneWidth = getMainZoneWidth();
-    const range = calculateDoorRange(mainZoneWidth);
+    const mainZoneWidth = isDroppedCeilingSlider ? width : getMainZoneWidth();
+    const range = calculateDoorRange(mainZoneWidth, isDroppedCeilingSlider);
     
     // 단내림이 활성화된 경우 메인 구간의 도어 개수가 너무 적으면 자동으로 증가
     if (spaceInfo.droppedCeiling?.enabled) {
@@ -399,13 +419,19 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
       // 컬럼 수가 많으면 대표값들만 표시
       const labels = [];
       const step = Math.ceil(doorCount / 7);
+      
+      // minDoors부터 시작하되 maxDoors를 초과하지 않도록
       for (let i = minDoors; i <= maxDoors; i += step) {
-        labels.push(i);
+        if (i <= maxDoors) {
+          labels.push(i);
+        }
       }
-      // 마지막 값이 maxDoors가 아니면 추가
-      if (labels[labels.length - 1] !== maxDoors) {
+      
+      // 마지막 값이 maxDoors가 아니고, 마지막 라벨이 maxDoors보다 작으면 maxDoors 추가
+      if (labels.length > 0 && labels[labels.length - 1] < maxDoors) {
         labels.push(maxDoors);
       }
+      
       console.log('🎯 생성된 라벨:', labels);
       return labels;
     }
@@ -425,6 +451,7 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width }) => {
   return (
     <div className={styles.doorSlider}>
       <div 
+        ref={sliderTrackRef}
         className={styles.sliderTrack}
         onClick={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
@@ -498,6 +525,48 @@ const ColorWheel: React.FC = () => (
   </div>
 );
 
+// 슬라이더 컴포넌트 추가
+interface SliderProps {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  format?: (value: number) => string;
+}
+
+const Slider: React.FC<SliderProps> = ({
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  format = (val) => `${val}`
+}) => {
+  const percentage = ((value - min) / (max - min)) * 100;
+  
+  return (
+    <div className={styles.sliderContainer}>
+      <div className={styles.sliderTrack}>
+        <div 
+          className={styles.sliderFill} 
+          style={{ width: `${percentage}%` }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className={styles.sliderInput}
+        />
+      </div>
+      <div className={styles.sliderValue}>{format(value)}</div>
+    </div>
+  );
+};
+
 interface RightPanelProps {
   activeTab: RightPanelTab;
   onTabChange: (tab: RightPanelTab) => void;
@@ -565,7 +634,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   frameType,
   onFrameTypeChange
 }) => {
-  const { spaceInfo } = useSpaceConfigStore();
+  const { spaceInfo, updateSpaceInfo } = useSpaceConfigStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
   const { t, currentLanguage } = useTranslation();
   
@@ -587,10 +656,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const getMainZoneWidth = () => {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림 활성화 시 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 900);
+      const mainZoneWidth = width - (spaceInfo.droppedCeiling.width || 1300);
       console.log('🎯 메인 구간 폭 계산 (RightPanel):', {
         totalWidth: width,
-        droppedWidth: spaceInfo.droppedCeiling.width || 900,
+        droppedWidth: spaceInfo.droppedCeiling.width || 1300,
         mainZoneWidth
       });
       return mainZoneWidth;
@@ -664,21 +733,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
     { id: 'freestanding', label: t('space.standing') }
   ];
 
-  const materialOptions = [
-    { id: 'white', label: '화이트' },
-    { id: 'melamine', label: '멜라민' },
-    { id: 'premium', label: '프리미엄' }
-  ];
+  const materialOptions = React.useMemo(() => [
+    { id: 'white', label: t('material.white') },
+    { id: 'melamine', label: t('material.melamine') },
+    { id: 'premium', label: t('material.premium') }
+  ], [t, currentLanguage]);
 
-  const floorOptions = [
-    { id: 'yes', label: t('common.enabled') },
-    { id: 'no', label: t('common.none') }
-  ];
+  const floorOptions = React.useMemo(() => {
+    const options = [
+      { id: 'yes', label: t('common.enabled') },
+      { id: 'no', label: t('common.none') }
+    ];
+    return options;
+  }, [t, currentLanguage]);
 
-  const frameTypeOptions = [
+  const frameTypeOptions = React.useMemo(() => [
     { id: 'surround', label: t('space.surround') },
     { id: 'no-surround', label: t('space.noSurround') }
-  ];
+  ], [t, currentLanguage]);
+
+  // 단내림 위치 옵션
+  const droppedCeilingPositionOptions = React.useMemo(() => [
+    { id: 'left', label: t('furniture.left') },
+    { id: 'right', label: t('furniture.right') }
+  ], [t, currentLanguage]);
 
   return (
     <div className={`${styles.rightPanel} ${isOpen ? styles.open : ''}`}>
@@ -709,40 +787,40 @@ const RightPanel: React.FC<RightPanelProps> = ({
           <div className={styles.formContainer}>
             {/* 브랜드 타입 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "브랜드 타입" : t('common.brandType')}
+              label={t('common.brandType')}
               expanded={expandedSections.has('brand')}
               onToggle={() => toggleSection('brand')}
             >
               <div className={styles.brandType}>
-                <div className={styles.brandLabel}>싱글 타입</div>
+                <div className={styles.brandLabel}>{t('furniture.single')}</div>
                 <div className={styles.brandOptions}>
-                  <button className={styles.brandOption}>싱글</button>
-                  <button className={styles.brandOption}>듀얼</button>
+                  <button className={styles.brandOption}>{t('furniture.single')}</button>
+                  <button className={styles.brandOption}>{t('furniture.dual')}</button>
                 </div>
               </div>
             </FormControl>
 
             {/* 가격 정보 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "가격 정보" : t('common.priceInfo')}
+              label={t('common.priceInfo')}
               expanded={expandedSections.has('price')}
               onToggle={() => toggleSection('price')}
             >
               <div className={styles.priceInfo}>
-                <div className={styles.priceLabel}>현재 가격</div>
+                <div className={styles.priceLabel}>{t('common.priceInfo')}</div>
                 <div className={styles.priceValue}>₩2,580,000</div>
               </div>
             </FormControl>
 
             {/* 다재 선택 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "다재 선택" : t('material.selection')}
+              label={t('material.selection')}
               expanded={expandedSections.has('material')}
               onToggle={() => toggleSection('material')}
             >
               <ColorWheel />
               <div className={styles.materialToggle}>
-                <div className={styles.materialLabel}>재질 종류</div>
+                <div className={styles.materialLabel}>{t('material.title')}</div>
                 <ToggleGroup
                   options={materialOptions}
                   selected="white"
@@ -753,12 +831,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 공간 설정 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "공간 설정" : t('space.title')}
+              label={t('space.title')}
               expanded={expandedSections.has('space')}
               onToggle={() => toggleSection('space')}
             >
               <NumberInput
-                label={currentLanguage === 'ko' ? "전체 폭" : t('space.totalWidth')}
+                label={t('space.totalWidth')}
                 value={width}
                 onChange={(newWidth) => {
                   onWidthChange(newWidth);
@@ -769,7 +847,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 step={100}
               />
               <NumberInput
-                label={currentLanguage === 'ko' ? "높이" : t('space.height')}
+                label={t('space.height')}
                 value={height}
                 onChange={onHeightChange}
                 min={2000}
@@ -781,11 +859,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
               {spaceInfo.droppedCeiling?.enabled && (
                 <div className={styles.zoneInfo}>
                   <div className={styles.zoneInfoItem}>
-                    <span className={styles.zoneLabel}>메인 구간:</span>
+                    <span className={styles.zoneLabel}>{t('space.mainSection')}:</span>
                     <span className={styles.zoneValue}>{width - spaceInfo.droppedCeiling.width} mm</span>
                   </div>
                   <div className={styles.zoneInfoItem}>
-                    <span className={styles.zoneLabel}>단내림 구간:</span>
+                    <span className={styles.zoneLabel}>{t('space.droppedSection')}:</span>
                     <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
                   </div>
                 </div>
@@ -794,15 +872,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "단내림" : t('space.droppedCeiling')}
+              label={t('space.droppedCeiling')}
               expanded={expandedSections.has('droppedCeiling')}
               onToggle={() => toggleSection('droppedCeiling')}
             >
               {/* 단내림 있음/없음 토글 */}
               <ToggleGroup
+                key={`dropped-ceiling-${currentLanguage}`}
                 options={[
-                  { id: 'no', label: '없음' },
-                  { id: 'yes', label: '있음' }
+                  { id: 'no', label: t('common.none') },
+                  { id: 'yes', label: t('common.enabled') }
                 ]}
                 selected={spaceInfo.droppedCeiling?.enabled ? 'yes' : 'no'}
                 onChange={(value) => {
@@ -810,7 +889,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   if (isEnabled) {
                     // 단내림 활성화
                     onInstallTypeChange && onInstallTypeChange(installType); // 설치 타입 유지
-                    const droppedWidth = 900; // 기본 단내림 폭
+                    const droppedWidth = 1300; // 기본 단내림 폭
                     const droppedHeight = 200; // 기본 단내림 높이
                     
                     // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
@@ -836,9 +915,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       droppedCeilingDoorCount: droppedDoorCount // 계산된 도어 개수로 설정
                     };
                     // spaceConfigStore 업데이트 호출
-                    if (window.handleSpaceInfoUpdate) {
-                      window.handleSpaceInfoUpdate(updates);
-                    }
+                    updateSpaceInfo(updates);
                   } else {
                     // 단내림 비활성화
                     const updates: any = {
@@ -849,48 +926,75 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       mainDoorCount: undefined,
                       droppedCeilingDoorCount: undefined
                     };
-                    if (window.handleSpaceInfoUpdate) {
-                      window.handleSpaceInfoUpdate(updates);
-                    }
+                    updateSpaceInfo(updates);
                   }
                 }}
               />
               
-              {/* 단내림이 활성화된 경우 위치 선택 */}
+              {/* 단내림이 활성화된 경우 위치 선택 및 너비 조절 */}
               {spaceInfo.droppedCeiling?.enabled && (
-                <div style={{ marginTop: '16px' }}>
-                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>단내림 위치</div>
-                  <ToggleGroup
-                    options={[
-                      { id: 'left', label: '좌측' },
-                      { id: 'right', label: '우측' }
-                    ]}
-                    selected={spaceInfo.droppedCeiling?.position || 'right'}
-                    onChange={(position) => {
-                      const updates: any = {
-                        droppedCeiling: {
-                          ...spaceInfo.droppedCeiling,
-                          position: position as 'left' | 'right'
+                <>
+                  <div style={{ marginTop: '16px' }}>
+                    <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>
+                      {t('placement.droppedCeilingPosition')}
+                    </div>
+                    <ToggleGroup
+                      key={`dropped-position-${currentLanguage}`}
+                      options={droppedCeilingPositionOptions}
+                      selected={spaceInfo.droppedCeiling?.position || 'right'}
+                      onChange={(position) => {
+                        const updates: any = {
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            position: position as 'left' | 'right'
+                          }
+                        };
+                        updateSpaceInfo(updates);
+                      }}
+                    />
+                  </div>
+                  
+                  {/* 단내림 구간 너비 조절 슬라이더 */}
+                  <div style={{ marginTop: '16px' }}>
+                    <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>{t('space.droppedCeilingWidth')}</div>
+                    <Slider
+                      value={spaceInfo.droppedCeiling?.width || 1300}
+                      onChange={(newWidth) => {
+                        // 너비가 변경되면 해당 너비에 맞는 적절한 컬럼수 재계산
+                        const frameThickness = 50;
+                        const droppedInternalWidth = newWidth - frameThickness;
+                        const newDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+                        
+                        const updates: any = {
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            width: newWidth
+                          },
+                          droppedCeilingDoorCount: newDoorCount
+                        };
+                        if (window.handleSpaceInfoUpdate) {
+                          window.handleSpaceInfoUpdate(updates);
                         }
-                      };
-                      if (window.handleSpaceInfoUpdate) {
-                        window.handleSpaceInfoUpdate(updates);
-                      }
-                    }}
-                  />
-                </div>
+                      }}
+                      min={600}
+                      max={Math.min(width - 600, 2400)} // 전체 너비에서 최소 메인구간 600mm 확보, 최대 2400mm
+                      step={100}
+                      format={(val) => `${val}mm`}
+                    />
+                  </div>
+                </>
               )}
             </FormControl>
 
             {/* 메인구간 사이즈 - 단내림 활성화되고 메인구간 탭일 때만 표시 */}
             {spaceInfo.droppedCeiling?.enabled && activeTab === 'placement' && (
               <FormControl
-                label={currentLanguage === 'ko' ? "메인구간 사이즈" : t('space.mainSectionSize')}
+                label={t('space.mainSectionSize')}
                 expanded={expandedSections.has('mainSpace')}
                 onToggle={() => toggleSection('mainSpace')}
               >
                 <div className={styles.numberInput}>
-                  <div className={styles.inputLabel}>메인구간 폭</div>
+                  <div className={styles.inputLabel}>{t('space.width')}</div>
                   <div className={styles.inputGroup}>
                     <div className={styles.inputField}>
                       <input
@@ -904,7 +1008,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   </div>
                 </div>
                 <div className={styles.numberInput}>
-                  <div className={styles.inputLabel}>메인구간 높이</div>
+                  <div className={styles.inputLabel}>{t('space.height')}</div>
                   <div className={styles.inputGroup}>
                     <div className={styles.inputField}>
                       <input
@@ -922,17 +1026,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 컬럼수 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "컬럼수" : t('space.columnCount')}
+              label={t('space.columnCount')}
               expanded={expandedSections.has('layout')}
               onToggle={() => toggleSection('layout')}
             >
               <NumberInput
-                label={spaceInfo.droppedCeiling?.enabled ? "메인 구간 컬럼수" : "컬럼수"}
+                label={spaceInfo.droppedCeiling?.enabled ? t('space.columnCount') : t('space.columnCount')}
                 value={doorCount}
                 onChange={onDoorCountChange}
                 min={minDoors}
                 max={maxDoors}
-                unit="개"
+                unit={t('common.unit')}
               />
               
               <DoorSlider
@@ -946,11 +1050,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 바닥 마감재 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "바닥 마감재" : t('material.floorFinish')}
+              label={t('material.floorFinish')}
               expanded={expandedSections.has('floor')}
               onToggle={() => toggleSection('floor')}
             >
+              {console.log('🚨 Floor Finish Render:', {
+                currentLanguage,
+                floorOptions,
+                translatedEnabled: t('common.enabled'),
+                translatedNone: t('common.none')
+              })}
               <ToggleGroup
+                key={`floor-${currentLanguage}`}
                 options={floorOptions}
                 selected={hasFloorFinish ? 'yes' : 'no'}
                 onChange={(value) => onFloorFinishToggle()}
@@ -959,11 +1070,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
             {/* 프레임 속성 */}
             <FormControl
-              label={currentLanguage === 'ko' ? "프레임 속성" : t('frame.properties')}
+              label={t('frame.properties')}
               expanded={expandedSections.has('frame')}
               onToggle={() => toggleSection('frame')}
             >
               <ToggleGroup
+                key={`frame-${currentLanguage}`}
                 options={frameTypeOptions}
                 selected={frameType}
                 onChange={(value) => onFrameTypeChange(value as 'surround' | 'no-surround')}
@@ -978,45 +1090,34 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {spaceInfo.droppedCeiling?.enabled && (
               <div className={styles.formContainer}>
                 <FormControl
-                  label={currentLanguage === 'ko' ? "단내림 구간 컬럼수" : t('space.droppedColumnCount')}
+                  label={t('space.droppedColumnCount')}
                   expanded={expandedSections.has('droppedLayout')}
                   onToggle={() => toggleSection('droppedLayout')}
                 >
-                  <div className={styles.numberInput}>
-                    <div className={styles.inputLabel}>단내림 구간 컬럼수</div>
-                    <div className={styles.inputGroup}>
-                      <div className={styles.inputField}>
-                        <input
-                          type="number"
-                          value={(() => {
-                            const value = spaceInfo.droppedCeilingDoorCount || 0;
-                            console.log('🎯 단내림 구간 컬럼수 표시:', {
-                              droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount,
-                              표시값: value,
-                              spaceInfo전체: spaceInfo
-                            });
-                            return value;
-                          })()}
-                          readOnly
-                          style={{ color: 'var(--theme-text)', backgroundColor: 'var(--theme-background-tertiary)', cursor: 'not-allowed' }}
-                        />
-                        <span className={styles.inputUnit}>개</span>
-                      </div>
-                    </div>
-                  </div>
+                  <DoorSlider
+                    value={spaceInfo.droppedCeilingDoorCount || 1}
+                    onChange={(newValue) => {
+                      console.log('🎯 단내림 구간 도어 개수 변경:', newValue);
+                      const updates: any = {
+                        droppedCeilingDoorCount: newValue
+                      };
+                      updateSpaceInfo(updates);
+                    }}
+                    width={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
+                  />
                   
                   <div className={styles.zoneInfo} style={{ marginTop: '12px' }}>
                     <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>구간 폭:</span>
+                      <span className={styles.zoneLabel}>{t('space.width')}:</span>
                       <span className={styles.zoneValue}>{spaceInfo.droppedCeiling.width} mm</span>
                     </div>
                     <div className={styles.zoneInfoItem}>
-                      <span className={styles.zoneLabel}>구간 높이:</span>
+                      <span className={styles.zoneLabel}>{t('space.height')}:</span>
                       <span className={styles.zoneValue}>{height - spaceInfo.droppedCeiling.dropHeight} mm</span>
                     </div>
                     {spaceInfo.droppedCeilingDoorCount && (
                       <div className={styles.zoneInfoItem}>
-                        <span className={styles.zoneLabel}>슬롯 폭:</span>
+                        <span className={styles.zoneLabel}>{t('space.width')}:</span>
                         <span className={styles.zoneValue}>
                           {Math.floor((spaceInfo.droppedCeiling.width - 100) / spaceInfo.droppedCeilingDoorCount)} mm
                         </span>
@@ -1034,7 +1135,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
       {/* 완료 버튼 */}
       <div className={styles.panelFooter}>
         <button className={styles.completeButton}>
-          완료
+          {t('common.finish')}
         </button>
       </div>
     </div>

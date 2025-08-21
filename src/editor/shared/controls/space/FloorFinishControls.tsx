@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
+import { useTranslation } from '@/i18n/useTranslation';
 
 interface FloorFinishControlsProps {
   spaceInfo: SpaceInfo;
@@ -11,6 +12,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
   spaceInfo,
   onUpdate
 }) => {
+  const { t } = useTranslation();
   const [floorThickness, setFloorThickness] = useState<string>(
     spaceInfo.floorFinish?.height?.toString() || '9'
   );
@@ -94,13 +96,13 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
             className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
             onClick={() => handleFloorStatusChange(false)}
           >
-            있음
+            {t('common.enabled')}
           </button>
           <button
             className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
             onClick={() => handleFloorStatusChange(true)}
           >
-            없음
+            {t('common.none')}
           </button>
         </div>
       </div>
@@ -108,7 +110,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
       {/* 바닥 마감재가 있을 때 두께 입력 필드 표시 */}
       {spaceInfo.hasFloorFinish && (
         <div className={styles.section}>
-          <label className={styles.label}>두께</label>
+          <label className={styles.label}>{t('space.floorFinishThickness')}</label>
           <div className={styles.inputWrapper}>
             <input
               type="text"

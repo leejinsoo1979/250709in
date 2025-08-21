@@ -6,6 +6,7 @@ import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -37,7 +38,7 @@ const getFurnitureImagePath = (moduleId: string) => {
 };
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
-const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false) => {
+const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
   const panels = {
     common: [],    // 공통 패널 (좌우측판, 뒷판)
     upper: [],     // 상부장 패널
@@ -179,7 +180,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       // 각 섹션의 기본 구조 패널 추가
       // 섹션 좌측판
       targetPanel.push({
-        name: `${sectionName} 좌측판`,
+        name: `${sectionName} ${t('furniture.leftPanel')}`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
         thickness: basicThickness,
@@ -188,7 +189,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       
       // 섹션 우측판
       targetPanel.push({
-        name: `${sectionName} 우측판`,
+        name: `${sectionName} ${t('furniture.rightPanel')}`,
         width: customDepth,
         height: Math.round(sectionHeightMm),
         thickness: basicThickness,
@@ -198,7 +199,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       // 섹션 상판 (마지막 섹션에만)
       if (sectionIndex === sections.length - 1) {
         targetPanel.push({
-          name: `${sectionName} 상판`,
+          name: `${sectionName} ${t('furniture.topPanel')}`,
           width: innerWidth,
           depth: customDepth,
           thickness: basicThickness,
@@ -210,7 +211,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       if (sectionIndex === 0) {
         // 하부섹션의 바닥판 (가구 전체 하판)
         targetPanel.push({
-          name: `${sectionName} 하판`,
+          name: `${sectionName} ${t('furniture.bottomPanel')}`,
           width: innerWidth,
           depth: customDepth,
           thickness: basicThickness,
@@ -219,7 +220,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       } else {
         // 상부섹션의 바닥판
         targetPanel.push({
-          name: `${sectionName} 하판`,
+          name: `${sectionName} ${t('furniture.bottomPanel')}`,
           width: innerWidth,
           depth: customDepth - backPanelThickness - 17, // 안전선반과 같은 깊이
           thickness: basicThickness,
@@ -231,7 +232,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
       
       // 섹션 뒷판
       targetPanel.push({
-        name: `${sectionName} 뒷판`,
+        name: `${sectionName} ${t('furniture.backPanel')}`,
         width: innerWidth + 10,
         height: Math.round(sectionHeightMm) + 10,
         thickness: backPanelThickness,
@@ -257,7 +258,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE) - PET 재질
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 손잡이판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
             width: customWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
@@ -271,7 +272,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 앞판
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 앞판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -280,7 +281,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 뒷판
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 뒷판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -289,7 +290,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 좌측판
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 좌측판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.leftPanel')}`,
             depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -298,7 +299,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 우측판
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 우측판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.rightPanel')}`,
             depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -307,7 +308,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
           
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
           targetPanel.push({
-            name: `${sectionName} 서랍${drawerNum} 바닥판`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
             thickness: drawerBottomThickness,
@@ -318,7 +319,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
         // 서랍 칸막이 (서랍 사이에만, 마지막 서랍 제외)
         for (let i = 1; i < section.count; i++) {
           targetPanel.push({
-            name: `${sectionName} 서랍 칸막이 ${i}`,
+            name: `${sectionName} ${t('furniture.drawerDivider')} ${i}`,
             width: innerWidth,
             depth: customDepth - backPanelThickness - 17, // 뒷판 공간 고려
             thickness: basicThickness,
@@ -408,7 +409,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
   
   // 상부장 패널 (상부 섹션)
   if (panels.upper.length > 0) {
-    result.push({ name: '=== 상부 섹션 (상부장) ===' });
+    result.push({ name: `=== ${t('furniture.upperSection')} ===` });
     result.push(...panels.upper);
   }
   
@@ -419,13 +420,13 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
   
   // 하부장 패널 (하부 섹션)
   if (panels.lower.length > 0) {
-    result.push({ name: '=== 하부 섹션 (하부장) ===' });
+    result.push({ name: `=== ${t('furniture.lowerSection')} ===` });
     result.push(...panels.lower);
   }
   
   // 도어 패널은 필요시 표시
   if (panels.door.length > 0 && hasDoor) {
-    result.push({ name: '=== 도어 ===' });
+    result.push({ name: `=== ${t('furniture.door')} ===` });
     result.push(...panels.door);
   }
   
@@ -433,6 +434,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
 };
 
 const PlacedModulePropertiesPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   
   // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
@@ -778,9 +780,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     
     // 범위 검증
     if (numValue < minDepth) {
-      setDepthError(`최소 ${minDepth}mm 이상이어야 합니다`);
+      setDepthError(t('furniture.minValue', { value: minDepth }));
     } else if (numValue > maxDepth) {
-      setDepthError(`최대 ${maxDepth}mm 이하여야 합니다`);
+      setDepthError(t('furniture.maxValue', { value: maxDepth }));
     } else {
       setDepthError('');
       handleCustomDepthChange(numValue);
@@ -816,9 +818,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     
     // 범위 검증
     if (numValue < minWidth) {
-      setWidthError(`최소 ${minWidth}mm 이상이어야 합니다`);
+      setWidthError(t('furniture.minValue', { value: minWidth }));
     } else if (numValue > maxWidth) {
-      setWidthError(`최대 ${maxWidth}mm 이하여야 합니다`);
+      setWidthError(t('furniture.maxValue', { value: maxWidth }));
     } else {
       setWidthError('');
       handleCustomWidthChange(numValue);
@@ -865,7 +867,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     <div className={styles.overlay}>
       <div className={styles.panel}>
         <div className={styles.header}>
-          <h3 className={styles.title}>가구 편집</h3>
+          <h3 className={styles.title}>{t('furniture.editFurniture')}</h3>
           <div className={styles.headerButtons}>
             <button className={styles.closeButton} onClick={handleClose}>
               ✕
@@ -917,16 +919,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               className={styles.detailsButton}
               onClick={() => setShowDetails(!showDetails)}
             >
-              상세보기
+              {t('furniture.viewDetails')}
             </button>
           </div>
           
           {/* 상세보기 패널 */}
           {showDetails && (
             <div className={styles.detailsSection}>
-              <h5 className={styles.sectionTitle}>패널 상세 정보</h5>
+              <h5 className={styles.sectionTitle}>{t('furniture.panelDetails')}</h5>
               <div className={styles.panelList}>
-                {calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor).map((panel, index) => {
+                {calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t).map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
                     return (
@@ -979,7 +981,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 너비 설정 (기둥 C인 경우만 표시) */}
           {isColumnC && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>너비 설정</h5>
+              <h5 className={styles.sectionTitle}>{t('furniture.widthSettings')}</h5>
               <div className={styles.depthInputWrapper}>
                 <div className={styles.inputWithUnit}>
                   <input
@@ -1001,7 +1003,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
                 {widthError && <div className={styles.errorMessage}>{widthError}</div>}
                 <div className={styles.depthRange}>
-                  범위: 150mm ~ {moduleData.dimensions.width}mm
+                  {t('furniture.range')}: 150mm ~ {moduleData.dimensions.width}mm
                 </div>
               </div>
             </div>
@@ -1009,7 +1011,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 깊이 설정 */}
           <div className={styles.propertySection}>
-            <h5 className={styles.sectionTitle}>깊이 설정</h5>
+            <h5 className={styles.sectionTitle}>{t('furniture.depthSettings')}</h5>
             <div className={styles.depthInputWrapper}>
               <div className={styles.inputWithUnit}>
                 <input
@@ -1031,7 +1033,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               {depthError && <div className={styles.errorMessage}>{depthError}</div>}
               <div className={styles.depthRange}>
-                범위: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
+                {t('furniture.range')}: {FURNITURE_LIMITS.DEPTH.MIN}mm ~ {Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}mm
               </div>
             </div>
           </div>
@@ -1039,45 +1041,45 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 도어 설정 (도어 지원 가구만) */}
           {moduleData.hasDoor && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>도어 유무</h5>
+              <h5 className={styles.sectionTitle}>{t('furniture.doorSettings')}</h5>
               <div className={styles.doorTabSelector}>
                 <button
                   className={`${styles.doorTab} ${!hasDoor ? styles.activeDoorTab : ''}`}
                   onClick={() => handleDoorChange(false)}
                 >
-                  없음
+                  {t('common.none')}
                 </button>
                 <button
                   className={`${styles.doorTab} ${hasDoor ? styles.activeDoorTab : ''}`}
                   onClick={() => handleDoorChange(true)}
                 >
-                  있음
+                  {t('common.enabled')}
                 </button>
               </div>
               
               {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만) */}
               {hasDoor && isSingleFurniture && (
                 <div className={styles.hingeSubSection}>
-                  <h6 className={styles.subSectionTitle}>경첩 방향</h6>
+                  <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
                   <div className={styles.hingeTabSelector}>
                     <button
                       className={`${styles.hingeTab} ${hingePosition === 'left' ? styles.activeHingeTab : ''}`}
                       onClick={() => handleHingePositionChange('left')}
                     >
-                      왼쪽
-                      <span className={styles.hingeTabSubtitle}>오른쪽으로 열림</span>
+                      {t('furniture.left')}
+                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
                     </button>
                     <button
                       className={`${styles.hingeTab} ${hingePosition === 'right' ? styles.activeHingeTab : ''}`}
                       onClick={() => handleHingePositionChange('right')}
                     >
-                      오른쪽
-                      <span className={styles.hingeTabSubtitle}>왼쪽으로 열림</span>
+                      {t('furniture.right')}
+                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
                     </button>
                   </div>
                   {isCoverDoor && (
                     <div className={styles.coverDoorNote}>
-                      커버도어는 경첩 위치 변경이 불가합니다
+                      {t('furniture.coverDoorNote')}
                     </div>
                   )}
                 </div>
@@ -1088,10 +1090,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>상하부장 사이 백패널</h5>
+              <h5 className={styles.sectionTitle}>{t('furniture.gapBackPanelSettings')}</h5>
               {isBackPanelAlreadyInSlot ? (
                 <div className={styles.backPanelDisabledNote}>
-                  이미 같은 슬롯의 {moduleData.category === 'upper' ? '하부장' : '상부장'}에서 백패널이 설정되어 있습니다.
+                  {t('furniture.backPanelAlreadySet', { position: moduleData.category === 'upper' ? t('furniture.lowerCabinet') : t('furniture.upperCabinet') })}
                 </div>
               ) : (
                 <div className={styles.doorTabSelector}>
@@ -1099,13 +1101,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     className={`${styles.doorTab} ${!hasGapBackPanel ? styles.activeDoorTab : ''}`}
                     onClick={() => handleGapBackPanelChange(false)}
                   >
-                    없음
+                    {t('common.none')}
                   </button>
                   <button
                     className={`${styles.doorTab} ${hasGapBackPanel ? styles.activeDoorTab : ''}`}
                     onClick={() => handleGapBackPanelChange(true)}
                   >
-                    있음
+                    {t('common.enabled')}
                   </button>
                 </div>
               )}
@@ -1124,7 +1126,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <line x1="10" y1="11" x2="10" y2="17"></line>
               <line x1="14" y1="11" x2="14" y2="17"></line>
             </svg>
-            삭제
+            {t('common.delete')}
           </button>
 
           {/* 확인/취소 버튼 */}
@@ -1133,13 +1135,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               className={styles.cancelButton}
               onClick={handleClose}
             >
-              취소
+              {t('common.cancel')}
             </button>
             <button 
               className={styles.confirmButton}
               onClick={handleClose}
             >
-              확인
+              {t('common.confirm')}
             </button>
           </div>
         </div>
@@ -1151,13 +1153,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           <div className={styles.warningModal}>
             <div className={styles.warningIcon}>⚠️</div>
             <div className={styles.warningMessage}>
-              커버도어는 경첩 위치 변경이 불가합니다
+              {t('furniture.coverDoorNote')}
             </div>
             <button 
               className={styles.warningCloseButton}
               onClick={() => setShowWarning(false)}
             >
-              확인
+              {t('common.confirm')}
             </button>
           </div>
         </div>

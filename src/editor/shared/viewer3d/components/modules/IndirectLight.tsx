@@ -86,7 +86,7 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
   return (
     <group position={position}>
       {/* 간접조명 효과 - X축으로 180도 회전하여 아래로 향하게 */}
-      <mesh rotation={[Math.PI, 0, 0]} renderOrder={1} frustumCulled={false}>
+      <mesh rotation={[Math.PI, 0, 0]} renderOrder={-1} frustumCulled={false}>
         <planeGeometry args={[width, depth]} />
         <meshBasicMaterial 
           map={texture}
@@ -95,7 +95,7 @@ const IndirectLight: React.FC<IndirectLightProps> = ({ width, depth, intensity, 
           opacity={intensity * 0.5} // 투명도를 0.6에서 0.5로 낮춤
           side={THREE.DoubleSide}
           depthWrite={false}
-          depthTest={false}
+          depthTest={true}
           blending={THREE.NormalBlending}
         />
       </mesh>

@@ -20,7 +20,7 @@ export default function StatsCard(){
           <span className={styles.value}>{waste.toFixed(1)}%</span>
         </div>
         <div className={styles.statItem}>
-          <span className={styles.label}>사용 시트</span>
+          <span className={styles.label}>Used Sheets</span>
           <span className={styles.value}>{new Set(placements.map(p=>p.sheetId)).size}</span>
         </div>
         <div className={styles.statItem}>

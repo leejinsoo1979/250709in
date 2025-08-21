@@ -51,7 +51,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     { id: 'mint', name: '민트', color: '#0CBA80' },
     { id: 'lime', name: '라임그린', color: '#84cc16' },
     { id: 'green', name: '그린', color: '#10b981' },
-    { id: 'forest', name: '다크그린', color: '#1B3924' },
+    { id: 'forest', name: '다크그린', color: '#314d30' },
     { id: 'olive', name: '올리브', color: '#4C462C' },
     { id: 'yellow', name: '올리브그린', color: '#eab308' },
   ];

@@ -763,7 +763,7 @@ const Room: React.FC<RoomProps> = ({
           {viewMode !== '2D' && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const droppedWidth = hasDroppedCeiling && spaceInfo.droppedCeiling 
-              ? mmToThreeUnits(spaceInfo.droppedCeiling.width || 900)
+              ? mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH)
               : 0;
             const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
             const dropHeight = hasDroppedCeiling && spaceInfo.droppedCeiling
@@ -1133,7 +1133,7 @@ const Room: React.FC<RoomProps> = ({
               // 단내림이 있는 경우 - 뒷벽을 두 부분으로 분할 (높이만)
               const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
               const droppedCeilingHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
-              const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
               
               // 단내림 경계 X 위치 계산
@@ -1672,7 +1672,7 @@ const Room: React.FC<RoomProps> = ({
             let droppedHeight = 0;
             let isLeftDropped = false;
             if (hasDroppedCeiling && spaceInfo.droppedCeiling) {
-              droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+              droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
               const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
               droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
               isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
@@ -1762,15 +1762,15 @@ const Room: React.FC<RoomProps> = ({
               if (isLeftDropped) {
                 // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
                 // ColumnIndexer 로직과 동일하게 수정
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH));
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
               } else {
                 // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
                 // ColumnIndexer 로직과 동일하게 수정
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH));
+                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
               }
