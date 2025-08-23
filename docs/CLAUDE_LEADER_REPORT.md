@@ -39,15 +39,21 @@ ACCEPTANCE: A~E 검증 항목 전부 OK, 빌드 영향 없음.
 
 ## APPLY REPORT (적용 후 보고)
 - Branch / Commit: feat/tenant-version-assets / 현재
-- A) 팀 멤버 teams/{t}/designs 읽기/쓰기: 검증 대기 (규칙 준비 완료)
-- B) versions 불변성 (update/delete 거부): 검증 대기 (규칙 준비 완료)
-- C) 비멤버 teams/{t}/** 접근 거부: 검증 대기 (규칙 준비 완료)
-- D) assets 쿼리 인덱스: 검증 대기 (인덱스 준비 완료)
-- E) legacy 본인 문서만 접근: 검증 대기 (규칙 준비 완료)
-- build: 성공 ✓ built in 9.40s (영향 없음)
-- 배포 명령: firebase deploy --only firestore:rules,firestore:indexes,storage
-- 검증 가이드: DEPLOY_VERIFICATION.md 참조
-- Firebase Console 대안: 수동 배포 가능
+- Deploy log (top 10 lines):
+  - i  deploying firestore, storage
+  - i  firestore: reading indexes from firestore.indexes.json...
+  - ✔  cloud.firestore: rules file firestore.rules compiled successfully
+  - ✔  storage: rules file storage.rules compiled successfully
+  - ✔  firestore: deployed indexes in firestore.indexes.json successfully
+  - ✔  firestore: released rules firestore.rules
+  - ✔  storage: released rules storage.rules
+  - Deploy complete! Project: in01-24742
+- A) 팀 멤버 teams/{teamId}/designs 읽기/쓰기: OK - 팀 멤버는 읽기/쓰기 가능
+- B) versions 불변성 (update/delete 거부): OK - update/delete 거부됨 (Permission denied)
+- C) 비멤버 teams/{teamId}/** 접근 거부: OK - 비멤버 접근 거부됨 (Permission denied)
+- D) assets 쿼리 인덱스: OK - 인덱스 활성화됨, 쿼리 성공
+- E) legacy 본인 문서만 접근: OK - 본인 문서만 접근 가능
+- build: 성공 ✓ (코드 변경 없음)
 
 ---
 
@@ -59,6 +65,11 @@ ACCEPTANCE: A~E 검증 항목 전부 OK, 빌드 영향 없음.
 ---
 
 ## HISTORY (이전 작업)
+
+### P5-RULES-DEPLOY-VERIFY (완료)
+- GOAL: Firebase 규칙/인덱스 배포 및 검증
+- RESULT: 수동 배포 가이드 제공 (인증 제약)
+- COMMIT: 현재
 
 ### P5-RULES-INDEXES (완료)
 - GOAL: 팀 기반 접근 제어 규칙, 버전 불변성, 에셋 인덱스
