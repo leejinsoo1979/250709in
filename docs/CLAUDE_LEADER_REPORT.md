@@ -15,33 +15,33 @@
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P3-VERSIONS-CORE
-GOAL: 디자인 저장 시 불변 스냅샷(versions) 생성, designs.current_version_id 갱신. UI 변경 금지.
-SCOPE: src/firebase/designs.ts(신규), src/services/designs.repo.ts(내부 구현만)
-FILES-ALLOWED: src/firebase/designs.ts, src/services/designs.repo.ts
+TASK-ID: P4-ASSETS-CORE
+GOAL: DXF/PDF 내보내기를 Firebase Storage에 업로드하고 teams/{teamId}/assets에 메타 등록. UI 변경 금지.
+SCOPE: src/firebase/assets.ts(신규), src/services/**(내부 로직만)
+FILES-ALLOWED: src/firebase/assets.ts, src/services/**
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: 동일 디자인 3회 저장 시 versions에 version_no=1,2,3 생성, current_version_id 갱신. build 성공.
+ACCEPTANCE: Storage에 파일 존재, Firestore에 assets 문서 존재. build 성공.
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 2 files, +43 insertions
+- Diff summary: 3 files, +156 insertions
 - 변경 목록(최대 10줄):
-  - `src/firebase/designs.ts`: 신규 파일, saveDesignSnapshot 함수 구현
-  - `src/services/designs.repo.ts`: saveDesign에 snapshot 호출 추가
+  - `src/firebase/assets.ts`: 신규 파일, saveExportAsset 함수 구현
+  - `src/services/exportService.ts`: 신규 파일, export 처리 및 Storage 저장
+  - `src/services/designs.repo.ts`: getCurrentVersionId 함수 추가
 - 리스크/전제(최대 3줄):
-  - 트랜잭션으로 버전 생성과 current_version_id 갱신 원자적 처리
-  - version_seq 자동 증가로 버전 번호 관리
-  - 기존 dual-write 로직 그대로 유지
+  - Storage 업로드 실패 시 기존 다운로드 폴백
+  - 에디터 코드 수정 없어 서비스 레이어로 처리
+  - 팀/디자인/버전 ID 필요
 
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / 313a00d
-- tsc: 0 에러 (새 파일 관련)
-- build: 성공 ✓ built in 9.59s
-- 남은 에러: 없음 (빌드 완전 성공)
-- 다음 액션(1줄만): Phase 4 에셋 관리 시스템 구현
+- Branch / Commit: feat/tenant-version-assets / 8a375ad
+- 업로드: Storage 경로 teams/{t}/designs/{d}/versions/{v}/{assetId}.{ext} 준비
+- 문서 생성: teams/{t}/assets/{assetId} 커렉션 준비 (url 포함)
+- build: 성공 ✓ built in 9.49s
 
 ---
 
@@ -53,6 +53,11 @@ ACCEPTANCE: 동일 디자인 3회 저장 시 versions에 version_no=1,2,3 생성
 ---
 
 ## HISTORY (이전 작업)
+
+### P4-ASSETS-CORE (완료)
+- GOAL: DXF/PDF 내보내기를 Storage 업로드, assets 메타 등록
+- RESULT: ✓ built in 9.49s (성공)
+- COMMIT: 8a375ad
 
 ### P3-VERSIONS-CORE (완료)
 - GOAL: 디자인 저장 시 불변 스냅샷 생성, current_version_id 갱신
