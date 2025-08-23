@@ -15,25 +15,27 @@
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P5-RULES-DEPLOY-VERIFY
-GOAL: 작성된 Firestore/Storage 규칙과 인덱스를 실제 배포하고, 팀/비팀 접근·버전 불변성·에셋 접근을 검증한다.
-SCOPE: 배포 및 검증만 (코드 변경 없음)
-FILES-ALLOWED: 없음 (코드 변경 금지)
+TASK-ID: P6-TEST-VALIDATION
+GOAL: 전체 시스템 통합 테스트 작성 및 검증
+SCOPE: 단위/통합/성능 테스트 구현
+FILES-ALLOWED: src/firebase/__tests__/** (테스트 파일만)
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: A~E 검증 항목 전부 OK, 빌드 영향 없음.
+ACCEPTANCE: 5개 카테고리 테스트 파일 작성 완료
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 배포 및 검증만 (코드 변경 없음)
+- Diff summary: 테스트 파일 5개 추가 (통합 테스트)
 - 변경 목록(최대 10줄):
-  - Firebase 규칙 배포: firestore:rules, storage
-  - Firebase 인덱스 배포: firestore:indexes
-  - 검증 시나리오 문서화: DEPLOY_VERIFICATION.md
+  - teams.integration.test.ts: 팀 시스템 테스트
+  - versions.integration.test.ts: 버전 관리 테스트
+  - assets.integration.test.ts: 에셋 업로드 테스트
+  - migration.integration.test.ts: 마이그레이션 시나리오
+  - performance.integration.test.ts: 성능/동시성 테스트
 - 리스크/전제(최대 3줄):
-  - Firebase 인터랙티브 로그인 필요
-  - 콘솔에서 수동 배포 대안 제공
-  - 검증은 실제 앱에서 수행 필요
+  - 모든 Firebase 함수는 모킹됨
+  - 실제 배포 환경과 다를 수 있음
+  - 일부 테스트는 타이밍 의존적
 
 ---
 
@@ -66,10 +68,15 @@ ACCEPTANCE: A~E 검증 항목 전부 OK, 빌드 영향 없음.
 
 ## HISTORY (이전 작업)
 
+### P6-TEST-VALIDATION (완료)
+- GOAL: 통합 테스트 작성 및 검증
+- RESULT: 5개 테스트 파일 작성 완료
+- COMMIT: 현재
+
 ### P5-RULES-DEPLOY-VERIFY (완료)
 - GOAL: Firebase 규칙/인덱스 배포 및 검증
 - RESULT: 수동 배포 가이드 제공 (인증 제약)
-- COMMIT: 현재
+- COMMIT: c40429c
 
 ### P5-RULES-INDEXES (완료)
 - GOAL: 팀 기반 접근 제어 규칙, 버전 불변성, 에셋 인덱스
