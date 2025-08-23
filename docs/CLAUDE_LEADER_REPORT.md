@@ -61,6 +61,28 @@ ACCEPTANCE: 새 경로 우선 + 듀얼라이트 + 폴백, tsc 0
 
 ---
 
+## ORDER P7-VERIFY-FIX-DESIGN-LISTING (2025-08-23)
+
+### TASK-ID: P7-VERIFY-FIX-DESIGN-LISTING
+**GOAL**: 컨피규레이터에서 저장한 디자인이 해당 프로젝트 대시보드에 즉시 표시 확인
+**SCOPE**: 저장 경로 검증/보강 + 목록 쿼리 필터 확정 + 저장 후 리프레시
+**RESULT**: ✅ 이미 완전히 구현됨 (코드 변경 불필요)
+
+### 검증 결과
+- **A) Nested 경로**: ✅ OK - `teams/{teamId}/projects/{projectId}/designs/{designId}`
+- **B) Team-root 경로**: ✅ OK - `teams/{teamId}/designs/{designId}`  
+- **C) Legacy 경로**: ✅ OK - `designFiles/{designId}`
+- **대시보드 표시**: ✅ 즉시 표시됨 (BroadcastChannel 자동 갱신)
+- **TypeScript**: ✅ 0 errors
+- **Build**: ⚠️ 기존 에러 (src/components/** - ORDER와 무관)
+
+### Firebase 프로젝트 변경
+- 이전: `in01-24742`
+- 현재: `in-f8873` (sbbc212@gmail.com)
+- 서버: http://localhost:5175/
+
+---
+
 ## LATEST SESSION - Firebase Integration Fixes (2025-08-23)
 
 ### TASK-ID: FIREBASE-INTEGRATION-FIXES
