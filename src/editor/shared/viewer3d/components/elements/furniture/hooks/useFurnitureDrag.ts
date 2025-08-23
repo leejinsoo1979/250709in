@@ -432,7 +432,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
       
       const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
-      const targetSlotInfo = columnSlots[globalSlotIndex];
+      let targetSlotInfo = columnSlots[globalSlotIndex];
       
       if (targetSlotInfo && targetSlotInfo.hasColumn) {
         // 기둥이 있는 슬롯으로 이동하는 경우

@@ -33,6 +33,8 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [folders, setFolders] = useState<{ [projectId: string]: FolderData[] }>({});
+  const [designFiles, setDesignFiles] = useState<{ [projectId: string]: DesignFileSummary[] }>({});
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [moreMenu, setMoreMenu] = useState<{
     visible: boolean;
@@ -114,13 +116,32 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
     
     try {
       const result = await getDesignFiles(projectId);
-      // 현재는 디자인 파일 로드만 수행, 추후 필요시 상태 관리 추가
+      // 디자인 파일을 상태에 저장
+      setDesignFiles(prev => ({
+        ...prev,
+        [projectId]: result.designFiles || []
+      }));
       console.log('디자인 파일 로드 완료:', result.designFiles);
     } catch (error) {
       console.error('디자인 파일 로드 에러:', error);
     }
   };
   
+  const toggleProject = async (projectId: string) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+      // 프로젝트를 확장할 때 선택 및 데이터 로드
+      handleProjectSelect(projectId);
+      // 폴더와 디자인 파일 데이터 로드
+      await loadFolderDataForProject(projectId);
+      await loadDesignFilesForProject(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
+
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
     if (newExpanded.has(folderId)) {
@@ -330,146 +351,24 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
               로그인하기
             </button>
           </div>
-        ) : selectedProjectId && selectedProject ? (
-          <div>
-            {/* 새 폴더 생성 버튼 */}
-            <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
-              <div className={styles.createFolderIcon}>
-                <FolderIcon size={16} />
-                <PlusIcon size={12} />
-              </div>
-              <span>새로운 폴더</span>
-            </button>
-            
-            {/* 프로젝트 루트 */}
-            <div className={`${styles.treeItem} ${styles.active}`}>
-              <div className={styles.treeItemIcon}>
-                <ProjectIcon size={16} />
-              </div>
-              <span>{selectedProject.title}</span>
-              <div className={styles.treeItemActions}>
-                <button 
-                  className={styles.treeItemActionBtn}
-                  onClick={(e) => handleMoreMenuOpen(e, selectedProject.id, selectedProject.title, 'project')}
-                >
-                  ⋯
-                </button>
-              </div>
-            </div>
-            
-            {/* 폴더들 */}
-            {(folders[selectedProjectId] || []).map(folder => (
-              <div key={folder.id}>
+        ) : user && allProjects.length > 0 ? (
+          <>
+            {/* 모든 프로젝트 목록 */}
+            {allProjects.map(project => (
+              <div key={project.id}>
                 <div 
-                  className={styles.treeItem}
-                  onClick={() => toggleFolder(folder.id)}
+                  className={`${styles.treeItem} ${selectedProjectId === project.id ? styles.active : ''}`}
+                  onClick={() => toggleProject(project.id)}
                 >
                   <div className={styles.treeItemIcon}>
-                    {expandedFolders.has(folder.id) ? (
+                    {expandedProjects.has(project.id) ? (
                       <ChevronDownIcon size={12} />
                     ) : (
                       <ChevronRightIcon size={12} />
                     )}
-                    <FolderIcon size={16} />
-                  </div>
-                  <span>{folder.name}</span>
-                  <span className={styles.treeItemCount}>{folder.children.length}</span>
-                  <div className={styles.treeItemActions}>
-                    <button 
-                      className={styles.treeItemActionBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoreMenuOpen(e, folder.id, folder.name, 'folder');
-                      }}
-                    >
-                      ⋯
-                    </button>
-                  </div>
-                </div>
-                
-                {/* 폴더 내 파일들 */}
-                {expandedFolders.has(folder.id) && (
-                  <div className={styles.folderChildren}>
-                    {folder.children.map(child => (
-                      <div 
-                        key={child.id}
-                        className={`${styles.treeItem} ${styles.childItem}`}
-                        onClick={() => handleDesignFileClick(selectedProject.id, child.name)}
-                      >
-                        <div className={styles.treeItemIcon}>
-                          <div className={styles.designIcon}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                              <path d="M2 2l7.586 7.586"/>
-                              <circle cx="11" cy="11" r="2"/>
-                            </svg>
-                          </div>
-                        </div>
-                        <span>{child.name}</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, child.id, child.name, 'design');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            {/* 루트 레벨 디자인 파일 */}
-            {hasRootDesignFile() && (
-              <div 
-                className={styles.treeItem}
-                onClick={() => handleDesignFileClick(selectedProject.id, selectedProject.title)}
-              >
-                <div className={styles.treeItemIcon}>
-                  <div className={styles.designIcon}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                      <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                      <path d="M2 2l7.586 7.586"/>
-                      <circle cx="11" cy="11" r="2"/>
-                    </svg>
-                  </div>
-                </div>
-                <span>{selectedProject.title}</span>
-                <div className={styles.treeItemActions}>
-                  <button 
-                    className={styles.treeItemActionBtn}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoreMenuOpen(e, `${selectedProject.id}-design`, selectedProject.title, 'design');
-                    }}
-                  >
-                    ⋯
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          user && allProjects.length > 0 ? (
-            <>
-              {allProjects.map(project => (
-                <div 
-                  key={project.id}
-                  className={styles.treeItem}
-                  onClick={() => handleProjectSelect(project.id)}
-                >
-                  <div className={styles.treeItemIcon}>
                     <ProjectIcon size={16} />
                   </div>
                   <span>{project.title}</span>
-                  <span className={styles.treeItemCount}>1</span>
                   <div className={styles.treeItemActions}>
                     <button 
                       className={styles.treeItemActionBtn}
@@ -482,21 +381,126 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                     </button>
                   </div>
                 </div>
-              ))}
-            </>
-          ) : user ? (
-            <div className={styles.treeItem}>
-              <span style={{ color: '#999', fontSize: '14px' }}>
-                프로젝트가 없습니다
-              </span>
-            </div>
-          ) : (
-            <div className={styles.treeItem}>
-              <span style={{ color: '#999', fontSize: '14px' }}>
-                로그인이 필요합니다
-              </span>
-            </div>
-          )
+                
+                {/* 프로젝트가 확장되면 디자인 파일과 폴더 표시 */}
+                {expandedProjects.has(project.id) && (
+                  <div className={styles.projectChildren}>
+                    {/* 폴더들 */}
+                    {(folders[project.id] || []).map(folder => (
+                      <div key={folder.id}>
+                        <div 
+                          className={`${styles.treeItem} ${styles.childItem}`}
+                          onClick={() => toggleFolder(folder.id)}
+                        >
+                          <div className={styles.treeItemIcon}>
+                            {expandedFolders.has(folder.id) ? (
+                              <ChevronDownIcon size={12} />
+                            ) : (
+                              <ChevronRightIcon size={12} />
+                            )}
+                            <FolderIcon size={16} />
+                          </div>
+                          <span>{folder.name}</span>
+                          <span className={styles.treeItemCount}>{folder.children.length}</span>
+                          <div className={styles.treeItemActions}>
+                            <button 
+                              className={styles.treeItemActionBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoreMenuOpen(e, folder.id, folder.name, 'folder');
+                              }}
+                            >
+                              ⋯
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* 폴더 내 파일들 */}
+                        {expandedFolders.has(folder.id) && (
+                          <div className={styles.folderChildren}>
+                            {folder.children.map(child => (
+                              <div 
+                                key={child.id}
+                                className={`${styles.treeItem} ${styles.childItem} ${styles.nestedItem}`}
+                                onClick={() => handleDesignFileClick(project.id, child.name)}
+                              >
+                                <div className={styles.treeItemIcon}>
+                                  <div className={styles.designIcon}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                      <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                      <path d="M2 2l7.586 7.586"/>
+                                      <circle cx="11" cy="11" r="2"/>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <span>{child.name}</span>
+                                <div className={styles.treeItemActions}>
+                                  <button 
+                                    className={styles.treeItemActionBtn}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMoreMenuOpen(e, child.id, child.name, 'design');
+                                    }}
+                                  >
+                                    ⋯
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* 디자인 파일들 (폴더에 없는 것들) */}
+                    {(designFiles[project.id] || []).map(designFile => (
+                      <div 
+                        key={designFile.id}
+                        className={`${styles.treeItem} ${styles.childItem}`}
+                        onClick={() => handleDesignFileClick(project.id, designFile.name)}
+                      >
+                        <div className={styles.treeItemIcon}>
+                          <div className={styles.designIcon}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                              <path d="M2 2l7.586 7.586"/>
+                              <circle cx="11" cy="11" r="2"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <span>{designFile.name}</span>
+                        <div className={styles.treeItemActions}>
+                          <button 
+                            className={styles.treeItemActionBtn}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMoreMenuOpen(e, designFile.id, designFile.name, 'design');
+                            }}
+                          >
+                            ⋯
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        ) : user ? (
+          <div className={styles.treeItem}>
+            <span style={{ color: '#999', fontSize: '14px' }}>
+              프로젝트가 없습니다
+            </span>
+          </div>
+        ) : (
+          <div className={styles.treeItem}>
+            <span style={{ color: '#999', fontSize: '14px' }}>
+              로그인이 필요합니다
+            </span>
+          </div>
         )}
       </div>
       

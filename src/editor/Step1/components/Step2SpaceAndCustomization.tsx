@@ -33,7 +33,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   const viewMode = '3D'; // 3D 뷰만 사용
   const [viewerKey, setViewerKey] = useState(0);
   
-  const { basicInfo } = useProjectStore();
+  const { basicInfo, projectId } = useProjectStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
 
@@ -138,10 +138,20 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         }
       };
 
-      const result = await createProject(projectData);
+      // 이미 Step1에서 프로젝트가 생성되었으므로, projectId 사용
+      let currentProjectId = projectId;
       
-      if (result.success && result.data) {
-        const projectId = result.data;
+      if (!currentProjectId) {
+        // 만약 프로젝트 ID가 없으면 생성 (백업용)
+        const result = await createProject(projectData);
+        if (result.success && result.data) {
+          currentProjectId = result.data;
+        } else {
+          throw new Error(result.error || '프로젝트 생성 실패');
+        }
+      }
+      
+      if (currentProjectId) {
         const designFileName = `${basicInfo.title || '새로운 디자인'}_${new Date().toISOString().split('T')[0]}`;
         
         const thumbnailDataURL = generateDefaultThumbnail(spaceInfo, placedModules.length);
@@ -149,7 +159,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         
         const designFileResult = await createDesignFile({
           name: designFileName,
-          projectId: projectId,
+          projectId: currentProjectId,
           spaceConfig: spaceInfo,
           furniture: {
             placedModules: []
@@ -164,7 +174,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           
           // 약간의 지연을 주어 로딩 화면이 보이도록 함
           setTimeout(() => {
-            navigate(`/configurator?project=${projectId}&design=new`, { replace: true });
+            navigate(`/configurator?project=${currentProjectId}&design=new`, { replace: true });
           }, 100);
         } else {
           throw new Error(designFileResult.error || '디자인 파일 생성 실패');
@@ -202,7 +212,14 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
             ×
           </button>
           <div>
-            <h1>공간 설정</h1>
+            <h1>
+              STEP. 2 공간 설정
+              {basicInfo.title && (
+                <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
+                  {basicInfo.title} / {basicInfo.location || '위치 미정'}
+                </span>
+              )}
+            </h1>
           </div>
         </div>
 

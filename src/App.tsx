@@ -4,6 +4,7 @@ import { AuthProvider } from '@/auth/AuthProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
+import { TeamProvider } from '@/contexts/TeamContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
@@ -127,11 +128,13 @@ function App() {
       <ThemeProvider>
         <AlertProvider>
           <AuthProvider>
-            <Router>
-              <NavigationProvider>
-                <AppContent />
-              </NavigationProvider>
-            </Router>
+            <TeamProvider>
+              <Router>
+                <NavigationProvider>
+                  <AppContent />
+                </NavigationProvider>
+              </Router>
+            </TeamProvider>
           </AuthProvider>
         </AlertProvider>
       </ThemeProvider>

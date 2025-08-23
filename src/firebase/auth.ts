@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
+import { FLAGS } from '@/flags';
 
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
@@ -23,6 +24,12 @@ googleProvider.setCustomParameters({
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // 팀 자동 생성 (최초 로그인 시)
+    if (FLAGS.teamScope) {
+      await ensurePersonalTeam(userCredential.user);
+    }
+    
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
@@ -43,6 +50,11 @@ export const signInWithGoogle = async () => {
         email: result.user.email,
         photo: result.user.photoURL
       });
+    }
+    
+    // 팀 자동 생성 (최초 로그인 시)
+    if (FLAGS.teamScope) {
+      await ensurePersonalTeam(result.user);
     }
     
     return { user: result.user, error: null };
@@ -83,6 +95,11 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
       await updateProfile(userCredential.user, { displayName });
     }
     
+    // 팀 자동 생성 (신규 가입 시)
+    if (FLAGS.teamScope) {
+      await ensurePersonalTeam(userCredential.user);
+    }
+    
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
@@ -119,4 +136,56 @@ export const getCurrentUserAsync = (): Promise<User | null> => {
       resolve(user);
     });
   });
-}; 
+};
+
+// 개인 팀 자동 생성 헬퍼 함수
+async function ensurePersonalTeam(user: User) {
+  try {
+    const { doc, getDoc, setDoc, serverTimestamp, Timestamp } = await import('firebase/firestore');
+    const { db } = await import('./config');
+    
+    const teamId = `personal_${user.uid}`;
+    const teamRef = doc(db, 'teams', teamId);
+    
+    // 이미 팀이 있는지 확인
+    const teamDoc = await getDoc(teamRef);
+    if (teamDoc.exists()) {
+      return;
+    }
+    
+    // 개인 팀 생성
+    const team = {
+      name: `${(user.email || 'User').split('@')[0]}'s Workspace`,
+      description: 'Personal workspace',
+      ownerId: user.uid,
+      members: [{
+        userId: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        role: 'owner',
+        joinedAt: Timestamp.now(),
+        status: 'active'
+      }],
+      settings: {
+        isPublic: false,
+        allowInvitations: true,
+        defaultRole: 'viewer',
+        maxMembers: 50
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    
+    await setDoc(teamRef, team);
+    
+    // localStorage에 email 저장 (나중에 팀 생성 시 사용)
+    if (user.email) {
+      localStorage.setItem('userEmail', user.email);
+    }
+    
+    console.log('✅ Personal team created:', teamId);
+  } catch (error) {
+    console.error('Failed to create personal team:', error);
+  }
+} 

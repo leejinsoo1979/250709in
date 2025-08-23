@@ -21,6 +21,7 @@ import { db } from './config';
 import { getCurrentUserAsync } from './auth';
 import { Team, TeamMember, TeamInvitation, TeamSettings } from './types';
 import { handleFirebaseError, createBusinessError } from './utils/error-handler';
+import { FLAGS } from '@/flags';
 
 // 컬렉션 참조
 const TEAMS_COLLECTION = 'teams';

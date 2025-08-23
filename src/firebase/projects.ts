@@ -18,9 +18,40 @@ import {
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
 import { FirebaseProject, CreateProjectData, ProjectSummary, CreateDesignFileData, DesignFile, DesignFileSummary } from './types';
+import { FLAGS } from '@/flags';
 
 // 컬렉션 참조
 const PROJECTS_COLLECTION = 'projects';
+
+// 팀 스코프 경로 헬퍼 함수
+async function getActiveTeamId(): Promise<string | null> {
+  if (!FLAGS.teamScope) return null;
+  
+  // 먼저 localStorage에서 확인
+  const storedTeamId = localStorage.getItem('activeTeamId');
+  if (storedTeamId) return storedTeamId;
+  
+  // 없으면 개인 팀 ID 사용
+  const user = await getCurrentUserAsync();
+  if (!user) return null;
+  
+  return `personal_${user.uid}`;
+}
+
+// 프로젝트 컬렉션 경로 결정
+async function getProjectsPath(): Promise<string> {
+  if (!FLAGS.teamScope) {
+    return PROJECTS_COLLECTION;
+  }
+  
+  const teamId = await getActiveTeamId();
+  if (teamId) {
+    return `teams/${teamId}/projects`;
+  }
+  
+  // Fallback to legacy path
+  return PROJECTS_COLLECTION;
+}
 
 // 새 프로젝트 생성
 export const createProject = async (projectData: CreateProjectData): Promise<{ id: string | null; error: string | null }> => {
@@ -74,7 +105,18 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
       },
     };
 
-    const docRef = await addDoc(collection(db, PROJECTS_COLLECTION), newProject);
+    // 팀 스코프 경로 사용
+    const projectsPath = await getProjectsPath();
+    const docRef = await addDoc(collection(db, projectsPath), newProject);
+    
+    // 팀 ID 추가 (메타데이터용)
+    if (FLAGS.teamScope) {
+      const teamId = await getActiveTeamId();
+      if (teamId) {
+        await updateDoc(docRef, { teamId });
+      }
+    }
+    
     return { id: docRef.id, error: null };
   } catch (error) {
     console.error('프로젝트 생성 에러:', error);
@@ -500,42 +542,78 @@ export const getUserProjects = async (userId?: string): Promise<{ projects: Proj
       targetUserId = user.uid;
     }
 
-    const q = query(
-      collection(db, PROJECTS_COLLECTION),
-      where('userId', '==', targetUserId),
-      orderBy('updatedAt', 'desc')
-    );
-
-    // 캐시 문제 해결을 위해 서버에서 직접 가져오기
-    const querySnapshot = await getDocsFromServer(q);
     const projects: ProjectSummary[] = [];
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      console.log('🔍 Firebase 원본 프로젝트 데이터:', {
-        id: doc.id,
-        title: data.title,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-        hasCreatedAt: 'createdAt' in data,
-        hasUpdatedAt: 'updatedAt' in data
-      });
+    
+    if (FLAGS.newReadsFirst && FLAGS.teamScope) {
+      // 새 경로 우선 읽기
+      const teamPath = await getProjectsPath();
+      const teamQuery = query(
+        collection(db, teamPath),
+        where('userId', '==', targetUserId),
+        orderBy('updatedAt', 'desc')
+      );
       
-      projects.push({
-        id: doc.id,
-        title: data.title,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-        furnitureCount: data.stats?.furnitureCount || 0,
-        spaceSize: {
-          width: data.spaceConfig?.width || 0,
-          height: data.spaceConfig?.height || 0,
-          depth: data.spaceConfig?.depth || 0,
-        },
-        thumbnail: data.thumbnail, // 썸네일 추가
-        folderId: data.folderId, // 폴더 ID 추가
+      try {
+        const teamSnapshot = await getDocsFromServer(teamQuery);
+        teamSnapshot.forEach((doc) => {
+          const data = doc.data();
+          projects.push({
+            id: doc.id,
+            title: data.title,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            furnitureCount: data.furniture?.placedModules?.length || 0,
+            spaceSize: {
+              width: data.spaceConfig?.width || 0,
+              height: data.spaceConfig?.height || 0,
+              depth: data.spaceConfig?.depth || 0,
+            },
+            spaceInfo: data.spaceConfig,
+            placedModules: data.furniture?.placedModules || [],
+          });
+        });
+      } catch (error) {
+        console.log('Team-scoped path not found, falling back to legacy');
+      }
+    }
+    
+    // 레거시 경로에서도 읽기 (팀 경로에서 못 찾은 경우 또는 플래그가 꺼진 경우)
+    if (projects.length === 0 || !FLAGS.teamScope) {
+      const q = query(
+        collection(db, PROJECTS_COLLECTION),
+        where('userId', '==', targetUserId),
+        orderBy('updatedAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocsFromServer(q);
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log('🔍 Firebase 원본 프로젝트 데이터:', {
+          id: doc.id,
+          title: data.title,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          hasCreatedAt: 'createdAt' in data,
+          hasUpdatedAt: 'updatedAt' in data
+        });
+        
+        projects.push({
+          id: doc.id,
+          title: data.title,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          furnitureCount: data.stats?.furnitureCount || 0,
+          spaceSize: {
+            width: data.spaceConfig?.width || 0,
+            height: data.spaceConfig?.height || 0,
+            depth: data.spaceConfig?.depth || 0,
+          },
+          thumbnail: data.thumbnail, // 썸네일 추가
+          folderId: data.folderId, // 폴더 ID 추가
+        });
       });
-    });
+    }
 
     return { projects, error: null };
   } catch (error) {

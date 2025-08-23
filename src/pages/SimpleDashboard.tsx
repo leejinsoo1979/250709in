@@ -1918,19 +1918,9 @@ const SimpleDashboard: React.FC = () => {
       <main className={styles.main}>
         {/* 상단 헤더 */}
         <header className={styles.header}>
+          <div className={styles.headerLeft}>
+          </div>
           <div className={styles.headerRight}>
-            {/* 검색바 */}
-            <div className={styles.searchContainer}>
-              <div className={styles.searchIcon}>
-                <SearchIcon size={16} />
-              </div>
-              <input
-                type="text"
-                placeholder="프로젝트 검색..."
-                className={styles.searchInput}
-              />
-            </div>
-            
             <div className={styles.headerActions}>
               <button className={styles.actionButton}>
                 <MessageIcon size={20} />
@@ -1988,6 +1978,18 @@ const SimpleDashboard: React.FC = () => {
             
             {/* 우측 액션 버튼들 */}
             <div className={styles.subHeaderActions}>
+              {/* 검색바 */}
+              <div className={styles.searchContainer}>
+                <div className={styles.searchIcon}>
+                  <SearchIcon size={16} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="프로젝트 검색..."
+                  className={styles.searchInput}
+                />
+              </div>
+              
               {/* 뷰 모드 토글 */}
               <div className={styles.viewToggleGroup}>
                 <button 
@@ -2092,15 +2094,17 @@ const SimpleDashboard: React.FC = () => {
           {activeMenu === 'all' && (
           <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.treeHeader}>
-              <button 
-                className={styles.treeToggleButton}
-                onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
-                aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
-              >
-                <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
-                  ◀
-                </span>
-              </button>
+              {allProjects.length > 0 && (
+                <button 
+                  className={styles.treeToggleButton}
+                  onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
+                  aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
+                >
+                  <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
+                    ◀
+                  </span>
+                </button>
+              )}
               <div className={styles.projectSelectorContainer}>
                 <SimpleProjectDropdown
                   projects={allProjects}

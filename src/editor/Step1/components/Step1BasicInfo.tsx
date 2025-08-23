@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { createProject } from '@/services/projectDataService';
+import { getCurrentUserAsync } from '@/firebase/auth';
+import { serverTimestamp } from 'firebase/firestore';
 import Input from '@/components/common/Input';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import styles from './Step1BasicInfo.module.css';
 
 interface Step1BasicInfoProps {
@@ -10,12 +14,13 @@ interface Step1BasicInfoProps {
 }
 
 const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
-  const { basicInfo, setBasicInfo } = useProjectStore();
+  const { basicInfo, setBasicInfo, projectId, setProjectId } = useProjectStore();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [hasFloorFinish, setHasFloorFinish] = useState(spaceInfo.hasFloorFinish || false);
   const [floorFinishHeight, setFloorFinishHeight] = useState(spaceInfo.floorFinish?.height || 10);
+  const [saving, setSaving] = useState(false);
   
   const locationOptions = ['안방', '거실', '아이방', '옷방', '창고'];
 
@@ -74,6 +79,16 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
 
   return (
     <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
+      {/* 로딩 화면 */}
+      {saving && (
+        <div className={styles.loadingOverlay}>
+          <LoadingSpinner 
+            message="프로젝트 생성 중..."
+            size="large"
+            type="spinner"
+          />
+        </div>
+      )}
       <div className={styles.modalContent}>
         <div className={styles.header}>
           <button
@@ -84,8 +99,14 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
             ×
           </button>
           <div>
-            <h1>STEP. 1 기본 정보</h1>
-            <p>디자인 정보를 입력해주세요.</p>
+            <h1>
+              STEP. 1 기본 정보
+              {basicInfo.title && (
+                <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
+                  {basicInfo.title}
+                </span>
+              )}
+            </h1>
           </div>
         </div>
 
@@ -183,10 +204,82 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
         <div className={styles.footer}>
           <button
             className={styles.nextButton}
-            onClick={onNext}
-            disabled={!canProceed}
+            onClick={async () => {
+              if (!projectId) {
+                // 프로젝트가 없으면 생성
+                setSaving(true);
+                try {
+                  const user = await getCurrentUserAsync();
+                  if (!user) {
+                    alert('로그인이 필요합니다.');
+                    setSaving(false);
+                    return;
+                  }
+
+                  const currentTimestamp = serverTimestamp();
+                  const projectData = {
+                    userId: user.uid,
+                    basicInfo: {
+                      title: basicInfo.title,
+                      location: basicInfo.location,
+                      description: basicInfo.description || '',
+                      unitType: basicInfo.unitType || 'household',
+                      category: basicInfo.category || 'residential',
+                      createdAt: currentTimestamp,
+                      updatedAt: currentTimestamp,
+                      version: '1.0.0'
+                    },
+                    spaceConfig: spaceInfo,
+                    customLayout: {
+                      wall: {
+                        type: 'wall',
+                        completed: false
+                      },
+                      rack: {
+                        thickness: '2mm',
+                        completed: false,
+                        options: {
+                          isComposite: false
+                        }
+                      },
+                      motor: {
+                        type: 'none',
+                        completed: false
+                      },
+                      ventilation: {
+                        type: 'none',
+                        completed: false
+                      },
+                      exhaust: {
+                        type: 'none',
+                        completed: false
+                      }
+                    }
+                  };
+
+                  const result = await createProject(projectData);
+                  
+                  if (result.success && result.data) {
+                    setProjectId(result.data); // 프로젝트 ID 저장
+                    console.log('프로젝트 생성 완료:', result.data);
+                    onNext();
+                  } else {
+                    alert(`프로젝트 생성 실패: ${result.error || '알 수 없는 오류'}`);
+                  }
+                } catch (error) {
+                  console.error('프로젝트 생성 오류:', error);
+                  alert('프로젝트 생성 중 오류가 발생했습니다.');
+                } finally {
+                  setSaving(false);
+                }
+              } else {
+                // 이미 프로젝트가 있으면 다음 단계로
+                onNext();
+              }
+            }}
+            disabled={!canProceed || saving}
           >
-            다음 단계
+            {saving ? '저장 중...' : '다음 단계'}
           </button>
         </div>
       </div>
