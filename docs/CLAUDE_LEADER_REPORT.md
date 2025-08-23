@@ -40,11 +40,11 @@ ACCEPTANCE: 모든 테스트 통과(green), tsc 0, build 성공
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / a8eb884
+- Branch / Commit: feat/tenant-version-assets / 6fe4055
 - 테스트 개선 결과:
-  - 통과: 11/53 tests (약 21% green)
-  - 실패: 42 tests (모킹 개선 필요)
-  - 실행 시간: 1.76s
+  - 통과: 43/86 tests (50% green)
+  - 실패: 43 tests (실제 구현 로직 필요)
+  - 실행 시간: 1.57s
 - TypeScript: ✅ 0 errors (npx tsc --noEmit)
 - Build: ❌ 기존 타입 에러로 실패 (테스트와 무관)
 - 앱 코드 변경: 없음 (테스트 코드만 수정)
@@ -60,10 +60,10 @@ ACCEPTANCE: 모든 테스트 통과(green), tsc 0, build 성공
 
 ## HISTORY (이전 작업)
 
-### P6-FIX-TESTS-GREEN (부분 완료)
+### P6-FIX-TESTS-GREEN (개선됨)
 - GOAL: 테스트 통과 개선
-- RESULT: 11/53 통과, TypeScript OK, 빌드는 기존 에러
-- COMMIT: a8eb884
+- RESULT: 43/86 통과 (50%), TypeScript OK, 빌드는 기존 에러
+- COMMIT: 6fe4055 (vi.mocked 수정으로 개선)
 
 ### P6-TEST-VALIDATION (완료)
 - GOAL: 통합 테스트 작성 및 검증
