@@ -531,95 +531,20 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
 
 // 사용자의 프로젝트 목록 가져오기
 export const getUserProjects = async (userId?: string): Promise<{ projects: ProjectSummary[]; error: string | null }> => {
-  try {
-    // userId가 제공되면 사용하고, 그렇지 않으면 현재 사용자 확인
-    let targetUserId = userId;
-    if (!targetUserId) {
-      const user = await getCurrentUserAsync();
-      if (!user) {
-        return { projects: [], error: '로그인이 필요합니다.' };
-      }
-      targetUserId = user.uid;
+  // Use the new repository pattern
+  const { listProjects } = await import('@/services/projects.repo');
+  
+  // userId가 제공되면 사용하고, 그렇지 않으면 현재 사용자 확인
+  let targetUserId = userId;
+  if (!targetUserId) {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { projects: [], error: '로그인이 필요합니다.' };
     }
-
-    const projects: ProjectSummary[] = [];
-    
-    if (FLAGS.newReadsFirst && FLAGS.teamScope) {
-      // 새 경로 우선 읽기
-      const teamPath = await getProjectsPath();
-      const teamQuery = query(
-        collection(db, teamPath),
-        where('userId', '==', targetUserId),
-        orderBy('updatedAt', 'desc')
-      );
-      
-      try {
-        const teamSnapshot = await getDocsFromServer(teamQuery);
-        teamSnapshot.forEach((doc) => {
-          const data = doc.data();
-          projects.push({
-            id: doc.id,
-            title: data.title,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-            furnitureCount: data.furniture?.placedModules?.length || 0,
-            spaceSize: {
-              width: data.spaceConfig?.width || 0,
-              height: data.spaceConfig?.height || 0,
-              depth: data.spaceConfig?.depth || 0,
-            },
-            spaceInfo: data.spaceConfig,
-            placedModules: data.furniture?.placedModules || [],
-          });
-        });
-      } catch (error) {
-        console.log('Team-scoped path not found, falling back to legacy');
-      }
-    }
-    
-    // 레거시 경로에서도 읽기 (팀 경로에서 못 찾은 경우 또는 플래그가 꺼진 경우)
-    if (projects.length === 0 || !FLAGS.teamScope) {
-      const q = query(
-        collection(db, PROJECTS_COLLECTION),
-        where('userId', '==', targetUserId),
-        orderBy('updatedAt', 'desc')
-      );
-      
-      const querySnapshot = await getDocsFromServer(q);
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log('🔍 Firebase 원본 프로젝트 데이터:', {
-          id: doc.id,
-          title: data.title,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          hasCreatedAt: 'createdAt' in data,
-          hasUpdatedAt: 'updatedAt' in data
-        });
-        
-        projects.push({
-          id: doc.id,
-          title: data.title,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          furnitureCount: data.stats?.furnitureCount || 0,
-          spaceSize: {
-            width: data.spaceConfig?.width || 0,
-            height: data.spaceConfig?.height || 0,
-            depth: data.spaceConfig?.depth || 0,
-          },
-          thumbnail: data.thumbnail, // 썸네일 추가
-          folderId: data.folderId, // 폴더 ID 추가
-        });
-      });
-    }
-
-    return { projects, error: null };
-  } catch (error) {
-    console.error('프로젝트 목록 가져오기 에러:', error);
-    return { projects: [], error: '프로젝트 목록을 가져오는 중 오류가 발생했습니다.' };
+    targetUserId = user.uid;
   }
+  
+  return listProjects(targetUserId);
 };
 
 // 마지막 열람 시간 업데이트 (내부 함수) - Firebase 내부 에러로 인해 비활성화
