@@ -5,6 +5,9 @@ import type { PlacedModule } from '../furniture/types';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../viewer3d/utils/geometry';
 import JSZip from 'jszip';
+import { exportWithPersistence } from '@/services/exportService';
+import { getCurrentVersionId } from '@/services/designs.repo';
+import { auth } from '@/firebase/auth';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side';
@@ -102,8 +105,30 @@ export const useDXFExport = () => {
       // 파일명 생성 (도면 타입 포함)
       const filename = generateDXFFilename(spaceInfo, drawingType);
       
-      // 파일 다운로드
-      downloadDXF(dxfContent, filename);
+      // Storage 업로드 시도
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          // Team ID와 Design ID 가져오기 (실제 프로젝트에서는 context나 store에서 가져와야 함)
+          const teamId = `personal_${user.uid}`; // 임시: personal team 사용
+          const designId = 'current_design'; // 임시: 현재 디자인 ID
+          const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
+          
+          // Blob 생성
+          const blob = new Blob([dxfContent], { type: 'application/dxf' });
+          
+          // Storage에 저장 시도
+          await exportWithPersistence(blob, filename, 'dxf', teamId, designId, versionId);
+          console.log(`✅ DXF ${drawingType} Storage 업로드 성공!`);
+        } else {
+          // 로그인하지 않은 경우 기존 방식으로 다운로드
+          downloadDXF(dxfContent, filename);
+        }
+      } catch (error) {
+        console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
+        // 실패 시 기존 방식으로 다운로드
+        downloadDXF(dxfContent, filename);
+      }
       
       console.log(`✅ DXF ${drawingType} 도면 내보내기 완료!`);
       
