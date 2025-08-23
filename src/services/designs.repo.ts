@@ -238,6 +238,30 @@ export async function listDesignVersions(
 }
 
 /**
+ * Get current version ID for a design
+ */
+export async function getCurrentVersionId(
+  teamId: string,
+  designId: string
+): Promise<string | null> {
+  try {
+    const designPath = getTeamDesignsPath(teamId);
+    const designRef = doc(db, designPath, designId);
+    const designDoc = await getDoc(designRef);
+    
+    if (designDoc.exists()) {
+      const data = designDoc.data();
+      return data.current_version_id || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting current version ID:', error);
+    return null;
+  }
+}
+
+/**
  * Save design with dual-write support
  */
 export async function saveDesign({ 
