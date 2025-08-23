@@ -13,6 +13,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
@@ -231,6 +232,53 @@ export async function listDesignVersions(
     return { 
       versions: [], 
       error: error instanceof Error ? error.message : 'Failed to list versions' 
+    };
+  }
+}
+
+/**
+ * Save design with dual-write support
+ */
+export async function saveDesign({ 
+  teamId, 
+  userId, 
+  id, 
+  data 
+}: {
+  teamId: string;
+  userId: string;
+  id: string;
+  data: any;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const now = serverTimestamp();
+    
+    // Team path save
+    const teamPath = getTeamDesignsPath(teamId);
+    await setDoc(
+      doc(db, teamPath, id), 
+      { ...data, userId, teamId, updatedAt: now }, 
+      { merge: true }
+    );
+    
+    console.log('✅ Saved to team path:', `${teamPath}/${id}`);
+    
+    // Legacy dual-write if enabled
+    if (FLAGS.dualWrite) {
+      await setDoc(
+        doc(db, LEGACY_COLLECTIONS.designFiles, id), 
+        { ...data, userId, updatedAt: now }, 
+        { merge: true }
+      );
+      console.log('✅ Dual-write to legacy path:', `${LEGACY_COLLECTIONS.designFiles}/${id}`);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving design:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to save design' 
     };
   }
 }
