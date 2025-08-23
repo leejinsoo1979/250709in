@@ -27,6 +27,7 @@ import {
   getActiveTeamId
 } from '@/firebase/collections';
 import { DesignFile, DesignFileSummary } from '@/firebase/types';
+import { saveDesignSnapshot } from '@/firebase/designs';
 
 /**
  * List design files with team-scope priority and legacy fallback
@@ -252,6 +253,17 @@ export async function saveDesign({
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const now = serverTimestamp();
+    
+    // Create immutable version snapshot before saving
+    await saveDesignSnapshot({
+      teamId,
+      designId: id,
+      userId,
+      state: data,
+      options: data.options || {},
+      bom: data.bom || {},
+      cutList: data.cutList || {}
+    });
     
     // Team path save
     const teamPath = getTeamDesignsPath(teamId);
