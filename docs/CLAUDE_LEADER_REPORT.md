@@ -13,34 +13,33 @@
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P2-DAL-DUALWRITE
-GOAL: UI/디자인 변경 없이 저장·갱신 시 team 경로와 legacy 경로에 동시에 기록(롤백 대비).
-SCOPE: src/flags.ts, src/services/projects.repo.ts, src/services/designs.repo.ts
-FILES-ALLOWED: src/flags.ts, src/services/projects.repo.ts, src/services/designs.repo.ts
+TASK-ID: P3-VERSIONS-CORE
+GOAL: 디자인 저장 시 불변 스냅샷(versions) 생성, designs.current_version_id 갱신. UI 변경 금지.
+SCOPE: src/firebase/designs.ts(신규), src/services/designs.repo.ts(내부 구현만)
+FILES-ALLOWED: src/firebase/designs.ts, src/services/designs.repo.ts
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: 새 프로젝트/디자인 저장 1회 후 Firestore에서 문서가 두 위치 모두 존재. build 성공.
+ACCEPTANCE: 동일 디자인 3회 저장 시 versions에 version_no=1,2,3 생성, current_version_id 갱신. build 성공.
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 3 files, +97/-1
+- Diff summary: 2 files, +43 insertions
 - 변경 목록(최대 10줄):
-  - `src/flags.ts`: dualWrite 플래그 true로 변경
-  - `src/services/projects.repo.ts`: saveProject 함수 추가 (dual-write 지원)
-  - `src/services/designs.repo.ts`: saveDesign 함수 추가 (dual-write 지원)
+  - `src/firebase/designs.ts`: 신규 파일, saveDesignSnapshot 함수 구현
+  - `src/services/designs.repo.ts`: saveDesign에 snapshot 호출 추가
 - 리스크/전제(최대 3줄):
-  - 추가 저장만 수행, 읽기 로직 변경 없음
-  - 롤백 필요시 dualWrite 플래그만 false로 변경
-  - 저장 시 두 경로 모두 성공해야 성공 반환
+  - 트랜잭션으로 버전 생성과 current_version_id 갱신 원자적 처리
+  - version_seq 자동 증가로 버전 번호 관리
+  - 기존 dual-write 로직 그대로 유지
 
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / 8c1e6e0
-- tsc: 0 에러 (테스트 파일 제외)
-- build: 성공 ✓ built in 9.75s
+- Branch / Commit: feat/tenant-version-assets / 313a00d
+- tsc: 0 에러 (새 파일 관련)
+- build: 성공 ✓ built in 9.59s
 - 남은 에러: 없음 (빌드 완전 성공)
-- 다음 액션(1줄만): Phase 3 버전 관리 시스템 구현
+- 다음 액션(1줄만): Phase 4 에셋 관리 시스템 구현
 
 ---
 
@@ -52,6 +51,16 @@ ACCEPTANCE: 새 프로젝트/디자인 저장 1회 후 Firestore에서 문서가
 ---
 
 ## HISTORY (이전 작업)
+
+### P3-VERSIONS-CORE (완료)
+- GOAL: 디자인 저장 시 불변 스냅샷 생성, current_version_id 갱신
+- RESULT: ✓ built in 9.59s (성공)
+- COMMIT: 313a00d
+
+### P2-DAL-DUALWRITE (완료)
+- GOAL: team 경로와 legacy 경로 동시 기록
+- RESULT: ✓ built in 9.75s (성공)
+- COMMIT: 8c1e6e0
 
 ### P2-TS-STABILIZE (완료)
 - GOAL: UI/디자인 변경 없이 타입 에러 0, 빌드 성공
