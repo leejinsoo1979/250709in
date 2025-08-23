@@ -65,7 +65,7 @@ const Configurator: React.FC = () => {
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
   // Store hooks
-  const { setBasicInfo, basicInfo } = useProjectStore();
+  const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
   const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
@@ -970,6 +970,7 @@ const Configurator: React.FC = () => {
     
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
+      setProjectId(projectId);  // projectStore에도 projectId 설정
       
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
@@ -977,10 +978,24 @@ const Configurator: React.FC = () => {
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
         
-        // 로딩 완료 처리
-        setTimeout(() => {
-          setLoading(false);
-        }, 500); // 로딩 화면이 보이도록 약간의 지연
+        // 새 디자인인 경우 프로젝트 정보 가져오기
+        if (isNewDesign) {
+          getProject(projectId).then(({ project, error }) => {
+            if (project && !error) {
+              setBasicInfo({ 
+                title: project.title,
+                location: project.location || ''
+              });
+              console.log('📝 새 디자인 - 프로젝트 정보 설정:', project.title);
+            }
+            setLoading(false);
+          });
+        } else {
+          // 로딩 완료 처리
+          setTimeout(() => {
+            setLoading(false);
+          }, 500); // 로딩 화면이 보이도록 약간의 지연
+        }
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
         console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);

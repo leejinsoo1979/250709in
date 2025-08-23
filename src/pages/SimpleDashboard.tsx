@@ -7,6 +7,7 @@ import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
+import { useProjectStore } from '@/store/core/projectStore';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
 import Step1 from '../editor/Step1';
@@ -490,6 +491,19 @@ const SimpleDashboard: React.FC = () => {
       // 로컬 상태에서 제거
       setFirebaseProjects(prev => prev.filter(p => p.id !== project.id));
       
+      // 휴지통에 추가
+      const deletedProject = {
+        ...project,
+        deletedAt: new Date().toISOString()
+      };
+      setDeletedProjects(prev => [...prev, deletedProject as any]);
+      
+      // localStorage에 휴지통 상태 저장
+      if (user) {
+        const updatedTrash = [...deletedProjects, deletedProject];
+        localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
+      }
+      
       // 북마크에서도 제거
       if (bookmarkedProjects.has(project.id)) {
         toggleBookmark(project.id);
@@ -786,22 +800,31 @@ const SimpleDashboard: React.FC = () => {
         });
       });
       
-      // 폴더에 속하지 않은 파일들만 추가 (furnitureCount가 있는 경우에만)
+      // 폴더에 속하지 않은 파일들만 추가 (실제 Firebase 디자인 파일들)
       const allFolderChildren = projectFolders.flatMap(folder => folder.children);
       const folderChildIds = new Set(allFolderChildren.map(child => child.id));
       
-      if (selectedProject.furnitureCount && selectedProject.furnitureCount > 0) {
-        const rootDesignId = `${selectedProject.id}-design`;
-        if (!folderChildIds.has(rootDesignId)) {
+      // 실제 Firebase에서 가져온 디자인 파일들을 표시
+      const actualDesignFiles = projectDesignFiles[selectedProjectId] || [];
+      console.log('🎨 디자인 파일 추가:', {
+        projectId: selectedProjectId,
+        actualDesignFilesCount: actualDesignFiles.length,
+        actualDesignFiles: actualDesignFiles.map(df => ({ id: df.id, name: df.name }))
+      });
+      
+      actualDesignFiles.forEach(designFile => {
+        // 폴더에 속하지 않은 디자인만 루트에 표시
+        if (!folderChildIds.has(designFile.id)) {
           items.push({
-            id: rootDesignId, 
-            type: 'design', 
-            name: selectedProject.title, // 프로젝트 이름을 사용
-            project: selectedProject, 
+            id: designFile.id,
+            type: 'design',
+            name: designFile.name,
+            project: selectedProject,
+            designFile: designFile, // 실제 디자인 파일 데이터 추가
             icon: ''
           });
         }
-      }
+      });
       
       console.log('📊 최종 아이템 개수:', items.length);
       return items;
@@ -1674,8 +1697,23 @@ const SimpleDashboard: React.FC = () => {
 
   // 새로운 디자인 시작
   const handleCreateDesign = (projectId?: string) => {
+    console.log('🚀 handleCreateDesign 호출됨:', { projectId, user: !!user });
+    
     if (user) {
-      // Step1 모달 열기
+      if (!projectId) {
+        alert('프로젝트를 먼저 선택해주세요.');
+        return;
+      }
+      
+      console.log('✅ projectId 확인됨, Step1 모달 열기 준비');
+      
+      // projectStore에 projectId 설정
+      const { setProjectId, resetBasicInfo } = useProjectStore.getState();
+      setProjectId(projectId);
+      resetBasicInfo(); // 이전 디자인 정보 초기화
+      
+      // Step1 모달 열기 - 새 디자인 생성
+      console.log('📝 Step1 모달 열기');
       setIsStep1ModalOpen(true);
     } else {
       alert('로그인이 필요합니다.');
@@ -1683,8 +1721,12 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // Step1 모달 닫기
-  const handleCloseStep1Modal = () => {
+  const handleCloseStep1Modal = async () => {
     setIsStep1ModalOpen(false);
+    // 디자인이 생성되었을 수 있으므로 프로젝트 목록을 새로고침
+    if (selectedProjectId) {
+      await loadDesignFilesForProject(selectedProjectId);
+    }
   };
 
   // 로그아웃 핸들러
@@ -3267,6 +3309,11 @@ const SimpleDashboard: React.FC = () => {
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
       />
+
+      {/* Step1 모달 - 새 디자인 생성 */}
+      {isStep1ModalOpen && (
+        <Step1 onClose={handleCloseStep1Modal} />
+      )}
     </div>
   );
 };

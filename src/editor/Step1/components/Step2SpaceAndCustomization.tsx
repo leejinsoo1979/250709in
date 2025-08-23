@@ -167,6 +167,20 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         });
 
         if (designFileResult.id) {
+          // BroadcastChannel로 다른 탭에 알림
+          try {
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({ 
+              type: 'DESIGN_FILE_UPDATED',
+              action: 'design_created',
+              projectId: currentProjectId,
+              designFileId: designFileResult.id
+            });
+            channel.close();
+          } catch (error) {
+            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+          }
+          
           // onClose가 있으면 모달을 닫고, 없으면 직접 navigate
           if (onClose) {
             onClose();
@@ -174,7 +188,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           
           // 약간의 지연을 주어 로딩 화면이 보이도록 함
           setTimeout(() => {
-            navigate(`/configurator?project=${currentProjectId}&design=new`, { replace: true });
+            navigate(`/configurator?projectId=${currentProjectId}&designId=${designFileResult.id}&skipLoad=true`, { replace: true });
           }, 100);
         } else {
           throw new Error(designFileResult.error || '디자인 파일 생성 실패');

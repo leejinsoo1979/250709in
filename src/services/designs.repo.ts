@@ -43,22 +43,35 @@ export async function listDesignFiles(
   teamId?: string
 ): Promise<{ designs: DesignFileSummary[]; error: string | null }> {
   try {
+    console.log('📂 [listDesignFiles] 시작:', {
+      projectId,
+      userId,
+      teamId,
+      FLAGS,
+      activeTeamId: teamId || getActiveTeamId()
+    });
+    
     const designs: DesignFileSummary[] = [];
     const activeTeamId = teamId || getActiveTeamId();
     
     // Try nested project path first if enabled
     if (FLAGS.nestedDesigns && FLAGS.newReadsFirst && activeTeamId && projectId) {
       try {
+        const nestedPath = `teams/${activeTeamId}/projects/${projectId}/designs`;
+        console.log('📂 Trying nested path:', nestedPath);
+        
         const nestedQuery = query(
           projectDesignsCol(activeTeamId, projectId),
           orderBy('updatedAt', 'desc')
         );
         
         const nestedSnapshot = await getDocs(nestedQuery);
+        console.log('📂 Nested snapshot empty?', nestedSnapshot.empty, 'size:', nestedSnapshot.size);
         
         if (!nestedSnapshot.empty) {
           nestedSnapshot.forEach((doc) => {
             const data = doc.data();
+            console.log('📂 Found design in nested:', { id: doc.id, name: data.name });
             designs.push({
               id: doc.id,
               name: data.name,
@@ -81,7 +94,7 @@ export async function listDesignFiles(
           return { designs, error: null };
         }
       } catch (error) {
-        console.log('Nested project designs not found, falling back to team scope');
+        console.log('Nested project designs error:', error);
       }
     }
     
@@ -89,6 +102,8 @@ export async function listDesignFiles(
     if (shouldUseTeamScope() && activeTeamId) {
       try {
         const teamPath = getTeamDesignsPath(activeTeamId);
+        console.log('📂 Trying team-scoped path:', teamPath);
+        
         const teamQuery = query(
           collection(db, teamPath),
           where('projectId', '==', projectId),
@@ -96,10 +111,12 @@ export async function listDesignFiles(
         );
         
         const teamSnapshot = await getDocs(teamQuery);
+        console.log('📂 Team snapshot empty?', teamSnapshot.empty, 'size:', teamSnapshot.size);
         
         if (!teamSnapshot.empty) {
           teamSnapshot.forEach((doc) => {
             const data = doc.data();
+            console.log('📂 Found design in team-scoped:', { id: doc.id, name: data.name });
             designs.push({
               id: doc.id,
               name: data.name,
@@ -122,11 +139,12 @@ export async function listDesignFiles(
           return { designs, error: null };
         }
       } catch (error) {
-        console.log('Team-scoped designs not found, falling back to legacy');
+        console.log('Team-scoped designs error:', error);
       }
     }
     
     // Fallback 2: Legacy path (designFiles collection)
+    console.log('📂 Trying legacy path: designFiles collection');
     const legacyQuery = query(
       collection(db, LEGACY_COLLECTIONS.designFiles),
       where('projectId', '==', projectId),
@@ -134,9 +152,16 @@ export async function listDesignFiles(
     );
     
     const legacySnapshot = await getDocs(legacyQuery);
+    console.log('📂 Legacy snapshot empty?', legacySnapshot.empty, 'size:', legacySnapshot.size);
     
     legacySnapshot.forEach((doc) => {
       const data = doc.data();
+      console.log('📂 Found design in legacy:', { 
+        id: doc.id, 
+        name: data.name, 
+        projectId: data.projectId,
+        furniture: data.furniture?.placedModules?.length || 0
+      });
       designs.push({
         id: doc.id,
         name: data.name,
@@ -332,7 +357,12 @@ export async function saveDesign({
   projectId?: string;
   id: string;
   data: any;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; pathUsed?: 'nested' | 'legacy' }> {
+  // HOTFIX: Enforce projectId requirement
+  if (!projectId) {
+    throw new Error('projectId required');
+  }
+  
   try {
     const now = serverTimestamp();
     const designData = { 
@@ -355,16 +385,19 @@ export async function saveDesign({
       cutList: data.cutList || {}
     });
     
-    // Primary save: Use nested path if projectId exists and nestedDesigns is enabled
-    if (projectId && FLAGS.nestedDesigns) {
+    let pathUsed: 'nested' | 'legacy' = 'nested';
+    
+    // Primary save: Always use nested path when projectId exists
+    if (FLAGS.nestedDesigns) {
       await setDoc(
         projectDesignDoc(teamId, projectId, id), 
         designData, 
         { merge: true }
       );
       console.log('✅ Saved to nested project path:', `teams/${teamId}/projects/${projectId}/designs/${id}`);
+      pathUsed = 'nested';
     } else {
-      // Save to team-level designs
+      // Fallback to team-level designs
       const teamPath = getTeamDesignsPath(teamId);
       await setDoc(
         doc(db, teamPath, id), 
@@ -372,20 +405,19 @@ export async function saveDesign({
         { merge: true }
       );
       console.log('✅ Saved to team path:', `${teamPath}/${id}`);
+      pathUsed = 'legacy';
     }
     
     // Dual-write if enabled
     if (FLAGS.dualWrite) {
-      // Write to team-level designs for backward compatibility (if using nested)
-      if (projectId && FLAGS.nestedDesigns) {
-        const teamPath = getTeamDesignsPath(teamId);
-        await setDoc(
-          doc(db, teamPath, id), 
-          designData, 
-          { merge: true }
-        );
-        console.log('✅ Dual-write to team path:', `${teamPath}/${id}`);
-      }
+      // Write to team-level designs for backward compatibility
+      const teamPath = getTeamDesignsPath(teamId);
+      await setDoc(
+        doc(db, teamPath, id), 
+        designData, 
+        { merge: true }
+      );
+      console.log('✅ Dual-write to team path:', `${teamPath}/${id}`);
       
       // Write to legacy designFiles collection
       await setDoc(
@@ -396,7 +428,7 @@ export async function saveDesign({
       console.log('✅ Dual-write to legacy path:', `${LEGACY_COLLECTIONS.designFiles}/${id}`);
     }
     
-    return { success: true };
+    return { success: true, pathUsed };
   } catch (error) {
     console.error('Error saving design:', error);
     return { 

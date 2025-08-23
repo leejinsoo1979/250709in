@@ -61,6 +61,45 @@ ACCEPTANCE: 새 경로 우선 + 듀얼라이트 + 폴백, tsc 0
 
 ---
 
+## LATEST SESSION - Firebase Integration Fixes (2025-08-23)
+
+### TASK-ID: FIREBASE-INTEGRATION-FIXES
+**GOAL**: Firebase 통합 문제 해결 (프로젝트 삭제, 휴지통, 디자인 파일 표시)
+**SCOPE**: 다중 경로 시스템 버그 수정
+**FILES-MODIFIED**: 
+- src/firebase/projects.ts (deleteProject, updateDesignFile)
+- src/pages/SimpleDashboard.tsx (moveToTrash, getDisplayedItems)
+- src/services/designs.repo.ts (listDesignFiles 디버깅 로그)
+
+### ISSUES FIXED
+1. **프로젝트 삭제 오류** ✅
+   - 문제: "프로젝트를 찾을 수 없습니다" 에러
+   - 원인: team-scoped 경로 생성 후 legacy 경로만 확인
+   - 해결: 두 경로 모두 확인하도록 수정
+
+2. **휴지통 기능** ✅
+   - 문제: 삭제한 프로젝트가 휴지통에 안 나타남
+   - 원인: UI 상태 업데이트 누락
+   - 해결: deletedProjects 상태 및 localStorage 업데이트
+
+3. **디자인 파일 업데이트** ✅
+   - 문제: updateDesignFile 불완전한 경로 탐색
+   - 해결: 3단계 경로 탐색 (Legacy → Team → Nested) + dual-write
+
+4. **디자인 파일 표시** ✅
+   - 문제: 저장한 디자인이 프로젝트에 안 나타남
+   - 원인: SimpleDashboard가 더미 데이터만 표시
+   - 해결: 실제 projectDesignFiles 표시하도록 수정
+
+### RESULT
+- ✅ 모든 Firebase 통합 문제 해결
+- ✅ 3단계 경로 시스템 정상 작동
+- ✅ 사용자 피드백 반영 완료
+- Branch: feat/tenant-version-assets
+- Commit: aa4412c
+
+---
+
 ## HISTORY (이전 작업)
 
 ### P7-DESIGNS-UNDER-PROJECTS (완료)

@@ -19,6 +19,7 @@ import { db } from './config';
 import { getCurrentUserAsync } from './auth';
 import { FirebaseProject, CreateProjectData, ProjectSummary, CreateDesignFileData, DesignFile, DesignFileSummary } from './types';
 import { FLAGS } from '@/flags';
+import { listDesignFiles as repoListDesignFiles } from '@/services/designs.repo';
 
 // 컬렉션 참조
 const PROJECTS_COLLECTION = 'projects';
@@ -61,8 +62,12 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
       return { id: null, error: '로그인이 필요합니다.' };
     }
 
+    // 팀 ID 가져오기
+    const teamId = await getActiveTeamId();
+    
     const newProject: Omit<FirebaseProject, 'id'> = {
       userId: user.uid,
+      teamId: teamId || `personal_${user.uid}`, // 팀 ID 추가
       title: projectData.title,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
@@ -127,7 +132,13 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
 // 디자인파일 생성
 export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id: string | null; error: string | null }> => {
   try {
-    console.log('💾 createDesignFile 함수 호출됨:', data);
+    console.log('💾 createDesignFile 함수 호출됨:', {
+      name: data.name,
+      projectId: data.projectId,
+      hasSpaceConfig: !!data.spaceConfig,
+      hasFurniture: !!data.furniture,
+      furnitureCount: data.furniture?.placedModules?.length || 0
+    });
     
     const user = await getCurrentUserAsync();
     if (!user) {
@@ -137,14 +148,19 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
 
     console.log('👤 현재 사용자:', user.uid);
 
+    const teamId = await getActiveTeamId();
+    const now = serverTimestamp() as Timestamp;
+
     // folderId가 undefined일 때 필드 제외
     const baseData = {
       name: data.name,
       projectId: data.projectId,
       spaceConfig: data.spaceConfig,
       furniture: data.furniture,
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp,
+      userId: user.uid,
+      teamId: teamId || '',
+      createdAt: now,
+      updatedAt: now,
     };
     
     const designFileData: any = data.folderId 
@@ -157,9 +173,39 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       spaceConfigKeys: designFileData.spaceConfig ? Object.keys(designFileData.spaceConfig) : []
     });
 
+    // 1. Legacy path에 저장 (기본)
     const docRef = await addDoc(collection(db, 'designFiles'), designFileData);
+    console.log('✅ Legacy path 저장 성공:', `designFiles/${docRef.id}`);
     
-    console.log('✅ Firestore 저장 성공, 문서 ID:', docRef.id);
+    // 2. Dual-write if enabled
+    if (FLAGS.dualWrite && teamId) {
+      try {
+        // 2a. Team-scoped path
+        if (FLAGS.teamScope) {
+          const teamPath = `teams/${teamId}/designs`;
+          await setDoc(
+            doc(db, teamPath, docRef.id),
+            designFileData,
+            { merge: true }
+          );
+          console.log('✅ Dual-write to team path:', `${teamPath}/${docRef.id}`);
+        }
+        
+        // 2b. Nested project path
+        if (FLAGS.nestedDesigns && data.projectId) {
+          const { projectDesignDoc } = await import('@/firebase/collections');
+          await setDoc(
+            projectDesignDoc(teamId, data.projectId, docRef.id),
+            designFileData,
+            { merge: true }
+          );
+          console.log('✅ Dual-write to nested project path:', `teams/${teamId}/projects/${data.projectId}/designs/${docRef.id}`);
+        }
+      } catch (dualWriteError) {
+        console.warn('⚠️ Dual-write failed (non-critical):', dualWriteError);
+        // Don't fail the entire operation if dual-write fails
+      }
+    }
     
     // 프로젝트 통계 업데이트
     await updateProjectStats(data.projectId);
@@ -175,41 +221,51 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
 // 프로젝트의 디자인파일 목록 가져오기
 export const getDesignFiles = async (projectId: string): Promise<{ designFiles: DesignFileSummary[]; error: string | null }> => {
   try {
-    // 인덱스 없이 간단한 쿼리로 시작
-    const q = query(
-      collection(db, 'designFiles'),
-      where('projectId', '==', projectId)
+    console.log('🔍 [getDesignFiles] 시작:', { projectId });
+    
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { designFiles: [], error: '로그인이 필요합니다.' };
+    }
+
+    const teamId = await getActiveTeamId();
+    console.log('🔍 [getDesignFiles] 팀 ID:', teamId);
+    
+    // Use designs.repo.ts which handles nested, team-scoped, and legacy fallback
+    const result = await repoListDesignFiles(
+      projectId,
+      user.uid,
+      teamId || undefined
     );
-
-    // 캐시 문제 해결을 위해 서버에서 직접 가져오기
-    const querySnapshot = await getDocsFromServer(q);
-    const designFiles: DesignFileSummary[] = [];
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      designFiles.push({
-        id: doc.id,
-        name: data.name,
-        projectId: data.projectId,
-        folderId: data.folderId,
-        updatedAt: data.updatedAt,
-        spaceSize: {
-          width: data.spaceConfig?.width || 0,
-          height: data.spaceConfig?.height || 0,
-          depth: data.spaceConfig?.depth || 0,
-        },
-        furnitureCount: data.furniture?.placedModules?.length || 0,
-        thumbnail: data.thumbnail,
-        // 썸네일 생성을 위한 전체 데이터 추가
-        spaceConfig: data.spaceConfig,
-        furniture: data.furniture,
-      });
+    
+    console.log('🔍 [getDesignFiles] repo 결과:', {
+      hasError: !!result.error,
+      designCount: result.designs?.length || 0,
+      designs: result.designs?.map(d => ({
+        id: d.id,
+        name: d.name,
+        projectId: d.projectId
+      }))
+    });
+    
+    if (result.error) {
+      console.error('디자인파일 목록 가져오기 에러:', result.error);
+      return { designFiles: [], error: result.error };
+    }
+    
+    // 수동으로 업데이트 시간순 정렬 (이미 정렬되어 있지만 확실하게)
+    result.designs.sort((a, b) => {
+      const aTime = a.updatedAt?.seconds || 0;
+      const bTime = b.updatedAt?.seconds || 0;
+      return bTime - aTime;
     });
 
-    // 수동으로 업데이트 시간순 정렬
-    designFiles.sort((a, b) => b.updatedAt.seconds - a.updatedAt.seconds);
+    console.log('🔍 [getDesignFiles] 최종 결과:', {
+      count: result.designs.length,
+      firstDesign: result.designs[0]
+    });
 
-    return { designFiles, error: null };
+    return { designFiles: result.designs, error: null };
   } catch (error) {
     console.error('디자인파일 목록 가져오기 에러:', error);
     return { designFiles: [], error: '디자인파일 목록을 가져오는 중 오류가 발생했습니다.' };
@@ -378,12 +434,50 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
       return { error: '로그인이 필요합니다.' };
     }
 
-    const docRef = doc(db, PROJECTS_COLLECTION, projectId);
+    let projectRef;
+    let projectData;
     
-    // 먼저 소유자 확인 (서버에서 직접 가져오기)
-    const docSnap = await getDocFromServer(docRef);
-    if (!docSnap.exists() || docSnap.data().userId !== user.uid) {
-      return { error: '프로젝트에 접근할 권한이 없습니다.' };
+    // 1. 먼저 팀 스코프 경로에서 찾기 시도
+    if (FLAGS.teamScope) {
+      const teamId = await getActiveTeamId();
+      if (teamId) {
+        const teamProjectRef = doc(db, `teams/${teamId}/projects`, projectId);
+        const teamDocSnap = await getDocFromServer(teamProjectRef);
+        
+        if (teamDocSnap.exists()) {
+          projectRef = teamProjectRef;
+          projectData = teamDocSnap.data();
+          console.log('팀 스코프에서 프로젝트 찾음:', `teams/${teamId}/projects/${projectId}`);
+        }
+      }
+    }
+    
+    // 2. 팀 스코프에서 못 찾았으면 legacy 경로에서 찾기
+    if (!projectRef) {
+      const legacyRef = doc(db, PROJECTS_COLLECTION, projectId);
+      const legacySnap = await getDocFromServer(legacyRef);
+      
+      if (legacySnap.exists()) {
+        projectRef = legacyRef;
+        projectData = legacySnap.data();
+        console.log('Legacy 경로에서 프로젝트 찾음:', `projects/${projectId}`);
+      }
+    }
+    
+    // 프로젝트를 찾지 못한 경우
+    if (!projectRef || !projectData) {
+      console.error('프로젝트를 찾을 수 없음:', projectId);
+      return { error: '프로젝트를 찾을 수 없습니다.' };
+    }
+    
+    // 소유자 확인
+    if (projectData.userId !== user.uid) {
+      console.error('프로젝트 삭제 권한 없음:', {
+        projectUserId: projectData.userId,
+        currentUserId: user.uid,
+        projectId
+      });
+      return { error: '프로젝트 삭제 권한이 없습니다.' };
     }
 
     // 1. 프로젝트에 속한 모든 디자인파일 삭제
@@ -393,13 +487,16 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
     );
     const designFilesSnapshot = await getDocsFromServer(designFilesQuery);
     
-    const deletePromises = designFilesSnapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
+    if (designFilesSnapshot.size > 0) {
+      const deletePromises = designFilesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      console.log(`디자인파일 ${designFilesSnapshot.size}개 삭제 완료`);
+    }
 
     // 2. 프로젝트 삭제
-    await deleteDoc(docRef);
+    await deleteDoc(projectRef);
     
-    console.log(`프로젝트 삭제 완료: ${projectId}, 디자인파일 ${designFilesSnapshot.size}개 함께 삭제`);
+    console.log(`프로젝트 삭제 완료: ${projectId}`);
     return { error: null };
   } catch (error) {
     console.error('프로젝트 삭제 에러:', error);
@@ -433,12 +530,65 @@ export const updateDesignFile = async (
       return { error: '로그인이 필요합니다.' };
     }
 
-    const docRef = doc(db, 'designFiles', designFileId);
+    // 디자인 파일을 찾기 위한 변수들
+    let designDocRef = null;
+    let docSnap = null;
+    let designData = null;
+    let foundPath = null;
+    let projectId = null;
     
-    // 디자인파일 존재 여부 확인 (서버에서 직접 가져오기)
-    const docSnap = await getDocFromServer(docRef);
-    if (!docSnap.exists()) {
-      console.error('🔥 [updateDesignFile] 디자인파일 없음:', designFileId);
+    // 1. 먼저 legacy path에서 디자인 파일 찾기
+    const legacyRef = doc(db, 'designFiles', designFileId);
+    const legacySnap = await getDocFromServer(legacyRef);
+    
+    if (legacySnap.exists()) {
+      designDocRef = legacyRef;
+      docSnap = legacySnap;
+      designData = legacySnap.data();
+      projectId = designData.projectId;
+      foundPath = 'legacy';
+      console.log('🔥 Legacy path에서 디자인 찾음:', { designFileId, projectId });
+    }
+    
+    // 2. Legacy에서 못 찾았으면 team-scoped path 시도
+    if (!designDocRef) {
+      const teamId = await getActiveTeamId();
+      if (FLAGS.teamScope && teamId) {
+        const teamDesignRef = doc(db, `teams/${teamId}/designs`, designFileId);
+        const teamSnap = await getDocFromServer(teamDesignRef);
+        
+        if (teamSnap.exists()) {
+          designDocRef = teamDesignRef;
+          docSnap = teamSnap;
+          designData = teamSnap.data();
+          projectId = designData.projectId;
+          foundPath = 'team-scoped';
+          console.log('🔥 Team-scoped path에서 디자인 찾음:', { designFileId, teamId, projectId });
+        }
+      }
+    }
+    
+    // 3. 여전히 못 찾았으면 nested path 시도 (projectId를 알아야 함)
+    // Legacy나 team-scoped에서 projectId를 얻었다면 nested path도 확인
+    if (!designDocRef && FLAGS.nestedDesigns && projectId) {
+      const teamId = await getActiveTeamId();
+      if (teamId) {
+        const nestedRef = doc(db, `teams/${teamId}/projects/${projectId}/designs`, designFileId);
+        const nestedSnap = await getDocFromServer(nestedRef);
+        
+        if (nestedSnap.exists()) {
+          designDocRef = nestedRef;
+          docSnap = nestedSnap;
+          designData = nestedSnap.data();
+          foundPath = 'nested';
+          console.log('🔥 Nested path에서 디자인 찾음:', { designFileId, teamId, projectId });
+        }
+      }
+    }
+    
+    // 디자인 파일을 찾지 못한 경우
+    if (!designDocRef || !designData) {
+      console.error('🔥 [updateDesignFile] 디자인파일을 찾을 수 없음:', designFileId);
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
@@ -451,16 +601,56 @@ export const updateDesignFile = async (
     };
 
     console.log('🔥 [updateDesignFile] 업데이트 데이터:', {
+      foundPath,
       hasUpdatedAt: !!updateData.updatedAt,
       keys: Object.keys(updateData),
       furnitureModulesCount: updateData.furniture?.placedModules?.length || 0
     });
 
-    await updateDoc(docRef, updateData);
+    // 찾은 경로에 업데이트
+    await updateDoc(designDocRef, updateData);
+    
+    // Dual-write if enabled
+    if (FLAGS.dualWrite) {
+      const teamId = await getActiveTeamId();
+      
+      // Legacy path가 아니면 legacy에도 저장
+      if (foundPath !== 'legacy') {
+        try {
+          const legacyRef = doc(db, 'designFiles', designFileId);
+          await updateDoc(legacyRef, updateData);
+          console.log('🔥 Dual-write to legacy path 완료');
+        } catch (e) {
+          console.warn('Legacy path dual-write 실패 (문서가 없을 수 있음):', e);
+        }
+      }
+      
+      // Team-scoped path가 아니고 teamId가 있으면 team-scoped에도 저장
+      if (foundPath !== 'team-scoped' && FLAGS.teamScope && teamId) {
+        try {
+          const teamRef = doc(db, `teams/${teamId}/designs`, designFileId);
+          await updateDoc(teamRef, updateData);
+          console.log('🔥 Dual-write to team-scoped path 완료');
+        } catch (e) {
+          console.warn('Team-scoped path dual-write 실패 (문서가 없을 수 있음):', e);
+        }
+      }
+      
+      // Nested path가 아니고 FLAGS.nestedDesigns가 켜져 있으면 nested에도 저장
+      if (foundPath !== 'nested' && FLAGS.nestedDesigns && teamId && projectId) {
+        try {
+          const nestedRef = doc(db, `teams/${teamId}/projects/${projectId}/designs`, designFileId);
+          await updateDoc(nestedRef, updateData);
+          console.log('🔥 Dual-write to nested path 완료');
+        } catch (e) {
+          console.warn('Nested path dual-write 실패 (문서가 없을 수 있음):', e);
+        }
+      }
+    }
     
     // 저장 후 즉시 확인 (서버에서 직접 가져오기)
     console.log('🔥 [updateDesignFile] 저장 직후 확인 시작');
-    const verifyDoc = await getDocFromServer(docRef);
+    const verifyDoc = await getDocFromServer(designDocRef);
     if (verifyDoc.exists()) {
       const savedData = verifyDoc.data();
       console.log('🔥 [updateDesignFile] 저장 직후 확인:', {
@@ -471,21 +661,16 @@ export const updateDesignFile = async (
     }
     
     // 디자인파일이 업데이트되면 해당 프로젝트의 썸네일도 업데이트
-    if (updates.thumbnail) {
-      const designFileData = docSnap.data();
-      const projectId = designFileData.projectId;
-      
-      if (projectId) {
-        try {
-          const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
-          await updateDoc(projectRef, {
-            thumbnail: updates.thumbnail,
-            updatedAt: serverTimestamp()
-          });
-          console.log(`프로젝트 썸네일도 업데이트됨: ${projectId}`);
-        } catch (projectUpdateError) {
-          console.warn('프로젝트 썸네일 업데이트 실패:', projectUpdateError);
-        }
+    if (updates.thumbnail && projectId) {
+      try {
+        const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
+        await updateDoc(projectRef, {
+          thumbnail: updates.thumbnail,
+          updatedAt: serverTimestamp()
+        });
+        console.log(`프로젝트 썸네일도 업데이트됨: ${projectId}`);
+      } catch (projectUpdateError) {
+        console.warn('프로젝트 썸네일 업데이트 실패:', projectUpdateError);
       }
     }
     

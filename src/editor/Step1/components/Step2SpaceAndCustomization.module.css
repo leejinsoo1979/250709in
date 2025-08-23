@@ -13,26 +13,41 @@
   backdrop-filter: blur(4px);
 }
 
+/* 로딩 오버레이 */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  pointer-events: none;
+}
+
 /* 모달 콘텐츠 */
 .modalContent {
   background: white;
   border-radius: 16px;
-  width: 90vw;  /* Reduced from 98vw */
-  max-width: 1200px;  /* Reduced from 1500px */
-  max-height: 92vh;  /* Increased from 90vh */
+  width: 90vw;
+  max-width: 1200px;  /* Step1과 동일한 크기 */
+  max-height: 92vh;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  animation: modalFadeIn 0.3s ease-out;
+  animation: modalSlideIn 0.3s ease-out;
 }
 
-@keyframes modalFadeIn {
+@keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(-10px);
+    transform: translateX(20px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateX(0);
   }
 }
 

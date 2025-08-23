@@ -100,7 +100,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
           </button>
           <div>
             <h1>
-              STEP. 1 기본 정보
+              STEP. 1 {projectId ? '디자인' : '프로젝트'} 정보
               {basicInfo.title && (
                 <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
                   {basicInfo.title}
@@ -143,10 +143,10 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
                     {basicInfo.title && basicInfo.title.trim() && (
                       <span className={styles.checkIcon}>✓</span>
                     )}
-                    디자인 제목
+                    {projectId ? '디자인 제목' : '프로젝트 제목'}
                   </label>
                   <Input
-                    placeholder="디자인 제목을 입력해주세요"
+                    placeholder={projectId ? "디자인 제목을 입력해주세요" : "프로젝트 제목을 입력해주세요"}
                     value={basicInfo.title || ''}
                     onChange={(e) => handleUpdate({ title: e.target.value })}
                     fullWidth

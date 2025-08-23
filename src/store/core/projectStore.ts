@@ -9,8 +9,12 @@ export interface BasicInfo {
 // 프로젝트 상태 타입
 interface ProjectState {
   // 상태
+  projectId: string | null;
   basicInfo: BasicInfo;
   isDirty: boolean;  // 변경사항 있음을 표시
+  
+  // 프로젝트 ID 액션
+  setProjectId: (id: string | null) => void;
   
   // 기본 정보 액션
   setBasicInfo: (info: Partial<BasicInfo>) => void;
@@ -22,7 +26,8 @@ interface ProjectState {
 }
 
 // 초기 상태
-const initialState: Omit<ProjectState, 'setBasicInfo' | 'resetBasicInfo' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<ProjectState, 'setProjectId' | 'setBasicInfo' | 'resetBasicInfo' | 'resetAll' | 'markAsSaved'> = {
+  projectId: null,
   basicInfo: {
     title: '',
     location: '',
@@ -32,6 +37,10 @@ const initialState: Omit<ProjectState, 'setBasicInfo' | 'resetBasicInfo' | 'rese
 
 export const useProjectStore = create<ProjectState>()((set) => ({
   ...initialState,
+  
+  // 프로젝트 ID 설정
+  setProjectId: (id) =>
+    set({ projectId: id }),
   
   // 기본 정보 설정
   setBasicInfo: (info) =>
