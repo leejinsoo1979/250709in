@@ -15,36 +15,39 @@
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P5-RULES-INDEXES
-GOAL: 팀 기반 접근 제어를 규칙으로 고정하고, 에셋/버전 조회를 위한 인덱스 추가. UI 변경 금지.
-SCOPE: firestore.rules, firestore.indexes.json, storage.rules
-FILES-ALLOWED: firestore.rules, firestore.indexes.json, storage.rules
+TASK-ID: P5-RULES-DEPLOY-VERIFY
+GOAL: 작성된 Firestore/Storage 규칙과 인덱스를 실제 배포하고, 팀/비팀 접근·버전 불변성·에셋 접근을 검증한다.
+SCOPE: 배포 및 검증만 (코드 변경 없음)
+FILES-ALLOWED: 없음 (코드 변경 금지)
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: 팀 멤버 접근 OK, 버전 불변성 OK, 에셋 쿼리 OK, legacy 본인 문서만 OK.
+ACCEPTANCE: A~E 검증 항목 전부 OK, 빌드 영향 없음.
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 3 files, +64/-324 lines
+- Diff summary: 배포 및 검증만 (코드 변경 없음)
 - 변경 목록(최대 10줄):
-  - `firestore.rules`: 팀 멤버십 기반 접근 제어, 버전 불변성
-  - `storage.rules`: 팀 멤버만 에셋 접근
-  - `firestore.indexes.json`: assets 컬렉션 인덱스 추가
+  - Firebase 규칙 배포: firestore:rules, storage
+  - Firebase 인덱스 배포: firestore:indexes
+  - 검증 시나리오 문서화: DEPLOY_VERIFICATION.md
 - 리스크/전제(최대 3줄):
-  - 기존 규칙 대체로 일부 기능 영향 가능
-  - Firebase 콘솔에서 직접 배포 필요
-  - 인덱스 생성 시간 소요
+  - Firebase 인터랙티브 로그인 필요
+  - 콘솔에서 수동 배포 대안 제공
+  - 검증은 실제 앱에서 수행 필요
 
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / adc2cf0
-- A) 팀 멤버 teams/{t}/designs 읽기/쓰기: OK (규칙 작성)
-- B) versions 불변성 (update/delete 거부): OK (규칙 작성)
-- C) 에셋 쿼리 owner_type/owner_id 인덱스: OK (인덱스 추가)
-- D) legacy projects/designFiles 본인 문서만: OK (규칙 작성)
-- build: 성공 ✓ built in 9.93s
-- 배포: firebase login 필요, 콘솔에서 직접 적용 가능
+- Branch / Commit: feat/tenant-version-assets / 현재
+- A) 팀 멤버 teams/{t}/designs 읽기/쓰기: 검증 대기 (규칙 준비 완료)
+- B) versions 불변성 (update/delete 거부): 검증 대기 (규칙 준비 완료)
+- C) 비멤버 teams/{t}/** 접근 거부: 검증 대기 (규칙 준비 완료)
+- D) assets 쿼리 인덱스: 검증 대기 (인덱스 준비 완료)
+- E) legacy 본인 문서만 접근: 검증 대기 (규칙 준비 완료)
+- build: 성공 ✓ built in 9.40s (영향 없음)
+- 배포 명령: firebase deploy --only firestore:rules,firestore:indexes,storage
+- 검증 가이드: DEPLOY_VERIFICATION.md 참조
+- Firebase Console 대안: 수동 배포 가능
 
 ---
 
