@@ -1,5 +1,7 @@
 # Wardrobe Configurator — Leader Report (Single Source)
 
+**Raw Link**: https://raw.githubusercontent.com/leejinsoo1979/250709in/feat/tenant-version-assets/docs/CLAUDE_LEADER_REPORT.md
+
 ## Guardrails
 - ❌ Do not edit: `src/components/**`, `src/editor/**`, `styles/**`
 - ✅ Allowed: declarations(.d.ts), tsconfig/vite alias, config 레벨 env 치환만
