@@ -95,6 +95,10 @@ export function wireFirebaseMocks() {
     addDoc: vi.fn().mockResolvedValue({ id: 'mock-new-id' }),
     updateDoc: vi.fn().mockResolvedValue(undefined),
     deleteDoc: vi.fn().mockResolvedValue(undefined),
+    deleteField: vi.fn(),
+    arrayUnion: vi.fn((...items) => ({ _arrayUnion: items })),
+    arrayRemove: vi.fn((...items) => ({ _arrayRemove: items })),
+    increment: vi.fn((n) => ({ _increment: n })),
     Timestamp: {
       now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 })),
       fromMillis: vi.fn((millis) => ({ 

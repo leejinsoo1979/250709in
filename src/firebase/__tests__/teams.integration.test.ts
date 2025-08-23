@@ -68,9 +68,9 @@ describe('Team System Integration Tests', () => {
         data: vi.fn(() => null)
       };
 
-      vi.mocked(doc).mockReturnValue(mockDocRef);
-      vi.mocked(getDoc).mockResolvedValue(mockDocSnap as any);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (doc as any).mockReturnValue(mockDocRef);
+      (getDoc as any).mockResolvedValue(mockDocSnap as any);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await ensurePersonalTeam(mockUser as User);
 
@@ -86,7 +86,7 @@ describe('Team System Integration Tests', () => {
       
       // Check member document creation
       const memberDocRef = { id: mockUser.uid } as DocumentReference;
-      vi.mocked(doc).mockReturnValue(memberDocRef);
+      (doc as any).mockReturnValue(memberDocRef);
       expect(setDoc).toHaveBeenNthCalledWith(2, memberDocRef, {
         user_id: mockUser.uid,
         role: 'owner',
@@ -101,8 +101,8 @@ describe('Team System Integration Tests', () => {
         data: vi.fn(() => mockTeamData)
       };
 
-      vi.mocked(doc).mockReturnValue(mockDocRef);
-      vi.mocked(getDoc).mockResolvedValue(mockDocSnap as any);
+      (doc as any).mockReturnValue(mockDocRef);
+      (getDoc as any).mockResolvedValue(mockDocSnap as any);
 
       await ensurePersonalTeam(mockUser as User);
 
@@ -113,8 +113,8 @@ describe('Team System Integration Tests', () => {
 
     it('should handle errors gracefully', async () => {
       const mockDocRef = { id: mockTeamId } as DocumentReference;
-      vi.mocked(doc).mockReturnValue(mockDocRef);
-      vi.mocked(getDoc).mockRejectedValue(new Error('Firestore error'));
+      (doc as any).mockReturnValue(mockDocRef);
+      (getDoc as any).mockRejectedValue(new Error('Firestore error'));
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -158,8 +158,8 @@ describe('Team System Integration Tests', () => {
         }))
       };
 
-      vi.mocked(getDocs).mockResolvedValue(mockMemberDocs as any);
-      vi.mocked(getDoc).mockImplementation((ref: any) => {
+      (getDocs as any).mockResolvedValue(mockMemberDocs as any);
+      (getDoc as any).mockImplementation((ref: any) => {
         const team = mockTeams.find(t => t.id === ref.id);
         return Promise.resolve({
           exists: () => !!team,
@@ -186,7 +186,7 @@ describe('Team System Integration Tests', () => {
     });
 
     it('should return empty array if no teams found', async () => {
-      vi.mocked(getDocs).mockResolvedValue({ empty: true, docs: [] } as any);
+      (getDocs as any).mockResolvedValue({ empty: true, docs: [] } as any);
 
       const teams = await getUserTeams('test-user-123');
 
@@ -215,7 +215,7 @@ describe('Team System Integration Tests', () => {
         }
       ];
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockMembers
       } as any);
@@ -240,8 +240,8 @@ describe('Team System Integration Tests', () => {
       FLAGS.teamScope = true;
       
       const mockDocRef = { id: 'test-project' } as DocumentReference;
-      vi.mocked(doc).mockReturnValue(mockDocRef);
-      vi.mocked(getDoc).mockResolvedValue({
+      (doc as any).mockReturnValue(mockDocRef);
+      (getDoc as any).mockResolvedValue({
         exists: () => true,
         data: () => ({ name: 'Test Project' })
       } as any);
@@ -257,8 +257,8 @@ describe('Team System Integration Tests', () => {
       FLAGS.dualWrite = true;
       
       const mockDocRef = { id: 'test-project' } as DocumentReference;
-      vi.mocked(doc).mockReturnValue(mockDocRef);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (doc as any).mockReturnValue(mockDocRef);
+      (setDoc as any).mockResolvedValue(undefined);
 
       // Simulate saving with dual-write
       const teamPath = `teams/${mockTeamId}/projects`;
@@ -277,7 +277,7 @@ describe('Team System Integration Tests', () => {
       FLAGS.newReadsFirst = true;
       
       // Mock team path returns nothing
-      vi.mocked(getDoc)
+      (getDoc as any)
         .mockResolvedValueOnce({
           exists: () => false,
           data: () => null

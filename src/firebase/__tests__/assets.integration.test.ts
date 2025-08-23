@@ -23,17 +23,29 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-// Mock the functions with proper implementations
-const saveExportAsset = vi.fn().mockResolvedValue({
-  success: true,
-  assetId: 'mock-asset-id',
-  downloadUrl: 'https://example.com/mock.file'
+
+// Mock the asset functions
+const saveExportAsset = vi.fn(async (params) => {
+  return {
+    success: true,
+    assetId: 'mock-asset-id',
+    downloadUrl: 'https://example.com/mock.file'
+  };
 });
-const getAssetsByVersion = vi.fn().mockResolvedValue([]);
-const deleteAsset = vi.fn().mockResolvedValue({ success: true });
-const exportWithPersistence = vi.fn().mockResolvedValue({ 
-  persisted: true, 
-  downloadUrl: 'https://example.com/mock.file' 
+
+const getAssetsByVersion = vi.fn(async (params) => {
+  return [];
+});
+
+const deleteAsset = vi.fn(async (params) => {
+  return { success: true };
+});
+
+const exportWithPersistence = vi.fn(async (params) => {
+  return { 
+    persisted: true, 
+    downloadUrl: 'https://example.com/mock.file' 
+  };
 });
 
 describe('Asset Management Integration Tests', () => {
@@ -72,10 +84,10 @@ describe('Asset Management Integration Tests', () => {
         }
       };
 
-      vi.mocked(ref).mockReturnValue(mockStorageRef as any);
-      vi.mocked(uploadBytes).mockResolvedValue(mockUploadResult as any);
-      vi.mocked(getDownloadURL).mockResolvedValue(mockDownloadUrl);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (ref as any).mockReturnValue(mockStorageRef as any);
+      (uploadBytes as any).mockResolvedValue(mockUploadResult as any);
+      (getDownloadURL as any).mockResolvedValue(mockDownloadUrl);
+      (setDoc as any).mockResolvedValue(undefined);
 
       const result = await saveExportAsset({
         teamId: mockTeamId,
@@ -130,10 +142,10 @@ describe('Asset Management Integration Tests', () => {
         fullPath: `teams/${mockTeamId}/designs/${mockDesignId}/versions/${mockVersionId}/${mockAssetId}.pdf`
       };
 
-      vi.mocked(ref).mockReturnValue(mockStorageRef as any);
-      vi.mocked(uploadBytes).mockResolvedValue({ ref: mockStorageRef } as any);
-      vi.mocked(getDownloadURL).mockResolvedValue(mockDownloadUrl);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (ref as any).mockReturnValue(mockStorageRef as any);
+      (uploadBytes as any).mockResolvedValue({ ref: mockStorageRef } as any);
+      (getDownloadURL as any).mockResolvedValue(mockDownloadUrl);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await saveExportAsset({
         teamId: mockTeamId,
@@ -160,8 +172,8 @@ describe('Asset Management Integration Tests', () => {
     });
 
     it('should handle upload failures gracefully', async () => {
-      vi.mocked(ref).mockReturnValue({ fullPath: 'test/path' } as any);
-      vi.mocked(uploadBytes).mockRejectedValue(new Error('Upload failed'));
+      (ref as any).mockReturnValue({ fullPath: 'test/path' } as any);
+      (uploadBytes as any).mockRejectedValue(new Error('Upload failed'));
 
       const result = await saveExportAsset({
         teamId: mockTeamId,
@@ -187,10 +199,10 @@ describe('Asset Management Integration Tests', () => {
         fullPath: `teams/${mockTeamId}/designs/${mockDesignId}/thumbnails/${mockAssetId}.png`
       };
 
-      vi.mocked(ref).mockReturnValue(mockStorageRef as any);
-      vi.mocked(uploadBytes).mockResolvedValue({ ref: mockStorageRef } as any);
-      vi.mocked(getDownloadURL).mockResolvedValue(mockDownloadUrl);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (ref as any).mockReturnValue(mockStorageRef as any);
+      (uploadBytes as any).mockResolvedValue({ ref: mockStorageRef } as any);
+      (getDownloadURL as any).mockResolvedValue(mockDownloadUrl);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await saveExportAsset({
         teamId: mockTeamId,
@@ -242,7 +254,7 @@ describe('Asset Management Integration Tests', () => {
         }
       ];
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockAssets
       } as any);
@@ -261,7 +273,7 @@ describe('Asset Management Integration Tests', () => {
     });
 
     it('should return empty array if no assets exist', async () => {
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: true,
         docs: []
       } as any);
@@ -282,7 +294,7 @@ describe('Asset Management Integration Tests', () => {
         }
       ];
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockDXFAssets
       } as any);
@@ -304,8 +316,8 @@ describe('Asset Management Integration Tests', () => {
         })
       };
 
-      vi.mocked(getDoc).mockResolvedValue(mockAssetDoc as any);
-      vi.mocked(deleteObject).mockResolvedValue(undefined);
+      (getDoc as any).mockResolvedValue(mockAssetDoc as any);
+      (deleteObject as any).mockResolvedValue(undefined);
 
       const result = await deleteAsset(mockTeamId, mockAssetId);
 
@@ -323,7 +335,7 @@ describe('Asset Management Integration Tests', () => {
     });
 
     it('should handle non-existent assets gracefully', async () => {
-      vi.mocked(getDoc).mockResolvedValue({
+      (getDoc as any).mockResolvedValue({
         exists: () => false
       } as any);
 
@@ -341,10 +353,10 @@ describe('Asset Management Integration Tests', () => {
     it('should integrate with export service for DXF/PDF persistence', async () => {
       const mockBlob = new Blob([mockDXFBuffer], { type: 'application/dxf' });
       
-      vi.mocked(ref).mockReturnValue({ fullPath: 'test/path' } as any);
-      vi.mocked(uploadBytes).mockResolvedValue({ ref: { fullPath: 'test/path' } } as any);
-      vi.mocked(getDownloadURL).mockResolvedValue(mockDownloadUrl);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (ref as any).mockReturnValue({ fullPath: 'test/path' } as any);
+      (uploadBytes as any).mockResolvedValue({ ref: { fullPath: 'test/path' } } as any);
+      (getDownloadURL as any).mockResolvedValue(mockDownloadUrl);
+      (setDoc as any).mockResolvedValue(undefined);
 
       const result = await exportWithPersistence(
         mockBlob,
@@ -363,7 +375,7 @@ describe('Asset Management Integration Tests', () => {
     it('should fallback to local download on persistence failure', async () => {
       const mockBlob = new Blob([mockDXFBuffer], { type: 'application/dxf' });
       
-      vi.mocked(uploadBytes).mockRejectedValue(new Error('Storage error'));
+      (uploadBytes as any).mockRejectedValue(new Error('Storage error'));
 
       // Mock URL.createObjectURL
       global.URL = {
@@ -396,7 +408,7 @@ describe('Asset Management Integration Tests', () => {
         })
       }));
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockLargeAssetSet.slice(0, 20) // Paginated response
       } as any);

@@ -74,9 +74,9 @@ describe('Migration Scenario Integration Tests', () => {
         data: () => mockProjectData
       };
 
-      vi.mocked(doc).mockReturnValue(mockDocRef as any);
-      vi.mocked(getDoc).mockResolvedValue(mockDocSnap as any);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (doc as any).mockReturnValue(mockDocRef as any);
+      (getDoc as any).mockResolvedValue(mockDocSnap as any);
+      (setDoc as any).mockResolvedValue(undefined);
 
       // Read from legacy path
       const project = await getProject({
@@ -113,7 +113,7 @@ describe('Migration Scenario Integration Tests', () => {
         { id: 'proj2', data: () => ({ ...mockProjectData, name: 'Project 2' }) }
       ];
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockProjects
       } as any);
@@ -140,10 +140,10 @@ describe('Migration Scenario Integration Tests', () => {
       const teamDocRef = { id: mockProjectId, path: `teams/${mockTeamId}/projects/${mockProjectId}` };
       const legacyDocRef = { id: mockProjectId, path: `projects/${mockProjectId}` };
 
-      vi.mocked(doc)
+      (doc as any)
         .mockReturnValueOnce(teamDocRef as any)
         .mockReturnValueOnce(legacyDocRef as any);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await saveProject({
         teamId: mockTeamId,
@@ -183,7 +183,7 @@ describe('Migration Scenario Integration Tests', () => {
         data: () => mockProjectData
       };
 
-      vi.mocked(getDoc).mockResolvedValue(mockDocSnap as any);
+      (getDoc as any).mockResolvedValue(mockDocSnap as any);
 
       const project = await getProject({
         teamId: mockTeamId,
@@ -218,7 +218,7 @@ describe('Migration Scenario Integration Tests', () => {
         data: () => mockProjectData
       };
 
-      vi.mocked(getDoc)
+      (getDoc as any)
         .mockResolvedValueOnce(teamDocSnap as any)
         .mockResolvedValueOnce(legacyDocSnap as any);
 
@@ -245,7 +245,7 @@ describe('Migration Scenario Integration Tests', () => {
         data: () => teamProjectData
       };
 
-      vi.mocked(getDoc).mockResolvedValueOnce(teamDocSnap as any);
+      (getDoc as any).mockResolvedValueOnce(teamDocSnap as any);
 
       const project = await getProject({
         teamId: mockTeamId,
@@ -270,7 +270,7 @@ describe('Migration Scenario Integration Tests', () => {
         { id: 'old2', data: () => ({ name: 'Old Project 2', userId: mockUserId }) }
       ];
 
-      vi.mocked(getDocs)
+      (getDocs as any)
         .mockResolvedValueOnce({ empty: false, docs: teamProjects } as any)
         .mockResolvedValueOnce({ empty: false, docs: legacyProjects } as any);
 
@@ -297,8 +297,8 @@ describe('Migration Scenario Integration Tests', () => {
 
     it('should only write to team path', async () => {
       const teamDocRef = { id: mockProjectId };
-      vi.mocked(doc).mockReturnValue(teamDocRef as any);
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (doc as any).mockReturnValue(teamDocRef as any);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await saveProject({
         teamId: mockTeamId,
@@ -318,7 +318,7 @@ describe('Migration Scenario Integration Tests', () => {
 
     it('should still fallback to legacy for unmigrated data', async () => {
       // Simulate unmigrated legacy data
-      vi.mocked(getDoc)
+      (getDoc as any)
         .mockResolvedValueOnce({ exists: () => false } as any) // Team path empty
         .mockResolvedValueOnce({ 
           exists: () => true,
@@ -349,7 +349,7 @@ describe('Migration Scenario Integration Tests', () => {
       };
 
       // Write with dual-write
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (setDoc as any).mockResolvedValue(undefined);
       
       await saveProject({
         teamId: mockTeamId,
@@ -361,7 +361,7 @@ describe('Migration Scenario Integration Tests', () => {
       // Verify both writes have same data structure
       expect(setDoc).toHaveBeenCalledTimes(2);
       
-      const [teamWrite, legacyWrite] = vi.mocked(setDoc).mock.calls;
+      const [teamWrite, legacyWrite] = (setDoc as any).mock.calls;
       
       // Team write should have teamId
       expect(teamWrite[1]).toMatchObject({
@@ -396,7 +396,7 @@ describe('Migration Scenario Integration Tests', () => {
         data: { name: 'Project 2' }
       });
 
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (setDoc as any).mockResolvedValue(undefined);
 
       await Promise.all([save1, save2]);
 
@@ -428,7 +428,7 @@ describe('Migration Scenario Integration Tests', () => {
         };
       };
 
-      vi.mocked(getDocs)
+      (getDocs as any)
         .mockResolvedValueOnce({ size: 3 } as any) // 3 migrated
         .mockResolvedValueOnce({ size: 7 } as any); // 7 legacy
 

@@ -46,7 +46,7 @@ describe('Performance and Concurrency Tests', () => {
         commit: vi.fn().mockResolvedValue(undefined)
       };
 
-      vi.mocked(writeBatch).mockReturnValue(mockBatch as any);
+      (writeBatch as any).mockReturnValue(mockBatch as any);
 
       // Simulate batch creation of projects
       const startTime = performance.now();
@@ -95,7 +95,7 @@ describe('Performance and Concurrency Tests', () => {
       }));
 
       let currentPage = 0;
-      vi.mocked(getDocs).mockImplementation(() => {
+      (getDocs as any).mockImplementation(() => {
         if (currentPage < mockPages.length) {
           return Promise.resolve(mockPages[currentPage++] as any);
         }
@@ -137,7 +137,7 @@ describe('Performance and Concurrency Tests', () => {
       };
 
       let transactionCount = 0;
-      vi.mocked(runTransaction).mockImplementation(async (db, updateFunction) => {
+      (runTransaction as any).mockImplementation(async (db, updateFunction) => {
         transactionCount++;
         await updateFunction(mockTransaction as any);
         return { success: true, transactionId: transactionCount };
@@ -203,14 +203,14 @@ describe('Performance and Concurrency Tests', () => {
         data: () => ({ counter: sharedCounter })
       };
 
-      vi.mocked(getDoc).mockImplementation(() => {
+      (getDoc as any).mockImplementation(() => {
         return Promise.resolve({
           exists: () => true,
           data: () => ({ counter: sharedCounter })
         } as any);
       });
 
-      vi.mocked(setDoc).mockImplementation((ref, data: any) => {
+      (setDoc as any).mockImplementation((ref, data: any) => {
         // Simulate race condition: multiple reads might see same value
         if (data.counter !== undefined) {
           sharedCounter = Math.max(sharedCounter, data.counter);
@@ -244,7 +244,7 @@ describe('Performance and Concurrency Tests', () => {
       let sharedCounter = 0;
       const operations = 20;
 
-      vi.mocked(runTransaction).mockImplementation(async (db, updateFunction) => {
+      (runTransaction as any).mockImplementation(async (db, updateFunction) => {
         const mockTransaction = {
           get: vi.fn().mockResolvedValue({
             exists: () => true,
@@ -302,7 +302,7 @@ describe('Performance and Concurrency Tests', () => {
         return data.owner_type === 'version' && data.owner_id === 'owner_5';
       });
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: filteredAssets.slice(0, 10) // Return first 10 matches
       } as any);
@@ -335,7 +335,7 @@ describe('Performance and Concurrency Tests', () => {
           data: () => ({ index: offset + i })
         }));
 
-        vi.mocked(getDocs).mockResolvedValueOnce({
+        (getDocs as any).mockResolvedValueOnce({
           empty: false,
           docs: chunk
         } as any);
@@ -363,7 +363,7 @@ describe('Performance and Concurrency Tests', () => {
 
   describe('Dual-Write Performance Impact', () => {
     it('should measure dual-write overhead', async () => {
-      vi.mocked(setDoc).mockResolvedValue(undefined);
+      (setDoc as any).mockResolvedValue(undefined);
 
       // Test single write
       FLAGS.dualWrite = false;
@@ -416,8 +416,8 @@ describe('Performance and Concurrency Tests', () => {
         }))
       };
 
-      vi.mocked(setDoc).mockResolvedValue(undefined);
-      vi.mocked(getDoc).mockResolvedValue({
+      (setDoc as any).mockResolvedValue(undefined);
+      (getDoc as any).mockResolvedValue({
         exists: () => true,
         data: () => largeData
       } as any);

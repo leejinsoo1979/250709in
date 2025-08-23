@@ -102,9 +102,9 @@ describe('Version Management Integration Tests', () => {
       };
 
       // Mock transaction execution
-      vi.mocked(runTransaction).mockImplementation(async (db, updateFunction) => {
+      (runTransaction as any).mockImplementation(async (db, updateFunction) => {
         mockTransaction.get.mockResolvedValue(mockDesignDoc);
-        vi.mocked(doc).mockReturnValue(mockVersionRef as any);
+        (doc as any).mockReturnValue(mockVersionRef as any);
         
         await updateFunction(mockTransaction as any);
         
@@ -176,7 +176,7 @@ describe('Version Management Integration Tests', () => {
         })
       };
 
-      vi.mocked(runTransaction).mockImplementation(async (db, updateFunction) => {
+      (runTransaction as any).mockImplementation(async (db, updateFunction) => {
         mockTransaction.get.mockResolvedValue(mockDesignDoc);
         await updateFunction(mockTransaction as any);
         return { 
@@ -215,7 +215,7 @@ describe('Version Management Integration Tests', () => {
     it('should handle transaction conflicts with retry', async () => {
       let attemptCount = 0;
       
-      vi.mocked(runTransaction).mockImplementation(async () => {
+      (runTransaction as any).mockImplementation(async () => {
         attemptCount++;
         if (attemptCount === 1) {
           throw new Error('Transaction conflict');
@@ -293,7 +293,7 @@ describe('Version Management Integration Tests', () => {
 
       const { getDocs, query, orderBy } = await import('firebase/firestore');
       
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockVersions
       } as any);
@@ -310,7 +310,7 @@ describe('Version Management Integration Tests', () => {
     it('should return empty array if no versions exist', async () => {
       const { getDocs } = await import('firebase/firestore');
       
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: true,
         docs: []
       } as any);
@@ -331,7 +331,7 @@ describe('Version Management Integration Tests', () => {
         })
       }));
 
-      vi.mocked(getDocs).mockResolvedValue({
+      (getDocs as any).mockResolvedValue({
         empty: false,
         docs: mockVersions.slice(0, 5) // Return first 5 for pagination
       } as any);
@@ -364,7 +364,7 @@ describe('Version Management Integration Tests', () => {
         })
       };
 
-      vi.mocked(getDoc)
+      (getDoc as any)
         .mockResolvedValueOnce(mockDesignDoc as any)
         .mockResolvedValueOnce(mockVersionDoc as any);
 
@@ -386,7 +386,7 @@ describe('Version Management Integration Tests', () => {
         })
       };
 
-      vi.mocked(getDoc).mockResolvedValue(mockDesignDoc as any);
+      (getDoc as any).mockResolvedValue(mockDesignDoc as any);
 
       const currentVersion = await getCurrentVersion(mockTeamId, mockDesignId);
 
@@ -437,7 +437,7 @@ describe('Version Management Integration Tests', () => {
         update: vi.fn()
       };
 
-      vi.mocked(runTransaction).mockImplementation(async (db, updateFunction) => {
+      (runTransaction as any).mockImplementation(async (db, updateFunction) => {
         await updateFunction(mockTransaction as any);
         return { success: true, versionId: mockVersionId, versionNo: 1 };
       });
