@@ -15,34 +15,36 @@
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P4-ASSETS-CORE
-GOAL: DXF/PDF 내보내기를 Firebase Storage에 업로드하고 teams/{teamId}/assets에 메타 등록. UI 변경 금지.
-SCOPE: src/firebase/assets.ts(신규), src/services/**(내부 로직만)
-FILES-ALLOWED: src/firebase/assets.ts, src/services/**
+TASK-ID: P5-RULES-INDEXES
+GOAL: 팀 기반 접근 제어를 규칙으로 고정하고, 에셋/버전 조회를 위한 인덱스 추가. UI 변경 금지.
+SCOPE: firestore.rules, firestore.indexes.json, storage.rules
+FILES-ALLOWED: firestore.rules, firestore.indexes.json, storage.rules
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: Storage에 파일 존재, Firestore에 assets 문서 존재. build 성공.
+ACCEPTANCE: 팀 멤버 접근 OK, 버전 불변성 OK, 에셋 쿼리 OK, legacy 본인 문서만 OK.
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 3 files, +156 insertions
+- Diff summary: 3 files, +64/-324 lines
 - 변경 목록(최대 10줄):
-  - `src/firebase/assets.ts`: 신규 파일, saveExportAsset 함수 구현
-  - `src/services/exportService.ts`: 신규 파일, export 처리 및 Storage 저장
-  - `src/services/designs.repo.ts`: getCurrentVersionId 함수 추가
+  - `firestore.rules`: 팀 멤버십 기반 접근 제어, 버전 불변성
+  - `storage.rules`: 팀 멤버만 에셋 접근
+  - `firestore.indexes.json`: assets 컬렉션 인덱스 추가
 - 리스크/전제(최대 3줄):
-  - Storage 업로드 실패 시 기존 다운로드 폴백
-  - 에디터 코드 수정 없어 서비스 레이어로 처리
-  - 팀/디자인/버전 ID 필요
+  - 기존 규칙 대체로 일부 기능 영향 가능
+  - Firebase 콘솔에서 직접 배포 필요
+  - 인덱스 생성 시간 소요
 
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / 209dd97
-- 업로드: Storage 경로 teams/{t}/designs/{d}/versions/{v}/{assetId}.{ext} 연결 완료
-- 문서 생성: teams/{t}/assets/{assetId} 컬렉션 연결 완료 (url 포함)
-- build: 성공 ✓ built in 12.29s
-- DXF/PDF export 시 자동 Storage 업로드, 실패 시 로컬 다운로드 폴백
+- Branch / Commit: feat/tenant-version-assets / adc2cf0
+- A) 팀 멤버 teams/{t}/designs 읽기/쓰기: OK (규칙 작성)
+- B) versions 불변성 (update/delete 거부): OK (규칙 작성)
+- C) 에셋 쿼리 owner_type/owner_id 인덱스: OK (인덱스 추가)
+- D) legacy projects/designFiles 본인 문서만: OK (규칙 작성)
+- build: 성공 ✓ built in 9.93s
+- 배포: firebase login 필요, 콘솔에서 직접 적용 가능
 
 ---
 
@@ -55,10 +57,15 @@ ACCEPTANCE: Storage에 파일 존재, Firestore에 assets 문서 존재. build �
 
 ## HISTORY (이전 작업)
 
+### P5-RULES-INDEXES (완료)
+- GOAL: 팀 기반 접근 제어 규칙, 버전 불변성, 에셋 인덱스
+- RESULT: ✓ built in 9.93s (성공)
+- COMMIT: adc2cf0
+
 ### P4-ASSETS-CORE (완료)
 - GOAL: DXF/PDF 내보내기를 Storage 업로드, assets 메타 등록
-- RESULT: ✓ built in 9.49s (성공)
-- COMMIT: 8a375ad
+- RESULT: ✓ built in 12.29s (성공), export hooks 연결
+- COMMIT: 209dd97
 
 ### P3-VERSIONS-CORE (완료)
 - GOAL: 디자인 저장 시 불변 스냅샷 생성, current_version_id 갱신
