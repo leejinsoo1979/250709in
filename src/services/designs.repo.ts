@@ -24,13 +24,18 @@ import {
   getDesignVersionsPath,
   LEGACY_COLLECTIONS,
   shouldUseTeamScope,
-  getActiveTeamId
+  getActiveTeamId,
+  projectDesignsCol,
+  projectDesignDoc,
+  projectVersionsCol,
+  designsCol,
+  designDoc
 } from '@/firebase/collections';
 import { DesignFile, DesignFileSummary } from '@/firebase/types';
 import { saveDesignSnapshot } from '@/firebase/designs';
 
 /**
- * List design files with team-scope priority and legacy fallback
+ * List design files with nested project priority, team-scope, and legacy fallback
  */
 export async function listDesignFiles(
   projectId: string,
@@ -39,22 +44,60 @@ export async function listDesignFiles(
 ): Promise<{ designs: DesignFileSummary[]; error: string | null }> {
   try {
     const designs: DesignFileSummary[] = [];
+    const activeTeamId = teamId || getActiveTeamId();
     
-    // Try team-scoped path first if enabled
-    if (shouldUseTeamScope()) {
-      const activeTeamId = teamId || getActiveTeamId();
-      
-      if (activeTeamId) {
-        try {
-          const teamPath = getTeamDesignsPath(activeTeamId);
-          const teamQuery = query(
-            collection(db, teamPath),
-            where('projectId', '==', projectId),
-            orderBy('updatedAt', 'desc')
-          );
+    // Try nested project path first if enabled
+    if (FLAGS.nestedDesigns && FLAGS.newReadsFirst && activeTeamId && projectId) {
+      try {
+        const nestedQuery = query(
+          projectDesignsCol(activeTeamId, projectId),
+          orderBy('updatedAt', 'desc')
+        );
+        
+        const nestedSnapshot = await getDocs(nestedQuery);
+        
+        if (!nestedSnapshot.empty) {
+          nestedSnapshot.forEach((doc) => {
+            const data = doc.data();
+            designs.push({
+              id: doc.id,
+              name: data.name,
+              projectId: data.projectId,
+              folderId: data.folderId,
+              updatedAt: data.updatedAt,
+              spaceSize: {
+                width: data.spaceConfig?.width || 0,
+                height: data.spaceConfig?.height || 0,
+                depth: data.spaceConfig?.depth || 0,
+              },
+              furnitureCount: data.furniture?.placedModules?.length || 0,
+              thumbnail: data.thumbnail,
+              spaceConfig: data.spaceConfig,
+              furniture: data.furniture
+            });
+          });
           
-          const teamSnapshot = await getDocs(teamQuery);
-          
+          console.log('🎨 Found designs in nested project path:', designs.length);
+          return { designs, error: null };
+        }
+      } catch (error) {
+        console.log('Nested project designs not found, falling back to team scope');
+      }
+    }
+    
+    // Fallback 1: Team-scoped path
+    if (shouldUseTeamScope() && activeTeamId) {
+      try {
+        const teamPath = getTeamDesignsPath(activeTeamId);
+        const teamQuery = query(
+          collection(db, teamPath),
+          where('projectId', '==', projectId),
+          orderBy('updatedAt', 'desc')
+        );
+        
+        const teamSnapshot = await getDocs(teamQuery);
+        
+        if (!teamSnapshot.empty) {
           teamSnapshot.forEach((doc) => {
             const data = doc.data();
             designs.push({
@@ -75,18 +118,15 @@ export async function listDesignFiles(
             });
           });
           
-          // If we found designs in team scope, return them
-          if (designs.length > 0) {
-            console.log('🎨 Found designs in team scope:', designs.length);
-            return { designs, error: null };
-          }
-        } catch (error) {
-          console.log('Team-scoped designs not found, falling back to legacy');
+          console.log('🎨 Found designs in team scope:', designs.length);
+          return { designs, error: null };
         }
+      } catch (error) {
+        console.log('Team-scoped designs not found, falling back to legacy');
       }
     }
     
-    // Fallback to legacy path (designFiles collection)
+    // Fallback 2: Legacy path (designFiles collection)
     const legacyQuery = query(
       collection(db, LEGACY_COLLECTIONS.designFiles),
       where('projectId', '==', projectId),
@@ -128,7 +168,7 @@ export async function listDesignFiles(
 }
 
 /**
- * Get a single design file with team-scope priority and legacy fallback
+ * Get a single design file with nested project priority, team-scope, and legacy fallback
  */
 export async function getDesignFile(
   designId: string,
@@ -136,34 +176,50 @@ export async function getDesignFile(
   teamId?: string
 ): Promise<{ design: DesignFile | null; error: string | null }> {
   try {
-    // Try team-scoped path first
-    if (shouldUseTeamScope()) {
-      const activeTeamId = teamId || getActiveTeamId();
-      
-      if (activeTeamId) {
-        try {
-          const teamPath = getTeamDesignsPath(activeTeamId);
-          const designRef = doc(db, teamPath, designId);
-          const designDoc = await getDoc(designRef);
-          
-          if (designDoc.exists()) {
-            const data = designDoc.data();
-            // Verify project ID matches
-            if (data.projectId === projectId) {
-              console.log('🎨 Found design in team scope');
-              return {
-                design: { id: designDoc.id, ...data } as DesignFile,
-                error: null
-              };
-            }
-          }
-        } catch (error) {
-          console.log('Team-scoped design not found, falling back to legacy');
+    const activeTeamId = teamId || getActiveTeamId();
+    
+    // Try nested project path first if enabled
+    if (FLAGS.nestedDesigns && FLAGS.newReadsFirst && activeTeamId && projectId) {
+      try {
+        const nestedDesignRef = projectDesignDoc(activeTeamId, projectId, designId);
+        const nestedDoc = await getDoc(nestedDesignRef);
+        
+        if (nestedDoc.exists()) {
+          console.log('🎨 Found design in nested project path');
+          return {
+            design: { id: nestedDoc.id, ...nestedDoc.data() } as DesignFile,
+            error: null
+          };
         }
+      } catch (error) {
+        console.log('Nested project design not found, falling back to team scope');
       }
     }
     
-    // Fallback to legacy path
+    // Fallback 1: Team-scoped path
+    if (shouldUseTeamScope() && activeTeamId) {
+      try {
+        const teamPath = getTeamDesignsPath(activeTeamId);
+        const designRef = doc(db, teamPath, designId);
+        const teamDoc = await getDoc(designRef);
+        
+        if (teamDoc.exists()) {
+          const data = teamDoc.data();
+          // Verify project ID matches
+          if (data.projectId === projectId) {
+            console.log('🎨 Found design in team scope');
+            return {
+              design: { id: teamDoc.id, ...data } as DesignFile,
+              error: null
+            };
+          }
+        }
+      } catch (error) {
+        console.log('Team-scoped design not found, falling back to legacy');
+      }
+    }
+    
+    // Fallback 2: Legacy path
     const legacyRef = doc(db, LEGACY_COLLECTIONS.designFiles, designId);
     const legacyDoc = await getDoc(legacyRef);
     
@@ -262,23 +318,33 @@ export async function getCurrentVersionId(
 }
 
 /**
- * Save design with dual-write support
+ * Save design with nested project paths and dual-write support
  */
 export async function saveDesign({ 
   teamId, 
   userId, 
+  projectId,
   id, 
   data 
 }: {
   teamId: string;
   userId: string;
+  projectId?: string;
   id: string;
   data: any;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const now = serverTimestamp();
+    const designData = { 
+      ...data, 
+      userId, 
+      teamId, 
+      projectId,
+      updatedAt: now 
+    };
     
     // Create immutable version snapshot before saving
+    // TODO: Update saveDesignSnapshot to support nested paths
     await saveDesignSnapshot({
       teamId,
       designId: id,
@@ -289,21 +355,42 @@ export async function saveDesign({
       cutList: data.cutList || {}
     });
     
-    // Team path save
-    const teamPath = getTeamDesignsPath(teamId);
-    await setDoc(
-      doc(db, teamPath, id), 
-      { ...data, userId, teamId, updatedAt: now }, 
-      { merge: true }
-    );
+    // Primary save: Use nested path if projectId exists and nestedDesigns is enabled
+    if (projectId && FLAGS.nestedDesigns) {
+      await setDoc(
+        projectDesignDoc(teamId, projectId, id), 
+        designData, 
+        { merge: true }
+      );
+      console.log('✅ Saved to nested project path:', `teams/${teamId}/projects/${projectId}/designs/${id}`);
+    } else {
+      // Save to team-level designs
+      const teamPath = getTeamDesignsPath(teamId);
+      await setDoc(
+        doc(db, teamPath, id), 
+        designData, 
+        { merge: true }
+      );
+      console.log('✅ Saved to team path:', `${teamPath}/${id}`);
+    }
     
-    console.log('✅ Saved to team path:', `${teamPath}/${id}`);
-    
-    // Legacy dual-write if enabled
+    // Dual-write if enabled
     if (FLAGS.dualWrite) {
+      // Write to team-level designs for backward compatibility (if using nested)
+      if (projectId && FLAGS.nestedDesigns) {
+        const teamPath = getTeamDesignsPath(teamId);
+        await setDoc(
+          doc(db, teamPath, id), 
+          designData, 
+          { merge: true }
+        );
+        console.log('✅ Dual-write to team path:', `${teamPath}/${id}`);
+      }
+      
+      // Write to legacy designFiles collection
       await setDoc(
         doc(db, LEGACY_COLLECTIONS.designFiles, id), 
-        { ...data, userId, updatedAt: now }, 
+        { ...data, userId, projectId, updatedAt: now }, 
         { merge: true }
       );
       console.log('✅ Dual-write to legacy path:', `${LEGACY_COLLECTIONS.designFiles}/${id}`);
