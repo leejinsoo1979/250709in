@@ -53,6 +53,11 @@ interface FurnitureDataState {
   // 드래그 상태 액션들 (FurnitureDragProvider와 동일한 인터페이스)
   setCurrentDragData: (data: CurrentDragData | null) => void;
   clearDragData: () => void;
+  
+  // 변경 상태 추적
+  isDirty: boolean;
+  setIsDirty: (dirty: boolean) => void;
+  resetAll: () => void;
 }
 
 // 가구 데이터 Store 생성
@@ -190,6 +195,23 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   clearDragData: () => {
     set({ currentDragData: null });
+  },
+  
+  // 변경 상태 추적
+  isDirty: false,
+  setIsDirty: (dirty: boolean) => set({ isDirty: dirty }),
+  resetAll: () => {
+    set({
+      placedModules: [],
+      selectedLibraryModuleId: null,
+      selectedPlacedModuleId: null,
+      selectedFurnitureId: null,
+      isFurniturePlacementMode: false,
+      editMode: false,
+      editingModuleId: null,
+      currentDragData: null,
+      isDirty: false
+    });
   },
 
   // 전체 도어 설치/제거 함수

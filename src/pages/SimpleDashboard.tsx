@@ -18,7 +18,7 @@ import ProfileTab from '../components/collaboration/ProfileTab';
 import NotificationBadge from '../components/common/NotificationBadge';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ThumbnailImage from '../components/common/ThumbnailImage';
-import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
+// import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
 // 커스텀 프로젝트 아이콘 (단색, 네모+선 형태)

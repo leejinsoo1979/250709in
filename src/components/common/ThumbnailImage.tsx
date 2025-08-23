@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ProjectSummary } from '../../firebase/types';
-import { generateProjectThumbnail } from '../../utils/thumbnailGenerator';
+// import { generateProjectThumbnail } from '../../utils/thumbnailGenerator';
+
+// 임시 더미 함수
+const generateProjectThumbnail = async (project: any) => {
+  return null;
+};
 
 // 스핀 애니메이션을 위한 CSS 주입
 const injectSpinAnimation = () => {
