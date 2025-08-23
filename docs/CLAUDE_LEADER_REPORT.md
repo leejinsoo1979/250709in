@@ -38,10 +38,11 @@ ACCEPTANCE: Storage에 파일 존재, Firestore에 assets 문서 존재. build �
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / 8a375ad
-- 업로드: Storage 경로 teams/{t}/designs/{d}/versions/{v}/{assetId}.{ext} 준비
-- 문서 생성: teams/{t}/assets/{assetId} 커렉션 준비 (url 포함)
-- build: 성공 ✓ built in 9.49s
+- Branch / Commit: feat/tenant-version-assets / 209dd97
+- 업로드: Storage 경로 teams/{t}/designs/{d}/versions/{v}/{assetId}.{ext} 연결 완료
+- 문서 생성: teams/{t}/assets/{assetId} 컬렉션 연결 완료 (url 포함)
+- build: 성공 ✓ built in 12.29s
+- DXF/PDF export 시 자동 Storage 업로드, 실패 시 로컬 다운로드 폴백
 
 ---
 
