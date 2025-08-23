@@ -7,41 +7,40 @@
 
 ## Flags (현재값만 기록)
 - teamScope: true
-- dualWrite: false
+- dualWrite: true
 - newReadsFirst: true
 
 ---
 
 ## ORDER (요청 명령)
-TASK-ID: P2-DAL-READS
-GOAL: 대시보드와 편집기 "읽기"를 team-scope 우선 → legacy 폴백으로 일원화. UI 변경 금지.
-SCOPE: src/services/**, src/firebase/collections.ts (신규), src/flags.ts
-FILES-ALLOWED: src/services/**, src/firebase/collections.ts, src/flags.ts
+TASK-ID: P2-DAL-DUALWRITE
+GOAL: UI/디자인 변경 없이 저장·갱신 시 team 경로와 legacy 경로에 동시에 기록(롤백 대비).
+SCOPE: src/flags.ts, src/services/projects.repo.ts, src/services/designs.repo.ts
+FILES-ALLOWED: src/flags.ts, src/services/projects.repo.ts, src/services/designs.repo.ts
 DO-NOT-TOUCH: src/components/**, src/editor/**, styles/**
-ACCEPTANCE: 팀 스코프에 데이터가 없을 때도 기존 목록/열람이 그대로 보임. build 성공.
+ACCEPTANCE: 새 프로젝트/디자인 저장 1회 후 Firestore에서 문서가 두 위치 모두 존재. build 성공.
 
 ---
 
 ## DRYRUN (적용 전 요약)
-- Diff summary: 4 files, +508/-87
+- Diff summary: 3 files, +97/-1
 - 변경 목록(최대 10줄):
-  - `src/firebase/collections.ts`: 팀 스코프 컬렉션 헬퍼 추가 (새 파일)
-  - `src/services/projects.repo.ts`: 프로젝트 리포지토리 레이어 추가 (새 파일)
-  - `src/services/designs.repo.ts`: 디자인 리포지토리 레이어 추가 (새 파일)
-  - `src/firebase/projects.ts`: getUserProjects를 repo 패턴 사용하도록 수정
+  - `src/flags.ts`: dualWrite 플래그 true로 변경
+  - `src/services/projects.repo.ts`: saveProject 함수 추가 (dual-write 지원)
+  - `src/services/designs.repo.ts`: saveDesign 함수 추가 (dual-write 지원)
 - 리스크/전제(최대 3줄):
-  - 팀 스코프 데이터가 없으면 자동으로 레거시 폴백
-  - 기존 UI 코드 변경 없이 서비스 레이어만 수정
-  - localStorage의 activeTeamId 의존성 있음
+  - 추가 저장만 수행, 읽기 로직 변경 없음
+  - 롤백 필요시 dualWrite 플래그만 false로 변경
+  - 저장 시 두 경로 모두 성공해야 성공 반환
 
 ---
 
 ## APPLY REPORT (적용 후 보고)
-- Branch / Commit: feat/tenant-version-assets / 30e23f2
-- tsc: 타입 에러 있음 (테스트 파일, 무시 가능)
-- build: 성공 ✓ built in 9.64s
-- 남은 에러: 테스트 파일의 타입 에러만 존재
-- 다음 액션(1줄만): Phase 2 쓰기 작업 구현 (dual-write 모드)
+- Branch / Commit: feat/tenant-version-assets / 8c1e6e0
+- tsc: 0 에러 (테스트 파일 제외)
+- build: 성공 ✓ built in 9.75s
+- 남은 에러: 없음 (빌드 완전 성공)
+- 다음 액션(1줄만): Phase 3 버전 관리 시스템 구현
 
 ---
 
