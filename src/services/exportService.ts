@@ -4,6 +4,7 @@
 
 import { saveExportAsset } from '@/firebase/assets';
 import { auth } from '@/firebase/auth';
+import { getCurrentVersionId } from '@/services/designs.repo';
 
 /**
  * Process and save export to Firebase Storage
@@ -108,4 +109,44 @@ export async function exportWithPersistence(
     // Final fallback - just download the blob
     triggerDownload(blob, filename);
   }
+}
+
+/**
+ * TEST FUNCTION - 실제 Storage 업로드 테스트
+ * 콘솔에서 실행: window.testExportAsset('team_id', 'design_id')
+ */
+export async function testExportAsset(teamId: string, designId: string): Promise<void> {
+  try {
+    console.log('🧪 테스트 시작: Export Asset Upload');
+    
+    // 1. 현재 버전 ID 가져오기
+    const versionId = await getCurrentVersionId(teamId, designId) || 'test_version_001';
+    console.log('📌 Version ID:', versionId);
+    
+    // 2. 테스트 PDF 생성
+    const testContent = `Test PDF Export\nTeam: ${teamId}\nDesign: ${designId}\nVersion: ${versionId}\nTimestamp: ${new Date().toISOString()}`;
+    const blob = new Blob([testContent], { type: 'application/pdf' });
+    
+    // 3. Storage 업로드 시도
+    const result = await processExport(blob, 'pdf', teamId, designId, versionId);
+    
+    if (result) {
+      console.log('✅ Storage 업로드 성공!');
+      console.log('📁 Storage 경로:', result.path);
+      console.log('🔗 다운로드 URL:', result.url);
+      console.log('📄 Asset ID:', result.assetId);
+      console.log('');
+      console.log('Firestore 확인:');
+      console.log(`teams/${teamId}/assets/${result.assetId}`);
+    } else {
+      console.error('❌ Storage 업로드 실패');
+    }
+  } catch (error) {
+    console.error('❌ 테스트 실패:', error);
+  }
+}
+
+// 브라우저 콘솔에서 테스트할 수 있도록 window에 노출
+if (typeof window !== 'undefined') {
+  (window as any).testExportAsset = testExportAsset;
 }
