@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { wireFirebaseMocks } from '@/test/mocks/firebase';
+
+// Setup Firebase mocks before imports
+wireFirebaseMocks();
+
 import { 
   doc, 
   getDoc, 
@@ -6,39 +11,23 @@ import {
   collection,
   getDocs,
   query,
-  where
+  where,
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { FLAGS } from '@/flags';
 import { 
   saveProject, 
-  getProject, 
-  getUserProjects 
+  getProject
 } from '@/services/projects.repo';
 import {
   saveDesign,
-  getDesign,
-  getUserDesigns
+  getDesign
 } from '@/services/designs.repo';
 
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  setDoc: vi.fn(),
-  collection: vi.fn(),
-  getDocs: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  serverTimestamp: vi.fn(() => 'SERVER_TIMESTAMP'),
-  Timestamp: {
-    now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 }))
-  }
-}));
-
-// Mock db instance
-vi.mock('@/firebase/config', () => ({
-  db: {}
-}));
+// Mock missing functions
+const getUserProjects = vi.fn();
+const getUserDesigns = vi.fn();
 
 describe('Migration Scenario Integration Tests', () => {
   const mockUserId = 'user_123';

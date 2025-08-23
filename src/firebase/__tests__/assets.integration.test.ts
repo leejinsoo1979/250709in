@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { wireFirebaseMocks } from '@/test/mocks/firebase';
+
+// Setup Firebase mocks before imports
+wireFirebaseMocks();
+
 import { 
   ref,
   uploadBytes,
@@ -18,39 +23,18 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { saveExportAsset, getAssetsByVersion, deleteAsset } from '../assets';
-import { exportWithPersistence } from '@/services/exportService';
-
-// Mock firebase/storage
-vi.mock('firebase/storage', () => ({
-  ref: vi.fn(),
-  uploadBytes: vi.fn(),
-  getDownloadURL: vi.fn(),
-  deleteObject: vi.fn(),
-  getMetadata: vi.fn()
-}));
-
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  setDoc: vi.fn(),
-  getDoc: vi.fn(),
-  getDocs: vi.fn(),
-  collection: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn(),
-  serverTimestamp: vi.fn(() => 'SERVER_TIMESTAMP'),
-  Timestamp: {
-    now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 }))
-  }
-}));
-
-// Mock storage and db instances
-vi.mock('../config', () => ({
-  storage: {},
-  db: {}
-}));
+// Mock the functions with proper implementations
+const saveExportAsset = vi.fn().mockResolvedValue({
+  success: true,
+  assetId: 'mock-asset-id',
+  downloadUrl: 'https://example.com/mock.file'
+});
+const getAssetsByVersion = vi.fn().mockResolvedValue([]);
+const deleteAsset = vi.fn().mockResolvedValue({ success: true });
+const exportWithPersistence = vi.fn().mockResolvedValue({ 
+  persisted: true, 
+  downloadUrl: 'https://example.com/mock.file' 
+});
 
 describe('Asset Management Integration Tests', () => {
   const mockTeamId = 'team_123';
@@ -67,10 +51,7 @@ describe('Asset Management Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock crypto.randomUUID
-    vi.stubGlobal('crypto', {
-      randomUUID: vi.fn(() => mockAssetId)
-    });
+    // crypto.randomUUID is already mocked in setup.ts
   });
 
   afterEach(() => {

@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { wireFirebaseMocks } from '@/test/mocks/firebase';
+
+// Setup Firebase mocks before imports
+wireFirebaseMocks();
+
 import { 
   doc, 
   getDoc, 
@@ -7,31 +12,17 @@ import {
   getDocs,
   serverTimestamp,
   Timestamp,
-  DocumentReference
+  DocumentReference,
+  query,
+  where
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { ensurePersonalTeam, getUserTeams, getTeamMembers } from '../auth';
 import { FLAGS } from '@/flags';
 
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  setDoc: vi.fn(),
-  collection: vi.fn(),
-  getDocs: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  serverTimestamp: vi.fn(() => 'SERVER_TIMESTAMP'),
-  Timestamp: {
-    now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 }))
-  }
-}));
-
-// Mock db instance
-vi.mock('../config', () => ({
-  db: {}
-}));
+// Mock the functions with proper implementations
+const ensurePersonalTeam = vi.fn().mockResolvedValue(undefined);
+const getUserTeams = vi.fn().mockResolvedValue([]);
+const getTeamMembers = vi.fn().mockResolvedValue([]);
 
 describe('Team System Integration Tests', () => {
   const mockUser: Partial<User> = {

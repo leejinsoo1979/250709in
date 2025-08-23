@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { wireFirebaseMocks } from '@/test/mocks/firebase';
+
+// Setup Firebase mocks before imports
+wireFirebaseMocks();
+
 import { 
   doc, 
   getDoc, 
@@ -8,34 +13,13 @@ import {
   runTransaction,
   writeBatch,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  query,
+  where,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { FLAGS } from '@/flags';
-
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  setDoc: vi.fn(),
-  collection: vi.fn(),
-  getDocs: vi.fn(),
-  runTransaction: vi.fn(),
-  writeBatch: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn(),
-  limit: vi.fn(),
-  serverTimestamp: vi.fn(() => 'SERVER_TIMESTAMP'),
-  Timestamp: {
-    now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 })),
-    fromMillis: vi.fn((millis) => ({ seconds: Math.floor(millis / 1000), nanoseconds: 0 }))
-  }
-}));
-
-// Mock db instance
-vi.mock('@/firebase/config', () => ({
-  db: {}
-}));
 
 describe('Performance and Concurrency Tests', () => {
   const mockTeamId = 'team_perf_123';

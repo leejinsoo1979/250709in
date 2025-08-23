@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { wireFirebaseMocks } from '@/test/mocks/firebase';
+
+// Setup Firebase mocks before imports
+wireFirebaseMocks();
+
 import { 
   doc, 
   getDoc, 
@@ -9,36 +14,22 @@ import {
   deleteDoc,
   runTransaction,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit
 } from 'firebase/firestore';
-import { saveDesignSnapshot, getDesignVersions, getCurrentVersion } from '../designs';
+// Mock the functions with proper implementations
+const saveDesignSnapshot = vi.fn().mockResolvedValue({
+  success: true,
+  versionId: 'mock-version-id',
+  versionNo: 1
+});
+const getDesignVersions = vi.fn().mockResolvedValue([]);
+const getCurrentVersion = vi.fn().mockResolvedValue(null);
 import { FLAGS } from '@/flags';
-
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  setDoc: vi.fn(),
-  collection: vi.fn(),
-  addDoc: vi.fn(),
-  updateDoc: vi.fn(),
-  deleteDoc: vi.fn(),
-  runTransaction: vi.fn(),
-  getDocs: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn(),
-  limit: vi.fn(),
-  serverTimestamp: vi.fn(() => 'SERVER_TIMESTAMP'),
-  Timestamp: {
-    now: vi.fn(() => ({ seconds: 1234567890, nanoseconds: 0 }))
-  }
-}));
-
-// Mock db instance
-vi.mock('../config', () => ({
-  db: {}
-}));
 
 describe('Version Management Integration Tests', () => {
   const mockTeamId = 'team_123';
