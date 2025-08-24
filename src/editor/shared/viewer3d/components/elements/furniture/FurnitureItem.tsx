@@ -184,6 +184,7 @@ interface FurnitureItemProps {
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
   showFurniture?: boolean; // 가구 표시 여부 추가
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
+  doorsOpen?: boolean; // 읽기 전용 모드에서의 도어 상태
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -202,7 +203,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerUp,
   onDoubleClick,
   showFurniture = true, // 기본값 true
-  isReadOnly = false // 읽기 전용 모드
+  isReadOnly = false, // 읽기 전용 모드
+  doorsOpen: propDoorsOpen // 읽기 전용 모드에서의 도어 상태
 }) => {
   // furnitureStartY 변경 감지
   React.useEffect(() => {

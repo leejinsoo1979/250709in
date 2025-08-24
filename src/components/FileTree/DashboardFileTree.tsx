@@ -393,11 +393,11 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                 >
                   <div className={styles.treeItemIcon}>
                     {expandedProjects.has(project.id) ? (
-                      <ChevronDownIcon size={12} />
+                      <ChevronDownIcon size={14} color="currentColor" />
                     ) : (
-                      <ChevronRightIcon size={12} />
+                      <ChevronRightIcon size={14} color="currentColor" />
                     )}
-                    <ProjectIcon size={16} />
+                    <ProjectIcon size={16} color="currentColor" />
                   </div>
                   <span>{project.title}</span>
                   <div className={styles.treeItemActions}>
@@ -431,11 +431,11 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                         >
                           <div className={styles.treeItemIcon}>
                             {expandedFolders.has(folder.id) ? (
-                              <ChevronDownIcon size={12} />
+                              <ChevronDownIcon size={14} color="currentColor" />
                             ) : (
-                              <ChevronRightIcon size={12} />
+                              <ChevronRightIcon size={14} color="currentColor" />
                             )}
-                            <FolderIcon size={16} />
+                            <FolderIcon size={16} color="currentColor" />
                           </div>
                           <span>{folder.name}</span>
                           <span className={styles.treeItemCount}>{folder.children.length}</span>

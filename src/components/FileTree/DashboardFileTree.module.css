@@ -103,7 +103,12 @@
   align-items: center;
   gap: 4px;
   margin-right: 8px;
-  color: var(--theme-text-secondary);
+  color: var(--theme-text-secondary, #666);
+  flex-shrink: 0;
+}
+
+.treeItemIcon svg {
+  display: block;
 }
 
 .treeItem.active .treeItemIcon {
