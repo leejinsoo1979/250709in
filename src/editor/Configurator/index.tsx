@@ -446,6 +446,7 @@ const Configurator: React.FC = () => {
         materialConfig: spaceInfo.materialConfig
       });
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
+      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules);
       
       // 썸네일 생성
       let thumbnail;
@@ -995,6 +996,7 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const designFileId = searchParams.get('designFileId');
+    const designFileName = searchParams.get('designFileName');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
@@ -1039,8 +1041,20 @@ const Configurator: React.FC = () => {
             setSpaceInfo(spaceConfig);
             
             // 가구 설정
+            console.log('🪑 디자인 파일 가구 데이터 로드:', {
+              hasFurniture: !!designFile.furniture,
+              hasPlacedModules: !!designFile.furniture?.placedModules,
+              placedModulesCount: designFile.furniture?.placedModules?.length || 0,
+              placedModules: designFile.furniture?.placedModules
+            });
+            
             if (designFile.furniture?.placedModules) {
+              console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
               setPlacedModules(designFile.furniture.placedModules);
+              console.log('🪑 가구 데이터 설정 완료');
+            } else {
+              console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+              setPlacedModules([]);
             }
             
             setLoading(false);
@@ -1053,6 +1067,79 @@ const Configurator: React.FC = () => {
       };
       
       loadDesignFile();
+      return; // 다른 로직 실행 방지
+    }
+    
+    // designFileName으로 진입한 경우 (대시보드에서 디자인 카드 클릭)
+    if (projectId && designFileName) {
+      console.log('📋 디자인명으로 진입 - designFileName:', designFileName);
+      setCurrentProjectId(projectId);
+      setProjectId(projectId);
+      setCurrentDesignFileName(decodeURIComponent(designFileName));
+      
+      // 프로젝트에서 디자인 파일 찾아서 로드
+      const loadDesignByName = async () => {
+        setLoading(true);
+        try {
+          // 프로젝트의 디자인 파일 목록 가져오기
+          const { getDesignFiles } = await import('@/firebase/projects');
+          const { designFiles, error } = await getDesignFiles(projectId);
+          
+          if (error) {
+            console.error('디자인 파일 목록 로드 에러:', error);
+            // 에러가 나도 프로젝트는 로드 시도
+            loadProject(projectId);
+            return;
+          }
+          
+          // 이름으로 디자인 파일 찾기
+          const decodedName = decodeURIComponent(designFileName);
+          const designFile = designFiles.find(df => df.name === decodedName);
+          
+          if (designFile) {
+            console.log('✅ 디자인 파일 찾음:', designFile.id, designFile.name);
+            setCurrentDesignFileId(designFile.id);
+            
+            // 디자인 데이터 설정
+            setBasicInfo({
+              title: designFile.name || '새 디자인',
+              location: ''
+            });
+            
+            // 공간 설정
+            const spaceConfig = { ...designFile.spaceConfig };
+            if (spaceConfig.installType === 'built-in') {
+              spaceConfig.installType = 'builtin';
+            }
+            setSpaceInfo(spaceConfig);
+            
+            // 가구 설정
+            console.log('🪑 디자인 파일 가구 데이터 로드:', {
+              hasFurniture: !!designFile.furniture,
+              hasPlacedModules: !!designFile.furniture?.placedModules,
+              placedModulesCount: designFile.furniture?.placedModules?.length || 0
+            });
+            
+            if (designFile.furniture?.placedModules) {
+              setPlacedModules(designFile.furniture.placedModules);
+            } else {
+              setPlacedModules([]);
+            }
+            
+            setLoading(false);
+          } else {
+            console.log('⚠️ 디자인 파일을 찾을 수 없음, 프로젝트 로드 시도');
+            // 디자인 파일을 찾을 수 없으면 프로젝트 로드
+            loadProject(projectId);
+          }
+        } catch (error) {
+          console.error('디자인 파일 로드 중 오류:', error);
+          // 오류 발생 시 프로젝트 로드 시도
+          loadProject(projectId);
+        }
+      };
+      
+      loadDesignByName();
       return; // 다른 로직 실행 방지
     }
     

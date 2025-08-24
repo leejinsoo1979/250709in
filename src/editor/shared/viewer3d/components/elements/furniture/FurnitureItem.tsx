@@ -183,6 +183,7 @@ interface FurnitureItemProps {
   onPointerUp: () => void;
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
   showFurniture?: boolean; // 가구 표시 여부 추가
+  isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -200,7 +201,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerMove,
   onPointerUp,
   onDoubleClick,
-  showFurniture = true // 기본값 true
+  showFurniture = true, // 기본값 true
+  isReadOnly = false // 읽기 전용 모드
 }) => {
   // furnitureStartY 변경 감지
   React.useEffect(() => {
@@ -1594,8 +1596,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
-      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
-      {showDimensions && viewMode === '3D' && (
+      {/* 3D 모드에서 편집 아이콘 표시 - 읽기 전용이 아니고, showDimensions가 true이고 3D 모드일 때만 표시 */}
+      {!isReadOnly && showDimensions && viewMode === '3D' && (
         <Html
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,

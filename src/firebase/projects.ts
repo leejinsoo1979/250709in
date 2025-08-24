@@ -884,6 +884,13 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       }
     }
 
+    console.log('🪑 [Firebase] 가구 데이터 처리 전:', {
+      rawFurniture: data.furniture,
+      hasFurniture: !!data.furniture,
+      hasPlacedModules: !!data.furniture?.placedModules,
+      placedModulesCount: data.furniture?.placedModules?.length || 0
+    });
+    
     const designFile: DesignFile = {
       id: docSnap.id,
       name: data.name,
@@ -907,6 +914,120 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
   } catch (error) {
     console.error('디자인 파일 조회 에러:', error);
     return { designFile: null, error: '디자인 파일을 불러오는 중 오류가 발생했습니다.' };
+  }
+};
+
+// 공유 링크용 - 인증 없이 디자인 파일 조회
+export const getDesignFileByIdPublic = async (designFileId: string): Promise<{ designFile: DesignFile | null; error: string | null }> => {
+  try {
+    console.log('🔥 [Firebase] getDesignFileByIdPublic 호출 (공유 링크):', designFileId);
+
+    const docRef = doc(db, 'designFiles', designFileId);
+    console.log('🔥 [Firebase] Firestore 문서 조회 중... (서버에서 직접)');
+    console.log('🔥 [Firebase] 문서 참조 경로:', docRef.path);
+    
+    // 캐시를 무시하고 서버에서 직접 가져오기
+    const docSnap = await getDocFromServer(docRef);
+    console.log('🔥 [Firebase] 문서 스냅샷:', docSnap);
+    console.log('🔥 [Firebase] 문서 존재 여부:', docSnap.exists());
+
+    if (!docSnap.exists()) {
+      console.log('🔥 [Firebase] 디자인 파일이 존재하지 않음');
+      return { designFile: null, error: '디자인 파일을 찾을 수 없습니다.' };
+    }
+
+    const data = docSnap.data();
+    console.log('🔥 [Firebase] 디자인 파일 원본 데이터 (공유):', data);
+    console.log('🔥 [Firebase] 디자인 파일 가구 데이터 (공유):', { 
+      hasData: !!data,
+      projectId: data?.projectId,
+      hasFurniture: !!data?.furniture,
+      furnitureData: data?.furniture,
+      placedModules: data?.furniture?.placedModules,
+      furnitureCount: data?.furniture?.placedModules?.length || 0
+    });
+    
+    const designFile: DesignFile = {
+      id: docSnap.id,
+      name: data.name,
+      projectId: data.projectId,
+      folderId: data.folderId,
+      spaceConfig: data.spaceConfig,
+      furniture: data.furniture || { placedModules: [] },
+      thumbnail: data.thumbnail,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+
+    console.log('🔍 디자인 파일 조회 완료 (공유):', {
+      id: designFile.id,
+      name: designFile.name,
+      furniture: designFile.furniture,
+      placedModulesCount: designFile.furniture?.placedModules?.length || 0
+    });
+
+    return { designFile, error: null };
+  } catch (error: any) {
+    console.error('🔥 디자인 파일 조회 에러 (공유):', error);
+    console.error('🔥 에러 코드:', error?.code);
+    console.error('🔥 에러 메시지:', error?.message);
+    
+    // Firebase 권한 에러 체크
+    if (error?.code === 'permission-denied') {
+      return { designFile: null, error: 'Firebase 보안 규칙에 의해 접근이 거부되었습니다. Firestore 규칙을 확인하세요.' };
+    }
+    
+    return { designFile: null, error: `디자인 파일을 불러오는 중 오류가 발생했습니다: ${error?.message || error}` };
+  }
+};
+
+// 공유 링크용 - 인증 없이 프로젝트 조회
+export const getProjectByIdPublic = async (projectId: string): Promise<{ project: any | null; error: string | null }> => {
+  try {
+    console.log('🔥 [Firebase] getProjectByIdPublic 호출 (공유 링크):', projectId);
+
+    const docRef = doc(db, PROJECTS_COLLECTION, projectId);
+    console.log('🔥 [Firebase] 프로젝트 문서 참조 경로:', docRef.path);
+    
+    const docSnap = await getDocFromServer(docRef);
+    console.log('🔥 [Firebase] 프로젝트 문서 스냅샷:', docSnap);
+    console.log('🔥 [Firebase] 프로젝트 문서 존재 여부:', docSnap.exists());
+
+    if (!docSnap.exists()) {
+      console.log('🔥 [Firebase] 프로젝트가 존재하지 않음 (공유)');
+      return { project: null, error: '프로젝트를 찾을 수 없습니다.' };
+    }
+
+    const data = docSnap.data();
+
+    // 전체 데이터 반환 (뷰어에서 필요한 모든 데이터 포함)
+    const project = {
+      id: docSnap.id,
+      ...data,
+      // 명시적으로 필요한 데이터 확인
+      spaceConfig: data.spaceConfig || null,
+      furniture: data.furniture || { placedModules: [] },
+      stats: data.stats || { furnitureCount: 0 }
+    };
+
+    console.log('🔍 Firebase 프로젝트 조회 (공유):', {
+      id: project.id,
+      hasSpaceConfig: !!project.spaceConfig,
+      furnitureCount: project.furniture?.placedModules?.length || 0
+    });
+
+    return { project, error: null };
+  } catch (error: any) {
+    console.error('🔥 프로젝트 불러오기 에러 (공유):', error);
+    console.error('🔥 에러 코드:', error?.code);
+    console.error('🔥 에러 메시지:', error?.message);
+    
+    // Firebase 권한 에러 체크
+    if (error?.code === 'permission-denied') {
+      return { project: null, error: 'Firebase 보안 규칙에 의해 접근이 거부되었습니다. Firestore 규칙을 확인하세요.' };
+    }
+    
+    return { project: null, error: `프로젝트를 불러오는 중 오류가 발생했습니다: ${error?.message || error}` };
   }
 };
 

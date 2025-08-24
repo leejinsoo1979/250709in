@@ -22,7 +22,7 @@ const THEME_STORAGE_KEY = 'app-theme-config';
 
 const defaultTheme: ThemeConfig = {
   mode: 'light',
-  color: 'green',
+  color: 'blue',  // 페일블루 라이트 테마를 기본으로 설정
 };
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

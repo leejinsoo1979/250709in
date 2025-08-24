@@ -113,27 +113,19 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
             
             <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
             
-            {/* 테스트용 큐브 */}
-            <mesh position={[0, 1, 0]}>
-              <boxGeometry args={[1, 1, 1]} />
-              <meshStandardMaterial color="red" />
-            </mesh>
-            
-            {/* Room 컴포넌트에 placedModules 전달 */}
+            {/* Room 컴포넌트에 placedModules 전달 - 미리보기 모드에서는 치수와 가이드 숨김 */}
             <Room 
               spaceInfo={spaceConfig} 
               viewMode={viewMode} 
               materialConfig={materialConfig} 
-              showAll={true} 
-              showFrame={true} 
+              showAll={false}  // 편집 아이콘들 숨김
+              showFrame={true}  // 프레임은 표시
+              showDimensions={false}  // 치수 숨김
               placedModules={placedModules}
+              isReadOnly={true}  // 읽기 전용 모드
             />
             
-            {/* 치수 표시 */}
-            <CleanCAD2D 
-              viewDirection={viewMode === '3D' ? '3D' : 'front'} 
-              showDimensions={true}
-            />
+            {/* 미리보기 모드에서는 치수 표시 제거 */}
           </React.Suspense>
         </ThreeCanvas>
       </div>

@@ -251,6 +251,26 @@
   transform: translateY(-1px);
 }
 
+.shareButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--theme-primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shareButton:hover {
+  background: var(--theme-primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .modalOverlay {
@@ -277,7 +297,8 @@
     align-items: stretch;
   }
   
-  .editButton {
+  .editButton,
+  .shareButton {
     width: 100%;
     justify-content: center;
   }

@@ -56,7 +56,7 @@ const SimpleDashboard: React.FC = () => {
   
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 초기값을 true로 설정
   const [error, setError] = useState<string | null>(null);
   
   // 디자인 파일 로딩 상태
@@ -191,30 +191,67 @@ const SimpleDashboard: React.FC = () => {
   }, []);
 
   // Firebase에서 프로젝트 목록 가져오기
-  const loadFirebaseProjects = useCallback(async () => {
+  const loadFirebaseProjects = useCallback(async (retryCount = 0) => {
     if (!user) {
       console.log('사용자가 로그인되지 않았습니다.');
+      setLoading(false); // 사용자가 없으면 로딩 종료
       return;
     }
 
-    setLoading(true);
+    console.log(`🔄 프로젝트 로드 시도 ${retryCount + 1}/3 - 사용자: ${user.email}`);
+    if (retryCount === 0) {
+      setLoading(true); // 첫 시도일 때만 로딩 시작
+    }
     setError(null);
     
     try {
       const { projects, error } = await getUserProjects();
       
       if (error) {
+        // 재시도 로직
+        if (retryCount < 2) {
+          console.log(`⚠️ 프로젝트 로드 실패, 1초 후 재시도...`);
+          setTimeout(() => {
+            loadFirebaseProjects(retryCount + 1);
+          }, 1000);
+          return;
+        }
+        
         setError(error);
-        console.error('Firebase 프로젝트 로드 에러:', error);
+        console.error('Firebase 프로젝트 로드 최종 실패:', error);
+        setLoading(false);
       } else {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
+        
+        // 프로젝트가 0개면 한 번 더 시도
+        if (projects.length === 0 && retryCount === 0) {
+          console.log('⚠️ 프로젝트가 0개, 2초 후 재확인...');
+          setTimeout(() => {
+            loadFirebaseProjects(1);
+          }, 2000);
+        } else {
+          // 성공적으로 로드했거나 재시도 후에도 0개면 로딩 종료
+          setLoading(false);
+        }
       }
     } catch (err) {
+      // 재시도 로직
+      if (retryCount < 2) {
+        console.log(`⚠️ 프로젝트 로드 예외 발생, 1초 후 재시도...`);
+        setTimeout(() => {
+          loadFirebaseProjects(retryCount + 1);
+        }, 1000);
+        return;
+      }
+      
       setError('프로젝트 목록을 가져오는 중 오류가 발생했습니다.');
-      console.error('Firebase 프로젝트 로드 실패:', err);
+      console.error('Firebase 프로젝트 로드 최종 실패:', err);
     } finally {
-      setLoading(false);
+      // 재시도가 끝났을 때만 로딩 종료
+      if (retryCount >= 2) {
+        setLoading(false);
+      }
     }
   }, [user]);
 
@@ -290,9 +327,29 @@ const SimpleDashboard: React.FC = () => {
     cleanupDemoProjects();
     
     if (user) {
-      loadFirebaseProjects();
+      console.log('🔥 사용자 로그인 감지, 프로젝트 로딩 시작:', user.email);
+      // 로그인 직후 Firebase Auth 토큰이 준비될 때까지 약간의 지연
+      setTimeout(() => {
+        loadFirebaseProjects();
+      }, 500);
+    } else {
+      console.log('⚠️ 사용자 없음, 프로젝트 로딩 건너뜀');
     }
-  }, [user]); // loadFirebaseProjects 의존성 제거로 무한 루프 방지
+  }, [user, loadFirebaseProjects]);
+  
+  // 프로젝트 목록이 로드되면 각 프로젝트의 디자인 파일도 로드
+  useEffect(() => {
+    if (firebaseProjects.length > 0 && user) {
+      console.log('🔥 프로젝트 목록 로드 완료, 각 프로젝트의 디자인 파일 로딩 시작');
+      firebaseProjects.forEach(project => {
+        // 이미 로드된 프로젝트는 건너뜀
+        if (!projectDesignFiles[project.id] && !designFilesLoading[project.id]) {
+          console.log(`📁 프로젝트 ${project.title}의 디자인 파일 로딩`);
+          loadDesignFilesForProject(project.id);
+        }
+      });
+    }
+  }, [firebaseProjects, user, loadDesignFilesForProject]);
   
   // firebaseProjects가 업데이트될 때 대기 중인 프로젝트 선택 처리
   useEffect(() => {
@@ -720,7 +777,7 @@ const SimpleDashboard: React.FC = () => {
         id: 'loading',
         type: 'loading',
         name: '디자인 파일 로딩 중...',
-        project: selectedProject
+        project: project  // selectedProject가 아니라 project 사용
       });
     } else {
       // 폴더에 속하지 않은 디자인 파일들을 루트 레벨에 표시
@@ -731,7 +788,7 @@ const SimpleDashboard: React.FC = () => {
             id: designFile.id,
             type: 'design',
             name: designFile.name,
-            project: selectedProject,
+            project: project,  // selectedProject가 아니라 project 사용
             designFile: designFile
           });
         }
@@ -2558,6 +2615,34 @@ const SimpleDashboard: React.FC = () => {
                 }).map(item => ({ type: item.type, name: item.name }))
               })}
               {(() => {
+                // 로딩 중일 때는 스켈레톤 UI 표시
+                if (loading && sortedItems.length === 0) {
+                  return (
+                    <>
+                      {[1, 2, 3, 4].map((i) => (
+                        <motion.div 
+                          key={`skeleton-${i}`}
+                          className={styles.designCard}
+                          style={{ opacity: 0.3, pointerEvents: 'none' }}
+                        >
+                          <div className={styles.designCardThumbnail} style={{ background: '#f0f0f0' }}>
+                            <div style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                              animation: 'shimmer 2s infinite' 
+                            }} />
+                          </div>
+                          <div className={styles.designCardFooter}>
+                            <div style={{ width: '60%', height: '16px', background: '#f0f0f0', borderRadius: '4px' }} />
+                            <div style={{ width: '30%', height: '12px', background: '#f0f0f0', borderRadius: '4px', marginTop: '4px' }} />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </>
+                  );
+                }
+                
                 const filteredItems = sortedItems.filter(item => {
                   // 리스트 뷰에서는 new-design 카드 제외
                   if (viewMode === 'list' && item.type === 'new-design') {
@@ -3033,15 +3118,15 @@ const SimpleDashboard: React.FC = () => {
                     )}
                   </motion.div>
                 ))
-                ) : (
-                  // 빈 상태 표시
+                ) : !loading ? (
+                  // 빈 상태 표시 (로딩 중이 아닐 때만)
                   <div className={styles.emptyState}>
                     <div className={styles.emptyStateTitle}>표시할 항목이 없습니다</div>
                   </div>
-                );
+                ) : null;
               })()}
               
-              {user && sortedItems.length === 0 ? (
+              {user && sortedItems.length === 0 && !loading ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}

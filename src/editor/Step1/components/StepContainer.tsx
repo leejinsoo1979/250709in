@@ -59,7 +59,7 @@ const StepContainer: React.FC<StepContainerProps> = ({ onClose, projectId: props
           <Step2SpaceAndCustomization
             onPrevious={handlePrevious}
             onClose={handleClose}
-            projectId={propsProjectId}
+            projectId={projectId || propsProjectId}  // store의 projectId를 우선 사용
             projectTitle={projectTitle}
           />
         );

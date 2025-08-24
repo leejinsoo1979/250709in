@@ -11,6 +11,7 @@ import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
+import ViewerPage from '@/pages/ViewerPage';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -114,6 +115,8 @@ function AppContent() {
             <ARViewer />
           </Suspense>
         } />
+        {/* 공유 뷰어 라우트 */}
+        <Route path="/viewer/:projectId" element={<ViewerPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
