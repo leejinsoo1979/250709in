@@ -104,6 +104,7 @@ interface DoorModuleProps {
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   isOpen?: boolean; // 외부에서 전달된 도어 열림 상태 (읽기 전용 모드용)
+  placedModuleId?: string; // 배치된 모듈의 고유 ID (재질 독립성을 위해)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -120,7 +121,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isEditMode = false,
   slotWidths,
   slotIndex,
-  isOpen
+  isOpen,
+  placedModuleId
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -128,6 +130,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // isOpen prop이 있으면 사용, 없으면 store의 doorsOpen 사용
   const doorsOpen = isOpen !== undefined ? isOpen : storeDoorsOpen;
+  
+  // 디버깅 로그
+  console.log('🚪 DoorModule - 도어 상태:', {
+    isOpen: isOpen,
+    storeDoorsOpen: storeDoorsOpen,
+    doorsOpen: doorsOpen,
+    moduleId: moduleData?.id
+  });
+  
   const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
@@ -182,7 +193,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
     });
-  }, [moduleData?.id]); // moduleId를 의존성으로 추가하여 각 가구마다 독립적인 재질 생성
+  }, [placedModuleId || moduleData?.id]); // placedModuleId를 우선 사용, 없으면 moduleData.id 사용
 
   // 싱글 가구용 도어 재질 - 각 가구마다 독립적
   const doorMaterial = useMemo(() => {

@@ -30,6 +30,11 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   isReadOnly = false, // 읽기 전용 모드
   doorsOpen: propDoorsOpen // 읽기 전용 모드에서의 도어 상태
 }) => {
+  // 디버깅: 도어 상태 확인
+  console.log('📦 PlacedFurnitureContainer - 도어 상태:', {
+    propDoorsOpen: propDoorsOpen,
+    isReadOnly: isReadOnly
+  });
   const { spaceInfo } = useSpaceConfigStore();
   
   // spaceInfo 변경 감지 디버그

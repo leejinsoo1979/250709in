@@ -26,6 +26,12 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   // 독립적인 도어 상태 관리
   const [doorsOpen, setDoorsOpen] = useState(false);
   
+  // 도어 토글 함수에 로그 추가
+  const handleDoorsToggle = () => {
+    console.log('🚪🚪🚪 도어 토글 버튼 클릭! 현재 상태:', doorsOpen, '→ 새로운 상태:', !doorsOpen);
+    setDoorsOpen(!doorsOpen);
+  };
+  
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,
     placedModulesCount: placedModules.length,
@@ -90,7 +96,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           viewMode={viewMode}
           isReadOnly={true}
           doorsOpen={doorsOpen}
-          onDoorsToggle={() => setDoorsOpen(!doorsOpen)}
+          onDoorsToggle={handleDoorsToggle}
         />
         
         <ThreeCanvas 

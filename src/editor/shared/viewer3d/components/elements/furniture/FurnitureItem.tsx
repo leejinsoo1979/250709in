@@ -204,8 +204,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onDoubleClick,
   showFurniture = true, // 기본값 true
   isReadOnly = false, // 읽기 전용 모드
-  doorsOpen: propDoorsOpen // 읽기 전용 모드에서의 도어 상태
+  doorsOpen // 읽기 전용 모드에서의 도어 상태
 }) => {
+  // 디버깅: 도어 상태 확인
+  console.log('🎯 FurnitureItem - 도어 상태 prop:', {
+    moduleId: placedModule.moduleId,
+    doorsOpen: doorsOpen,
+    isReadOnly: isReadOnly
+  });
+  
   // furnitureStartY 변경 감지
   React.useEffect(() => {
     if (placedModule.moduleId.includes('dual-4drawer-pantshanger') || placedModule.moduleId.includes('dual-2drawer-styler')) {
@@ -1329,6 +1336,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     slotCenterX={slotCenterX}
                     moduleData={actualModuleData}
                     isDragging={isDraggingThis}
+                    isOpen={doorsOpen}
+                    placedModuleId={placedModule.id}
                     isEditMode={isEditMode}
                     slotIndex={placedModule.slotIndex}
                   />
@@ -1576,7 +1585,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             slotCenterX={0} // 도어는 가구와 같은 위치 (움직이지 않음)
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
+            isOpen={doorsOpen}
             isDragging={isDraggingThis}
+            placedModuleId={placedModule.id}
             isEditMode={isEditMode}
             slotWidths={(() => {
               // 듀얼 가구인 경우 개별 슬롯 너비 전달

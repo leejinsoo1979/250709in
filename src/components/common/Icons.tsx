@@ -350,7 +350,7 @@ export const MoreIcon: React.FC<IconProps> = ({ size = 16, color = 'currentColor
 // 확장 아이콘
 export const ChevronRightIcon: React.FC<IconProps> = ({ size = 16, color = 'currentColor', className }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <polyline points="9,18 15,12 9,6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline points="9,18 15,12 9,6" stroke={color || '#666'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -372,7 +372,7 @@ export const LogOutIcon: React.FC<IconProps> = ({ size = 16, color = 'currentCol
 // 축소 아이콘
 export const ChevronDownIcon: React.FC<IconProps> = ({ size = 16, color = 'currentColor', className }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <polyline points="6,9 12,15 18,9" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline points="6,9 12,15 18,9" stroke={color || '#666'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 

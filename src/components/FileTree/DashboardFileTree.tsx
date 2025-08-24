@@ -392,12 +392,20 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                   onClick={() => toggleProject(project.id)}
                 >
                   <div className={styles.treeItemIcon}>
-                    {expandedProjects.has(project.id) ? (
-                      <ChevronDownIcon size={14} color="currentColor" />
-                    ) : (
-                      <ChevronRightIcon size={14} color="currentColor" />
-                    )}
-                    <ProjectIcon size={16} color="currentColor" />
+                    <span style={{ 
+                      display: 'inline-block', 
+                      width: '16px', 
+                      height: '16px',
+                      fontSize: '12px',
+                      lineHeight: '16px',
+                      textAlign: 'center',
+                      color: 'var(--theme-text-secondary, #666)',
+                      fontFamily: 'monospace',
+                      userSelect: 'none'
+                    }}>
+                      {expandedProjects.has(project.id) ? '▼' : '▶'}
+                    </span>
+                    <ProjectIcon size={16} color="#666" />
                   </div>
                   <span>{project.title}</span>
                   <div className={styles.treeItemActions}>
@@ -420,6 +428,7 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                       projectId: project.id,
                       designFiles: designFiles[project.id],
                       designFilesCount: designFiles[project.id]?.length || 0,
+                      designFilesDetail: designFiles[project.id]?.map(df => ({ id: df.id, name: df.name })),
                       folders: folders[project.id]?.length || 0
                     })}
                     {/* 폴더들 */}
@@ -430,11 +439,19 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                           onClick={() => toggleFolder(folder.id)}
                         >
                           <div className={styles.treeItemIcon}>
-                            {expandedFolders.has(folder.id) ? (
-                              <ChevronDownIcon size={14} color="currentColor" />
-                            ) : (
-                              <ChevronRightIcon size={14} color="currentColor" />
-                            )}
+                            <span style={{ 
+                              display: 'inline-block', 
+                              width: '14px', 
+                              height: '14px',
+                              fontSize: '11px',
+                              lineHeight: '14px',
+                              textAlign: 'center',
+                              color: 'var(--theme-text-secondary, #666)',
+                              fontFamily: 'monospace',
+                              userSelect: 'none'
+                            }}>
+                              {expandedFolders.has(folder.id) ? '▼' : '▶'}
+                            </span>
                             <FolderIcon size={16} color="currentColor" />
                           </div>
                           <span>{folder.name}</span>

@@ -105,6 +105,7 @@
   margin-right: 8px;
   color: var(--theme-text-secondary, #666);
   flex-shrink: 0;
+  min-width: 36px; /* Ensure space for toggle + icon */
 }
 
 .treeItemIcon svg {
