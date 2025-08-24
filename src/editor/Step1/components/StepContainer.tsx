@@ -16,7 +16,17 @@ export type StepType = 1 | 2;
 const StepContainer: React.FC<StepContainerProps> = ({ onClose, projectId: propsProjectId, projectTitle }) => {
   const [currentStep, setCurrentStep] = useState<StepType>(1);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { projectId } = useProjectStore();
+  const { projectId: storeProjectId } = useProjectStore();
+  
+  // props로 받은 projectId를 우선 사용하고, 없으면 store에서 가져오기
+  const projectId = propsProjectId || storeProjectId;
+  
+  console.log('🔥 StepContainer projectId 확인:', {
+    propsProjectId,
+    storeProjectId,
+    finalProjectId: projectId,
+    currentStep
+  });
 
   // projectId가 설정되면 URL 업데이트
   useEffect(() => {
@@ -59,7 +69,7 @@ const StepContainer: React.FC<StepContainerProps> = ({ onClose, projectId: props
           <Step2SpaceAndCustomization
             onPrevious={handlePrevious}
             onClose={handleClose}
-            projectId={projectId || propsProjectId}  // store의 projectId를 우선 사용
+            projectId={projectId}  // 위에서 결정한 projectId 사용
             projectTitle={projectTitle}
           />
         );
