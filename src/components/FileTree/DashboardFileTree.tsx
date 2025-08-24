@@ -116,14 +116,33 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
     
     try {
       const result = await getDesignFiles(projectId);
+      console.log('🔥 디자인 파일 로드 결과:', {
+        projectId,
+        designFilesCount: result.designFiles?.length || 0,
+        designFiles: result.designFiles,
+        error: result.error
+      });
+      
       // 디자인 파일을 상태에 저장
-      setDesignFiles(prev => ({
-        ...prev,
-        [projectId]: result.designFiles || []
-      }));
-      console.log('디자인 파일 로드 완료:', result.designFiles);
+      if (result.designFiles && result.designFiles.length > 0) {
+        setDesignFiles(prev => ({
+          ...prev,
+          [projectId]: result.designFiles
+        }));
+        console.log('✅ 디자인 파일 state 업데이트 완료');
+      } else {
+        console.log('⚠️ 디자인 파일이 없거나 비어있음');
+        setDesignFiles(prev => ({
+          ...prev,
+          [projectId]: []
+        }));
+      }
     } catch (error) {
       console.error('디자인 파일 로드 에러:', error);
+      setDesignFiles(prev => ({
+        ...prev,
+        [projectId]: []
+      }));
     }
   };
   
@@ -385,6 +404,12 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                 {/* 프로젝트가 확장되면 디자인 파일과 폴더 표시 */}
                 {expandedProjects.has(project.id) && (
                   <div className={styles.projectChildren}>
+                    {console.log('🔥 프로젝트 확장됨:', {
+                      projectId: project.id,
+                      designFiles: designFiles[project.id],
+                      designFilesCount: designFiles[project.id]?.length || 0,
+                      folders: folders[project.id]?.length || 0
+                    })}
                     {/* 폴더들 */}
                     {(folders[project.id] || []).map(folder => (
                       <div key={folder.id}>

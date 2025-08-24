@@ -172,12 +172,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 가구 드래그 이벤트 리스너
   useEffect(() => {
     const handleFurnitureDragStart = () => {
-      console.log('🎯 가구/기둥 드래그 시작 - 카메라 회전 비활성화');
       // UIStore에서 isFurnitureDragging 상태 관리
     };
 
     const handleFurnitureDragEnd = () => {
-      console.log('🎯 가구/기둥 드래그 종료 - OrbitControls 회전 활성화');
       
       // 카메라 컨트롤 재활성화
       if (controlsRef.current) {
@@ -187,12 +185,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.enableZoom = true;
         controls.enableRotate = viewMode === '3D';
         controls.update();
-        console.log('🎯 카메라 컨트롤 재활성화 완료');
       }
     };
 
     const handleFurniturePlacementComplete = () => {
-      console.log('🎯 가구 배치 완료');
       // 카메라 리셋 기능 제거 - 사용자가 원하는 각도 유지
       
       // 카메라 컨트롤 재활성화
@@ -203,7 +199,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.enableZoom = true;
         controls.enableRotate = viewMode === '3D';
         controls.update();
-        console.log('🎯 카메라 컨트롤 재활성화 완료');
       }
     };
 
@@ -553,6 +548,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           
           // 기본 렌더링 설정
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          
+          // outputColorSpace 설정 (deprecated outputEncoding 대체)
+          gl.outputColorSpace = THREE.SRGBColorSpace;
           
           // 그림자 설정 - 3D 모드에서만
           gl.shadowMap.enabled = viewMode === '3D';

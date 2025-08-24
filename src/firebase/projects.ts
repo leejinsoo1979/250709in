@@ -840,6 +840,12 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       furnitureCount: data?.furniture?.placedModules?.length || 0
     });
     
+    // 가구 데이터가 있는지 한 번 더 체크하고 배열인지 확인
+    if (data?.furniture?.placedModules && !Array.isArray(data.furniture.placedModules)) {
+      console.error('🔥 [Firebase] placedModules가 배열이 아님:', data.furniture.placedModules);
+      data.furniture.placedModules = [];
+    }
+    
     // 디자인 파일이 속한 프로젝트의 권한 확인
     // Multi-path 아키텍처에서는 프로젝트가 teams/{teamId}/projects/{projectId}에 있음
     const projectRef = doc(db, PROJECTS_COLLECTION, data.projectId);

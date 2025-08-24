@@ -375,7 +375,21 @@ const Configurator: React.FC = () => {
         }
         
         setSpaceInfo(spaceConfig);
-        setPlacedModules(project.furniture.placedModules);
+        
+        // 가구 설정 - 먼저 초기화
+        clearAllModules(); // 이전 데이터 완전히 클리어
+        
+        // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+        setTimeout(() => {
+          if (project.furniture?.placedModules && project.furniture.placedModules.length > 0) {
+            console.log('🪑 프로젝트 가구 데이터 설정:', project.furniture.placedModules);
+            setPlacedModules(project.furniture.placedModules);
+          } else {
+            console.log('⚠️ 프로젝트에 가구 데이터가 없음');
+            setPlacedModules([]);
+          }
+        }, 100);
+        
         setCurrentProjectId(projectId);
         
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
@@ -1048,7 +1062,9 @@ const Configurator: React.FC = () => {
             }
             setSpaceInfo(spaceConfig);
             
-            // 가구 설정
+            // 가구 설정 - 먼저 초기화
+            clearAllModules(); // 이전 데이터 완전히 클리어
+            
             console.log('🪑 디자인 파일 가구 데이터 로드:', {
               hasFurniture: !!designFile.furniture,
               hasPlacedModules: !!designFile.furniture?.placedModules,
@@ -1056,16 +1072,18 @@ const Configurator: React.FC = () => {
               placedModules: designFile.furniture?.placedModules
             });
             
-            if (designFile.furniture?.placedModules) {
-              console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
-              setPlacedModules(designFile.furniture.placedModules);
-              console.log('🪑 가구 데이터 설정 완료');
-            } else {
-              console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
-              setPlacedModules([]);
-            }
-            
-            setLoading(false);
+            // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+            setTimeout(() => {
+              if (designFile.furniture?.placedModules && designFile.furniture.placedModules.length > 0) {
+                console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 가구 데이터 설정 완료');
+              } else {
+                console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+                setPlacedModules([]);
+              }
+              setLoading(false);
+            }, 100);
           }
         } catch (error) {
           console.error('디자인 파일 로드 중 오류:', error);
@@ -1121,20 +1139,27 @@ const Configurator: React.FC = () => {
             }
             setSpaceInfo(spaceConfig);
             
-            // 가구 설정
+            // 가구 설정 - 먼저 초기화
+            clearAllModules(); // 이전 데이터 완전히 클리어
+            
             console.log('🪑 디자인 파일 가구 데이터 로드:', {
               hasFurniture: !!designFile.furniture,
               hasPlacedModules: !!designFile.furniture?.placedModules,
               placedModulesCount: designFile.furniture?.placedModules?.length || 0
             });
             
-            if (designFile.furniture?.placedModules) {
-              setPlacedModules(designFile.furniture.placedModules);
-            } else {
-              setPlacedModules([]);
-            }
-            
-            setLoading(false);
+            // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+            setTimeout(() => {
+              if (designFile.furniture?.placedModules && designFile.furniture.placedModules.length > 0) {
+                console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 가구 데이터 설정 완료');
+              } else {
+                console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+                setPlacedModules([]);
+              }
+              setLoading(false);
+            }, 100);
           } else {
             console.log('⚠️ 디자인 파일을 찾을 수 없음, 프로젝트 로드 시도');
             // 디자인 파일을 찾을 수 없으면 프로젝트 로드

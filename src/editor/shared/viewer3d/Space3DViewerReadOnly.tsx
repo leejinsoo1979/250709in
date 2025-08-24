@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
+import ViewerToolbar from './components/ViewerToolbar';
 
 interface Space3DViewerReadOnlyProps {
   spaceConfig: any;
@@ -22,13 +23,17 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   viewMode = '3D',
   renderMode = 'solid'
 }) => {
+  // 독립적인 도어 상태 관리
+  const [doorsOpen, setDoorsOpen] = useState(false);
+  
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,
     placedModulesCount: placedModules.length,
     placedModules: placedModules,
     spaceConfig: spaceConfig,
     viewMode,
-    renderMode
+    renderMode,
+    doorsOpen
   });
 
   // 재질 설정
@@ -80,6 +85,14 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           position: 'relative'
         }}
       >
+        {/* ViewerToolbar로 도어 버튼 표시 */}
+        <ViewerToolbar 
+          viewMode={viewMode}
+          isReadOnly={true}
+          doorsOpen={doorsOpen}
+          onDoorsToggle={() => setDoorsOpen(!doorsOpen)}
+        />
+        
         <ThreeCanvas 
           cameraPosition={cameraPosition}
           viewMode={viewMode}
@@ -123,6 +136,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
               showDimensions={false}  // 치수 숨김
               placedModules={placedModules}
               isReadOnly={true}  // 읽기 전용 모드
+              doorsOpen={doorsOpen}  // 도어 상태 전달
             />
             
             {/* 미리보기 모드에서는 치수 표시 제거 */}
