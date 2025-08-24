@@ -59,6 +59,8 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
         const projectId = urlParams.get('projectId');
         if (projectId) {
           setSelectedProjectId(projectId);
+          // URL에 프로젝트 ID가 있으면 자동으로 확장
+          setExpandedProjects(new Set([projectId]));
         }
       }
     };
@@ -88,6 +90,16 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
     try {
       const result = await getUserProjects(user.uid);
       setAllProjects(result.projects);
+      
+      // 프로젝트가 있고 선택된 프로젝트가 없으면 첫 번째 프로젝트 자동 선택
+      if (result.projects.length > 0 && !selectedProjectId) {
+        const firstProjectId = result.projects[0].id;
+        setSelectedProjectId(firstProjectId);
+        setSelectedProject(result.projects[0]);
+        // 첫 번째 프로젝트 자동 확장
+        setExpandedProjects(new Set([firstProjectId]));
+        console.log('✅ 첫 번째 프로젝트 자동 선택 및 확장:', firstProjectId);
+      }
     } catch (error) {
       console.error('프로젝트 로드 에러:', error);
     }

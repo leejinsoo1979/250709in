@@ -39,9 +39,11 @@ const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
     module.hasDoor !== false // 도어가 있는 가구만 (도어가 없는 가구 제외)
   );
   
+  // 읽기 전용 모드(미리보기)에서만 도어 버튼 표시
+  const showDoorButton = isReadOnly && hasDoorsInstalled && toggleDoors;
+  
   // 3D 모드가 아니거나 표시할 요소가 없으면 null 반환
   const showIndirectLight = viewMode === '3D' && (hasUpperCabinet || isFloatingMode);
-  const showDoorButton = hasDoorsInstalled && toggleDoors; // 도어가 있고 토글 함수가 있을 때만
   
   if (!showIndirectLight && !showDoorButton) {
     return null;
@@ -49,7 +51,7 @@ const ViewerToolbar: React.FC<ViewerToolbarProps> = ({
   
   return (
     <div className={styles.toolbar}>
-      {/* 도어 열기/닫기 버튼 */}
+      {/* 도어 열기/닫기 버튼 - 미리보기 모드에서만 표시 */}
       {showDoorButton && (
         <div
           className={`${styles.toolbarButton} ${doorsOpen ? styles.active : ''}`}

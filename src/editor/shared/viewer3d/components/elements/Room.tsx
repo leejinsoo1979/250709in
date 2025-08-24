@@ -182,7 +182,8 @@ const Room: React.FC<RoomProps> = ({
   isStep2,
   renderMode: renderModeProp,
   activeZone,
-  isReadOnly = false
+  isReadOnly = false,
+  doorsOpen
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -2595,7 +2596,7 @@ const Room: React.FC<RoomProps> = ({
                 showFurniture
               });
               
-              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={props.doorsOpen} />;
+              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} />;
             })()}
           </>
         ) : (
@@ -2608,7 +2609,7 @@ const Room: React.FC<RoomProps> = ({
               activeZone,
               showFurniture
             })}
-            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={props.doorsOpen} />
+            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} />
           </>
         )
       )}

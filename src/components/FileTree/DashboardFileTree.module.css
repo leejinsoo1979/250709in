@@ -82,8 +82,20 @@
   color: var(--theme-primary);
 }
 
+.projectChildren {
+  /* 프로젝트 하위 아이템들을 위한 컨테이너 */
+}
+
 .treeItem.childItem {
   padding-left: 36px;
+}
+
+.treeItem.nestedItem {
+  padding-left: 56px; /* 폴더 안의 파일들은 더 들여쓰기 */
+}
+
+.folderChildren {
+  /* 폴더 하위 아이템들을 위한 컨테이너 */
 }
 
 .treeItemIcon {
