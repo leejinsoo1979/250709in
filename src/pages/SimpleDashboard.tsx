@@ -127,6 +127,8 @@ const SimpleDashboard: React.FC = () => {
   
   // Step1 모달 상태
   const [isStep1ModalOpen, setIsStep1ModalOpen] = useState(false);
+  const [modalProjectId, setModalProjectId] = useState<string | null>(null);
+  const [modalProjectTitle, setModalProjectTitle] = useState<string | null>(null);
   
   // 3D 뷰어 모달 상태
   const [viewerModal, setViewerModal] = useState<{
@@ -1715,26 +1717,42 @@ const SimpleDashboard: React.FC = () => {
     setIsCreating(true);
     try {
       if (user) {
+        console.log('🚀 프로젝트 생성 시작:', {
+          title: newProjectName.trim(),
+          userId: user.uid,
+          userEmail: user.email
+        });
+        
         const { id, error } = await createProject({
           title: newProjectName.trim()
         });
 
         if (error) {
-          console.error('Firebase 프로젝트 생성 실패:', error);
+          console.error('❌ Firebase 프로젝트 생성 실패:', error);
           alert('프로젝트 생성에 실패했습니다: ' + error);
+          setIsCreating(false);
           return;
         }
 
         if (id) {
-          console.log('✅ Firebase 프로젝트 생성 성공:', id);
-          await loadFirebaseProjects();
+          console.log('✅ Firebase 프로젝트 생성 성공:', {
+            projectId: id,
+            title: newProjectName.trim(),
+            timestamp: new Date().toISOString()
+          });
           
-          // 모달 닫기
+          // 모달 먼저 닫기
           setIsCreateModalOpen(false);
           setNewProjectName('');
           
-          // 프로젝트 선택
-          handleProjectSelect(id);
+          // 프로젝트 목록 새로고침 (강제로)
+          await loadFirebaseProjects(0);
+          
+          // 약간의 지연 후 프로젝트 선택 (목록이 업데이트된 후)
+          setTimeout(() => {
+            console.log('🎯 새 프로젝트 선택:', id);
+            handleProjectSelect(id);
+          }, 500);
           
           try {
             const channel = new BroadcastChannel('project-updates');
@@ -1791,8 +1809,12 @@ const SimpleDashboard: React.FC = () => {
       setProjectTitle(title);
       resetBasicInfo(); // 이전 디자인 정보 초기화
       
+      // 모달에 전달할 projectId와 title을 state에 저장
+      setModalProjectId(projectId);
+      setModalProjectTitle(title);
+      
       // Step1 모달 열기 - 새 디자인 생성
-      console.log('📝 Step1 모달 열기');
+      console.log('📝 Step1 모달 열기 with projectId:', projectId, 'title:', title);
       setIsStep1ModalOpen(true);
     } else {
       alert('로그인이 필요합니다.');
@@ -1802,6 +1824,8 @@ const SimpleDashboard: React.FC = () => {
   // Step1 모달 닫기
   const handleCloseStep1Modal = async () => {
     setIsStep1ModalOpen(false);
+    setModalProjectId(null);
+    setModalProjectTitle(null);
     // 디자인이 생성되었을 수 있으므로 프로젝트 목록을 새로고침
     if (selectedProjectId) {
       await loadDesignFilesForProject(selectedProjectId);
@@ -3386,12 +3410,12 @@ const SimpleDashboard: React.FC = () => {
       )}
 
       {/* Step1 모달 - 대시보드 컨텍스트에서도 라이트 테마 강제 적용 */}
-      {isStep1ModalOpen && (
+      {isStep1ModalOpen && modalProjectId && (
         <div data-theme="light" style={{ colorScheme: 'light' }}>
           <Step1 
             onClose={handleCloseStep1Modal}
-            projectId={useProjectStore.getState().projectId}
-            projectTitle={useProjectStore.getState().projectTitle}
+            projectId={modalProjectId}
+            projectTitle={modalProjectTitle || undefined}
           />
         </div>
       )}
@@ -3444,11 +3468,11 @@ const SimpleDashboard: React.FC = () => {
       />
 
       {/* Step1 모달 - 새 디자인 생성 */}
-      {isStep1ModalOpen && (
+      {isStep1ModalOpen && modalProjectId && (
         <Step1 
           onClose={handleCloseStep1Modal}
-          projectId={useProjectStore.getState().projectId}
-          projectTitle={useProjectStore.getState().projectTitle}
+          projectId={modalProjectId}
+          projectTitle={modalProjectTitle || undefined}
         />
       )}
     </div>

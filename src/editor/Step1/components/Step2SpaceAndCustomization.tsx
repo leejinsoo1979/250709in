@@ -37,49 +37,28 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   
   const { basicInfo, projectId: storeProjectId, projectTitle: storeProjectTitle } = useProjectStore();
   
-  // projectId와 projectTitle을 안정적으로 유지
-  const projectIdRef = useRef<string | null>(null);
-  const projectTitleRef = useRef<string | null>(null);
-  
-  // 최초 마운트 시 한 번만 초기값 설정
-  useEffect(() => {
-    if (!projectIdRef.current) {
-      projectIdRef.current = storeProjectId || propsProjectId || null;
-    }
-    if (!projectTitleRef.current) {
-      projectTitleRef.current = storeProjectTitle || propsProjectTitle || null;
-    }
-  }, []); // 빈 dependency로 최초 한 번만 실행
-  
-  // store가 업데이트되면 ref도 업데이트 (store가 우선순위)
-  useEffect(() => {
-    if (storeProjectId) {
-      projectIdRef.current = storeProjectId;
-    }
-    if (storeProjectTitle) {
-      projectTitleRef.current = storeProjectTitle;
-    }
-  }, [storeProjectId, storeProjectTitle]);
-  
-  // 최종 사용할 값 - ref를 우선 사용하되, 없으면 store/props 순서로 fallback
-  const projectId = useMemo(() => 
-    projectIdRef.current || storeProjectId || propsProjectId || null,
-    [storeProjectId, propsProjectId, projectIdRef.current]
-  );
-  
-  const projectTitle = useMemo(() => 
-    projectTitleRef.current || storeProjectTitle || propsProjectTitle || null,
-    [storeProjectTitle, propsProjectTitle, projectTitleRef.current]
-  );
+  // props로 받은 projectId를 우선 사용하고, 없으면 store에서 가져오기
+  const projectId = propsProjectId || storeProjectId;
+  const projectTitle = propsProjectTitle || storeProjectTitle;
   
   console.log('🔥 Step2 projectId/Title 확인:', {
-    storeProjectId,
     propsProjectId,
+    storeProjectId,
     finalProjectId: projectId,
-    storeProjectTitle,
     propsProjectTitle,
+    storeProjectTitle,
     finalProjectTitle: projectTitle
   });
+  
+  // projectId가 없으면 에러 처리
+  useEffect(() => {
+    if (!projectId) {
+      console.error('🔥🔥🔥 Step2: projectId가 없습니다!', {
+        propsProjectId,
+        storeProjectId
+      });
+    }
+  }, [projectId, propsProjectId, storeProjectId]);
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
 

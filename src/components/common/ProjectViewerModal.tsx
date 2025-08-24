@@ -22,6 +22,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [viewMode, setViewMode] = useState<'2D' | '3D'>(initialViewMode);
 
   useEffect(() => {
+    console.log('🔥🔥🔥 ProjectViewerModal Props:', {
+      isOpen,
+      projectId,
+      designFileId,
+      hasProjectId: !!projectId,
+      hasDesignFileId: !!designFileId
+    });
+    
     if (isOpen && projectId) {
       loadProject();
     }

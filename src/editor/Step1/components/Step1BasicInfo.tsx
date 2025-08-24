@@ -46,15 +46,15 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
     }
   }, [storeProjectId, storeProjectTitle]);
   
-  // 최종 사용할 값 - ref를 우선 사용하되, 없으면 store/props 순서로 fallback
+  // 최종 사용할 값 - props를 최우선으로 사용
   const projectId = useMemo(() => 
-    projectIdRef.current || storeProjectId || propsProjectId || null,
-    [storeProjectId, propsProjectId, projectIdRef.current]
+    propsProjectId || projectIdRef.current || storeProjectId || null,
+    [propsProjectId, storeProjectId]
   );
   
   const projectTitle = useMemo(() => 
-    projectTitleRef.current || storeProjectTitle || propsProjectTitle || null,
-    [storeProjectTitle, propsProjectTitle, projectTitleRef.current]
+    propsProjectTitle || projectTitleRef.current || storeProjectTitle || null,
+    [propsProjectTitle, storeProjectTitle]
   );
   
   // 컴포넌트가 마운트될 때와 리렌더링될 때 로그
@@ -332,8 +332,13 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                   setSaving(false);
                 }
               } else {
-                // 이미 프로젝트가 있으면 다음 단계로
-                console.log('✅ projectId가 있어서 다음 단계로 이동:', projectId);
+                // 이미 프로젝트가 있으면 store에 저장하고 다음 단계로
+                console.log('✅ projectId가 있어서 store에 저장하고 다음 단계로 이동:', projectId);
+                // store에 projectId 확실하게 저장
+                if (!storeProjectId || storeProjectId !== projectId) {
+                  setProjectId(projectId);
+                  console.log('🔥 Step1BasicInfo: store에 projectId 저장:', projectId);
+                }
                 onNext();
               }
             }}
