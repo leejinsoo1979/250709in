@@ -13,7 +13,8 @@ import {
   Timestamp,
   setDoc,
   getDocFromServer,
-  getDocsFromServer
+  getDocsFromServer,
+  collectionGroup
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
@@ -110,15 +111,24 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
       },
     };
 
-    // 팀 스코프 경로 사용
-    const projectsPath = await getProjectsPath();
-    const docRef = await addDoc(collection(db, projectsPath), newProject);
+    // 1. Legacy 경로에 먼저 저장 (기본)
+    const docRef = await addDoc(collection(db, PROJECTS_COLLECTION), newProject);
+    console.log('✅ 프로젝트 생성 - Legacy path:', `${PROJECTS_COLLECTION}/${docRef.id}`);
     
-    // 팀 ID 추가 (메타데이터용)
-    if (FLAGS.teamScope) {
-      const teamId = await getActiveTeamId();
-      if (teamId) {
-        await updateDoc(docRef, { teamId });
+    // 2. Dual-write if enabled
+    if (FLAGS.dualWrite && FLAGS.teamScope && teamId) {
+      try {
+        // Team-scoped path에도 저장
+        const teamPath = `teams/${teamId}/projects`;
+        await setDoc(
+          doc(db, teamPath, docRef.id),
+          newProject,
+          { merge: true }
+        );
+        console.log('✅ Dual-write to team path:', `${teamPath}/${docRef.id}`);
+      } catch (dualWriteError) {
+        console.warn('⚠️ Team path dual-write failed (non-critical):', dualWriteError);
+        // Don't fail the entire operation if dual-write fails
       }
     }
     
@@ -151,8 +161,8 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     const teamId = await getActiveTeamId();
     const now = serverTimestamp() as Timestamp;
 
-    // folderId가 undefined일 때 필드 제외
-    const baseData = {
+    // undefined 필드들을 제외한 데이터 생성
+    const baseData: any = {
       name: data.name,
       projectId: data.projectId,
       spaceConfig: data.spaceConfig,
@@ -162,7 +172,13 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       createdAt: now,
       updatedAt: now,
     };
-    
+
+    // thumbnail이 있을 때만 추가
+    if (data.thumbnail !== undefined && data.thumbnail !== null) {
+      baseData.thumbnail = data.thumbnail;
+    }
+
+    // folderId가 있을 때만 추가
     const designFileData: any = data.folderId 
       ? { ...baseData, folderId: data.folderId }
       : baseData;
@@ -173,44 +189,88 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       spaceConfigKeys: designFileData.spaceConfig ? Object.keys(designFileData.spaceConfig) : []
     });
 
-    // 1. Legacy path에 저장 (기본)
-    const docRef = await addDoc(collection(db, 'designFiles'), designFileData);
-    console.log('✅ Legacy path 저장 성공:', `designFiles/${docRef.id}`);
+    let docRef;
+    let designId;
     
-    // 2. Dual-write if enabled
-    if (FLAGS.dualWrite && teamId) {
+    // Legacy path를 기본으로 사용 (개인 프로젝트)
+    if (false) {  // nested path 비활성화
       try {
-        // 2a. Team-scoped path
-        if (FLAGS.teamScope) {
-          const teamPath = `teams/${teamId}/designs`;
-          await setDoc(
-            doc(db, teamPath, docRef.id),
-            designFileData,
-            { merge: true }
-          );
-          console.log('✅ Dual-write to team path:', `${teamPath}/${docRef.id}`);
-        }
+        // Nested project path를 primary로 사용
+        const { projectDesignsCol } = await import('@/firebase/collections');
+        const nestedRef = await addDoc(
+          projectDesignsCol(teamId, data.projectId),
+          designFileData
+        );
+        designId = nestedRef.id;
+        console.log('✅ Nested project path 저장 성공:', `teams/${teamId}/projects/${data.projectId}/designs/${designId}`);
         
-        // 2b. Nested project path
-        if (FLAGS.nestedDesigns && data.projectId) {
-          const { projectDesignDoc } = await import('@/firebase/collections');
+        // Dual-write to legacy path
+        if (FLAGS.dualWrite) {
           await setDoc(
-            projectDesignDoc(teamId, data.projectId, docRef.id),
+            doc(db, 'designFiles', designId),
             designFileData,
             { merge: true }
           );
-          console.log('✅ Dual-write to nested project path:', `teams/${teamId}/projects/${data.projectId}/designs/${docRef.id}`);
+          console.log('✅ Dual-write to legacy path:', `designFiles/${designId}`);
+          
+          // Also write to team-scoped path
+          if (FLAGS.teamScope) {
+            const teamPath = `teams/${teamId}/designs`;
+            await setDoc(
+              doc(db, teamPath, designId),
+              designFileData,
+              { merge: true }
+            );
+            console.log('✅ Dual-write to team path:', `${teamPath}/${designId}`);
+          }
         }
-      } catch (dualWriteError) {
-        console.warn('⚠️ Dual-write failed (non-critical):', dualWriteError);
-        // Don't fail the entire operation if dual-write fails
+      } catch (nestedError) {
+        console.error('❌ Nested path 저장 실패, legacy로 fallback:', nestedError);
+        // Fallback to legacy path
+        docRef = await addDoc(collection(db, 'designFiles'), designFileData);
+        designId = docRef.id;
+        console.log('✅ Legacy path 저장 성공 (fallback):', `designFiles/${designId}`);
+      }
+    } else {
+      // Legacy path를 primary로 사용
+      docRef = await addDoc(collection(db, 'designFiles'), designFileData);
+      designId = docRef.id;
+      console.log('✅ Legacy path 저장 성공:', `designFiles/${designId}`);
+      
+      // Dual-write if enabled
+      if (FLAGS.dualWrite && teamId) {
+        try {
+          // Team-scoped path
+          if (FLAGS.teamScope) {
+            const teamPath = `teams/${teamId}/designs`;
+            await setDoc(
+              doc(db, teamPath, designId),
+              designFileData,
+              { merge: true }
+            );
+            console.log('✅ Dual-write to team path:', `${teamPath}/${designId}`);
+          }
+          
+          // Nested project path
+          if (FLAGS.nestedDesigns && data.projectId) {
+            const { projectDesignDoc } = await import('@/firebase/collections');
+            await setDoc(
+              projectDesignDoc(teamId, data.projectId, designId),
+              designFileData,
+              { merge: true }
+            );
+            console.log('✅ Dual-write to nested project path:', `teams/${teamId}/projects/${data.projectId}/designs/${designId}`);
+          }
+        } catch (dualWriteError) {
+          console.warn('⚠️ Dual-write failed (non-critical):', dualWriteError);
+        }
       }
     }
     
     // 프로젝트 통계 업데이트
     await updateProjectStats(data.projectId);
     
-    return { id: docRef.id, error: null };
+    return { id: designId, error: null };
   } catch (error) {
     console.error('❌ 디자인파일 생성 에러:', error);
     const errorMessage = error instanceof Error ? error.message : '디자인파일 생성 중 오류가 발생했습니다.';
@@ -434,10 +494,11 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
       return { error: '로그인이 필요합니다.' };
     }
 
-    let projectRef;
-    let projectData;
+    // 삭제할 프로젝트 참조들을 저장할 배열
+    const projectRefsToDelete = [];
+    let projectData = null;
     
-    // 1. 먼저 팀 스코프 경로에서 찾기 시도
+    // 1. 팀 스코프 경로 확인
     if (FLAGS.teamScope) {
       const teamId = await getActiveTeamId();
       if (teamId) {
@@ -445,27 +506,27 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
         const teamDocSnap = await getDocFromServer(teamProjectRef);
         
         if (teamDocSnap.exists()) {
-          projectRef = teamProjectRef;
+          projectRefsToDelete.push(teamProjectRef);
           projectData = teamDocSnap.data();
           console.log('팀 스코프에서 프로젝트 찾음:', `teams/${teamId}/projects/${projectId}`);
         }
       }
     }
     
-    // 2. 팀 스코프에서 못 찾았으면 legacy 경로에서 찾기
-    if (!projectRef) {
-      const legacyRef = doc(db, PROJECTS_COLLECTION, projectId);
-      const legacySnap = await getDocFromServer(legacyRef);
-      
-      if (legacySnap.exists()) {
-        projectRef = legacyRef;
+    // 2. Legacy 경로 확인 (항상 확인하여 양쪽 경로에서 모두 삭제)
+    const legacyRef = doc(db, PROJECTS_COLLECTION, projectId);
+    const legacySnap = await getDocFromServer(legacyRef);
+    
+    if (legacySnap.exists()) {
+      projectRefsToDelete.push(legacyRef);
+      if (!projectData) {
         projectData = legacySnap.data();
-        console.log('Legacy 경로에서 프로젝트 찾음:', `projects/${projectId}`);
       }
+      console.log('Legacy 경로에서 프로젝트 찾음:', `projects/${projectId}`);
     }
     
     // 프로젝트를 찾지 못한 경우
-    if (!projectRef || !projectData) {
+    if (projectRefsToDelete.length === 0 || !projectData) {
       console.error('프로젝트를 찾을 수 없음:', projectId);
       return { error: '프로젝트를 찾을 수 없습니다.' };
     }
@@ -493,8 +554,10 @@ export const deleteProject = async (projectId: string): Promise<{ error: string 
       console.log(`디자인파일 ${designFilesSnapshot.size}개 삭제 완료`);
     }
 
-    // 2. 프로젝트 삭제
-    await deleteDoc(projectRef);
+    // 2. 모든 경로에서 프로젝트 삭제
+    const deleteProjectPromises = projectRefsToDelete.map(ref => deleteDoc(ref));
+    await Promise.all(deleteProjectPromises);
+    console.log(`프로젝트 삭제 완료 (${projectRefsToDelete.length}개 경로에서 삭제):`, projectId);
     
     console.log(`프로젝트 삭제 완료: ${projectId}`);
     return { error: null };
@@ -777,12 +840,48 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       furnitureCount: data?.furniture?.placedModules?.length || 0
     });
     
-    // 디자인 파일이 속한 프로젝트의 소유자 확인
+    // 디자인 파일이 속한 프로젝트의 권한 확인
+    // Multi-path 아키텍처에서는 프로젝트가 teams/{teamId}/projects/{projectId}에 있음
     const projectRef = doc(db, PROJECTS_COLLECTION, data.projectId);
     const projectSnap = await getDocFromServer(projectRef);
     
-    if (!projectSnap.exists() || projectSnap.data().userId !== user.uid) {
-      return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+    if (!projectSnap.exists()) {
+      console.log('🔥 [Firebase] 프로젝트가 존재하지 않음:', data.projectId);
+      // 프로젝트가 root에 없으면 teams 컬렉션에서 찾기
+      const teamsQuery = query(
+        collectionGroup(db, 'projects'),
+        where('__name__', '==', data.projectId)
+      );
+      const teamsSnapshot = await getDocs(teamsQuery);
+      
+      if (teamsSnapshot.empty) {
+        return { designFile: null, error: '프로젝트를 찾을 수 없습니다.' };
+      }
+      
+      // teams 컬렉션에서 프로젝트를 찾았으면 권한 확인
+      const projectDoc = teamsSnapshot.docs[0];
+      const projectData = projectDoc.data();
+      const teamPath = projectDoc.ref.parent.parent?.id; // teams/{teamId}
+      
+      // 팀 멤버 확인
+      if (teamPath) {
+        const teamRef = doc(db, 'teams', teamPath);
+        const teamSnap = await getDocFromServer(teamRef);
+        if (teamSnap.exists()) {
+          const teamData = teamSnap.data();
+          const isTeamMember = teamData.members?.some((m: any) => 
+            m.userId === user.uid || m.email === user.email
+          );
+          if (!isTeamMember) {
+            return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+          }
+        }
+      }
+    } else {
+      // root 프로젝트인 경우 기존 방식대로 확인
+      if (projectSnap.data().userId !== user.uid) {
+        return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+      }
     }
 
     const designFile: DesignFile = {

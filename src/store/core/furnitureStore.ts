@@ -58,6 +58,7 @@ interface FurnitureDataState {
   isDirty: boolean;
   setIsDirty: (dirty: boolean) => void;
   resetAll: () => void;
+  markAsSaved: () => void;
 }
 
 // 가구 데이터 Store 생성
@@ -213,6 +214,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       isDirty: false
     });
   },
+  markAsSaved: () => set({ isDirty: false }),
 
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {

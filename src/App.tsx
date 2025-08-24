@@ -61,10 +61,13 @@ function AppContent() {
   // 어느 하나라도 변경사항이 있으면 true
   const hasUnsavedChanges = projectIsDirty || spaceConfigIsDirty || furnitureIsDirty;
 
-  // 브라우저 새로고침/닫기 시 경고
+  // 브라우저 새로고침/닫기 시 경고 (Configurator 페이지에서만)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
+      // Configurator 페이지에서만 경고 표시
+      const isConfiguratorPage = window.location.pathname.includes('/configurator');
+      
+      if (hasUnsavedChanges && isConfiguratorPage) {
         const message = '저장하지 않은 변경사항이 있습니다. 정말로 페이지를 떠나시겠습니까?';
         e.preventDefault();
         e.returnValue = message;

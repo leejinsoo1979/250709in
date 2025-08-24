@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from '@/contexts/NavigationContext';
+import { useNavigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
@@ -8,6 +8,8 @@ import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderD
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
 import Step1 from '../editor/Step1';
@@ -35,10 +37,22 @@ const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // 대시보드 진입 시 store의 isDirty 플래그 초기화
+  useEffect(() => {
+    const { markAsSaved: markProjectSaved } = useProjectStore.getState();
+    const { markAsSaved: markSpaceSaved } = useSpaceConfigStore.getState();
+    const { markAsSaved: markFurnitureSaved } = useFurnitureStore.getState();
+    
+    markProjectSaved();
+    markSpaceSaved();
+    markFurnitureSaved();
+  }, []);
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [sidebarImageError, setSidebarImageError] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
+  
   
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
@@ -488,8 +502,8 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
       
-      // 로컬 상태에서 제거
-      setFirebaseProjects(prev => prev.filter(p => p.id !== project.id));
+      // Firebase에서 프로젝트 목록 다시 로드
+      await loadFirebaseProjects();
       
       // 휴지통에 추가
       const deletedProject = {
@@ -1363,6 +1377,9 @@ const SimpleDashboard: React.FC = () => {
                   localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
                 }
                 
+                // Firebase에서 프로젝트 목록 다시 로드
+                await loadFirebaseProjects();
+                
                 // BroadcastChannel로 다른 창에 삭제 알림
                 try {
                   const channel = new BroadcastChannel('project-updates');
@@ -1696,8 +1713,8 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // 새로운 디자인 시작
-  const handleCreateDesign = (projectId?: string) => {
-    console.log('🚀 handleCreateDesign 호출됨:', { projectId, user: !!user });
+  const handleCreateDesign = (projectId?: string, projectTitle?: string) => {
+    console.log('🚀 handleCreateDesign 호출됨:', { projectId, projectTitle, user: !!user });
     
     if (user) {
       if (!projectId) {
@@ -1705,11 +1722,16 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
       
+      // 프로젝트 제목 찾기
+      const project = allProjects.find(p => p.id === projectId);
+      const title = projectTitle || project?.title || '새 프로젝트';
+      
       console.log('✅ projectId 확인됨, Step1 모달 열기 준비');
       
-      // projectStore에 projectId 설정
-      const { setProjectId, resetBasicInfo } = useProjectStore.getState();
+      // projectStore에 projectId와 프로젝트명 설정
+      const { setProjectId, setProjectTitle, resetBasicInfo } = useProjectStore.getState();
       setProjectId(projectId);
+      setProjectTitle(title);
       resetBasicInfo(); // 이전 디자인 정보 초기화
       
       // Step1 모달 열기 - 새 디자인 생성
@@ -1848,20 +1870,6 @@ const SimpleDashboard: React.FC = () => {
             <span className={styles.navItemCount}>{allProjects.length}</span>
           </div>
           
-          <div 
-            className={`${styles.navItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
-            onClick={() => {
-              setActiveMenu('bookmarks');
-              setSelectedProjectId(null);
-              setBreadcrumbPath([]);
-            }}
-          >
-            <div className={styles.navItemIcon}>
-              <StarIcon size={20} />
-            </div>
-            <span>북마크</span>
-            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedDesigns.size + bookmarkedFolders.size}</span>
-          </div>
           
           <div 
             className={`${styles.navItem} ${activeMenu === 'shared' ? styles.active : ''}`}
@@ -1974,49 +1982,60 @@ const SimpleDashboard: React.FC = () => {
               </NotificationBadge>
             </div>
             
-            {user && (
-              <div className={styles.userProfile}>
-                <div className={styles.userProfileAvatar}>
-                  {user?.photoURL && !headerImageError ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt="프로필" 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        borderRadius: '50%',
-                        objectFit: 'cover'
-                      }}
-                      onError={() => setHeaderImageError(true)}
-                      onLoad={() => setHeaderImageError(false)}
-                    />
-                  ) : (
-                    <UserIcon size={14} />
-                  )}
-                </div>
-                <span className={styles.userProfileName}>
-                  {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-                </span>
+            {/* 프로필 영역은 항상 표시 - user가 없어도 기본 아이콘 표시 */}
+            <div className={styles.userProfile}>
+              <div className={styles.userProfileAvatar}>
+                {user?.photoURL && !headerImageError ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt="프로필" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      borderRadius: '50%',
+                      objectFit: 'cover'
+                    }}
+                    onError={() => setHeaderImageError(true)}
+                    onLoad={() => setHeaderImageError(false)}
+                  />
+                ) : (
+                  <UserIcon size={14} />
+                )}
               </div>
-            )}
+              <span className={styles.userProfileName}>
+                {user ? (user?.displayName || user?.email?.split('@')[0] || '사용자') : '게스트'}
+              </span>
+            </div>
           </div>
         </header>
 
-        {/* 서브헤더 */}
+        {/* 서브헤더 - 프로젝트 관련 메뉴에서만 표시 */}
+        {(activeMenu === 'all' || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared') && (
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
-            {/* 선택된 아이템 개수 표시 (좌측) */}
-            {selectedCards.size > 0 && (
-              <div className={styles.selectionInfo}>
-                <span>{selectedCards.size}개의 항목이 선택됨</span>
-                <button 
-                  className={styles.clearSelectionBtn}
-                  onClick={() => setSelectedCards(new Set())}
-                >
-                  선택 해제
-                </button>
-              </div>
-            )}
+            {/* 메뉴별 타이틀 표시 (좌측) */}
+            <div className={styles.subHeaderLeft}>
+              {activeMenu === 'all' && (
+                <h1 className={styles.subHeaderTitle}>전체 프로젝트</h1>
+              )}
+              {activeMenu === 'trash' && (
+                <h1 className={styles.subHeaderTitle}>휴지통</h1>
+              )}
+              {/* 북마크는 타이틀 없음 */}
+              
+              {/* 선택된 아이템 개수 표시 */}
+              {selectedCards.size > 0 && (
+                <div className={styles.selectionInfo}>
+                  <span>{selectedCards.size}개의 항목이 선택됨</span>
+                  <button 
+                    className={styles.clearSelectionBtn}
+                    onClick={() => setSelectedCards(new Set())}
+                  >
+                    선택 해제
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* 우측 액션 버튼들 */}
             <div className={styles.subHeaderActions}>
@@ -2130,23 +2149,22 @@ const SimpleDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
         <div className={styles.content}>
           {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 */}
-          {activeMenu === 'all' && (
+          {activeMenu === 'all' && allProjects.length > 0 && (
           <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.treeHeader}>
-              {allProjects.length > 0 && (
-                <button 
-                  className={styles.treeToggleButton}
-                  onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
-                  aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
-                >
-                  <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
-                    ◀
-                  </span>
-                </button>
-              )}
+              <button 
+                className={styles.treeToggleButton}
+                onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
+                aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
+              >
+                <span className={`${styles.toggleIcon} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
+                  ◀
+                </span>
+              </button>
               <div className={styles.projectSelectorContainer}>
                 <SimpleProjectDropdown
                   projects={allProjects}
@@ -2161,12 +2179,13 @@ const SimpleDashboard: React.FC = () => {
             </div>
             
             <div className={styles.treeContent}>
-              {selectedProjectId && selectedProject ? (
-                (() => {
-                  if (!selectedProject) return null;
-                  
-                  const projectFolders = folders[selectedProjectId] || [];
-                  const hasDesignFiles = selectedProject.furnitureCount && selectedProject.furnitureCount > 0;
+              {allProjects.length > 0 ? (
+                selectedProjectId && selectedProject ? (
+                  (() => {
+                    if (!selectedProject) return null;
+                    
+                    const projectFolders = folders[selectedProjectId] || [];
+                    const hasDesignFiles = selectedProject.furnitureCount && selectedProject.furnitureCount > 0;
                   
                   return (
                     <div>
@@ -2417,10 +2436,10 @@ const SimpleDashboard: React.FC = () => {
                         return null;
                       })()}
                     </div>
-                  );
-                })()
-              ) : (
-                user && allProjects.length > 0 ? (
+                    );
+                  })()
+                ) : (
+                  // 프로젝트 목록 표시
                   <>
                     {allProjects.map(project => (
                       <div 
@@ -2447,7 +2466,10 @@ const SimpleDashboard: React.FC = () => {
                       </div>
                     ))}
                   </>
-                ) : user ? (
+                )
+              ) : (
+                // 프로젝트가 없을 때
+                user ? (
                   <div className={styles.treeItem}>
                     <span style={{ color: '#999', fontSize: '14px' }}>
                       프로젝트가 없습니다
@@ -2600,7 +2622,7 @@ const SimpleDashboard: React.FC = () => {
                         handleProjectSelect(item.project.id);
                       } else if (item.type === 'new-design') {
                         console.log('➕ 새 디자인 생성');
-                        handleCreateDesign(item.project.id);
+                        handleCreateDesign(item.project.id, item.project.title);
                       } else if (item.type === 'loading') {
                         console.log('⏳ 로딩 중...');
                         // 로딩 아이템은 클릭 무시
@@ -2616,10 +2638,16 @@ const SimpleDashboard: React.FC = () => {
                         console.log('🎨 디자인 카드 클릭 - 에디터로 이동', {
                           itemId: item.id,
                           projectId: item.project.id,
-                          itemName: item.name
+                          itemName: item.name,
+                          hasDesignFile: !!item.designFile
                         });
                         // 디자인 카드 클릭 시 에디터로 이동
-                        handleDesignOpen(item.project.id, item.name);
+                        // designFile이 있으면 ID를 사용, 없으면 이름을 사용
+                        if (item.designFile && item.designFile.id) {
+                          navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
+                        } else {
+                          navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
+                        }
                       }
                     }}
                   >
@@ -2764,9 +2792,15 @@ const SimpleDashboard: React.FC = () => {
                                       console.log('🎨 오버레이 버튼 클릭 - 에디터로 이동', {
                                         itemId: item.id,
                                         projectId: item.project.id,
-                                        itemName: item.name
+                                        itemName: item.name,
+                                        hasDesignFile: !!item.designFile
                                       });
-                                      handleDesignOpen(item.project.id, item.name);
+                                      // designFile이 있으면 ID를 사용, 없으면 이름을 사용
+                                      if (item.designFile && item.designFile.id) {
+                                        navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
+                                      } else {
+                                        navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
+                                      }
                                     }}
                                   >
                                     <EditIcon size={16} />
@@ -2824,8 +2858,21 @@ const SimpleDashboard: React.FC = () => {
                                 <div key={projectItem.id} className={styles.thumbnailItem}>
                                   {projectItem.type === 'folder' ? (
                                     <div className={styles.thumbnailFolder}>
-                                      <FolderIcon size={48} />
+                                      <FolderIcon size={24} />
                                     </div>
+                                  ) : projectItem.type === 'design' && projectItem.designFile ? (
+                                    // 디자인 파일의 실제 썸네일 표시
+                                    <ThumbnailImage 
+                                      project={item.project}
+                                      designFile={{
+                                        thumbnail: projectItem.designFile.thumbnail,
+                                        updatedAt: projectItem.designFile.updatedAt,
+                                        spaceConfig: projectItem.designFile.spaceConfig,
+                                        furniture: projectItem.designFile.furniture
+                                      }}
+                                      className={styles.thumbnailImage}
+                                      alt={projectItem.name}
+                                    />
                                   ) : (
                                     <div className={styles.thumbnailFile}>
                                       <div className={styles.fileIconWrapper}>
@@ -3060,9 +3107,6 @@ const SimpleDashboard: React.FC = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <h2 className={styles.modalTitle}>로그아웃 하시겠습니까?</h2>
-            <div style={{ margin: '16px 0', color: '#666', fontSize: '15px', textAlign: 'center' }}>
-              로그아웃 하시겠습니까?
-            </div>
             <div className={styles.modalActions}>
               <button
                 onClick={() => setIsLogoutModalOpen(false)}
@@ -3259,7 +3303,11 @@ const SimpleDashboard: React.FC = () => {
       {/* Step1 모달 - 대시보드 컨텍스트에서도 라이트 테마 강제 적용 */}
       {isStep1ModalOpen && (
         <div data-theme="light" style={{ colorScheme: 'light' }}>
-          <Step1 onClose={handleCloseStep1Modal} />
+          <Step1 
+            onClose={handleCloseStep1Modal}
+            projectId={useProjectStore.getState().projectId}
+            projectTitle={useProjectStore.getState().projectTitle}
+          />
         </div>
       )}
 
@@ -3312,7 +3360,11 @@ const SimpleDashboard: React.FC = () => {
 
       {/* Step1 모달 - 새 디자인 생성 */}
       {isStep1ModalOpen && (
-        <Step1 onClose={handleCloseStep1Modal} />
+        <Step1 
+          onClose={handleCloseStep1Modal}
+          projectId={useProjectStore.getState().projectId}
+          projectTitle={useProjectStore.getState().projectTitle}
+        />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -78,6 +78,9 @@ const Configurator: React.FC = () => {
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+  
+  // Sidebar의 unsaved changes 리셋을 위한 ref
+  const resetUnsavedChangesRef = useRef<(() => void) | null>(null);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
@@ -495,6 +498,15 @@ const Configurator: React.FC = () => {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
               
+              // 저장 성공 후 unsaved changes 상태 리셋
+              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+              setTimeout(() => {
+                if (resetUnsavedChangesRef.current) {
+                  console.log('🔄 Calling reset after successful save');
+                  resetUnsavedChangesRef.current();
+                }
+              }, 100);
+              
               // BroadcastChannel로 디자인 파일 업데이트 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
@@ -532,6 +544,15 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
+              
+              // 저장 성공 후 unsaved changes 상태 리셋
+              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+              setTimeout(() => {
+                if (resetUnsavedChangesRef.current) {
+                  console.log('🔄 Calling reset after successful create');
+                  resetUnsavedChangesRef.current();
+                }
+              }, 100);
               
               // BroadcastChannel로 디자인 파일 생성 알림
               try {
@@ -635,7 +656,7 @@ const Configurator: React.FC = () => {
       if (isFirebaseConfigured() && user) {
         // Firebase에 새 디자인파일 생성
         const result = await createDesignFile({
-          name: `디자인 ${new Date().toLocaleTimeString()}`,
+          name: '새 디자인',
           projectId: currentProjectId,
           spaceConfig: defaultSpaceConfig,
           furniture: { placedModules: [] }
@@ -844,6 +865,15 @@ const Configurator: React.FC = () => {
             setBasicInfo({ ...basicInfo, title: newTitle.trim() });
             setSaveStatus('success');
             
+            // 저장 후 변경사항 상태 리셋
+            // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+            setTimeout(() => {
+              if (resetUnsavedChangesRef.current) {
+                console.log('🔄 Calling reset after successful save as');
+                resetUnsavedChangesRef.current();
+              }
+            }, 100);
+            
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
             
@@ -964,9 +994,67 @@ const Configurator: React.FC = () => {
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+    const designFileId = searchParams.get('designFileId');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
+    
+    // Step2에서 넘어온 경우 (designFileId가 있는 경우)
+    if (projectId && designFileId) {
+      console.log('📋 Step2에서 넘어옴 - designFileId:', designFileId);
+      setCurrentProjectId(projectId);
+      setProjectId(projectId);
+      setCurrentDesignFileId(designFileId);
+      
+      // 디자인 파일 로드
+      const loadDesignFile = async () => {
+        setLoading(true);
+        try {
+          // 디자인 파일 가져오기
+          const { getDesignFileById } = await import('@/firebase/projects');
+          const { designFile, error } = await getDesignFileById(designFileId);
+          
+          if (error) {
+            console.error('디자인 파일 로드 에러:', error);
+            alert('디자인 파일을 불러오는데 실패했습니다: ' + error);
+            navigate('/dashboard');
+            return;
+          }
+          
+          if (designFile) {
+            console.log('✅ 디자인 파일 로드 성공:', designFile.name);
+            
+            // 디자인 데이터 설정
+            setBasicInfo({
+              title: designFile.name || '새 디자인',
+              location: ''
+            });
+            setCurrentDesignFileName(designFile.name);
+            
+            // 공간 설정
+            const spaceConfig = { ...designFile.spaceConfig };
+            if (spaceConfig.installType === 'built-in') {
+              spaceConfig.installType = 'builtin';
+            }
+            setSpaceInfo(spaceConfig);
+            
+            // 가구 설정
+            if (designFile.furniture?.placedModules) {
+              setPlacedModules(designFile.furniture.placedModules);
+            }
+            
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('디자인 파일 로드 중 오류:', error);
+          alert('디자인 파일 로드 중 오류가 발생했습니다.');
+          setLoading(false);
+        }
+      };
+      
+      loadDesignFile();
+      return; // 다른 로직 실행 방지
+    }
     
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
@@ -2425,6 +2513,7 @@ const Configurator: React.FC = () => {
           onTabClick={handleSidebarTabClick}
           isOpen={!!activeSidebarTab}
           onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+          onResetUnsavedChanges={resetUnsavedChangesRef}
         />
 
         {/* 사이드바 컨텐츠 패널 */}

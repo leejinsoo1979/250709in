@@ -1,0 +1,79 @@
+// 이 내용을 Firebase Console > Firestore Database > Rules 탭에 복사-붙여넣기 하세요
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isTeamMember(teamId) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    // users
+    match /users/{uid} {
+      allow read, create, update: if isSignedIn() && uid == request.auth.uid;
+    }
+
+    // teams + subcollections
+    match /teams/{teamId} {
+      // 팀 문서
+      allow read: if isTeamMember(teamId);
+      allow create: if isSignedIn() && teamId == request.auth.uid; // 개인 팀 최초 생성
+      allow update, delete: if isTeamMember(teamId);
+
+      // 멤버
+      match /members/{memberUid} {
+        allow read: if isTeamMember(teamId);
+        allow create: if isSignedIn() && memberUid == request.auth.uid; // 자기 자신 참여
+        allow update, delete: if isTeamMember(teamId) && request.auth.uid == memberUid;
+      }
+
+      // 프로젝트/디자인
+      match /projects/{projectId} {
+        allow read, write: if isTeamMember(teamId);
+        
+        // ✅ NEW: Nested designs under projects
+        match /designs/{designId} {
+          allow read, write: if isTeamMember(teamId);
+
+          // Nested versions under project designs
+          match /versions/{versionId} {
+            allow read: if isTeamMember(teamId);
+            allow create: if isTeamMember(teamId);
+            allow update, delete: if false; // immutable
+          }
+        }
+      }
+      
+      // Team-level designs (for backward compatibility)
+      match /designs/{designId} {
+        allow read, write: if isTeamMember(teamId);
+
+        // 버전: 불변
+        match /versions/{versionId} {
+          allow read: if isTeamMember(teamId);
+          allow create: if isTeamMember(teamId);
+          allow update, delete: if false; // immutable
+        }
+      }
+
+      // 에셋/잡
+      match /assets/{assetId} {
+        allow read, write: if isTeamMember(teamId);
+      }
+      match /jobs/{jobId} {
+        allow read, write: if isTeamMember(teamId);
+      }
+    }
+
+    // Legacy(dualWrite 중만 허용)
+    match /projects/{id} {
+      allow read, write: if isSignedIn() &&
+        (request.auth.uid == (request.resource.data.userId ?? resource.data.userId));
+    }
+    match /designFiles/{id} {
+      allow read, write: if isSignedIn() &&
+        (request.auth.uid == (request.resource.data.userId ?? resource.data.userId));
+    }
+  }
+}

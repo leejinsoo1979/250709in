@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { createProject } from '@/services/projectDataService';
@@ -11,10 +11,66 @@ import styles from './Step1BasicInfo.module.css';
 interface Step1BasicInfoProps {
   onNext: () => void;
   onClose: () => void;
+  projectId?: string;
+  projectTitle?: string;
 }
 
-const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
-  const { basicInfo, setBasicInfo, projectId, setProjectId } = useProjectStore();
+const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projectId: propsProjectId, projectTitle: propsProjectTitle }) => {
+  // Store 전체 가져오기
+  const projectStore = useProjectStore();
+  const { basicInfo, setBasicInfo, projectId: storeProjectId, setProjectId, projectTitle: storeProjectTitle } = projectStore;
+  
+  // projectId와 projectTitle을 안정적으로 유지
+  // 1. 초기값은 store 또는 props에서 가져옴
+  // 2. ref로 저장하여 리렌더링 시에도 유지
+  const projectIdRef = useRef<string | null>(null);
+  const projectTitleRef = useRef<string | null>(null);
+  
+  // 최초 마운트 시 한 번만 초기값 설정
+  useEffect(() => {
+    if (!projectIdRef.current) {
+      projectIdRef.current = storeProjectId || propsProjectId || null;
+    }
+    if (!projectTitleRef.current) {
+      projectTitleRef.current = storeProjectTitle || propsProjectTitle || null;
+    }
+  }, []); // 빈 dependency로 최초 한 번만 실행
+  
+  // store가 업데이트되면 ref도 업데이트 (store가 우선순위)
+  useEffect(() => {
+    if (storeProjectId) {
+      projectIdRef.current = storeProjectId;
+    }
+    if (storeProjectTitle) {
+      projectTitleRef.current = storeProjectTitle;
+    }
+  }, [storeProjectId, storeProjectTitle]);
+  
+  // 최종 사용할 값 - ref를 우선 사용하되, 없으면 store/props 순서로 fallback
+  const projectId = useMemo(() => 
+    projectIdRef.current || storeProjectId || propsProjectId || null,
+    [storeProjectId, propsProjectId, projectIdRef.current]
+  );
+  
+  const projectTitle = useMemo(() => 
+    projectTitleRef.current || storeProjectTitle || propsProjectTitle || null,
+    [storeProjectTitle, propsProjectTitle, projectTitleRef.current]
+  );
+  
+  // 컴포넌트가 마운트될 때와 리렌더링될 때 로그
+  useEffect(() => {
+    console.log('🔥 Step1BasicInfo 마운트/업데이트:', {
+      propsProjectId,
+      storeProjectId,
+      refProjectId: projectIdRef.current,
+      finalProjectId: projectId,
+      storeProjectTitle,
+      refProjectTitle: projectTitleRef.current,
+      finalProjectTitle: projectTitle,
+      basicInfo
+    });
+  });
+  
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -100,10 +156,10 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
           </button>
           <div>
             <h1>
-              STEP. 1 {projectId ? '디자인' : '프로젝트'} 정보
-              {basicInfo.title && (
+              STEP. 1 디자인 정보
+              {projectId && projectTitle && (
                 <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
-                  {basicInfo.title}
+                  프로젝트: {projectTitle}
                 </span>
               )}
             </h1>
@@ -143,10 +199,11 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
                     {basicInfo.title && basicInfo.title.trim() && (
                       <span className={styles.checkIcon}>✓</span>
                     )}
-                    {projectId ? '디자인 제목' : '프로젝트 제목'}
+                    {/* projectId가 있으면 항상 디자인파일 명으로 표시 */}
+                    {projectId ? '디자인파일 명' : '프로젝트 제목'}
                   </label>
                   <Input
-                    placeholder={projectId ? "디자인 제목을 입력해주세요" : "프로젝트 제목을 입력해주세요"}
+                    placeholder={projectId ? "디자인파일 명을 입력해주세요" : "프로젝트 제목을 입력해주세요"}
                     value={basicInfo.title || ''}
                     onChange={(e) => handleUpdate({ title: e.target.value })}
                     fullWidth
@@ -205,7 +262,9 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
           <button
             className={styles.nextButton}
             onClick={async () => {
+              console.log('🔥 다음 단계 버튼 클릭, projectId:', projectId);
               if (!projectId) {
+                console.log('⚠️ projectId가 없어서 새 프로젝트 생성 시도');
                 // 프로젝트가 없으면 생성
                 setSaving(true);
                 try {
@@ -274,6 +333,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose }) => {
                 }
               } else {
                 // 이미 프로젝트가 있으면 다음 단계로
+                console.log('✅ projectId가 있어서 다음 단계로 이동:', projectId);
                 onNext();
               }
             }}

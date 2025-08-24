@@ -316,17 +316,95 @@
   background: white !important;
 }
 
-/* 상단 헤더 */
+/* 상단 헤더 - 모든 메뉴에서 항상 표시 */
 .header {
   height: 65px;
   background: var(--theme-surface, rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--theme-border);
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   gap: 24px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 헤더 내부 요소들도 항상 표시 */
+.header * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 북마크 메뉴에서도 헤더 요소 강제 표시 */
+.dashboard[data-menu="bookmarks"] .header {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .headerRight {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.dashboard[data-menu="bookmarks"] .headerActions,
+.dashboard[data-menu="shared"] .headerActions,
+.dashboard[data-menu="trash"] .headerActions,
+.dashboard[data-menu="profile"] .headerActions,
+.dashboard[data-menu="team"] .headerActions {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfile,
+.dashboard[data-menu="shared"] .userProfile,
+.dashboard[data-menu="trash"] .userProfile,
+.dashboard[data-menu="profile"] .userProfile,
+.dashboard[data-menu="team"] .userProfile {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard[data-menu="bookmarks"] .actionButton,
+.dashboard[data-menu="shared"] .actionButton,
+.dashboard[data-menu="trash"] .actionButton,
+.dashboard[data-menu="profile"] .actionButton,
+.dashboard[data-menu="team"] .actionButton {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfileAvatar,
+.dashboard[data-menu="shared"] .userProfileAvatar,
+.dashboard[data-menu="trash"] .userProfileAvatar,
+.dashboard[data-menu="profile"] .userProfileAvatar,
+.dashboard[data-menu="team"] .userProfileAvatar {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfileName,
+.dashboard[data-menu="shared"] .userProfileName,
+.dashboard[data-menu="trash"] .userProfileName,
+.dashboard[data-menu="profile"] .userProfileName,
+.dashboard[data-menu="team"] .userProfileName {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .headerLeft {
@@ -406,16 +484,20 @@
 }
 
 .headerRight {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 16px;
   margin-left: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .headerActions {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 12px;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .actionButton {
@@ -425,11 +507,13 @@
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   color: var(--theme-text-secondary);
   transition: background-color 0.2s;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .actionButton:hover {
@@ -984,7 +1068,8 @@
   pointer-events: none; /* 기본적으로 클릭 이벤트 차단 */
 }
 
-/* 오버레이는 폴더 뷰의 디자인 카드에만 적용 */
+/* 오버레이는 모든 디자인 카드에 적용 (폴더와 new-design 제외) */
+.designCard[data-design-id]:hover .designCardOverlay,
 .designGrid.folderView .designCard:not(.folderCard):not(.newDesign):hover .designCardOverlay,
 .designCard.forceHover .designCardOverlay {
   opacity: 1;
@@ -1581,6 +1666,13 @@
   border-radius: 6px;
   overflow: hidden;
   transition: all 0.2s ease;
+  background: var(--theme-background-secondary);
+}
+
+.thumbnailItem .thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .thumbnailFolder {
@@ -1968,18 +2060,20 @@
 .modalActions {
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: 24px;
 }
 
 .modalCancelBtn,
 .modalCreateBtn {
-  padding: 8px 16px;
+  padding: 10px 24px;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-width: 100px;
 }
 
 .modalCancelBtn {

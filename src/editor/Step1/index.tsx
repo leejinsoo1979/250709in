@@ -11,9 +11,11 @@ import styles from './style.module.css';
 // onClose prop 타입 추가
 interface Step1Props {
   onClose?: () => void;
+  projectId?: string;
+  projectTitle?: string;
 }
 
-const Step1: React.FC<Step1Props> = ({ onClose }) => {
+const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -99,7 +101,7 @@ const Step1: React.FC<Step1Props> = ({ onClose }) => {
 
   return (
     <div data-theme="light" style={{ colorScheme: 'light' }}>
-      <StepContainer onClose={handleClose} />
+      <StepContainer onClose={handleClose} projectId={projectId} projectTitle={projectTitle} />
     </div>
   );
 };

@@ -84,16 +84,26 @@ export function shouldUseTeamScope(): boolean {
 }
 
 /**
- * Get active team ID from localStorage
+ * Get active team ID - async version for better reliability
  */
-export function getActiveTeamId(): string | null {
+export async function getActiveTeamId(): Promise<string | null> {
   if (!FLAGS.teamScope) return null;
   
-  // Get from localStorage
+  // 1. Firebase Auth에서 직접 가져오기
+  try {
+    const { getCurrentUserAsync } = await import('@/firebase/auth');
+    const user = await getCurrentUserAsync();
+    if (user?.uid) {
+      return `personal_${user.uid}`;
+    }
+  } catch (e) {
+    console.log('Firebase Auth 확인 실패, fallback 사용');
+  }
+  
+  // 2. localStorage fallback (동기 호출을 위해 유지)
   const storedTeamId = localStorage.getItem('activeTeamId');
   if (storedTeamId) return storedTeamId;
   
-  // Fallback to personal team
   const userId = localStorage.getItem('userId');
   if (userId) return `personal_${userId}`;
   

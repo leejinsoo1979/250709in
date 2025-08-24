@@ -388,31 +388,30 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {onProfile && (
-                <div 
-                  ref={profileButtonRef}
-                  className={styles.userProfile} 
-                  onClick={handleProfileClick}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={styles.userProfileAvatar}>
-                    {user?.photoURL && !imageError ? (
-                      <img 
-                        src={user.photoURL} 
-                        alt={user.displayName || user.email || '사용자'} 
-                        className={styles.profileImage}
-                        onError={() => setImageError(true)}
-                        onLoad={() => setImageError(false)}
-                      />
-                    ) : (
-                      <User size={16} />
-                    )}
-                  </div>
-                  <span className={styles.userProfileName}>
-                    {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-                  </span>
+              {/* 프로필은 항상 표시 - onProfile이 없어도 표시 */}
+              <div 
+                ref={profileButtonRef}
+                className={styles.userProfile} 
+                onClick={onProfile ? handleProfileClick : undefined}
+                style={{ cursor: onProfile ? 'pointer' : 'default' }}
+              >
+                <div className={styles.userProfileAvatar}>
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || user.email || '사용자'} 
+                      className={styles.profileImage}
+                      onError={() => setImageError(true)}
+                      onLoad={() => setImageError(false)}
+                    />
+                  ) : (
+                    <User size={16} />
+                  )}
                 </div>
-              )}
+                <span className={styles.userProfileName}>
+                  {user?.displayName || user?.email?.split('@')[0] || '사용자'}
+                </span>
+              </div>
             </>
           ) : (
             <button 

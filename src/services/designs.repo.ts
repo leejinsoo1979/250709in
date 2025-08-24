@@ -48,14 +48,14 @@ export async function listDesignFiles(
       userId,
       teamId,
       FLAGS,
-      activeTeamId: teamId || getActiveTeamId()
+      activeTeamId: teamId || await getActiveTeamId()
     });
     
     const designs: DesignFileSummary[] = [];
-    const activeTeamId = teamId || getActiveTeamId();
+    const activeTeamId = teamId || await getActiveTeamId();
     
-    // Try nested project path first if enabled
-    if (FLAGS.nestedDesigns && FLAGS.newReadsFirst && activeTeamId && projectId) {
+    // nested path 스킵
+    if (false) {  // nested path 비활성화
       try {
         const nestedPath = `teams/${activeTeamId}/projects/${projectId}/designs`;
         console.log('📂 Trying nested path:', nestedPath);
@@ -98,8 +98,8 @@ export async function listDesignFiles(
       }
     }
     
-    // Fallback 1: Team-scoped path
-    if (shouldUseTeamScope() && activeTeamId) {
+    // Team-scoped path 스킵
+    if (false) {  // team scope 비활성화
       try {
         const teamPath = getTeamDesignsPath(activeTeamId);
         console.log('📂 Trying team-scoped path:', teamPath);

@@ -70,6 +70,7 @@ export interface CreateDesignFileData {
   furniture: {
     placedModules: PlacedModule[];
   };
+  thumbnail?: string;  // 썸네일 필드 추가
 }
 
 // 프로젝트 목록에서 사용하는 간단한 타입
