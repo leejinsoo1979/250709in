@@ -103,6 +103,7 @@ interface DoorModuleProps {
   isEditMode?: boolean; // 편집 모드 여부
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
+  isOpen?: boolean; // 외부에서 전달된 도어 열림 상태 (읽기 전용 모드용)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -118,11 +119,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isDragging = false,
   isEditMode = false,
   slotWidths,
-  slotIndex
+  slotIndex,
+  isOpen
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const { doorsOpen, view2DDirection } = useUIStore();
+  const { doorsOpen: storeDoorsOpen, view2DDirection } = useUIStore();
+  
+  // isOpen prop이 있으면 사용, 없으면 store의 doorsOpen 사용
+  const doorsOpen = isOpen !== undefined ? isOpen : storeDoorsOpen;
   const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
@@ -168,7 +173,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     return '#10b981'; // 기본값 (green)
   };
-  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 초기 생성용
+  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 각 가구마다 독립적
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color('#E0E0E0'), // 기본 회색으로 생성
@@ -177,19 +182,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
     });
-  }, []); // 의존성 배열 비움 - 한 번만 생성
+  }, [moduleData?.id]); // moduleId를 의존성으로 추가하여 각 가구마다 독립적인 재질 생성
 
-  // 싱글 가구용 도어 재질 - 한 번만 생성 (성능 최적화)
+  // 싱글 가구용 도어 재질 - 각 가구마다 독립적
   const doorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
+  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 각 가구마다 독립적
   const leftDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
+  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 각 가구마다 독립적
   const rightDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
