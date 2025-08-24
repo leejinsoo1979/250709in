@@ -57,19 +57,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
     [propsProjectTitle, storeProjectTitle]
   );
   
-  // 컴포넌트가 마운트될 때와 리렌더링될 때 로그
-  useEffect(() => {
-    console.log('🔥 Step1BasicInfo 마운트/업데이트:', {
-      propsProjectId,
-      storeProjectId,
-      refProjectId: projectIdRef.current,
-      finalProjectId: projectId,
-      storeProjectTitle,
-      refProjectTitle: projectTitleRef.current,
-      finalProjectTitle: projectTitle,
-      basicInfo
-    });
-  });
+  // 디버그 로그 제거 - 불필요한 콘솔 오염 방지
   
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -262,9 +250,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
           <button
             className={styles.nextButton}
             onClick={async () => {
-              console.log('🔥 다음 단계 버튼 클릭, projectId:', projectId);
               if (!projectId) {
-                console.log('⚠️ projectId가 없어서 새 프로젝트 생성 시도');
                 // 프로젝트가 없으면 생성
                 setSaving(true);
                 try {
@@ -320,7 +306,6 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                   
                   if (result.success && result.data) {
                     setProjectId(result.data); // 프로젝트 ID 저장
-                    console.log('프로젝트 생성 완료:', result.data);
                     onNext();
                   } else {
                     alert(`프로젝트 생성 실패: ${result.error || '알 수 없는 오류'}`);
@@ -333,11 +318,9 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                 }
               } else {
                 // 이미 프로젝트가 있으면 store에 저장하고 다음 단계로
-                console.log('✅ projectId가 있어서 store에 저장하고 다음 단계로 이동:', projectId);
                 // store에 projectId 확실하게 저장
                 if (!storeProjectId || storeProjectId !== projectId) {
                   setProjectId(projectId);
-                  console.log('🔥 Step1BasicInfo: store에 projectId 저장:', projectId);
                 }
                 onNext();
               }

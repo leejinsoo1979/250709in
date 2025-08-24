@@ -22,19 +22,12 @@ const ViewerPage: React.FC = () => {
   }, [projectId]);
 
   const loadProject = async () => {
-    console.log('🔥🔥🔥 ViewerPage - loadProject 시작:', { 
-      projectId,
-      url: window.location.href,
-      pathname: window.location.pathname 
-    });
     setLoading(true);
     setError(null);
     
     try {
       // 먼저 디자인 파일로 시도 (design_ 접두사가 없어도)
-      console.log('🔥🔥🔥 먼저 디자인 파일로 시도:', projectId);
       const designResult = await getDesignFileByIdPublic(projectId);
-      console.log('🔥🔥🔥 디자인 파일 로드 결과:', designResult);
       
       if (designResult.designFile) {
         // 디자인 파일로 성공
@@ -55,19 +48,11 @@ const ViewerPage: React.FC = () => {
           placedModules: designResult.designFile.furniture?.placedModules || []
         };
         
-        console.log('🔥🔥🔥 디자인 파일 로드 성공:', {
-          designFileId: projectId,
-          name: designResult.designFile.name,
-          placedModulesCount: projectSummary.placedModules?.length || 0,
-          placedModules: projectSummary.placedModules
-        });
         
         setProject(projectSummary);
       } else {
         // 디자인 파일이 아니면 프로젝트로 시도
-        console.log('🔥🔥🔥 프로젝트 로드 시도:', projectId);
         const result = await getProjectByIdPublic(projectId);
-        console.log('🔥🔥🔥 프로젝트 로드 결과:', result);
         
         if (result.project) {
           const projectSummary: ProjectSummary = {
@@ -111,23 +96,13 @@ const ViewerPage: React.FC = () => {
             },
             placedModules: result.project.furniture?.placedModules || []
           };
-          console.log('🔥 프로젝트 로드 성공 (가구 포함):', {
-            title: projectSummary.title,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModules: projectSummary.placedModules
-          });
           setProject(projectSummary);
         } else {
           setError(result.error || '프로젝트를 찾을 수 없습니다.');
         }
       }
     } catch (err: any) {
-      console.error('🔥🔥🔥 프로젝트 로드 실패:', err);
-      console.error('🔥🔥🔥 에러 상세:', {
-        message: err?.message,
-        code: err?.code,
-        stack: err?.stack
-      });
+      console.error('프로젝트 로드 실패:', err);
       setError(`프로젝트를 불러오는 중 오류가 발생했습니다: ${err?.message || err}`);
     } finally {
       setLoading(false);
@@ -220,13 +195,6 @@ const ViewerPage: React.FC = () => {
 
       {/* 뷰어 콘텐츠 */}
       <div className={styles.viewerContent}>
-        {console.log('🔥 ViewerPage 렌더링 - Space3DViewerReadOnly props:', {
-          projectId,
-          viewMode,
-          hasSpaceConfig: !!project.spaceInfo,
-          placedModulesCount: project.placedModules?.length || 0,
-          placedModules: project.placedModules
-        })}
         <Space3DViewerReadOnly
           key={`${projectId}-${viewMode}`}
           spaceConfig={project.spaceInfo}

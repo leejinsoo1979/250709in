@@ -22,30 +22,19 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [viewMode, setViewMode] = useState<'2D' | '3D'>(initialViewMode);
 
   useEffect(() => {
-    console.log('🔥🔥🔥 ProjectViewerModal Props:', {
-      isOpen,
-      projectId,
-      designFileId,
-      hasProjectId: !!projectId,
-      hasDesignFileId: !!designFileId
-    });
-    
     if (isOpen && projectId) {
       loadProject();
     }
   }, [isOpen, projectId, designFileId]);
 
   const loadProject = async () => {
-    console.log('🔥 ProjectViewerModal - loadProject 시작:', { projectId, designFileId });
     setLoading(true);
     setError(null);
     
     try {
       // 디자인 파일 ID가 있으면 디자인 파일 로드, 없으면 프로젝트 로드
       if (designFileId) {
-        console.log('🔥 디자인 파일 로드 시도:', designFileId);
         const designResult = await getDesignFileById(designFileId);
-        console.log('🔥 디자인 파일 로드 결과:', designResult);
         
         if (designResult.designFile) {
           const projectSummary: ProjectSummary = {
@@ -64,14 +53,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             spaceInfo: designResult.designFile.spaceConfig,
             placedModules: designResult.designFile.furniture?.placedModules || []
           };
-          
-          console.log('디자인 파일 로드:', {
-            designFileId,
-            name: designResult.designFile.name,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModules: projectSummary.placedModules,
-            spaceConfig: projectSummary.spaceInfo
-          });
           
           setProject(projectSummary);
         } else {
@@ -123,13 +104,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             },
             placedModules: result.project.furniture?.placedModules || []
           };
-          console.log('프로젝트 뷰어 데이터 로드:', {
-            title: projectSummary.title,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModulesData: projectSummary.placedModules,
-            spaceInfo: !!projectSummary.spaceInfo,
-            fullProjectData: result.project
-          });
           setProject(projectSummary);
         } else {
           setError(result.error || '프로젝트를 찾을 수 없습니다.');
@@ -239,14 +213,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
-                {console.log('🎨 읽기 전용 뷰어 렌더링:', {
-                  projectId,
-                  viewMode,
-                  hasProject: !!project,
-                  hasSpaceInfo: !!project.spaceInfo,
-                  spaceInfo: project.spaceInfo,
-                  placedModulesCount: project.placedModules?.length || 0
-                })}
                 <Space3DViewerReadOnly
                   key={`${projectId}-${viewMode}`}
                   spaceConfig={project.spaceInfo}
