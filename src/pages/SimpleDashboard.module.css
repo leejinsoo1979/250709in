@@ -1530,7 +1530,8 @@
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardInfo,
 .designGrid.folderView:not(.listView) .designCard .cardInfo {
   padding: 12px !important;
-  height: 80px !important;
+  height: auto !important;
+  min-height: 80px !important;
   border-top: 1px solid var(--theme-border) !important;
   display: flex;
   flex-direction: column;
@@ -1834,7 +1835,8 @@
   padding: 12px;
   background: var(--theme-surface);
   border-top: 1px solid var(--theme-border);
-  height: 80px;
+  height: auto;
+  min-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

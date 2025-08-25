@@ -3096,6 +3096,30 @@ const SimpleDashboard: React.FC = () => {
                               })()}
                             </div>
                           </div>
+                          
+                          <div className={styles.cardFooter}>
+                            <div className={styles.cardUser}>
+                              <div className={styles.cardUserAvatar}>
+                                {user?.photoURL ? (
+                                  <img 
+                                    src={user.photoURL} 
+                                    alt="프로필" 
+                                    style={{ 
+                                      width: '100%', 
+                                      height: '100%', 
+                                      borderRadius: '50%',
+                                      objectFit: 'cover'
+                                    }}
+                                  />
+                                ) : (
+                                  <UserIcon size={12} />
+                                )}
+                              </div>
+                              <span className={styles.cardUserName}>
+                                {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         // 프로젝트 카드
