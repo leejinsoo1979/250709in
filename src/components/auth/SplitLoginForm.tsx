@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
@@ -14,7 +13,22 @@ interface SplitLoginFormProps {
 
 export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  // useAuth를 사용하지 않음 - 로그인 페이지에서는 user 상태를 체크하지 않음
+  
+  // 컴포넌트 마운트 시 localStorage 정리
+  useEffect(() => {
+    // 잘못된 인증 정보 제거
+    const cleanupAuth = () => {
+      const keysToRemove = ['naver_user', 'userId', 'activeTeamId'];
+      keysToRemove.forEach(key => {
+        if (localStorage.getItem(key)) {
+          console.log(`🧹 Removing ${key} from localStorage`);
+          localStorage.removeItem(key);
+        }
+      });
+    };
+    cleanupAuth();
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
