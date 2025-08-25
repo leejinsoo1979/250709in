@@ -13,17 +13,41 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Firebase 설정 확인 (개발 및 프로덕션 모두에서)
-console.log('🔥 Firebase Config:', {
-  apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
-  authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
-  projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
-  storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
-  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
-  appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing'
+// 런타임 환경 체크 및 로깅
+const isProduction = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
+const deploymentEnv = import.meta.env.VITE_VERCEL_ENV || 'unknown';
+
+console.log('🔥 [Firebase Init] Runtime Environment:', {
+  isProduction,
+  isDevelopment,
+  deploymentEnv,
+  url: typeof window !== 'undefined' ? window.location.href : 'N/A'
 });
-console.log('🔥 Auth Domain:', firebaseConfig.authDomain);
-console.log('🔥 Project ID:', firebaseConfig.projectId);
+
+// Firebase 설정 검증
+const requiredFields = [
+  'apiKey',
+  'authDomain', 
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+] as const;
+
+const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+
+if (missingFields.length > 0) {
+  console.error('🔴 [Firebase Init] Missing required fields:', missingFields);
+  console.error('🔴 [Firebase Init] Current config:', {
+    ...firebaseConfig,
+    apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : undefined
+  });
+} else {
+  console.log('✅ [Firebase Init] All required fields present');
+  console.log('✅ [Firebase Init] Auth Domain:', firebaseConfig.authDomain);
+  console.log('✅ [Firebase Init] Project ID:', firebaseConfig.projectId);
+}
 
 // Firebase 앱 초기화
 const app = initializeApp(firebaseConfig);

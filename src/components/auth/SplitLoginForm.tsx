@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
+import { getRedirectResult, User } from 'firebase/auth';
+import { auth } from '@/firebase/config';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -36,6 +38,28 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       return () => clearTimeout(timeoutId);
     }
   }, [user, authLoading, navigate]);
+
+  // 리다이렉트 결과 처리
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        console.log('🔄 [Auth] Checking for redirect result...');
+        const result = await getRedirectResult(auth);
+        
+        if (result?.user) {
+          console.log('✅ [Auth] Redirect sign-in successful:', result.user.email);
+          onSuccess?.();
+        } else {
+          console.log('ℹ️ [Auth] No redirect result found');
+        }
+      } catch (error: any) {
+        console.error('🔴 [Auth] Redirect result error:', error);
+        setError(error?.message || '리다이렉트 로그인 처리 중 오류가 발생했습니다.');
+      }
+    };
+
+    handleRedirectResult();
+  }, [onSuccess]);
 
   // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,8 +114,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     setLoading(true);
     setError(null);
 
-    console.log('🔍 구글 로그인 시도...');
-    console.log('🔍 Firebase 설정 상태:', isFirebaseConfigured());
+    console.log('🔍 [Auth] 구글 로그인 시도...');
+    console.log('🔍 [Auth] Firebase 설정 상태:', isFirebaseConfigured());
 
     if (!isFirebaseConfigured()) {
       setError('Firebase 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.');
@@ -99,22 +123,32 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       return;
     }
 
+    let result: { user: User | null; error: string | null; pending?: boolean } | undefined;
+    
     try {
-      console.log('🔍 signInWithGoogle 호출...');
-      const result = await signInWithGoogle();
+      console.log('🔍 [Auth] signInWithGoogle 호출...');
+      result = await signInWithGoogle();
       
       if (result.error) {
-        console.error('❌ 구글 로그인 실패:', result.error);
+        console.error('❌ [Auth] 구글 로그인 실패:', result.error);
         setError(result.error);
+      } else if (result.pending) {
+        console.log('🔄 [Auth] 리다이렉트 방식으로 로그인 중...');
+        // 리다이렉트 중이므로 로딩 상태 유지
+        // 사용자에게 안내 메시지 표시
+        setError('팝업이 차단되었습니다. 리다이렉트 방식으로 로그인을 진행합니다...');
       } else if (result.user) {
-        console.log('✅ 구글 로그인 성공:', result.user.email);
+        console.log('✅ [Auth] 구글 로그인 성공:', result.user.email);
         onSuccess?.();
       }
     } catch (err) {
-      console.error('❌ 구글 로그인 예외 발생:', err);
+      console.error('❌ [Auth] 구글 로그인 예외 발생:', err);
       setError('구글 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
-      setLoading(false);
+      // pending 상태가 아닌 경우에만 로딩 해제
+      if (!result?.pending) {
+        setLoading(false);
+      }
     }
   };
 

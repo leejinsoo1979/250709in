@@ -38,19 +38,18 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 // 구글로 로그인
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (): Promise<{ user: User | null; error: string | null; pending?: boolean }> => {
+  console.log('🔐 [Auth] Google Sign-In initiated');
+  console.log('🔐 [Auth] Current URL:', window.location.href);
+  console.log('🔐 [Auth] Auth Domain configured:', auth.app.options.authDomain);
+  
   try {
+    // 먼저 팝업 시도
+    console.log('🔐 [Auth] Attempting popup sign-in...');
     const result = await signInWithPopup(auth, googleProvider);
     
-    // 개발 모드에서 로그 출력
-    if (import.meta.env.DEV) {
-      console.log('🔐 구글 로그인 성공:', result.user.email);
-      console.log('🔐 사용자 정보:', {
-        name: result.user.displayName,
-        email: result.user.email,
-        photo: result.user.photoURL
-      });
-    }
+    console.log('✅ [Auth] Popup sign-in successful');
+    console.log('✅ [Auth] User:', result.user.email);
     
     // 팀 자동 생성 (최초 로그인 시)
     if (FLAGS.teamScope) {
@@ -58,45 +57,64 @@ export const signInWithGoogle = async () => {
     }
     
     return { user: result.user, error: null };
-  } catch (error: any) {
-    // 콘솔에 자세한 에러 정보 출력
-    console.error('🔴 구글 로그인 에러 전체:', error);
-    console.error('🔴 에러 타입:', typeof error);
-    console.error('🔴 에러 코드:', error?.code);
-    console.error('🔴 에러 메시지:', error?.message);
-    console.error('🔴 에러 스택:', error?.stack);
+  } catch (popupError: any) {
+    console.warn('⚠️ [Auth] Popup failed:', popupError?.code, popupError?.message);
     
-    const firebaseError = error as FirebaseError;
-    
-    // 구글 로그인 특정 에러 처리
-    let errorMessage = error?.message || '알 수 없는 오류가 발생했습니다.';
-    
-    switch (error?.code) {
-      case 'auth/popup-closed-by-user':
-        errorMessage = '로그인이 취소되었습니다.';
-        break;
-      case 'auth/popup-blocked':
-        errorMessage = '팝업이 차단되었습니다. 팝업을 허용해주세요.';
-        break;
-      case 'auth/cancelled-popup-request':
-        errorMessage = '로그인 요청이 취소되었습니다.';
-        break;
-      case 'auth/account-exists-with-different-credential':
-        errorMessage = '이미 다른 방법으로 가입된 이메일입니다.';
-        break;
-      case 'auth/unauthorized-domain':
-        errorMessage = '이 도메인은 Firebase에서 승인되지 않았습니다.';
-        break;
-      case 'auth/operation-not-allowed':
-        errorMessage = 'Google 로그인이 활성화되지 않았습니다.';
-        break;
-      default:
-        errorMessage = `구글 로그인 중 오류가 발생했습니다. (${error?.code || 'unknown'})`;
+    // 팝업이 차단되거나 실패한 경우 리다이렉트 시도
+    if (popupError?.code === 'auth/popup-blocked' || 
+        popupError?.code === 'auth/unauthorized-domain' ||
+        popupError?.code === 'auth/operation-not-allowed' ||
+        !popupError?.code) {
+      
+      console.log('🔄 [Auth] Falling back to redirect sign-in...');
+      
+      try {
+        // 리다이렉트 방식으로 재시도
+        const { signInWithRedirect } = await import('firebase/auth');
+        await signInWithRedirect(auth, googleProvider);
+        
+        // 리다이렉트는 즉시 리턴하지 않으므로 pending 상태 반환
+        return { user: null, error: null, pending: true };
+      } catch (redirectError: any) {
+        console.error('🔴 [Auth] Redirect also failed:', redirectError);
+        
+        // 최종 에러 처리
+        const errorMessage = getAuthErrorMessage(redirectError?.code || popupError?.code);
+        return { user: null, error: errorMessage };
+      }
     }
     
+    // 기타 에러는 바로 처리
+    const errorMessage = getAuthErrorMessage(popupError?.code);
     return { user: null, error: errorMessage };
   }
 };
+
+// 에러 메시지 헬퍼 함수
+function getAuthErrorMessage(errorCode: string | undefined): string {
+  console.log('🔴 [Auth] Error code:', errorCode);
+  
+  switch (errorCode) {
+    case 'auth/popup-closed-by-user':
+      return '로그인이 취소되었습니다.';
+    case 'auth/popup-blocked':
+      return '팝업이 차단되었습니다. 리다이렉트 방식으로 재시도하세요.';
+    case 'auth/cancelled-popup-request':
+      return '로그인 요청이 취소되었습니다.';
+    case 'auth/account-exists-with-different-credential':
+      return '이미 다른 방법으로 가입된 이메일입니다.';
+    case 'auth/unauthorized-domain':
+      return '이 도메인은 Firebase에서 승인되지 않았습니다. Firebase Console에서 도메인을 추가해주세요.';
+    case 'auth/operation-not-allowed':
+      return 'Google 로그인이 활성화되지 않았습니다.';
+    case 'auth/invalid-api-key':
+      return 'Firebase API 키가 올바르지 않습니다.';
+    case 'auth/invalid-auth-domain':
+      return 'Auth Domain이 올바르지 않습니다.';
+    default:
+      return `구글 로그인 중 오류가 발생했습니다. (${errorCode || 'unknown'})`;
+  }
+}
 
 // 이메일/비밀번호로 회원가입
 export const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
