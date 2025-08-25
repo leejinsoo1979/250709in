@@ -108,7 +108,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
         setError(result.error);
       } else if (result.user) {
         console.log('✅ 구글 로그인 성공:', result.user.email);
-        onSuccess?.();
+        // 로그인 성공 시 대시보드로 이동
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error('❌ 구글 로그인 예외 발생:', err);

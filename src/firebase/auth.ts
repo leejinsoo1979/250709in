@@ -17,8 +17,14 @@ const googleProvider = new GoogleAuthProvider();
 
 // 구글 로그인 설정
 googleProvider.setCustomParameters({
-  prompt: 'select_account' // 항상 계정 선택 화면 표시
+  prompt: 'select_account', // 항상 계정 선택 화면 표시
+  auth_type: 'rerequest',
+  access_type: 'offline'
 });
+
+// 추가 스코프 설정
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
 
 // 이메일/비밀번호로 로그인
 export const signInWithEmail = async (email: string, password: string) => {
