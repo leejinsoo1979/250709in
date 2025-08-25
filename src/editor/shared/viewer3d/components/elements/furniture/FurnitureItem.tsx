@@ -330,7 +330,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     internalSpace: internalSpace
   });
   
-  // 너비에 따라 모듈 ID 생성
+  // 너비에 따라 모듈 ID 생성 - indexing 정의 전이므로 일단 기본값 사용
   let targetModuleId = placedModule.moduleId;
   
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
@@ -342,11 +342,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       renderWidth: placedModule.adjustedWidth
     });
   }
-  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
+  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성 (백업)
   else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
     const baseType = placedModule.moduleId.replace(/-\d+$/, '');
     targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
+    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성 (백업):', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       newTargetModuleId: targetModuleId
@@ -440,6 +440,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     indexing = calculateSpaceIndexing(zoneSpaceInfo);
   }
   
+  // indexing이 정의된 후 slotWidths가 있으면 모듈 ID 재설정
+  if (!placedModule.adjustedWidth && indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
+    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+    let slotWidth;
+    
+    // isDualSlot 확인 (아직 정의되지 않았으므로 moduleId로 판단)
+    const isDual = placedModule.isDualSlot || placedModule.moduleId.includes('dual-');
+    if (isDual && placedModule.slotIndex < indexing.slotWidths.length - 1) {
+      slotWidth = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
+    } else {
+      slotWidth = indexing.slotWidths[placedModule.slotIndex];
+    }
+    
+    // 현재 모듈 ID와 다른 너비면 새로 생성
+    if (!placedModule.moduleId.endsWith(`-${slotWidth}`)) {
+      targetModuleId = `${baseType}-${slotWidth}`;
+      console.log('🔧 [FurnitureItem] slotWidth로 ModuleID 재설정:', {
+        original: placedModule.moduleId,
+        slotWidth: slotWidth,
+        newTargetModuleId: targetModuleId
+      });
+      // 모듈 데이터 다시 가져오기
+      moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+    }
+  }
+  
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
@@ -499,15 +525,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 캐비넷 너비 결정: 슬롯 너비 우선 정책
   // 1순위: adjustedWidth (기둥 침범 케이스)
-  // 2순위: slotWidths (현재 슬롯의 실제 너비 - 슬롯 경계에 맞춤)
-  // 3순위: customWidth (백업용 - 슬롯 너비를 알 수 없을 때)
-  // 4순위: 모듈 기본 너비
+  // 2순위: moduleWidth (updateFurnitureForColumns에서 업데이트된 너비)
+  // 3순위: slotWidths (현재 슬롯의 실제 너비 - 슬롯 경계에 맞춤)
+  // 4순위: customWidth (백업용 - 슬롯 너비를 알 수 없을 때)
+  // 5순위: 모듈 기본 너비
   let furnitureWidthMm = actualModuleData?.dimensions.width || 600; // 기본값
   
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm);
+  } else if (placedModule.moduleWidth !== undefined && placedModule.moduleWidth !== null) {
+    // moduleWidth가 있으면 사용 (updateFurnitureForColumns에서 업데이트된 너비)
+    furnitureWidthMm = placedModule.moduleWidth;
+    console.log('📐 moduleWidth 사용 (컬럼 변경 시 업데이트):', furnitureWidthMm);
   } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
     // slotWidths가 있으면 우선 사용 (현재 슬롯의 실제 너비)
     if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
@@ -1381,8 +1412,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   metalness={0.0}
                   roughness={0.7}
                   reflectivity={0.2}
-                  transparent={isDraggingThis || isEditMode}
-                  opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
+                  transparent={false}
+                  opacity={1.0}
                 />
               </Box>
               <Edges 

@@ -200,6 +200,8 @@ export const useBaseFurniture = (
       roughness: 0.6,
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
+      transparent: false,  // 초기값으로 불투명 설정
+      opacity: 1.0,  // 완전 불투명
     });
     
     return mat;
@@ -222,41 +224,68 @@ export const useBaseFurniture = (
         material.map = null; // 드래그 중에는 텍스처 제거
         material.emissive.set(new THREE.Color(getThemeColor())); // 드래그 중 발광 효과
         material.emissiveIntensity = 0.2; // 약간의 발광
+        material.transparent = true;
+        material.opacity = 0.6;
       } else if (isHighlighted) {
         // 강조 상태일 때 고스트 효과 (반투명)
         material.emissive.set(new THREE.Color(0x000000)); // 발광 없음
         material.emissiveIntensity = 0;
         if (!material.map) {
-          material.color.set(furnitureColor);
+          material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
         }
+        material.transparent = true;
+        material.opacity = 0.5;
       } else {
+        // 정상 상태로 완전 복원
         material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
         material.emissiveIntensity = 0;
         if (!material.map) {
-          // 드래그 중이 아닐 때는 기본 색상 사용
-          material.color.set(furnitureColor);
+          // 드래그 중이 아닐 때는 기본 색상 사용 - materialConfig.interiorColor 우선 사용
+          material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
+        }
+        
+        // 특수 렌더 모드가 아니면 완전 불투명으로 복원
+        if (renderMode === 'wireframe') {
+          material.transparent = true;
+          material.opacity = 0.3;
+        } else if (viewMode === '2D' && renderMode === 'solid') {
+          material.transparent = true;
+          material.opacity = 0.5;
+        } else {
+          // 정상 상태 - 완전 불투명으로 강제 설정
+          material.transparent = false;
+          material.opacity = 1.0;
         }
       }
       
-      // 투명도 설정 - 편집 모드는 투명도 적용하지 않음
-      if (renderMode === 'wireframe') {
-        material.transparent = true;
-        material.opacity = 0.3;
-      } else if (viewMode === '2D' && renderMode === 'solid') {
-        material.transparent = true;
-        material.opacity = 0.5;
-      } else if (isDragging) {
-        material.transparent = true;
-        material.opacity = 0.6;
-      } else if (isHighlighted) {
-        material.transparent = true;
-        material.opacity = 0.5;
-      } else {
-        // 정상 상태 - 완전 불투명
+      material.needsUpdate = true;
+      
+      // 강제 불투명 설정 - 드래그 중이 아니고 특수 모드가 아니면 항상 불투명
+      if (!isDragging && !isHighlighted && renderMode !== 'wireframe' && !(viewMode === '2D' && renderMode === 'solid')) {
+        // 즉시 불투명 설정
         material.transparent = false;
         material.opacity = 1.0;
+        material.needsUpdate = true;
+        
+        // 100ms 후에 한 번 더 재질 상태 확인
+        setTimeout(() => {
+          if (material) {
+            material.transparent = false;
+            material.opacity = 1.0;
+            material.needsUpdate = true;
+            console.log('🔄 재질 강제 불투명 복원:', moduleData.id);
+          }
+        }, 100);
+        
+        // 300ms 후에도 한 번 더 확인
+        setTimeout(() => {
+          if (material) {
+            material.transparent = false;
+            material.opacity = 1.0;
+            material.needsUpdate = true;
+          }
+        }, 300);
       }
-      material.needsUpdate = true;
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted, materialConfig.interiorColor]); // materialConfig.interiorColor 의존성 추가
 
