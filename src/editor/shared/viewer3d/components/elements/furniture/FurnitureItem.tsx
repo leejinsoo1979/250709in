@@ -483,10 +483,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // 캐비넷 너비 결정: 슬롯 너비 우선 정책
+  // 캐비넷 너비 결정: customWidth 우선 정책 (컬럼 수 변경 시 업데이트됨)
   // 1순위: adjustedWidth (기둥 침범 케이스)
-  // 2순위: slotWidths (슬롯 경계에 정확히 맞춤)
-  // 3순위: customWidth (명시적 설정)
+  // 2순위: customWidth (명시적 설정 - 컬럼 수 변경 시 업데이트됨)
+  // 3순위: slotWidths (초기 배치 시 슬롯 경계에 맞춤)
   // 4순위: 모듈 기본 너비
   let furnitureWidthMm = actualModuleData?.dimensions.width || 600; // 기본값
   
@@ -494,8 +494,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm);
+  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+    // customWidth가 명시적으로 설정되어 있으면 사용 (컬럼 수 변경 시 이 값이 업데이트됨)
+    furnitureWidthMm = placedModule.customWidth;
+    console.log('📐 customWidth 사용 (컬럼 수 변경 반영):', furnitureWidthMm);
   } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
-    // 슬롯 너비를 우선적으로 사용 - 캐비넷은 슬롯에 정확히 맞춤
+    // slotWidths가 있으면 사용 (초기 배치 시)
     if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
       furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
       console.log('📐 듀얼 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm, '(두 슬롯 합계)');
@@ -503,10 +507,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex];
       console.log('📐 싱글 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm);
     }
-  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
-    // customWidth가 명시적으로 설정되어 있으면 사용
-    furnitureWidthMm = placedModule.customWidth;
-    console.log('📐 customWidth 사용:', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
