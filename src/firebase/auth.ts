@@ -47,6 +47,12 @@ export const signInWithEmail = async (email: string, password: string) => {
 // 구글로 로그인 (팝업 방식 - 데스크톱)
 export const signInWithGoogle = async () => {
   try {
+    // 디버깅: 현재 환경 정보 출력
+    console.log('🔐 구글 로그인 시도');
+    console.log('🔐 현재 도메인:', window.location.hostname);
+    console.log('🔐 Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
+    console.log('🔐 환경:', import.meta.env.MODE);
+    
     // 모바일 환경 체크
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
@@ -79,6 +85,12 @@ export const signInWithGoogle = async () => {
   } catch (error) {
     const firebaseError = error as FirebaseError;
     
+    // 에러 상세 로깅
+    console.error('🔥 구글 로그인 에러 발생');
+    console.error('🔥 에러 코드:', firebaseError.code);
+    console.error('🔥 에러 메시지:', firebaseError.message);
+    console.error('🔥 전체 에러:', error);
+    
     // 구글 로그인 특정 에러 처리
     let errorMessage = firebaseError.message;
     
@@ -96,8 +108,11 @@ export const signInWithGoogle = async () => {
         errorMessage = '이미 다른 방법으로 가입된 이메일입니다.';
         break;
       case 'auth/unauthorized-domain':
-        errorMessage = '인증되지 않은 도메인입니다. Firebase Console에서 이 도메인을 추가해주세요.';
-        console.error('🔥 Firebase 인증 도메인 오류 - 현재 도메인:', window.location.hostname);
+        errorMessage = `인증되지 않은 도메인입니다. 현재 도메인: ${window.location.hostname}`;
+        console.error('🔥 Firebase 인증 도메인 오류');
+        console.error('🔥 현재 도메인:', window.location.hostname);
+        console.error('🔥 현재 URL:', window.location.href);
+        console.error('🔥 Auth Domain 설정:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
         console.error('🔥 Firebase Console > Authentication > Settings > Authorized domains에 추가 필요');
         break;
       default:
