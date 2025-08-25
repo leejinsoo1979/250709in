@@ -218,44 +218,26 @@ export const useBaseFurniture = (
     });
     
     if (material) {
-      // 드래그 중일 때만 테마 색상 사용
-      if (isDragging) {
-        material.color.set(getThemeColor());
-        material.map = null; // 드래그 중에는 텍스처 제거
-        material.emissive.set(new THREE.Color(getThemeColor())); // 드래그 중 발광 효과
-        material.emissiveIntensity = 0.2; // 약간의 발광
+      // 정상 상태 - 항상 불투명
+      material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
+      material.emissiveIntensity = 0;
+      
+      // 색상 설정
+      if (!material.map) {
+        material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
+      }
+      
+      // 투명도는 항상 불투명으로 설정 (특수 모드 제외)
+      if (renderMode === 'wireframe') {
         material.transparent = true;
-        material.opacity = 0.6;
-      } else if (isHighlighted) {
-        // 강조 상태일 때 고스트 효과 (반투명)
-        material.emissive.set(new THREE.Color(0x000000)); // 발광 없음
-        material.emissiveIntensity = 0;
-        if (!material.map) {
-          material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
-        }
+        material.opacity = 0.3;
+      } else if (viewMode === '2D' && renderMode === 'solid') {
         material.transparent = true;
         material.opacity = 0.5;
       } else {
-        // 정상 상태로 완전 복원
-        material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
-        material.emissiveIntensity = 0;
-        if (!material.map) {
-          // 드래그 중이 아닐 때는 기본 색상 사용 - materialConfig.interiorColor 우선 사용
-          material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
-        }
-        
-        // 특수 렌더 모드가 아니면 완전 불투명으로 복원
-        if (renderMode === 'wireframe') {
-          material.transparent = true;
-          material.opacity = 0.3;
-        } else if (viewMode === '2D' && renderMode === 'solid') {
-          material.transparent = true;
-          material.opacity = 0.5;
-        } else {
-          // 정상 상태 - 완전 불투명으로 강제 설정
-          material.transparent = false;
-          material.opacity = 1.0;
-        }
+        // 모든 경우에 완전 불투명
+        material.transparent = false;
+        material.opacity = 1.0;
       }
       
       material.needsUpdate = true;
@@ -291,22 +273,31 @@ export const useBaseFurniture = (
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
-    // 드래그 중이거나 편집 모드일 때는 텍스처 적용하지 않음
-    if (isDragging || isEditMode) {
+    // 드래그 중일 때만 텍스처 제거 (편집 모드는 텍스처 유지)
+    if (isDragging) {
       if (material) {
         material.map = null;
+        material.transparent = true;
+        material.opacity = 0.5;
         material.needsUpdate = true;
       }
       return;
     }
     
-    // 드래그가 끝났을 때 텍스처 재적용
+    // 드래그가 끝났을 때 텍스처 재적용 및 불투명 복원
     console.log('🎨 텍스처 재적용 체크:', {
       isDragging,
       isEditMode,
       materialConfigTexture: materialConfig.interiorTexture,
       hasMaterial: !!material
     });
+    
+    // 드래그가 끝나면 즉시 불투명 복원
+    if (!isDragging && material) {
+      material.transparent = false;
+      material.opacity = 1.0;
+      material.needsUpdate = true;
+    }
     
     const textureUrl = materialConfig.interiorTexture;
     
@@ -345,8 +336,8 @@ export const useBaseFurniture = (
       textureLoader.load(
         textureUrl, 
         (texture) => {
-          // 편집 모드나 드래그 중이면 텍스처 로드해도 적용하지 않음
-          if (isDragging || isEditMode) {
+          // 드래그 중이면 텍스처 로드해도 적용하지 않음
+          if (isDragging) {
             texture.dispose(); // 메모리 해제
             return;
           }
@@ -401,6 +392,48 @@ export const useBaseFurniture = (
       material.needsUpdate = true;
     }
   }, [materialConfig.interiorTexture, materialConfig.interiorColor, material, furnitureColor, isDragging, isEditMode]);
+  
+  // 드래그 종료 시 강제 복원
+  useEffect(() => {
+    if (!isDragging && material) {
+      // 드래그가 끝나면 200ms 후 강제로 재질 복원
+      const restoreTimer = setTimeout(() => {
+        console.log('🔄 드래그 종료 - 재질 강제 복원:', moduleData.id);
+        
+        // 투명도 완전 복원
+        material.transparent = false;
+        material.opacity = 1.0;
+        
+        // 색상 복원
+        if (!material.map) {
+          material.color.set(furnitureColor || materialConfig.interiorColor || '#e8e8e8');
+        }
+        
+        // 재질 속성 복원
+        material.metalness = 0.0;
+        material.roughness = 0.6;
+        material.needsUpdate = true;
+        
+        // 텍스처가 있어야 하는데 없으면 다시 로드
+        if (materialConfig.interiorTexture && !material.map) {
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(
+            materialConfig.interiorTexture,
+            (texture) => {
+              texture.wrapS = THREE.RepeatWrapping;
+              texture.wrapT = THREE.RepeatWrapping;
+              texture.repeat.set(1, 1);
+              material.map = texture;
+              material.needsUpdate = true;
+              console.log('✅ 텍스처 재적용 완료:', moduleData.id);
+            }
+          );
+        }
+      }, 200);
+      
+      return () => clearTimeout(restoreTimer);
+    }
+  }, [isDragging]);
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;

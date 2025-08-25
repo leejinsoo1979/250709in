@@ -67,6 +67,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
+    
+    // 드래그가 끝난 후 원래 재질로 복원
+    // material이 이미 투명하게 설정된 경우 불투명하게 수정
+    if (!isDragging && material instanceof THREE.MeshStandardMaterial) {
+      const normalMaterial = material.clone();
+      normalMaterial.transparent = false;
+      normalMaterial.opacity = 1.0;
+      normalMaterial.needsUpdate = true;
+      return normalMaterial;
+    }
+    
     // 편집 모드에서는 원래 재질 그대로 사용
     return material;
   }, [material, isDragging, isEditMode]);
