@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
-import { getRedirectResult, User } from 'firebase/auth';
-import { auth } from '@/firebase/config';
-import { redirectToNaverLogin } from '@/firebase/naverAuth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -28,39 +25,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-  // 로그인 상태 확인 후 자동 리다이렉트
-  useEffect(() => {
-    if (user && !authLoading) {
-      console.log('✅ 로그인된 상태 감지, 홈페이지로 이동합니다.');
-      const timeoutId = setTimeout(() => {
-        navigate('/');
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [user, authLoading, navigate]);
 
-  // 리다이렉트 결과 처리
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        console.log('🔄 [Auth] Checking for redirect result...');
-        const result = await getRedirectResult(auth);
-        
-        if (result?.user) {
-          console.log('✅ [Auth] Redirect sign-in successful:', result.user.email);
-          onSuccess?.();
-        } else {
-          console.log('ℹ️ [Auth] No redirect result found');
-        }
-      } catch (error: any) {
-        console.error('🔴 [Auth] Redirect result error:', error);
-        setError(error?.message || '리다이렉트 로그인 처리 중 오류가 발생했습니다.');
-      }
-    };
-
-    handleRedirectResult();
-  }, [onSuccess]);
 
   // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,6 +47,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       } else if (result.user) {
         console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();
+        // 로그인 성공 후 대시보드로 이동
+        navigate('/dashboard');
       }
     } catch (err) {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -153,11 +120,6 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     }
   };
 
-  // 네이버 로그인 처리
-  const handleNaverLogin = () => {
-    console.log('🔐 네이버 로그인 시작...');
-    redirectToNaverLogin();
-  };
 
   // 카카오 로그인 처리 (준비중)
   const handleKakaoLogin = () => {
@@ -259,18 +221,6 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               <span>Google</span>
-            </button>
-            
-            <button
-              type="button"
-              className={`${styles.socialButton} ${styles.naverButton}`}
-              onClick={handleNaverLogin}
-              disabled={loading}
-            >
-              <svg className={styles.socialIcon} viewBox="0 0 24 24">
-                <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"/>
-              </svg>
-              <span>Naver</span>
             </button>
             
             <button

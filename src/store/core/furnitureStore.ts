@@ -315,11 +315,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             });
           }
           
-          // moduleId와 moduleWidth 업데이트
+          // moduleId와 moduleWidth 업데이트, customWidth도 동일하게 업데이트
           module = {
             ...module,
             moduleId: newModuleId,
-            moduleWidth: isDualFurniture ? targetColumnWidth * 2 : targetColumnWidth  // 듀얼은 2배 너비
+            moduleWidth: isDualFurniture ? targetColumnWidth * 2 : targetColumnWidth,  // 듀얼은 2배 너비
+            customWidth: isDualFurniture ? targetColumnWidth * 2 : targetColumnWidth   // customWidth도 함께 업데이트
           };
         }
         
