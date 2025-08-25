@@ -192,7 +192,7 @@ export const useBaseFurniture = (
   
   
   
-  // 각 가구마다 독립적인 재질 생성 - moduleId로 구분
+  // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#FFFFFF'), // 기본 흰색으로 생성
@@ -201,9 +201,9 @@ export const useBaseFurniture = (
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
     });
-    
+    console.log('🎨 useBaseFurniture 재질 생성 (한 번만)');
     return mat;
-  }, [moduleData.id]); // moduleId를 의존성으로 추가하여 각 가구마다 독립적인 재질 생성
+  }, []); // 의존성 배열 비움 - 한 번만 생성
   
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
