@@ -184,7 +184,6 @@ interface FurnitureItemProps {
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
   showFurniture?: boolean; // 가구 표시 여부 추가
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
-  doorsOpen?: boolean; // 읽기 전용 모드에서의 도어 상태
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -203,18 +202,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerUp,
   onDoubleClick,
   showFurniture = true, // 기본값 true
-  isReadOnly = false, // 읽기 전용 모드
-  doorsOpen // 읽기 전용 모드에서의 도어 상태
+  isReadOnly = false // 읽기 전용 모드
 }) => {
-  // 디버깅: 도어 상태 확인
-  console.log('🎯 FurnitureItem - 도어 상태 prop:', {
-    moduleId: placedModule.moduleId,
-    doorsOpen: doorsOpen,
-    isReadOnly: isReadOnly,
-    hasDoor: placedModule.hasDoor,
-    isOpenValue: isReadOnly ? doorsOpen : undefined
-  });
-  
   // furnitureStartY 변경 감지
   React.useEffect(() => {
     if (placedModule.moduleId.includes('dual-4drawer-pantshanger') || placedModule.moduleId.includes('dual-2drawer-styler')) {
@@ -1153,7 +1142,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
-                isOpen={isReadOnly ? doorsOpen : undefined} // 미리보기 모드에서 도어 상태 전달
                 spaceInfo={(() => {
                   console.log('🚨 FurnitureItem -> BoxModule spaceInfo 전달:', {
                     moduleId: actualModuleData?.id || 'unknown',
@@ -1339,8 +1327,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     slotCenterX={slotCenterX}
                     moduleData={actualModuleData}
                     isDragging={isDraggingThis}
-                    isOpen={isReadOnly ? doorsOpen : undefined}
-                    placedModuleId={placedModule.id}
                     isEditMode={isEditMode}
                     slotIndex={placedModule.slotIndex}
                   />
@@ -1588,9 +1574,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             slotCenterX={0} // 도어는 가구와 같은 위치 (움직이지 않음)
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
-            isOpen={isReadOnly ? doorsOpen : undefined}
             isDragging={isDraggingThis}
-            placedModuleId={placedModule.id}
             isEditMode={isEditMode}
             slotWidths={(() => {
               // 듀얼 가구인 경우 개별 슬롯 너비 전달

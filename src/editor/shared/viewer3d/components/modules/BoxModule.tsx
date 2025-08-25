@@ -43,7 +43,6 @@ interface BoxModuleProps {
   showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   isHighlighted?: boolean; // 가구 강조 여부
   adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
-  isOpen?: boolean; // 도어 열림/닫힘 상태 (미리보기용)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -84,7 +83,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   showFurniture = true, // 기본값은 true (가구 표시)
   isHighlighted = false, // 강조 상태
   adjacentCabinets, // 인접 상하부장 정보
-  isOpen, // 도어 열림/닫힘 상태
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -108,7 +106,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     isEditMode,
     adjustedWidth,
     isHighlighted
-  }, spaceInfo); // spaceInfo를 세 번째 인자로 전달
+  });
   
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
@@ -518,7 +516,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
               isDragging={isDragging}
               isEditMode={isEditMode}
-              isOpen={isOpen} // 미리보기용 도어 상태 전달
             />
           );
         }
