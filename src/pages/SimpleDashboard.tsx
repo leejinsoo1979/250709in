@@ -38,6 +38,19 @@ const SimpleDashboard: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   
+  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!user) {
+      console.log('🔒 사용자가 로그인되지 않음 - 로그인 페이지로 리다이렉트');
+      navigate('/auth', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  // 로그인되지 않은 상태에서는 아무것도 렌더링하지 않음
+  if (!user) {
+    return null;
+  }
+  
   // URL 파라미터 파싱
   const searchParams = new URLSearchParams(location.search);
   const urlProjectId = searchParams.get('projectId');
