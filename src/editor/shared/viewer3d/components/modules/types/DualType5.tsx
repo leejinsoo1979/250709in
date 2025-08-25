@@ -45,7 +45,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjacentCabinets,
-  });
+  }, spaceInfo);
 
   const {
     width,
@@ -90,7 +90,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     is2DMode,
     showIndirectLight,
     lightY
-  });
+  }, spaceInfo);
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -171,7 +171,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       return (section.heightType === 'absolute') 
         ? calculateSectionHeight(section, availableHeight)
         : calculateSectionHeight(section, remainingHeight);
-    });
+    }, spaceInfo);
   };
 
   // 좌우 섹션 렌더링
@@ -494,7 +494,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             )}
           </group>
         );
-      });
+      }, spaceInfo);
     };
 
     // 우측 섹션 렌더링 (스타일러장 - 단순 옷걸이 구역)
@@ -704,7 +704,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             )}
           </group>
         );
-      });
+      }, spaceInfo);
     };
 
     return (

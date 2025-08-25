@@ -35,7 +35,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   // 디버깅: 도어 상태 확인
   console.log('📦 PlacedFurnitureContainer - 도어 상태:', {
     propDoorsOpen: propDoorsOpen,
-    isReadOnly: isReadOnly
+    isReadOnly: isReadOnly,
+    placedModulesCount: propPlacedModules?.length || 0
   });
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기

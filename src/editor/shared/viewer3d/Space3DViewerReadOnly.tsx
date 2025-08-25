@@ -4,7 +4,7 @@ import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
-import ViewerToolbar from './components/ViewerToolbar';
+import ViewerControls, { ViewMode, ViewDirection, RenderMode } from '../../Configurator/components/ViewerControls';
 
 interface Space3DViewerReadOnlyProps {
   spaceConfig: any;
@@ -23,30 +23,54 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   viewMode = '3D',
   renderMode = 'solid'
 }) => {
-  // 독립적인 도어 상태 관리
+  // 뷰어 컨트롤을 위한 상태 관리
+  const [localViewMode, setLocalViewMode] = useState<ViewMode>(viewMode as ViewMode);
+  const [localRenderMode, setLocalRenderMode] = useState<RenderMode>(renderMode as RenderMode);
+  const [viewDirection, setViewDirection] = useState<ViewDirection>('front');
+  const [showAll, setShowAll] = useState(false);
+  const [showDimensions, setShowDimensions] = useState(false);
+  const [showDimensionsText, setShowDimensionsText] = useState(false);
+  const [showGuides, setShowGuides] = useState(false);
+  const [showAxis, setShowAxis] = useState(false);
+  const [showFurniture, setShowFurniture] = useState(true);
   const [doorsOpen, setDoorsOpen] = useState(false);
+  const [hasDoorsInstalled, setHasDoorsInstalled] = useState(false);
   
-  // 도어 토글 함수에 로그 추가
+  // 도어가 설치된 가구가 있는지 확인
+  React.useEffect(() => {
+    const hasDoors = placedModules.some(module => 
+      module.hasDoor === true || module.hasDoor === undefined
+    );
+    setHasDoorsInstalled(hasDoors);
+  }, [placedModules]);
+  
+  // 도어 토글 함수
   const handleDoorsToggle = () => {
-    console.log('🚪🚪🚪 Space3DViewerReadOnly - 도어 토글 버튼 클릭!');
-    console.log('  현재 상태:', doorsOpen);
-    console.log('  새로운 상태:', !doorsOpen);
-    setDoorsOpen(!doorsOpen);
+    const newState = !doorsOpen;
+    console.log('🚪🚪🚪 Space3DViewerReadOnly - 도어 토글:', {
+      현재상태: doorsOpen,
+      새로운상태: newState,
+      hasDoorsInstalled
+    });
+    setDoorsOpen(newState);
   };
   
-  // doorsOpen 상태 변경 감지
-  React.useEffect(() => {
-    console.log('🔄 Space3DViewerReadOnly - doorsOpen 상태 변경됨:', doorsOpen);
-  }, [doorsOpen]);
+  // 도어 설치 토글 함수
+  const handleDoorInstallationToggle = () => {
+    console.log('🚪 도어 설치 토글');
+    // 미리보기 모드에서는 실제 설치는 하지 않고 상태만 변경
+    handleDoorsToggle();
+  };
   
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,
     placedModulesCount: placedModules.length,
     placedModules: placedModules,
     spaceConfig: spaceConfig,
-    viewMode,
-    renderMode,
-    doorsOpen
+    viewMode: localViewMode,
+    renderMode: localRenderMode,
+    doorsOpen,
+    hasDoorsInstalled
   });
 
   // 재질 설정
@@ -87,8 +111,8 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
     <Space3DViewProvider 
       spaceInfo={spaceConfig} 
       svgSize={{ width: 800, height: 600 }} 
-      renderMode={renderMode} 
-      viewMode={viewMode}
+      renderMode={localRenderMode} 
+      viewMode={localViewMode}
     >
       <div 
         style={{ 
@@ -98,21 +122,90 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           position: 'relative'
         }}
       >
-        {/* ViewerToolbar로 도어 버튼 표시 */}
-        <ViewerToolbar 
-          viewMode={viewMode}
-          isReadOnly={true}
+        {/* ViewerControls로 도어 버튼 표시 - 컨피규레이터와 동일한 컴포넌트 사용 */}
+        <ViewerControls
+          viewMode={localViewMode}
+          onViewModeChange={setLocalViewMode}
+          viewDirection={viewDirection}
+          onViewDirectionChange={setViewDirection}
+          renderMode={localRenderMode}
+          onRenderModeChange={setLocalRenderMode}
+          showAll={showAll}
+          onShowAllToggle={() => setShowAll(!showAll)}
+          showDimensions={showDimensions}
+          onShowDimensionsToggle={() => setShowDimensions(!showDimensions)}
+          showDimensionsText={showDimensionsText}
+          onShowDimensionsTextToggle={() => setShowDimensionsText(!showDimensionsText)}
+          showGuides={showGuides}
+          onShowGuidesToggle={() => setShowGuides(!showGuides)}
+          showAxis={showAxis}
+          onShowAxisToggle={() => setShowAxis(!showAxis)}
+          showFurniture={showFurniture}
+          onShowFurnitureToggle={() => setShowFurniture(!showFurniture)}
           doorsOpen={doorsOpen}
           onDoorsToggle={handleDoorsToggle}
-          spaceInfo={spaceConfig}
-          placedModules={placedModules}
+          hasDoorsInstalled={hasDoorsInstalled}
+          onDoorInstallationToggle={undefined} // 미리보기에서는 도어 설치 버튼 숨김
         />
+        
+        {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
+        {hasDoorsInstalled && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            display: 'flex',
+            gap: '8px',
+            background: 'transparent',
+            padding: 0,
+            border: 'none'
+          }}>
+            <button 
+              style={{
+                background: !doorsOpen ? 'var(--theme-primary, #007AFF)' : '#ffffff',
+                border: '1px solid #e1e5e9',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: !doorsOpen ? '#ffffff' : '#374151',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(8px)',
+                minWidth: '60px'
+              }}
+              onClick={() => !doorsOpen || handleDoorsToggle()}
+            >
+              Close
+            </button>
+            <button 
+              style={{
+                background: doorsOpen ? 'var(--theme-primary, #007AFF)' : '#ffffff',
+                border: '1px solid #e1e5e9',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: doorsOpen ? '#ffffff' : '#374151',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(8px)',
+                minWidth: '60px'
+              }}
+              onClick={() => doorsOpen || handleDoorsToggle()}
+            >
+              Open
+            </button>
+          </div>
+        )}
         
         <ThreeCanvas 
           cameraPosition={cameraPosition}
-          viewMode={viewMode}
-          view2DDirection="front"
-          renderMode={renderMode}
+          viewMode={localViewMode}
+          view2DDirection={viewDirection}
+          renderMode={localRenderMode}
         >
           <React.Suspense fallback={null}>
             {/* 조명 시스템 */}
@@ -120,7 +213,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
               position={[5, 15, 20]} 
               intensity={2.5} 
               color="#ffffff"
-              castShadow={viewMode === '3D'}
+              castShadow={localViewMode === '3D'}
               shadow-mapSize-width={4096}
               shadow-mapSize-height={4096}
               shadow-camera-far={50}
@@ -139,12 +232,12 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
               color="#ffffff"
             />
             
-            <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
+            <ambientLight intensity={localViewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
             
             {/* Room 컴포넌트에 placedModules 전달 - 미리보기 모드에서는 치수와 가이드 숨김 */}
             <Room 
               spaceInfo={spaceConfig} 
-              viewMode={viewMode} 
+              viewMode={localViewMode} 
               materialConfig={materialConfig} 
               showAll={false}  // 편집 아이콘들 숨김
               showFrame={true}  // 프레임은 표시

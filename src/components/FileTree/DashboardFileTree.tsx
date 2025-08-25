@@ -21,11 +21,12 @@ interface FolderData {
 
 interface DashboardFileTreeProps {
   onFileSelect?: (projectId: string, designFileId: string, designFileName: string) => void;
+  onProjectSelect?: (projectId: string) => void;
   onCreateNew?: () => void;
   onClose?: () => void;
 }
 
-const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onClose }) => {
+const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onProjectSelect, onClose }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -188,6 +189,10 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
     const project = allProjects.find(p => p.id === projectId);
     if (project) {
       setSelectedProject(project);
+    }
+    // 상위 컴포넌트로 프로젝트 선택 이벤트 전달
+    if (onProjectSelect) {
+      onProjectSelect(projectId);
     }
   };
   

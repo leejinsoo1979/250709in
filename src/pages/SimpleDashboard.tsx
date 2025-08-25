@@ -37,6 +37,10 @@ const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  
+  // URL 파라미터 파싱
+  const searchParams = new URLSearchParams(location.search);
+  const urlProjectId = searchParams.get('projectId');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // 대시보드 진입 시 store의 isDirty 플래그 초기화
@@ -416,6 +420,36 @@ const SimpleDashboard: React.FC = () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, [user, selectedProjectId, loadDesignFilesForProject]); // 의존성 추가
+
+  // URL의 projectId가 변경되면 해당 프로젝트 선택
+  useEffect(() => {
+    if (urlProjectId && firebaseProjects.length > 0) {
+      const projectExists = firebaseProjects.some(p => p.id === urlProjectId);
+      if (projectExists && selectedProjectId !== urlProjectId) {
+        console.log('🔗 URL에서 프로젝트 ID 감지, 자동 선택:', urlProjectId);
+        setSelectedProjectId(urlProjectId);
+        const targetProject = firebaseProjects.find(p => p.id === urlProjectId);
+        if (targetProject) {
+          setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
+          loadFolderDataForProject(urlProjectId);
+          loadDesignFilesForProject(urlProjectId);
+        }
+      }
+    } else if (!urlProjectId && selectedProjectId) {
+      // URL에 projectId가 없으면 선택 해제
+      console.log('🔗 URL에 projectId가 없음, 전체 프로젝트로 돌아가기');
+      setSelectedProjectId(null);
+      setBreadcrumbPath(['전체 프로젝트']);
+    }
+  }, [urlProjectId, firebaseProjects, selectedProjectId]);
+
+  // URL 변경 시 activeMenu 업데이트
+  useEffect(() => {
+    const currentMenu = getMenuFromPath();
+    if (currentMenu !== activeMenu) {
+      setActiveMenu(currentMenu);
+    }
+  }, [location.pathname]);
 
   // 메뉴 변경 시 파일트리 자동 접기/펼치기
   useEffect(() => {
@@ -1042,6 +1076,17 @@ const SimpleDashboard: React.FC = () => {
     });
   };
 
+  // 디자인 미리보기 함수
+  const handlePreviewDesign = (itemId: string) => {
+    // 현재 표시 중인 아이템들에서 해당 아이템 찾기
+    const item = sortedItems.find(i => i.id === itemId);
+    
+    if (item && item.type === 'design') {
+      const actualDesignFileId = item.designFile?.id || (item.id.endsWith('-design') ? undefined : item.id);
+      handleOpenViewer(item.project.id, actualDesignFileId);
+    }
+  };
+
   // 썸네일 생성 함수
   const getThumbnail = async (project: ProjectSummary): Promise<string> => {
     // 캐시에서 먼저 확인
@@ -1135,12 +1180,24 @@ const SimpleDashboard: React.FC = () => {
       // 같은 프로젝트 클릭 시 전체 프로젝트로 돌아가기
       setSelectedProjectId(null);
       setBreadcrumbPath(['전체 프로젝트']);
+      // URL에서 projectId 제거
+      navigate('/dashboard');
     } else {
       // 새 프로젝트 선택
       const targetProject = allProjects.find(p => p.id === projectId);
       if (targetProject) {
         setSelectedProjectId(projectId);
         setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
+        // URL에 projectId 추가
+        navigate(`/dashboard?projectId=${projectId}`);
+        
+        // 프로젝트를 선택하면 자동으로 확장
+        setExpandedProjects(prev => {
+          const newExpanded = new Set(prev);
+          newExpanded.add(projectId);
+          return newExpanded;
+        });
+        
         // 프로젝트 선택 시 폴더 데이터 불러오기
         loadFolderDataForProject(projectId);
         
@@ -1153,6 +1210,16 @@ const SimpleDashboard: React.FC = () => {
         console.warn('프로젝트를 찾을 수 없습니다. 일단 선택만 진행합니다:', projectId);
         setSelectedProjectId(projectId);
         setBreadcrumbPath(['전체 프로젝트', '로딩 중...']);
+        // URL에 projectId 추가
+        navigate(`/dashboard?projectId=${projectId}`);
+        
+        // 프로젝트를 선택하면 자동으로 확장
+        setExpandedProjects(prev => {
+          const newExpanded = new Set(prev);
+          newExpanded.add(projectId);
+          return newExpanded;
+        });
+        
         // 프로젝트 선택 시 폴더 데이터와 디자인 파일들 불러오기
         loadFolderDataForProject(projectId);
         loadDesignFilesForProject(projectId);
@@ -1167,10 +1234,14 @@ const SimpleDashboard: React.FC = () => {
       setSelectedProjectId(null);
       setCurrentFolderId(null);
       setBreadcrumbPath(['전체 프로젝트']);
+      // URL을 전체 프로젝트로 업데이트
+      navigate('/dashboard');
     } else if (index === 1 && selectedProjectId && selectedProject) {
       // 프로젝트 클릭 - 폴더에서 나가기
       setCurrentFolderId(null);
       setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+      // URL을 해당 프로젝트로 업데이트
+      navigate(`/dashboard?projectId=${selectedProjectId}`);
     } else if (index === 2 && currentFolderId) {
       // 폴더 클릭 - 현재 상태 유지
       return;
@@ -1263,6 +1334,7 @@ const SimpleDashboard: React.FC = () => {
   const handleMoreMenuOpen = (e: React.MouseEvent, itemId: string, itemName: string, itemType: 'folder' | 'design' | 'project') => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType, x: e.clientX, y: e.clientY });
     setMoreMenu({
       visible: true,
       x: e.clientX,
@@ -1975,6 +2047,7 @@ const SimpleDashboard: React.FC = () => {
             className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
             onClick={() => {
               navigate('/dashboard');
+              setActiveMenu('all');
               setSelectedProjectId(null);
               setBreadcrumbPath(['전체 프로젝트']);
             }}
@@ -2237,6 +2310,34 @@ const SimpleDashboard: React.FC = () => {
                 </div>
               )}
               
+              {/* 선택된 카드가 있을 때 휴지통으로 이동 버튼 */}
+              {selectedCards.size > 0 && activeMenu !== 'trash' && (
+                <button 
+                  className={styles.bulkDeleteButton}
+                  onClick={() => {
+                    if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
+                      // 선택된 항목들을 휴지통으로 이동
+                      selectedCards.forEach(cardId => {
+                        const item = sortedItems.find(i => i.id === cardId);
+                        if (item) {
+                          if (item.type === 'project') {
+                            moveToTrash(item.project);
+                          } else if (item.type === 'design' || item.type === 'folder') {
+                            // 디자인이나 폴더 삭제 로직
+                            console.log('삭제할 항목:', item);
+                          }
+                        }
+                      });
+                      // 선택 해제
+                      setSelectedCards(new Set());
+                    }
+                  }}
+                >
+                  <TrashIcon size={16} />
+                  <span>휴지통으로 이동 ({selectedCards.size})</span>
+                </button>
+              )}
+              
               {/* 휴지통 비우기 버튼 */}
               {activeMenu === 'trash' && deletedProjects.length > 0 && (
                 <button 
@@ -2248,20 +2349,19 @@ const SimpleDashboard: React.FC = () => {
                 </button>
               )}
               
-              {/* 리스트 뷰에서 디자인 생성 버튼 */}
-              {viewMode === 'list' && currentFolderId && (
+              {/* 리스트 뷰에서 디자인 생성 버튼 - 프로젝트 선택 시에만 */}
+              {viewMode === 'list' && selectedProjectId && (
                 <button 
                   className={styles.createDesignBtn}
                   onClick={() => {
-                    if (selectedProjectId) {
-                      navigate(`/configurator?project=${selectedProjectId}&design=new`);
-                    }
+                    handleOpenStep1Modal(selectedProjectId, selectedProject?.title);
                   }}
                 >
-                  <PlusIcon size={16} />
-                  <span>새 디자인</span>
+                  <PlusIcon size={14} />
+                  <span>디자인 생성</span>
                 </button>
               )}
+              
             </div>
           </div>
         </div>
@@ -2286,9 +2386,8 @@ const SimpleDashboard: React.FC = () => {
                   projects={allProjects}
                   currentProject={selectedProject}
                   onProjectSelect={(project) => {
-                    setSelectedProjectId(project.id);
-                    setBreadcrumbPath(['전체 프로젝트', project.title]);
-                    loadFolderDataForProject(project.id);
+                    console.log('🎯 SimpleDashboard - 프로젝트 선택됨:', project.id, project.title);
+                    handleProjectSelect(project.id);
                   }}
                 />
               </div>
@@ -2311,11 +2410,10 @@ const SimpleDashboard: React.FC = () => {
                         <div 
                           className={`${styles.treeItem} ${isSelected ? styles.active : ''}`}
                           onClick={() => {
-                            // 프로젝트 클릭 시 선택
-                            setSelectedProjectId(project.id);
-                            setBreadcrumbPath(['전체 프로젝트', project.title]);
+                            // 프로젝트 클릭 시 handleProjectSelect 호출
+                            console.log('🎯 파일트리 프로젝트 클릭:', project.id, project.title);
+                            handleProjectSelect(project.id);
                             setCurrentFolderId(null);
-                            loadFolderDataForProject(project.id);
                           }}
                           style={{ cursor: 'pointer' }}
                         >
@@ -2715,6 +2813,7 @@ const SimpleDashboard: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     className={`${styles.designCard} ${item.type === 'new-design' ? styles.newDesign : ''} ${item.type === 'folder' ? styles.folderCard : ''}`}
                     data-design-id={item.type === 'design' ? item.id : undefined}
+                    data-item-type={item.type}
                     draggable={item.type === 'design'}
                     onDragStart={(e) => {
                       if (item.type === 'design') {
@@ -2754,19 +2853,23 @@ const SimpleDashboard: React.FC = () => {
                           setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
                         }
                       } else if (item.type === 'design') {
-                        console.log('🎨 디자인 카드 클릭 - 에디터로 이동', {
+                        console.log('🎨 디자인 카드 클릭 - 액션 팝업 표시', {
                           itemId: item.id,
                           projectId: item.project.id,
                           itemName: item.name,
-                          hasDesignFile: !!item.designFile
+                          hasDesignFile: !!item.designFile,
+                          viewMode
                         });
-                        // 디자인 카드 클릭 시 에디터로 이동
-                        // designFile이 있으면 ID를 사용, 없으면 이름을 사용
-                        if (item.designFile && item.designFile.id) {
-                          navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
-                        } else {
-                          navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
+                        
+                        // 그리드 뷰에서는 바로 에디터로 이동
+                        if (viewMode !== 'list') {
+                          if (item.designFile && item.designFile.id) {
+                            navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
+                          } else {
+                            navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
+                          }
                         }
+                        // 리스트 뷰에서는 카드 클릭 무시 (버튼으로만 동작)
                       }
                     }}
                   >
@@ -2882,7 +2985,8 @@ const SimpleDashboard: React.FC = () => {
                                   alt={item.name}
                                 />
                                 
-                                {/* 디자인 카드 호버 오버레이 */}
+                                {/* 디자인 카드 호버 오버레이 - 그리드 뷰에서만 표시 */}
+                                {viewMode === 'grid' && (
                                 <div className={styles.designCardOverlay}>
                                   <button 
                                     className={styles.overlayButton}
@@ -2926,6 +3030,7 @@ const SimpleDashboard: React.FC = () => {
                                     에디터로 이동
                                   </button>
                                 </div>
+                                )}
                               </div>
                             );
                           }
@@ -3077,7 +3182,40 @@ const SimpleDashboard: React.FC = () => {
                       ) : item.type === 'design' ? (
                         // 디자인 카드 (폴더 내부에서)
                         <div className={styles.cardInfo}>
-                          <div className={styles.cardTitle}>{item.name}</div>
+                          <div className={styles.cardTitle}>
+                            {item.name}
+                            {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 */}
+                            {viewMode === 'list' && (
+                              <div className={styles.listActionButtons}>
+                                <button
+                                  className={styles.listActionBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePreviewDesign(item.id);
+                                  }}
+                                  title="미리보기"
+                                >
+                                  <EyeIcon size={16} />
+                                  <span>미리보기</span>
+                                </button>
+                                <button
+                                  className={styles.listActionBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (item.designFile && item.designFile.id) {
+                                      navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
+                                    } else {
+                                      navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
+                                    }
+                                  }}
+                                  title="에디터로 이동"
+                                >
+                                  <EditIcon size={16} />
+                                  <span>에디터로 이동</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                           
                           <div className={styles.cardMeta}>
                             <div className={styles.cardDate}>
@@ -3308,6 +3446,7 @@ const SimpleDashboard: React.FC = () => {
       )}
 
       {/* 더보기 메뉴 */}
+      {console.log('🔍 moreMenu 상태:', moreMenu)}
       {moreMenu && (
         <>
           <div 
@@ -3404,6 +3543,7 @@ const SimpleDashboard: React.FC = () => {
           </div>
         </>
       )}
+
 
       {/* 폴더 생성 모달 */}
       {isCreateFolderModalOpen && (

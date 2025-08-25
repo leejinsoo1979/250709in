@@ -210,7 +210,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   console.log('🎯 FurnitureItem - 도어 상태 prop:', {
     moduleId: placedModule.moduleId,
     doorsOpen: doorsOpen,
-    isReadOnly: isReadOnly
+    isReadOnly: isReadOnly,
+    hasDoor: placedModule.hasDoor,
+    isOpenValue: isReadOnly ? doorsOpen : undefined
   });
   
   // furnitureStartY 변경 감지

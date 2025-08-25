@@ -108,7 +108,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     isEditMode,
     adjustedWidth,
     isHighlighted
-  });
+  }, spaceInfo); // spaceInfo를 세 번째 인자로 전달
   
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;

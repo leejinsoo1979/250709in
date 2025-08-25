@@ -133,11 +133,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 디버깅 로그
   console.log('🚪 DoorModule - 도어 상태:', {
     isOpen: isOpen,
+    isOpenType: typeof isOpen,
     storeDoorsOpen: storeDoorsOpen,
     doorsOpen: doorsOpen,
     moduleId: moduleData?.id,
     hasSpaceInfo: !!spaceInfo,
-    doorColor: spaceInfo?.doorMaterial?.colorCode || spaceInfo?.materialConfig?.doorColor
+    doorColor: spaceInfo?.doorMaterial?.colorCode || spaceInfo?.materialConfig?.doorColor,
+    isEditMode: isEditMode
   });
   
   const { columnCount } = useDerivedSpaceStore();
@@ -884,7 +886,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
   // 도어 열림 상태 계산 - 성능 최적화
-  const shouldOpenDoors = useMemo(() => doorsOpen || isEditMode, [doorsOpen, isEditMode]);
+  const shouldOpenDoors = useMemo(() => {
+    console.log('🚪🔄 DoorModule - shouldOpenDoors 계산:', {
+      doorsOpen,
+      isEditMode,
+      isOpen,
+      isOpenDefined: isOpen !== undefined,
+      결과: doorsOpen || isEditMode
+    });
+    return doorsOpen || isEditMode;
+  }, [doorsOpen, isEditMode]);
   
   // 도어 애니메이션 상태 추적
   const [isAnimating, setIsAnimating] = useState(false);
@@ -914,6 +925,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 클릭 핸들러
   const handleDoorClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    
+    // 읽기 전용 모드에서는 클릭 무시 (isOpen prop이 있으면 읽기 전용 모드)
+    if (isOpen !== undefined) {
+      console.log('🚪 읽기 전용 모드에서 도어 클릭 무시');
+      return;
+    }
     
     console.log('🚪 도어 클릭 이벤트 발생:', {
       moduleId: moduleData?.id,
