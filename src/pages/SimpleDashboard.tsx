@@ -260,17 +260,7 @@ const SimpleDashboard: React.FC = () => {
       } else {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
-        
-        // 프로젝트가 0개면 한 번 더 시도
-        if (projects.length === 0 && retryCount === 0) {
-          console.log('⚠️ 프로젝트가 0개, 2초 후 재확인...');
-          setTimeout(() => {
-            loadFirebaseProjects(1);
-          }, 2000);
-        } else {
-          // 성공적으로 로드했거나 재시도 후에도 0개면 로딩 종료
-          setLoading(false);
-        }
+        setLoading(false); // 성공하면 바로 로딩 종료
       }
     } catch (err) {
       // 재시도 로직
@@ -284,11 +274,7 @@ const SimpleDashboard: React.FC = () => {
       
       setError('프로젝트 목록을 가져오는 중 오류가 발생했습니다.');
       console.error('Firebase 프로젝트 로드 최종 실패:', err);
-    } finally {
-      // 재시도가 끝났을 때만 로딩 종료
-      if (retryCount >= 2) {
-        setLoading(false);
-      }
+      setLoading(false); // 에러 발생 시에도 로딩 종료
     }
   }, [user]);
 

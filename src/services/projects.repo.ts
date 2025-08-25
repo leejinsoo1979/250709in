@@ -44,10 +44,10 @@ export async function listProjects(
       if (activeTeamId) {
         try {
           const teamPath = getTeamProjectsPath(activeTeamId);
+          // orderBy를 제거하여 인덱스 문제 해결
           const teamQuery = query(
             collection(db, teamPath),
-            where('userId', '==', userId),
-            orderBy('updatedAt', 'desc')
+            where('userId', '==', userId)
           );
           
           const teamSnapshot = await getDocs(teamQuery);
@@ -83,10 +83,10 @@ export async function listProjects(
     }
     
     // Fallback to legacy path
+    // orderBy를 제거하여 인덱스 문제 해결
     const legacyQuery = query(
       collection(db, LEGACY_COLLECTIONS.projects),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
+      where('userId', '==', userId)
     );
     
     const legacySnapshot = await getDocs(legacyQuery);
@@ -109,6 +109,14 @@ export async function listProjects(
         spaceInfo: data.spaceConfig,
         placedModules: data.furniture?.placedModules || [],
       });
+    });
+    
+    // 클라이언트 측에서 정렬 수행
+    projects.sort((a, b) => {
+      // updatedAt으로 정렬 (최신 순)
+      const timeA = a.updatedAt?.toMillis() || 0;
+      const timeB = b.updatedAt?.toMillis() || 0;
+      return timeB - timeA;
     });
     
     console.log('📦 Found projects in legacy:', projects.length);
