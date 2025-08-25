@@ -96,7 +96,9 @@ export const signInWithGoogle = async () => {
         errorMessage = '이미 다른 방법으로 가입된 이메일입니다.';
         break;
       case 'auth/unauthorized-domain':
-        errorMessage = '인증되지 않은 도메인입니다. 관리자에게 문의하세요.';
+        errorMessage = '인증되지 않은 도메인입니다. Firebase Console에서 이 도메인을 추가해주세요.';
+        console.error('🔥 Firebase 인증 도메인 오류 - 현재 도메인:', window.location.hostname);
+        console.error('🔥 Firebase Console > Authentication > Settings > Authorized domains에 추가 필요');
         break;
       default:
         errorMessage = '구글 로그인 중 오류가 발생했습니다.';
