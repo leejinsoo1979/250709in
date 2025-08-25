@@ -58,20 +58,20 @@ export const signInWithGoogle = async () => {
     }
     
     return { user: result.user, error: null };
-  } catch (error) {
+  } catch (error: any) {
+    // 콘솔에 자세한 에러 정보 출력
+    console.error('🔴 구글 로그인 에러 전체:', error);
+    console.error('🔴 에러 타입:', typeof error);
+    console.error('🔴 에러 코드:', error?.code);
+    console.error('🔴 에러 메시지:', error?.message);
+    console.error('🔴 에러 스택:', error?.stack);
+    
     const firebaseError = error as FirebaseError;
     
-    // 콘솔에 자세한 에러 정보 출력
-    console.error('🔴 구글 로그인 에러 상세:', {
-      code: firebaseError.code,
-      message: firebaseError.message,
-      fullError: error
-    });
-    
     // 구글 로그인 특정 에러 처리
-    let errorMessage = firebaseError.message;
+    let errorMessage = error?.message || '알 수 없는 오류가 발생했습니다.';
     
-    switch (firebaseError.code) {
+    switch (error?.code) {
       case 'auth/popup-closed-by-user':
         errorMessage = '로그인이 취소되었습니다.';
         break;
@@ -91,7 +91,7 @@ export const signInWithGoogle = async () => {
         errorMessage = 'Google 로그인이 활성화되지 않았습니다.';
         break;
       default:
-        errorMessage = `구글 로그인 중 오류가 발생했습니다. (${firebaseError.code})`;
+        errorMessage = `구글 로그인 중 오류가 발생했습니다. (${error?.code || 'unknown'})`;
     }
     
     return { user: null, error: errorMessage };
