@@ -108,9 +108,11 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                 right: true,
                 top: true,
               },
-              materialConfig: {
+              materialConfig: result.project.spaceConfig?.materialConfig || {
                 interiorColor: '#FFFFFF',
-                doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
+                doorColor: '#E0E0E0',
+                interiorTexture: result.project.spaceConfig?.materialConfig?.interiorTexture || null,
+                doorTexture: result.project.spaceConfig?.materialConfig?.doorTexture || null
               },
               columns: [],
               frameSize: { upper: 50, left: 50, right: 50 },
