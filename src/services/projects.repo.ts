@@ -46,7 +46,18 @@ export async function listProjects(
     // where 절도 제거하여 가장 간단한 쿼리로 만들기
     const legacyQuery = collection(db, LEGACY_COLLECTIONS.projects);
     
-    const legacySnapshot = await getDocs(legacyQuery);
+    // 컬렉션이 없을 때 에러 처리
+    let legacySnapshot;
+    try {
+      legacySnapshot = await getDocs(legacyQuery);
+    } catch (error: any) {
+      // 400 에러나 권한 문제일 경우
+      if (error?.code === 'permission-denied' || error?.code === 'failed-precondition') {
+        console.log('📦 Projects collection does not exist or no permission. Returning empty list.');
+        return { projects: [], error: null };
+      }
+      throw error;
+    }
     
     legacySnapshot.forEach((doc) => {
       const data = doc.data();
