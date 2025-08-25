@@ -5,12 +5,12 @@ import { getStorage } from 'firebase/storage';
 
 // Firebase 설정 (환경변수에서 가져오기)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.trim(),
+  authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com').trim(),
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim(),
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET?.trim(),
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim(),
+  appId: import.meta.env.VITE_FIREBASE_APP_ID?.trim()
 };
 
 // Firebase 설정 확인 (개발 모드 및 프로덕션 모두)
