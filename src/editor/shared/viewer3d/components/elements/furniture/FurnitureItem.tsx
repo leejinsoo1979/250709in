@@ -1151,6 +1151,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
+                isOpen={isReadOnly ? doorsOpen : undefined} // 미리보기 모드에서 도어 상태 전달
                 spaceInfo={(() => {
                   console.log('🚨 FurnitureItem -> BoxModule spaceInfo 전달:', {
                     moduleId: actualModuleData?.id || 'unknown',

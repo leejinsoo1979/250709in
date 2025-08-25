@@ -9,17 +9,25 @@ interface ViewerToolbarProps {
   isReadOnly?: boolean; // 읽기 전용 모드 (독립적인 도어 상태 관리용)
   onDoorsToggle?: () => void; // 읽기 전용 모드에서 사용할 도어 토글 함수
   doorsOpen?: boolean; // 읽기 전용 모드에서 사용할 도어 상태
+  spaceInfo?: any; // 읽기 전용 모드에서 사용할 spaceInfo
+  placedModules?: any[]; // 읽기 전용 모드에서 사용할 placedModules
 }
 
 const ViewerToolbar: React.FC<ViewerToolbarProps> = ({ 
   viewMode, 
   isReadOnly = false,
   onDoorsToggle: propDoorsToggle,
-  doorsOpen: propDoorsOpen 
+  doorsOpen: propDoorsOpen,
+  spaceInfo: propSpaceInfo,
+  placedModules: propPlacedModules
 }) => {
   const { indirectLightEnabled, toggleIndirectLight, doorsOpen: storeDoorsOpen, toggleDoors: storeToggleDoors } = useUIStore();
-  const placedModules = useFurnitureStore((state) => state.placedModules);
-  const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+  const storePlacedModules = useFurnitureStore((state) => state.placedModules);
+  const storeSpaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+  
+  // props로 받은 값을 우선 사용, 없으면 store에서 가져오기
+  const spaceInfo = propSpaceInfo || storeSpaceInfo;
+  const placedModules = propPlacedModules || storePlacedModules;
   
   // 읽기 전용 모드면 prop 사용, 아니면 store 사용
   const doorsOpen = isReadOnly ? propDoorsOpen : storeDoorsOpen;

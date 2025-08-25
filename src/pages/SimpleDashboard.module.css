@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple SD Gothic Neo', sans-serif;
-  background: var(--theme-background-secondary) !important;
+  background: white !important;
   color: var(--theme-text) !important;
   position: relative;
   overflow: hidden;
@@ -312,7 +312,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--theme-background-secondary) !important;
+  background: white !important;
   overflow: hidden;
   min-width: 0;
 }
@@ -566,7 +566,7 @@
   flex: 1;
   display: flex;
   overflow: hidden;
-  background: var(--theme-background-secondary) !important;
+  background: white !important;
 }
 
 /* 라이트모드에서만 흰색 배경 */
@@ -761,6 +761,7 @@
   font-size: 14px;
   color: var(--theme-text-secondary);
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .treeItem:hover {
@@ -778,6 +779,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Tree toggle arrow for expanding/collapsing projects */
+.treeToggleArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.treeToggleArrow.expanded {
+  transform: rotate(90deg);
+}
+
+/* Project children container for expanded items */
+.projectChildren {
+  margin-left: 24px;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--theme-border);
 }
 
 .treeItemCount {

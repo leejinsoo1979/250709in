@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
@@ -35,6 +35,7 @@ const ProjectIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 
 const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
@@ -48,6 +49,12 @@ const SimpleDashboard: React.FC = () => {
     markSpaceSaved();
     markFurnitureSaved();
   }, []);
+  
+  // URL 변경 시 activeMenu 동기화
+  useEffect(() => {
+    const menu = getMenuFromPath();
+    setActiveMenu(menu);
+  }, [location.pathname]);
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [sidebarImageError, setSidebarImageError] = useState(false);
@@ -67,6 +74,9 @@ const SimpleDashboard: React.FC = () => {
   
   // 선택된 프로젝트 필터링
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  
+  // 확장된 프로젝트 트리 상태
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   
   // 브레드크럼 네비게이션 상태
   const [breadcrumbPath, setBreadcrumbPath] = useState<string[]>(['전체 프로젝트']);
@@ -150,8 +160,16 @@ const SimpleDashboard: React.FC = () => {
   // 팀 모달 상태
   const [showTeamModal, setShowTeamModal] = useState(false);
 
-  // 메뉴 상태 추가
-  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>('all');
+  // URL 경로에서 현재 메뉴 결정
+  const getMenuFromPath = () => {
+    const path = location.pathname.replace('/dashboard', '');
+    if (path === '' || path === '/') return 'all';
+    const menu = path.substring(1); // Remove leading slash
+    return menu as 'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash';
+  };
+  
+  // 메뉴 상태 추가 - URL과 동기화
+  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>(getMenuFromPath());
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
   const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
   const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
@@ -510,7 +528,7 @@ const SimpleDashboard: React.FC = () => {
     } else {
       newBookmarks.add(projectId);
       // 북마크 추가 시 북마크 메뉴로 이동
-      setActiveMenu('bookmarks');
+      navigate('/dashboard/bookmarks');
     }
     setBookmarkedProjects(newBookmarks);
     if (user) {
@@ -1202,6 +1220,23 @@ const SimpleDashboard: React.FC = () => {
     } finally {
       setIsCreatingFolder(false);
     }
+  };
+
+  // 프로젝트 토글 (접기/펼치기)
+  const toggleProjectExpansion = (projectId: string) => {
+    setExpandedProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+        // 프로젝트 확장 시 디자인 파일 로드
+        if (!projectDesignFiles[projectId] && !designFilesLoadingStates[projectId]) {
+          loadDesignFilesForProject(projectId);
+        }
+      }
+      return newSet;
+    });
   };
 
   // 폴더 토글 (접기/펼치기)
@@ -1939,7 +1974,7 @@ const SimpleDashboard: React.FC = () => {
           <div 
             className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('all');
+              navigate('/dashboard');
               setSelectedProjectId(null);
               setBreadcrumbPath(['전체 프로젝트']);
             }}
@@ -1955,7 +1990,7 @@ const SimpleDashboard: React.FC = () => {
           <div 
             className={`${styles.navItem} ${activeMenu === 'shared' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('shared');
+              navigate('/dashboard/shared');
               setSelectedProjectId(null);
               setBreadcrumbPath([]);
             }}
@@ -1970,7 +2005,7 @@ const SimpleDashboard: React.FC = () => {
           <div 
             className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('profile');
+              navigate('/dashboard/profile');
               setBreadcrumbPath([]);
             }}
           >
@@ -1983,7 +2018,7 @@ const SimpleDashboard: React.FC = () => {
           <div 
             className={`${styles.navItem} ${activeMenu === 'team' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('team');
+              navigate('/dashboard/team');
               setBreadcrumbPath([]);
             }}
           >
@@ -1996,7 +2031,7 @@ const SimpleDashboard: React.FC = () => {
           <div 
             className={`${styles.navItem} ${activeMenu === 'trash' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('trash');
+              navigate('/dashboard/trash');
               setSelectedProjectId(null);
               setBreadcrumbPath([]);
             }}
@@ -2261,54 +2296,81 @@ const SimpleDashboard: React.FC = () => {
             
             <div className={styles.treeContent}>
               {allProjects.length > 0 ? (
-                selectedProjectId && selectedProject ? (
-                  (() => {
-                    if (!selectedProject) return null;
+                <div>
+                  {/* 모든 프로젝트 표시 */}
+                  {allProjects.map(project => {
+                    const isExpanded = expandedProjects.has(project.id);
+                    const isSelected = selectedProjectId === project.id;
+                    const projectFolders = folders[project.id] || [];
+                    const designFiles = projectDesignFiles[project.id] || [];
+                    const hasContent = projectFolders.length > 0 || designFiles.length > 0 || project.furnitureCount > 0;
                     
-                    const projectFolders = folders[selectedProjectId] || [];
-                    const hasDesignFiles = selectedProject.furnitureCount && selectedProject.furnitureCount > 0;
-                  
-                  return (
-                    <div>
-                      {/* 새 폴더 생성 버튼 */}
-                      <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
-                        <div className={styles.createFolderIcon}>
-                          <FolderIcon size={16} />
-                          <PlusIcon size={12} />
+                    return (
+                      <div key={project.id}>
+                        {/* 프로젝트 아이템 */}
+                        <div 
+                          className={`${styles.treeItem} ${isSelected ? styles.active : ''}`}
+                          onClick={() => {
+                            // 프로젝트 클릭 시 선택
+                            setSelectedProjectId(project.id);
+                            setBreadcrumbPath(['전체 프로젝트', project.title]);
+                            setCurrentFolderId(null);
+                            loadFolderDataForProject(project.id);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {/* 토글 화살표 */}
+                          {hasContent && (
+                            <div 
+                              className={`${styles.treeToggleArrow} ${isExpanded ? styles.expanded : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProjectExpansion(project.id);
+                              }}
+                            >
+                              ▶
+                            </div>
+                          )}
+                          <div className={styles.treeItemIcon}>
+                            <ProjectIcon size={16} />
+                          </div>
+                          <span>{project.title}</span>
+                          {/* 디자인 파일 개수 표시 */}
+                          {(designFiles.length > 0 || project.furnitureCount > 0) && (
+                            <span className={styles.treeItemCount}>
+                              {designFiles.length || project.furnitureCount || 0}
+                            </span>
+                          )}
+                          <div className={styles.treeItemActions}>
+                            <button 
+                              className={styles.treeItemActionBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoreMenuOpen(e, project.id, project.title, 'project');
+                              }}
+                            >
+                              ⋯
+                            </button>
+                          </div>
                         </div>
-                        <span>새로운 폴더</span>
-                      </button>
-                      
-                      {/* 프로젝트 루트 */}
-                      <div 
-                        className={`${styles.treeItem} ${styles.active}`}
-                        onClick={() => {
-                          // 프로젝트 루트 클릭 시 프로젝트 메인으로 이동
-                          setCurrentFolderId(null);
-                          setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
-                        }}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className={styles.treeItemIcon}>
-                          <ProjectIcon size={16} />
-                        </div>
-                        <span>{selectedProject.title}</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, selectedProject.id, selectedProject.title, 'project');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* 폴더 목록 */}
-                      {projectFolders.map(folder => (
-                        <div key={folder.id}>
+                        
+                        {/* 프로젝트가 확장되었을 때 하위 내용 표시 */}
+                        {isExpanded && (
+                          <div className={styles.projectChildren}>
+                            {/* 새 폴더 생성 버튼 (선택된 프로젝트만) */}
+                            {isSelected && (
+                              <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
+                                <div className={styles.createFolderIcon}>
+                                  <FolderIcon size={16} />
+                                  <PlusIcon size={12} />
+                                </div>
+                                <span>새로운 폴더</span>
+                              </button>
+                            )}
+                            
+                            {/* 폴더 목록 */}
+                            {projectFolders.map(folder => (
+                              <div key={folder.id}>
                           <div 
                             className={styles.treeItem}
                             onClick={() => {
@@ -2438,116 +2500,64 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       ))}
                       
-                      {/* 루트 레벨 디자인 파일 (폴더에 속하지 않은 파일들만) */}
-                      {(() => {
-                        const allFolderChildren = projectFolders.flatMap(folder => folder.children);
-                        const folderChildIds = new Set(allFolderChildren.map(child => child.id));
-                        const rootDesignId = `${selectedProject.id}-design`;
-                        const isRootDesignInFolder = folderChildIds.has(rootDesignId);
-                        
-                        if (hasDesignFiles && !isRootDesignInFolder) {
-                          return (
-                            <div 
-                              className={styles.treeItem}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('루트 디자인 파일 클릭됨:', selectedProject.title);
+                            {/* 디자인 파일 목록 */}
+                            {designFiles.map(designFile => (
+                              <div 
+                                key={designFile.id}
+                                className={styles.treeItem}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('디자인 파일 클릭됨:', designFile.name);
                                 
-                                // 현재 위치에서 디자인 카드로 스크롤
-                                setTimeout(() => {
-                                  // 디자인 카드 찾기
-                                  const designCards = document.querySelectorAll(`.${styles.designCard}`);
-                                  console.log('모든 디자인 카드:', designCards.length);
-                                  
-                                  // 프로젝트 제목으로 카드 찾기
-                                  const targetCard = Array.from(designCards).find(card => {
-                                    const cardElement = card as HTMLElement;
-                                    const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
-                                    console.log('카드 제목 확인:', cardTitle, '찾는 디자인:', selectedProject.title);
-                                    return cardTitle === selectedProject.title;
-                                  });
-                                  
-                                  if (targetCard) {
-                                    console.log('디자인 카드 찾음:', targetCard);
+                                  // 현재 위치에서 디자인 카드로 스크롤
+                                  setTimeout(() => {
+                                    const designCards = document.querySelectorAll(`.${styles.designCard}`);
+                                    const targetCard = Array.from(designCards).find(card => {
+                                      const cardElement = card as HTMLElement;
+                                      const cardTitle = cardElement.querySelector(`.${styles.cardTitle}`)?.textContent;
+                                      return cardTitle === designFile.name;
+                                    });
                                     
-                                    // 카드로 스크롤
-                                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    
-                                    // 오버레이 강제 표시
-                                    (targetCard as HTMLElement).classList.add(styles.forceHover);
-                                    
-                                    // 3초 후 오버레이 제거
-                                    setTimeout(() => {
-                                      (targetCard as HTMLElement).classList.remove(styles.forceHover);
-                                    }, 3000);
-                                  } else {
-                                    console.log('디자인 카드를 찾을 수 없음');
-                                  }
-                                }, 100);
-                              }}
-                              onContextMenu={(e) => handleFileRightClick(e, rootDesignId, 'design.json', 'design')}
-                            >
-                              <div className={styles.treeItemIcon}>
-                                <div className={styles.designIcon}>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                                    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                                    <path d="M2 2l7.586 7.586"/>
-                                    <circle cx="11" cy="11" r="2"/>
-                                  </svg>
+                                    if (targetCard) {
+                                      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      (targetCard as HTMLElement).classList.add(styles.forceHover);
+                                      setTimeout(() => {
+                                        (targetCard as HTMLElement).classList.remove(styles.forceHover);
+                                      }, 3000);
+                                    }
+                                  }, 100);
+                                }}
+                              >
+                                <div className={styles.treeItemIcon}>
+                                  <div className={styles.designIcon}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                                      <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                      <path d="M2 2l7.586 7.586"/>
+                                      <circle cx="11" cy="11" r="2"/>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <span>{designFile.name}</span>
+                                <div className={styles.treeItemActions}>
+                                  <button 
+                                    className={styles.treeItemActionBtn}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleMoreMenuOpen(e, designFile.id, designFile.name, 'design');
+                                    }}
+                                  >
+                                    ⋯
+                                  </button>
                                 </div>
                               </div>
-                              <span>{selectedProject.title}</span>
-                              <div className={styles.treeItemActions}>
-                                <button 
-                                  className={styles.treeItemActionBtn}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMoreMenuOpen(e, rootDesignId, selectedProject.title, 'design');
-                                  }}
-                                >
-                                  ⋯
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        } else if (!hasDesignFiles || isRootDesignInFolder) {
-                          return null;
-                        }
-                        return null;
-                      })()}
-                    </div>
-                    );
-                  })()
-                ) : (
-                  // 프로젝트 목록 표시
-                  <>
-                    {allProjects.map(project => (
-                      <div 
-                        key={project.id}
-                        className={styles.treeItem}
-                        onClick={() => handleProjectSelect(project.id)}
-                      >
-                        <div className={styles.treeItemIcon}>
-                          <ProjectIcon size={16} />
-                        </div>
-                        <span>{project.title}</span>
-                        <span className={styles.treeItemCount}>1</span>
-                        <div className={styles.treeItemActions}>
-                          <button 
-                            className={styles.treeItemActionBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoreMenuOpen(e, project.id, project.title, 'project');
-                            }}
-                          >
-                            ⋯
-                          </button>
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </>
-                )
+                    );
+                  })}
+                </div>
               ) : (
                 // 프로젝트가 없을 때
                 user ? (

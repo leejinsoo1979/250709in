@@ -97,6 +97,8 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           isReadOnly={true}
           doorsOpen={doorsOpen}
           onDoorsToggle={handleDoorsToggle}
+          spaceInfo={spaceConfig}
+          placedModules={placedModules}
         />
         
         <ThreeCanvas 

@@ -66,7 +66,7 @@ const Configurator: React.FC = () => {
 
   // Store hooks
   const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
-  const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
+  const { setSpaceInfo, replaceSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
@@ -374,7 +374,7 @@ const Configurator: React.FC = () => {
           }
         }
         
-        setSpaceInfo(spaceConfig);
+        replaceSpaceInfo(spaceConfig);
         
         // 가구 설정 - 먼저 초기화
         clearAllModules(); // 이전 데이터 완전히 클리어
@@ -503,6 +503,14 @@ const Configurator: React.FC = () => {
               },
               thumbnail: thumbnail
             };
+            
+            // 재질 설정 저장 확인 로그
+            console.log('🎨 디자인 파일 저장 - materialConfig:', {
+              interiorColor: spaceInfo.materialConfig?.interiorColor,
+              doorColor: spaceInfo.materialConfig?.doorColor,
+              interiorTexture: spaceInfo.materialConfig?.interiorTexture,
+              doorTexture: spaceInfo.materialConfig?.doorTexture
+            });
             
             console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
               name: updatePayload.name,
@@ -695,7 +703,7 @@ const Configurator: React.FC = () => {
           console.log('🎨 [DEBUG] 새 디자인 생성 성공:', result.id);
           
           // 상태 업데이트 (프로젝트는 그대로, 디자인만 초기화)
-          setSpaceInfo(defaultSpaceConfig);
+          replaceSpaceInfo(defaultSpaceConfig);
           setPlacedModules([]);
           setCurrentDesignFileId(result.id);
           
@@ -707,7 +715,7 @@ const Configurator: React.FC = () => {
         }
       } else {
         // 데모 모드에서는 단순히 상태만 초기화
-        setSpaceInfo(defaultSpaceConfig);
+        replaceSpaceInfo(defaultSpaceConfig);
         setPlacedModules([]);
         derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
         alert('새 디자인이 생성되었습니다!');
@@ -794,7 +802,7 @@ const Configurator: React.FC = () => {
             
             // 상태 업데이트
             setBasicInfo({ title: 'Untitled', location: '' });
-            setSpaceInfo(defaultSpaceConfig);
+            replaceSpaceInfo(defaultSpaceConfig);
             setPlacedModules([]);
             setCurrentProjectId(result.id);
             
@@ -1055,12 +1063,30 @@ const Configurator: React.FC = () => {
             });
             setCurrentDesignFileName(designFile.name);
             
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
+            // 공간 설정 - materialConfig 포함하여 완전히 교체
+            // Deep copy로 완전한 독립성 보장
+            const spaceConfig = JSON.parse(JSON.stringify(designFile.spaceConfig));
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
             }
-            setSpaceInfo(spaceConfig);
+            // materialConfig가 없으면 기본값 설정
+            if (!spaceConfig.materialConfig) {
+              spaceConfig.materialConfig = {
+                interiorColor: '#FFFFFF',
+                doorColor: '#E0E0E0'
+              };
+            } else {
+              // materialConfig가 있어도 deep copy로 독립성 보장
+              spaceConfig.materialConfig = {
+                interiorColor: spaceConfig.materialConfig.interiorColor || '#FFFFFF',
+                doorColor: spaceConfig.materialConfig.doorColor || '#E0E0E0',
+                ...(spaceConfig.materialConfig.interiorTexture && { interiorTexture: spaceConfig.materialConfig.interiorTexture }),
+                ...(spaceConfig.materialConfig.doorTexture && { doorTexture: spaceConfig.materialConfig.doorTexture })
+              };
+            }
+            console.log('🎨 디자인 파일 로드 - materialConfig:', spaceConfig.materialConfig);
+            // 전체 spaceInfo를 새로운 디자인 파일의 데이터로 완전히 교체
+            replaceSpaceInfo(spaceConfig);
             
             // 가구 설정 - 먼저 초기화
             clearAllModules(); // 이전 데이터 완전히 클리어
@@ -1132,12 +1158,30 @@ const Configurator: React.FC = () => {
               location: ''
             });
             
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
+            // 공간 설정 - materialConfig 포함하여 완전히 교체
+            // Deep copy로 완전한 독립성 보장
+            const spaceConfig = JSON.parse(JSON.stringify(designFile.spaceConfig));
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
             }
-            setSpaceInfo(spaceConfig);
+            // materialConfig가 없으면 기본값 설정
+            if (!spaceConfig.materialConfig) {
+              spaceConfig.materialConfig = {
+                interiorColor: '#FFFFFF',
+                doorColor: '#E0E0E0'
+              };
+            } else {
+              // materialConfig가 있어도 deep copy로 독립성 보장
+              spaceConfig.materialConfig = {
+                interiorColor: spaceConfig.materialConfig.interiorColor || '#FFFFFF',
+                doorColor: spaceConfig.materialConfig.doorColor || '#E0E0E0',
+                ...(spaceConfig.materialConfig.interiorTexture && { interiorTexture: spaceConfig.materialConfig.interiorTexture }),
+                ...(spaceConfig.materialConfig.doorTexture && { doorTexture: spaceConfig.materialConfig.doorTexture })
+              };
+            }
+            console.log('🎨 디자인 파일 로드 - materialConfig:', spaceConfig.materialConfig);
+            // 전체 spaceInfo를 새로운 디자인 파일의 데이터로 완전히 교체
+            replaceSpaceInfo(spaceConfig);
             
             // 가구 설정 - 먼저 초기화
             clearAllModules(); // 이전 데이터 완전히 클리어

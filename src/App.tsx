@@ -89,8 +89,8 @@ function AppContent() {
       <Routes>
         {/* 메인 페이지 - 대시보드로 리다이렉트 */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        {/* 대시보드 페이지 */}
-        <Route path="/dashboard" element={<SimpleDashboard />} />
+        {/* 대시보드 페이지 - 중첩 라우팅 지원 */}
+        <Route path="/dashboard/*" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />

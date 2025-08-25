@@ -2602,7 +2602,7 @@ const Room: React.FC<RoomProps> = ({
                 showFurniture
               });
               
-              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} />;
+              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} spaceInfo={spaceInfo} />;
             })()}
           </>
         ) : (
@@ -2615,7 +2615,7 @@ const Room: React.FC<RoomProps> = ({
               activeZone,
               showFurniture
             })}
-            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} />
+            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} spaceInfo={spaceInfo} />
           </>
         )
       )}

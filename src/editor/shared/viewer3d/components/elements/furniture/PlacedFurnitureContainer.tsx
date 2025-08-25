@@ -18,6 +18,7 @@ interface PlacedFurnitureContainerProps {
   showFurniture?: boolean; // 가구 표시 여부 추가
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
   doorsOpen?: boolean; // 읽기 전용 모드에서 도어 상태
+  spaceInfo?: any; // 미리보기용 spaceInfo
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -28,14 +29,17 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   activeZone,
   showFurniture = true, // 기본값 true
   isReadOnly = false, // 읽기 전용 모드
-  doorsOpen: propDoorsOpen // 읽기 전용 모드에서의 도어 상태
+  doorsOpen: propDoorsOpen, // 읽기 전용 모드에서의 도어 상태
+  spaceInfo: propSpaceInfo // props로 받은 spaceInfo
 }) => {
   // 디버깅: 도어 상태 확인
   console.log('📦 PlacedFurnitureContainer - 도어 상태:', {
     propDoorsOpen: propDoorsOpen,
     isReadOnly: isReadOnly
   });
-  const { spaceInfo } = useSpaceConfigStore();
+  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
+  const spaceInfo = propSpaceInfo || storeSpaceInfo;
   
   // spaceInfo 변경 감지 디버그
   React.useEffect(() => {

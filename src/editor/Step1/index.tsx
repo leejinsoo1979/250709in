@@ -29,6 +29,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
   
   const { 
     setSpaceInfo,
+    replaceSpaceInfo,
     resetAll: resetSpaceConfig
   } = useSpaceConfigStore();
 
@@ -64,7 +65,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
       if (project) {
         // Store에 데이터 설정
         setBasicInfo(project.projectData);
-        setSpaceInfo(project.spaceConfig);
+        replaceSpaceInfo(project.spaceConfig);
         setPlacedModules(project.furniture.placedModules);
         console.log('✅ 프로젝트 로드 성공:', project.title);
       }
