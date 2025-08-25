@@ -52,8 +52,13 @@ export const handleNaverCallback = async (code: string, state: string) => {
     // State 삭제
     sessionStorage.removeItem('naver_auth_state');
     
+    // Firebase Functions URL 직접 사용
+    const functionsUrl = import.meta.env.DEV 
+      ? 'http://localhost:5001/in-f8873/us-central1'
+      : 'https://us-central1-in-f8873.cloudfunctions.net';
+    
     // 백엔드로 code 전송하여 access token 획득
-    const tokenResponse = await fetch('/api/auth/naver/token', {
+    const tokenResponse = await fetch(`${functionsUrl}/naverToken`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -62,13 +67,15 @@ export const handleNaverCallback = async (code: string, state: string) => {
     });
     
     if (!tokenResponse.ok) {
+      const errorData = await tokenResponse.text();
+      console.error('Token response error:', errorData);
       throw new Error('Failed to get access token');
     }
     
     const { accessToken } = await tokenResponse.json();
     
     // Access token으로 Firebase Custom Token 획득
-    const authResponse = await fetch('/api/auth/naver', {
+    const authResponse = await fetch(`${functionsUrl}/naverAuth`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -77,6 +84,8 @@ export const handleNaverCallback = async (code: string, state: string) => {
     });
     
     if (!authResponse.ok) {
+      const errorData = await authResponse.text();
+      console.error('Auth response error:', errorData);
       throw new Error('Failed to authenticate with Firebase');
     }
     

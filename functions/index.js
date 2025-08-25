@@ -1,7 +1,14 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const axios = require('axios');
-const cors = require('cors')({ origin: true });
+const cors = require('cors')({ 
+  origin: [
+    'http://localhost:5173',
+    'https://250709in.vercel.app',
+    'https://250709in-*.vercel.app'
+  ],
+  credentials: true
+});
 
 // Firebase Admin 초기화
 admin.initializeApp();
