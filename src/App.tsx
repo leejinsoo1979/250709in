@@ -12,7 +12,6 @@ import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
-import NaverCallback from '@/pages/NaverCallback';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -88,13 +87,12 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <Routes>
-        {/* 메인 페이지 - 로그인 페이지로 리다이렉트 */}
-        <Route path="/" element={<Navigate to="/auth" replace />} />
-        {/* 대시보드 페이지 - 중첩 라우팅 지원 */}
-        <Route path="/dashboard/*" element={<SimpleDashboard />} />
+        {/* 메인 페이지 - 대시보드로 리다이렉트 */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* 대시보드 페이지 */}
+        <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/auth" element={<SplitLoginForm />} />
-        <Route path="/auth/callback/naver" element={<NaverCallback />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
         <Route path="/auth/ultra" element={<UltraModernLoginForm />} />
         <Route path="/auth/modern" element={<ModernLoginForm />} />

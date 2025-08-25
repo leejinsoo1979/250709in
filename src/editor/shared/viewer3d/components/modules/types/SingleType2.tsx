@@ -130,7 +130,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth
-  }, spaceInfo);
+  });
 
   const {
     width,

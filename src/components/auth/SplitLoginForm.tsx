@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
@@ -13,22 +14,7 @@ interface SplitLoginFormProps {
 
 export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => {
   const navigate = useNavigate();
-  // useAuth를 사용하지 않음 - 로그인 페이지에서는 user 상태를 체크하지 않음
-  
-  // 컴포넌트 마운트 시 localStorage 정리
-  useEffect(() => {
-    // 잘못된 인증 정보 제거
-    const cleanupAuth = () => {
-      const keysToRemove = ['naver_user', 'userId', 'activeTeamId'];
-      keysToRemove.forEach(key => {
-        if (localStorage.getItem(key)) {
-          console.log(`🧹 Removing ${key} from localStorage`);
-          localStorage.removeItem(key);
-        }
-      });
-    };
-    cleanupAuth();
-  }, []);
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -39,7 +25,17 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-
+  // 로그인 상태 확인 후 자동 리다이렉트
+  useEffect(() => {
+    if (user && !authLoading) {
+      console.log('✅ 로그인된 상태 감지, 홈페이지로 이동합니다.');
+      const timeoutId = setTimeout(() => {
+        navigate('/');
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user, authLoading, navigate]);
 
   // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,8 +57,6 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       } else if (result.user) {
         console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();
-        // 로그인 성공 후 대시보드로 이동
-        navigate('/dashboard');
       }
     } catch (err) {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -96,8 +90,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     setLoading(true);
     setError(null);
 
-    console.log('🔍 [Auth] 구글 로그인 시도...');
-    console.log('🔍 [Auth] Firebase 설정 상태:', isFirebaseConfigured());
+    console.log('🔍 구글 로그인 시도...');
+    console.log('🔍 Firebase 설정 상태:', isFirebaseConfigured());
 
     if (!isFirebaseConfigured()) {
       setError('Firebase 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.');
@@ -105,40 +99,29 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       return;
     }
 
-    let result: { user: User | null; error: string | null; pending?: boolean } | undefined;
-    
     try {
-      console.log('🔍 [Auth] signInWithGoogle 호출...');
-      result = await signInWithGoogle();
+      console.log('🔍 signInWithGoogle 호출...');
+      const result = await signInWithGoogle();
       
       if (result.error) {
-        console.error('❌ [Auth] 구글 로그인 실패:', result.error);
+        console.error('❌ 구글 로그인 실패:', result.error);
         setError(result.error);
-      } else if (result.pending) {
-        console.log('🔄 [Auth] 리다이렉트 방식으로 로그인 중...');
-        // 리다이렉트 중이므로 로딩 상태 유지
-        // 사용자에게 안내 메시지 표시
-        setError('팝업이 차단되었습니다. 리다이렉트 방식으로 로그인을 진행합니다...');
       } else if (result.user) {
-        console.log('✅ [Auth] 구글 로그인 성공:', result.user.email);
+        console.log('✅ 구글 로그인 성공:', result.user.email);
         onSuccess?.();
       }
     } catch (err) {
-      console.error('❌ [Auth] 구글 로그인 예외 발생:', err);
+      console.error('❌ 구글 로그인 예외 발생:', err);
       setError('구글 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
-      // pending 상태가 아닌 경우에만 로딩 해제
-      if (!result?.pending) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
-
-  // 카카오 로그인 처리 (준비중)
-  const handleKakaoLogin = () => {
-    console.log('카카오 로그인 (준비중)');
-    alert('카카오 로그인 기능은 준비중입니다.');
+  // Facebook 로그인 처리 (데모용)
+  const handleFacebookLogin = () => {
+    console.log('Facebook 로그인 (데모)');
+    navigate('/configurator');
   };
 
   return (
@@ -239,14 +222,14 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
             
             <button
               type="button"
-              className={`${styles.socialButton} ${styles.kakaoButton}`}
-              onClick={handleKakaoLogin}
+              className={`${styles.socialButton} ${styles.facebookButton}`}
+              onClick={handleFacebookLogin}
               disabled={loading}
             >
               <svg className={styles.socialIcon} viewBox="0 0 24 24">
-                <path fill="#000000" d="M12 3c5.514 0 10 3.592 10 8.007 0 4.917-5.145 7.961-9.91 7.961-1.937 0-3.383-.397-4.394-.644-.509-.124-.826-.122-1.221.065l-1.86.904a.61.61 0 01-.635-.049.557.557 0 01-.217-.579l.567-2.121c.12-.449.075-.621-.015-.785C2.762 14.135 2 11.962 2 9.993 2 5.577 6.486 3 12 3z"/>
+                <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
-              <span>Kakao</span>
+              <span>Facebook</span>
             </button>
           </div>
 

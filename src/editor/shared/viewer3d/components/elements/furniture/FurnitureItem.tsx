@@ -184,7 +184,6 @@ interface FurnitureItemProps {
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
   showFurniture?: boolean; // 가구 표시 여부 추가
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
-  doorsOpen?: boolean; // 읽기 전용 모드에서의 도어 상태
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -203,18 +202,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerUp,
   onDoubleClick,
   showFurniture = true, // 기본값 true
-  isReadOnly = false, // 읽기 전용 모드
-  doorsOpen // 읽기 전용 모드에서의 도어 상태
+  isReadOnly = false // 읽기 전용 모드
 }) => {
-  // 디버깅: 도어 상태 확인
-  console.log('🎯 FurnitureItem - 도어 상태 prop:', {
-    moduleId: placedModule.moduleId,
-    doorsOpen: doorsOpen,
-    isReadOnly: isReadOnly,
-    hasDoor: placedModule.hasDoor,
-    isOpenValue: isReadOnly ? doorsOpen : undefined
-  });
-  
   // furnitureStartY 변경 감지
   React.useEffect(() => {
     if (placedModule.moduleId.includes('dual-4drawer-pantshanger') || placedModule.moduleId.includes('dual-2drawer-styler')) {
@@ -330,7 +319,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     internalSpace: internalSpace
   });
   
-  // 너비에 따라 모듈 ID 생성 - indexing 정의 전이므로 일단 기본값 사용
+  // 너비에 따라 모듈 ID 생성
   let targetModuleId = placedModule.moduleId;
   
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
@@ -342,11 +331,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       renderWidth: placedModule.adjustedWidth
     });
   }
-  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성 (백업)
+  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
   else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
     const baseType = placedModule.moduleId.replace(/-\d+$/, '');
     targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성 (백업):', {
+    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       newTargetModuleId: targetModuleId
@@ -411,59 +400,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
-    // 전체 indexing 정보를 가져와서 zone별 slotWidths 사용
-    const fullIndexing = calculateSpaceIndexing(spaceInfo);
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    
-    // zone별 slotWidths 가져오기
-    let zoneSlotWidths;
-    if (placedModule.zone === 'dropped' && fullIndexing.zones?.dropped?.slotWidths) {
-      zoneSlotWidths = fullIndexing.zones.dropped.slotWidths;
-    } else if (placedModule.zone === 'normal' && fullIndexing.zones?.normal?.slotWidths) {
-      zoneSlotWidths = fullIndexing.zones.normal.slotWidths;
-    } else {
-      // fallback: targetZone의 columnWidth를 사용하여 슬롯 너비 배열 생성
-      zoneSlotWidths = Array(targetZone.columnCount).fill(targetZone.columnWidth);
-    }
     
     // zone별 indexing은 targetZone 정보를 직접 사용
     indexing = {
       columnCount: targetZone.columnCount,
       columnWidth: targetZone.columnWidth,
-      slotWidths: zoneSlotWidths, // slotWidths 추가
       threeUnitPositions: [],
       threeUnitDualPositions: {},
       threeUnitBoundaries: []
     };
   } else {
     indexing = calculateSpaceIndexing(zoneSpaceInfo);
-  }
-  
-  // indexing이 정의된 후 slotWidths가 있으면 모듈 ID 재설정
-  if (!placedModule.adjustedWidth && indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
-    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
-    let slotWidth;
-    
-    // isDualSlot 확인 (아직 정의되지 않았으므로 moduleId로 판단)
-    const isDual = placedModule.isDualSlot || placedModule.moduleId.includes('dual-');
-    if (isDual && placedModule.slotIndex < indexing.slotWidths.length - 1) {
-      slotWidth = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
-    } else {
-      slotWidth = indexing.slotWidths[placedModule.slotIndex];
-    }
-    
-    // 현재 모듈 ID와 다른 너비면 새로 생성
-    if (!placedModule.moduleId.endsWith(`-${slotWidth}`)) {
-      targetModuleId = `${baseType}-${slotWidth}`;
-      console.log('🔧 [FurnitureItem] slotWidth로 ModuleID 재설정:', {
-        original: placedModule.moduleId,
-        slotWidth: slotWidth,
-        newTargetModuleId: targetModuleId
-      });
-      // 모듈 데이터 다시 가져오기
-      moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
-    }
   }
   
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
@@ -525,22 +474,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 캐비넷 너비 결정: 슬롯 너비 우선 정책
   // 1순위: adjustedWidth (기둥 침범 케이스)
-  // 2순위: moduleWidth (updateFurnitureForColumns에서 업데이트된 너비)
-  // 3순위: slotWidths (현재 슬롯의 실제 너비 - 슬롯 경계에 맞춤)
-  // 4순위: customWidth (백업용 - 슬롯 너비를 알 수 없을 때)
-  // 5순위: 모듈 기본 너비
+  // 2순위: slotWidths (슬롯 경계에 정확히 맞춤)
+  // 3순위: customWidth (명시적 설정)
+  // 4순위: 모듈 기본 너비
   let furnitureWidthMm = actualModuleData?.dimensions.width || 600; // 기본값
   
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm);
-  } else if (placedModule.moduleWidth !== undefined && placedModule.moduleWidth !== null) {
-    // moduleWidth가 있으면 사용 (updateFurnitureForColumns에서 업데이트된 너비)
-    furnitureWidthMm = placedModule.moduleWidth;
-    console.log('📐 moduleWidth 사용 (컬럼 변경 시 업데이트):', furnitureWidthMm);
   } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
-    // slotWidths가 있으면 우선 사용 (현재 슬롯의 실제 너비)
+    // 슬롯 너비를 우선적으로 사용 - 캐비넷은 슬롯에 정확히 맞춤
     if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
       furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
       console.log('📐 듀얼 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm, '(두 슬롯 합계)');
@@ -549,9 +493,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       console.log('📐 싱글 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm);
     }
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
-    // slotWidths가 없을 때만 customWidth 사용 (백업용)
+    // customWidth가 명시적으로 설정되어 있으면 사용
     furnitureWidthMm = placedModule.customWidth;
-    console.log('📐 customWidth 사용 (백업):', furnitureWidthMm);
+    console.log('📐 customWidth 사용:', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
@@ -846,13 +790,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
   const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
-  
-  // 드래그 상태 변경 감지
-  React.useEffect(() => {
-    if (!isDraggingThis) {
-      console.log('🔄 가구 드래그 종료 감지:', placedModule.id);
-    }
-  }, [isDraggingThis, placedModule.id]);
   
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
   let optimalHingePosition = placedModule.hingePosition || 'right';
@@ -1205,7 +1142,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
-                isOpen={isReadOnly ? doorsOpen : undefined} // 미리보기 모드에서 도어 상태 전달
                 spaceInfo={(() => {
                   console.log('🚨 FurnitureItem -> BoxModule spaceInfo 전달:', {
                     moduleId: actualModuleData?.id || 'unknown',
@@ -1391,8 +1327,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     slotCenterX={slotCenterX}
                     moduleData={actualModuleData}
                     isDragging={isDraggingThis}
-                    isOpen={isReadOnly ? doorsOpen : undefined}
-                    placedModuleId={placedModule.id}
                     isEditMode={isEditMode}
                     slotIndex={placedModule.slotIndex}
                   />
@@ -1412,8 +1346,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   metalness={0.0}
                   roughness={0.7}
                   reflectivity={0.2}
-                  transparent={false}
-                  opacity={1.0}
+                  transparent={isDraggingThis || isEditMode}
+                  opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
                 />
               </Box>
               <Edges 
@@ -1640,9 +1574,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             slotCenterX={0} // 도어는 가구와 같은 위치 (움직이지 않음)
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
-            isOpen={isReadOnly ? doorsOpen : undefined}
             isDragging={isDraggingThis}
-            placedModuleId={placedModule.id}
             isEditMode={isEditMode}
             slotWidths={(() => {
               // 듀얼 가구인 경우 개별 슬롯 너비 전달

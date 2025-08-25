@@ -22,14 +22,11 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
   
   const { 
     setBasicInfo,
-    resetAll: resetProject,
-    setProjectId,
-    setProjectTitle
+    resetAll: resetProject
   } = useProjectStore();
   
   const { 
     setSpaceInfo,
-    replaceSpaceInfo,
     resetAll: resetSpaceConfig
   } = useSpaceConfigStore();
 
@@ -37,18 +34,6 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
     clearAllModules,
     setPlacedModules
   } = useFurnitureStore();
-  
-  // projectId가 전달되면 store에 설정
-  useEffect(() => {
-    if (projectId) {
-      console.log('🔥 Step1: projectId를 store에 설정:', projectId);
-      setProjectId(projectId);
-    }
-    if (projectTitle) {
-      console.log('🔥 Step1: projectTitle을 store에 설정:', projectTitle);
-      setProjectTitle(projectTitle);
-    }
-  }, [projectId, projectTitle, setProjectId, setProjectTitle]);
 
   // 프로젝트 데이터 로드
   const loadProject = async (projectId: string) => {
@@ -65,7 +50,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
       if (project) {
         // Store에 데이터 설정
         setBasicInfo(project.projectData);
-        replaceSpaceInfo(project.spaceConfig);
+        setSpaceInfo(project.spaceConfig);
         setPlacedModules(project.furniture.placedModules);
         console.log('✅ 프로젝트 로드 성공:', project.title);
       }

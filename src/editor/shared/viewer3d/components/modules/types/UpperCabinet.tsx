@@ -42,7 +42,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth
-  }, spaceInfo);
+  });
 
   // 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리
   // 개별 상부장에서는 간접조명을 렌더링하지 않음

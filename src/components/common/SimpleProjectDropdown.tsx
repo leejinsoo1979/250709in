@@ -42,7 +42,6 @@ const SimpleProjectDropdown: React.FC<SimpleProjectDropdownProps> = ({
   }, [isOpen]);
 
   const handleProjectSelect = (project: ProjectSummary) => {
-    console.log('🎯 SimpleProjectDropdown - 프로젝트 선택:', project.id, project.title);
     onProjectSelect(project);
     setIsOpen(false);
   };

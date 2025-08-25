@@ -45,7 +45,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth
-  }, spaceInfo);
+  });
 
   // 띄워서 배치 여부 확인 (간접조명용)
   const placementType = spaceInfo?.baseConfig?.placementType;

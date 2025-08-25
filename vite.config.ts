@@ -50,18 +50,6 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
       'Cross-Origin-Embedder-Policy': 'unsafe-none'
-    },
-    proxy: {
-      '/api/auth/naver': {
-        target: 'https://us-central1-in-f8873.cloudfunctions.net',
-        changeOrigin: true,
-        rewrite: (path) => path.replace('/api/auth/naver', '/naverAuth')
-      },
-      '/api/auth/naver/token': {
-        target: 'https://us-central1-in-f8873.cloudfunctions.net',
-        changeOrigin: true,
-        rewrite: (path) => path.replace('/api/auth/naver/token', '/naverToken')
-      }
     }
   }
 })

@@ -44,7 +44,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjacentCabinets,
-  }, spaceInfo);
+  });
 
   const {
     width,
@@ -94,7 +94,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     is2DMode,
     showIndirectLight,
     lightY
-  }, spaceInfo);
+  });
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -142,7 +142,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       leftSections: modelConfig.leftSections,
       rightSections: modelConfig.rightSections
     }
-  }, spaceInfo);
+  });
 
   // 통합 중단선반 및 안전선반 관련 계산
   const hasSharedMiddlePanel = modelConfig.hasSharedMiddlePanel || false;
@@ -446,7 +446,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             )}
           </group>
         );
-      }, spaceInfo);
+      });
     };
 
     // 우측 섹션 렌더링 (바지걸이 + 옷장)
@@ -490,7 +490,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
           </group>
         );
-      }, spaceInfo);
+      });
     };
 
     return (
@@ -684,7 +684,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       depth: baseFurniture.depth,
       material: baseFurniture.material
     }
-  }, spaceInfo);
+  });
 
   return (
     <>
@@ -852,7 +852,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       isEditMode,
       showFurniture,
       slotWidths
-    }, spaceInfo);
+    });
     
     // 에러가 발생해도 빈 group을 반환하여 전체 씬이 충돌하지 않도록 함
     return <group />;

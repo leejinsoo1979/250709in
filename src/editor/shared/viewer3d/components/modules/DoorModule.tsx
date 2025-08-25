@@ -103,8 +103,6 @@ interface DoorModuleProps {
   isEditMode?: boolean; // 편집 모드 여부
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
-  isOpen?: boolean; // 외부에서 전달된 도어 열림 상태 (읽기 전용 모드용)
-  placedModuleId?: string; // 배치된 모듈의 고유 ID (재질 독립성을 위해)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -120,47 +118,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isDragging = false,
   isEditMode = false,
   slotWidths,
-  slotIndex,
-  isOpen,
-  placedModuleId
+  slotIndex
 }) => {
-  // Store에서 도어 상태만 가져오기 (읽기 전용 모드가 아닐 때만)
-  const { doorsOpen: storeDoorsOpen, view2DDirection } = useUIStore();
-  
-  // isOpen prop이 있으면 사용 (읽기 전용 모드), 없으면 store의 doorsOpen 사용
-  const doorsOpen = isOpen !== undefined ? isOpen : storeDoorsOpen;
-  
-  // 디버깅 로그
-  console.log('🚪 DoorModule - 도어 상태:', {
-    isOpen: isOpen,
-    isOpenType: typeof isOpen,
-    storeDoorsOpen: storeDoorsOpen,
-    doorsOpen: doorsOpen,
-    moduleId: moduleData?.id,
-    hasSpaceInfo: !!spaceInfo,
-    doorColor: spaceInfo?.doorMaterial?.colorCode || spaceInfo?.materialConfig?.doorColor,
-    isEditMode: isEditMode
-  });
-  
+  // Store에서 재질 설정과 도어 상태 가져오기
+  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  const { doorsOpen, view2DDirection } = useUIStore();
   const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
-  // props로 받은 spaceInfo를 반드시 사용 (store fallback 제거)
-  if (!spaceInfo) {
-    console.warn('⚠️ DoorModule: spaceInfo가 전달되지 않음');
-    return null;
-  }
-  
-  const currentSpaceInfo = spaceInfo;
+  // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
+  const currentSpaceInfo = spaceInfo || storeSpaceInfo;
   const materialConfig = currentSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
     doorColor: '#E0E0E0'  // 기본값 변경
   };
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
-  // doorMaterial이 있으면 우선 사용
-  let doorColor = color || currentSpaceInfo.doorMaterial?.colorCode || materialConfig.doorColor;
+  let doorColor = color || materialConfig.doorColor;
   // 혹시라도 rgba/hex8 등 알파값이 포함된 경우 알파값 무시 (불투명 hex로 변환)
   if (typeof doorColor === 'string') {
     // hex8 (#RRGGBBAA) → hex6 (#RRGGBB)
@@ -193,28 +168,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     return '#10b981'; // 기본값 (green)
   };
-  // 도어 재질 생성 함수 - 간단하게 각 인스턴스마다 새 재질 생성
+  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 초기 생성용
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(doorColor || '#E0E0E0'), // 현재 도어 색상으로 생성
+      color: new THREE.Color('#E0E0E0'), // 기본 회색으로 생성
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
     });
-  }, [doorColor]); // 색상이 변경되면 재질 재생성
+  }, []); // 의존성 배열 비움 - 한 번만 생성
 
-  // 싱글 가구용 도어 재질 - 디자인 파일별로 독립적
+  // 싱글 가구용 도어 재질 - 한 번만 생성 (성능 최적화)
   const doorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 디자인 파일별로 독립적
+  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
   const leftDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 디자인 파일별로 독립적
+  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 한 번만 생성 (성능 최적화)
   const rightDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
@@ -224,15 +199,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const materials = [doorMaterial, leftDoorMaterial, rightDoorMaterial];
     materials.forEach(mat => {
       if (mat) {
-        // 색상 설정 - 재질이 이미 올바른 색상으로 생성되었으므로 특별한 경우만 업데이트
+        // 색상 설정
         if (isDragging || isEditMode) {
           // 드래그 중이거나 편집 모드일 때는 항상 테마 색상
           mat.color.set(getThemeColor());
-        } else if (!mat.map && isSelected) {
-          // 선택된 경우 테마 색상
-          mat.color.set(getThemeColor());
+        } else if (!mat.map) {
+          // 텍스처가 없을 때만 기본 색상 사용
+          mat.color.set(isSelected ? getThemeColor() : doorColor);
         }
-        // 일반 상태에서는 색상 업데이트하지 않음 (생성 시 설정된 색상 유지)
         
         // 편집 모드일 때 설정 (드래그와 분리)
         if (isEditMode) {
@@ -258,7 +232,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
           mat.map = null;  // 텍스처 제거
-          // 색상은 생성 시 설정된 것을 유지 (doorColor 직접 설정 제거)
+          mat.color.set(doorColor);  // 도어 색상으로 설정
           mat.transparent = true;
           mat.opacity = viewMode === '3D' ? 0.5 : 0.0;  // 2D에서는 완전 투명, 3D에서는 반투명
           mat.depthWrite = false;
@@ -278,7 +252,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]); // doorColor 제거 - 재질 재생성으로 처리
+  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
 
   // Shadow auto-update enabled - manual shadow updates removed
 
@@ -886,16 +860,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
   // 도어 열림 상태 계산 - 성능 최적화
-  const shouldOpenDoors = useMemo(() => {
-    console.log('🚪🔄 DoorModule - shouldOpenDoors 계산:', {
-      doorsOpen,
-      isEditMode,
-      isOpen,
-      isOpenDefined: isOpen !== undefined,
-      결과: doorsOpen || isEditMode
-    });
-    return doorsOpen || isEditMode;
-  }, [doorsOpen, isEditMode]);
+  const shouldOpenDoors = useMemo(() => doorsOpen || isEditMode, [doorsOpen, isEditMode]);
   
   // 도어 애니메이션 상태 추적
   const [isAnimating, setIsAnimating] = useState(false);
@@ -925,12 +890,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 클릭 핸들러
   const handleDoorClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    
-    // 읽기 전용 모드에서는 클릭 무시 (isOpen prop이 있으면 읽기 전용 모드)
-    if (isOpen !== undefined) {
-      console.log('🚪 읽기 전용 모드에서 도어 클릭 무시');
-      return;
-    }
     
     console.log('🚪 도어 클릭 이벤트 발생:', {
       moduleId: moduleData?.id,

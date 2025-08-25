@@ -37,28 +37,49 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   
   const { basicInfo, projectId: storeProjectId, projectTitle: storeProjectTitle } = useProjectStore();
   
-  // props로 받은 projectId를 우선 사용하고, 없으면 store에서 가져오기
-  const projectId = propsProjectId || storeProjectId;
-  const projectTitle = propsProjectTitle || storeProjectTitle;
+  // projectId와 projectTitle을 안정적으로 유지
+  const projectIdRef = useRef<string | null>(null);
+  const projectTitleRef = useRef<string | null>(null);
+  
+  // 최초 마운트 시 한 번만 초기값 설정
+  useEffect(() => {
+    if (!projectIdRef.current) {
+      projectIdRef.current = storeProjectId || propsProjectId || null;
+    }
+    if (!projectTitleRef.current) {
+      projectTitleRef.current = storeProjectTitle || propsProjectTitle || null;
+    }
+  }, []); // 빈 dependency로 최초 한 번만 실행
+  
+  // store가 업데이트되면 ref도 업데이트 (store가 우선순위)
+  useEffect(() => {
+    if (storeProjectId) {
+      projectIdRef.current = storeProjectId;
+    }
+    if (storeProjectTitle) {
+      projectTitleRef.current = storeProjectTitle;
+    }
+  }, [storeProjectId, storeProjectTitle]);
+  
+  // 최종 사용할 값 - ref를 우선 사용하되, 없으면 store/props 순서로 fallback
+  const projectId = useMemo(() => 
+    projectIdRef.current || storeProjectId || propsProjectId || null,
+    [storeProjectId, propsProjectId, projectIdRef.current]
+  );
+  
+  const projectTitle = useMemo(() => 
+    projectTitleRef.current || storeProjectTitle || propsProjectTitle || null,
+    [storeProjectTitle, propsProjectTitle, projectTitleRef.current]
+  );
   
   console.log('🔥 Step2 projectId/Title 확인:', {
-    propsProjectId,
     storeProjectId,
+    propsProjectId,
     finalProjectId: projectId,
-    propsProjectTitle,
     storeProjectTitle,
+    propsProjectTitle,
     finalProjectTitle: projectTitle
   });
-  
-  // projectId가 없으면 에러 처리
-  useEffect(() => {
-    if (!projectId) {
-      console.error('🔥🔥🔥 Step2: projectId가 없습니다!', {
-        propsProjectId,
-        storeProjectId
-      });
-    }
-  }, [projectId, propsProjectId, storeProjectId]);
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
 
@@ -166,88 +187,61 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       // projectStore에서 프로젝트 ID 가져오기
       const currentProjectId = projectId;
       
-      console.log('🔥🔥🔥 Step2 handleCreate - projectId 체크:', {
-        projectId,
-        storeProjectId,
-        propsProjectId,
-        projectTitle,
-        basicInfo
-      });
-      
       if (!currentProjectId) {
         // projectId가 없으면 에러 - 프로젝트를 선택하지 않고 디자인을 생성하려는 경우
-        const errorMsg = '프로젝트 ID가 없습니다. 프로젝트를 먼저 선택해주세요.';
-        console.error('🔥 프로젝트 ID 에러:', {
-          projectId,
-          storeProjectId,
-          propsProjectId
-        });
-        throw new Error(errorMsg);
+        throw new Error('프로젝트를 먼저 선택해주세요.');
       }
       
       console.log('📋 기존 프로젝트에 디자인 파일 생성, 프로젝트 ID:', currentProjectId);
       
-      // 디자인 파일명은 사용자가 입력한 그대로 사용 (날짜 추가하지 않음)
-      const designFileName = basicInfo.title || '새로운 디자인';
-      
-      // 썸네일 생성
-      const thumbnailDataURL = generateDefaultThumbnail(spaceInfo, placedModules.length);
-      
-      console.log('🔥 createDesignFile 호출 직전:', {
-        name: designFileName,
-        projectId: currentProjectId,
-        spaceConfigKeys: Object.keys(spaceInfo),
-        furnitureCount: 0
-      });
-      
-      const designFileResult = await createDesignFile({
-        name: designFileName,
-        projectId: currentProjectId,
-        spaceConfig: spaceInfo,
-        furniture: {
-          placedModules: []
-        },
-        thumbnail: thumbnailDataURL  // 썸네일 추가
-      });
-
-      console.log('🔥 createDesignFile 결과:', designFileResult);
-
-      if (designFileResult.id) {
-        // BroadcastChannel로 다른 탭에 알림
-        try {
-          const channel = new BroadcastChannel('project-updates');
-          channel.postMessage({ 
-            type: 'DESIGN_FILE_UPDATED',
-            action: 'design_created',
-            projectId: currentProjectId,
-            designFileId: designFileResult.id
-          });
-          channel.close();
-        } catch (error) {
-          console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
-        }
+      if (currentProjectId) {
+        // 디자인 파일명은 사용자가 입력한 그대로 사용 (날짜 추가하지 않음)
+        const designFileName = basicInfo.title || '새로운 디자인';
         
-        // onClose가 있으면 모달을 닫고, 없으면 직접 navigate
-        if (onClose) {
-          onClose();
-        }
+        // 썸네일 생성
+        const thumbnailDataURL = generateDefaultThumbnail(spaceInfo, placedModules.length);
         
-        // 약간의 지연을 주어 로딩 화면이 보이도록 함
-        setTimeout(() => {
-          navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileResult.id}`, { replace: true });
-        }, 100);
-      } else {
-        const errorMsg = designFileResult.error || '디자인 파일 생성 실패';
-        console.error('🔥 디자인 파일 생성 실패:', {
-          error: errorMsg,
-          designFileResult
+        const designFileResult = await createDesignFile({
+          name: designFileName,
+          projectId: currentProjectId,
+          spaceConfig: spaceInfo,
+          furniture: {
+            placedModules: []
+          },
+          thumbnail: thumbnailDataURL  // 썸네일 추가
         });
-        throw new Error(errorMsg);
+
+        if (designFileResult.id) {
+          // BroadcastChannel로 다른 탭에 알림
+          try {
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({ 
+              type: 'DESIGN_FILE_UPDATED',
+              action: 'design_created',
+              projectId: currentProjectId,
+              designFileId: designFileResult.id
+            });
+            channel.close();
+          } catch (error) {
+            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+          }
+          
+          // onClose가 있으면 모달을 닫고, 없으면 직접 navigate
+          if (onClose) {
+            onClose();
+          }
+          
+          // 약간의 지연을 주어 로딩 화면이 보이도록 함
+          setTimeout(() => {
+            navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileResult.id}`, { replace: true });
+          }, 100);
+        } else {
+          throw new Error(designFileResult.error || '디자인 파일 생성 실패');
+        }
       }
     } catch (error) {
-      console.error('🔥🔥🔥 프로젝트/디자인 생성 오류 상세:', error);
-      console.error('🔥 에러 스택:', error instanceof Error ? error.stack : '스택 없음');
-      alert(`디자인 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      console.error('프로젝트 생성 오류:', error);
+      alert(`프로젝트 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     } finally {
       setSaving(false);
     }

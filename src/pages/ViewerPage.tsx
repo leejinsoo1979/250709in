@@ -22,38 +22,50 @@ const ViewerPage: React.FC = () => {
   }, [projectId]);
 
   const loadProject = async () => {
+    console.log('🔥 ViewerPage - loadProject 시작:', { projectId });
     setLoading(true);
     setError(null);
     
     try {
-      // 먼저 디자인 파일로 시도 (design_ 접두사가 없어도)
-      const designResult = await getDesignFileByIdPublic(projectId);
-      
-      if (designResult.designFile) {
-        // 디자인 파일로 성공
-        const projectSummary: ProjectSummary = {
-          id: designResult.designFile.projectId,
-          title: designResult.designFile.name,
-          createdAt: designResult.designFile.createdAt,
-          updatedAt: designResult.designFile.updatedAt,
-          furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
-          spaceSize: {
-            width: designResult.designFile.spaceConfig?.width || 3600,
-            height: designResult.designFile.spaceConfig?.height || 2400,
-            depth: designResult.designFile.spaceConfig?.depth || 1500,
-          },
-          thumbnail: designResult.designFile.thumbnail,
-          folderId: '',
-          spaceInfo: designResult.designFile.spaceConfig,
-          placedModules: designResult.designFile.furniture?.placedModules || []
-        };
+      // Check if it's a design file ID or project ID
+      if (projectId?.startsWith('design_')) {
+        console.log('🔥 디자인 파일 로드 시도 (공유 링크):', projectId);
+        const designResult = await getDesignFileByIdPublic(projectId);
+        console.log('🔥 디자인 파일 로드 결과 (공유 링크):', designResult);
         
-        
-        setProject(projectSummary);
+        if (designResult.designFile) {
+          const projectSummary: ProjectSummary = {
+            id: designResult.designFile.projectId,
+            title: designResult.designFile.name,
+            createdAt: designResult.designFile.createdAt,
+            updatedAt: designResult.designFile.updatedAt,
+            furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
+            spaceSize: {
+              width: designResult.designFile.spaceConfig?.width || 3600,
+              height: designResult.designFile.spaceConfig?.height || 2400,
+              depth: designResult.designFile.spaceConfig?.depth || 1500,
+            },
+            thumbnail: designResult.designFile.thumbnail,
+            folderId: '',
+            spaceInfo: designResult.designFile.spaceConfig,
+            placedModules: designResult.designFile.furniture?.placedModules || []
+          };
+          
+          console.log('🔥 디자인 파일 로드 성공 (가구 포함):', {
+            designFileId: projectId,
+            name: designResult.designFile.name,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModules: projectSummary.placedModules
+          });
+          
+          setProject(projectSummary);
+        } else {
+          setError(designResult.error || '디자인 파일을 찾을 수 없습니다.');
+        }
       } else {
-        // 디자인 파일이 아니면 프로젝트로 시도
+        console.log('🔥 프로젝트 로드 시도 (공유 링크):', projectId);
         const result = await getProjectByIdPublic(projectId);
-        
+        console.log('🔥 프로젝트 로드 결과 (공유 링크):', result);
         if (result.project) {
           const projectSummary: ProjectSummary = {
             id: result.project.id,
@@ -86,11 +98,9 @@ const ViewerPage: React.FC = () => {
                 right: true,
                 top: true,
               },
-              materialConfig: result.project.spaceConfig?.materialConfig || {
+              materialConfig: {
                 interiorColor: '#FFFFFF',
                 doorColor: '#E0E0E0',
-                interiorTexture: result.project.spaceConfig?.materialConfig?.interiorTexture || null,
-                doorTexture: result.project.spaceConfig?.materialConfig?.doorTexture || null
               },
               columns: [],
               frameSize: { upper: 50, left: 50, right: 50 },
@@ -98,14 +108,19 @@ const ViewerPage: React.FC = () => {
             },
             placedModules: result.project.furniture?.placedModules || []
           };
+          console.log('🔥 프로젝트 로드 성공 (가구 포함):', {
+            title: projectSummary.title,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModules: projectSummary.placedModules
+          });
           setProject(projectSummary);
         } else {
           setError(result.error || '프로젝트를 찾을 수 없습니다.');
         }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('프로젝트 로드 실패:', err);
-      setError(`프로젝트를 불러오는 중 오류가 발생했습니다: ${err?.message || err}`);
+      setError('프로젝트를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -197,6 +212,13 @@ const ViewerPage: React.FC = () => {
 
       {/* 뷰어 콘텐츠 */}
       <div className={styles.viewerContent}>
+        {console.log('🔥 ViewerPage 렌더링 - Space3DViewerReadOnly props:', {
+          projectId,
+          viewMode,
+          hasSpaceConfig: !!project.spaceInfo,
+          placedModulesCount: project.placedModules?.length || 0,
+          placedModules: project.placedModules
+        })}
         <Space3DViewerReadOnly
           key={`${projectId}-${viewMode}`}
           spaceConfig={project.spaceInfo}

@@ -28,23 +28,18 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   }, [isOpen, projectId, designFileId]);
 
   const loadProject = async () => {
+    console.log('🔥 ProjectViewerModal - loadProject 시작:', { projectId, designFileId });
     setLoading(true);
     setError(null);
     
     try {
       // 디자인 파일 ID가 있으면 디자인 파일 로드, 없으면 프로젝트 로드
       if (designFileId) {
+        console.log('🔥 디자인 파일 로드 시도:', designFileId);
         const designResult = await getDesignFileById(designFileId);
+        console.log('🔥 디자인 파일 로드 결과:', designResult);
         
         if (designResult.designFile) {
-          console.log('🔍 디자인 파일 로드됨:', {
-            designFileId: designFileId,
-            spaceConfig: designResult.designFile.spaceConfig,
-            furnitureBaseMaterial: designResult.designFile.spaceConfig?.furnitureBaseMaterial,
-            furnitureAccentMaterial: designResult.designFile.spaceConfig?.furnitureAccentMaterial,
-            placedModulesCount: designResult.designFile.furniture?.placedModules?.length || 0
-          });
-          
           const projectSummary: ProjectSummary = {
             id: designResult.designFile.projectId,
             title: designResult.designFile.name,
@@ -62,10 +57,12 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             placedModules: designResult.designFile.furniture?.placedModules || []
           };
           
-          console.log('🎨 ProjectSummary 생성됨:', {
-            spaceInfo: projectSummary.spaceInfo,
-            hasFurnitureBaseMaterial: !!projectSummary.spaceInfo?.furnitureBaseMaterial,
-            hasFurnitureAccentMaterial: !!projectSummary.spaceInfo?.furnitureAccentMaterial
+          console.log('디자인 파일 로드:', {
+            designFileId,
+            name: designResult.designFile.name,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModules: projectSummary.placedModules,
+            spaceConfig: projectSummary.spaceInfo
           });
           
           setProject(projectSummary);
@@ -108,11 +105,9 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                 right: true,
                 top: true,
               },
-              materialConfig: result.project.spaceConfig?.materialConfig || {
+              materialConfig: {
                 interiorColor: '#FFFFFF',
-                doorColor: '#E0E0E0',
-                interiorTexture: result.project.spaceConfig?.materialConfig?.interiorTexture || null,
-                doorTexture: result.project.spaceConfig?.materialConfig?.doorTexture || null
+                doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
               },
               columns: [],
               frameSize: { upper: 50, left: 50, right: 50 },
@@ -120,6 +115,13 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             },
             placedModules: result.project.furniture?.placedModules || []
           };
+          console.log('프로젝트 뷰어 데이터 로드:', {
+            title: projectSummary.title,
+            placedModulesCount: projectSummary.placedModules?.length || 0,
+            placedModulesData: projectSummary.placedModules,
+            spaceInfo: !!projectSummary.spaceInfo,
+            fullProjectData: result.project
+          });
           setProject(projectSummary);
         } else {
           setError(result.error || '프로젝트를 찾을 수 없습니다.');
@@ -229,6 +231,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
+                {console.log('🎨 읽기 전용 뷰어 렌더링:', {
+                  projectId,
+                  viewMode,
+                  hasProject: !!project,
+                  hasSpaceInfo: !!project.spaceInfo,
+                  spaceInfo: project.spaceInfo,
+                  placedModulesCount: project.placedModules?.length || 0
+                })}
                 <Space3DViewerReadOnly
                   key={`${projectId}-${viewMode}`}
                   spaceConfig={project.spaceInfo}
