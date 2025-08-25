@@ -356,6 +356,24 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         }
         
         // 새 모듈 배치
+        // adjustedWidth가 없는 경우 (일반 슬롯) 슬롯 너비를 customWidth로 설정
+        let finalCustomWidth = adjustedWidth;
+        if (!finalCustomWidth) {
+          // 듀얼 가구인 경우 2개 슬롯 너비 합산
+          if (dropPosition.isDualFurniture) {
+            const slotWidths = indexing.slotWidths || [];
+            if (dropPosition.column < slotWidths.length - 1) {
+              finalCustomWidth = slotWidths[dropPosition.column] + slotWidths[dropPosition.column + 1];
+            } else {
+              finalCustomWidth = indexing.columnWidth * 2;
+            }
+          } else {
+            // 싱글 가구인 경우 해당 슬롯 너비
+            const slotWidths = indexing.slotWidths || [];
+            finalCustomWidth = slotWidths[dropPosition.column] || indexing.columnWidth;
+          }
+        }
+        
         let newModuleData: any = {
           id: placedId,
           moduleId: currentDragData.moduleData.id,
@@ -367,7 +385,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
-          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정 또는 노서라운드 엔드패널 슬롯 너비
+          customWidth: finalCustomWidth, // 항상 customWidth를 설정하여 일관성 유지
+          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정 (있는 경우만)
         };
         
         // Column C의 경우 서브슬롯 위치 추가
