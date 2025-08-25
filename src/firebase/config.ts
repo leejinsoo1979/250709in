@@ -13,18 +13,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// 개발 모드에서 Firebase 설정 확인
-if (import.meta.env.DEV) {
-  console.log('🔥 Firebase Config:', {
-    apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
-    authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
-    projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
-    storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
-    messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
-    appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing'
-  });
-  console.log('🔥 Project ID:', firebaseConfig.projectId);
-}
+// Firebase 설정 확인 (개발 및 프로덕션 모두에서)
+console.log('🔥 Firebase Config:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
+  storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
+  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
+  appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing'
+});
+console.log('🔥 Auth Domain:', firebaseConfig.authDomain);
+console.log('🔥 Project ID:', firebaseConfig.projectId);
 
 // Firebase 앱 초기화
 const app = initializeApp(firebaseConfig);
