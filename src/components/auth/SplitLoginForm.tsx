@@ -24,6 +24,13 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  
+  // 디버깅 로그
+  console.log('🔍 SplitLoginForm 상태:', {
+    user: user?.email,
+    authLoading,
+    path: window.location.pathname
+  });
 
   // 로그인 상태 확인 - 자동 리다이렉트 제거
   useEffect(() => {

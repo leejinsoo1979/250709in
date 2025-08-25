@@ -87,8 +87,8 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <Routes>
-        {/* 메인 페이지 - 로그인 페이지로 리다이렉트 */}
-        <Route path="/" element={<Navigate to="/auth" replace />} />
+        {/* 메인 페이지 - 로그인 페이지 표시 */}
+        <Route path="/" element={<SplitLoginForm />} />
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
