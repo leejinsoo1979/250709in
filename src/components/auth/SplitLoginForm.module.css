@@ -261,8 +261,9 @@
 /* Social Buttons */
 .socialButtons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 30px;
+  justify-content: space-between;
 }
 
 .socialButton {
@@ -270,16 +271,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 12px 14px;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
+  min-width: 0;
 }
 
 .socialButton:hover:not(:disabled) {
@@ -300,6 +302,34 @@
 }
 
 .googleButton .socialIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.naverButton {
+  background: #03C75A;
+  color: white;
+}
+
+.naverButton:hover:not(:disabled) {
+  background: #02B351;
+}
+
+.naverButton .socialIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.kakaoButton {
+  background: #FEE500;
+  color: #000000;
+}
+
+.kakaoButton:hover:not(:disabled) {
+  background: #FDDC00;
+}
+
+.kakaoButton .socialIcon {
   width: 18px;
   height: 18px;
 }
@@ -394,10 +424,22 @@
   }
   
   .socialButtons {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
   }
   
   .socialButton {
-    width: 100%;
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+  
+  .socialButton span {
+    display: none;
+  }
+  
+  .socialIcon {
+    width: 20px !important;
+    height: 20px !important;
   }
 }

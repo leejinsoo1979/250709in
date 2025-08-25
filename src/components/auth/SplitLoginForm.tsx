@@ -152,10 +152,16 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     }
   };
 
-  // Facebook 로그인 처리 (데모용)
-  const handleFacebookLogin = () => {
-    console.log('Facebook 로그인 (데모)');
-    navigate('/configurator');
+  // 네이버 로그인 처리 (준비중)
+  const handleNaverLogin = () => {
+    console.log('네이버 로그인 (준비중)');
+    alert('네이버 로그인 기능은 준비중입니다.');
+  };
+
+  // 카카오 로그인 처리 (준비중)
+  const handleKakaoLogin = () => {
+    console.log('카카오 로그인 (준비중)');
+    alert('카카오 로그인 기능은 준비중입니다.');
   };
 
   return (
@@ -256,14 +262,26 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
             
             <button
               type="button"
-              className={`${styles.socialButton} ${styles.facebookButton}`}
-              onClick={handleFacebookLogin}
+              className={`${styles.socialButton} ${styles.naverButton}`}
+              onClick={handleNaverLogin}
               disabled={loading}
             >
               <svg className={styles.socialIcon} viewBox="0 0 24 24">
-                <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                <path fill="#03C75A" d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"/>
               </svg>
-              <span>Facebook</span>
+              <span>Naver</span>
+            </button>
+            
+            <button
+              type="button"
+              className={`${styles.socialButton} ${styles.kakaoButton}`}
+              onClick={handleKakaoLogin}
+              disabled={loading}
+            >
+              <svg className={styles.socialIcon} viewBox="0 0 24 24">
+                <path fill="#000000" d="M12 3c5.514 0 10 3.592 10 8.007 0 4.917-5.145 7.961-9.91 7.961-1.937 0-3.383-.397-4.394-.644-.509-.124-.826-.122-1.221.065l-1.86.904a.61.61 0 01-.635-.049.557.557 0 01-.217-.579l.567-2.121c.12-.449.075-.621-.015-.785C2.762 14.135 2 11.962 2 9.993 2 5.577 6.486 3 12 3z"/>
+              </svg>
+              <span>Kakao</span>
             </button>
           </div>
 
