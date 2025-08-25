@@ -25,17 +25,13 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-  // 로그인 상태 확인 후 자동 리다이렉트
+  // 로그인 상태 확인 - 자동 리다이렉트 제거
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('✅ 로그인된 상태 감지, 홈페이지로 이동합니다.');
-      const timeoutId = setTimeout(() => {
-        navigate('/');
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
+      console.log('✅ 이미 로그인된 상태입니다.');
+      // 자동 리다이렉트 제거 - 사용자가 수동으로 이동하도록 함
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
   
   // 리다이렉트 결과 처리 (모바일 Google 로그인)
   useEffect(() => {
@@ -72,6 +68,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       } else if (result.user) {
         console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();
+        // 로그인 성공 시 대시보드로 이동
+        navigate('/dashboard');
       }
     } catch (err) {
       setError('예상치 못한 오류가 발생했습니다.');
