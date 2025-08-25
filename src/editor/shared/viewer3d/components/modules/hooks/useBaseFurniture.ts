@@ -239,10 +239,23 @@ export const useBaseFurniture = (
       }
       
       // 투명도 설정 - 편집 모드는 투명도 적용하지 않음
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isHighlighted;
-      material.opacity = renderMode === 'wireframe' ? 0.3 : 
-                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 : (isHighlighted ? 0.5 : 1.0)); // 강조 시 0.5 투명도 (고스트 효과)
+      if (renderMode === 'wireframe') {
+        material.transparent = true;
+        material.opacity = 0.3;
+      } else if (viewMode === '2D' && renderMode === 'solid') {
+        material.transparent = true;
+        material.opacity = 0.5;
+      } else if (isDragging) {
+        material.transparent = true;
+        material.opacity = 0.6;
+      } else if (isHighlighted) {
+        material.transparent = true;
+        material.opacity = 0.5;
+      } else {
+        // 정상 상태 - 완전 불투명
+        material.transparent = false;
+        material.opacity = 1.0;
+      }
       material.needsUpdate = true;
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted, materialConfig.interiorColor]); // materialConfig.interiorColor 의존성 추가
@@ -257,6 +270,14 @@ export const useBaseFurniture = (
       }
       return;
     }
+    
+    // 드래그가 끝났을 때 텍스처 재적용
+    console.log('🎨 텍스처 재적용 체크:', {
+      isDragging,
+      isEditMode,
+      materialConfigTexture: materialConfig.interiorTexture,
+      hasMaterial: !!material
+    });
     
     const textureUrl = materialConfig.interiorTexture;
     

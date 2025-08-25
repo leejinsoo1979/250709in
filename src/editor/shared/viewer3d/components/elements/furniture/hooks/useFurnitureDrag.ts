@@ -687,10 +687,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         isDualSlot: isDualFurniture, // 듀얼 유지 여부 반영 (전환 시 false)
         zone: detectedZone || currentModule.zone, // 감지된 zone으로 업데이트하여 cross-zone 이동 허용
         customWidth: (() => {
-          // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
-          if (targetSlotInfo && targetSlotInfo.hasColumn) {
-            return undefined; // 기둥 슬롯에서는 adjustedWidth만 사용
-          }
+          // 기둥이 있는 슬롯인 경우에도 customWidth 유지 (adjustedWidth와 함께 사용)
           // zone별로 다른 슬롯 너비 사용
           if (detectedZone && spaceInfo.droppedCeiling?.enabled) {
             const fullIndexing = calculateSpaceIndexing(spaceInfo);
@@ -749,13 +746,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 드래그 종료
   const handlePointerUp = () => {
     if (isDragging.current) {
-      if (import.meta.env.DEV) {
-        console.log('🏁 드래그 종료');
-      }
+      console.log('🏁 드래그 종료 - 즉시 상태 해제');
       
       isDragging.current = false;
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
+      setFurnitureDragging(false); // 드래그 상태 즉시 해제
       
       // 가구 드래그 종료 이벤트 발생
       window.dispatchEvent(new CustomEvent('furniture-drag-end'));
@@ -763,11 +759,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 드래그 종료 시 즉시 렌더링 업데이트
       triggerRender();
       
-      // 드래그 종료 후 짧은 지연 후에 드래그 상태 해제 (자석 효과 방지)
+      // 추가 렌더링 업데이트 (재질 복원 보장)
       setTimeout(() => {
-        setFurnitureDragging(false); // 드래그 상태 해제
+        console.log('🔄 드래그 종료 후 추가 렌더링 업데이트');
         triggerRender(); // 드래그 상태 해제 후에도 렌더링 업데이트
-      }, 100); // 100ms 지연
+      }, 50); // 50ms 지연
       
       // 3D 모드에서 그림자 강제 업데이트
       if (gl && gl.shadowMap) {

@@ -411,13 +411,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+    // 전체 indexing 정보를 가져와서 zone별 slotWidths 사용
+    const fullIndexing = calculateSpaceIndexing(spaceInfo);
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+    
+    // zone별 slotWidths 가져오기
+    let zoneSlotWidths;
+    if (placedModule.zone === 'dropped' && fullIndexing.zones?.dropped?.slotWidths) {
+      zoneSlotWidths = fullIndexing.zones.dropped.slotWidths;
+    } else if (placedModule.zone === 'normal' && fullIndexing.zones?.normal?.slotWidths) {
+      zoneSlotWidths = fullIndexing.zones.normal.slotWidths;
+    } else {
+      // fallback: targetZone의 columnWidth를 사용하여 슬롯 너비 배열 생성
+      zoneSlotWidths = Array(targetZone.columnCount).fill(targetZone.columnWidth);
+    }
     
     // zone별 indexing은 targetZone 정보를 직접 사용
     indexing = {
       columnCount: targetZone.columnCount,
       columnWidth: targetZone.columnWidth,
+      slotWidths: zoneSlotWidths, // slotWidths 추가
       threeUnitPositions: [],
       threeUnitDualPositions: {},
       threeUnitBoundaries: []
@@ -483,10 +497,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // 캐비넷 너비 결정: customWidth 우선 정책 (컬럼 수 변경 시 업데이트됨)
+  // 캐비넷 너비 결정: 슬롯 너비 우선 정책
   // 1순위: adjustedWidth (기둥 침범 케이스)
-  // 2순위: customWidth (명시적 설정 - 컬럼 수 변경 시 업데이트됨)
-  // 3순위: slotWidths (초기 배치 시 슬롯 경계에 맞춤)
+  // 2순위: slotWidths (현재 슬롯의 실제 너비 - 슬롯 경계에 맞춤)
+  // 3순위: customWidth (백업용 - 슬롯 너비를 알 수 없을 때)
   // 4순위: 모듈 기본 너비
   let furnitureWidthMm = actualModuleData?.dimensions.width || 600; // 기본값
   
@@ -494,12 +508,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm);
-  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
-    // customWidth가 명시적으로 설정되어 있으면 사용 (컬럼 수 변경 시 이 값이 업데이트됨)
-    furnitureWidthMm = placedModule.customWidth;
-    console.log('📐 customWidth 사용 (컬럼 수 변경 반영):', furnitureWidthMm);
   } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
-    // slotWidths가 있으면 사용 (초기 배치 시)
+    // slotWidths가 있으면 우선 사용 (현재 슬롯의 실제 너비)
     if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
       furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
       console.log('📐 듀얼 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm, '(두 슬롯 합계)');
@@ -507,6 +517,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureWidthMm = indexing.slotWidths[placedModule.slotIndex];
       console.log('📐 싱글 캐비넷 - 슬롯 너비 사용:', furnitureWidthMm);
     }
+  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+    // slotWidths가 없을 때만 customWidth 사용 (백업용)
+    furnitureWidthMm = placedModule.customWidth;
+    console.log('📐 customWidth 사용 (백업):', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
@@ -801,6 +815,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
   const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
+  
+  // 드래그 상태 변경 감지
+  React.useEffect(() => {
+    if (!isDraggingThis) {
+      console.log('🔄 가구 드래그 종료 감지:', placedModule.id);
+    }
+  }, [isDraggingThis, placedModule.id]);
   
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
   let optimalHingePosition = placedModule.hingePosition || 'right';
