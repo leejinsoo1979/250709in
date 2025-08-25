@@ -95,6 +95,7 @@ interface SpaceConfigState {
   
   // 공간 정보 액션
   setSpaceInfo: (info: Partial<SpaceInfo>) => void;
+  replaceSpaceInfo: (info: SpaceInfo) => void;  // 디자인 파일 로드 시 완전 교체용
   resetSpaceInfo: () => void;
   
   // 재질 설정 액션
@@ -228,7 +229,7 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
 };
 
 // 초기 상태
-const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'resetAll' | 'markAsSaved'> = {
+const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'replaceSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'resetAll' | 'markAsSaved'> = {
   isDirty: false,
   spaceInfo: DEFAULT_SPACE_CONFIG,
 };
@@ -236,7 +237,7 @@ const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | '
 export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   ...initialState,
   
-  // 공간 정보 설정
+  // 공간 정보 부분 업데이트 (MaterialPanel 등에서 사용)
   setSpaceInfo: (info) => {
     set((state) => {
       // installType 하이픈 문제 수정
@@ -327,6 +328,38 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
       
       return newState;
+    });
+  },
+  
+  // 공간 정보 완전 교체 (디자인 파일 로드 시 사용)
+  replaceSpaceInfo: (info) => {
+    set(() => {
+      // installType 하이픈 문제 수정
+      const processedInfo = { ...info };
+      if (processedInfo.installType === 'built-in' as any) {
+        processedInfo.installType = 'builtin';
+      }
+      
+      // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
+      if (processedInfo.droppedCeiling?.enabled && 
+          (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
+        processedInfo.droppedCeiling = {
+          ...processedInfo.droppedCeiling,
+          width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
+          dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
+        };
+      }
+      
+      console.log('🔄 SpaceConfigStore - 전체 교체:', {
+        materialConfig: processedInfo.materialConfig,
+        width: processedInfo.width,
+        height: processedInfo.height
+      });
+      
+      return {
+        spaceInfo: processedInfo,  // 완전히 새로운 spaceInfo로 교체
+        isDirty: false,  // 로드된 데이터는 변경사항 없음
+      };
     });
   },
   

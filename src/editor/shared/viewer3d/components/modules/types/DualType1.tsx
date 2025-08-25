@@ -42,7 +42,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjacentCabinets,
-  });
+  }, spaceInfo);
 
   const { renderMode } = useSpace3DView();
   
@@ -58,7 +58,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     indirectLightEnabled,
     showIndirectLight
-  });
+  }, spaceInfo);
 
   return (
     <>

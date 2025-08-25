@@ -19,7 +19,7 @@ export const CANVAS_SETTINGS = {
   SHADOW_MAP_ENABLED: true,
   SHADOW_MAP_TYPE: 'PCFSoftShadowMap',
   TONE_MAPPING: 'ACESFilmicToneMapping',
-  OUTPUT_ENCODING: 'sRGBEncoding',
+  OUTPUT_ENCODING: 'SRGBColorSpace', // Updated from deprecated sRGBEncoding
   DPR_RANGE: [1, 2],
 } as const;
 

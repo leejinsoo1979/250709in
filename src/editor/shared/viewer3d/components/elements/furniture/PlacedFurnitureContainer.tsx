@@ -17,6 +17,8 @@ interface PlacedFurnitureContainerProps {
   activeZone?: 'normal' | 'dropped';
   showFurniture?: boolean; // 가구 표시 여부 추가
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
+  doorsOpen?: boolean; // 읽기 전용 모드에서 도어 상태
+  spaceInfo?: any; // 미리보기용 spaceInfo
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -26,9 +28,19 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   placedModules: propPlacedModules,
   activeZone,
   showFurniture = true, // 기본값 true
-  isReadOnly = false // 읽기 전용 모드
+  isReadOnly = false, // 읽기 전용 모드
+  doorsOpen: propDoorsOpen, // 읽기 전용 모드에서의 도어 상태
+  spaceInfo: propSpaceInfo // props로 받은 spaceInfo
 }) => {
-  const { spaceInfo } = useSpaceConfigStore();
+  // 디버깅: 도어 상태 확인
+  console.log('📦 PlacedFurnitureContainer - 도어 상태:', {
+    propDoorsOpen: propDoorsOpen,
+    isReadOnly: isReadOnly,
+    placedModulesCount: propPlacedModules?.length || 0
+  });
+  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
+  const spaceInfo = propSpaceInfo || storeSpaceInfo;
   
   // spaceInfo 변경 감지 디버그
   React.useEffect(() => {
@@ -199,6 +211,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             onDoubleClick={selectionState.handleFurnitureClick}
             showFurniture={showFurniture} // 가구 표시 여부 전달
             isReadOnly={isReadOnly} // 읽기 전용 모드 전달
+            doorsOpen={propDoorsOpen} // 읽기 전용 모드의 도어 상태 전달
           />
         );
       })}

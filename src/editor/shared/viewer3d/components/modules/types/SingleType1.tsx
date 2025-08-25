@@ -44,7 +44,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     adjustedWidth,
     isHighlighted,
     
-  });
+  }, spaceInfo);
 
   const {
     width,
@@ -79,7 +79,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     indirectLightEnabled,
     showIndirectLight
-  });
+  }, spaceInfo);
 
   return (
     <>

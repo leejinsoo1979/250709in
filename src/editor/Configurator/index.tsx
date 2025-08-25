@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
-import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
+import { getProject, updateProject, createProject, createDesignFile, getDesignFileById } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
@@ -66,11 +66,19 @@ const Configurator: React.FC = () => {
 
   // Store hooks
   const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
-  const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
+  const { setSpaceInfo, replaceSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
+  
+  // uiStore를 window 객체에 등록 (썸네일 캡처용)
+  useEffect(() => {
+    (window as any).__uiStore = useUIStore;
+    return () => {
+      delete (window as any).__uiStore;
+    };
+  }, []);
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -366,8 +374,22 @@ const Configurator: React.FC = () => {
           }
         }
         
-        setSpaceInfo(spaceConfig);
-        setPlacedModules(project.furniture.placedModules);
+        replaceSpaceInfo(spaceConfig);
+        
+        // 가구 설정 - 먼저 초기화
+        clearAllModules(); // 이전 데이터 완전히 클리어
+        
+        // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+        setTimeout(() => {
+          if (project.furniture?.placedModules && project.furniture.placedModules.length > 0) {
+            console.log('🪑 프로젝트 가구 데이터 설정:', project.furniture.placedModules);
+            setPlacedModules(project.furniture.placedModules);
+          } else {
+            console.log('⚠️ 프로젝트에 가구 데이터가 없음');
+            setPlacedModules([]);
+          }
+        }, 100);
+        
         setCurrentProjectId(projectId);
         
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
@@ -481,6 +503,14 @@ const Configurator: React.FC = () => {
               },
               thumbnail: thumbnail
             };
+            
+            // 재질 설정 저장 확인 로그
+            console.log('🎨 디자인 파일 저장 - materialConfig:', {
+              interiorColor: spaceInfo.materialConfig?.interiorColor,
+              doorColor: spaceInfo.materialConfig?.doorColor,
+              interiorTexture: spaceInfo.materialConfig?.interiorTexture,
+              doorTexture: spaceInfo.materialConfig?.doorTexture
+            });
             
             console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
               name: updatePayload.name,
@@ -673,7 +703,7 @@ const Configurator: React.FC = () => {
           console.log('🎨 [DEBUG] 새 디자인 생성 성공:', result.id);
           
           // 상태 업데이트 (프로젝트는 그대로, 디자인만 초기화)
-          setSpaceInfo(defaultSpaceConfig);
+          replaceSpaceInfo(defaultSpaceConfig);
           setPlacedModules([]);
           setCurrentDesignFileId(result.id);
           
@@ -685,7 +715,7 @@ const Configurator: React.FC = () => {
         }
       } else {
         // 데모 모드에서는 단순히 상태만 초기화
-        setSpaceInfo(defaultSpaceConfig);
+        replaceSpaceInfo(defaultSpaceConfig);
         setPlacedModules([]);
         derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
         alert('새 디자인이 생성되었습니다!');
@@ -772,7 +802,7 @@ const Configurator: React.FC = () => {
             
             // 상태 업데이트
             setBasicInfo({ title: 'Untitled', location: '' });
-            setSpaceInfo(defaultSpaceConfig);
+            replaceSpaceInfo(defaultSpaceConfig);
             setPlacedModules([]);
             setCurrentProjectId(result.id);
             
@@ -945,6 +975,11 @@ const Configurator: React.FC = () => {
     }
   };
 
+  // 파일트리 토글 핸들러
+  const handleFileTreeToggle = () => {
+    setIsFileTreeOpen(!isFileTreeOpen);
+  };
+
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
@@ -1033,14 +1068,34 @@ const Configurator: React.FC = () => {
             });
             setCurrentDesignFileName(designFile.name);
             
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
+            // 공간 설정 - materialConfig 포함하여 완전히 교체
+            // Deep copy로 완전한 독립성 보장
+            const spaceConfig = JSON.parse(JSON.stringify(designFile.spaceConfig));
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
             }
-            setSpaceInfo(spaceConfig);
+            // materialConfig가 없으면 기본값 설정
+            if (!spaceConfig.materialConfig) {
+              spaceConfig.materialConfig = {
+                interiorColor: '#FFFFFF',
+                doorColor: '#E0E0E0'
+              };
+            } else {
+              // materialConfig가 있어도 deep copy로 독립성 보장
+              spaceConfig.materialConfig = {
+                interiorColor: spaceConfig.materialConfig.interiorColor || '#FFFFFF',
+                doorColor: spaceConfig.materialConfig.doorColor || '#E0E0E0',
+                ...(spaceConfig.materialConfig.interiorTexture && { interiorTexture: spaceConfig.materialConfig.interiorTexture }),
+                ...(spaceConfig.materialConfig.doorTexture && { doorTexture: spaceConfig.materialConfig.doorTexture })
+              };
+            }
+            console.log('🎨 디자인 파일 로드 - materialConfig:', spaceConfig.materialConfig);
+            // 전체 spaceInfo를 새로운 디자인 파일의 데이터로 완전히 교체
+            replaceSpaceInfo(spaceConfig);
             
-            // 가구 설정
+            // 가구 설정 - 먼저 초기화
+            clearAllModules(); // 이전 데이터 완전히 클리어
+            
             console.log('🪑 디자인 파일 가구 데이터 로드:', {
               hasFurniture: !!designFile.furniture,
               hasPlacedModules: !!designFile.furniture?.placedModules,
@@ -1048,16 +1103,18 @@ const Configurator: React.FC = () => {
               placedModules: designFile.furniture?.placedModules
             });
             
-            if (designFile.furniture?.placedModules) {
-              console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
-              setPlacedModules(designFile.furniture.placedModules);
-              console.log('🪑 가구 데이터 설정 완료');
-            } else {
-              console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
-              setPlacedModules([]);
-            }
-            
-            setLoading(false);
+            // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+            setTimeout(() => {
+              if (designFile.furniture?.placedModules && designFile.furniture.placedModules.length > 0) {
+                console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 가구 데이터 설정 완료');
+              } else {
+                console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+                setPlacedModules([]);
+              }
+              setLoading(false);
+            }, 100);
           }
         } catch (error) {
           console.error('디자인 파일 로드 중 오류:', error);
@@ -1106,27 +1163,52 @@ const Configurator: React.FC = () => {
               location: ''
             });
             
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
+            // 공간 설정 - materialConfig 포함하여 완전히 교체
+            // Deep copy로 완전한 독립성 보장
+            const spaceConfig = JSON.parse(JSON.stringify(designFile.spaceConfig));
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
             }
-            setSpaceInfo(spaceConfig);
+            // materialConfig가 없으면 기본값 설정
+            if (!spaceConfig.materialConfig) {
+              spaceConfig.materialConfig = {
+                interiorColor: '#FFFFFF',
+                doorColor: '#E0E0E0'
+              };
+            } else {
+              // materialConfig가 있어도 deep copy로 독립성 보장
+              spaceConfig.materialConfig = {
+                interiorColor: spaceConfig.materialConfig.interiorColor || '#FFFFFF',
+                doorColor: spaceConfig.materialConfig.doorColor || '#E0E0E0',
+                ...(spaceConfig.materialConfig.interiorTexture && { interiorTexture: spaceConfig.materialConfig.interiorTexture }),
+                ...(spaceConfig.materialConfig.doorTexture && { doorTexture: spaceConfig.materialConfig.doorTexture })
+              };
+            }
+            console.log('🎨 디자인 파일 로드 - materialConfig:', spaceConfig.materialConfig);
+            // 전체 spaceInfo를 새로운 디자인 파일의 데이터로 완전히 교체
+            replaceSpaceInfo(spaceConfig);
             
-            // 가구 설정
+            // 가구 설정 - 먼저 초기화
+            clearAllModules(); // 이전 데이터 완전히 클리어
+            
             console.log('🪑 디자인 파일 가구 데이터 로드:', {
               hasFurniture: !!designFile.furniture,
               hasPlacedModules: !!designFile.furniture?.placedModules,
               placedModulesCount: designFile.furniture?.placedModules?.length || 0
             });
             
-            if (designFile.furniture?.placedModules) {
-              setPlacedModules(designFile.furniture.placedModules);
-            } else {
-              setPlacedModules([]);
-            }
-            
-            setLoading(false);
+            // setTimeout으로 다음 틱에서 실행하여 Store 초기화 보장
+            setTimeout(() => {
+              if (designFile.furniture?.placedModules && designFile.furniture.placedModules.length > 0) {
+                console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 가구 데이터 설정 완료');
+              } else {
+                console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+                setPlacedModules([]);
+              }
+              setLoading(false);
+            }, 100);
           } else {
             console.log('⚠️ 디자인 파일을 찾을 수 없음, 프로젝트 로드 시도');
             // 디자인 파일을 찾을 수 없으면 프로젝트 로드
@@ -1709,11 +1791,6 @@ const Configurator: React.FC = () => {
 
   const handleProfile = () => {
     console.log('프로필');
-  };
-
-  // FileTree 토글 핸들러
-  const handleFileTreeToggle = () => {
-    setIsFileTreeOpen(!isFileTreeOpen);
   };
 
 
@@ -2566,17 +2643,100 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={(projectId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
-                  // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
-                  setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침하여 새 디자인 파일 로드
-                  window.location.reload();
+                onFileSelect={async (projectId, designFileId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', {
+                    projectId,
+                    designFileId,
+                    designFileName,
+                    currentDesignFileId,
+                    currentProjectId
+                  });
+                  
+                  // 같은 파일을 선택한 경우 무시
+                  if (designFileId === currentDesignFileId) {
+                    console.log('⚠️ 이미 열려있는 파일입니다.');
+                    setIsFileTreeOpen(false);
+                    return;
+                  }
+                  
+                  // 현재 파일 저장
+                  if (currentDesignFileId) {
+                    console.log('💾 현재 파일 저장 중...');
+                    await saveProject();
+                  }
+                  
+                  // 새 디자인 파일 로드
+                  setLoading(true);
+                  try {
+                    console.log('📥 디자인 파일 로드 시작:', designFileId);
+                    const { designFile, error } = await getDesignFileById(designFileId);
+                    
+                    if (error) {
+                      console.error('❌ 디자인 파일 로드 에러:', error);
+                      alert(`디자인 파일을 불러오는데 실패했습니다: ${error}`);
+                      return;
+                    }
+                    
+                    if (designFile) {
+                      console.log('📋 로드된 디자인 파일 데이터:', {
+                        id: designFile.id,
+                        name: designFile.name,
+                        hasSpaceConfig: !!designFile.spaceConfig,
+                        hasFurniture: !!designFile.furniture,
+                        furnitureCount: designFile.furniture?.placedModules?.length || 0,
+                        spaceConfig: designFile.spaceConfig,
+                        furniture: designFile.furniture
+                      });
+                      
+                      // 디자인 파일 ID와 이름 업데이트
+                      setCurrentDesignFileId(designFileId);
+                      setCurrentDesignFileName(designFile.name);
+                      
+                      // 공간 설정 로드
+                      if (designFile.spaceConfig) {
+                        console.log('🏠 공간 설정 적용 중:', designFile.spaceConfig);
+                        replaceSpaceInfo(designFile.spaceConfig);
+                        console.log('🏠 공간 설정 적용 완료');
+                      } else {
+                        console.log('⚠️ 공간 설정이 없습니다. 기본값 사용.');
+                      }
+                      
+                      // 가구 배치 로드
+                      if (designFile.furniture?.placedModules) {
+                        console.log('🪑 가구 배치 적용 중:', designFile.furniture.placedModules.length, '개');
+                        setPlacedModules(designFile.furniture.placedModules);
+                        console.log('🪑 가구 배치 적용 완료');
+                      } else {
+                        console.log('⚠️ 가구가 없습니다. 초기화합니다.');
+                        clearAllModules();
+                      }
+                      
+                      // URL 업데이트
+                      navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`, { replace: true });
+                      
+                      console.log('✅ 디자인 파일 로드 성공:', designFile.name);
+                      
+                      // 로드 완료 후 잠시 대기하여 UI 업데이트 확실히 처리
+                      setTimeout(() => {
+                        console.log('🔄 UI 업데이트 완료');
+                        setLoading(false);
+                      }, 100);
+                    } else {
+                      console.error('❌ 디자인 파일 데이터가 없습니다.');
+                      alert('디자인 파일 데이터를 찾을 수 없습니다.');
+                      setLoading(false);
+                    }
+                  } catch (error) {
+                    console.error('❌ 디자인 파일 로드 실패:', error);
+                    alert('디자인 파일을 불러오는데 실패했습니다.');
+                    setLoading(false);
+                  } finally {
+                    setIsFileTreeOpen(false);
+                  }
                 }}
                 onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
-                  handleNewProject();
+                  handleNewDesign();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
                 onClose={() => setIsFileTreeOpen(false)}

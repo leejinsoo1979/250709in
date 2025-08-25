@@ -40,6 +40,7 @@ interface RoomProps {
   isStep2?: boolean; // Step2 여부
   activeZone?: 'normal' | 'dropped'; // 활성 영역
   isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
+  doorsOpen?: boolean; // 읽기 전용 모드에서의 도어 상태
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -181,8 +182,15 @@ const Room: React.FC<RoomProps> = ({
   isStep2,
   renderMode: renderModeProp,
   activeZone,
-  isReadOnly = false
+  isReadOnly = false,
+  doorsOpen
 }) => {
+  // 디버깅: 도어 상태 확인
+  console.log('🏠 Room - 도어 상태:', {
+    doorsOpen: doorsOpen,
+    isReadOnly: isReadOnly
+  });
+  
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
   if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number') {
@@ -2594,7 +2602,7 @@ const Room: React.FC<RoomProps> = ({
                 showFurniture
               });
               
-              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} />;
+              return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} spaceInfo={spaceInfo} />;
             })()}
           </>
         ) : (
@@ -2607,7 +2615,7 @@ const Room: React.FC<RoomProps> = ({
               activeZone,
               showFurniture
             })}
-            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} />
+            <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={viewMode === '3D' ? true : showFurniture} isReadOnly={isReadOnly} doorsOpen={doorsOpen} spaceInfo={spaceInfo} />
           </>
         )
       )}

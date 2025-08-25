@@ -64,7 +64,8 @@ interface BaseFurnitureResult {
  */
 export const useBaseFurniture = (
   moduleData: ModuleData,
-  options: BaseFurnitureOptions = {}
+  options: BaseFurnitureOptions = {},
+  passedSpaceInfo?: any // 미리보기 모드에서 전달받은 spaceInfo
 ): BaseFurnitureResult => {
   const { 
     color, 
@@ -79,7 +80,10 @@ export const useBaseFurniture = (
   
   // Store에서 재질 설정 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const materialConfig = storeSpaceInfo.materialConfig || { 
+  
+  // 미리보기 모드에서는 전달받은 spaceInfo를 우선 사용
+  const currentSpaceInfo = passedSpaceInfo || storeSpaceInfo;
+  const materialConfig = currentSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
     doorColor: '#E0E0E0' // Changed default from #FFFFFF to light gray
   };
@@ -186,18 +190,9 @@ export const useBaseFurniture = (
       : materialConfig.interiorColor)
   );
   
-  // 강조 상태 디버깅
-  if (isHighlighted) {
-    console.log('🌟 useBaseFurniture - 가구 강조 상태:', {
-      moduleId: moduleData.id,
-      isHighlighted,
-      isDragging,
-      색상: furnitureColor
-    });
-  }
   
   
-  // 공통 재질 생성 함수 - 한 번만 생성
+  // 각 가구마다 독립적인 재질 생성 - moduleId로 구분
   const material = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#FFFFFF'), // 기본 흰색으로 생성
@@ -207,13 +202,19 @@ export const useBaseFurniture = (
       emissive: new THREE.Color(0x000000),
     });
     
-    console.log('🎨 useBaseFurniture 재질 생성 (한 번만)');
-    
     return mat;
-  }, []); // 의존성 배열 비움 - 한 번만 생성
+  }, [moduleData.id]); // moduleId를 의존성으로 추가하여 각 가구마다 독립적인 재질 생성
   
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
+    console.log('🎨 useBaseFurniture 재질 업데이트:', {
+      moduleId: moduleData.id,
+      furnitureColor,
+      interiorColor: materialConfig.interiorColor,
+      hasMaterial: !!material,
+      isDragging
+    });
+    
     if (material) {
       // 드래그 중일 때만 테마 색상 사용
       if (isDragging) {
@@ -244,7 +245,7 @@ export const useBaseFurniture = (
                         (isDragging ? 0.6 : (isHighlighted ? 0.5 : 1.0)); // 강조 시 0.5 투명도 (고스트 효과)
       material.needsUpdate = true;
     }
-  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted]);
+  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted, materialConfig.interiorColor]); // materialConfig.interiorColor 의존성 추가
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
@@ -349,7 +350,7 @@ export const useBaseFurniture = (
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  }, [materialConfig.interiorTexture, material, furnitureColor, isDragging, isEditMode]);
+  }, [materialConfig.interiorTexture, materialConfig.interiorColor, material, furnitureColor, isDragging, isEditMode]);
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;

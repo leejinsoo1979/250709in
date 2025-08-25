@@ -142,7 +142,7 @@ interface UIState {
 const initialUIState = {
   viewMode: '3D' as const,  // 기본값은 3D
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
-  doorsOpen: true,  // 기본값: 문 열림 상태
+  doorsOpen: false,  // 기본값: 문 닫힘 상태 (미리보기에서는 독립적으로 관리)
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: true, // 기본값: 그리드(가이드) 표시

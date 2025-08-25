@@ -6,12 +6,32 @@ import styles from './ViewerToolbar.module.css';
 
 interface ViewerToolbarProps {
   viewMode: '2D' | '3D';
+  isReadOnly?: boolean; // 읽기 전용 모드 (독립적인 도어 상태 관리용)
+  onDoorsToggle?: () => void; // 읽기 전용 모드에서 사용할 도어 토글 함수
+  doorsOpen?: boolean; // 읽기 전용 모드에서 사용할 도어 상태
+  spaceInfo?: any; // 읽기 전용 모드에서 사용할 spaceInfo
+  placedModules?: any[]; // 읽기 전용 모드에서 사용할 placedModules
 }
 
-const ViewerToolbar: React.FC<ViewerToolbarProps> = ({ viewMode }) => {
-  const { indirectLightEnabled, toggleIndirectLight } = useUIStore();
-  const placedModules = useFurnitureStore((state) => state.placedModules);
-  const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+const ViewerToolbar: React.FC<ViewerToolbarProps> = ({ 
+  viewMode, 
+  isReadOnly = false,
+  onDoorsToggle: propDoorsToggle,
+  doorsOpen: propDoorsOpen,
+  spaceInfo: propSpaceInfo,
+  placedModules: propPlacedModules
+}) => {
+  const { indirectLightEnabled, toggleIndirectLight, doorsOpen: storeDoorsOpen, toggleDoors: storeToggleDoors } = useUIStore();
+  const storePlacedModules = useFurnitureStore((state) => state.placedModules);
+  const storeSpaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+  
+  // props로 받은 값을 우선 사용, 없으면 store에서 가져오기
+  const spaceInfo = propSpaceInfo || storeSpaceInfo;
+  const placedModules = propPlacedModules || storePlacedModules;
+  
+  // 읽기 전용 모드면 prop 사용, 아니면 store 사용
+  const doorsOpen = isReadOnly ? propDoorsOpen : storeDoorsOpen;
+  const toggleDoors = isReadOnly ? propDoorsToggle : storeToggleDoors;
   
   // 띄워서 배치 설정 확인
   const isFloatingMode = spaceInfo?.baseConfig?.placementType === 'float' && 
@@ -22,20 +42,72 @@ const ViewerToolbar: React.FC<ViewerToolbarProps> = ({ viewMode }) => {
     module.moduleId.includes('upper-cabinet') || module.moduleId.includes('upper')
   );
   
-  // 3D 모드가 아니거나 (상부장이 없고 띄워서 배치가 아닌 경우) 표시하지 않음
-  if (viewMode !== '3D' || (!hasUpperCabinet && !isFloatingMode)) {
+  // 도어가 있는 가구가 있는지 확인
+  // hasDoor가 true이거나 undefined(기본값)인 경우 도어가 있다고 판단
+  const hasDoorsInstalled = placedModules.some(module => 
+    module.hasDoor === true || module.hasDoor === undefined
+  );
+  
+  // 도어 버튼 표시 조건: 도어가 있는 가구가 있고 토글 함수가 있으면 표시
+  const showDoorButton = hasDoorsInstalled && toggleDoors;
+  
+  // 3D 모드가 아니거나 표시할 요소가 없으면 null 반환
+  const showIndirectLight = viewMode === '3D' && (hasUpperCabinet || isFloatingMode);
+  
+  if (!showIndirectLight && !showDoorButton) {
     return null;
   }
   
   return (
     <div className={styles.toolbar}>
-      <div
-        className={`${styles.toolbarButton} ${indirectLightEnabled ? styles.active : ''}`}
-        onClick={toggleIndirectLight}
-        title={indirectLightEnabled ? '간접조명 끄기' : '간접조명 켜기'}
-        role="button"
-        tabIndex={0}
-      >
+      {/* 도어 열기/닫기 버튼 - 도어가 있는 가구가 있을 때 표시 */}
+      {showDoorButton && (
+        <div
+          className={`${styles.toolbarButton} ${doorsOpen ? styles.active : ''}`}
+          onClick={toggleDoors}
+          title={doorsOpen ? '도어 닫기' : '도어 열기'}
+          role="button"
+          tabIndex={0}
+        >
+          {/* 도어 아이콘 SVG */}
+          <svg 
+            width="24" 
+            height="24" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            {doorsOpen ? (
+              // 도어 열림 상태
+              <>
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18" />
+                <circle cx="7" cy="12" r="0.5" fill="currentColor" />
+              </>
+            ) : (
+              // 도어 닫힘 상태
+              <>
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="12" y1="3" x2="12" y2="21" />
+                <circle cx="14" cy="12" r="0.5" fill="currentColor" />
+              </>
+            )}
+          </svg>
+        </div>
+      )}
+      
+      {/* 간접조명 버튼 */}
+      {showIndirectLight && (
+        <div
+          className={`${styles.toolbarButton} ${indirectLightEnabled ? styles.active : ''}`}
+          onClick={toggleIndirectLight}
+          title={indirectLightEnabled ? '간접조명 끄기' : '간접조명 켜기'}
+          role="button"
+          tabIndex={0}
+        >
         {/* 전구 아이콘 SVG */}
         <svg 
           width="24" 
@@ -84,6 +156,7 @@ const ViewerToolbar: React.FC<ViewerToolbarProps> = ({ viewMode }) => {
           )}
         </svg>
       </div>
+      )}
     </div>
   );
 };
