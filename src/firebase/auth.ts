@@ -17,8 +17,14 @@ const googleProvider = new GoogleAuthProvider();
 
 // 구글 로그인 설정
 googleProvider.setCustomParameters({
-  prompt: 'select_account' // 항상 계정 선택 화면 표시
+  prompt: 'select_account', // 항상 계정 선택 화면 표시
+  access_type: 'offline',
+  include_granted_scopes: 'true'
 });
+
+// 추가 스코프 설정 (선택사항)
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
 
 // 이메일/비밀번호로 로그인
 export const signInWithEmail = async (email: string, password: string) => {
@@ -41,10 +47,24 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signInWithGoogle = async (): Promise<{ user: User | null; error: string | null; pending?: boolean }> => {
   console.log('🔐 [Auth] Google Sign-In initiated');
   console.log('🔐 [Auth] Current URL:', window.location.href);
+  console.log('🔐 [Auth] User Agent:', navigator.userAgent);
   console.log('🔐 [Auth] Auth Domain configured:', auth.app.options.authDomain);
   
+  // User Agent 체크 - WebView/임베디드 브라우저 감지
+  const userAgent = navigator.userAgent || '';
+  const isWebView = /WebView|wv|Instagram|FBAN|FBAV|Twitter|Line|KakaoTalk|KAKAOTALK/i.test(userAgent);
+  const isInAppBrowser = /Line|FB_IAB|FB4A|FBAN|FBIOS|FBAV/i.test(userAgent);
+  
+  if (isWebView || isInAppBrowser) {
+    console.warn('⚠️ [Auth] WebView/InApp Browser detected');
+    return { 
+      user: null, 
+      error: '앱 내장 브라우저에서는 Google 로그인이 제한됩니다.\n\n일반 브라우저(Chrome, Safari 등)에서 다시 시도해주세요.\n\n주소: 250709in.vercel.app' 
+    };
+  }
+  
   try {
-    // 먼저 팝업 시도
+    // 일반 브라우저에서는 팝업 시도
     console.log('🔐 [Auth] Attempting popup sign-in...');
     const result = await signInWithPopup(auth, googleProvider);
     
