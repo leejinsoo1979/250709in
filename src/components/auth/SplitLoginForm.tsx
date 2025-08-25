@@ -32,12 +32,12 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     path: window.location.pathname
   });
 
-  // 로그인 상태 확인 - 자동 리다이렉트 제거
+  // 로그인 상태 확인만 (리다이렉트 없음)
   useEffect(() => {
-    if (user && !authLoading) {
-      console.log('✅ 이미 로그인된 상태입니다.');
-      // 자동 리다이렉트 제거 - 사용자가 수동으로 이동하도록 함
-    }
+    console.log('🔍 로그인 상태:', {
+      user: user?.email,
+      authLoading
+    });
   }, [user, authLoading]);
   
   // 리다이렉트 결과 처리 (모바일 Google 로그인)

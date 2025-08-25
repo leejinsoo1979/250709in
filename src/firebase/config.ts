@@ -6,7 +6,7 @@ import { getStorage } from 'firebase/storage';
 // Firebase 설정 (환경변수에서 가져오기)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: 'in-f8873.firebaseapp.com', // 하드코딩으로 고정
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -34,6 +34,12 @@ export const auth = getAuth(app);
 
 // Firestore 초기화 - getFirestore 사용 (자동 캐싱 포함)
 export const db = getFirestore(app);
+
+// Firestore 설정 최적화
+if (typeof window !== 'undefined') {
+  // 오프라인 지속성 비활성화 (400 에러 방지)
+  // enableIndexedDbPersistence는 사용하지 않음
+}
 
 export const storage = getStorage(app);
 

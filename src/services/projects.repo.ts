@@ -37,78 +37,38 @@ export async function listProjects(
   try {
     const projects: ProjectSummary[] = [];
     
-    // Try team-scoped path first if enabled
-    if (shouldUseTeamScope()) {
-      const activeTeamId = teamId || getActiveTeamId();
-      
-      if (activeTeamId) {
-        try {
-          const teamPath = getTeamProjectsPath(activeTeamId);
-          // orderBy를 제거하여 인덱스 문제 해결
-          const teamQuery = query(
-            collection(db, teamPath),
-            where('userId', '==', userId)
-          );
-          
-          const teamSnapshot = await getDocs(teamQuery);
-          
-          teamSnapshot.forEach((doc) => {
-            const data = doc.data();
-            projects.push({
-              id: doc.id,
-              title: data.title,
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-              furnitureCount: data.furniture?.placedModules?.length || 0,
-              spaceSize: {
-                width: data.spaceConfig?.width || 0,
-                height: data.spaceConfig?.height || 0,
-                depth: data.spaceConfig?.depth || 0,
-              },
-              thumbnail: data.thumbnail,
-              spaceInfo: data.spaceConfig,
-              placedModules: data.furniture?.placedModules || [],
-            });
-          });
-          
-          // If we found projects in team scope, return them
-          if (projects.length > 0) {
-            console.log('📦 Found projects in team scope:', projects.length);
-            return { projects, error: null };
-          }
-        } catch (error) {
-          console.log('Team-scoped path not found or error, falling back to legacy');
-        }
-      }
-    }
+    // Team-scoped path는 건너뛰고 legacy만 사용 (400 에러 방지)
+    // if (shouldUseTeamScope()) {
+    //   ...
+    // }
     
-    // Fallback to legacy path
-    // orderBy를 제거하여 인덱스 문제 해결
-    const legacyQuery = query(
-      collection(db, LEGACY_COLLECTIONS.projects),
-      where('userId', '==', userId)
-    );
+    // Legacy path만 사용 (가장 단순한 쿼리)
+    // where 절도 제거하여 가장 간단한 쿼리로 만들기
+    const legacyQuery = collection(db, LEGACY_COLLECTIONS.projects);
     
     const legacySnapshot = await getDocs(legacyQuery);
     
     legacySnapshot.forEach((doc) => {
       const data = doc.data();
-      projects.push({
-        id: doc.id,
-        title: data.title,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-        furnitureCount: data.stats?.furnitureCount || 0,
-        spaceSize: {
-          width: data.spaceConfig?.width || 0,
-          height: data.spaceConfig?.height || 0,
-          depth: data.spaceConfig?.depth || 0,
-        },
-        thumbnail: data.thumbnail,
-        folderId: data.folderId,
-        spaceInfo: data.spaceConfig,
-        placedModules: data.furniture?.placedModules || [],
-      });
+      // 클라이언트 측에서 userId 필터링
+      if (data.userId === userId) {
+        projects.push({
+          id: doc.id,
+          title: data.title,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          furnitureCount: data.stats?.furnitureCount || 0,
+          spaceSize: {
+            width: data.spaceConfig?.width || 0,
+            height: data.spaceConfig?.height || 0,
+            depth: data.spaceConfig?.depth || 0,
+          },
+          thumbnail: data.thumbnail,
+          folderId: data.folderId,
+          spaceInfo: data.spaceConfig,
+          placedModules: data.furniture?.placedModules || [],
+        });
+      }
     });
     
     // 클라이언트 측에서 정렬 수행
