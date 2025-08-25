@@ -124,11 +124,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isOpen,
   placedModuleId
 }) => {
-  // Store에서 재질 설정과 도어 상태 가져오기
-  const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  // Store에서 도어 상태만 가져오기 (읽기 전용 모드가 아닐 때만)
   const { doorsOpen: storeDoorsOpen, view2DDirection } = useUIStore();
   
-  // isOpen prop이 있으면 사용, 없으면 store의 doorsOpen 사용
+  // isOpen prop이 있으면 사용 (읽기 전용 모드), 없으면 store의 doorsOpen 사용
   const doorsOpen = isOpen !== undefined ? isOpen : storeDoorsOpen;
   
   // 디버깅 로그
@@ -136,22 +135,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     isOpen: isOpen,
     storeDoorsOpen: storeDoorsOpen,
     doorsOpen: doorsOpen,
-    moduleId: moduleData?.id
+    moduleId: moduleData?.id,
+    hasSpaceInfo: !!spaceInfo,
+    doorColor: spaceInfo?.doorMaterial?.colorCode || spaceInfo?.materialConfig?.doorColor
   });
   
   const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
-  // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
-  const currentSpaceInfo = spaceInfo || storeSpaceInfo;
+  // props로 받은 spaceInfo를 반드시 사용 (store fallback 제거)
+  if (!spaceInfo) {
+    console.warn('⚠️ DoorModule: spaceInfo가 전달되지 않음');
+    return null;
+  }
+  
+  const currentSpaceInfo = spaceInfo;
   const materialConfig = currentSpaceInfo.materialConfig || { 
     interiorColor: '#FFFFFF', 
     doorColor: '#E0E0E0'  // 기본값 변경
   };
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
-  let doorColor = color || materialConfig.doorColor;
+  // doorMaterial이 있으면 우선 사용
+  let doorColor = color || currentSpaceInfo.doorMaterial?.colorCode || materialConfig.doorColor;
   // 혹시라도 rgba/hex8 등 알파값이 포함된 경우 알파값 무시 (불투명 hex로 변환)
   if (typeof doorColor === 'string') {
     // hex8 (#RRGGBBAA) → hex6 (#RRGGBB)
@@ -184,28 +191,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     return '#10b981'; // 기본값 (green)
   };
-  // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 각 가구마다 독립적
+  // 도어 재질 생성 함수 - 간단하게 각 인스턴스마다 새 재질 생성
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#E0E0E0'), // 기본 회색으로 생성
+      color: new THREE.Color(doorColor || '#E0E0E0'), // 현재 도어 색상으로 생성
       metalness: 0.0,
       roughness: 0.6,
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
     });
-  }, [placedModuleId || moduleData?.id]); // placedModuleId를 우선 사용, 없으면 moduleData.id 사용
+  }, [doorColor]); // 색상이 변경되면 재질 재생성
 
-  // 싱글 가구용 도어 재질 - 각 가구마다 독립적
+  // 싱글 가구용 도어 재질 - 디자인 파일별로 독립적
   const doorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 각 가구마다 독립적
+  // 듀얼 가구용 왼쪽 도어 재질 (별도 인스턴스) - 디자인 파일별로 독립적
   const leftDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
-  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 각 가구마다 독립적
+  // 듀얼 가구용 오른쪽 도어 재질 (별도 인스턴스) - 디자인 파일별로 독립적
   const rightDoorMaterial = useMemo(() => {
     return createDoorMaterial();
   }, [createDoorMaterial]);
@@ -215,14 +222,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const materials = [doorMaterial, leftDoorMaterial, rightDoorMaterial];
     materials.forEach(mat => {
       if (mat) {
-        // 색상 설정
+        // 색상 설정 - 재질이 이미 올바른 색상으로 생성되었으므로 특별한 경우만 업데이트
         if (isDragging || isEditMode) {
           // 드래그 중이거나 편집 모드일 때는 항상 테마 색상
           mat.color.set(getThemeColor());
-        } else if (!mat.map) {
-          // 텍스처가 없을 때만 기본 색상 사용
-          mat.color.set(isSelected ? getThemeColor() : doorColor);
+        } else if (!mat.map && isSelected) {
+          // 선택된 경우 테마 색상
+          mat.color.set(getThemeColor());
         }
+        // 일반 상태에서는 색상 업데이트하지 않음 (생성 시 설정된 색상 유지)
         
         // 편집 모드일 때 설정 (드래그와 분리)
         if (isEditMode) {
@@ -248,7 +256,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
           mat.map = null;  // 텍스처 제거
-          mat.color.set(doorColor);  // 도어 색상으로 설정
+          // 색상은 생성 시 설정된 것을 유지 (doorColor 직접 설정 제거)
           mat.transparent = true;
           mat.opacity = viewMode === '3D' ? 0.5 : 0.0;  // 2D에서는 완전 투명, 3D에서는 반투명
           mat.depthWrite = false;
@@ -268,7 +276,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+  }, [isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]); // doorColor 제거 - 재질 재생성으로 처리
 
   // Shadow auto-update enabled - manual shadow updates removed
 

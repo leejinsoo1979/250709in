@@ -28,9 +28,16 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   
   // 도어 토글 함수에 로그 추가
   const handleDoorsToggle = () => {
-    console.log('🚪🚪🚪 도어 토글 버튼 클릭! 현재 상태:', doorsOpen, '→ 새로운 상태:', !doorsOpen);
+    console.log('🚪🚪🚪 Space3DViewerReadOnly - 도어 토글 버튼 클릭!');
+    console.log('  현재 상태:', doorsOpen);
+    console.log('  새로운 상태:', !doorsOpen);
     setDoorsOpen(!doorsOpen);
   };
+  
+  // doorsOpen 상태 변경 감지
+  React.useEffect(() => {
+    console.log('🔄 Space3DViewerReadOnly - doorsOpen 상태 변경됨:', doorsOpen);
+  }, [doorsOpen]);
   
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,

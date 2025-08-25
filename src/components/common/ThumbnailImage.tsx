@@ -78,7 +78,16 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
               width: designFile.spaceConfig.width,
               height: designFile.spaceConfig.height,
               depth: designFile.spaceConfig.depth,
-              columns: designFile.spaceConfig.columns || []
+              columns: designFile.spaceConfig.columns || [],
+              // 재질 정보도 포함
+              furnitureBaseMaterial: designFile.spaceConfig.furnitureBaseMaterial,
+              furnitureAccentMaterial: designFile.spaceConfig.furnitureAccentMaterial,
+              floorMaterial: designFile.spaceConfig.floorMaterial,
+              wallMaterial: designFile.spaceConfig.wallMaterial,
+              doorMaterial: designFile.spaceConfig.doorMaterial,
+              ceilingMaterial: designFile.spaceConfig.ceilingMaterial,
+              // 모든 spaceConfig 데이터 포함
+              ...designFile.spaceConfig
             },
             placedModules: designFile.furniture.placedModules || []
           };

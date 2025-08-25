@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
-import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
+import { getProject, updateProject, createProject, createDesignFile, getDesignFileById } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
@@ -975,6 +975,11 @@ const Configurator: React.FC = () => {
     }
   };
 
+  // 파일트리 토글 핸들러
+  const handleFileTreeToggle = () => {
+    setIsFileTreeOpen(!isFileTreeOpen);
+  };
+
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
@@ -1786,11 +1791,6 @@ const Configurator: React.FC = () => {
 
   const handleProfile = () => {
     console.log('프로필');
-  };
-
-  // FileTree 토글 핸들러
-  const handleFileTreeToggle = () => {
-    setIsFileTreeOpen(!isFileTreeOpen);
   };
 
 
@@ -2643,17 +2643,100 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={(projectId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
-                  // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
-                  setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침하여 새 디자인 파일 로드
-                  window.location.reload();
+                onFileSelect={async (projectId, designFileId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', {
+                    projectId,
+                    designFileId,
+                    designFileName,
+                    currentDesignFileId,
+                    currentProjectId
+                  });
+                  
+                  // 같은 파일을 선택한 경우 무시
+                  if (designFileId === currentDesignFileId) {
+                    console.log('⚠️ 이미 열려있는 파일입니다.');
+                    setIsFileTreeOpen(false);
+                    return;
+                  }
+                  
+                  // 현재 파일 저장
+                  if (currentDesignFileId) {
+                    console.log('💾 현재 파일 저장 중...');
+                    await saveProject();
+                  }
+                  
+                  // 새 디자인 파일 로드
+                  setLoading(true);
+                  try {
+                    console.log('📥 디자인 파일 로드 시작:', designFileId);
+                    const { designFile, error } = await getDesignFileById(designFileId);
+                    
+                    if (error) {
+                      console.error('❌ 디자인 파일 로드 에러:', error);
+                      alert(`디자인 파일을 불러오는데 실패했습니다: ${error}`);
+                      return;
+                    }
+                    
+                    if (designFile) {
+                      console.log('📋 로드된 디자인 파일 데이터:', {
+                        id: designFile.id,
+                        name: designFile.name,
+                        hasSpaceConfig: !!designFile.spaceConfig,
+                        hasFurniture: !!designFile.furniture,
+                        furnitureCount: designFile.furniture?.placedModules?.length || 0,
+                        spaceConfig: designFile.spaceConfig,
+                        furniture: designFile.furniture
+                      });
+                      
+                      // 디자인 파일 ID와 이름 업데이트
+                      setCurrentDesignFileId(designFileId);
+                      setCurrentDesignFileName(designFile.name);
+                      
+                      // 공간 설정 로드
+                      if (designFile.spaceConfig) {
+                        console.log('🏠 공간 설정 적용 중:', designFile.spaceConfig);
+                        replaceSpaceInfo(designFile.spaceConfig);
+                        console.log('🏠 공간 설정 적용 완료');
+                      } else {
+                        console.log('⚠️ 공간 설정이 없습니다. 기본값 사용.');
+                      }
+                      
+                      // 가구 배치 로드
+                      if (designFile.furniture?.placedModules) {
+                        console.log('🪑 가구 배치 적용 중:', designFile.furniture.placedModules.length, '개');
+                        setPlacedModules(designFile.furniture.placedModules);
+                        console.log('🪑 가구 배치 적용 완료');
+                      } else {
+                        console.log('⚠️ 가구가 없습니다. 초기화합니다.');
+                        clearAllModules();
+                      }
+                      
+                      // URL 업데이트
+                      navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`, { replace: true });
+                      
+                      console.log('✅ 디자인 파일 로드 성공:', designFile.name);
+                      
+                      // 로드 완료 후 잠시 대기하여 UI 업데이트 확실히 처리
+                      setTimeout(() => {
+                        console.log('🔄 UI 업데이트 완료');
+                        setLoading(false);
+                      }, 100);
+                    } else {
+                      console.error('❌ 디자인 파일 데이터가 없습니다.');
+                      alert('디자인 파일 데이터를 찾을 수 없습니다.');
+                      setLoading(false);
+                    }
+                  } catch (error) {
+                    console.error('❌ 디자인 파일 로드 실패:', error);
+                    alert('디자인 파일을 불러오는데 실패했습니다.');
+                    setLoading(false);
+                  } finally {
+                    setIsFileTreeOpen(false);
+                  }
                 }}
                 onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
-                  handleNewProject();
+                  handleNewDesign();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
                 onClose={() => setIsFileTreeOpen(false)}

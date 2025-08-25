@@ -20,7 +20,7 @@ interface FolderData {
 }
 
 interface DashboardFileTreeProps {
-  onFileSelect?: (projectId: string, designFileName: string) => void;
+  onFileSelect?: (projectId: string, designFileId: string, designFileName: string) => void;
   onCreateNew?: () => void;
   onClose?: () => void;
 }
@@ -191,14 +191,27 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
     }
   };
   
-  const handleDesignFileClick = (projectId: string, designFileName: string) => {
+  const handleDesignFileClick = (projectId: string, designFileId: string, designFileName: string) => {
+    console.log('🎯 handleDesignFileClick 호출됨:', {
+      projectId,
+      designFileId,
+      designFileName,
+      hasOnFileSelect: !!onFileSelect
+    });
+    
     if (onFileSelect) {
-      onFileSelect(projectId, designFileName);
+      console.log('✅ onFileSelect 함수 호출 시작');
+      onFileSelect(projectId, designFileId, designFileName);
     } else {
+      console.log('🔀 기본 네비게이션 동작');
       // 기본 동작: 에디터로 이동
-      navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
+      navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`);
     }
-    onClose?.();
+    
+    if (onClose) {
+      console.log('🚪 파일트리 닫기');
+      onClose();
+    }
   };
   
   const handleMoreMenuOpen = (e: React.MouseEvent, itemId: string, itemName: string, itemType: 'folder' | 'design' | 'project') => {
@@ -476,7 +489,7 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                               <div 
                                 key={child.id}
                                 className={`${styles.treeItem} ${styles.childItem} ${styles.nestedItem}`}
-                                onClick={() => handleDesignFileClick(project.id, child.name)}
+                                onClick={() => handleDesignFileClick(project.id, child.id, child.name)}
                               >
                                 <div className={styles.treeItemIcon}>
                                   <div className={styles.designIcon}>
@@ -512,7 +525,7 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onC
                       <div 
                         key={designFile.id}
                         className={`${styles.treeItem} ${styles.childItem}`}
-                        onClick={() => handleDesignFileClick(project.id, designFile.name)}
+                        onClick={() => handleDesignFileClick(project.id, designFile.id, designFile.name)}
                       >
                         <div className={styles.treeItemIcon}>
                           <div className={styles.designIcon}>

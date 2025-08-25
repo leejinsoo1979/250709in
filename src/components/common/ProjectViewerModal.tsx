@@ -37,6 +37,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
         const designResult = await getDesignFileById(designFileId);
         
         if (designResult.designFile) {
+          console.log('🔍 디자인 파일 로드됨:', {
+            designFileId: designFileId,
+            spaceConfig: designResult.designFile.spaceConfig,
+            furnitureBaseMaterial: designResult.designFile.spaceConfig?.furnitureBaseMaterial,
+            furnitureAccentMaterial: designResult.designFile.spaceConfig?.furnitureAccentMaterial,
+            placedModulesCount: designResult.designFile.furniture?.placedModules?.length || 0
+          });
+          
           const projectSummary: ProjectSummary = {
             id: designResult.designFile.projectId,
             title: designResult.designFile.name,
@@ -53,6 +61,12 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             spaceInfo: designResult.designFile.spaceConfig,
             placedModules: designResult.designFile.furniture?.placedModules || []
           };
+          
+          console.log('🎨 ProjectSummary 생성됨:', {
+            spaceInfo: projectSummary.spaceInfo,
+            hasFurnitureBaseMaterial: !!projectSummary.spaceInfo?.furnitureBaseMaterial,
+            hasFurnitureAccentMaterial: !!projectSummary.spaceInfo?.furnitureAccentMaterial
+          });
           
           setProject(projectSummary);
         } else {
