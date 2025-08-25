@@ -4,6 +4,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
 import { getRedirectResult, User } from 'firebase/auth';
 import { auth } from '@/firebase/config';
+import { redirectToNaverLogin } from '@/firebase/naverAuth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -152,10 +153,10 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     }
   };
 
-  // 네이버 로그인 처리 (준비중)
+  // 네이버 로그인 처리
   const handleNaverLogin = () => {
-    console.log('네이버 로그인 (준비중)');
-    alert('네이버 로그인 기능은 준비중입니다.');
+    console.log('🔐 네이버 로그인 시작...');
+    redirectToNaverLogin();
   };
 
   // 카카오 로그인 처리 (준비중)
