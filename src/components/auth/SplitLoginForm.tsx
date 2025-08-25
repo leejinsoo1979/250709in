@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -36,6 +36,21 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       return () => clearTimeout(timeoutId);
     }
   }, [user, authLoading, navigate]);
+  
+  // 리다이렉트 결과 처리 (모바일 Google 로그인)
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      const result = await handleRedirectResult();
+      if (result.user) {
+        console.log('✅ Google 리다이렉트 로그인 성공');
+        navigate('/dashboard');
+      } else if (result.error) {
+        setError(result.error);
+      }
+    };
+    
+    checkRedirectResult();
+  }, [navigate]);
 
   // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
