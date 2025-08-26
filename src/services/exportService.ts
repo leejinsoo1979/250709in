@@ -3,7 +3,7 @@
  */
 
 import { saveExportAsset } from '@/firebase/assets';
-import { auth } from '@/firebase/auth';
+import { auth } from '@/firebase/config';
 import { getCurrentVersionId } from '@/services/designs.repo';
 
 /**

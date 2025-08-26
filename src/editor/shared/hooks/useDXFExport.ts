@@ -7,7 +7,7 @@ import { calculateInternalSpace } from '../viewer3d/utils/geometry';
 import JSZip from 'jszip';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
-import { auth } from '@/firebase/auth';
+import { auth } from '@/firebase/config';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side';

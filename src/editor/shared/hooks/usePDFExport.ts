@@ -9,7 +9,7 @@ import { getModuleById } from '@/data/modules';
 import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
-import { auth } from '@/firebase/auth';
+import { auth } from '@/firebase/config';
 
 export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-right';
 

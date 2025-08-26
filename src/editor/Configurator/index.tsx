@@ -14,6 +14,8 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useDXFExport } from '@/editor/shared/hooks/useDXFExport';
+import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -72,6 +74,10 @@ const Configurator: React.FC = () => {
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
 
+  // 내보내기 훅들
+  const { exportToDXF, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
+  const { exportToPDF, canExportPDF, getExportStatusMessage: getPDFStatusMessage, VIEW_TYPES } = usePDFExport();
+
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
@@ -87,7 +93,9 @@ const Configurator: React.FC = () => {
   const [showAll, setShowAll] = useState(true);
   const [showFurniture, setShowFurniture] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
-  const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
+  // URL 파라미터에서 도면 편집기 상태 확인
+  const showDrawingEditor = searchParams.get('editor') === 'drawing';
+  const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // PDF 미리보기 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -1698,8 +1706,29 @@ const Configurator: React.FC = () => {
     window.open('/help', '_blank');
   };
 
-  const handleConvert = () => {
+  const handleConvert = async () => {
     console.log('도면 편집기 열기');
+    
+    // 3D 뷰 캡처
+    try {
+      // 각 뷰 방향에 대한 캡처 (현재는 현재 뷰만 캡처)
+      const thumbnail = await captureProjectThumbnail();
+      if (thumbnail) {
+        setCapturedViews({
+          top: thumbnail,  // 임시로 같은 이미지 사용
+          front: thumbnail,
+          side: thumbnail,
+          iso: thumbnail
+        });
+      }
+    } catch (error) {
+      console.error('뷰 캡처 실패:', error);
+    }
+    
+    // URL에 editor=drawing 파라미터 추가
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('editor', 'drawing');
+    window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
     setShowPDFPreview(true);
   };
 
@@ -1715,6 +1744,72 @@ const Configurator: React.FC = () => {
   const handleFileTreeToggle = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
+
+  // DXF 내보내기 핸들러
+  const handleExportDXF = async () => {
+    console.log('🔧 DXF 내보내기 시작...');
+    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
+
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
+    }
+
+    // 기본 공간 정보만으로도 DXF 생성 가능하도록 수정
+    try {
+      const result = await exportToDXF(spaceInfo, placedModules, 'front');
+      
+      if (result.success) {
+        console.log('✅ DXF 내보내기 성공:', result.filename);
+        alert(`✅ ${result.message}\n파일명: ${result.filename}`);
+      } else {
+        console.error('❌ DXF 내보내기 실패:', result.error);
+        alert(`❌ ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ DXF 내보내기 예외:', error);
+      alert('DXF 내보내기 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // PDF 내보내기 핸들러
+  const handleExportPDF = async () => {
+    console.log('📄 PDF 내보내기 시작...');
+    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
+
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
+    }
+
+    try {
+      // 기본 뷰들 선택 (3D 정면뷰, 2D 상부뷰, 2D 정면뷰)
+      const selectedViews = ['3d-front', '2d-top', '2d-front'] as const;
+      
+      const result = await exportToPDF(spaceInfo, placedModules, selectedViews, 'solid');
+      
+      if (result.success) {
+        console.log('✅ PDF 내보내기 성공:', result.filename);
+        alert(`✅ ${result.message}\n파일명: ${result.filename}`);
+      } else {
+        console.error('❌ PDF 내보내기 실패:', result.message);
+        alert(`❌ ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ PDF 내보내기 예외:', error);
+      alert('PDF 내보내기 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // 개발 및 테스트를 위한 함수들을 window에 노출
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).testExportDXF = handleExportDXF;
+      (window as any).testExportPDF = handleExportPDF;
+      (window as any).getCurrentSpaceInfo = () => spaceInfo;
+      (window as any).getCurrentPlacedModules = () => placedModules;
+    }
+  }, [spaceInfo, placedModules, handleExportDXF, handleExportPDF]);
 
 
 
@@ -2550,6 +2645,8 @@ const Configurator: React.FC = () => {
         onNewProject={handleNewDesign}
         onSaveAs={handleSaveAs}
         onProjectNameChange={handleProjectNameChange}
+        onExportDXF={handleExportDXF}
+        onExportPDF={handleExportPDF}
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
       />
@@ -2808,7 +2905,14 @@ const Configurator: React.FC = () => {
       {/* PDF 템플릿 미리보기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
-        onClose={() => setShowPDFPreview(false)}
+        onClose={() => {
+          // URL에서 editor 파라미터 제거
+          const newSearchParams = new URLSearchParams(searchParams.toString());
+          newSearchParams.delete('editor');
+          const queryString = newSearchParams.toString();
+          window.history.replaceState(null, '', `${window.location.pathname}${queryString ? '?' + queryString : ''}`);
+          setShowPDFPreview(false);
+        }}
         capturedViews={capturedViews}
       />
 
