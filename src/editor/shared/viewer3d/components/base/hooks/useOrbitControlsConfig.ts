@@ -110,8 +110,9 @@ export const useOrbitControlsConfig = (
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼: 팬
       },
       touches: {
-        ONE: is2DMode ? undefined : THREE.TOUCH.ROTATE, // 3D 모드에서만 한 손가락으로 회전
-        TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락으로 줌+팬 (두 손가락 스크롤: 줌, 두 손가락 클릭 드래그: 팬)
+        // 트랙패드 설정
+        ONE: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, // 한 손가락: 3D에서는 회전, 2D에서는 팬
+        TWO: is2DMode ? THREE.TOUCH.DOLLY_PAN : THREE.TOUCH.ROTATE, // 두 손가락: 3D에서는 회전, 2D에서는 줌+팬
       },
     };
   }, [cameraTarget, viewMode, calculateDynamicDistances]);
