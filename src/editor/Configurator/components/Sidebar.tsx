@@ -247,9 +247,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className={styles.modalActions}>
               <button
                 className={styles.modalButtonCancel}
-                onClick={() => setShowExitConfirm(false)}
+                onClick={async () => {
+                  setShowExitConfirm(false);
+                  // 저장하고 나가기 - onResetUnsavedChanges를 통해 저장 실행
+                  if (onResetUnsavedChanges?.current) {
+                    await onResetUnsavedChanges.current();
+                  }
+                  navigate('/dashboard');
+                }}
               >
-                {t('common.cancel')}
+                {t('messages.exitWithSaving')}
               </button>
               <button
                 className={styles.modalButtonConfirm}

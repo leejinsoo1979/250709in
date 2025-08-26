@@ -69,6 +69,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const [canvasReady, setCanvasReady] = useState(false);
   // isFurnitureDragging 상태는 UIStore에서 가져옴
   
   // 캔버스 참조 저장
@@ -106,6 +107,54 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
+  
+  // Command 키 + 트랙패드/마우스 회전 지원
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && viewMode === '3D') {
+        // Command 키가 눌렸을 때 컨트롤 업데이트를 지연시킴
+        setTimeout(() => {
+          if (controlsRef.current) {
+            // 왼쪽 버튼을 회전으로, 터치도 회전으로 변경
+            controlsRef.current.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+            controlsRef.current.touches.ONE = (THREE as any).TOUCH.ROTATE;
+            controlsRef.current.update();
+          }
+        }, 0);
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.metaKey) {
+        setTimeout(() => {
+          if (controlsRef.current) {
+            // 원래 설정으로 복구
+            controlsRef.current.mouseButtons.LEFT = undefined;
+            controlsRef.current.touches.ONE = viewMode === '2D' ? undefined : (THREE as any).TOUCH.ROTATE;
+            controlsRef.current.update();
+          }
+        }, 0);
+      }
+    };
+    
+    // 윈도우 포커스 잃었을 때도 리셋
+    const handleBlur = () => {
+      if (controlsRef.current) {
+        controlsRef.current.mouseButtons.LEFT = undefined;
+        controlsRef.current.update();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [viewMode]);
   
   // viewMode 변경 시 그림자 설정 업데이트
   useEffect(() => {
@@ -547,29 +596,45 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           precision: 'highp',  // 고정밀도 셰이더
         }}
         onCreated={({ gl, scene }) => {
-          // renderer 참조 저장
-          canvasRef.current = gl.domElement;
-          rendererRef.current = gl;
-          
-          // 기본 렌더링 설정
-          gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          
-          // 그림자 설정 - 3D 모드에서만
-          gl.shadowMap.enabled = viewMode === '3D';
-          if (viewMode === '3D') {
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
-            gl.shadowMap.autoUpdate = true;
-            gl.shadowMap.needsUpdate = true;
-          }
-          
-          // 초기 배경색 설정
-          const initialBgColor = getBackgroundColor();
-          gl.setClearColor(new THREE.Color(initialBgColor), 1.0);
-          
-          // 씬 배경색 설정
-          if (scene) {
-            scene.background = new THREE.Color(initialBgColor);
-            scene.fog = null;
+          try {
+            console.log('🎨 Canvas 생성 시작:', { canvasKey, viewMode });
+            
+            // 기존 renderer가 있으면 정리
+            if (rendererRef.current && rendererRef.current !== gl) {
+              console.log('🧹 기존 renderer 정리');
+              rendererRef.current.dispose();
+            }
+            
+            // renderer 참조 저장
+            canvasRef.current = gl.domElement;
+            rendererRef.current = gl;
+            
+            // 기본 렌더링 설정
+            gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // 그림자 설정 - 3D 모드에서만
+            gl.shadowMap.enabled = viewMode === '3D';
+            if (viewMode === '3D') {
+              gl.shadowMap.type = THREE.PCFSoftShadowMap;
+              gl.shadowMap.autoUpdate = true;
+              gl.shadowMap.needsUpdate = true;
+            }
+            
+            // 초기 배경색 설정
+            const initialBgColor = getBackgroundColor();
+            gl.setClearColor(new THREE.Color(initialBgColor), 1.0);
+            
+            // 씬 배경색 설정
+            if (scene) {
+              scene.background = new THREE.Color(initialBgColor);
+              scene.fog = null;
+            }
+            
+            setCanvasReady(true);
+            console.log('✅ Canvas 생성 완료:', { canvasKey, viewMode });
+          } catch (error) {
+            console.error('❌ Canvas 생성 중 오류:', error);
+            setCanvasReady(false);
           }
         }}
       >

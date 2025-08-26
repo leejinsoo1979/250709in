@@ -125,24 +125,42 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
   };
   
   const loadDesignFilesForProject = async (projectId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.warn('⚠️ 사용자가 로그인되지 않음 - 디자인 파일 로드 건너뛰기');
+      return;
+    }
     
     try {
+      console.log('🔄 디자인 파일 로드 시작:', { projectId, userId: user.uid });
       const result = await getDesignFiles(projectId);
       console.log('🔥 디자인 파일 로드 결과:', {
         projectId,
         designFilesCount: result.designFiles?.length || 0,
-        designFiles: result.designFiles,
+        designFiles: result.designFiles?.map(df => ({ id: df.id, name: df.name })),
         error: result.error
       });
       
-      // 디자인 파일을 상태에 저장
-      if (result.designFiles && result.designFiles.length > 0) {
+      if (result.error) {
+        console.error('❌ 디자인 파일 로드 에러:', result.error);
+        // 에러가 있어도 빈 배열로 설정하여 UI가 동작하도록 함
         setDesignFiles(prev => ({
           ...prev,
-          [projectId]: result.designFiles
+          [projectId]: []
         }));
-        console.log('✅ 디자인 파일 state 업데이트 완료');
+        return;
+      }
+      
+      // 디자인 파일을 상태에 저장
+      if (result.designFiles && Array.isArray(result.designFiles)) {
+        const validDesignFiles = result.designFiles.filter(df => df && df.id && df.name);
+        setDesignFiles(prev => ({
+          ...prev,
+          [projectId]: validDesignFiles
+        }));
+        console.log('✅ 디자인 파일 state 업데이트 완료:', {
+          count: validDesignFiles.length,
+          files: validDesignFiles.map(df => df.name)
+        });
       } else {
         console.log('⚠️ 디자인 파일이 없거나 비어있음');
         setDesignFiles(prev => ({
@@ -151,7 +169,8 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
         }));
       }
     } catch (error) {
-      console.error('디자인 파일 로드 에러:', error);
+      console.error('❌ 디자인 파일 로드 중 예외 발생:', error);
+      // 프로젝트 로드 실패 시에도 빈 배열로 설정
       setDesignFiles(prev => ({
         ...prev,
         [projectId]: []
@@ -209,8 +228,8 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
       onFileSelect(projectId, designFileId, designFileName);
     } else {
       console.log('🔀 기본 네비게이션 동작');
-      // 기본 동작: 에디터로 이동
-      navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}`);
+      // 기본 동작: 에디터로 이동 - designFileId와 designFileName 모두 전달
+      navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`);
     }
     
     if (onClose) {

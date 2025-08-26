@@ -2566,16 +2566,59 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={(projectId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
-                  // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
+                onFileSelect={async (projectId, designFileId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
+                  
+                  // 현재 작업 내용 자동 저장
+                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
+                    console.log('💾 디자인 전환 전 자동 저장 시작');
+                    setSaving(true);
+                    setSaveStatus('idle');
+                    
+                    try {
+                      await saveProject();
+                      console.log('✅ 자동 저장 완료');
+                    } catch (error) {
+                      console.error('❌ 자동 저장 실패:', error);
+                      const confirmSwitch = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 다른 디자인으로 전환하시겠습니까?');
+                      if (!confirmSwitch) {
+                        setSaving(false);
+                        return;
+                      }
+                    }
+                  }
+                  
+                  // 디자인 파일 선택 시 해당 프로젝트 로드 - designFileId 우선 사용
+                  if (designFileId) {
+                    navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
+                  } else {
+                    navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
+                  }
                   setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침하여 새 디자인 파일 로드
-                  window.location.reload();
+                  // 페이지 새로고침 제거 - navigate만으로 충분
                 }}
-                onCreateNew={() => {
+                onCreateNew={async () => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
+                  
+                  // 현재 작업 내용 자동 저장
+                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
+                    console.log('💾 새 디자인 생성 전 자동 저장 시작');
+                    setSaving(true);
+                    setSaveStatus('idle');
+                    
+                    try {
+                      await saveProject();
+                      console.log('✅ 자동 저장 완료');
+                    } catch (error) {
+                      console.error('❌ 자동 저장 실패:', error);
+                      const confirmCreate = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 새 디자인을 생성하시겠습니까?');
+                      if (!confirmCreate) {
+                        setSaving(false);
+                        return;
+                      }
+                    }
+                  }
+                  
                   handleNewProject();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
