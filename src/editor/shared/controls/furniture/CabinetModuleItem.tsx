@@ -13,7 +13,7 @@ interface CabinetModuleItemProps {
 const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
-  const { openFurniturePopup } = useUIStore();
+  const { openFurniturePopup, setIsSlotDragging } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
   
   // 도어 상태 관리 (기본값: false - 도어 없음)
@@ -51,6 +51,7 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
     
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
+    setIsSlotDragging(true); // 슬롯 드래그 시작
     
     // 드래그 데이터 설정 (도어 정보 포함)
     const dragData = {
@@ -83,6 +84,7 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
   const handleDragEnd = () => {
     // 가구 배치 모드 비활성화
     setFurniturePlacementMode(false);
+    setIsSlotDragging(false); // 슬롯 드래그 종료
 
     // 전역 드래그 상태 초기화
     setCurrentDragData(null);

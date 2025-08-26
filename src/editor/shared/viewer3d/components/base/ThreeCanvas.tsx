@@ -49,7 +49,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -78,20 +78,34 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   
-  // 초기 카메라 설정 저장
+  // 초기 카메라 설정 저장 (2D와 3D 각각)
   const initialCameraSetup = useRef<{
     position0: THREE.Vector3 | null;
     target0: THREE.Vector3 | null;
     zoom0: number | null;
+    // 2D 모드 초기 상태 별도 저장
+    position2D: THREE.Vector3 | null;
+    target2D: THREE.Vector3 | null;
+    zoom2D: number | null;
   }>({
     position0: null,
     target0: null,
-    zoom0: null
+    zoom0: null,
+    position2D: null,
+    target2D: null,
+    zoom2D: null
   });
   
   
   // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
   useEffect(() => {
+    // 뷰 모드 변경 시 해당 모드의 초기 상태 리셋
+    if (viewMode === '2D') {
+      // 2D 모드로 전환 시 2D 초기 상태 리셋
+      initialCameraSetup.current.position2D = null;
+      initialCameraSetup.current.target2D = null;
+      initialCameraSetup.current.zoom2D = null;
+    }
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   }, [theme, viewMode, view2DDirection, view2DTheme]);
   
@@ -223,62 +237,83 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 카메라 리셋 함수
   const resetCamera = useCallback(() => {
-    if (controlsRef.current) {
+    if (controlsRef.current && viewMode === '3D') {
       const controls = controlsRef.current;
       
-      console.log('🎯 카메라 리셋 전 상태:', {
-        currentPosition: controls.object.position.toArray(),
-        currentTarget: controls.target.toArray(),
-        cameraPosition,
-        cameraTarget,
-        cameraConfig: camera
+      // 현재 카메라 거리 유지
+      const currentDistance = controls.object.position.distanceTo(controls.target);
+      
+      // 공간 정보 가져오기
+      const spaceHeight = spaceInfo?.height || 2400;
+      
+      // 정면 뷰: 공간의 정확한 중앙
+      const centerX = 0; // X축 중앙은 0
+      const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
+      
+      console.log('🎯 정면 뷰로 카메라 리셋 (거리 유지):', {
+        centerX, centerY, 
+        currentDistance,
+        spaceHeight
       });
       
-      // 카메라 위치를 정확히 설정
-      const targetPosition = cameraPosition || camera.position;
-      const targetTarget = cameraTarget || camera.target;
-      const targetUp = cameraUp || camera.up || [0, 1, 0];
+      // 카메라를 정면 중앙에 위치 (거리는 현재 거리 유지)
+      controls.object.position.set(0, centerY, currentDistance);
+      controls.target.set(0, centerY, 0);
+      controls.object.up.set(0, 1, 0);
       
-      // 카메라 위치 설정
-      controls.object.position.set(...targetPosition);
-      controls.target.set(...targetTarget);
-      controls.object.up.set(...targetUp);
-      
-      // 2D 모드일 경우 줌 설정
-      if (camera.is2DMode && camera.zoom) {
-        controls.object.zoom = camera.zoom;
-        controls.object.updateProjectionMatrix();
-      }
-      
-      // 카메라가 타겟을 정확히 바라보도록 설정
+      // 카메라가 타겟을 바라보도록 설정
       controls.object.lookAt(controls.target);
       
-      // OrbitControls 상태 동기화
+      // OrbitControls 업데이트
       controls.update();
-      
-      // OrbitControls의 내부 상태도 리셋
       controls.saveState();
       
-      // 회전 각도를 정확히 0으로 설정 (정면뷰)
-      if (viewMode === '3D') {
-        // 구면 좌표계에서 azimuth(수평 회전)과 polar(수직 회전) 각도를 리셋
-        const spherical = controls.getSpherical();
-        spherical.theta = 0; // 수평 회전각 0 (정면)
-        spherical.phi = Math.PI / 2; // 수직 회전각 90도 (수평선)
-        controls.setSpherical(spherical);
+      console.log('🎯 카메라 정면 뷰 리셋 완료');
+    } else if (controlsRef.current && viewMode === '2D') {
+      // 2D 모드에서 저장된 초기 상태로 완전히 리셋
+      const controls = controlsRef.current;
+      
+      // 저장된 2D 초기 상태가 있으면 사용, 없으면 현재 카메라 설정 사용
+      if (initialCameraSetup.current.position2D && 
+          initialCameraSetup.current.target2D && 
+          initialCameraSetup.current.zoom2D !== null) {
+        
+        console.log('🎯 2D 카메라 저장된 초기 상태로 리셋:', {
+          position: initialCameraSetup.current.position2D.toArray(),
+          target: initialCameraSetup.current.target2D.toArray(),
+          zoom: initialCameraSetup.current.zoom2D
+        });
+        
+        // OrbitControls의 저장된 초기 상태를 업데이트
+        controls.target0.copy(initialCameraSetup.current.target2D);
+        controls.position0.copy(initialCameraSetup.current.position2D);
+        controls.zoom0 = initialCameraSetup.current.zoom2D;
+        
+        // reset()을 호출하면 target0, position0, zoom0으로 완전히 리셋됨
+        controls.reset();
+        
+        console.log('🎯 2D 카메라 초기 상태 리셋 완료');
+      } else {
+        // 저장된 상태가 없으면 현재 카메라 설정 사용 (폴백)
+        const initialPosition = camera.position;
+        const initialTarget = camera.target;
+        const initialUp = camera.up || [0, 1, 0];
+        const initialZoom = camera.zoom || 1;
+        
+        console.log('🎯 2D 카메라 기본값으로 리셋 (저장된 상태 없음)');
+        
+        controls.object.position.set(...initialPosition);
+        controls.target.set(...initialTarget);
+        controls.object.up.set(...initialUp);
+        controls.object.zoom = initialZoom;
+        controls.object.updateProjectionMatrix();
+        
+        controls.object.lookAt(controls.target);
+        controls.update();
+        controls.saveState();
       }
-      
-      // 다시 한번 업데이트하여 변경사항 적용
-      controls.update();
-      
-      console.log('🎯 카메라 위치 리셋 완료', {
-        newPosition: controls.object.position.toArray(),
-        newTarget: controls.target.toArray(),
-        newUp: controls.object.up.toArray(),
-        zoom: controls.object.zoom
-      });
     }
-  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode]);
+  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
@@ -643,31 +678,48 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           ref={(ref) => {
             controlsRef.current = ref;
             // OrbitControls가 처음 생성될 때 초기 상태 저장
-            if (ref && !initialCameraSetup.current.position0) {
-              // 짧은 지연 후 초기 상태 저장 (OrbitControls가 완전히 초기화된 후)
-              setTimeout(() => {
-                if (ref && ref.object) {
-                  console.log('📸 OrbitControls 초기 상태 저장', {
-                    position: ref.object.position.toArray(),
-                    target: ref.target.toArray(),
-                    zoom: ref.object.zoom
-                  });
-                  initialCameraSetup.current.position0 = ref.object.position.clone();
-                  initialCameraSetup.current.target0 = ref.target.clone();
-                  initialCameraSetup.current.zoom0 = ref.object.zoom;
-                }
-              }, 100);
+            if (ref) {
+              // 2D 모드일 때 2D 초기 상태 저장
+              if (viewMode === '2D' && !initialCameraSetup.current.position2D) {
+                setTimeout(() => {
+                  if (ref && ref.object) {
+                    console.log('📸 2D 모드 초기 상태 저장', {
+                      position: ref.object.position.toArray(),
+                      target: ref.target.toArray(),
+                      zoom: ref.object.zoom
+                    });
+                    initialCameraSetup.current.position2D = ref.object.position.clone();
+                    initialCameraSetup.current.target2D = ref.target.clone();
+                    initialCameraSetup.current.zoom2D = ref.object.zoom;
+                  }
+                }, 100);
+              }
+              // 3D 모드 초기 상태 저장
+              else if (viewMode === '3D' && !initialCameraSetup.current.position0) {
+                setTimeout(() => {
+                  if (ref && ref.object) {
+                    console.log('📸 3D 모드 초기 상태 저장', {
+                      position: ref.object.position.toArray(),
+                      target: ref.target.toArray(),
+                      zoom: ref.object.zoom
+                    });
+                    initialCameraSetup.current.position0 = ref.object.position.clone();
+                    initialCameraSetup.current.target0 = ref.target.clone();
+                    initialCameraSetup.current.zoom0 = ref.object.zoom;
+                  }
+                }, 100);
+              }
             }
           }}
-          enabled={controlsConfig.enabled && !isFurnitureDragging && !isDraggingColumn}
+          enabled={controlsConfig.enabled && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
           target={controlsConfig.target}
           minPolarAngle={controlsConfig.minPolarAngle}
           maxPolarAngle={controlsConfig.maxPolarAngle}
           minAzimuthAngle={controlsConfig.minAzimuthAngle}
           maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
-          enablePan={controlsConfig.enablePan && !isFurnitureDragging && !isDraggingColumn}
-          enableZoom={controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn}
-          enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn}
+          enablePan={controlsConfig.enablePan && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
+          enableZoom={controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
+          enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
           minDistance={controlsConfig.minDistance}
           maxDistance={controlsConfig.maxDistance}
           mouseButtons={controlsConfig.mouseButtons}
@@ -685,7 +737,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* 터치 컨트롤 설정 - 항상 활성화 (테스트용) */}
         <TouchOrbitControlsSetup 
           controlsRef={controlsRef}
-          enabled={!isFurnitureDragging && !isDraggingColumn}
+          enabled={!isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
         />
         
         {/* 기존 조건부 터치 컨트롤 (나중에 필요시 사용) */}

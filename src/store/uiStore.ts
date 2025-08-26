@@ -72,6 +72,9 @@ interface UIState {
   // 기둥 드래그 상태
   isDraggingColumn: boolean;
   
+  // 슬롯 드래그 상태
+  isSlotDragging: boolean;
+  
   // 활성 단내림 탭 상태
   activeDroppedCeilingTab: 'main' | 'dropped';
   
@@ -129,6 +132,7 @@ interface UIState {
   setSelectedPanelBId: (panelBId: string | null) => void;
   setFurnitureDragging: (isDragging: boolean) => void;
   setIsDraggingColumn: (isDragging: boolean) => void;
+  setIsSlotDragging: (isDragging: boolean) => void;
   setHighlightedCompartment: (compartmentId: string | null) => void;
   setSelectedModuleForPlacement: (moduleId: string | null) => void;
   setHoveredSlotForPlacement: (slotIndex: number | null) => void;
@@ -162,6 +166,7 @@ const initialUIState = {
   selectedPanelBId: null,  // 기본값: 패널B 선택 없음
   isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
   isDraggingColumn: false,  // 기본값: 기둥 드래그 비활성화
+  isSlotDragging: false,  // 기본값: 슬롯 드래그 비활성화
   activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
@@ -342,6 +347,9 @@ export const useUIStore = create<UIState>()(
       
       setIsDraggingColumn: (isDragging) =>
         set({ isDraggingColumn: isDragging }),
+      
+      setIsSlotDragging: (isDragging) =>
+        set({ isSlotDragging: isDragging }),
       
       setHighlightedCompartment: (compartmentId) =>
         set({ highlightedCompartment: compartmentId }),
