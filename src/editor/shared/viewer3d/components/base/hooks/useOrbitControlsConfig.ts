@@ -111,8 +111,8 @@ export const useOrbitControlsConfig = (
       },
       touches: {
         // 터치 디바이스 설정
-        ONE: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, // 한 손가락: 3D에서는 회전, 2D에서는 팬
-        TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락: 줌+팬
+        ONE: undefined, // 한 손가락: 비활성화
+        TWO: is2DMode ? THREE.TOUCH.DOLLY_PAN : THREE.TOUCH.ROTATE, // 두 손가락: 3D에서는 회전, 2D에서는 줌+팬
       },
     };
   }, [cameraTarget, viewMode, calculateDynamicDistances]);
