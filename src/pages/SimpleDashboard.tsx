@@ -2353,7 +2353,7 @@ const SimpleDashboard: React.FC = () => {
                 <button 
                   className={styles.createDesignBtn}
                   onClick={() => {
-                    handleOpenStep1Modal(selectedProjectId, selectedProject?.title);
+                    handleCreateDesign(selectedProjectId, selectedProject?.title);
                   }}
                 >
                   <PlusIcon size={14} />
