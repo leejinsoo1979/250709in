@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, Che
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
@@ -36,6 +37,7 @@ function PageInner(){
   const { basicInfo } = useProjectStore();
   const { panels: livePanels } = useLivePanelData();
   const { t, currentLanguage } = useTranslation();
+  const { theme } = useTheme();
   
   const { 
     panels, setPanels, 

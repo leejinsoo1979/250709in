@@ -91,21 +91,31 @@ export const generateDXF = (data: DXFExportData): string => {
       break;
   }
   
-  // 제목과 정보 추가
-  drawTitleAndInfo(dxf, spaceInfo, drawingType);
+  // 제목과 정보 추가 - 도면 타입이 front가 아닌 경우에만
+  if (drawingType !== 'front') {
+    drawTitleAndInfo(dxf, spaceInfo, drawingType);
+  }
   
   return dxf.stringify();
 };
 
 /**
- * 정면도 전체 그리기
+ * 정면도 전체 그리기 - 2D 뷰어와 동일한 깔끔한 가구 객체와 치수만 표시
  */
 const drawFrontElevation = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPlacedModule[]): void => {
-  // 공간 외곽선 그리기
-  drawFrontSpaceBoundary(dxf, spaceInfo);
+  // 공간 외곽선 제거 - 2D 뷰어처럼 가구 객체만 표시
+  // drawFrontSpaceBoundary(dxf, spaceInfo); // REMOVED: 그리드/컬럼/축 제거
   
-  // 가구 모듈들 그리기
+  // 가구 모듈들만 그리기 (깔끔한 와이어프레임)
   drawFrontFurnitureModules(dxf, placedModules, spaceInfo);
+  
+  // 간단한 타이틀만 추가 (공간 치수 제거)
+  dxf.setCurrentLayerName('TEXT');
+  dxf.addText(
+    point3d(0, -200),
+    60, // 텍스트 높이
+    formatDxfText('Front Elevation - Furniture Layout')
+  );
 };
 
 /**
@@ -364,15 +374,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     threeUnitDualPositions: derivedSpaceState.dualColumnPositions.map((pos: number) => pos / 10) // mm to Three.js units
   };
   
-  console.log('🔍 DXF 생성 - 슬롯 인덱싱 정보:', {
-    columnCount: indexing.columnCount,
-    columnPositions: indexing.columnPositions,
-    threeUnitPositions: indexing.threeUnitPositions,
-    dualPositions: indexing.dualColumnPositions,
-    threeUnitDualPositions: indexing.threeUnitDualPositions,
-    internalStartX: indexing.internalStartX,
-    internalWidth: indexing.internalWidth
-  });
+  // DXF 생성용 슬롯 인덱싱 정보 준비 완료
   
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
@@ -411,7 +413,6 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     
     // 슬롯을 찾지 못한 경우 기존 방식으로 폴백
     if (slotIndex < 0) {
-      console.warn(`⚠️ 가구 ${index + 1}의 슬롯을 찾을 수 없음. 기존 방식 사용.`);
       slotPositionMm = position.x * 10; // 기존 변환 방식
     }
     
@@ -420,18 +421,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     // DXF에서는 왼쪽 하단(0,0)을 기준으로 해야 함
     const dxfXPosition = (spaceInfo.width / 2) + slotPositionMm; // 공간 중앙에서 슬롯 위치만큼 이동
     
-    console.log(`🔍 가구 ${index + 1} (${moduleData.name}) 좌표 변환:`, {
-      originalThreeJsX: position.x,
-      slotIndex,
-      isDualFurniture,
-      slotPositionMm, // Three.js 기준 mm 위치 (중앙 기준)
-      dxfXPosition,   // DXF 기준 위치 (왼쪽 하단 기준)
-      spaceWidth: spaceInfo.width,
-      dimensions,
-      customWidth: (module as any).customWidth,
-      adjustedWidth: (module as any).adjustedWidth,
-      finalWidth: dimensions.width
-    });
+    // 좌표 변환 완료: Three.js → DXF
     
     // 가구 사각형 (정면도 기준: dxfXPosition 사용)
     const x1 = dxfXPosition - (dimensions.width / 2); // 중심점에서 좌측 끝
@@ -441,14 +431,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.height; // 상단
     
-    console.log(`📐 DXF 좌표 최종 계산:`, {
-      slotIndex,
-      slotPositionMm,
-      dxfXPosition,
-      x1, y1, x2, y2,
-      width: dimensions.width,
-      height: dimensions.height
-    });
+    // DXF 좌표 계산 완료
     
     // 가구 외곽선 그리기 (정면도 - 완전한 2D 단면)
     dxf.setCurrentLayerName('FURNITURE');
@@ -463,13 +446,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const modelConfig = actualModuleData?.modelConfig;
     const shelfCount = modelConfig?.shelfCount || 0;
     
-    console.log(`🏗️ 가구 ${index + 1} 내부 구조:`, {
-      moduleId,
-      shelfCount,
-      modelConfig,
-      furnitureWidth,
-      furnitureHeight
-    });
+    // 가구 내부 구조 분석 완료
     
     // 가구가 충분히 클 때만 내부 구조 표시
     if (furnitureHeight > 200 && furnitureWidth > 200) {
@@ -507,57 +484,26 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
         }
       } else {
         // 오픈 박스: 내부 구조 없음 (외곽선만)
-        console.log(`📦 오픈 박스 가구 - 내부 구조 없음`);
       }
     }
     
-    // 가구 이름 텍스트 (중앙에 배치)
+    // 가구 이름 텍스트 (중앙에 배치) - 깔끔하게
     const centerX = x1 + dimensions.width / 2;
     const centerY = y1 + dimensions.height / 2;
     
-    const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
+    const safeFurnitureName = getSafeFurnitureName(moduleData.name || `F${index + 1}`);
     dxf.setCurrentLayerName('TEXT');
     dxf.addText(
       point3d(centerX, centerY),
-      Math.min(dimensions.height / 4, 50), // 높이에 비례한 텍스트 크기
+      Math.min(dimensions.height / 6, 40), // 작고 깔끔한 텍스트 크기
       safeFurnitureName
     );
     
-    // 가구 타입 정보 표시 (디버깅용)
-    const furnitureType = shelfCount === 0 ? 'Open Box' : 
-                         shelfCount === 1 ? '2-Shelf' :
-                         shelfCount === 6 ? '7-Shelf' :
-                         shelfCount === 2 ? 'Dual 2-Shelf' :
-                         shelfCount === 12 ? 'Dual 7-Shelf' : `${shelfCount}-Shelf`;
-    
+    // 가구 치수 표기 (간소화 - 너비×높이만)
     dxf.addText(
-      point3d(centerX, y1 - 120),
-      20,
-      `Slot${slotIndex + 1} | ${furnitureType}`
-    );
-    
-    // 좌표 정보 표시 (디버깅용)
-    dxf.addText(
-      point3d(centerX, y1 - 160),
-      15,
-      `DXF-X: ${Math.round(dxfXPosition)}mm`
-    );
-    
-    // 가구 치수 디버깅 로그
-    console.log(`🔍 정면도 가구 ${index + 1} (${moduleData.name}) 치수:`, {
-      moduleId,
-      moduleDataDepth: moduleData.dimensions.depth,
-      actualModuleDataDepth: actualModuleData?.dimensions.depth,
-      finalDepth: dimensions.depth,
-      width: dimensions.width,
-      height: dimensions.height
-    });
-    
-    // 가구 치수 표기 (하단에 표시)
-    dxf.addText(
-      point3d(centerX, y1 - 80),
-      25, // 텍스트 높이
-      formatDimensionsText(dimensions.width, dimensions.height, dimensions.depth)
+      point3d(centerX, y1 - 60),
+      20, // 텍스트 높이
+      `${dimensions.width}×${dimensions.height}mm`
     );
     
     // 높이 치수선 (우측에 표시) - IMPORTANT: Keep this for dimension lines
@@ -650,7 +596,6 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     
     // 슬롯을 찾지 못한 경우 기존 방식으로 폴백
     if (slotIndex < 0) {
-      console.warn(`⚠️ 가구 ${index + 1}의 슬롯을 찾을 수 없음. 기존 방식 사용.`);
       slotPositionMm = position.x * 10; // 기존 변환 방식
     }
     

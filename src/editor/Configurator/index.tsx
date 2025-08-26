@@ -75,7 +75,7 @@ const Configurator: React.FC = () => {
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
 
   // 내보내기 훅들
-  const { exportToDXF, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
+  const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
   const { exportToPDF, canExportPDF, getExportStatusMessage: getPDFStatusMessage, VIEW_TYPES } = usePDFExport();
 
   // 새로운 UI 상태들
@@ -1745,9 +1745,9 @@ const Configurator: React.FC = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
 
-  // DXF 내보내기 핸들러
+  // DXF 내보내기 핸들러 - 다중 뷰 ZIP 파일 생성
   const handleExportDXF = async () => {
-    console.log('🔧 DXF 내보내기 시작...');
+    console.log('🔧 DXF ZIP 내보내기 시작...');
     console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
 
     if (!spaceInfo) {
@@ -1755,20 +1755,23 @@ const Configurator: React.FC = () => {
       return;
     }
 
-    // 기본 공간 정보만으로도 DXF 생성 가능하도록 수정
     try {
-      const result = await exportToDXF(spaceInfo, placedModules, 'front');
+      // 2D 와이어프레임 도면 - 3개 시점 (정면도, 평면도, 측면도)
+      const drawingTypes = ['front', 'plan', 'side'] as const;
+      console.log('📐 생성할 도면:', drawingTypes.join(', '));
+      
+      const result = await exportToZIP(spaceInfo, placedModules, drawingTypes);
       
       if (result.success) {
-        console.log('✅ DXF 내보내기 성공:', result.filename);
-        alert(`✅ ${result.message}\n파일명: ${result.filename}`);
+        console.log('✅ DXF ZIP 내보내기 성공:', result.filename);
+        alert(`✅ ${result.message}\n\n포함된 도면:\n- 정면도 (Front Elevation)\n- 평면도 (Plan View)\n- 측면도 (Side Section)\n\n파일명: ${result.filename}`);
       } else {
-        console.error('❌ DXF 내보내기 실패:', result.error);
+        console.error('❌ DXF ZIP 내보내기 실패:', result.error);
         alert(`❌ ${result.message}`);
       }
     } catch (error) {
-      console.error('❌ DXF 내보내기 예외:', error);
-      alert('DXF 내보내기 중 오류가 발생했습니다: ' + error.message);
+      console.error('❌ DXF ZIP 내보내기 예외:', error);
+      alert('DXF ZIP 내보내기 중 오류가 발생했습니다: ' + error.message);
     }
   };
 
@@ -1804,7 +1807,7 @@ const Configurator: React.FC = () => {
   // 개발 및 테스트를 위한 함수들을 window에 노출
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).testExportDXF = handleExportDXF;
+      (window as any).testExportDXFZIP = handleExportDXF;
       (window as any).testExportPDF = handleExportPDF;
       (window as any).getCurrentSpaceInfo = () => spaceInfo;
       (window as any).getCurrentPlacedModules = () => placedModules;

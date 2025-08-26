@@ -364,11 +364,14 @@ const Header: React.FC<HeaderProps> = ({
                       }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                        <path d="M16 22H8c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2z" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="0.8" fill="none"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="0.8"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="0.8"/>
+                        <circle cx="18" cy="6" r="3" stroke="currentColor" strokeWidth="1" fill="none"/>
+                        <path d="M16.5 6.5L19.5 6.5M18 5L18 8" stroke="currentColor" strokeWidth="1"/>
                       </svg>
-                      {t('export.dxf')}
+                      DXF ZIP (3개 뷰)
                     </button>
                   )}
                   

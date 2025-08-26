@@ -127,6 +127,9 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   console.log('🎨 테마 적용 중:', theme);
   const root = document.documentElement;
   
+  // data-theme 속성 설정 (라이트/다크 모드)
+  root.setAttribute('data-theme', theme.mode);
+  
   // 기존 테마 클래스 제거
   document.body.classList.remove(...Array.from(document.body.classList).filter(c => c.startsWith('theme-')));
   
