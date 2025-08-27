@@ -582,21 +582,66 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const furnitureWidth = dimensions.width;
     const modelConfig = actualModuleData?.modelConfig;
     const shelfCount = modelConfig?.shelfCount || 0;
+    const drawerCount = modelConfig?.drawerCount || 0;
+    
+    // STEP 6: 바닥선/받침대선 추가
+    // 모든 가구에 대해 바닥선 표시 (가구 하단과 공간 바닥 사이)
+    if (y1 > 0) {
+      // 바닥선 (가구 아래에 받침대나 base frame이 있는 경우)
+      dxf.addLine(point3d(x1, 0), point3d(x1, y1)); // 좌측 지지대
+      dxf.addLine(point3d(x2, 0), point3d(x2, y1)); // 우측 지지대
+      
+      console.log(`📏 [DXF-SPECIALIST STEP 6] Floor/Base lines added for ${moduleData.name}:`, {
+        leftSupport: { x: x1, from: 0, to: y1 },
+        rightSupport: { x: x2, from: 0, to: y1 },
+        baseFrameHeight: y1
+      });
+    }
     
     // 가구 내부 구조 분석 완료
     
     // 가구가 충분히 클 때만 내부 구조 표시
     if (furnitureHeight > 200 && furnitureWidth > 200) {
-      if (shelfCount > 0) {
-        // 선반이 있는 가구: 실제 선반 개수에 따라 구조 그리기
-        if (isDualFurniture) {
-          // 듀얼 가구: 중앙 칸막이 + 양쪽 선반
-          const centerX = x1 + (furnitureWidth / 2);
-          
-          // 중앙 세로 칸막이
-          dxf.addLine(point3d(centerX, y1), point3d(centerX, y2));
-          
-          // 양쪽 칸에 선반 그리기
+      // STEP 4: 듀얼 가구는 항상 중앙 칸막이 표시
+      if (isDualFurniture) {
+        // 듀얼 가구: 중앙 칸막이 항상 표시
+        const centerX = x1 + (furnitureWidth / 2);
+        
+        // 중앙 세로 칸막이 (STEP 4: 듀얼은 항상 표시)
+        dxf.addLine(point3d(centerX, y1), point3d(centerX, y2));
+        
+        console.log(`🎯 [DXF-SPECIALIST STEP 4] Dual central divider always shown for ${moduleData.name}:`, {
+          centerX,
+          from: y1,
+          to: y2,
+          isDualFurniture: true
+        });
+        
+        // STEP 5: 서랍이 있는 경우 N개 서랍에 대해 N-1개 분할선
+        if (drawerCount > 0) {
+          // 듀얼 가구의 경우 각 칸에 대해 서랍 분할선 처리
+          const drawersPerSide = Math.floor(drawerCount / 2);
+          if (drawersPerSide > 1) {
+            // 왼쪽 칸 서랍 분할선 (N-1개)
+            for (let i = 1; i < drawersPerSide; i++) {
+              const dividerY = y1 + (furnitureHeight / drawersPerSide) * i;
+              dxf.addLine(point3d(x1, dividerY), point3d(centerX, dividerY));
+            }
+            
+            // 오른쪽 칸 서랍 분할선 (N-1개)
+            for (let i = 1; i < drawersPerSide; i++) {
+              const dividerY = y1 + (furnitureHeight / drawersPerSide) * i;
+              dxf.addLine(point3d(centerX, dividerY), point3d(x2, dividerY));
+            }
+            
+            console.log(`📐 [DXF-SPECIALIST STEP 5] Dual drawer dividers (N-1) for ${moduleData.name}:`, {
+              drawersPerSide,
+              dividersPerSide: drawersPerSide - 1,
+              totalDividers: (drawersPerSide - 1) * 2
+            });
+          }
+        } else if (shelfCount > 0) {
+          // 선반이 있는 경우 양쪽 칸에 선반 그리기
           const shelvesPerSide = Math.floor(shelfCount / 2); // 듀얼이므로 절반씩
           
           if (shelvesPerSide > 0) {
@@ -612,16 +657,45 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
               dxf.addLine(point3d(centerX, shelfY), point3d(x2, shelfY));
             }
           }
-        } else {
-          // 싱글 가구: 선반 개수만큼 수평선 그리기
+        }
+      } else {
+        // 싱글 가구 처리
+        // STEP 5: 서랍이 있는 경우 N개 서랍에 대해 N-1개 분할선
+        if (drawerCount > 0 && drawerCount > 1) {
+          // N개 서랍에 대해 N-1개 수평 분할선
+          for (let i = 1; i < drawerCount; i++) {
+            const dividerY = y1 + (furnitureHeight / drawerCount) * i;
+            dxf.addLine(point3d(x1, dividerY), point3d(x2, dividerY));
+          }
+          
+          console.log(`📐 [DXF-SPECIALIST STEP 5] Single drawer dividers (N-1) for ${moduleData.name}:`, {
+            drawerCount,
+            dividerCount: drawerCount - 1,
+            dividerPositions: Array.from({ length: drawerCount - 1 }, (_, i) => 
+              y1 + (furnitureHeight / drawerCount) * (i + 1)
+            )
+          });
+        } else if (shelfCount > 0) {
+          // 선반이 있는 경우 선반 개수만큼 수평선 그리기
           for (let i = 1; i <= shelfCount; i++) {
             const shelfY = y1 + (furnitureHeight / (shelfCount + 1)) * i;
             dxf.addLine(point3d(x1, shelfY), point3d(x2, shelfY));
           }
         }
-      } else {
-        // 오픈 박스: 내부 구조 없음 (외곽선만)
       }
+    } else if (isDualFurniture) {
+      // STEP 4: 작은 듀얼 가구도 중앙 칸막이는 항상 표시
+      const centerX = x1 + (furnitureWidth / 2);
+      dxf.addLine(point3d(centerX, y1), point3d(centerX, y2));
+      
+      console.log(`🎯 [DXF-SPECIALIST STEP 4] Small dual central divider shown for ${moduleData.name}:`, {
+        centerX,
+        from: y1,
+        to: y2,
+        furnitureWidth,
+        furnitureHeight,
+        note: 'Central divider shown even for small dual furniture'
+      });
     }
     
     // 가구 이름 텍스트 (중앙에 배치) - 깔끔하게
@@ -643,17 +717,22 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       formatDimensionsText(dimensions.width, dimensions.height, dimensions.depth)
     );
     
-    // 높이 치수선 (우측에 표시) - IMPORTANT: Keep this for dimension lines
+    // STEP 7: 개별 가구 치수선 추가 (DIMENSIONS 레이어)
+    // 높이 치수선 (dimV: 우측에 세로로 표시)
     if (dimensions.height > 100) {
       const dimensionX = x2 + 50; // 가구 우측 끝에서 50mm 떨어진 위치
       
       dxf.setCurrentLayerName('DIMENSIONS');
-      // 치수선
+      // 치수선 (세로선)
       dxf.addLine(point3d(dimensionX, y1), point3d(dimensionX, y2));
       
       // 치수 화살표 (간단한 선으로 표현)
       dxf.addLine(point3d(dimensionX - 20, y1), point3d(dimensionX + 20, y1));
       dxf.addLine(point3d(dimensionX - 20, y2), point3d(dimensionX + 20, y2));
+      
+      // 연장선 (가구에서 치수선까지)
+      dxf.addLine(point3d(x2, y1), point3d(dimensionX - 20, y1));
+      dxf.addLine(point3d(x2, y2), point3d(dimensionX - 20, y2));
       
       // 높이 치수 텍스트
       dxf.setCurrentLayerName('TEXT');
@@ -662,6 +741,47 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
         20,
         `${dimensions.height}mm`
       );
+      
+      console.log(`📐 [DXF-SPECIALIST STEP 7] dimV (height) added for ${moduleData.name}:`, {
+        dimensionX,
+        from: y1,
+        to: y2,
+        height: dimensions.height,
+        layer: 'DIMENSIONS'
+      });
+    }
+    
+    // 폭 치수선 (dimH: 하단에 가로로 표시)
+    if (dimensions.width > 100) {
+      const dimensionY = y1 - 100; // 가구 하단에서 100mm 아래
+      
+      dxf.setCurrentLayerName('DIMENSIONS');
+      // 치수선 (가로선)
+      dxf.addLine(point3d(x1, dimensionY), point3d(x2, dimensionY));
+      
+      // 치수 화살표 (간단한 선으로 표현)
+      dxf.addLine(point3d(x1, dimensionY - 20), point3d(x1, dimensionY + 20));
+      dxf.addLine(point3d(x2, dimensionY - 20), point3d(x2, dimensionY + 20));
+      
+      // 연장선 (가구에서 치수선까지)
+      dxf.addLine(point3d(x1, y1), point3d(x1, dimensionY + 20));
+      dxf.addLine(point3d(x2, y1), point3d(x2, dimensionY + 20));
+      
+      // 폭 치수 텍스트
+      dxf.setCurrentLayerName('TEXT');
+      dxf.addText(
+        point3d(centerX, dimensionY - 30),
+        20,
+        `${dimensions.width}mm`
+      );
+      
+      console.log(`📐 [DXF-SPECIALIST STEP 7] dimH (width) added for ${moduleData.name}:`, {
+        dimensionY,
+        from: x1,
+        to: x2,
+        width: dimensions.width,
+        layer: 'DIMENSIONS'
+      });
     }
   });
 };
