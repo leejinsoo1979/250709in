@@ -408,6 +408,73 @@
   pointer-events: none;
 }
 
+/* 세로 모드 캔버스 중복 방지 */
+.canvasContainer[data-portrait="true"] .canvas-container:not(:first-child) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 첫번째 canvas-container 내부의 중복 캔버스도 숨기기 */
+.canvasContainer[data-portrait="true"] .canvas-container canvas.upper-canvas ~ canvas {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Fabric.js가 생성하는 중복 캔버스 숨기기 */
+.canvasContainer .canvas-container ~ .canvas-container {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* 캔버스 컨테이너는 항상 하나만 표시 */
+.canvasContainer {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.canvasContainer .canvas-container {
+  display: none !important;
+}
+
+.canvasContainer .canvas-container:first-of-type {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  position: relative !important;
+  left: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* 모든 중복 canvas-container 강제 숨기기 */
+.canvasContainer .canvas-container:nth-child(n+2) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -99999px !important;
+  top: -99999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+}
+
 .viewConfigContent {
   padding: 20px;
   text-align: center;
