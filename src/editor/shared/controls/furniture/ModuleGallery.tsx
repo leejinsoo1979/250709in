@@ -79,9 +79,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setIsSlotDragging(true); // 슬롯 드래그 시작
     
     // 영역별 인덱싱 계산
-    let indexing = calculateSpaceIndexing(spaceInfo);
+    const indexing = calculateSpaceIndexing(spaceInfo);
     let targetZone: 'normal' | 'dropped' = 'normal';
-    let adjustedDimensions = { ...module.dimensions };
+    const adjustedDimensions = { ...module.dimensions };
     let dragModuleId = module.id; // 드래그에 사용할 모듈 ID
     
     // 단내림이 활성화되어 있는 경우
@@ -286,9 +286,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       }
       
       // 영역별 인덱싱 계산
-      let indexing = calculateSpaceIndexing(spaceInfo);
+      const indexing = calculateSpaceIndexing(spaceInfo);
       let targetZone: 'normal' | 'dropped' = 'normal';
-      let adjustedDimensions = { ...module.dimensions };
+      const adjustedDimensions = { ...module.dimensions };
       let dragModuleId = module.id;
       
       // 단내림이 활성화되어 있는 경우

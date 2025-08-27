@@ -143,7 +143,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       
       // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
       if (!isNaN(Number(value))) {
-        let validatedValue = parseInt(value);
+        const validatedValue = parseInt(value);
         
         // 범위 검증은 blur 시에만 적용
         

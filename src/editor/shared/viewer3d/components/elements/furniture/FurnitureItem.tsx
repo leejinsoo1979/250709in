@@ -342,7 +342,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+  const moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // Set state instead of early return to maintain hooks order
   React.useEffect(() => {
@@ -454,8 +454,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const adjacentCheck = actualModuleData 
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
-  let needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
-  let endPanelSide = adjacentCheck.adjacentSide;
+  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
+  const endPanelSide = adjacentCheck.adjacentSide;
   
   // 상하부장은 엔드패널이 필요없으므로 인접 체크 불필요
   // 상하부장 인접 체크 로직 제거됨
@@ -601,8 +601,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기
   // 단, customWidth가 이미 설정되어 있으면 이미 올바른 슬롯 너비가 반영된 것이므로 추가로 빼지 않음
-  let adjustedWidthForEndPanel = furnitureWidthMm;
-  let positionAdjustmentForEndPanel = 0; // 위치 조정값
+  const adjustedWidthForEndPanel = furnitureWidthMm;
+  const positionAdjustmentForEndPanel = 0; // 위치 조정값
   
   console.log('🔍 노서라운드 조정 전 상태:', {
     moduleId: placedModule.moduleId,
@@ -707,11 +707,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 노서라운드 모드에서 엔드패널 위치 조정은 렌더링 시 동적으로 적용됨
   
-  let adjustedDepthMm = actualModuleData?.dimensions.depth || 600;
+  const adjustedDepthMm = actualModuleData?.dimensions.depth || 600;
   
   
   // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
-  let furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
+  const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
   
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {

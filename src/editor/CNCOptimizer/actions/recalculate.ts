@@ -11,10 +11,10 @@ export function recalc(){
   console.log('Sheets:', s.sheets);
   if(s.sheets.length === 0) return; 
   
-  let allPlacements = [];
-  let allCuts = [];
+  const allPlacements = [];
+  const allCuts = [];
   let remainingPanels = [...s.panels];
-  let totalCncStats = { cycleTimeSec: 0, cutLenMm: 0, airLenMm: 0, toolChanges: 0 };
+  const totalCncStats = { cycleTimeSec: 0, cutLenMm: 0, airLenMm: 0, toolChanges: 0 };
   
   // Process each sheet until all panels are placed
   for(const sheet of s.sheets) {

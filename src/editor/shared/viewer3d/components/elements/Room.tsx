@@ -409,7 +409,7 @@ const Room: React.FC<RoomProps> = ({
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
     
     // 2D에서 베이스프레임은 투명하게 표시
-    let frameColor = materialConfig?.doorColor || defaultColor;
+    const frameColor = materialConfig?.doorColor || defaultColor;
     let baseFrameTransparent = false;
     if (viewMode === '2D' && frameType === 'base') {
       baseFrameTransparent = true;

@@ -119,8 +119,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       minorPointsLength: 'generating...'
     });
     
-    let majorPoints: number[] = [];
-    let minorPoints: number[] = [];
+    const majorPoints: number[] = [];
+    const minorPoints: number[] = [];
 
     // 뷰별 평면에 맞게 그리드 생성
     switch (view2DDirection) {

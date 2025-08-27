@@ -14,7 +14,7 @@ import { initializeTestEnvironment, RulesTestEnvironment } from '@firebase/rules
 
 describe('Template Service Integration Tests', () => {
   let testEnv: RulesTestEnvironment;
-  let authenticatedUserId = 'integration-test-user';
+  const authenticatedUserId = 'integration-test-user';
   
   const createTestTemplate = (name: string, isPublic: boolean = false): CreateTemplateInput => ({
     metadata: {

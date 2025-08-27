@@ -510,7 +510,7 @@ export function packGuillotine(
   
   const bins: PackedBin[] = [];
   let currentBin = 0;
-  let remainingPanels = [...panels];
+  const remainingPanels = [...panels];
   
   while (remainingPanels.length > 0 && currentBin < maxBins) {
     

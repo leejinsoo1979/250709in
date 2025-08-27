@@ -604,7 +604,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
       }
       
-      let adjustedPosition = { x: finalX, y: calculatedY, z: currentModule.position.z };
+      const adjustedPosition = { x: finalX, y: calculatedY, z: currentModule.position.z };
       
       if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
         const columnDepth = targetSlotInfo.column.depth;
@@ -693,7 +693,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
       
       // slotIndex는 이미 zone별 로컬 인덱스이므로 직접 사용
-      let finalSlotIndex = slotIndex;
+      const finalSlotIndex = slotIndex;
       
       updatePlacedModule(draggingModuleId, {
         moduleId: updatedModuleId,

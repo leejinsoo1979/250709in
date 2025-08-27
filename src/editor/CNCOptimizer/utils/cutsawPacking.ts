@@ -187,7 +187,7 @@ export function packCutsaw(
   
   const bins: PackedBin[] = [];
   let currentBin = 0;
-  let remainingPanels = [...sortedPanels];
+  const remainingPanels = [...sortedPanels];
   
   while (remainingPanels.length > 0 && currentBin < maxBins) {
     console.log(`\n--- Creating Cutsaw Bin ${currentBin + 1} ---`);

@@ -984,8 +984,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         }
         
         // 도어가 있는 경우 - 도어의 실제 크기와 위치로 치수 가이드 조정
-        let displayWidth = actualFurnitureWidthMm;
-        let displayPositionX = furniturePositionX + positionAdjustmentForEndPanel; // 엔드패널 영역을 피해서 표시
+        const displayWidth = actualFurnitureWidthMm;
+        const displayPositionX = furniturePositionX + positionAdjustmentForEndPanel; // 엔드패널 영역을 피해서 표시
         
         // 도어 치수 표시 코드 주석 처리
         // if (module.doorConfig) {

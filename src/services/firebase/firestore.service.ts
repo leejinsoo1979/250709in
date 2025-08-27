@@ -133,7 +133,7 @@ function buildQuery(
   collectionRef: CollectionReference<DocumentData>, 
   options?: QueryOptions
 ): Query<DocumentData> {
-  let constraints: QueryConstraint[] = [];
+  const constraints: QueryConstraint[] = [];
   
   if (options?.where) {
     options.where.forEach(condition => {

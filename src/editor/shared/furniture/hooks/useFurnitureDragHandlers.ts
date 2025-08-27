@@ -168,7 +168,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const targetSlotInfo = columnSlots[dropPosition.column];
         
         let adjustedWidth: number | undefined = undefined;
-        let adjustedPosition = { x: finalX, y: 0, z: 0 };
+        const adjustedPosition = { x: finalX, y: 0, z: 0 };
         let adjustedDepth = customDepth;
         
         // 디버그 로그 추가
@@ -356,7 +356,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         }
         
         // 새 모듈 배치
-        let newModuleData: any = {
+        const newModuleData: any = {
           id: placedId,
           moduleId: currentDragData.moduleData.id,
           baseModuleType: currentDragData.moduleData.id.replace(/-\d+$/, ''), // 너비를 제외한 기본 타입

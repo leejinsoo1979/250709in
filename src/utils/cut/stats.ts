@@ -76,7 +76,7 @@ export function calculateActualCutLength(cuts: CutStep[]): number {
     // 겹치는 구간 병합
     segments.sort((a, b) => a.start - b.start);
     
-    let mergedSegments: { start: number, end: number, kerf: number }[] = [];
+    const mergedSegments: { start: number, end: number, kerf: number }[] = [];
     let current = segments[0];
     
     for (let i = 1; i < segments.length; i++) {

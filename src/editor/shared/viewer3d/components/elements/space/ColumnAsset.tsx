@@ -182,7 +182,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // 화면 좌표 저장
     const startScreenX = event.nativeEvent.clientX;
-    let moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
+    const moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
     const updateInterval = 16; // 약 60fps로 제한
     
     // 드래그 시작 시 필요한 값들 미리 계산

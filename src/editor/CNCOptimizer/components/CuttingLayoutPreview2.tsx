@@ -576,7 +576,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // 패널 크기에 맞는 폰트 크기 계산
           const maxTextWidth = width * 0.8; // 패널 너비의 80%
           const maxTextHeight = height * 0.4; // 패널 높이의 40%로 증가
-          let baseFontSize = 24; // 기본 폰트 크기
+          const baseFontSize = 24; // 기본 폰트 크기
           let fontSize = Math.min(baseFontSize, maxTextHeight); // 패널 이름은 fontScale 적용 안 함
           
           // 가로 모드일 때 텍스트를 시계방향 90도 회전

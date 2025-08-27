@@ -90,7 +90,7 @@ export default function PanelsTable(){
   const onChange = (i:number, key: keyof Panel, val:any) => {
     const next = panels.map((panel, index) => {
       if (index === i) {
-        let updatedPanel = {
+        const updatedPanel = {
           ...panel,
           [key]: key==='quantity' || key==='width' || key==='length' || key==='thickness' ? Number(val) : val
         };

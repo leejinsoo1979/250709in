@@ -811,7 +811,7 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
           console.log('⚠️ 실제 Firebase 디자인파일이 없음 - 폴더 구조 이름만 변경');
           
           // 폴더 구조에서 해당 노드 찾아서 이름 변경
-          let updatedFolders = [...projectFolders];
+          const updatedFolders = [...projectFolders];
           let nameUpdated = false;
           
           for (let i = 0; i < updatedFolders.length; i++) {

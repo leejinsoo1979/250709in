@@ -1110,7 +1110,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         'right';
       
       // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
-      let adjustedDepth = defaultDepth;
+      const adjustedDepth = defaultDepth;
       
       // 새 모듈 배치
       const newModule: any = {
@@ -1402,7 +1402,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const defaultDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
     
     // 사용할 인덱싱 정보 결정
-    let zoneTargetIndexing = indexing;
+    const zoneTargetIndexing = indexing;
     
     // 실제 슬롯 너비 가져오기
     const actualSlotWidth = zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[slotIndex] !== undefined

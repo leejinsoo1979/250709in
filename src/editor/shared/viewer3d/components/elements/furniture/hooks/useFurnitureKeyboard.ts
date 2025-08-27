@@ -107,7 +107,7 @@ export const useFurnitureKeyboard = ({
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;
-              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              const adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
               let customDepth = editingModule.customDepth;
               
               // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -197,7 +197,7 @@ export const useFurnitureKeyboard = ({
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;
-              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              const adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
               let customDepth = editingModule.customDepth;
               
               // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -342,7 +342,7 @@ export const useFurnitureKeyboard = ({
                 const targetSlotInfo = columnSlots[nextSlot];
                 
                 let adjustedWidth: number | undefined = undefined;
-                let adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
+                const adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
                 let customDepth = selectedModule.customDepth;
                 
                 // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -432,7 +432,7 @@ export const useFurnitureKeyboard = ({
                 const targetSlotInfo = columnSlots[nextSlot];
                 
                 let adjustedWidth: number | undefined = undefined;
-                let adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
+                const adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
                 let customDepth = selectedModule.customDepth;
                 
                 // 기둥이 있는 슬롯인 경우 크기와 위치 조정

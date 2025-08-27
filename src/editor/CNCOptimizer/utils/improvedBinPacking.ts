@@ -249,7 +249,7 @@ export function packMaxRects(
   
   const bins: PackedBin[] = [];
   let currentBin = 0;
-  let remainingPanels = [...sortedPanels];
+  const remainingPanels = [...sortedPanels];
   
   while (remainingPanels.length > 0 && currentBin < maxBins) {
     

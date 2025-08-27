@@ -147,7 +147,7 @@ const WallAsset: React.FC<WallAssetProps> = ({
     
     // 화면 좌표 저장
     const startScreenX = event.nativeEvent.clientX;
-    let moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
+    const moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
     
     // 전역 이벤트 리스너 등록
     const handleGlobalPointerMove = (e: PointerEvent) => {

@@ -175,7 +175,7 @@ function PageInner(){
           }
           
           // 결방향은 항상 세로(V)로 설정 - 긴 방향이 결방향
-          let grain = 'V'; // 세로 결방향 (긴 방향)
+          const grain = 'V'; // 세로 결방향 (긴 방향)
           
           // 도어와 엔드패널은 자동으로 PET 재질로 설정
           let material = p.material || 'PB';
@@ -297,7 +297,7 @@ function PageInner(){
           length = p.width;
         }
         
-        let grain = 'V';
+        const grain = 'V';
         let material = p.material || 'PB';
         const panelName = (p.name || '').toLowerCase();
         if (panelName.includes('도어') || panelName.includes('door') || 
@@ -394,7 +394,7 @@ function PageInner(){
       
       panels.forEach(panel => {
         // Apply grain and rotation settings
-        let processedPanel = { ...panel };
+        const processedPanel = { ...panel };
         
         // 패널 치수를 그대로 사용 (width와 length를 변경하지 않음)
         // console.log(`Panel ${panel.label}: ${panel.width}x${panel.length} (grain: ${panel.grain}, thickness: ${panel.thickness}mm)`);
@@ -530,7 +530,7 @@ function PageInner(){
       // console.log('Total sheets generated:', allResults.length);
       
       // 재최적화 비활성화 - 시트 낭비 방지
-      let finalResults = [...allResults];
+      const finalResults = [...allResults];
       
       // console.log('=== Final Optimization Complete ===');
       // console.log('Total sheets:', finalResults.length);

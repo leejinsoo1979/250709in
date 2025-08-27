@@ -330,7 +330,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     }
     
     // 최종 위치 계산 - zone 정보 전달
-    let finalX = calculateFurniturePosition(zoneSlotIndex, actualModuleId, spaceInfo, zone);
+    const finalX = calculateFurniturePosition(zoneSlotIndex, actualModuleId, spaceInfo, zone);
     if (finalX === null) {
       return false;
     }
@@ -428,7 +428,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
       console.log('📏 평균 슬롯 너비 사용 (fallback):', customWidth);
     }
-    let adjustedDepth = customDepth; // Column C의 경우 조정될 수 있음
+    const adjustedDepth = customDepth; // Column C의 경우 조정될 수 있음
     
     // 기둥이 있는 슬롯인 경우 중복 배치 가능성 검토
     if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
@@ -541,7 +541,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         });
         
         // 위치와 크기 조정
-        let finalPosition = { 
+        const finalPosition = { 
           x: bestSpace.position.x, 
           y: 0, 
           z: bestSpace.position.z 
@@ -678,8 +678,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 기존 로직 - 단일 배치인 경우만 실행
     if (!targetSlotInfo || !targetSlotInfo.hasColumn || !targetSlotInfo.column) {
       // 기둥이 없는 일반 슬롯인 경우
-      let finalPosition = { x: finalX, y: 0, z: 0 };
-      let adjustedFurnitureWidth = actualModuleData.dimensions.width;
+      const finalPosition = { x: finalX, y: 0, z: 0 };
+      const adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
       // 노서라운드 엔드패널 슬롯 확인 - adjustedWidth 설정 제거
       // FurnitureItem에서 직접 처리하도록 변경
@@ -731,7 +731,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 기둥이 있지만 중복 배치가 불가능한 경우의 기존 로직
     let finalPosition = { x: finalX, y: 0, z: 0 };
     let adjustedFurnitureWidth = actualModuleData.dimensions.width;
-    let doorWidthForColumn = actualModuleData.dimensions.width - 3; // 기본값: 가구 너비 - 3mm
+    const doorWidthForColumn = actualModuleData.dimensions.width - 3; // 기본값: 가구 너비 - 3mm
     
     if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
       const columnDepth = targetSlotInfo.column.depth;
@@ -1610,7 +1610,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           }
           
           // 드래그 중인 가구의 모듈 데이터 가져오기
-          let moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
+          const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
           if (!moduleData) return null;
         
         // 듀얼 가구인 경우 기둥 체크

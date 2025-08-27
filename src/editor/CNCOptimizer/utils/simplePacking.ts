@@ -242,7 +242,7 @@ export function packSimple(
   
   const bins: PackedBin[] = [];
   let currentBin = 0;
-  let remainingPanels = [...sortedPanels];
+  const remainingPanels = [...sortedPanels];
   
   // 모든 패널을 배치할 때까지 반복
   while (remainingPanels.length > 0 && currentBin < maxBins) {

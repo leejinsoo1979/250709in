@@ -361,8 +361,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const indexing = calculateSpaceIndexing(spaceInfo);
       
       // 기본 너비 설정 - customWidth를 우선적으로 사용 (탑뷰와 동일하게)
-      let actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
-      let actualPositionX = module.position.x;
+      const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
+      const actualPositionX = module.position.x;
       
       // 듀얼 가구도 슬롯 경계에 정확히 맞춤 - 위치 조정 제거
       
@@ -1551,7 +1551,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         } = item;
         
         // actualPositionX를 moduleX로부터 가져옴
-        let actualPositionX = moduleX;
+        const actualPositionX = moduleX;
         
         // 실제 너비 계산은 이미 완료되어 있음
         const stepDownWidth = spaceInfo.droppedCeiling?.width || 0;
@@ -3971,7 +3971,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
           const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
-          let actualPositionX = module.adjustedPosition?.x || module.position.x;
+          const actualPositionX = module.adjustedPosition?.x || module.position.x;
           
           // 노서라운드 모드에서 듀얼 가구 엔드패널 정렬 적용
           const isDualFurniture = moduleData.id.includes('dual');
@@ -4161,7 +4161,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {false && placedModules.length > 0 && (() => {
           // 우측에 배치된 가구들의 가장 뒷면과 X 위치 찾기
           let rightmostBackZ = Infinity;
-          let rightFurnitureX = spaceXOffset + mmToThreeUnits(spaceInfo.width); // 기본값: 공간 오른쪽 끝
+          const rightFurnitureX = spaceXOffset + mmToThreeUnits(spaceInfo.width); // 기본값: 공간 오른쪽 끝
           let rightFurnitureLeftEdge = spaceXOffset + mmToThreeUnits(spaceInfo.width); // 우측 가구의 왼쪽 끝 모서리
           
           placedModules.forEach((module) => {
