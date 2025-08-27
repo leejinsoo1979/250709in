@@ -80,8 +80,15 @@ class DXFParser {
     const entity = { type, layer: '0', text: '', x: 0, y: 0 };
     this.index++; // Skip entity type
     while (this.index < this.lines.length) {
-      if (this.lines[this.index] === '0') {
-        break;
+      // Only break on '0' if the next line is an entity type (not a coordinate)
+      if (this.lines[this.index] === '0' && this.index + 1 < this.lines.length) {
+        const nextLine = this.lines[this.index + 1];
+        // Check if next line is an entity type or section marker
+        if (nextLine === 'TEXT' || nextLine === 'MTEXT' || nextLine === 'LINE' || 
+            nextLine === 'LWPOLYLINE' || nextLine === 'DIMENSION' || 
+            nextLine === 'ENDSEC' || nextLine === 'EOF') {
+          break;
+        }
       }
       if (this.lines[this.index] === '8') {
         entity.layer = this.lines[this.index + 1];
