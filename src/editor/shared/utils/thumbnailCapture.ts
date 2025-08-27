@@ -178,59 +178,85 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
 
 // 프로젝트 저장 시 자동 썸네일 캡처 (base64 문자열 반환)
 export const captureProjectThumbnail = async (): Promise<string | null> => {
-  // 먼저 정면 뷰로 캡처 시도
-  const frontViewThumbnail = await captureFrontViewThumbnail();
-  if (frontViewThumbnail) {
-    return frontViewThumbnail; // 이미 base64 문자열
+  // UI Store에서 치수 표시 상태 가져오기
+  const uiStore = (window as any).__uiStore;
+  let originalShowDimensions = true;
+  let originalShowDimensionsText = true;
+  
+  // 치수 및 슬롯 가이드 임시 숨기기
+  if (uiStore) {
+    const state = uiStore.getState();
+    originalShowDimensions = state.showDimensions;
+    originalShowDimensionsText = state.showDimensionsText;
+    
+    // 썸네일 캡처를 위해 일시적으로 숨기기
+    uiStore.getState().setShowDimensions(false);
+    uiStore.getState().setShowDimensionsText(false);
+    console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
   }
   
-  // 정면 뷰 캡처 실패 시 기존 방식 사용
-  const canvas = findThreeCanvas();
-  
-  if (!canvas) {
-    console.warn('3D 캔버스를 찾을 수 없어 썸네일을 생성할 수 없습니다.');
-    return null;
-  }
-  
-  // 캔버스가 보이는 상태인지 확인
-  if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
-    console.warn('캔버스가 보이지 않는 상태입니다.');
-    return null;
-  }
-  
-  console.log('📸 3D 캔버스 썸네일 캡처 시작...', {
-    canvasSize: `${canvas.width}x${canvas.height}`,
-    displaySize: `${canvas.offsetWidth}x${canvas.offsetHeight}`
-  });
-  
-  // 렌더링이 완료될 시간을 주기 위해 잠시 대기
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // 여러 번 시도하여 가장 좋은 결과 선택
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const thumbnail = captureCanvasThumbnail(canvas, {
-        width: 300,
-        height: 200,
-        quality: 0.7
-      });
-      
-      if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
-        console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도)`);
-        return thumbnail; // base64 문자열 반환
+  try {
+    // 먼저 정면 뷰로 캡처 시도
+    const frontViewThumbnail = await captureFrontViewThumbnail();
+    if (frontViewThumbnail) {
+      return frontViewThumbnail; // 이미 base64 문자열
+    }
+    
+    // 정면 뷰 캡처 실패 시 기존 방식 사용
+    const canvas = findThreeCanvas();
+    
+    if (!canvas) {
+      console.warn('3D 캔버스를 찾을 수 없어 썸네일을 생성할 수 없습니다.');
+      return null;
+    }
+    
+    // 캔버스가 보이는 상태인지 확인
+    if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+      console.warn('캔버스가 보이지 않는 상태입니다.');
+      return null;
+    }
+    
+    console.log('📸 3D 캔버스 썸네일 캡처 시작...', {
+      canvasSize: `${canvas.width}x${canvas.height}`,
+      displaySize: `${canvas.offsetWidth}x${canvas.offsetHeight}`
+    });
+    
+    // 렌더링이 완료될 시간을 주기 위해 잠시 대기
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 여러 번 시도하여 가장 좋은 결과 선택
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const thumbnail = captureCanvasThumbnail(canvas, {
+          width: 300,
+          height: 200,
+          quality: 0.7
+        });
+        
+        if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
+          console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도)`);
+          return thumbnail; // base64 문자열 반환
+        }
+        
+        // 실패 시 100ms 대기 후 재시도
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        console.warn(`썸네일 캡처 시도 ${attempt} 실패:`, error);
       }
-      
-      // 실패 시 100ms 대기 후 재시도
-      if (attempt < 3) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    } catch (error) {
-      console.warn(`썸네일 캡처 시도 ${attempt} 실패:`, error);
+    }
+    
+    console.warn('모든 썸네일 캡처 시도 실패');
+    return null;
+  } finally {
+    // 원래 상태로 복원
+    if (uiStore) {
+      uiStore.getState().setShowDimensions(originalShowDimensions);
+      uiStore.getState().setShowDimensionsText(originalShowDimensionsText);
+      console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
     }
   }
-  
-  console.warn('모든 썸네일 캡처 시도 실패');
-  return null;
 };
 
 // Base64 데이터 URL을 Blob으로 변환하는 유틸리티 함수

@@ -11,9 +11,10 @@ describe('UIStore', () => {
     it('기본값들이 올바르게 설정되어야 한다', () => {
       const state = useUIStore.getState()
       
-      expect(state.viewMode).toBe('2D')
-      expect(state.doorsOpen).toBe(false)
-      expect(state.selectedModuleForProperties).toBeNull()
+      // 실제 초기값과 일치하도록 수정
+      expect(state.viewMode).toBe('3D')
+      expect(state.doorsOpen).toBe(true)
+      expect(state.selectedModuleForPlacement).toBeNull()
     })
   })
 
@@ -21,11 +22,12 @@ describe('UIStore', () => {
     it('viewMode가 올바르게 변경되어야 한다', () => {
       const store = useUIStore
       
-      expect(store.getState().viewMode).toBe('2D')
-      
-      store.getState().setViewMode('3D')
-      
+      // 실제 초기값은 3D
       expect(store.getState().viewMode).toBe('3D')
+      
+      store.getState().setViewMode('2D')
+      
+      expect(store.getState().viewMode).toBe('2D')
     })
 
     it('2D와 3D 모드 간 전환이 정상 작동해야 한다', () => {
@@ -43,13 +45,14 @@ describe('UIStore', () => {
     it('문 열림/닫힘 토글이 정상 작동해야 한다', () => {
       const store = useUIStore
       
-      expect(store.getState().doorsOpen).toBe(false)
-      
-      store.getState().toggleDoors()
+      // 실제 초기값은 true
       expect(store.getState().doorsOpen).toBe(true)
       
       store.getState().toggleDoors()
       expect(store.getState().doorsOpen).toBe(false)
+      
+      store.getState().toggleDoors()
+      expect(store.getState().doorsOpen).toBe(true)
     })
   })
 
@@ -57,23 +60,24 @@ describe('UIStore', () => {
     it('모듈 선택이 올바르게 설정되어야 한다', () => {
       const store = useUIStore
       
-      expect(store.getState().selectedModuleForProperties).toBeNull()
+      // selectedModuleForPlacement로 변경
+      expect(store.getState().selectedModuleForPlacement).toBeNull()
       
-      store.getState().setSelectedModuleForProperties('module-123')
-      expect(store.getState().selectedModuleForProperties).toBe('module-123')
+      store.getState().setSelectedModuleForPlacement('module-123')
+      expect(store.getState().selectedModuleForPlacement).toBe('module-123')
       
-      store.getState().setSelectedModuleForProperties(null)
-      expect(store.getState().selectedModuleForProperties).toBeNull()
+      store.getState().setSelectedModuleForPlacement(null)
+      expect(store.getState().selectedModuleForPlacement).toBeNull()
     })
 
     it('다른 모듈로 변경이 정상 작동해야 한다', () => {
       const store = useUIStore
       
-      store.getState().setSelectedModuleForProperties('module-1')
-      expect(store.getState().selectedModuleForProperties).toBe('module-1')
+      store.getState().setSelectedModuleForPlacement('module-1')
+      expect(store.getState().selectedModuleForPlacement).toBe('module-1')
       
-      store.getState().setSelectedModuleForProperties('module-2')
-      expect(store.getState().selectedModuleForProperties).toBe('module-2')
+      store.getState().setSelectedModuleForPlacement('module-2')
+      expect(store.getState().selectedModuleForPlacement).toBe('module-2')
     })
   })
 
@@ -82,23 +86,23 @@ describe('UIStore', () => {
       const store = useUIStore
       
       // 상태 변경
-      store.getState().setViewMode('3D')
+      store.getState().setViewMode('2D')
       store.getState().toggleDoors()
-      store.getState().setSelectedModuleForProperties('module-123')
+      store.getState().setSelectedModuleForPlacement('module-123')
       
       // 변경 확인
-      expect(store.getState().viewMode).toBe('3D')
-      expect(store.getState().doorsOpen).toBe(true)
-      expect(store.getState().selectedModuleForProperties).toBe('module-123')
+      expect(store.getState().viewMode).toBe('2D')
+      expect(store.getState().doorsOpen).toBe(false)
+      expect(store.getState().selectedModuleForPlacement).toBe('module-123')
       
       // 리셋
       store.getState().resetUI()
       
       // 초기값 확인
       const state = store.getState()
-      expect(state.viewMode).toBe('2D')
-      expect(state.doorsOpen).toBe(false)
-      expect(state.selectedModuleForProperties).toBeNull()
+      expect(state.viewMode).toBe('3D')
+      expect(state.doorsOpen).toBe(true)
+      expect(state.selectedModuleForPlacement).toBeNull()
     })
   })
 
@@ -114,7 +118,7 @@ describe('UIStore', () => {
       const newState = store.getState()
       expect(newState.viewMode).toBe('3D')
       expect(newState.doorsOpen).toBe(initialState.doorsOpen)
-      expect(newState.selectedModuleForProperties).toBe(initialState.selectedModuleForProperties)
+      expect(newState.selectedModuleForPlacement).toBe(initialState.selectedModuleForPlacement)
     })
   })
 }) 

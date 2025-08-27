@@ -86,6 +86,10 @@ interface ServiceResponse<T> {
 }
 
 interface FirebaseProjectData extends Omit<ProjectData, 'id'> {
+  // 최상위 레벨에 title과 timestamp 추가 (대시보드 표시 및 정렬용)
+  title: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   // Firebase Timestamp 타입으로 변환
   basicInfo: Omit<ProjectBasicInfo, 'createdAt' | 'updatedAt'> & {
     createdAt: Timestamp;
@@ -119,6 +123,11 @@ export const createProject = async (
     const now = serverTimestamp() as Timestamp;
     const newProjectData: FirebaseProjectData = {
       userId: user.uid,
+      // 최상위 레벨에 title 추가 (대시보드 표시용)
+      title: projectData.basicInfo.title,
+      // 타임스탬프 추가 (정렬용)
+      createdAt: now,
+      updatedAt: now,
       basicInfo: {
         ...projectData.basicInfo,
         createdAt: now,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/firebase/auth';
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Logo from '@/components/common/Logo';
@@ -24,18 +24,36 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  
+  // 디버깅 로그
+  console.log('🔍 SplitLoginForm 상태:', {
+    user: user?.email,
+    authLoading,
+    path: window.location.pathname
+  });
 
-  // 로그인 상태 확인 후 자동 리다이렉트
+  // 로그인 상태 확인만 (리다이렉트 없음)
   useEffect(() => {
-    if (user && !authLoading) {
-      console.log('✅ 로그인된 상태 감지, 홈페이지로 이동합니다.');
-      const timeoutId = setTimeout(() => {
-        navigate('/');
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [user, authLoading, navigate]);
+    console.log('🔍 로그인 상태:', {
+      user: user?.email,
+      authLoading
+    });
+  }, [user, authLoading]);
+  
+  // 리다이렉트 결과 처리 (모바일 Google 로그인)
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      const result = await handleRedirectResult();
+      if (result.user) {
+        console.log('✅ Google 리다이렉트 로그인 성공');
+        navigate('/dashboard');
+      } else if (result.error) {
+        setError(result.error);
+      }
+    };
+    
+    checkRedirectResult();
+  }, [navigate]);
 
   // 이메일/비밀번호 로그인/회원가입 처리
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,6 +75,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       } else if (result.user) {
         console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();
+        // 로그인 성공 시 대시보드로 이동
+        navigate('/dashboard');
       }
     } catch (err) {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -108,7 +128,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
         setError(result.error);
       } else if (result.user) {
         console.log('✅ 구글 로그인 성공:', result.user.email);
-        onSuccess?.();
+        // 로그인 성공 시 대시보드로 이동
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error('❌ 구글 로그인 예외 발생:', err);

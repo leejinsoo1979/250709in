@@ -4,12 +4,14 @@ import { AuthProvider } from '@/auth/AuthProvider';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
+import { TeamProvider } from '@/contexts/TeamContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
+import ViewerPage from '@/pages/ViewerPage';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -60,10 +62,13 @@ function AppContent() {
   // 어느 하나라도 변경사항이 있으면 true
   const hasUnsavedChanges = projectIsDirty || spaceConfigIsDirty || furnitureIsDirty;
 
-  // 브라우저 새로고침/닫기 시 경고
+  // 브라우저 새로고침/닫기 시 경고 (Configurator 페이지에서만)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
+      // Configurator 페이지에서만 경고 표시
+      const isConfiguratorPage = window.location.pathname.includes('/configurator');
+      
+      if (hasUnsavedChanges && isConfiguratorPage) {
         const message = '저장하지 않은 변경사항이 있습니다. 정말로 페이지를 떠나시겠습니까?';
         e.preventDefault();
         e.returnValue = message;
@@ -82,8 +87,8 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <Routes>
-        {/* 메인 페이지 - 대시보드로 리다이렉트 */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* 메인 페이지 - 로그인 페이지 표시 */}
+        <Route path="/" element={<SplitLoginForm />} />
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
@@ -110,6 +115,8 @@ function AppContent() {
             <ARViewer />
           </Suspense>
         } />
+        {/* 공유 뷰어 라우트 */}
+        <Route path="/viewer/:projectId" element={<ViewerPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
@@ -127,11 +134,13 @@ function App() {
       <ThemeProvider>
         <AlertProvider>
           <AuthProvider>
-            <Router>
-              <NavigationProvider>
-                <AppContent />
-              </NavigationProvider>
-            </Router>
+            <TeamProvider>
+              <Router>
+                <NavigationProvider>
+                  <AppContent />
+                </NavigationProvider>
+              </Router>
+            </TeamProvider>
           </AuthProvider>
         </AlertProvider>
       </ThemeProvider>

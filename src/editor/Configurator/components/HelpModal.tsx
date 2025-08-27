@@ -13,10 +13,12 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const shortcuts = [
-    { key: t('help.shortcuts.mouseDrag'), action: t('help.shortcuts.cameraRotate') },
-    { key: t('help.shortcuts.mouseWheel'), action: t('help.shortcuts.zoomInOut') },
-    { key: 'Delete', action: t('help.shortcuts.deleteSelected') },
-    { key: 'Backspace', action: t('help.shortcuts.deleteSelected') },
+    { key: '마우스 휠버튼 드래그', action: '3D 카메라 회전' },
+    { key: '두 손가락 드래그', action: '화면 이동 (팬)' },
+    { key: '스크롤/두 손가락 핀치', action: '줌 인/아웃' },
+    { key: 'Space', action: '카메라 초기 위치로 리셋' },
+    { key: '가구/기둥 드래그 시', action: '자동 정면뷰 전환' },
+    { key: 'Delete / Backspace', action: t('help.shortcuts.deleteSelected') },
     { key: 'Esc', action: t('help.shortcuts.exitEditMode') },
     { key: t('help.shortcuts.arrowKeys'), action: t('help.shortcuts.fineTuneMove') },
     { key: t('help.shortcuts.doubleClick'), action: t('help.shortcuts.editMode') },

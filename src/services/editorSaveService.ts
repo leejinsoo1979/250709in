@@ -192,7 +192,7 @@ export const saveEditorProject = async (
     if (!options.skipThumbnail) {
       try {
         const thumbnail = await captureProjectThumbnail();
-        thumbnailBlob = thumbnail || undefined;
+        thumbnailBlob = typeof thumbnail === 'string' ? undefined : (thumbnail || undefined);
         console.log('💾 [EditorSave] 3D 썸네일 캡처 성공:', !!thumbnailBlob);
       } catch (thumbnailError) {
         console.error('💾 [EditorSave] 3D 썸네일 캡처 실패:', thumbnailError);

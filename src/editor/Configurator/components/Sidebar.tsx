@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
@@ -18,13 +18,15 @@ interface SidebarProps {
   onTabClick: (tab: SidebarTab) => void;
   isOpen: boolean;
   onToggle: () => void; // 폴딩 버튼 핸들러 추가
+  onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>; // 저장 완료 후 상태 리셋을 위한 ref
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabClick,
   isOpen,
-  onToggle
+  onToggle,
+  onResetUnsavedChanges
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -40,45 +42,73 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [initialState, setInitialState] = useState<any>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   
-  // Save initial state when component mounts
-  useEffect(() => {
+  // 현재 상태를 초기 상태로 저장하는 함수
+  const saveCurrentStateAsInitial = useCallback(() => {
+    // Store의 최신 상태를 가져오기 위해 직접 접근
+    const currentProject = useProjectStore.getState();
+    const currentSpaceConfig = useSpaceConfigStore.getState();
+    const currentFurniture = useFurnitureStore.getState();
+    
     const state = {
       project: {
-        basicInfo: projectStore.basicInfo,
-        updatedAt: projectStore.updatedAt
+        basicInfo: currentProject.basicInfo
+        // updatedAt를 제외 - 이 필드는 저장 시 서버에서 자동 업데이트되므로 비교에서 제외
       },
       spaceConfig: {
-        spaceInfo: spaceConfigStore.spaceInfo,
-        materialConfig: spaceConfigStore.materialConfig,
-        columns: spaceConfigStore.columns
+        spaceInfo: currentSpaceConfig.spaceInfo,
+        materialConfig: currentSpaceConfig.materialConfig,
+        columns: currentSpaceConfig.columns
       },
       furniture: {
-        placedModules: furnitureStore.placedModules
+        placedModules: currentFurniture.placedModules
       }
     };
     setInitialState(JSON.parse(JSON.stringify(state)));
   }, []);
+
+  // Save initial state when component mounts or when project data changes significantly
+  useEffect(() => {
+    // 약간의 지연을 두어 데이터가 로드된 후 초기 상태를 저장
+    const timer = setTimeout(() => {
+      saveCurrentStateAsInitial();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [saveCurrentStateAsInitial]);
+
+  // 외부에서 호출할 수 있도록 ref에 함수 등록
+  useEffect(() => {
+    if (onResetUnsavedChanges && onResetUnsavedChanges.current !== undefined) {
+      onResetUnsavedChanges.current = saveCurrentStateAsInitial;
+    }
+  }, [onResetUnsavedChanges]);
   
   // Check if there are unsaved changes
   const hasUnsavedChanges = () => {
     if (!initialState) return false;
     
+    // Store의 최신 상태를 가져오기
+    const currentProject = useProjectStore.getState();
+    const currentSpaceConfig = useSpaceConfigStore.getState();
+    const currentFurniture = useFurnitureStore.getState();
+    
     const currentState = {
       project: {
-        basicInfo: projectStore.basicInfo,
-        updatedAt: projectStore.updatedAt
+        basicInfo: currentProject.basicInfo
+        // updatedAt를 제외 - 이 필드는 저장 시 서버에서 자동 업데이트되므로 비교에서 제외
       },
       spaceConfig: {
-        spaceInfo: spaceConfigStore.spaceInfo,
-        materialConfig: spaceConfigStore.materialConfig,
-        columns: spaceConfigStore.columns
+        spaceInfo: currentSpaceConfig.spaceInfo,
+        materialConfig: currentSpaceConfig.materialConfig,
+        columns: currentSpaceConfig.columns
       },
       furniture: {
-        placedModules: furnitureStore.placedModules
+        placedModules: currentFurniture.placedModules
       }
     };
     
-    return JSON.stringify(initialState) !== JSON.stringify(currentState);
+    const hasChanges = JSON.stringify(initialState) !== JSON.stringify(currentState);
+    return hasChanges;
   };
   
   const handleExitClick = () => {
@@ -217,9 +247,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className={styles.modalActions}>
               <button
                 className={styles.modalButtonCancel}
-                onClick={() => setShowExitConfirm(false)}
+                onClick={async () => {
+                  setShowExitConfirm(false);
+                  // 저장하고 나가기 - onResetUnsavedChanges를 통해 저장 실행
+                  if (onResetUnsavedChanges?.current) {
+                    await onResetUnsavedChanges.current();
+                  }
+                  navigate('/dashboard');
+                }}
               >
-                {t('common.cancel')}
+                {t('messages.exitWithSaving')}
               </button>
               <button
                 className={styles.modalButtonConfirm}

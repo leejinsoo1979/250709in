@@ -11,14 +11,15 @@ interface ProjectViewerModalProps {
   onClose: () => void;
   projectId: string;
   designFileId?: string;
+  initialViewMode?: '2D' | '3D';
 }
 
-const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId }) => {
+const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId, initialViewMode = '3D' }) => {
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
+  const [viewMode, setViewMode] = useState<'2D' | '3D'>(initialViewMode);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -306,14 +307,20 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                 }</span>
               </div>
               <button 
-                className={styles.editButton}
+                className={styles.shareButton}
                 onClick={() => {
-                  handleClose();
-                  // 에디터로 이동하는 로직은 부모 컴포넌트에서 처리
-                  window.location.href = `/configurator/${projectId}`;
+                  // 디자인 파일이 있으면 디자인 파일 ID로, 없으면 프로젝트 ID로 공유
+                  const shareId = designFileId || projectId;
+                  const shareUrl = `${window.location.origin}/viewer/${shareId}`;
+                  navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert(`공유 링크가 클립보드에 복사되었습니다!\n${shareUrl}`);
+                  }).catch(() => {
+                    // 복사 실패 시 직접 표시
+                    prompt('공유 링크를 복사하세요:', shareUrl);
+                  });
                 }}
               >
-                에디터에서 편집
+                공유하기
               </button>
             </div>
           )}

@@ -37,7 +37,7 @@ export interface OrbitControlsConfig {
  * - 두 손가락 클릭 후 드래그: 화면 팬 이동
  * 
  * 마우스 컨트롤:
- * - 왼쪽 버튼: 팬 (화면 이동)
+ * - 왼쪽 버튼: 비활성화
  * - 중간 버튼(휠 클릭/드래그): 카메라 회전 (3D 모드) / 팬 (2D 모드)
  * - 휠 스크롤: 줌 인/아웃
  * - 오른쪽 버튼: 팬
@@ -105,13 +105,14 @@ export const useOrbitControlsConfig = (
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
       dampingFactor: 0.05, // 관성 정도 (작을수록 더 묵직함)
       mouseButtons: {
-        LEFT: THREE.MOUSE.PAN, // 왼쪽 버튼: 팬 (화면 이동)
+        LEFT: is2DMode ? undefined : THREE.MOUSE.ROTATE, // 왼쪽 버튼: 3D에서는 회전 (트랙패드 기본 동작)
         MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, // 중간 버튼(휠 클릭): 2D에서는 팬, 3D에서는 회전
         RIGHT: THREE.MOUSE.PAN, // 오른쪽 버튼: 팬
       },
       touches: {
-        ONE: is2DMode ? undefined : THREE.TOUCH.ROTATE, // 3D 모드에서만 한 손가락으로 회전
-        TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락으로 줌+팬 (두 손가락 스크롤: 줌, 두 손가락 클릭 드래그: 팬)
+        // 터치 디바이스 설정
+        ONE: is2DMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, // 한 손가락: 3D에서는 회전, 2D에서는 팬
+        TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락: 줌+팬 (핀치 줌)
       },
     };
   }, [cameraTarget, viewMode, calculateDynamicDistances]);

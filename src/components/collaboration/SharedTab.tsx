@@ -113,24 +113,46 @@ const SharedTab: React.FC<SharedTabProps> = ({ onProjectSelect }) => {
   return (
     <div className={styles.tabContent}>
       <div className={styles.tabHeader}>
-        <h2 className={styles.tabTitle}>
-          <ShareIcon size={20} />
-          공유 프로젝트
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h2 className={styles.tabTitle}>
+            <ShareIcon size={20} />
+            공유 프로젝트
+          </h2>
+          
+          <div className={styles.shareStats} style={{ marginLeft: 'auto', marginRight: '16px' }}>
+            <span>
+              {activeSubTab === 'shared-by-me' 
+                ? `공유한 프로젝트 ${sharedByMe.length}개`
+                : `공유받은 프로젝트 ${sharedWithMe.length}개`}
+            </span>
+          </div>
+        </div>
         
-        <div className={styles.subTabs}>
-          <button
-            className={`${styles.subTab} ${activeSubTab === 'shared-by-me' ? styles.active : ''}`}
-            onClick={() => setActiveSubTab('shared-by-me')}
-          >
-            내가 공유한 프로젝트
-          </button>
-          <button
-            className={`${styles.subTab} ${activeSubTab === 'shared-with-me' ? styles.active : ''}`}
-            onClick={() => setActiveSubTab('shared-with-me')}
-          >
-            공유받은 프로젝트
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className={styles.subTabs}>
+            <button
+              className={`${styles.subTab} ${activeSubTab === 'shared-by-me' ? styles.active : ''}`}
+              onClick={() => setActiveSubTab('shared-by-me')}
+            >
+              내가 공유한 프로젝트
+            </button>
+            <button
+              className={`${styles.subTab} ${activeSubTab === 'shared-with-me' ? styles.active : ''}`}
+              onClick={() => setActiveSubTab('shared-with-me')}
+            >
+              공유받은 프로젝트
+            </button>
+          </div>
+          
+          {activeSubTab === 'shared-by-me' && (
+            <button
+              className={styles.shareButton}
+              onClick={() => setShowShareModal(true)}
+            >
+              <ShareIcon size={16} />
+              새 공유 만들기
+            </button>
+          )}
         </div>
       </div>
 
@@ -245,26 +267,6 @@ const SharedTab: React.FC<SharedTabProps> = ({ onProjectSelect }) => {
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      <div className={styles.tabFooter}>
-        <div className={styles.shareStats}>
-          <span>
-            {activeSubTab === 'shared-by-me' 
-              ? `공유한 프로젝트 ${sharedByMe.length}개`
-              : `공유받은 프로젝트 ${sharedWithMe.length}개`}
-          </span>
-        </div>
-        
-        {activeSubTab === 'shared-by-me' && (
-          <button
-            className={styles.shareButton}
-            onClick={() => setShowShareModal(true)}
-          >
-            <ShareIcon size={16} />
-            새 공유 만들기
-          </button>
         )}
       </div>
     </div>

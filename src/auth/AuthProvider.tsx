@@ -44,13 +44,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(user);
         setLoading(false);
         
-        // 개발 모드에서 로그 출력
-        if (import.meta.env.DEV) {
-          if (user) {
-            console.log('🔐 사용자 로그인:', user.email);
-          } else {
-            console.log('🔐 사용자 로그아웃');
+        // localStorage에 userId와 activeTeamId 설정 (개발 모드 조건 제거!)
+        if (user) {
+          console.log('🔐 사용자 로그인:', user.email);
+          localStorage.setItem('userId', user.uid);
+          if (!localStorage.getItem('activeTeamId')) {
+            localStorage.setItem('activeTeamId', `personal_${user.uid}`);
           }
+        } else {
+          console.log('🔐 사용자 로그아웃');
+          // 로그아웃 시 localStorage 정리
+          localStorage.removeItem('userId');
+          localStorage.removeItem('activeTeamId');
         }
       });
 

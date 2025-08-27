@@ -7,6 +7,9 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getModuleById } from '@/data/modules';
 import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
+import { exportWithPersistence } from '@/services/exportService';
+import { getCurrentVersionId } from '@/services/designs.repo';
+import { auth } from '@/firebase/config';
 
 export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-right';
 
@@ -557,9 +560,33 @@ export function usePDFExport() {
         pdf.text('FURNITURE POSITIONS REFER TO FLOOR PLAN', tableX, yPos + 20);
       }
       
-      // PDF 다운로드
+      // PDF 파일명 생성
       const filename = `${projectTitle.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${currentDate.replace(/\./g, '')}.pdf`;
-      pdf.save(filename);
+      
+      // Storage 업로드 시도
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          // Team ID와 Design ID 가져오기
+          const teamId = `personal_${user.uid}`;
+          const designId = 'current_design'; // 임시: 현재 디자인 ID
+          const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
+          
+          // PDF Blob 생성
+          const pdfBlob = pdf.output('blob');
+          
+          // Storage에 저장 시도
+          await exportWithPersistence(pdfBlob, filename, 'pdf', teamId, designId, versionId);
+          console.log('✅ PDF Storage 업로드 성공!');
+        } else {
+          // 로그인하지 않은 경우 기존 방식으로 다운로드
+          pdf.save(filename);
+        }
+      } catch (error) {
+        console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
+        // 실패 시 기존 방식으로 다운로드
+        pdf.save(filename);
+      }
       
       return {
         success: true,

@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Apple SD Gothic Neo', sans-serif;
-  background: var(--theme-background-secondary) !important;
+  background: var(--theme-background) !important;
   color: var(--theme-text) !important;
   position: relative;
   overflow: hidden;
@@ -36,6 +36,12 @@
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   33% { transform: translate(30px, -30px) rotate(120deg); }
   66% { transform: translate(-20px, 20px) rotate(240deg); }
+}
+
+/* 스켈레톤 로딩 애니메이션 */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* 좌측 사이드바 */
@@ -306,7 +312,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--theme-background-secondary) !important;
+  background: var(--theme-background) !important;
   overflow: hidden;
   min-width: 0;
 }
@@ -316,17 +322,95 @@
   background: white !important;
 }
 
-/* 상단 헤더 */
+/* 상단 헤더 - 모든 메뉴에서 항상 표시 */
 .header {
   height: 65px;
   background: var(--theme-surface, rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--theme-border);
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   gap: 24px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 헤더 내부 요소들도 항상 표시 */
+.header * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 북마크 메뉴에서도 헤더 요소 강제 표시 */
+.dashboard[data-menu="bookmarks"] .header {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .headerRight {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.dashboard[data-menu="bookmarks"] .headerActions,
+.dashboard[data-menu="shared"] .headerActions,
+.dashboard[data-menu="trash"] .headerActions,
+.dashboard[data-menu="profile"] .headerActions,
+.dashboard[data-menu="team"] .headerActions {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfile,
+.dashboard[data-menu="shared"] .userProfile,
+.dashboard[data-menu="trash"] .userProfile,
+.dashboard[data-menu="profile"] .userProfile,
+.dashboard[data-menu="team"] .userProfile {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard[data-menu="bookmarks"] .actionButton,
+.dashboard[data-menu="shared"] .actionButton,
+.dashboard[data-menu="trash"] .actionButton,
+.dashboard[data-menu="profile"] .actionButton,
+.dashboard[data-menu="team"] .actionButton {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfileAvatar,
+.dashboard[data-menu="shared"] .userProfileAvatar,
+.dashboard[data-menu="trash"] .userProfileAvatar,
+.dashboard[data-menu="profile"] .userProfileAvatar,
+.dashboard[data-menu="team"] .userProfileAvatar {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.dashboard[data-menu="bookmarks"] .userProfileName,
+.dashboard[data-menu="shared"] .userProfileName,
+.dashboard[data-menu="trash"] .userProfileName,
+.dashboard[data-menu="profile"] .userProfileName,
+.dashboard[data-menu="team"] .userProfileName {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .headerLeft {
@@ -406,16 +490,20 @@
 }
 
 .headerRight {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 16px;
   margin-left: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .headerActions {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 12px;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .actionButton {
@@ -425,11 +513,13 @@
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   color: var(--theme-text-secondary);
   transition: background-color 0.2s;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .actionButton:hover {
@@ -476,7 +566,7 @@
   flex: 1;
   display: flex;
   overflow: hidden;
-  background: var(--theme-background-secondary) !important;
+  background: var(--theme-background) !important;
 }
 
 /* 라이트모드에서만 흰색 배경 */
@@ -671,6 +761,7 @@
   font-size: 14px;
   color: var(--theme-text-secondary);
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .treeItem:hover {
@@ -688,6 +779,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Tree toggle arrow for expanding/collapsing projects */
+.treeToggleArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.treeToggleArrow.expanded {
+  transform: rotate(90deg);
+}
+
+/* Project children container for expanded items */
+.projectChildren {
+  margin-left: 24px;
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--theme-border);
 }
 
 .treeItemCount {
@@ -954,13 +1072,14 @@
   grid-row: 1;
   background: transparent;
   padding: 0;
-  margin-right: 8px;
-  justify-self: start;
+  margin: 0;
+  justify-self: center;
   align-self: center;
 }
 
 .designGrid.listView .cardCheckbox:hover {
-  background: transparent;
+  background: transparent !important;
+  transform: none !important;
 }
 
 /* 디자인 카드 호버 오버레이 */
@@ -984,7 +1103,8 @@
   pointer-events: none; /* 기본적으로 클릭 이벤트 차단 */
 }
 
-/* 오버레이는 폴더 뷰의 디자인 카드에만 적용 */
+/* 오버레이는 모든 디자인 카드에 적용 (폴더와 new-design 제외) */
+.designCard[data-design-id]:hover .designCardOverlay,
 .designGrid.folderView .designCard:not(.folderCard):not(.newDesign):hover .designCardOverlay,
 .designCard.forceHover .designCardOverlay {
   opacity: 1;
@@ -1037,10 +1157,11 @@
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   box-shadow: 0 10px 25px var(--theme-shadow, rgba(0, 0, 0, 0.15)), 0 4px 6px rgba(0, 0, 0, 0.05);
-  z-index: 1101;
+  z-index: 9999;
   padding: 8px;
   min-width: 160px;
   backdrop-filter: blur(10px);
+  position: fixed;
 }
 
 /* 더보기 메뉴 백드롭 */
@@ -1051,7 +1172,7 @@
   right: 0;
   bottom: 0;
   background: transparent;
-  z-index: 1100;
+  z-index: 9998;
 }
 
 .moreMenuItem {
@@ -1113,11 +1234,11 @@
 }
 
 .pageTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--theme-primary);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--theme-text);
   margin: 0;
-  padding: 4px 8px;
+  padding: 0;
 }
 
 .designGrid {
@@ -1167,7 +1288,7 @@
 /* 리스트 테이블 헤더 */
 .listTableHeader {
   display: grid;
-  grid-template-columns: 40px 1fr 160px 120px 80px;
+  grid-template-columns: 40px minmax(200px, 1fr) 180px 140px 100px;
   gap: 16px;
   padding: 12px 20px;
   padding-left: 20px;
@@ -1176,6 +1297,7 @@
   border-bottom: 1px solid var(--theme-border);
   border-radius: 8px 8px 0 0;
   margin-bottom: 0;
+  align-items: center;
 }
 
 .headerColumn {
@@ -1186,10 +1308,11 @@
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .headerColumn:nth-child(1) {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .headerColumn:nth-child(2) {
@@ -1197,10 +1320,14 @@
 }
 
 .headerColumn:nth-child(3) {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .headerColumn:nth-child(4) {
+  justify-content: center;
+}
+
+.headerColumn:nth-child(5) {
   justify-content: center;
 }
 
@@ -1227,9 +1354,9 @@
 /* 리스트 뷰 카드 스타일 */
 .designGrid.listView .designCard {
   display: grid;
-  grid-template-columns: 40px 1fr 160px 120px 80px;
+  grid-template-columns: 40px 56px minmax(200px, 1fr) 180px 140px 100px;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 12px 20px;
   min-height: 64px;
   border-radius: 0;
@@ -1248,29 +1375,21 @@
   display: contents;
 }
 
-/* 썸네일과 제목을 포함하는 두 번째 컬럼 */
+/* 리스트 뷰 썸네일 스타일 - 두 번째 컬럼 */
 .designGrid.listView .cardThumbnail {
   grid-column: 2;
   grid-row: 1;
   width: 56px;
   height: 40px;
-  justify-self: start;
+  justify-self: center;
   align-self: center;
+  position: static;
+  flex-shrink: 0;
 }
 
-.designGrid.listView .cardMeta {
-  grid-column: 3;
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  justify-self: start;
-  align-self: center;
-}
-
+/* 리스트 뷰 제목 스타일 - 세 번째 컬럼 */
 .designGrid.listView .cardTitle {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   font-size: 14px;
   font-weight: 500;
@@ -1279,9 +1398,89 @@
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0;
-  padding-left: 72px; /* 56px(썸네일) + 16px(gap) */
+  padding-left: 0; /* 패딩 제거 */
   justify-self: start;
   align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0; /* 텍스트 오버플로우가 제대로 작동하도록 */
+  max-width: 100%; /* 최대 너비 제한 */
+}
+
+.designGrid.listView .cardMeta {
+  grid-column: 4;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  justify-self: center;
+  align-self: center;
+}
+
+/* 리스트 뷰에서 프로젝트 카드 제목 수정 */
+.designGrid.listView .designCard[data-item-type="project"] .cardTitle,
+.designGrid.listView .designCard[data-item-type="folder"] .cardTitle {
+  padding-left: 0; /* 패딩 제거 */
+}
+
+/* 리스트 뷰에서 폴더 카드 레이아웃 */
+.designGrid.listView .folderContent {
+  display: contents; /* 그리드 레이아웃에 맞게 조정 */
+  padding: 0;
+  border-top: none;
+}
+
+/* 리스트 뷰에서 폴더 제목 */
+.designGrid.listView .folderTitle {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+  margin: 0;
+  padding-left: 0;
+  justify-self: start;
+  align-self: center;
+}
+
+/* 리스트 뷰 액션 버튼들 */
+.listActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 16px;
+}
+
+.listActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--theme-background-secondary);
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.listActionBtn:hover {
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  transform: translateY(-1px);
+}
+
+.listActionBtn svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* 날짜 컬럼 */
@@ -1293,10 +1492,10 @@
 
 /* 사용자 정보 컬럼 */
 .designGrid.listView .cardFooter {
-  grid-column: 4;
+  grid-column: 5;
   grid-row: 1;
   margin: 0;
-  justify-self: start;
+  justify-self: center;
   align-self: center;
 }
 
@@ -1309,7 +1508,7 @@
 
 /* 액션 버튼 컬럼 */
 .designGrid.listView .cardActionButton {
-  grid-column: 5;
+  grid-column: 6;
   grid-row: 1;
   width: 32px;
   height: 32px;
@@ -1334,8 +1533,8 @@
 
 .designGrid.listView .designCard:hover {
   background: var(--theme-background-secondary, rgba(16, 185, 129, 0.03)) !important;
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
   border-bottom: 1px solid var(--theme-border, #e5e7eb);
   cursor: pointer;
 }
@@ -1411,7 +1610,8 @@
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardInfo,
 .designGrid.folderView:not(.listView) .designCard .cardInfo {
   padding: 12px !important;
-  height: 80px !important;
+  height: auto !important;
+  min-height: 80px !important;
   border-top: 1px solid var(--theme-border) !important;
   display: flex;
   flex-direction: column;
@@ -1494,14 +1694,15 @@
   margin: 0 !important;
 }
 
-/* 리스트 뷰 썸네일 스타일 */
+/* 리스트 뷰 썸네일 컨테이너 추가 스타일 */
 .designGrid.listView .cardThumbnail {
-  width: 56px;
-  height: 40px;
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid var(--theme-border, #e5e7eb);
-  flex-shrink: 0;
+  background: var(--theme-background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .designGrid.listView .designThumbnailImage {
@@ -1514,6 +1715,21 @@
 .designGrid.listView .cardThumbnail.newDesign {
   background: var(--theme-primary);
   border-color: var(--theme-primary);
+}
+
+/* 리스트 뷰 폴더 아이콘 */
+.designGrid.listView .folderIcon {
+  width: 100%;
+  height: 100%;
+  background: var(--theme-background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.designGrid.listView .folderIconSvg {
+  width: 24px;
+  height: 24px;
 }
 
 .designGrid.listView .cardThumbnailIcon {
@@ -1574,6 +1790,26 @@
   border-radius: 8px;
 }
 
+/* 리스트 뷰에서 썸네일 그리드 조정 */
+.designGrid.listView .thumbnailGrid {
+  gap: 2px;
+  padding: 4px;
+}
+
+.designGrid.listView .thumbnailFolder,
+.designGrid.listView .thumbnailFile {
+  font-size: 8px;
+}
+
+.designGrid.listView .fileIconWrapper {
+  width: 12px;
+  height: 12px;
+}
+
+.designGrid.listView .fileIcon {
+  font-size: 8px;
+}
+
 .thumbnailItem {
   display: flex;
   align-items: center;
@@ -1581,6 +1817,13 @@
   border-radius: 6px;
   overflow: hidden;
   transition: all 0.2s ease;
+  background: var(--theme-background-secondary);
+}
+
+.thumbnailItem .thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .thumbnailFolder {
@@ -1708,7 +1951,8 @@
   padding: 12px;
   background: var(--theme-surface);
   border-top: 1px solid var(--theme-border);
-  height: 80px;
+  height: auto;
+  min-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1755,6 +1999,7 @@
   font-size: 13px;
   color: var(--theme-text-secondary);
   width: 160px;
+  text-align: center;
 }
 
 .cardActions {
@@ -1808,8 +2053,8 @@
 .designGrid.listView .cardActionButton:hover {
   background: var(--theme-background-secondary);
   border-color: var(--theme-border);
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* 리스트 뷰에서 트리 아이템 카운트 숨기기 */
@@ -1834,6 +2079,7 @@
 
 .designGrid.listView .cardUser {
   width: 120px;
+  justify-content: center;
 }
 
 .cardUser {
@@ -1968,18 +2214,20 @@
 .modalActions {
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: 24px;
 }
 
 .modalCancelBtn,
 .modalCreateBtn {
-  padding: 8px 16px;
+  padding: 10px 24px;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-width: 100px;
 }
 
 .modalCancelBtn {
@@ -2519,4 +2767,112 @@
   background: var(--theme-primary-hover, #059669);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px var(--theme-primary-light, rgba(16, 185, 129, 0.3));
+}
+
+/* Bulk Delete Button */
+.bulkDeleteButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bulkDeleteButton:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--theme-primary-light);
+}
+
+.bulkDeleteButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* List Action Popup Styles */
+.popupBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999;
+}
+
+.listActionPopup {
+  position: fixed;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  padding: 8px;
+  min-width: 180px;
+  backdrop-filter: blur(10px);
+}
+
+.popupButton {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text);
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.popupButton:hover {
+  background: var(--theme-background-secondary);
+  transform: translateX(2px);
+}
+
+.popupButton svg {
+  width: 16px;
+  height: 16px;
+  color: var(--theme-text-secondary);
+}
+/* 리스트 뷰 내부 디자인 생성 버튼 */
+.createDesignBtnInList {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  margin-left: auto;
+  background: var(--theme-primary, #007AFF);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.createDesignBtnInList:hover {
+  background: var(--theme-primary-hover, #0051D5);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--theme-primary-light, rgba(0, 122, 255, 0.2));
+}
+
+.createDesignBtnInList svg {
+  width: 14px;
+  height: 14px;
 }

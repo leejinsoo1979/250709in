@@ -296,7 +296,8 @@
     "invalidInput": "유효하지 않은 입력값입니다",
     "connectionError": "연결 오류가 발생했습니다",
     "sessionExpired": "세션이 만료되었습니다",
-    "exitWithoutSaving": "저장하지 않고 나가기",
+    "exitWithoutSaving": "그냥 나가기",
+    "exitWithSaving": "저장하고 나가기",
     "captureFailure": "뷰 캡처에 실패했습니다. 다시 시도해주세요.",
     "exitConfirm": "변경사항을 저장하지 않고 나가시겠습니까?",
     "loseChanges": "저장하지 않은 내용은 잃어버리게 됩니다."

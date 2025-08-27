@@ -4,6 +4,7 @@ import { ArrowLeft, Package, Layers, Zap, Eye, Download, Plus, Edit2, Trash2, Gr
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import styles from './style.module.css';
 import { Panel, StockPanel, OptimizedResult, PlacedPanel, PanelGroup } from './types';
@@ -57,6 +58,7 @@ const getMaterialName = (material: string): string => {
 const CNCOptimizer: React.FC = () => {
   const navigate = useNavigate();
   const { basicInfo } = useProjectStore();
+  const { theme } = useTheme();
   
   // Use live panel data hook for real-time synchronization
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();

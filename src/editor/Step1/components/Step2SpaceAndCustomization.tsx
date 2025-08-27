@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -24,16 +24,62 @@ import styles from './Step2SpaceAndCustomization.module.css';
 interface Step2SpaceAndCustomizationProps {
   onPrevious: () => void;
   onClose: () => void;
+  projectId?: string;
+  projectTitle?: string;
 }
 
-const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({ onPrevious, onClose }) => {
+const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({ onPrevious, onClose, projectId: propsProjectId, projectTitle: propsProjectTitle }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const viewMode = '3D'; // 3D 뷰만 사용
   const [viewerKey, setViewerKey] = useState(0);
   
-  const { basicInfo } = useProjectStore();
+  const { basicInfo, projectId: storeProjectId, projectTitle: storeProjectTitle } = useProjectStore();
+  
+  // projectId와 projectTitle을 안정적으로 유지
+  const projectIdRef = useRef<string | null>(null);
+  const projectTitleRef = useRef<string | null>(null);
+  
+  // 최초 마운트 시 한 번만 초기값 설정
+  useEffect(() => {
+    if (!projectIdRef.current) {
+      projectIdRef.current = storeProjectId || propsProjectId || null;
+    }
+    if (!projectTitleRef.current) {
+      projectTitleRef.current = storeProjectTitle || propsProjectTitle || null;
+    }
+  }, []); // 빈 dependency로 최초 한 번만 실행
+  
+  // store가 업데이트되면 ref도 업데이트 (store가 우선순위)
+  useEffect(() => {
+    if (storeProjectId) {
+      projectIdRef.current = storeProjectId;
+    }
+    if (storeProjectTitle) {
+      projectTitleRef.current = storeProjectTitle;
+    }
+  }, [storeProjectId, storeProjectTitle]);
+  
+  // 최종 사용할 값 - ref를 우선 사용하되, 없으면 store/props 순서로 fallback
+  const projectId = useMemo(() => 
+    projectIdRef.current || storeProjectId || propsProjectId || null,
+    [storeProjectId, propsProjectId, projectIdRef.current]
+  );
+  
+  const projectTitle = useMemo(() => 
+    projectTitleRef.current || storeProjectTitle || propsProjectTitle || null,
+    [storeProjectTitle, propsProjectTitle, projectTitleRef.current]
+  );
+  
+  console.log('🔥 Step2 projectId/Title 확인:', {
+    storeProjectId,
+    propsProjectId,
+    finalProjectId: projectId,
+    storeProjectTitle,
+    propsProjectTitle,
+    finalProjectTitle: projectTitle
+  });
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
 
@@ -94,7 +140,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         throw new Error('사용자 정보를 찾을 수 없습니다.');
       }
 
-      const projectId = `project_${Date.now()}`;
+      // projectId는 나중에 Firebase에서 생성됨
       const currentTimestamp = serverTimestamp();
       
       // CreateProjectData 형식에 맞게 데이터 준비
@@ -138,25 +184,48 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
         }
       };
 
-      const result = await createProject(projectData);
+      // projectStore에서 프로젝트 ID 가져오기
+      const currentProjectId = projectId;
       
-      if (result.success && result.data) {
-        const projectId = result.data;
-        const designFileName = `${basicInfo.title || '새로운 디자인'}_${new Date().toISOString().split('T')[0]}`;
+      if (!currentProjectId) {
+        // projectId가 없으면 에러 - 프로젝트를 선택하지 않고 디자인을 생성하려는 경우
+        throw new Error('프로젝트를 먼저 선택해주세요.');
+      }
+      
+      console.log('📋 기존 프로젝트에 디자인 파일 생성, 프로젝트 ID:', currentProjectId);
+      
+      if (currentProjectId) {
+        // 디자인 파일명은 사용자가 입력한 그대로 사용 (날짜 추가하지 않음)
+        const designFileName = basicInfo.title || '새로운 디자인';
         
+        // 썸네일 생성
         const thumbnailDataURL = generateDefaultThumbnail(spaceInfo, placedModules.length);
-        const thumbnailBlob = thumbnailDataURL ? dataURLToBlob(thumbnailDataURL) : null;
         
         const designFileResult = await createDesignFile({
           name: designFileName,
-          projectId: projectId,
+          projectId: currentProjectId,
           spaceConfig: spaceInfo,
           furniture: {
             placedModules: []
-          }
+          },
+          thumbnail: thumbnailDataURL  // 썸네일 추가
         });
 
         if (designFileResult.id) {
+          // BroadcastChannel로 다른 탭에 알림
+          try {
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({ 
+              type: 'DESIGN_FILE_UPDATED',
+              action: 'design_created',
+              projectId: currentProjectId,
+              designFileId: designFileResult.id
+            });
+            channel.close();
+          } catch (error) {
+            console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
+          }
+          
           // onClose가 있으면 모달을 닫고, 없으면 직접 navigate
           if (onClose) {
             onClose();
@@ -164,13 +233,11 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           
           // 약간의 지연을 주어 로딩 화면이 보이도록 함
           setTimeout(() => {
-            navigate(`/configurator?project=${projectId}&design=new`, { replace: true });
+            navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileResult.id}`, { replace: true });
           }, 100);
         } else {
           throw new Error(designFileResult.error || '디자인 파일 생성 실패');
         }
-      } else {
-        throw new Error(result.error || '프로젝트 생성 실패');
       }
     } catch (error) {
       console.error('프로젝트 생성 오류:', error);
@@ -202,7 +269,14 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
             ×
           </button>
           <div>
-            <h1>공간 설정</h1>
+            <h1>
+              STEP. 2 공간 설정
+              {projectTitle && (
+                <span style={{ marginLeft: '20px', fontSize: '0.8em', color: '#666' }}>
+                  프로젝트: {projectTitle} / 디자인: {basicInfo.title || '새 디자인'} / {basicInfo.location || '위치 미정'}
+                </span>
+              )}
+            </h1>
           </div>
         </div>
 

@@ -21,6 +21,7 @@ import { db } from './config';
 import { getCurrentUserAsync } from './auth';
 import { Team, TeamMember, TeamInvitation, TeamSettings } from './types';
 import { handleFirebaseError, createBusinessError } from './utils/error-handler';
+import { FLAGS } from '@/flags';
 
 // 컬렉션 참조
 const TEAMS_COLLECTION = 'teams';
@@ -148,9 +149,24 @@ export const getUserTeams = async (): Promise<{ teams: Team[]; error: string | n
       
       if (isMember) {
         console.log('✅ 사용자가 속한 팀 발견:', data.name);
+        
+        // 현재 사용자의 프로필 정보로 멤버 정보 업데이트
+        const updatedMembers = data.members.map((member: TeamMember) => {
+          if (member.userId === user.uid) {
+            return {
+              ...member,
+              displayName: user.displayName || member.displayName,
+              photoURL: user.photoURL || member.photoURL,
+              email: user.email || member.email
+            };
+          }
+          return member;
+        });
+        
         teams.push({
           id: doc.id,
           ...data,
+          members: updatedMembers
         } as Team);
       }
     });
@@ -187,9 +203,24 @@ export const getTeam = async (teamId: string): Promise<{ team: Team | null; erro
     }
 
     const data = docSnap.data();
+    
+    // 현재 사용자의 프로필 정보로 멤버 정보 업데이트
+    const updatedMembers = data.members.map((member: TeamMember) => {
+      if (member.userId === user.uid) {
+        return {
+          ...member,
+          displayName: user.displayName || member.displayName,
+          photoURL: user.photoURL || member.photoURL,
+          email: user.email || member.email
+        };
+      }
+      return member;
+    });
+    
     const team: Team = {
       id: docSnap.id,
       ...data,
+      members: updatedMembers
     } as Team;
 
     // 사용자가 팀 멤버인지 확인

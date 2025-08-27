@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -14,6 +14,8 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useDXFExport } from '@/editor/shared/hooks/useDXFExport';
+import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -65,12 +67,16 @@ const Configurator: React.FC = () => {
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
   // Store hooks
-  const { setBasicInfo, basicInfo } = useProjectStore();
+  const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
   const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
+
+  // 내보내기 훅들
+  const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
+  const { exportToPDF, canExportPDF, getExportStatusMessage: getPDFStatusMessage, VIEW_TYPES } = usePDFExport();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -79,12 +85,17 @@ const Configurator: React.FC = () => {
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
   
+  // Sidebar의 unsaved changes 리셋을 위한 ref
+  const resetUnsavedChangesRef = useRef<(() => void) | null>(null);
+  
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
   const [showFurniture, setShowFurniture] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
-  const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
+  // URL 파라미터에서 도면 편집기 상태 확인
+  const showDrawingEditor = searchParams.get('editor') === 'drawing';
+  const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // PDF 미리보기 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -443,6 +454,7 @@ const Configurator: React.FC = () => {
         materialConfig: spaceInfo.materialConfig
       });
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
+      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules);
       
       // 썸네일 생성
       let thumbnail;
@@ -495,6 +507,15 @@ const Configurator: React.FC = () => {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
               
+              // 저장 성공 후 unsaved changes 상태 리셋
+              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+              setTimeout(() => {
+                if (resetUnsavedChangesRef.current) {
+                  console.log('🔄 Calling reset after successful save');
+                  resetUnsavedChangesRef.current();
+                }
+              }, 100);
+              
               // BroadcastChannel로 디자인 파일 업데이트 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
@@ -532,6 +553,15 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
+              
+              // 저장 성공 후 unsaved changes 상태 리셋
+              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+              setTimeout(() => {
+                if (resetUnsavedChangesRef.current) {
+                  console.log('🔄 Calling reset after successful create');
+                  resetUnsavedChangesRef.current();
+                }
+              }, 100);
               
               // BroadcastChannel로 디자인 파일 생성 알림
               try {
@@ -635,7 +665,7 @@ const Configurator: React.FC = () => {
       if (isFirebaseConfigured() && user) {
         // Firebase에 새 디자인파일 생성
         const result = await createDesignFile({
-          name: `디자인 ${new Date().toLocaleTimeString()}`,
+          name: '새 디자인',
           projectId: currentProjectId,
           spaceConfig: defaultSpaceConfig,
           furniture: { placedModules: [] }
@@ -844,6 +874,15 @@ const Configurator: React.FC = () => {
             setBasicInfo({ ...basicInfo, title: newTitle.trim() });
             setSaveStatus('success');
             
+            // 저장 후 변경사항 상태 리셋
+            // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
+            setTimeout(() => {
+              if (resetUnsavedChangesRef.current) {
+                console.log('🔄 Calling reset after successful save as');
+                resetUnsavedChangesRef.current();
+              }
+            }, 100);
+            
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
             
@@ -964,12 +1003,157 @@ const Configurator: React.FC = () => {
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+    const designFileId = searchParams.get('designFileId');
+    const designFileName = searchParams.get('designFileName');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
     
+    // Step2에서 넘어온 경우 (designFileId가 있는 경우)
+    if (projectId && designFileId) {
+      console.log('📋 Step2에서 넘어옴 - designFileId:', designFileId);
+      setCurrentProjectId(projectId);
+      setProjectId(projectId);
+      setCurrentDesignFileId(designFileId);
+      
+      // 디자인 파일 로드
+      const loadDesignFile = async () => {
+        setLoading(true);
+        try {
+          // 디자인 파일 가져오기
+          const { getDesignFileById } = await import('@/firebase/projects');
+          const { designFile, error } = await getDesignFileById(designFileId);
+          
+          if (error) {
+            console.error('디자인 파일 로드 에러:', error);
+            alert('디자인 파일을 불러오는데 실패했습니다: ' + error);
+            navigate('/dashboard');
+            return;
+          }
+          
+          if (designFile) {
+            console.log('✅ 디자인 파일 로드 성공:', designFile.name);
+            
+            // 디자인 데이터 설정
+            setBasicInfo({
+              title: designFile.name || '새 디자인',
+              location: ''
+            });
+            setCurrentDesignFileName(designFile.name);
+            
+            // 공간 설정
+            const spaceConfig = { ...designFile.spaceConfig };
+            if (spaceConfig.installType === 'built-in') {
+              spaceConfig.installType = 'builtin';
+            }
+            setSpaceInfo(spaceConfig);
+            
+            // 가구 설정
+            console.log('🪑 디자인 파일 가구 데이터 로드:', {
+              hasFurniture: !!designFile.furniture,
+              hasPlacedModules: !!designFile.furniture?.placedModules,
+              placedModulesCount: designFile.furniture?.placedModules?.length || 0,
+              placedModules: designFile.furniture?.placedModules
+            });
+            
+            if (designFile.furniture?.placedModules) {
+              console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+              setPlacedModules(designFile.furniture.placedModules);
+              console.log('🪑 가구 데이터 설정 완료');
+            } else {
+              console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+              setPlacedModules([]);
+            }
+            
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('디자인 파일 로드 중 오류:', error);
+          alert('디자인 파일 로드 중 오류가 발생했습니다.');
+          setLoading(false);
+        }
+      };
+      
+      loadDesignFile();
+      return; // 다른 로직 실행 방지
+    }
+    
+    // designFileName으로 진입한 경우 (대시보드에서 디자인 카드 클릭)
+    if (projectId && designFileName) {
+      console.log('📋 디자인명으로 진입 - designFileName:', designFileName);
+      setCurrentProjectId(projectId);
+      setProjectId(projectId);
+      setCurrentDesignFileName(decodeURIComponent(designFileName));
+      
+      // 프로젝트에서 디자인 파일 찾아서 로드
+      const loadDesignByName = async () => {
+        setLoading(true);
+        try {
+          // 프로젝트의 디자인 파일 목록 가져오기
+          const { getDesignFiles } = await import('@/firebase/projects');
+          const { designFiles, error } = await getDesignFiles(projectId);
+          
+          if (error) {
+            console.error('디자인 파일 목록 로드 에러:', error);
+            // 에러가 나도 프로젝트는 로드 시도
+            loadProject(projectId);
+            return;
+          }
+          
+          // 이름으로 디자인 파일 찾기
+          const decodedName = decodeURIComponent(designFileName);
+          const designFile = designFiles.find(df => df.name === decodedName);
+          
+          if (designFile) {
+            console.log('✅ 디자인 파일 찾음:', designFile.id, designFile.name);
+            setCurrentDesignFileId(designFile.id);
+            
+            // 디자인 데이터 설정
+            setBasicInfo({
+              title: designFile.name || '새 디자인',
+              location: ''
+            });
+            
+            // 공간 설정
+            const spaceConfig = { ...designFile.spaceConfig };
+            if (spaceConfig.installType === 'built-in') {
+              spaceConfig.installType = 'builtin';
+            }
+            setSpaceInfo(spaceConfig);
+            
+            // 가구 설정
+            console.log('🪑 디자인 파일 가구 데이터 로드:', {
+              hasFurniture: !!designFile.furniture,
+              hasPlacedModules: !!designFile.furniture?.placedModules,
+              placedModulesCount: designFile.furniture?.placedModules?.length || 0
+            });
+            
+            if (designFile.furniture?.placedModules) {
+              setPlacedModules(designFile.furniture.placedModules);
+            } else {
+              setPlacedModules([]);
+            }
+            
+            setLoading(false);
+          } else {
+            console.log('⚠️ 디자인 파일을 찾을 수 없음, 프로젝트 로드 시도');
+            // 디자인 파일을 찾을 수 없으면 프로젝트 로드
+            loadProject(projectId);
+          }
+        } catch (error) {
+          console.error('디자인 파일 로드 중 오류:', error);
+          // 오류 발생 시 프로젝트 로드 시도
+          loadProject(projectId);
+        }
+      };
+      
+      loadDesignByName();
+      return; // 다른 로직 실행 방지
+    }
+    
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
+      setProjectId(projectId);  // projectStore에도 projectId 설정
       
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
@@ -977,10 +1161,24 @@ const Configurator: React.FC = () => {
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
         
-        // 로딩 완료 처리
-        setTimeout(() => {
-          setLoading(false);
-        }, 500); // 로딩 화면이 보이도록 약간의 지연
+        // 새 디자인인 경우 프로젝트 정보 가져오기
+        if (isNewDesign) {
+          getProject(projectId).then(({ project, error }) => {
+            if (project && !error) {
+              setBasicInfo({ 
+                title: project.title,
+                location: project.location || ''
+              });
+              console.log('📝 새 디자인 - 프로젝트 정보 설정:', project.title);
+            }
+            setLoading(false);
+          });
+        } else {
+          // 로딩 완료 처리
+          setTimeout(() => {
+            setLoading(false);
+          }, 500); // 로딩 화면이 보이도록 약간의 지연
+        }
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
         console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
@@ -1508,8 +1706,29 @@ const Configurator: React.FC = () => {
     window.open('/help', '_blank');
   };
 
-  const handleConvert = () => {
+  const handleConvert = async () => {
     console.log('도면 편집기 열기');
+    
+    // 3D 뷰 캡처
+    try {
+      // 각 뷰 방향에 대한 캡처 (현재는 현재 뷰만 캡처)
+      const thumbnail = await captureProjectThumbnail();
+      if (thumbnail) {
+        setCapturedViews({
+          top: thumbnail,  // 임시로 같은 이미지 사용
+          front: thumbnail,
+          side: thumbnail,
+          iso: thumbnail
+        });
+      }
+    } catch (error) {
+      console.error('뷰 캡처 실패:', error);
+    }
+    
+    // URL에 editor=drawing 파라미터 추가
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('editor', 'drawing');
+    window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
     setShowPDFPreview(true);
   };
 
@@ -1525,6 +1744,75 @@ const Configurator: React.FC = () => {
   const handleFileTreeToggle = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
+
+  // DXF 내보내기 핸들러 - 다중 뷰 ZIP 파일 생성
+  const handleExportDXF = async () => {
+    console.log('🔧 DXF ZIP 내보내기 시작...');
+    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
+
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
+    }
+
+    try {
+      // 2D 와이어프레임 도면 - 3개 시점 (정면도, 평면도, 측면도)
+      const drawingTypes = ['front', 'plan', 'side'] as const;
+      console.log('📐 생성할 도면:', drawingTypes.join(', '));
+      
+      const result = await exportToZIP(spaceInfo, placedModules, drawingTypes);
+      
+      if (result.success) {
+        console.log('✅ DXF ZIP 내보내기 성공:', result.filename);
+        alert(`✅ ${result.message}\n\n포함된 도면:\n- 정면도 (Front Elevation)\n- 평면도 (Plan View)\n- 측면도 (Side Section)\n\n파일명: ${result.filename}`);
+      } else {
+        console.error('❌ DXF ZIP 내보내기 실패:', result.error);
+        alert(`❌ ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ DXF ZIP 내보내기 예외:', error);
+      alert('DXF ZIP 내보내기 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // PDF 내보내기 핸들러
+  const handleExportPDF = async () => {
+    console.log('📄 PDF 내보내기 시작...');
+    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
+
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
+    }
+
+    try {
+      // 기본 뷰들 선택 (3D 정면뷰, 2D 상부뷰, 2D 정면뷰)
+      const selectedViews = ['3d-front', '2d-top', '2d-front'] as const;
+      
+      const result = await exportToPDF(spaceInfo, placedModules, selectedViews, 'solid');
+      
+      if (result.success) {
+        console.log('✅ PDF 내보내기 성공:', result.filename);
+        alert(`✅ ${result.message}\n파일명: ${result.filename}`);
+      } else {
+        console.error('❌ PDF 내보내기 실패:', result.message);
+        alert(`❌ ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ PDF 내보내기 예외:', error);
+      alert('PDF 내보내기 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // 개발 및 테스트를 위한 함수들을 window에 노출
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).testExportDXFZIP = handleExportDXF;
+      (window as any).testExportPDF = handleExportPDF;
+      (window as any).getCurrentSpaceInfo = () => spaceInfo;
+      (window as any).getCurrentPlacedModules = () => placedModules;
+    }
+  }, [spaceInfo, placedModules, handleExportDXF, handleExportPDF]);
 
 
 
@@ -2360,6 +2648,8 @@ const Configurator: React.FC = () => {
         onNewProject={handleNewDesign}
         onSaveAs={handleSaveAs}
         onProjectNameChange={handleProjectNameChange}
+        onExportDXF={handleExportDXF}
+        onExportPDF={handleExportPDF}
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
       />
@@ -2376,16 +2666,59 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={(projectId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
-                  // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
+                onFileSelect={async (projectId, designFileId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
+                  
+                  // 현재 작업 내용 자동 저장
+                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
+                    console.log('💾 디자인 전환 전 자동 저장 시작');
+                    setSaving(true);
+                    setSaveStatus('idle');
+                    
+                    try {
+                      await saveProject();
+                      console.log('✅ 자동 저장 완료');
+                    } catch (error) {
+                      console.error('❌ 자동 저장 실패:', error);
+                      const confirmSwitch = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 다른 디자인으로 전환하시겠습니까?');
+                      if (!confirmSwitch) {
+                        setSaving(false);
+                        return;
+                      }
+                    }
+                  }
+                  
+                  // 디자인 파일 선택 시 해당 프로젝트 로드 - designFileId 우선 사용
+                  if (designFileId) {
+                    navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
+                  } else {
+                    navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
+                  }
                   setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침하여 새 디자인 파일 로드
-                  window.location.reload();
+                  // 페이지 새로고침 제거 - navigate만으로 충분
                 }}
-                onCreateNew={() => {
+                onCreateNew={async () => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
+                  
+                  // 현재 작업 내용 자동 저장
+                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
+                    console.log('💾 새 디자인 생성 전 자동 저장 시작');
+                    setSaving(true);
+                    setSaveStatus('idle');
+                    
+                    try {
+                      await saveProject();
+                      console.log('✅ 자동 저장 완료');
+                    } catch (error) {
+                      console.error('❌ 자동 저장 실패:', error);
+                      const confirmCreate = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 새 디자인을 생성하시겠습니까?');
+                      if (!confirmCreate) {
+                        setSaving(false);
+                        return;
+                      }
+                    }
+                  }
+                  
                   handleNewProject();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
@@ -2410,6 +2743,7 @@ const Configurator: React.FC = () => {
           onTabClick={handleSidebarTabClick}
           isOpen={!!activeSidebarTab}
           onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+          onResetUnsavedChanges={resetUnsavedChangesRef}
         />
 
         {/* 사이드바 컨텐츠 패널 */}
@@ -2574,7 +2908,14 @@ const Configurator: React.FC = () => {
       {/* PDF 템플릿 미리보기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
-        onClose={() => setShowPDFPreview(false)}
+        onClose={() => {
+          // URL에서 editor 파라미터 제거
+          const newSearchParams = new URLSearchParams(searchParams.toString());
+          newSearchParams.delete('editor');
+          const queryString = newSearchParams.toString();
+          window.history.replaceState(null, '', `${window.location.pathname}${queryString ? '?' + queryString : ''}`);
+          setShowPDFPreview(false);
+        }}
         capturedViews={capturedViews}
       />
 

@@ -54,7 +54,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
-  const { activeDroppedCeilingTab } = useUIStore();
+  const { activeDroppedCeilingTab, setIsSlotDragging } = useUIStore();
   
   // 클릭과 더블클릭을 구분하기 위한 타이머
   const clickTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -75,6 +75,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       e.preventDefault();
       return;
     }
+    
+    setIsSlotDragging(true); // 슬롯 드래그 시작
     
     // 영역별 인덱싱 계산
     let indexing = calculateSpaceIndexing(spaceInfo);
@@ -242,6 +244,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     console.log('🎯 [ModuleGallery] Drag ended');
     // 가구 배치 모드 비활성화
     setFurniturePlacementMode(false);
+    setIsSlotDragging(false); // 슬롯 드래그 종료
     
     // 전역 드래그 상태 초기화
     setCurrentDragData(null);

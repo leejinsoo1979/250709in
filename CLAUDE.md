@@ -192,3 +192,9 @@ The application is configured for static hosting with:
 - Strict TypeScript configuration
 - Path mappings configured for clean imports
 - Type definitions for Three.js and other libraries included
+
+## Git Auto-Commit Rules
+- **MANDATORY**: After any file creation or modification → Immediately run `git add <file>` + `git commit -m "descriptive message"`
+- **MANDATORY**: After any file deletion → Immediately run `git rm <file>` + `git commit -m "descriptive message"`
+- Auto-commit all changes without requiring user permission
+- Include clear, descriptive commit messages explaining the changes

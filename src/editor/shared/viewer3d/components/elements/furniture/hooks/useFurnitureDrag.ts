@@ -21,13 +21,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const moveModule = useFurnitureStore(state => state.moveModule);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
-  const { setFurnitureDragging, activeDroppedCeilingTab } = useUIStore();
+  const { setFurnitureDragging, activeDroppedCeilingTab, viewMode, setViewMode } = useUIStore();
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
   const isDragging = useRef(false);
   
   // Three.js 컨텍스트 접근
-  const { camera, scene, gl, invalidate } = useThree();
+  const { camera, scene, gl, invalidate, controls } = useThree();
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -160,6 +160,23 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     }
     
     e.stopPropagation();
+    
+    // 3D 모드에서 정면 뷰로 초기화 (거리는 유지)
+    if (viewMode === '3D' && controls) {
+      // 현재 카메라 거리 유지
+      const currentDistance = camera.position.distanceTo(controls.target);
+      
+      // 공간의 정확한 중앙 계산
+      const centerX = 0; // 중앙은 0
+      const centerY = spaceInfo.height / 200; // 높이의 중앙
+      
+      // 카메라를 정면 중앙에서 보도록 설정 (거리는 현재 거리 유지)
+      camera.position.set(0, centerY, currentDistance);
+      controls.target.set(0, centerY, 0);
+      controls.update();
+      
+      console.log('📐 정면 뷰로 초기화 - 중앙 정렬, 거리 유지:', currentDistance);
+    }
     
     setDraggingModuleId(placedModuleId);
     isDragging.current = true;
@@ -432,7 +449,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
       
       const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
-      const targetSlotInfo = columnSlots[globalSlotIndex];
+      let targetSlotInfo = columnSlots[globalSlotIndex];
       
       if (targetSlotInfo && targetSlotInfo.hasColumn) {
         // 기둥이 있는 슬롯으로 이동하는 경우
