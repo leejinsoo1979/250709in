@@ -68,19 +68,35 @@ export function usePDFExport() {
     // 뷰 변경이 적용되길 기다림
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // 3D 뷰어 컨테이너 찾기
+    // 캔버스를 직접 찾기 (2D/3D 모두 지원)
+    let canvas: HTMLCanvasElement | null = null;
+    
+    // 먼저 3D 뷰어 컨테이너 시도
     let viewerContainer = document.querySelector('[data-viewer-container="true"]');
-    if (!viewerContainer) {
-      console.error('뷰어 컨테이너를 찾을 수 없습니다. 선택자: [data-viewer-container="true"]');
-      // 대체 선택자 시도
-      viewerContainer = document.querySelector('.viewer-container') || document.querySelector('#viewer-container');
-      if (!viewerContainer) {
-        throw new Error('3D 뷰어를 찾을 수 없습니다.');
-      }
+    if (viewerContainer) {
+      canvas = viewerContainer.querySelector('canvas');
     }
     
-    // WebGL canvas를 직접 찾아서 캡처 시도
-    const canvas = viewerContainer.querySelector('canvas');
+    // 3D 뷰어가 없으면 모든 캔버스 검색
+    if (!canvas) {
+      const allCanvas = document.querySelectorAll('canvas');
+      // 가장 큰 캔버스를 선택 (일반적으로 메인 렌더링 캔버스)
+      let maxSize = 0;
+      allCanvas.forEach(c => {
+        const size = c.width * c.height;
+        if (size > maxSize && c.width > 100 && c.height > 100) {
+          maxSize = size;
+          canvas = c;
+        }
+      });
+    }
+    
+    if (!canvas) {
+      console.error('렌더링 캔버스를 찾을 수 없습니다.');
+      throw new Error('뷰어 캔버스를 찾을 수 없습니다.');
+    }
+    
+    viewerContainer = viewerContainer || canvas.parentElement;
     let imageData: string;
     
     console.log('Canvas 캡처 시도:', {
@@ -623,7 +639,7 @@ export function usePDFExport() {
     } finally {
       setIsExporting(false);
     }
-  }, [title]);
+  }, [title, captureView]);
   
   const canExportPDF = useCallback((spaceInfo: SpaceInfo | null, placedModules: PlacedModule[]) => {
     return spaceInfo !== null && placedModules.length > 0;
