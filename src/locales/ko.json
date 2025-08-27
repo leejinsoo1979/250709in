@@ -255,8 +255,8 @@
   },
   "export": {
     "title": "내보내기",
-    "pdf": "PDF 템플릿",
-    "pdfDesc": "기술 도면 템플릿으로 PDF 생성",
+    "pdf": "PDF 다운로드",
+    "pdfDesc": "정면도, 평면도, 측면도를 포함한 PDF 생성",
     "dxf": "DXF 도면",
     "dxfDesc": "CAD 프로그램용 도면 파일 (준비 중)",
     "image": "이미지 다운로드",

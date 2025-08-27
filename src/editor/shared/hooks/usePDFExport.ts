@@ -31,7 +31,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, setViewMode, setView2DDirection } = useUIStore();
+  const { viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -40,12 +40,24 @@ export function usePDFExport() {
     // 현재 뷰 설정 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
+    const originalShowGuides = showGuides;
+    
+    console.log('📸 PDF 캡처 시작:', {
+      viewType,
+      원래설정: {
+        viewMode: originalViewMode,
+        view2DDirection: originalView2DDirection,
+        showGuides: originalShowGuides
+      }
+    });
     
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
       setViewMode('3D');
     } else {
+      // 2D 모드로 전환하면서 그리드 컬럼 축 비활성화
       setViewMode('2D');
+      setShowGuides(false); // 중요: 그리드 컬럼 축 라디오버튼 끄기
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
       }
@@ -56,19 +68,35 @@ export function usePDFExport() {
     // 뷰 변경이 적용되길 기다림
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // 3D 뷰어 컨테이너 찾기
+    // 캔버스를 직접 찾기 (2D/3D 모두 지원)
+    let canvas: HTMLCanvasElement | null = null;
+    
+    // 먼저 3D 뷰어 컨테이너 시도
     let viewerContainer = document.querySelector('[data-viewer-container="true"]');
-    if (!viewerContainer) {
-      console.error('뷰어 컨테이너를 찾을 수 없습니다. 선택자: [data-viewer-container="true"]');
-      // 대체 선택자 시도
-      viewerContainer = document.querySelector('.viewer-container') || document.querySelector('#viewer-container');
-      if (!viewerContainer) {
-        throw new Error('3D 뷰어를 찾을 수 없습니다.');
-      }
+    if (viewerContainer) {
+      canvas = viewerContainer.querySelector('canvas');
     }
     
-    // WebGL canvas를 직접 찾아서 캡처 시도
-    const canvas = viewerContainer.querySelector('canvas');
+    // 3D 뷰어가 없으면 모든 캔버스 검색
+    if (!canvas) {
+      const allCanvas = document.querySelectorAll('canvas');
+      // 가장 큰 캔버스를 선택 (일반적으로 메인 렌더링 캔버스)
+      let maxSize = 0;
+      allCanvas.forEach(c => {
+        const size = c.width * c.height;
+        if (size > maxSize && c.width > 100 && c.height > 100) {
+          maxSize = size;
+          canvas = c;
+        }
+      });
+    }
+    
+    if (!canvas) {
+      console.error('렌더링 캔버스를 찾을 수 없습니다.');
+      throw new Error('뷰어 캔버스를 찾을 수 없습니다.');
+    }
+    
+    viewerContainer = viewerContainer || canvas.parentElement;
     let imageData: string;
     
     console.log('Canvas 캡처 시도:', {
@@ -135,12 +163,20 @@ export function usePDFExport() {
     if (originalViewMode === '2D') {
       setView2DDirection(originalView2DDirection);
     }
+    // 그리드 설정 복원
+    setShowGuides(originalShowGuides);
+    
+    console.log('📸 PDF 캡처 완료 - 설정 복원:', {
+      viewMode: originalViewMode,
+      view2DDirection: originalView2DDirection,
+      showGuides: originalShowGuides
+    });
     
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return imageData;
-  }, [viewMode, view2DDirection, setViewMode, setView2DDirection]);
+  }, [viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
@@ -563,29 +599,32 @@ export function usePDFExport() {
       // PDF 파일명 생성
       const filename = `${projectTitle.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${currentDate.replace(/\./g, '')}.pdf`;
       
-      // Storage 업로드 시도
+      // 직접 다운로드 (Storage 업로드 스킵)
       try {
-        const user = auth.currentUser;
-        if (user) {
-          // Team ID와 Design ID 가져오기
-          const teamId = `personal_${user.uid}`;
-          const designId = 'current_design'; // 임시: 현재 디자인 ID
-          const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
-          
-          // PDF Blob 생성
-          const pdfBlob = pdf.output('blob');
-          
-          // Storage에 저장 시도
-          await exportWithPersistence(pdfBlob, filename, 'pdf', teamId, designId, versionId);
-          console.log('✅ PDF Storage 업로드 성공!');
-        } else {
-          // 로그인하지 않은 경우 기존 방식으로 다운로드
-          pdf.save(filename);
-        }
-      } catch (error) {
-        console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
-        // 실패 시 기존 방식으로 다운로드
+        // PDF 직접 다운로드
         pdf.save(filename);
+        console.log('✅ PDF 다운로드 성공!', filename);
+        
+        // 나중에 Storage 업로드 시도 (선택사항)
+        // const user = auth.currentUser;
+        // if (user) {
+        //   const pdfBlob = pdf.output('blob');
+        //   // 비동기로 백그라운드 업로드 (실패해도 무시)
+        //   exportWithPersistence(pdfBlob, filename, 'pdf', teamId, designId, versionId)
+        //     .catch(err => console.log('Storage 업로드 실패 (무시):', err));
+        // }
+      } catch (error) {
+        console.error('PDF 다운로드 실패:', error);
+        // 대체 다운로드 방법
+        const pdfBlob = pdf.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
       
       return {
@@ -603,7 +642,7 @@ export function usePDFExport() {
     } finally {
       setIsExporting(false);
     }
-  }, [title]);
+  }, [title, captureView]);
   
   const canExportPDF = useCallback((spaceInfo: SpaceInfo | null, placedModules: PlacedModule[]) => {
     return spaceInfo !== null && placedModules.length > 0;
