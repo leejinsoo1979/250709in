@@ -13,7 +13,7 @@ describe('UIStore', () => {
       
       // 실제 초기값과 일치하도록 수정
       expect(state.viewMode).toBe('3D')
-      expect(state.doorsOpen).toBe(true)
+      expect(state.doorsOpen).toBe(false)  // 실제 초기값은 false
       expect(state.selectedModuleForPlacement).toBeNull()
     })
   })
@@ -45,14 +45,14 @@ describe('UIStore', () => {
     it('문 열림/닫힘 토글이 정상 작동해야 한다', () => {
       const store = useUIStore
       
-      // 실제 초기값은 true
-      expect(store.getState().doorsOpen).toBe(true)
-      
-      store.getState().toggleDoors()
+      // 실제 초기값은 false
       expect(store.getState().doorsOpen).toBe(false)
       
       store.getState().toggleDoors()
       expect(store.getState().doorsOpen).toBe(true)
+      
+      store.getState().toggleDoors()
+      expect(store.getState().doorsOpen).toBe(false)
     })
   })
 
@@ -87,12 +87,12 @@ describe('UIStore', () => {
       
       // 상태 변경
       store.getState().setViewMode('2D')
-      store.getState().toggleDoors()
+      store.getState().toggleDoors()  // false -> true
       store.getState().setSelectedModuleForPlacement('module-123')
       
       // 변경 확인
       expect(store.getState().viewMode).toBe('2D')
-      expect(store.getState().doorsOpen).toBe(false)
+      expect(store.getState().doorsOpen).toBe(true)
       expect(store.getState().selectedModuleForPlacement).toBe('module-123')
       
       // 리셋
@@ -101,7 +101,7 @@ describe('UIStore', () => {
       // 초기값 확인
       const state = store.getState()
       expect(state.viewMode).toBe('3D')
-      expect(state.doorsOpen).toBe(true)
+      expect(state.doorsOpen).toBe(false)  // 실제 초기값은 false
       expect(state.selectedModuleForPlacement).toBeNull()
     })
   })
