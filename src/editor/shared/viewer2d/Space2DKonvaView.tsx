@@ -5,6 +5,9 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import FurnitureItem2D from './components/FurnitureItem2D';
+import Grid2D from './components/Grid2D';
+import ViewerToolbar2D from './components/ViewerToolbar2D';
 import styles from './Space2DKonvaView.module.css';
 
 // Types
@@ -60,6 +63,13 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
   const [stageSize, setStageSize] = useState({ width, height });
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFurnitureId, setDraggedFurnitureId] = useState<string | null>(null);
+  const [selectedFurnitureId, setSelectedFurnitureId] = useState<string | null>(null);
+  const [tool, setTool] = useState<'select' | 'pan' | 'measure'>('select');
+  const [showColumns, setShowColumns] = useState(true);
+  const [showWalls, setShowWalls] = useState(true);
+  const [localShowGrid, setLocalShowGrid] = useState(showGrid);
+  const [localShowDimensions, setLocalShowDimensions] = useState(showDimensions);
+  const [localShowFurniture, setLocalShowFurniture] = useState(showFurniture);
 
   // Convert mm to canvas pixels
   const mmToPixels = useCallback((mm: number): number => {
@@ -140,45 +150,63 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
     }));
   }, []);
 
-  // Render grid
-  const renderGrid = () => {
-    if (!showGrid) return null;
+  // Handle furniture selection
+  const handleFurnitureSelect = useCallback((id: string) => {
+    setSelectedFurnitureId(id);
+  }, []);
 
-    const gridLines: JSX.Element[] = [];
-    const gridSizePx = mmToPixels(GRID_SIZE);
-    
-    // Calculate visible area
-    const startX = -viewport.x / viewport.scale;
-    const startY = -viewport.y / viewport.scale;
-    const endX = (stageSize.width - viewport.x) / viewport.scale;
-    const endY = (stageSize.height - viewport.y) / viewport.scale;
-    
-    // Vertical lines
-    for (let x = Math.floor(startX / gridSizePx) * gridSizePx; x < endX; x += gridSizePx) {
-      gridLines.push(
-        <Line
-          key={`v-${x}`}
-          points={[x, startY, x, endY]}
-          stroke="#e0e0e0"
-          strokeWidth={1 / viewport.scale}
-        />
-      );
+  // Handle furniture drag
+  const handleFurnitureDragStart = useCallback((id: string) => {
+    setIsDragging(true);
+    setDraggedFurnitureId(id);
+  }, []);
+
+  const handleFurnitureDragEnd = useCallback((id: string, x: number, z: number) => {
+    setIsDragging(false);
+    setDraggedFurnitureId(null);
+    furniture.updateModule(id, {
+      position: { x, y: furniture.placedModules.find(m => m.id === id)?.position.y || 0, z }
+    });
+  }, [furniture]);
+
+  const handleFurnitureRotate = useCallback((id: string, rotation: number) => {
+    furniture.updateModule(id, { rotation });
+  }, [furniture]);
+
+  const handleFurnitureDelete = useCallback((id: string) => {
+    furniture.removeModule(id);
+    if (selectedFurnitureId === id) {
+      setSelectedFurnitureId(null);
     }
-    
-    // Horizontal lines
-    for (let y = Math.floor(startY / gridSizePx) * gridSizePx; y < endY; y += gridSizePx) {
-      gridLines.push(
-        <Line
-          key={`h-${y}`}
-          points={[startX, y, endX, y]}
-          stroke="#e0e0e0"
-          strokeWidth={1 / viewport.scale}
-        />
-      );
+  }, [furniture, selectedFurnitureId]);
+
+  // Zoom controls
+  const handleZoomIn = useCallback(() => {
+    setViewport(prev => ({ 
+      ...prev, 
+      scale: Math.min(MAX_SCALE, prev.scale * SCALE_FACTOR) 
+    }));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setViewport(prev => ({ 
+      ...prev, 
+      scale: Math.max(MIN_SCALE, prev.scale / SCALE_FACTOR) 
+    }));
+  }, []);
+
+  const handleZoomReset = useCallback(() => {
+    if (spaceConfig.width && spaceConfig.depth) {
+      const spaceWidthPx = mmToPixels(spaceConfig.width);
+      const spaceDepthPx = mmToPixels(spaceConfig.depth);
+      const scaleX = stageSize.width * 0.8 / spaceWidthPx;
+      const scaleY = stageSize.height * 0.8 / spaceDepthPx;
+      const scale = Math.min(scaleX, scaleY, 1);
+      const x = (stageSize.width - spaceWidthPx * scale) / 2;
+      const y = (stageSize.height - spaceDepthPx * scale) / 2;
+      setViewport({ x, y, scale });
     }
-    
-    return <Group>{gridLines}</Group>;
-  };
+  }, [spaceConfig.width, spaceConfig.depth, stageSize, mmToPixels]);
 
   // Render space boundaries
   const renderSpace = () => {
@@ -199,7 +227,7 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
         />
         
         {/* Columns */}
-        {spaceConfig.columns.map((column) => {
+        {showColumns && spaceConfig.columns.map((column) => {
           const xPx = mmToPixels(column.position.x);
           const zPx = mmToPixels(column.position.z);
           const sizePx = mmToPixels(column.size);
@@ -219,7 +247,7 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
         })}
         
         {/* Walls */}
-        {spaceConfig.walls.map((wall) => {
+        {showWalls && spaceConfig.walls.map((wall) => {
           const xPx = mmToPixels(wall.position.x);
           const zPx = mmToPixels(wall.position.z);
           const widthPx = mmToPixels(wall.dimensions.width);
@@ -245,68 +273,36 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
 
   // Render furniture items
   const renderFurniture = () => {
-    if (!showFurniture) return null;
+    if (!localShowFurniture) return null;
     
     return (
       <Group>
-        {furniture.placedModules.map((item) => {
-          const xPx = mmToPixels(item.position.x);
-          const zPx = mmToPixels(item.position.z);
-          const widthPx = mmToPixels(item.dimensions.width);
-          const depthPx = mmToPixels(item.dimensions.depth);
-          
-          return (
-            <Group
-              key={item.id}
-              x={xPx}
-              y={zPx}
-              draggable
-              onDragStart={() => {
-                setIsDragging(true);
-                setDraggedFurnitureId(item.id);
-              }}
-              onDragEnd={(e) => {
-                setIsDragging(false);
-                setDraggedFurnitureId(null);
-                
-                // Update furniture position
-                const node = e.target;
-                const newX = node.x() / 0.1; // Convert back to mm
-                const newZ = node.y() / 0.1;
-                
-                furniture.updateModule(item.id, {
-                  position: { x: newX, y: item.position.y, z: newZ }
-                });
-              }}
-            >
-              <Rect
-                width={widthPx}
-                height={depthPx}
-                fill={item.id === draggedFurnitureId ? '#4CAF50' : '#2196F3'}
-                stroke="#1976D2"
-                strokeWidth={2 / viewport.scale}
-                cornerRadius={4 / viewport.scale}
-                opacity={0.8}
-              />
-              <Text
-                text={item.name || 'Furniture'}
-                fontSize={12 / viewport.scale}
-                fill="white"
-                width={widthPx}
-                height={depthPx}
-                align="center"
-                verticalAlign="middle"
-              />
-            </Group>
-          );
-        })}
+        {furniture.placedModules.map((item) => (
+          <FurnitureItem2D
+            key={item.id}
+            item={item}
+            scale={viewport.scale}
+            isSelected={selectedFurnitureId === item.id}
+            isDragging={draggedFurnitureId === item.id}
+            onSelect={handleFurnitureSelect}
+            onDragStart={handleFurnitureDragStart}
+            onDragEnd={handleFurnitureDragEnd}
+            onRotate={handleFurnitureRotate}
+            onDelete={handleFurnitureDelete}
+            onDoubleClick={(id) => {
+              // Open edit modal
+              uiStore.setActivePopup({ type: 'furnitureEdit', id });
+            }}
+            mmToPixels={mmToPixels}
+          />
+        ))}
       </Group>
     );
   };
 
   // Render dimensions
   const renderDimensions = () => {
-    if (!showDimensions) return null;
+    if (!localShowDimensions) return null;
     
     const widthPx = mmToPixels(spaceConfig.width);
     const depthPx = mmToPixels(spaceConfig.depth);
@@ -371,6 +367,26 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
 
   return (
     <div ref={containerRef} className={styles.container}>
+      {/* Toolbar */}
+      <ViewerToolbar2D
+        showGrid={localShowGrid}
+        showDimensions={localShowDimensions}
+        showFurniture={localShowFurniture}
+        showColumns={showColumns}
+        showWalls={showWalls}
+        tool={tool}
+        scale={viewport.scale}
+        onToggleGrid={() => setLocalShowGrid(!localShowGrid)}
+        onToggleDimensions={() => setLocalShowDimensions(!localShowDimensions)}
+        onToggleFurniture={() => setLocalShowFurniture(!localShowFurniture)}
+        onToggleColumns={() => setShowColumns(!showColumns)}
+        onToggleWalls={() => setShowWalls(!showWalls)}
+        onToolChange={setTool}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+      />
+      
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -384,52 +400,30 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
         scaleY={viewport.scale}
       >
         <Layer ref={layerRef}>
-          {renderGrid()}
+          {/* Grid layer */}
+          {localShowGrid && (
+            <Grid2D
+              width={mmToPixels(spaceConfig.width)}
+              height={mmToPixels(spaceConfig.depth)}
+              gridSize={mmToPixels(GRID_SIZE)}
+              scale={viewport.scale}
+              showLabels={viewport.scale > 0.5}
+              color="#e0e0e0"
+              opacity={0.5}
+            />
+          )}
+          
+          {/* Space and structure */}
           {renderSpace()}
+          
+          {/* Dimensions */}
           {renderDimensions()}
+          
+          {/* Furniture */}
           {renderFurniture()}
         </Layer>
       </Stage>
       
-      {/* Zoom controls */}
-      <div className={styles.controls}>
-        <button
-          className={styles.zoomButton}
-          onClick={() => setViewport(prev => ({ 
-            ...prev, 
-            scale: Math.min(MAX_SCALE, prev.scale * SCALE_FACTOR) 
-          }))}
-        >
-          +
-        </button>
-        <span className={styles.zoomLevel}>{Math.round(viewport.scale * 100)}%</span>
-        <button
-          className={styles.zoomButton}
-          onClick={() => setViewport(prev => ({ 
-            ...prev, 
-            scale: Math.max(MIN_SCALE, prev.scale / SCALE_FACTOR) 
-          }))}
-        >
-          -
-        </button>
-        <button
-          className={styles.resetButton}
-          onClick={() => {
-            if (spaceConfig.width && spaceConfig.depth) {
-              const spaceWidthPx = mmToPixels(spaceConfig.width);
-              const spaceDepthPx = mmToPixels(spaceConfig.depth);
-              const scaleX = stageSize.width * 0.8 / spaceWidthPx;
-              const scaleY = stageSize.height * 0.8 / spaceDepthPx;
-              const scale = Math.min(scaleX, scaleY, 1);
-              const x = (stageSize.width - spaceWidthPx * scale) / 2;
-              const y = (stageSize.height - spaceDepthPx * scale) / 2;
-              setViewport({ x, y, scale });
-            }
-          }}
-        >
-          Reset View
-        </button>
-      </div>
     </div>
   );
 };
