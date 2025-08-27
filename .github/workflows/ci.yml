@@ -1,53 +1,50 @@
 name: CI
-
 on:
-  push:
-    branches: [ main, develop, 'feature/**' ]
-  pull_request:
-    branches: [ main ]
+  push: { branches: [ main, develop, 'feature/**' ] }
+  pull_request: { branches: [ main ] }
 
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+permissions: { contents: read }
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
 
 jobs:
   test:
     name: test (${{ matrix.node }})
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [18.x, 20.x]
-
+    strategy: { matrix: { node: [18.x, 20.x] } }
     steps:
-      - name: Checkout (with LFS)
-        uses: actions/checkout@v4
-        with:
-          lfs: true
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: { lfs: true, fetch-depth: 0 }
 
       - name: Git LFS init & pull
         run: |
           git lfs install
           git lfs pull || true
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ matrix.node }}, cache: npm }
 
-      - name: Install deps
-        run: npm ci
+      - name: Install deps (ci if lockfile else install)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-      # 테스트 파일이 없거나 test 스크립트가 없으면 자동 스킵
+      # CI 전용 .env (시크릿 아님, 워크스페이스에만 생성)
+      - name: Prepare CI env (.env)
+        run: |
+          cat > .env <<'ENV'
+          VITE_FIREBASE_API_KEY=ci
+          VITE_FIREBASE_AUTH_DOMAIN=ci
+          VITE_FIREBASE_PROJECT_ID=ci
+          VITE_FIREBASE_STORAGE_BUCKET=ci
+          VITE_FIREBASE_MESSAGING_SENDER_ID=ci
+          VITE_FIREBASE_APP_ID=ci
+          VITE_USE_FIREBASE_EMULATOR=true
+          ENV
+
       - name: Detect tests
         id: has_tests
         run: |
-          if [ -f package.json ] && cat package.json | jq -er '.scripts.test' >/dev/null 2>&1; then
-            if git ls-files | grep -E '\.test\.(ts|tsx|js|jsx)$|__tests__' >/dev/null 2>&1; then
+          if [ -f package.json ] && node -e "p=require('./package.json');process.exit(p.scripts&&p.scripts.test?0:1)"; then
+            if git ls-files | grep -E '\.test\.(ts|tsx|js|jsx)$|__tests__/' >/dev/null 2>&1; then
               echo "has_tests=true" >> $GITHUB_OUTPUT
             else
               echo "has_tests=false" >> $GITHUB_OUTPUT
@@ -69,9 +66,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
+        with: { node-version: 20 }
+      - run: npm ci || npm install
       - name: npm audit (non-blocking)
         run: npm audit --audit-level=high
         continue-on-error: true
