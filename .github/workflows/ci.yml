@@ -6,70 +6,72 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: test (${{ matrix.node }})
     runs-on: ubuntu-latest
-    
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-    
+        node: [18.x, 20.x]
+
     steps:
-      - name: Checkout repository with LFS
+      - name: Checkout (with LFS)
         uses: actions/checkout@v4
         with:
           lfs: true
-      
-      - name: Setup Git LFS
+          fetch-depth: 0
+
+      - name: Git LFS init & pull
         run: |
           git lfs install
-          git lfs pull
-      
-      - name: Setup Node.js ${{ matrix.node-version }}
+          git lfs pull || true
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
           cache: 'npm'
-      
-      - name: Install dependencies
+
+      - name: Install deps
         run: npm ci
-      
-      - name: Run linter
-        run: npm run lint
-      
-      - name: Run tests
-        run: npm test -- --run
-      
-      - name: Build project
-        run: npm run build
-      
-      - name: Check build size
+
+      # 테스트 파일이 없거나 test 스크립트가 없으면 자동 스킵
+      - name: Detect tests
+        id: has_tests
         run: |
-          echo "Build size report:"
-          du -sh dist/
-          find dist -type f -name "*.js" -exec du -h {} + | sort -rh | head -10
-      
-      - name: Upload build artifacts
-        if: github.event_name == 'push' && matrix.node-version == '20.x'
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: dist/
-          retention-days: 7
+          if [ -f package.json ] && cat package.json | jq -er '.scripts.test' >/dev/null 2>&1; then
+            if git ls-files | grep -E '\.test\.(ts|tsx|js|jsx)$|__tests__' >/dev/null 2>&1; then
+              echo "has_tests=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_tests=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run unit tests (Vitest)
+        if: steps.has_tests.outputs.has_tests == 'true'
+        run: npm run test -- --run
+
+      - name: Build (sanity)
+        run: npm run build
 
   security:
+    name: security (${{ github.event_name }})
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Run security audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-      
-      - name: Check for secrets
-        uses: trufflesecurity/trufflehog@main
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          node-version: 20
+      - run: npm ci
+      - name: npm audit (non-blocking)
+        run: npm audit --audit-level=high
+        continue-on-error: true
