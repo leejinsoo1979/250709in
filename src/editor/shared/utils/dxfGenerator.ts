@@ -680,6 +680,9 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       depth: dimensions.depth
     });
     
+    // FURNITURE 레이어로 전환 (가구 외곽선용)
+    dxf.setCurrentLayerName('FURNITURE');
+    
     // 가구 외곽선 그리기 (평면도 - 위에서 본 모습)
     dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 앞쪽
     dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 우측
@@ -709,6 +712,9 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       }
       // 싱글 가구는 외곽선만 표시 (평면도에서는 선반이 보이지 않음)
     }
+    
+    // TEXT 레이어로 전환 (텍스트용)
+    dxf.setCurrentLayerName('TEXT');
     
     // 가구 이름 텍스트 (중앙에 배치)
     const centerX = x1 + dimensions.width / 2;
@@ -757,6 +763,9 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
  * 가구 모듈들을 그리기 (측면도 기준)
  */
 const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
+  // FURNITURE 레이어로 전환
+  dxf.setCurrentLayerName('FURNITURE');
+  
   const internalSpace = calculateInternalSpace(spaceInfo);
   
   console.log('🔍 DXF 측면도 생성 - 가구 배치 정보:', {
@@ -851,6 +860,9 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       // 오픈 박스는 외곽선만 표시
     }
     
+    // TEXT 레이어로 전환 (텍스트용)
+    dxf.setCurrentLayerName('TEXT');
+    
     // 가구 이름 텍스트 (중앙에 배치)
     const centerX = furnitureCenterX;
     const centerY = furnitureCenterY;
@@ -886,12 +898,18 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     if (actualDepthMm > 100) {
       const dimensionY = y1 - 120; // 가구 하단에서 120mm 아래
       
+      // DIMENSIONS 레이어로 전환
+      dxf.setCurrentLayerName('DIMENSIONS');
+      
       // 치수선
       dxf.addLine(point3d(x1, dimensionY), point3d(x2, dimensionY));
       
       // 치수 화살표 (간단한 선으로 표현)
       dxf.addLine(point3d(x1, dimensionY - 10), point3d(x1, dimensionY + 10));
       dxf.addLine(point3d(x2, dimensionY - 10), point3d(x2, dimensionY + 10));
+      
+      // TEXT 레이어로 전환
+      dxf.setCurrentLayerName('TEXT');
       
       // 깊이 치수 텍스트
       dxf.addText(
@@ -907,6 +925,9 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
  * 제목과 정보 그리기
  */
 const drawTitleAndInfo = (dxf: DxfWriter, spaceInfo: SpaceInfo, drawingType: string = 'front'): void => {
+  // TEXT 레이어로 전환
+  dxf.setCurrentLayerName('TEXT');
+  
   // 도면 타입별로 제목 위치 조정
   const titleX = spaceInfo.width + 500;
   const titleY = drawingType === 'plan' ? spaceInfo.depth : spaceInfo.height;
