@@ -1253,6 +1253,9 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     }
   }, [draggingView, isDraggingFromMenu, isResizing, isRotating, dragOffset, scale, resizeStart, rotateStart, handleMouseMove, handleMouseUp]);
 
+  // Fabric.js 캔버스 초기화 플래그
+  const isCanvasInitializedRef = useRef(false);
+  
   // Fabric.js 캔버스 초기화
   useEffect(() => {
     // 모달이 열려있지 않으면 초기화하지 않음
@@ -1267,6 +1270,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           console.error('캔버스 정리 중 오류:', e);
         }
         fabricCanvasRef.current = null;
+        isCanvasInitializedRef.current = false;
       }
       
       // 모든 캔버스 관련 요소 제거
@@ -1287,10 +1291,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         return false;
       }
 
-      // 이미 초기화된 캔버스가 있으면 크기만 업데이트
-      const existingCanvasElement = document.getElementById('fabric-canvas');
-      if (fabricCanvasRef.current && existingCanvasElement && existingCanvasElement.parentElement) {
-        console.log('기존 캔버스 크기만 업데이트');
+      // 이미 초기화되었으면 리턴
+      if (isCanvasInitializedRef.current && fabricCanvasRef.current) {
+        console.log('캔버스가 이미 초기화되어 있습니다.');
+        // 크기만 업데이트
         fabricCanvasRef.current.setDimensions({
           width: paperDimensions.displayWidth,
           height: paperDimensions.displayHeight
@@ -1511,9 +1515,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
             wrapper: canvas.wrapperEl
           });
           
+          isCanvasInitializedRef.current = true; // 초기화 완료 플래그 설정
           return true;
         } catch (error) {
           console.error('Fabric.js 캔버스 생성 오류:', error);
+          isCanvasInitializedRef.current = false; // 실패 시 플래그 리셋
           return false;
         }
     };
