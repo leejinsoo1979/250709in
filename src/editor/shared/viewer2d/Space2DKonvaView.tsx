@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Group, Line, Text, Circle } from 'react-konva';
 import Konva from 'konva';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -31,6 +31,8 @@ const GRID_SIZE = 100; // 100mm grid
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
 const SCALE_FACTOR = 1.1;
+const RESIZE_DEBOUNCE_DELAY = 100; // ms
+const STAGE_CONTAINER_ID = 'konva-stage-container-2d'; // Unique ID for stage container
 
 /**
  * Space2DKonvaView Component
@@ -47,6 +49,9 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
   const stageRef = useRef<Konva.Stage>(null);
   const layerRef = useRef<Konva.Layer>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout>();
+  const isInitializedRef = useRef(false);
+  const mountedRef = useRef(false);
 
   // Store states
   const spaceConfig = useSpaceConfigStore();
@@ -76,26 +81,87 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
     return mm * 0.1; // 1mm = 0.1px at scale 1
   }, []);
 
-  // Update stage size when container resizes
-  useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setStageSize({
-          width: rect.width,
-          height: rect.height,
-        });
-      }
-    };
-
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+  // Debounced resize handler
+  const debouncedUpdateSize = useCallback(() => {
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    
+    resizeTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current || !containerRef.current) return;
+      
+      const rect = containerRef.current.getBoundingClientRect();
+      // Only update if size actually changed
+      setStageSize((prevSize) => {
+        if (prevSize.width !== rect.width || prevSize.height !== rect.height) {
+          console.log('[Space2DKonvaView] Size updated:', { width: rect.width, height: rect.height });
+          return {
+            width: rect.width,
+            height: rect.height,
+          };
+        }
+        return prevSize;
+      });
+    }, RESIZE_DEBOUNCE_DELAY);
   }, []);
 
-  // Center the space in view on mount
+  // Update stage size when container resizes with debounce and duplicate prevention
   useEffect(() => {
-    if (spaceConfig.width && spaceConfig.depth) {
+    mountedRef.current = true;
+    
+    // Initial size calculation
+    if (containerRef.current && !isInitializedRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setStageSize({
+        width: rect.width,
+        height: rect.height,
+      });
+      isInitializedRef.current = true;
+      console.log('[Space2DKonvaView] Initial mount, size set:', { width: rect.width, height: rect.height });
+    }
+
+    // Event handlers with duplicate prevention
+    const handleResize = () => {
+      if (!mountedRef.current) return;
+      debouncedUpdateSize();
+    };
+    
+    const handleOrientationChange = () => {
+      if (!mountedRef.current) return;
+      // Wait for orientation change to complete
+      setTimeout(() => {
+        if (mountedRef.current) {
+          debouncedUpdateSize();
+        }
+      }, 300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    return () => {
+      mountedRef.current = false;
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      
+      // Clear any pending timeouts
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // Cleanup Konva stage properly
+      if (stageRef.current) {
+        console.log('[Space2DKonvaView] Cleaning up Konva stage');
+        stageRef.current.destroy();
+      }
+    };
+  }, [debouncedUpdateSize]);
+
+  // Center the space in view on mount and size changes
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    
+    if (spaceConfig.width && spaceConfig.depth && stageSize.width > 0 && stageSize.height > 0) {
       const spaceWidthPx = mmToPixels(spaceConfig.width);
       const spaceDepthPx = mmToPixels(spaceConfig.depth);
       
@@ -365,8 +431,13 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
     );
   };
 
+  // Generate unique key for Stage to prevent duplicates
+  const stageKey = useMemo(() => {
+    return `konva-stage-${Date.now()}`;
+  }, []);
+
   return (
-    <div ref={containerRef} className={styles.container}>
+    <div ref={containerRef} className={styles.container} id={STAGE_CONTAINER_ID}>
       {/* Toolbar */}
       <ViewerToolbar2D
         showGrid={localShowGrid}
@@ -388,6 +459,7 @@ const Space2DKonvaView: React.FC<Space2DKonvaViewProps> = ({
       />
       
       <Stage
+        key={stageKey}
         ref={stageRef}
         width={stageSize.width}
         height={stageSize.height}

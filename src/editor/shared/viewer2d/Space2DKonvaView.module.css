@@ -8,6 +8,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Prevent duplicate canvas elements */
+.container > div:not(:first-of-type) > canvas {
+  display: none !important;
+}
+
+/* Ensure only one Konva container is visible */
+.container .konvajs-content {
+  position: relative !important;
+}
+
+/* Hide any duplicate Konva stages during orientation change */
+.container > .konvajs-content:not(:first-child) {
+  display: none !important;
+}
+
 .controls {
   position: absolute;
   bottom: 20px;

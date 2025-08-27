@@ -55,6 +55,7 @@ const UnifiedSpaceViewer: React.FC<UnifiedSpaceViewerProps> = ({
     propViewMode || uiStore.viewMode || '3D'
   );
   const [use2DKonva, setUse2DKonva] = useState(false);
+  const [viewerKey, setViewerKey] = useState(Date.now());
 
   // Sync with UI store
   useEffect(() => {
@@ -70,6 +71,9 @@ const UnifiedSpaceViewer: React.FC<UnifiedSpaceViewerProps> = ({
     setLocalViewMode(mode);
     uiStore.setViewMode(mode);
     
+    // Force re-render with new key to prevent duplicate canvas
+    setViewerKey(Date.now());
+    
     if (onViewModeChange) {
       onViewModeChange(mode);
     }
@@ -78,6 +82,8 @@ const UnifiedSpaceViewer: React.FC<UnifiedSpaceViewerProps> = ({
   // Toggle between 2D implementations
   const handle2DImplementationToggle = () => {
     setUse2DKonva(!use2DKonva);
+    // Force re-render with new key to prevent duplicate canvas
+    setViewerKey(Date.now());
   };
 
   return (
@@ -118,6 +124,7 @@ const UnifiedSpaceViewer: React.FC<UnifiedSpaceViewerProps> = ({
         {localViewMode === '2D' && use2DKonva ? (
           // Render 2D Konva Canvas
           <Space2DKonvaView
+            key={`konva-${viewerKey}`}
             width={width}
             height={height}
             viewMode={localViewMode}
