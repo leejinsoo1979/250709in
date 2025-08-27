@@ -1714,6 +1714,19 @@
   color: var(--accent-primary);
 }
 
+/* Fabric.js canvas-container 스타일 - 중복 캔버스 방지 */
+.previewContent :global(.canvas-container) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.previewContent :global(.canvas-container:not(:first-of-type)) {
+  display: none !important; /* 두 번째 이후 캔버스 숨김 */
+}
+
 /* 페이지 네비게이션 */
 .pageNavigation {
   display: flex;
