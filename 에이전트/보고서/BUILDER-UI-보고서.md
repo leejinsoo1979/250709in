@@ -1,7 +1,8 @@
-# BUILDER-UI 작업 보고서
+# 🟢 BUILDER-UI 작업 보고서
 
 ## 에이전트 정보
 - **에이전트명**: BUILDER-UI (react-konva-2d-editor)
+- **에이전트 컬러**: 🟢 (초록색)
 - **역할**: React 프론트엔드 UI 구현 담당
 - **프로젝트**: 250709in (React 기반 가구 에디터)
 
