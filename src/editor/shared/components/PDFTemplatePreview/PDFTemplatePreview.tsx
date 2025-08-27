@@ -3978,10 +3978,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       height: paperDimensions.displayHeight,
                       backgroundColor: paperColor,
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                      overflow: 'visible',
-                      // 세로 모드일 때 전체 페이퍼 컨테이너를 회전
-                      transform: orientation === 'portrait' ? 'rotate(90deg)' : 'rotate(0deg)',
-                      transformOrigin: 'center'
+                      overflow: 'visible'
+                      // 회전 제거 - 캔버스 중복 문제 해결을 위해 transform 제거
                     }}
                   >
                   {/* Fabric.js 캔버스 컨테이너 */}
