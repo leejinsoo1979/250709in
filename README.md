@@ -1,5 +1,7 @@
 # 🏠 가구 에디터 (Furniture Editor)
 
+![CI](https://github.com/leejinsoo1979/250709in/actions/workflows/ci.yml/badge.svg)
+
 ## 🌟 데모 실행하기
 
 - **[🚀 최신 데모(Vercel)](https://250709in.vercel.app)**
