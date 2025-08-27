@@ -110,7 +110,7 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
     for (let i = 0; i < 5; i++) {
       await act(async () => {
         mockStore.setPortrait(!mockStore.isPortrait);
-        (useViewerUIStore as any).mockReturnValue({ ...mockStore });
+        (useUIStore as any).mockReturnValue({ ...mockStore });
       });
 
       // Force re-render
@@ -158,7 +158,7 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
     for (let i = 0; i < 3; i++) {
       await act(async () => {
         mockStore.setPortrait(!mockStore.isPortrait);
-        (useViewerUIStore as any).mockReturnValue({ ...mockStore });
+        (useUIStore as any).mockReturnValue({ ...mockStore });
       });
     }
 
@@ -188,7 +188,7 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
     for (let i = 0; i < 10; i++) {
       await act(async () => {
         mockStore.setPortrait(i % 2 === 0);
-        (useViewerUIStore as any).mockReturnValue({ ...mockStore });
+        (useUIStore as any).mockReturnValue({ ...mockStore });
       });
 
       // Allow some frames to render

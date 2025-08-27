@@ -1,4 +1,5 @@
-import React from 'react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { PlacedModule } from '../types';
 
@@ -10,6 +11,48 @@ const sampleModule: PlacedModule = {
   rotation: 0,
   hasDoor: false
 };
+
+describe('Furniture Store Tests', () => {
+  let store: any;
+
+  beforeEach(() => {
+    const { result } = renderHook(() => useFurnitureStore());
+    store = result.current;
+    
+    // 각 테스트 시작 전 상태 초기화
+    act(() => {
+      store.clearAllModules();
+    });
+  });
+
+  it('should add module correctly', () => {
+    act(() => {
+      store.addModule(sampleModule);
+    });
+
+    expect(store.placedModules).toHaveLength(1);
+    expect(store.placedModules[0]).toEqual(sampleModule);
+  });
+
+  it('should remove module correctly', () => {
+    act(() => {
+      store.addModule(sampleModule);
+      store.removeModule(sampleModule.id);
+    });
+
+    expect(store.placedModules).toHaveLength(0);
+  });
+
+  it('should clear all modules', () => {
+    act(() => {
+      store.addModule(sampleModule);
+      store.addModule({ ...sampleModule, id: 'test-module-2' });
+      store.clearAllModules();
+    });
+
+    expect(store.placedModules).toHaveLength(0);
+  });
+});
 
 /**
  * Furniture Store 테스트 컴포넌트

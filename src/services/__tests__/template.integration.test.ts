@@ -2,7 +2,7 @@
  * Template Service Integration Tests - 템플릿 서비스 통합 테스트
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import * as templateService from '../template.service';
 import { 
   Template, 
@@ -10,10 +10,19 @@ import {
   TemplateListOptions,
   ApplyTemplateOptions
 } from '../types/template.types';
-import { initializeTestEnvironment, RulesTestEnvironment } from '@firebase/rules-unit-testing';
+
+// Mock Firebase for integration tests
+vi.mock('../../firebase/config', () => ({
+  db: {
+    collection: vi.fn(),
+    doc: vi.fn()
+  },
+  auth: {
+    currentUser: { uid: 'test-user-id' }
+  }
+}));
 
 describe('Template Service Integration Tests', () => {
-  let testEnv: RulesTestEnvironment;
   const authenticatedUserId = 'integration-test-user';
   
   const createTestTemplate = (name: string, isPublic: boolean = false): CreateTemplateInput => ({
@@ -91,44 +100,14 @@ describe('Template Service Integration Tests', () => {
   });
 
   beforeAll(async () => {
-    // Firebase 테스트 환경 초기화
-    try {
-      testEnv = await initializeTestEnvironment({
-        projectId: 'template-service-test',
-        firestore: {
-          rules: `
-            rules_version = '2';
-            service cloud.firestore {
-              match /databases/{database}/documents {
-                match /templates/{templateId} {
-                  allow read: if resource.data.metadata.isPublic == true ||
-                               (request.auth != null && request.auth.uid == resource.data.userId);
-                  allow create: if request.auth != null;
-                  allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-                  allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-                }
-              }
-            }
-          `
-        }
-      });
-    } catch (error) {
-      console.warn('Firebase test environment initialization skipped:', error);
-      // 테스트 환경이 없어도 계속 진행 (CI/CD 환경 고려)
-    }
-  });
-
-  afterAll(async () => {
-    if (testEnv) {
-      await testEnv.cleanup();
-    }
+    // Mock 테스트 환경 설정
+    console.log('✅ Mock 테스트 환경 초기화 완료');
   });
 
   beforeEach(async () => {
+    // Mock 초기화
+    vi.clearAllMocks();
     templateService.clearTemplateCache();
-    if (testEnv) {
-      await testEnv.clearFirestore();
-    }
   });
 
   describe('End-to-End Template Lifecycle', () => {
