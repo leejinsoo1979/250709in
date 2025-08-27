@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 const mockDocSnapshot = {
   id: 'mock-id',
-  exists: vi.fn(() => true),
+  exists: () => true,
   data: vi.fn(() => ({ name: 'Mock Data' })),
   get: vi.fn((field) => ({ name: 'Mock Data' })[field]),
   ref: { id: 'mock-id', path: 'mock/path' }
