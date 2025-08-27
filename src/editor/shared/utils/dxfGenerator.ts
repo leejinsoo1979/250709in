@@ -116,6 +116,9 @@ export const generateDXF = (data: DXFExportData): string => {
  * 정면도 전체 그리기 - 2D 뷰어와 동일한 깔끔한 가구 객체와 치수만 표시
  */
 const drawFrontElevation = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPlacedModule[]): void => {
+  // 하부 프레임 그리기 (있는 경우)
+  drawBaseFrame(dxf, spaceInfo, 'front');
+  
   // 가구 모듈들 그리기 (FURNITURE 레이어로 전환됨)
   drawFrontFurnitureModules(dxf, placedModules, spaceInfo);
   
@@ -151,6 +154,9 @@ const drawPlanView = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPl
 const drawSideSection = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPlacedModule[]): void => {
   // 공간 외곽선 그리기 (FURNITURE 레이어로)
   drawSideSpaceBoundary(dxf, spaceInfo);
+  
+  // 하부 프레임 그리기 (있는 경우)
+  drawBaseFrame(dxf, spaceInfo, 'side');
   
   // 가구 모듈들 그리기 (FURNITURE 레이어로)
   drawSideFurnitureModules(dxf, placedModules, spaceInfo);
@@ -398,6 +404,59 @@ const drawSideSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
 };
 
 /**
+ * 하부 프레임(Base Frame) 그리기 - 모든 뷰에서 사용
+ */
+const drawBaseFrame = (dxf: DxfWriter, spaceInfo: SpaceInfo, viewType: 'front' | 'plan' | 'side'): void => {
+  if (spaceInfo.baseConfig?.type !== 'base_frame') {
+    return; // base_frame이 아니면 그리지 않음
+  }
+  
+  const baseHeight = spaceInfo.baseConfig?.height || 100;
+  dxf.setCurrentLayerName('FURNITURE'); // 가구 레이어에 그리기
+  
+  if (viewType === 'front') {
+    // 정면도: 전체 너비 x 베이스 높이
+    const x1 = 0;
+    const y1 = 0;
+    const x2 = spaceInfo.width;
+    const y2 = baseHeight;
+    
+    // 베이스 프레임 외곽선
+    dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 하단
+    dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 우측
+    dxf.addLine(point3d(x2, y2), point3d(x1, y2)); // 상단
+    dxf.addLine(point3d(x1, y2), point3d(x1, y1)); // 좌측
+    
+    console.log(`🎯 [DXF-SPECIALIST] Base Frame drawn in Front View:`, {
+      width: spaceInfo.width,
+      height: baseHeight,
+      position: 'bottom of space'
+    });
+  } else if (viewType === 'plan') {
+    // 평면도: 베이스 프레임은 보통 평면도에서는 보이지 않음 (선택적)
+    // 필요시 점선으로 표시 가능
+  } else if (viewType === 'side') {
+    // 측면도: 깊이 x 베이스 높이
+    const x1 = 0;
+    const y1 = 0;
+    const x2 = spaceInfo.depth;
+    const y2 = baseHeight;
+    
+    // 베이스 프레임 외곽선
+    dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 하단
+    dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 뒤쪽
+    dxf.addLine(point3d(x2, y2), point3d(x1, y2)); // 상단
+    dxf.addLine(point3d(x1, y2), point3d(x1, y1)); // 앞쪽
+    
+    console.log(`🎯 [DXF-SPECIALIST] Base Frame drawn in Side View:`, {
+      depth: spaceInfo.depth,
+      height: baseHeight,
+      position: 'bottom of space'
+    });
+  }
+};
+
+/**
  * 가구 모듈들을 슬롯 위치 기반으로 그리기 (정면도 기준)
  */
 const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
@@ -459,12 +518,37 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       slotPositionMm = position.x * 10; // 기존 변환 방식
     }
     
-    // DXF 좌표계로 변환: Three.js 중앙 기준 → DXF 왼쪽 하단 기준
-    // Three.js에서 slotPositionMm은 중앙(0)을 기준으로 한 위치
-    // DXF에서는 왼쪽 하단(0,0)을 기준으로 해야 함
-    const dxfXPosition = (spaceInfo.width / 2) + slotPositionMm; // 공간 중앙에서 슬롯 위치만큼 이동
+    // DXF 좌표계로 변환: slotPositionMm은 내부 공간 시작점(internalStartX) 기준의 절대 좌표
+    // DXF에서는 공간의 왼쪽 끝(0,0)을 기준으로 하므로 그대로 사용
+    // 공간 중앙이 아닌 왼쪽 끝 기준으로 변환
+    const dxfXPosition = slotPositionMm; // internalStartX 기준 절대 좌표
     
     // 좌표 변환 완료: Three.js → DXF
+    console.log(`🎯 [DXF-SPECIALIST] Front View Coordinate Transform - ${moduleData.name}:`, {
+      '1_ThreeJS_Original': {
+        x: position.x,
+        y: position.y,
+        slotIndex,
+        isDualFurniture
+      },
+      '2_Internal_Space': {
+        internalStartX: indexing.internalStartX,
+        internalWidth: indexing.internalWidth,
+        totalSpaceWidth: spaceInfo.width
+      },
+      '3_Slot_Position': {
+        slotPositionMm_Absolute: slotPositionMm,
+        columnWidth: indexing.columnWidth,
+        columnIndex: slotIndex
+      },
+      '4_DXF_Transform': {
+        dxfXPosition,
+        furnitureLeft: dxfXPosition - (dimensions.width / 2),
+        furnitureRight: dxfXPosition + (dimensions.width / 2),
+        leftEdgeToSpaceLeft: dxfXPosition - (dimensions.width / 2),
+        rightEdgeToSpaceRight: spaceInfo.width - (dxfXPosition + dimensions.width / 2)
+      }
+    });
     
     // 가구 사각형 (정면도 기준: dxfXPosition 사용)
     const x1 = dxfXPosition - (dimensions.width / 2); // 중심점에서 좌측 끝
@@ -473,6 +557,16 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const y1 = baseFrameHeight; // 하부 프레임 위의 가구 바닥
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.height; // 상단
+    
+    // Y좌표 변환 로그
+    console.log(`📏 [DXF-SPECIALIST] Front View Y-Coordinate with BaseFrame:`, {
+      baseFrameType: spaceInfo.baseConfig?.type,
+      baseFrameHeight,
+      furnitureBottom: y1,
+      furnitureTop: y2,
+      totalHeight: dimensions.height,
+      floorToFurnitureBottom: y1
+    });
     
     // DXF 좌표 계산 완료
     
@@ -642,26 +736,40 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       slotPositionMm = position.x * 10; // 기존 변환 방식
     }
     
-    // DXF 좌표계로 변환: Three.js 중앙 기준 → DXF 왼쪽 하단 기준
-    // 평면도에서는 X축은 그대로, Y축은 가구 앞면 기준으로 배치
-    const dxfXPosition = (spaceInfo.width / 2) + slotPositionMm; // 공간 중앙에서 슬롯 위치만큼 이동
+    // DXF 좌표계로 변환: slotPositionMm은 내부 공간 시작점(internalStartX) 기준의 절대 좌표
+    // DXF에서는 공간의 왼쪽 끝(0,0)을 기준으로 하므로 그대로 사용
+    // 평면도에서도 X축은 internalStartX 기준, Y축은 가구 앞면 기준으로 배치
+    const dxfXPosition = slotPositionMm; // internalStartX 기준 절대 좌표
     
     // 가구 앞면 위치: 공간 앞면에서 20mm 뒤 (측면도와 동일한 로직)
     const frontPositionMm = 20;
     const dxfYPosition = frontPositionMm; // 가구 앞면을 공간 앞면에서 20mm 뒤에 배치
     
-    console.log(`🔍 평면도 가구 ${index + 1} (${moduleData.name}) 좌표 변환:`, {
-      originalThreeJsX: position.x,
-      originalThreeJsZ: position.z,
-      slotIndex,
-      isDualFurniture,
-      slotPositionMm, // Three.js 기준 mm 위치 (중앙 기준)
-      dxfXPosition,   // DXF 기준 X 위치 (왼쪽 하단 기준)
-      frontPositionMm, // 가구 앞면 위치 (공간 앞면에서 20mm 뒤)
-      dxfYPosition,   // DXF 기준 Y 위치 (가구 앞면 기준)
-      spaceWidth: spaceInfo.width,
-      spaceDepth: spaceInfo.depth,
-      dimensions
+    console.log(`🎯 [DXF-SPECIALIST] Plan View Coordinate Transform - ${moduleData.name}:`, {
+      '1_ThreeJS_Original': {
+        x: position.x,
+        z: position.z,
+        slotIndex,
+        isDualFurniture
+      },
+      '2_Internal_Space': {
+        internalStartX: indexing.internalStartX,
+        internalWidth: indexing.internalWidth,
+        totalSpaceWidth: spaceInfo.width
+      },
+      '3_DXF_Transform': {
+        slotPositionMm_Absolute: slotPositionMm,
+        dxfXPosition,
+        furnitureLeft: dxfXPosition - (dimensions.width / 2),
+        furnitureRight: dxfXPosition + (dimensions.width / 2),
+        leftEdgeToSpaceLeft: dxfXPosition - (dimensions.width / 2),
+        rightEdgeToSpaceRight: spaceInfo.width - (dxfXPosition + dimensions.width / 2)
+      },
+      '4_Depth_Position': {
+        frontPositionMm,
+        dxfYPosition,
+        spaceDepth: spaceInfo.depth
+      }
     });
     
     // 가구 사각형 (평면도 기준: width x depth)
@@ -806,21 +914,31 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     // 가구 중심 위치 (측면도 X축)
     const furnitureCenterX = frontPositionMm + (actualDepthMm / 2);
     
-    // 가구 높이 위치 계산 (기존 정면도와 동일한 로직)
-    // Y 좌표는 바닥에서의 높이이므로 position.y * 10 사용
-    const furnitureBottomY = 0; // 바닥부터 시작
-    const furnitureTopY = dimensions.height; // 가구 높이만큼
-    const furnitureCenterY = furnitureTopY / 2;
+    // 가구 높이 위치 계산 (baseFrameHeight 포함)
+    // Y 좌표: 내경 바닥 위치 계산
+    const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
+    const furnitureBottomY = baseFrameHeight; // 하부 프레임 위의 가구 바닥
+    const furnitureTopY = furnitureBottomY + dimensions.height; // 가구 상단
+    const furnitureCenterY = furnitureBottomY + (dimensions.height / 2);
     
-    console.log(`📐 측면도 DXF 좌표 계산:`, {
-      frontPositionMm,
-      backPositionMm,
-      furnitureCenterX,
-      furnitureBottomY,
-      furnitureTopY,
-      furnitureCenterY,
-      actualDepthMm,
-      height: dimensions.height
+    console.log(`🎯 [DXF-SPECIALIST] Side View Coordinate Transform with BaseFrame:`, {
+      '1_BaseFrame': {
+        type: spaceInfo.baseConfig?.type,
+        height: baseFrameHeight,
+        furnitureBottomWithBase: furnitureBottomY
+      },
+      '2_Depth_Position': {
+        frontPositionMm,
+        backPositionMm,
+        actualDepthMm
+      },
+      '3_Height_Position': {
+        furnitureBottomY,
+        furnitureTopY,
+        furnitureCenterY,
+        totalHeight: dimensions.height,
+        floorToFurnitureBottom: furnitureBottomY
+      }
     });
     
     // 가구 사각형 그리기 (측면도: depth x height)
