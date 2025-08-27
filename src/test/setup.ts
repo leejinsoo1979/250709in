@@ -7,14 +7,22 @@ import './setup/polyfills'
 // Import Firebase test setup
 import './setup/firebase'
 
-// Mock localStorage
+// Mock localStorage - both window and global
+const localStorageMock = {
+  getItem: vi.fn(() => null),
+  setItem: vi.fn(() => null),
+  removeItem: vi.fn(() => null),
+  clear: vi.fn(() => null),
+};
+
 Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: vi.fn(() => null),
-    setItem: vi.fn(() => null),
-    removeItem: vi.fn(() => null),
-    clear: vi.fn(() => null),
-  },
+  value: localStorageMock,
+  writable: true,
+});
+
+// Also define on global for Node.js environment
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
   writable: true,
 });
 
