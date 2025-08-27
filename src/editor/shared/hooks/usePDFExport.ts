@@ -599,29 +599,32 @@ export function usePDFExport() {
       // PDF 파일명 생성
       const filename = `${projectTitle.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${currentDate.replace(/\./g, '')}.pdf`;
       
-      // Storage 업로드 시도
+      // 직접 다운로드 (Storage 업로드 스킵)
       try {
-        const user = auth.currentUser;
-        if (user) {
-          // Team ID와 Design ID 가져오기
-          const teamId = `personal_${user.uid}`;
-          const designId = 'current_design'; // 임시: 현재 디자인 ID
-          const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
-          
-          // PDF Blob 생성
-          const pdfBlob = pdf.output('blob');
-          
-          // Storage에 저장 시도
-          await exportWithPersistence(pdfBlob, filename, 'pdf', teamId, designId, versionId);
-          console.log('✅ PDF Storage 업로드 성공!');
-        } else {
-          // 로그인하지 않은 경우 기존 방식으로 다운로드
-          pdf.save(filename);
-        }
-      } catch (error) {
-        console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
-        // 실패 시 기존 방식으로 다운로드
+        // PDF 직접 다운로드
         pdf.save(filename);
+        console.log('✅ PDF 다운로드 성공!', filename);
+        
+        // 나중에 Storage 업로드 시도 (선택사항)
+        // const user = auth.currentUser;
+        // if (user) {
+        //   const pdfBlob = pdf.output('blob');
+        //   // 비동기로 백그라운드 업로드 (실패해도 무시)
+        //   exportWithPersistence(pdfBlob, filename, 'pdf', teamId, designId, versionId)
+        //     .catch(err => console.log('Storage 업로드 실패 (무시):', err));
+        // }
+      } catch (error) {
+        console.error('PDF 다운로드 실패:', error);
+        // 대체 다운로드 방법
+        const pdfBlob = pdf.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       }
       
       return {

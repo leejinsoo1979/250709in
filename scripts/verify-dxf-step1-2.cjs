@@ -100,34 +100,39 @@ class DXFParser {
 
   parseGeometryEntity(type) {
     const entity = { type, layer: '0' };
-    const startIndex = this.index;
-    while (this.index < this.lines.length && this.index - startIndex < 50) {
+    this.index++; // Skip entity type
+    while (this.index < this.lines.length) {
       if (this.lines[this.index] === '0') {
         break;
       }
       if (this.lines[this.index] === '8') {
         entity.layer = this.lines[this.index + 1];
+        this.index++;
       }
       this.index++;
     }
     this.entities.push(entity);
+    this.index--; // Back up one so the main loop can find the next '0'
   }
 
   parseDimensionEntity() {
     const entity = { type: 'DIMENSION', layer: '0', text: '' };
-    const startIndex = this.index;
-    while (this.index < this.lines.length && this.index - startIndex < 50) {
+    this.index++; // Skip entity type
+    while (this.index < this.lines.length) {
       if (this.lines[this.index] === '0') {
         break;
       }
       if (this.lines[this.index] === '8') {
         entity.layer = this.lines[this.index + 1];
+        this.index++;
       } else if (this.lines[this.index] === '1') {
         entity.text = this.lines[this.index + 1];
+        this.index++;
       }
       this.index++;
     }
     this.entities.push(entity);
+    this.index--; // Back up one so the main loop can find the next '0'
   }
 }
 

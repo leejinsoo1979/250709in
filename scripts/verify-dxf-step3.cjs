@@ -78,23 +78,28 @@ class DXFParser {
 
   parseTextEntity(type) {
     const entity = { type, layer: '0', text: '', x: 0, y: 0 };
-    const startIndex = this.index;
-    while (this.index < this.lines.length && this.index - startIndex < 50) {
+    this.index++; // Skip entity type
+    while (this.index < this.lines.length) {
       if (this.lines[this.index] === '0') {
         break;
       }
       if (this.lines[this.index] === '8') {
         entity.layer = this.lines[this.index + 1];
+        this.index++;
       } else if (this.lines[this.index] === '1') {
         entity.text = this.lines[this.index + 1];
+        this.index++;
       } else if (this.lines[this.index] === '10') {
         entity.x = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       } else if (this.lines[this.index] === '20') {
         entity.y = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       }
       this.index++;
     }
     this.entities.push(entity);
+    this.index--; // Back up one so the main loop can find the next '0'
   }
 
   parseLineEntity() {
@@ -104,25 +109,31 @@ class DXFParser {
       x1: 0, y1: 0, 
       x2: 0, y2: 0 
     };
-    const startIndex = this.index;
-    while (this.index < this.lines.length && this.index - startIndex < 50) {
+    this.index++; // Skip entity type
+    while (this.index < this.lines.length) {
       if (this.lines[this.index] === '0') {
         break;
       }
       if (this.lines[this.index] === '8') {
         entity.layer = this.lines[this.index + 1];
+        this.index++;
       } else if (this.lines[this.index] === '10') {
         entity.x1 = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       } else if (this.lines[this.index] === '20') {
         entity.y1 = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       } else if (this.lines[this.index] === '11') {
         entity.x2 = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       } else if (this.lines[this.index] === '21') {
         entity.y2 = parseFloat(this.lines[this.index + 1]);
+        this.index++;
       }
       this.index++;
     }
     this.entities.push(entity);
+    this.index--; // Back up one so the main loop can find the next '0'
   }
 }
 
