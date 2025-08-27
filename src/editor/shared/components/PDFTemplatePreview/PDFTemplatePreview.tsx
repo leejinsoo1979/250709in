@@ -1329,8 +1329,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       }
       
       // 모든 캔버스 엘리먼트 제거 (안전을 위해)
-      const allCanvases = canvasContainerRef.current.querySelectorAll('canvas');
-      allCanvases.forEach((canvas, index) => {
+      const canvasElements = canvasContainerRef.current.querySelectorAll('canvas');
+      canvasElements.forEach((canvas, index) => {
         console.log(`캔버스 엘리먼트 ${index + 1} 제거`);
         canvas.remove();
       });
