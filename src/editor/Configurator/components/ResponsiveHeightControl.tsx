@@ -1,4 +1,4 @@
-import React from 'react';
+확장import React from 'react';
 import { useResponsive } from '@/hooks/useResponsive';
 import { TouchCompatibleControl } from './TouchCompatibleControls';
 import HeightControl from '@/editor/shared/controls/space/HeightControl';
