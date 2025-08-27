@@ -1,30 +1,35 @@
-import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
-import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { vi } from 'vitest';
+
+// Mock 모듈들을 먼저 설정
+vi.mock('firebase/app');
+vi.mock('firebase/auth');
+vi.mock('firebase/firestore');
+vi.mock('firebase/storage');
 
 // Firebase 에뮬레이터 설정
 const USE_FIREBASE_EMULATOR = process.env.USE_FIREBASE_EMULATOR === '1';
 
-// 테스트용 Firebase 설정
-const testFirebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || 'test-api-key',
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || 'test-auth-domain',
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'test-project-id',
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'test-storage-bucket',
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.VITE_FIREBASE_APP_ID || 'test-app-id'
-};
-
-let app: FirebaseApp;
-
-// Firebase 초기화 및 에뮬레이터 연결
 if (USE_FIREBASE_EMULATOR) {
   console.log('🧪 Firebase 에뮬레이터 모드 활성화');
   
+  // 에뮬레이터 모드에서는 실제 Firebase 모듈 사용
+  const { initializeApp } = await import('firebase/app');
+  const { getAuth, connectAuthEmulator } = await import('firebase/auth');
+  const { getFirestore, connectFirestoreEmulator } = await import('firebase/firestore');
+  const { getStorage, connectStorageEmulator } = await import('firebase/storage');
+  
+  // 테스트용 Firebase 설정
+  const testFirebaseConfig = {
+    apiKey: process.env.VITE_FIREBASE_API_KEY || 'test-api-key',
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || 'test-auth-domain',
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'test-project-id',
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || 'test-storage-bucket',
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+    appId: process.env.VITE_FIREBASE_APP_ID || 'test-app-id'
+  };
+  
   // Firebase 앱 초기화
-  app = initializeApp(testFirebaseConfig, 'test-app');
+  const app = initializeApp(testFirebaseConfig, 'test-app');
   
   // Auth 에뮬레이터 연결
   const auth = getAuth(app);
