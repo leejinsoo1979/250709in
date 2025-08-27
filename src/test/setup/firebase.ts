@@ -125,70 +125,104 @@ if (USE_FIREBASE_EMULATOR) {
         createUserWithEmailAndPassword: vi.fn(() => Promise.resolve({ user: mockUser })),
         signOut: vi.fn(() => Promise.resolve()),
         sendPasswordResetEmail: vi.fn(() => Promise.resolve()),
-        GoogleAuthProvider: vi.fn(),
-        GithubAuthProvider: vi.fn()
+        signInWithPopup: vi.fn(() => Promise.resolve({ user: mockUser }))
       })),
       connectAuthEmulator: vi.fn(),
       signInWithEmailAndPassword: vi.fn(() => Promise.resolve({ user: mockUser })),
       createUserWithEmailAndPassword: vi.fn(() => Promise.resolve({ user: mockUser })),
-      signOut: vi.fn(() => Promise.resolve())
+      signOut: vi.fn(() => Promise.resolve()),
+      GoogleAuthProvider: vi.fn(() => ({
+        providerId: 'google.com',
+        addScope: vi.fn()
+      })),
+      GithubAuthProvider: vi.fn(() => ({
+        providerId: 'github.com',
+        addScope: vi.fn()
+      }))
     };
   });
   
-  vi.mock('firebase/firestore', () => ({
-    getFirestore: vi.fn(() => ({})),
-    collection: vi.fn(),
-    doc: vi.fn(),
-    addDoc: vi.fn(() => Promise.resolve({ id: 'new-doc-id' })),
-    setDoc: vi.fn(() => Promise.resolve()),
-    getDoc: vi.fn(() => Promise.resolve({ exists: () => false })),
-    getDocs: vi.fn(() => Promise.resolve({ docs: [], empty: true })),
-    updateDoc: vi.fn(() => Promise.resolve()),
-    deleteDoc: vi.fn(() => Promise.resolve()),
-    query: vi.fn(),
-    where: vi.fn(),
-    orderBy: vi.fn(),
-    limit: vi.fn(),
-    onSnapshot: vi.fn(() => vi.fn()),
-    serverTimestamp: vi.fn(() => new Date()),
-    Timestamp: {
-      now: vi.fn(() => ({ toDate: () => new Date() })),
-      fromDate: vi.fn((date) => ({ toDate: () => date }))
-    },
-    runTransaction: vi.fn((db, callback) => callback({
+  vi.mock('firebase/firestore', () => {
+    const mockRunTransaction = vi.fn((db, callback) => callback({
       get: vi.fn(),
       set: vi.fn(),
       update: vi.fn(),
       delete: vi.fn()
-    })),
-    writeBatch: vi.fn(() => ({
-      set: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      commit: vi.fn(() => Promise.resolve())
-    })),
-    connectFirestoreEmulator: vi.fn()
-  }));
+    }));
+    
+    // Add mockImplementation method
+    mockRunTransaction.mockImplementation = vi.fn((impl) => {
+      mockRunTransaction.mockReset();
+      mockRunTransaction.mockImplementation(impl);
+    });
+    
+    return {
+      getFirestore: vi.fn(() => ({})),
+      collection: vi.fn(),
+      doc: vi.fn(),
+      addDoc: vi.fn(() => Promise.resolve({ id: 'new-doc-id' })),
+      setDoc: vi.fn(() => Promise.resolve()),
+      getDoc: vi.fn(() => Promise.resolve({ exists: () => false, data: () => null })),
+      getDocs: vi.fn(() => Promise.resolve({ docs: [], empty: true })),
+      updateDoc: vi.fn(() => Promise.resolve()),
+      deleteDoc: vi.fn(() => Promise.resolve()),
+      query: vi.fn(),
+      where: vi.fn(),
+      orderBy: vi.fn(),
+      limit: vi.fn(),
+      startAfter: vi.fn(),
+      onSnapshot: vi.fn(() => vi.fn()),
+      serverTimestamp: vi.fn(() => new Date()),
+      Timestamp: {
+        now: vi.fn(() => ({ toDate: () => new Date() })),
+        fromDate: vi.fn((date) => ({ toDate: () => date }))
+      },
+      runTransaction: mockRunTransaction,
+      writeBatch: vi.fn(() => ({
+        set: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        commit: vi.fn(() => Promise.resolve())
+      })),
+      connectFirestoreEmulator: vi.fn()
+    };
+  });
   
-  vi.mock('firebase/storage', () => ({
-    getStorage: vi.fn(() => ({})),
-    ref: vi.fn(() => ({
-      child: vi.fn(() => ({
-        put: vi.fn(),
-        putString: vi.fn(),
-        getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')),
-        delete: vi.fn()
-      }))
-    })),
-    uploadBytes: vi.fn(() => Promise.resolve({
+  vi.mock('firebase/storage', () => {
+    const mockUploadBytes = vi.fn(() => Promise.resolve({
       metadata: { name: 'test-file' },
-      ref: { getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')) }
-    })),
-    uploadString: vi.fn(() => Promise.resolve()),
-    getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')),
-    deleteObject: vi.fn(() => Promise.resolve()),
-    connectStorageEmulator: vi.fn()
-  }));
+      ref: { 
+        fullPath: 'test/path',
+        getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')) 
+      }
+    }));
+    
+    // Make mock functions accessible for tests
+    mockUploadBytes.mockResolvedValue = vi.fn((value) => {
+      mockUploadBytes.mockImplementation(() => Promise.resolve(value));
+    });
+    mockUploadBytes.mockRejectedValue = vi.fn((error) => {
+      mockUploadBytes.mockImplementation(() => Promise.reject(error));
+    });
+    
+    return {
+      getStorage: vi.fn(() => ({})),
+      ref: vi.fn(() => ({
+        fullPath: 'test/path',
+        child: vi.fn(() => ({
+          put: vi.fn(),
+          putString: vi.fn(),
+          getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')),
+          delete: vi.fn()
+        }))
+      })),
+      uploadBytes: mockUploadBytes,
+      uploadString: vi.fn(() => Promise.resolve()),
+      getDownloadURL: vi.fn(() => Promise.resolve('https://mock-url.com/file')),
+      deleteObject: vi.fn(() => Promise.resolve()),
+      connectStorageEmulator: vi.fn()
+    };
+  });
 }
 
 // 테스트 환경 정리
