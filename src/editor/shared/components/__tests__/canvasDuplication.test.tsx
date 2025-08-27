@@ -85,7 +85,7 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
 
   it('AC1: Canvas DOM nodes must equal 1 after multiple portrait toggles', async () => {
     // We'll simulate the portrait toggle behavior
-    const mockComponent = () => {
+    const TestComponent = () => {
       const [orientation, setOrientation] = React.useState<'landscape' | 'portrait'>('landscape');
       const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
       
@@ -117,7 +117,6 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
       );
     };
     
-    const TestComponent = mockComponent();
     const result = render(<TestComponent />);
     container = result.container;
     
