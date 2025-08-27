@@ -1,7 +1,8 @@
-# Geometry Core Engine (DXF-SPECIALIST) 작업 보고서
+# 🔴 Geometry Core Engine (DXF-SPECIALIST) 작업 보고서
 
 ## 에이전트 정보
 - **에이전트명**: geometry-core-engine (DXF-SPECIALIST)
+- **에이전트 색상**: 🔴 레드
 - **역할**: DXF import/export, 기하학 처리, 공차/두께 처리, CAD 파이프라인 작업
 - **작성일**: 2025-01-27
 
