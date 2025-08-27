@@ -12,16 +12,20 @@ class DXFParser {
 
   parse() {
     while (this.index < this.lines.length) {
-      const code = this.lines[this.index];
-      if (code === '2' && this.lines[this.index - 1] === '0') {
-        const sectionName = this.lines[this.index + 1];
-        if (sectionName === 'ENTITIES') {
-          this.parseEntities();
-        } else if (sectionName === 'TABLES') {
-          this.parseTables();
+      if (this.lines[this.index] === '0' && this.lines[this.index + 1] === 'SECTION') {
+        this.index += 2;
+        if (this.lines[this.index] === '2') {
+          const sectionName = this.lines[this.index + 1];
+          this.index += 2;
+          if (sectionName === 'ENTITIES') {
+            this.parseEntities();
+          } else if (sectionName === 'TABLES') {
+            this.parseTables();
+          }
         }
+      } else {
+        this.index++;
       }
-      this.index++;
     }
   }
 
