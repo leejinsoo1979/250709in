@@ -27,6 +27,7 @@ import CNCOptimizer from '@/editor/CNCOptimizer';
 import CNCOptimizerNew from '@/editor/CNCOptimizer/CNCOptimizerNew';
 import CNCOptimizerPro from '@/editor/CNCOptimizer/CNCOptimizerPro';
 import CNCOptimizerTest from '@/editor/CNCOptimizer/CNCOptimizerTest';
+import Test2DViewer from '@/pages/Test2DViewer';
 import { initializeTheme } from '@/theme';
 
 // AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
@@ -101,6 +102,8 @@ function AppContent() {
         <Route path="/debug/firebase" element={<FirebaseDebug />} />
         <Route path="/debug/data" element={<FirebaseDataDebug />} />
         <Route path="/touch-test" element={<TouchTestPage />} />
+        {/* 2D Konva 뷰어 테스트 페이지 */}
+        <Route path="/test-2d" element={<Test2DViewer />} />
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
