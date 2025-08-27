@@ -3,6 +3,9 @@ import styles from './ConvertModal.module.css';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
+import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -19,6 +22,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     door?: string;
   }>({});
   const [isCapturing, setIsCapturing] = useState(false);
+  
+  // PDF 내보내기 훅 사용
+  const { exportToPDF, isExporting } = usePDFExport();
+  const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
+  const placedModules = useFurnitureStore((state) => state.placedModules);
 
   if (!isOpen) return null;
 
@@ -106,30 +114,35 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handlePDFTemplate = async () => {
-    console.log('PDF 템플릿 버튼 클릭됨');
+  const handlePDFDownload = async () => {
+    console.log('📄 PDF 다운로드 버튼 클릭됨');
     
-    // jsPDF 직접 사용해서 바로 다운로드
-    const { jsPDF } = await import('jspdf');
-    const pdf = new jsPDF();
-    
-    // 제목 추가
-    pdf.setFontSize(20);
-    pdf.text('Furniture Design', 20, 20);
-    
-    // 현재 화면 캡처
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 15, 40, 180, 100);
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
     }
     
-    // 날짜 추가
-    pdf.setFontSize(12);
-    pdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, 160);
-    
-    // PDF 다운로드
-    pdf.save('furniture-design.pdf');
+    try {
+      // 정면도, 평면도, 측면도를 포함한 PDF 생성
+      // 2D 모드에서 그리드 컬럼 축 자동 비활성화 처리됨
+      const selectedViews = ['2d-front', '2d-top', '2d-left'] as const;
+      
+      const result = await exportToPDF(spaceInfo, placedModules, selectedViews, 'solid');
+      
+      if (result.success) {
+        console.log('✅ PDF 다운로드 성공:', result.filename);
+        // 모달 자동 닫기
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        console.error('❌ PDF 다운로드 실패:', result.message);
+        alert(`PDF 다운로드 실패: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ PDF 다운로드 예외:', error);
+      alert('PDF 다운로드 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -149,8 +162,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
             <div className={styles.optionList}>
               <button 
                 className={styles.optionButton}
-                onClick={handlePDFTemplate}
-                disabled={isCapturing}
+                onClick={handlePDFDownload}
+                disabled={isExporting}
               >
                 <div className={styles.optionIcon}>
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
@@ -164,7 +177,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                   <h3>{t('export.pdf')}</h3>
                   <p>{t('export.pdfDesc')}</p>
                 </div>
-                {isCapturing && <span className={styles.loading}>{t('export.capturing')}</span>}
+                {isExporting && <span className={styles.loading}>{t('export.capturing')}</span>}
               </button>
 
               <button className={styles.optionButton} disabled>
