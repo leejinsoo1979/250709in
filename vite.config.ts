@@ -44,7 +44,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/test/setup.ts', './src/test/setup/firebase.ts'],
   },
   server: {
     headers: {
