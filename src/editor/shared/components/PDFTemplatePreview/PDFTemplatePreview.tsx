@@ -1255,8 +1255,6 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
   // Fabric.js 캔버스 초기화
   useEffect(() => {
-    let isInitializing = false; // 초기화 중복 방지 플래그
-    
     // 모달이 열려있지 않으면 초기화하지 않음
     if (!isOpen) {
       // 캔버스 정리
@@ -1270,24 +1268,29 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         }
         fabricCanvasRef.current = null;
       }
+      
+      // 모든 캔버스 관련 요소 제거
+      if (canvasContainerRef.current) {
+        const allCanvasContainers = canvasContainerRef.current.querySelectorAll('.canvas-container');
+        allCanvasContainers.forEach(container => container.remove());
+        
+        const allCanvases = canvasContainerRef.current.querySelectorAll('canvas');
+        allCanvases.forEach(canvas => canvas.remove());
+      }
       return;
     }
     
-    // 캔버스 초기화 함수 - 지연 실행으로 중복 방지
+    // 캔버스 초기화 함수
     const initCanvas = () => {
-      if (isInitializing) {
-        console.log('이미 초기화 중입니다. 스킵합니다.');
-        return false;
-      }
-      
       if (!canvasContainerRef.current) {
         console.error('캔버스 컨테이너가 없습니다.');
         return false;
       }
 
-      // 이미 캔버스가 존재하고 크기만 변경된 경우 크기 업데이트만 수행
-      if (fabricCanvasRef.current) {
-        console.log('기존 캔버스 크기 업데이트');
+      // 이미 초기화된 캔버스가 있으면 크기만 업데이트
+      const existingCanvasElement = document.getElementById('fabric-canvas');
+      if (fabricCanvasRef.current && existingCanvasElement && existingCanvasElement.parentElement) {
+        console.log('기존 캔버스 크기만 업데이트');
         fabricCanvasRef.current.setDimensions({
           width: paperDimensions.displayWidth,
           height: paperDimensions.displayHeight
@@ -1295,24 +1298,28 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         fabricCanvasRef.current.renderAll();
         return true;
       }
-      
-      isInitializing = true;
 
-      console.log('Fabric.js 초기화 시작...', {
-        displayWidth: paperDimensions.displayWidth,
-        displayHeight: paperDimensions.displayHeight,
-        paperColor: paperColor,
-        isOpen: isOpen,
-        orientation: orientation
-      });
+      console.log('Fabric.js 새로운 캔버스 초기화 시작...');
       
-      // Fabric.js가 생성한 wrapper들 모두 제거 (중복 방지)
-      const wrappers = canvasContainerRef.current.querySelectorAll('.canvas-container');
-      console.log(`찾은 canvas-container 개수: ${wrappers.length}`);
-      wrappers.forEach((wrapper, index) => {
-        console.log(`canvas-container ${index + 1} 제거`);
-        wrapper.remove();
-      });
+      // 기존 캔버스 완전 제거
+      if (fabricCanvasRef.current) {
+        try {
+          fabricCanvasRef.current.clear();
+          fabricCanvasRef.current.dispose();
+          fabricCanvasRef.current = null;
+        } catch (e) {
+          console.error('캔버스 정리 오류:', e);
+        }
+      }
+      
+      // 모든 기존 캔버스 관련 요소 강제 제거
+      const allCanvasContainers = canvasContainerRef.current.querySelectorAll('.canvas-container');
+      console.log(`제거할 canvas-container 개수: ${allCanvasContainers.length}`);
+      allCanvasContainers.forEach(container => container.remove());
+      
+      const allCanvases = canvasContainerRef.current.querySelectorAll('canvas');
+      console.log(`제거할 canvas 개수: ${allCanvases.length}`);
+      allCanvases.forEach(canvas => canvas.remove());
       
       // 캔버스 엘리먼트 재생성
       const existingCanvas = document.getElementById('fabric-canvas');
@@ -1504,21 +1511,17 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
             wrapper: canvas.wrapperEl
           });
           
-          isInitializing = false; // 초기화 완료
           return true;
         } catch (error) {
           console.error('Fabric.js 캔버스 생성 오류:', error);
-          isInitializing = false; // 초기화 실패 시에도 플래그 리셋
           return false;
-        } finally {
-          isInitializing = false; // 항상 플래그 리셋
         }
     };
 
-    // orientation 변경 시 지연 실행으로 중복 방지
-    const timer = setTimeout(() => {
+    // 초기화 실행 - 단 한 번만
+    if (isOpen && canvasContainerRef.current) {
       initCanvas();
-    }, 100);
+    }
     
     // 키보드 이벤트 핸들러
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1536,25 +1539,34 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      clearTimeout(timer);
       document.removeEventListener('keydown', handleKeyDown);
       // Fabric 캔버스 키보드 이벤트 리스너 제거
       if ((window as any).handleCanvasKeyDown) {
         document.removeEventListener('keydown', (window as any).handleCanvasKeyDown);
         delete (window as any).handleCanvasKeyDown;
       }
-      // canvas.dispose(); // 이것을 제거하여 캔버스가 삭제되지 않도록 함
     };
-  }, [isOpen, paperDimensions.displayWidth, paperDimensions.displayHeight, paperColor]); // orientation 제거하여 중복 생성 방지
+  }, [isOpen]); // 의존성을 isOpen만으로 최소화
 
-  // 캔버스 크기 업데이트
+  // 캔버스 크기 업데이트 - 크기가 실제로 변경될 때만
   useEffect(() => {
     if (fabricCanvasRef.current && isOpen) {
-      fabricCanvasRef.current.setDimensions({
-        width: paperDimensions.displayWidth,
-        height: paperDimensions.displayHeight
-      });
-      fabricCanvasRef.current.renderAll();
+      const currentWidth = fabricCanvasRef.current.getWidth();
+      const currentHeight = fabricCanvasRef.current.getHeight();
+      
+      // 크기가 실제로 변경된 경우에만 업데이트
+      if (currentWidth !== paperDimensions.displayWidth || currentHeight !== paperDimensions.displayHeight) {
+        console.log('캔버스 크기 업데이트:', { 
+          from: { width: currentWidth, height: currentHeight },
+          to: { width: paperDimensions.displayWidth, height: paperDimensions.displayHeight }
+        });
+        
+        fabricCanvasRef.current.setDimensions({
+          width: paperDimensions.displayWidth,
+          height: paperDimensions.displayHeight
+        });
+        fabricCanvasRef.current.renderAll();
+      }
     }
   }, [paperDimensions.displayWidth, paperDimensions.displayHeight, isOpen]);
 

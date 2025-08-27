@@ -1723,8 +1723,20 @@
   height: 100% !important;
 }
 
-.previewContent :global(.canvas-container:not(:first-of-type)) {
-  display: none !important; /* 두 번째 이후 캔버스 숨김 */
+/* 첫 번째 캔버스만 표시 */
+.previewContent :global(.canvas-container:first-child) {
+  display: block !important;
+  z-index: 1 !important;
+}
+
+/* 두 번째 이후 모든 캔버스 완전 숨김 */
+.previewContent :global(.canvas-container ~ .canvas-container) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -9999 !important;
 }
 
 /* 페이지 네비게이션 */
