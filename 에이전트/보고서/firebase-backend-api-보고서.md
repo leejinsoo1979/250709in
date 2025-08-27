@@ -1,4 +1,4 @@
-# Firebase Backend API (BUILDER-BE) 작업 보고서
+# 🟠 Firebase Backend API (BUILDER-BE) 작업 보고서
 
 ## 🟠 에이전트 정보
 - **이름**: firebase-backend-api (BUILDER-BE)
