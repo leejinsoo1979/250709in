@@ -12,6 +12,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:emu": "USE_FIREBASE_EMULATOR=1 vitest",
+    "emu:start": "firebase emulators:start --only auth,firestore,storage --project demo-furniture-editor",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "firebase:emulators": "firebase emulators:start",

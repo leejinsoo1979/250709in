@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { useUIStore } from '@/store/uiStore';
 import Space3DView from '../Space3DView';
 import * as THREE from 'three';
@@ -98,7 +99,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
   });
 
   it('TEST 1: Should maintain single canvas after 5 portrait toggles', async () => {
-    const { container } = render(<Space3DView />);
+    const { container } = render(
+      <BrowserRouter>
+        <Space3DView />
+      </BrowserRouter>
+    );
     
     // Wait for initial render
     await waitFor(() => {
@@ -114,7 +119,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
       });
 
       // Force re-render
-      const { container: newContainer } = render(<Space3DView />);
+      const { container: newContainer } = render(
+        <BrowserRouter>
+          <Space3DView />
+        </BrowserRouter>
+      );
       
       // Validate canvas count remains 1
       await waitFor(() => {
@@ -130,7 +139,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
     }
 
     // Final validation
-    const finalRender = render(<Space3DView />);
+    const finalRender = render(
+      <BrowserRouter>
+        <Space3DView />
+      </BrowserRouter>
+    );
     const finalCanvases = finalRender.container.querySelectorAll('canvas');
     
     expect(finalCanvases.length).toBe(1);
@@ -138,7 +151,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
   });
 
   it('TEST 2: Should not leak event listeners on portrait toggle', async () => {
-    const { container, unmount } = render(<Space3DView />);
+    const { container, unmount } = render(
+      <BrowserRouter>
+        <Space3DView />
+      </BrowserRouter>
+    );
     
     // Get initial listener count
     const getListenerCount = () => {
@@ -178,7 +195,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
   });
 
   it('TEST 3: Should maintain FPS >= 30 during portrait toggles', async () => {
-    const { container } = render(<Space3DView />);
+    const { container } = render(
+      <BrowserRouter>
+        <Space3DView />
+      </BrowserRouter>
+    );
     
     // Reset performance counters
     frameCount = 0;
@@ -271,7 +292,11 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
   });
 
   it('TEST 5: Should not create duplicate canvas containers in portrait mode', async () => {
-    const { container } = render(<Space3DView />);
+    const { container } = render(
+      <BrowserRouter>
+        <Space3DView />
+      </BrowserRouter>
+    );
     
     // Set to portrait mode
     await act(async () => {

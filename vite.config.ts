@@ -44,7 +44,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts', './src/test/setup/polyfills.ts', './src/test/setup/firebase.ts'],
+    setupFiles: ['./src/test/setup.ts'],
   },
   server: {
     headers: {

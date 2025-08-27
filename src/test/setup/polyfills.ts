@@ -1,171 +1,76 @@
-/**
- * Polyfills for test environment
- * jsdom과 브라우저 API 차이를 보완
- */
+// Polyfills for jsdom environment
+import { vi } from 'vitest'
 
-// TextEncoder/TextDecoder polyfill (jsdom에 필요)
-import { TextEncoder, TextDecoder } from 'util';
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
+// TextEncoder/TextDecoder polyfills
+if (typeof global !== 'undefined') {
+  if (typeof global.TextEncoder === 'undefined') {
+    const { TextEncoder, TextDecoder } = require('util')
+    global.TextEncoder = TextEncoder
+    global.TextDecoder = TextDecoder
+  }
 
-// fetch polyfill
-if (!global.fetch) {
-  global.fetch = fetch;
-  global.Headers = Headers;
-  global.Request = Request;
-  global.Response = Response;
+  // structuredClone polyfill
+  if (typeof global.structuredClone === 'undefined') {
+    global.structuredClone = vi.fn((obj) => JSON.parse(JSON.stringify(obj)))
+  }
 }
 
-// localStorage mock
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-    get length() {
-      return Object.keys(store).length;
-    },
-    key: (index: number) => {
-      const keys = Object.keys(store);
-      return keys[index] || null;
+// Crypto polyfill for jsdom
+if (typeof global !== 'undefined' && typeof global.crypto === 'undefined') {
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      randomUUID: () => {
+        // Simple UUID v4 implementation for testing
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = Math.random() * 16 | 0
+          const v = c === 'x' ? r : (r & 0x3 | 0x8)
+          return v.toString(16)
+        })
+      },
+      getRandomValues: (arr: any) => {
+        for (let i = 0; i < arr.length; i++) {
+          arr[i] = Math.floor(Math.random() * 256)
+        }
+        return arr
+      }
     }
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-  writable: true
-});
-
-// sessionStorage mock (localStorage와 동일)
-Object.defineProperty(window, 'sessionStorage', {
-  value: localStorageMock,
-  writable: true
-});
+  })
+}
 
 // URL.createObjectURL mock
 if (typeof URL.createObjectURL === 'undefined') {
-  URL.createObjectURL = () => 'blob:mock-url';
+  URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 }
 
 if (typeof URL.revokeObjectURL === 'undefined') {
-  URL.revokeObjectURL = () => {};
-}
-
-// ResizeObserver mock
-if (typeof ResizeObserver === 'undefined') {
-  global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+  URL.revokeObjectURL = vi.fn()
 }
 
 // IntersectionObserver mock
-if (typeof IntersectionObserver === 'undefined') {
-  global.IntersectionObserver = class IntersectionObserver {
-    constructor() {}
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-    takeRecords() {
-      return [];
-    }
-  };
+if (typeof global.IntersectionObserver === 'undefined') {
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    root: null,
+    rootMargin: '',
+    thresholds: [],
+    takeRecords: vi.fn(() => [])
+  }))
 }
-
-// matchMedia mock
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: (query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  }),
-});
-
-// WebGL context mock
-HTMLCanvasElement.prototype.getContext = (() => {
-  const originalGetContext = HTMLCanvasElement.prototype.getContext;
-  return function(this: HTMLCanvasElement, contextType: string, ...args: any[]) {
-    if (contextType === 'webgl' || contextType === 'webgl2' || contextType === 'experimental-webgl') {
-      return {
-        canvas: this,
-        drawingBufferWidth: 800,
-        drawingBufferHeight: 600,
-        getExtension: () => null,
-        getParameter: () => 0,
-        createShader: () => ({}),
-        createProgram: () => ({}),
-        shaderSource: () => {},
-        compileShader: () => {},
-        attachShader: () => {},
-        linkProgram: () => {},
-        useProgram: () => {},
-        getProgramParameter: () => true,
-        getShaderParameter: () => true,
-        getUniformLocation: () => null,
-        getAttribLocation: () => 0,
-        bindBuffer: () => {},
-        bufferData: () => {},
-        enableVertexAttribArray: () => {},
-        vertexAttribPointer: () => {},
-        drawArrays: () => {},
-        viewport: () => {},
-        clearColor: () => {},
-        clear: () => {},
-        enable: () => {},
-        depthFunc: () => {},
-        blendFunc: () => {},
-        createTexture: () => ({}),
-        bindTexture: () => {},
-        texParameteri: () => {},
-        texImage2D: () => {},
-        createBuffer: () => ({}),
-        deleteBuffer: () => {},
-        isContextLost: () => false,
-      };
-    }
-    return originalGetContext.call(this, contextType, ...args);
-  };
-})();
 
 // requestAnimationFrame mock
-if (typeof requestAnimationFrame === 'undefined') {
-  global.requestAnimationFrame = (callback: FrameRequestCallback) => {
-    return setTimeout(callback, 16);
-  };
+if (typeof global.requestAnimationFrame === 'undefined') {
+  global.requestAnimationFrame = vi.fn((cb) => setTimeout(cb, 0))
+  global.cancelAnimationFrame = vi.fn((id) => clearTimeout(id))
 }
 
-if (typeof cancelAnimationFrame === 'undefined') {
-  global.cancelAnimationFrame = (id: number) => {
-    clearTimeout(id);
-  };
+// Performance.now mock
+if (typeof global.performance === 'undefined' || typeof global.performance.now === 'undefined') {
+  global.performance = {
+    now: vi.fn(() => Date.now()),
+    ...global.performance
+  }
 }
 
-// Performance API mock
-if (!window.performance) {
-  (window as any).performance = {
-    now: () => Date.now(),
-    mark: () => {},
-    measure: () => {},
-    clearMarks: () => {},
-    clearMeasures: () => {},
-  };
-}
-
-export {};
+export {}
