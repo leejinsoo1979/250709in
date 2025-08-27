@@ -1,18 +1,11 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
-import { TextEncoder, TextDecoder } from 'util';
 
-// Add TextEncoder/TextDecoder for Node environment
-(globalThis as any).TextEncoder = TextEncoder;
-(globalThis as any).TextDecoder = TextDecoder as any;
+// Import polyfills for jsdom environment
+import './setup/polyfills'
 
-// Add crypto.randomUUID if not available
-if (!('crypto' in globalThis) || !(crypto as any).randomUUID) {
-  (globalThis as any).crypto = { 
-    ...(globalThis as any).crypto, 
-    randomUUID: () => '00000000-0000-4000-8000-000000000000' 
-  };
-}
+// Import Firebase test setup
+import './setup/firebase'
 
 // Mock localStorage
 Object.defineProperty(window, 'localStorage', {
