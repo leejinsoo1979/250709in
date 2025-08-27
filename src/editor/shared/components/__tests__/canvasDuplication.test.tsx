@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import React, { act } from 'react';
 
 // Mock Firebase services
 vi.mock('@/firebase/auth', () => ({
@@ -117,9 +117,8 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
       );
     };
     
-    const React = await import('react');
     const TestComponent = mockComponent();
-    const result = render(TestComponent);
+    const result = render(<TestComponent />);
     container = result.container;
     
     // Initial state check
@@ -180,7 +179,6 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
       return originalRemoveEventListener.call(this, type, ...args);
     };
     
-    const React = await import('react');
     const TestComponent = () => {
       const [count, setCount] = React.useState(0);
       
@@ -198,7 +196,7 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
       );
     };
     
-    const { unmount } = render(TestComponent);
+    const { unmount } = render(<TestComponent />);
     
     // Toggle multiple times
     const toggleButton = screen.getByText('Toggle 0');
@@ -224,8 +222,6 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
   });
 
   it('AC3: Performance FPS >= 30 during operations', async () => {
-    const React = await import('react');
-    
     let renderCount = 0;
     const TestComponent = () => {
       const [orientation, setOrientation] = React.useState<'landscape' | 'portrait'>('landscape');
@@ -245,7 +241,7 @@ describe('[VALIDATOR] Canvas Duplication Tests', () => {
       );
     };
     
-    render(TestComponent);
+    render(<TestComponent />);
     
     // Reset FPS counters
     frameCount = 0;
