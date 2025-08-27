@@ -10,13 +10,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { useViewerUIStore } from '@/store/viewerUIStore';
+import { useUIStore } from '@/store/uiStore';
 import Space3DView from '../Space3DView';
 import * as THREE from 'three';
 
 // Mock stores
-vi.mock('@/store/viewerUIStore', () => ({
-  useViewerUIStore: vi.fn()
+vi.mock('@/store/uiStore', () => ({
+  useUIStore: vi.fn()
 }));
 
 vi.mock('@/store/derivedSpaceStore', () => ({
@@ -77,7 +77,7 @@ describe('[VALIDATOR] Portrait Mode Canvas Regression Tests', () => {
       setIsInteracting: vi.fn()
     };
 
-    (useViewerUIStore as any).mockReturnValue(mockStore);
+    (useUIStore as any).mockReturnValue(mockStore);
 
     // Setup performance monitoring
     frameCount = 0;

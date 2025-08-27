@@ -77,12 +77,10 @@ export const ref = vi.fn((storage, path) => ({
   storage
 }));
 
-export const uploadBytes = vi.fn(() => 
-  Promise.resolve({
-    metadata: { name: 'file.jpg' },
-    ref: mockStorageRef
-  })
-);
+export const uploadBytes = vi.fn().mockResolvedValue({
+  metadata: { name: 'file.jpg' },
+  ref: mockStorageRef
+});
 
 export const uploadBytesResumable = vi.fn(() => mockUploadTask);
 
@@ -93,9 +91,7 @@ export const uploadString = vi.fn(() =>
   })
 );
 
-export const getDownloadURL = vi.fn(() => 
-  Promise.resolve('https://mock-url.com/file')
-);
+export const getDownloadURL = vi.fn().mockResolvedValue('https://mock-url.com/file');
 
 export const deleteObject = vi.fn(() => Promise.resolve());
 

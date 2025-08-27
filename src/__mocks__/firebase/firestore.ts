@@ -39,7 +39,7 @@ export const addDoc = vi.fn(() =>
   Promise.resolve({ id: 'new-doc-id' })
 );
 
-export const setDoc = vi.fn(() => Promise.resolve());
+export const setDoc = vi.fn().mockResolvedValue(undefined);
 export const updateDoc = vi.fn(() => Promise.resolve());
 export const deleteDoc = vi.fn(() => Promise.resolve());
 
