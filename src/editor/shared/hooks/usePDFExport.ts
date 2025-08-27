@@ -31,7 +31,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, setViewMode, setView2DDirection } = useUIStore();
+  const { viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -40,12 +40,24 @@ export function usePDFExport() {
     // 현재 뷰 설정 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
+    const originalShowGuides = showGuides;
+    
+    console.log('📸 PDF 캡처 시작:', {
+      viewType,
+      원래설정: {
+        viewMode: originalViewMode,
+        view2DDirection: originalView2DDirection,
+        showGuides: originalShowGuides
+      }
+    });
     
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
       setViewMode('3D');
     } else {
+      // 2D 모드로 전환하면서 그리드 컬럼 축 비활성화
       setViewMode('2D');
+      setShowGuides(false); // 중요: 그리드 컬럼 축 라디오버튼 끄기
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
       }
@@ -135,12 +147,20 @@ export function usePDFExport() {
     if (originalViewMode === '2D') {
       setView2DDirection(originalView2DDirection);
     }
+    // 그리드 설정 복원
+    setShowGuides(originalShowGuides);
+    
+    console.log('📸 PDF 캡처 완료 - 설정 복원:', {
+      viewMode: originalViewMode,
+      view2DDirection: originalView2DDirection,
+      showGuides: originalShowGuides
+    });
     
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return imageData;
-  }, [viewMode, view2DDirection, setViewMode, setView2DDirection]);
+  }, [viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
