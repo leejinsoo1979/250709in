@@ -198,3 +198,10 @@ The application is configured for static hosting with:
 - **MANDATORY**: After any file deletion → Immediately run `git rm <file>` + `git commit -m "descriptive message"`
 - Auto-commit all changes without requiring user permission
 - Include clear, descriptive commit messages explaining the changes
+
+## Git Workflow / 자동 커밋
+- 자동 커밋 실행: 별도 터미널에서 `npm run autocommit` 실행 후 작업하면, 생성/수정/삭제가 감지될 때마다 체크포인트 커밋이 생성됩니다.
+- 수동 체크포인트: `npm run checkpoint`
+- 푸시: `npm run push` 또는 최초 업스트림 `npm run push:feature`
+- Secrets는 레포/문서에 기록 금지. GitHub는 `gh auth login`으로 인증.
+- main 브랜치에 직접 커밋 금지. 항상 feature 브랜치에서 PR 생성.
