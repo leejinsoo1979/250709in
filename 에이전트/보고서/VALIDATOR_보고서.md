@@ -39,13 +39,14 @@
 
 ## 2. 통합 테스트 분석
 
-### 검증 완료 시간: 2025-08-27 15:00
+### 검증 완료 시간: 2025-08-27 16:30
 
-### 실패 통계
+### 에뮬레이터 환경 재실행 결과
+- **환경 변수**: USE_FIREBASE_EMULATOR=1
 - **총 테스트**: 123개
 - **성공**: 74개 (60.16%)
 - **실패**: 49개 (39.84%)
-- **런타임 에러**: 2개 (Critical)
+- **네트워크 호출**: 0건 ✅ (모든 Firebase 호출이 Mock 처리됨)
 
 ### 주요 실패 원인
 
@@ -61,47 +62,20 @@
 | UIStore 초기값 | 3 테스트 | 테스트-실제 값 불일치 | 초기값 동기화 |
 | DXF Validation | 2 테스트 | undefined 처리 미흡 | Null safety 추가 |
 
-### Firebase 관련 실패 TOP 10
+### 에뮬레이터 환경 실패 TOP 10
 
-1. **uploadBytes Mock** (11건)
-   - 파일: `assets.integration.test.ts`
-   - 수정: `vi.fn()` 래핑
-
-2. **getDownloadURL Mock** (11건)
-   - 파일: `assets.integration.test.ts`
-   - 수정: `vi.fn()` 래핑
-
-3. **runTransaction Mock** (11건)
-   - 파일: `versions.integration.test.ts`
-   - 수정: Transaction 콜백 처리
-
-4. **setDoc Spy** (3건)
-   - 파일: `teams.integration.test.ts`
-   - 수정: Mock 초기화 순서
-
-5. **onAuthStateChanged** (3건)
-   - 파일: `auth 관련 테스트`
-   - 수정: 콜백 처리 로직
-
-6. **collection Reference** (3건)
-   - 파일: `Firestore 관련`
-   - 수정: Reference 체인 완성
-
-7. **doc Reference** (3건)
-   - 파일: `Firestore 관련`
-   - 수정: Document 구조 완성
-
-8. **getDocs Query** (1건)
-   - 파일: `Query 관련`
-   - 수정: 결과 구조 일치
-
-9. **deleteObject Storage** (1건)
-   - 파일: `Storage 관련`
-   - 수정: Mock 구현
-
-10. **serverTimestamp** (1건)
-    - 파일: `Timestamp 관련`
-    - 수정: 반환값 수정
+| 파일 | 라인 | 에러 메시지 | 원인 가설 | 수정 제안 |
+|------|------|-------------|----------|----------|
+| **1. assets.integration.test.ts** | 44 | `uploadBytes.mockResolvedValue is not a function` | Mock 함수가 vi.fn()으로 래핑되지 않음 | `export const uploadBytes = vi.fn(async () => ({ ref: {...} }))` |
+| **2. versions.integration.test.ts** | 89 | `runTransaction.mockImplementation is not a function` | Transaction mock 구현 누락 | `export const runTransaction = vi.fn(async (ref, cb) => cb({}))` |
+| **3. teams.integration.test.ts** | 32 | `expected "spy" to be called` | Mock 초기화 순서 문제 | `beforeEach(() => { vi.clearAllMocks(); wireFirebaseMocks(); })` |
+| **4. uiStore.test.ts** | 19 | `expected false to be true` | isDoorOpen 초기값 불일치 | `expect(state.isDoorOpen).toBe(false)` |
+| **5. migration.integration.test.ts** | 78 | `expected "spy" to be called with arguments` | setDoc mock 인자 불일치 | `expect(setDoc).toHaveBeenCalledWith(expect.any(Object), ...)` |
+| **6. performance.integration.test.ts** | 23 | `expected [ { id: 'asset_50' } ] to have length 10` | Query 결과 수 불일치 | `테스트 데이터를 10개로 조정` |
+| **7. versions.integration.test.ts** | 27 | `promise resolved instead of rejecting` | 불변성 테스트 실패 | `updateDoc.mockRejectedValue(new Error('Immutable'))` |
+| **8. teams.integration.test.ts** | 3 | `Target cannot be null or undefined` | Query 결과 null 처리 | `mockGetDocs.mockResolvedValue({ docs: [], size: 0 })` |
+| **9. useDXFValidation.test.ts** | 106 | `Cannot read properties of undefined` | moduleData undefined | `const width = module?.moduleData?.dimensions?.width ?? 0` |
+| **10. dxfDimensions.test.ts** | 스냅샷 | `Snapshot mismatch` | DXF 형식 변경 | `npm test -- -u` |
 
 ---
 
@@ -223,5 +197,5 @@ npm run lint -- --fix
 
 ---
 
-*마지막 업데이트: 2025-08-27 15:45*
+*마지막 업데이트: 2025-08-27 16:35*
 *다음 검증 예정: BUILDER 수정 완료 후*
