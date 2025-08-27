@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { usePDFExport, type ViewType } from '@/editor/shared/hooks/usePDFExport';
+import { useDXFValidation } from '@/editor/shared/hooks/useDXFValidation';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ExportPanel.module.css';
@@ -59,6 +60,7 @@ const ExportPanel: React.FC = () => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage } = useDXFExport();
   const { exportToPDF, canExportPDF, VIEW_TYPES, isExporting: isPDFExporting } = usePDFExport();
+  const { validateDXFExport, getFirstErrorMessage } = useDXFValidation();
   
   const [isExporting, setIsExporting] = useState(false);
   const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front']);
@@ -276,7 +278,22 @@ const ExportPanel: React.FC = () => {
     }
   };
 
-  const isExportEnabled = spaceInfo && canExportDXF(spaceInfo, placedModules) && selectedDrawingTypes.length > 0;
+  // Validate DXF export
+  const dxfValidation = useMemo(() => {
+    return validateDXFExport(spaceInfo, placedModules);
+  }, [spaceInfo, placedModules, validateDXFExport]);
+  
+  // Get error message for tooltip
+  const dxfErrorMessage = useMemo(() => {
+    return getFirstErrorMessage(dxfValidation);
+  }, [dxfValidation, getFirstErrorMessage]);
+  
+  // Check if export is enabled (original logic + validation)
+  const isExportEnabled = spaceInfo && 
+    canExportDXF(spaceInfo, placedModules) && 
+    selectedDrawingTypes.length > 0 && 
+    dxfValidation.isValid;
+    
   const isPDFExportEnabled = spaceInfo && canExportPDF(spaceInfo, placedModules) && selectedPDFViews.length > 0;
   const statusMessage = spaceInfo ? getExportStatusMessage(spaceInfo, placedModules) : '공간 정보가 없습니다.';
   
@@ -347,6 +364,7 @@ const ExportPanel: React.FC = () => {
               className={`${styles.exportButton} ${!isExportEnabled ? styles.disabled : ''}`}
               onClick={handleExportDXFZip}
               disabled={!isExportEnabled || isExporting}
+              title={!isExportEnabled && dxfErrorMessage ? dxfErrorMessage : ''}
             >
               {isExporting ? (
                 <>
@@ -364,6 +382,7 @@ const ExportPanel: React.FC = () => {
               className={`${styles.exportButton} ${styles.secondary} ${!isExportEnabled ? styles.disabled : ''}`}
               onClick={handleExportDXF}
               disabled={!isExportEnabled || isExporting}
+              title={!isExportEnabled && dxfErrorMessage ? dxfErrorMessage : ''}
             >
               {isExporting ? (
                 <>
@@ -492,7 +511,13 @@ const ExportPanel: React.FC = () => {
       {/* 공통 상태 메시지 */}
       <div className={styles.status}>
         <div className={styles.statusMessage}>
-          {statusMessage}
+          {dxfValidation.errors.length > 0 ? (
+            <span style={{ color: '#e74c3c' }}>
+              ⚠️ {dxfErrorMessage}
+            </span>
+          ) : (
+            statusMessage
+          )}
         </div>
         
         {spaceInfo && (
