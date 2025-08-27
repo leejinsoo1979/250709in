@@ -1725,29 +1725,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const handleShapeClick = (svgContent: string, shapeType: string) => {
     console.log('도형 클릭됨:', shapeType);
     
-    // 캔버스가 없으면 초기화 시도
+    // 캔버스가 없으면 리턴
     if (!fabricCanvasRef.current) {
-      console.log('캔버스가 없음, 초기화 시도...');
-      const canvasElement = document.getElementById('fabric-canvas') as HTMLCanvasElement;
-      if (!canvasElement) {
-        console.error('fabric-canvas 엘리먼트를 찾을 수 없습니다.');
-        return;
-      }
-      
-      try {
-        fabricCanvasRef.current = new fabric.Canvas('fabric-canvas', {
-          width: paperDimensions.displayWidth,
-          height: paperDimensions.displayHeight,
-          backgroundColor: paperColor,
-          selection: true,
-          preserveObjectStacking: true,
-          renderOnAddRemove: true
-        });
-        console.log('캔버스 초기화 성공');
-      } catch (error) {
-        console.error('캔버스 초기화 실패:', error);
-        return;
-      }
+      console.error('캔버스가 초기화되지 않았습니다.');
+      return;
     }
 
     const canvas = fabricCanvasRef.current;
@@ -1806,29 +1787,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const handleLineClick = (lineType: string) => {
     console.log('선 클릭됨:', lineType);
     
-    // 캔버스가 없으면 초기화 시도
+    // 캔버스가 없으면 리턴
     if (!fabricCanvasRef.current) {
-      console.log('캔버스가 없음, 초기화 시도...');
-      const canvasElement = document.getElementById('fabric-canvas') as HTMLCanvasElement;
-      if (!canvasElement) {
-        console.error('fabric-canvas 엘리먼트를 찾을 수 없습니다.');
-        return;
-      }
-      
-      try {
-        fabricCanvasRef.current = new fabric.Canvas('fabric-canvas', {
-          width: paperDimensions.displayWidth,
-          height: paperDimensions.displayHeight,
-          backgroundColor: paperColor,
-          selection: true,
-          preserveObjectStacking: true,
-          renderOnAddRemove: true
-        });
-        console.log('캔버스 초기화 성공');
-      } catch (error) {
-        console.error('캔버스 초기화 실패:', error);
-        return;
-      }
+      console.error('캔버스가 초기화되지 않았습니다.');
+      return;
     }
 
     const canvas = fabricCanvasRef.current;
@@ -2058,29 +2020,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const handleSymbolClick = (symbol: string) => {
     console.log('심볼 클릭됨:', symbol);
     
-    // 캔버스가 없으면 초기화 시도
+    // 캔버스가 없으면 리턴
     if (!fabricCanvasRef.current) {
-      console.log('캔버스가 없음, 초기화 시도...');
-      const canvasElement = document.getElementById('fabric-canvas') as HTMLCanvasElement;
-      if (!canvasElement) {
-        console.error('fabric-canvas 엘리먼트를 찾을 수 없습니다.');
-        return;
-      }
-      
-      try {
-        fabricCanvasRef.current = new fabric.Canvas('fabric-canvas', {
-          width: paperDimensions.displayWidth,
-          height: paperDimensions.displayHeight,
-          backgroundColor: paperColor,
-          selection: true,
-          preserveObjectStacking: true,
-          renderOnAddRemove: true
-        });
-        console.log('캔버스 초기화 성공');
-      } catch (error) {
-        console.error('캔버스 초기화 실패:', error);
-        return;
-      }
+      console.error('캔버스가 초기화되지 않았습니다.');
+      return;
     }
 
     const canvas = fabricCanvasRef.current;

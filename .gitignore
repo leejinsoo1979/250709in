@@ -54,3 +54,9 @@ out/
 
 # Local Netlify folder
 .netlify
+
+# Coverage
+coverage/
+
+# Environment variables (comprehensive)
+.env*
