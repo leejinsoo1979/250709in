@@ -43,8 +43,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
-    setupFiles: ['./src/test/setup.ts', './src/test/setup/firebase.ts'],
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts', './src/test/setup/polyfills.ts', './src/test/setup/firebase.ts'],
   },
   server: {
     headers: {
