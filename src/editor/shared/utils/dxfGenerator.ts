@@ -499,11 +499,11 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       safeFurnitureName
     );
     
-    // 가구 치수 표기 (간소화 - 너비×높이만)
+    // 가구 치수 표기 (W×H×D 형식)
     dxf.addText(
       point3d(centerX, y1 - 60),
       20, // 텍스트 높이
-      `${dimensions.width}×${dimensions.height}mm`
+      formatDimensionsText(dimensions.width, dimensions.height, dimensions.depth)
     );
     
     // 높이 치수선 (우측에 표시) - IMPORTANT: Keep this for dimension lines
@@ -705,7 +705,7 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     dxf.addText(
       point3d(centerX, y1 - 50),
       20, // 텍스트 높이
-      formatDimensionsText(dimensions.width, dimensions.depth, dimensions.height)
+      formatDimensionsText(dimensions.width, dimensions.height, dimensions.depth)
     );
   });
 };
@@ -836,7 +836,7 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     dxf.addText(
       point3d(centerX, y1 - 50),
       20, // 텍스트 높이
-      formatDimensionsText(dimensions.width, actualDepthMm, dimensions.height)
+      formatDimensionsText(dimensions.width, dimensions.height, actualDepthMm)
     );
     
     // 깊이 치수선 (하단에 표시)
