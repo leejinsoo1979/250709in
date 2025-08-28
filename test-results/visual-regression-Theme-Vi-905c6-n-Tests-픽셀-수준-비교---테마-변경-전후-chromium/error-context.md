@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - button "파일 트리 열기/닫기" [ref=e7] [cursor=pointer]:
+          - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]:
+          - generic [ref=e11] [cursor=pointer]: m
+          - generic [ref=e12] [cursor=pointer]: logo
+        - generic [ref=e14] [cursor=pointer]: 새로운 디자인
+      - generic [ref=e15]:
+        - button "파일" [ref=e17] [cursor=pointer]:
+          - img [ref=e18] [cursor=pointer]
+          - text: 파일
+          - img [ref=e21] [cursor=pointer]
+        - button "저장" [ref=e23] [cursor=pointer]:
+          - img [ref=e24] [cursor=pointer]
+          - text: 저장
+        - button "뒤로" [ref=e28] [cursor=pointer]:
+          - img [ref=e29] [cursor=pointer]
+          - text: 뒤로
+        - button "도움말" [ref=e31] [cursor=pointer]:
+          - img [ref=e32] [cursor=pointer]
+          - text: 도움말
+        - button "조작법" [ref=e36] [cursor=pointer]:
+          - img [ref=e37] [cursor=pointer]
+          - text: 조작법
+      - generic [ref=e41]:
+        - button "설정" [ref=e42] [cursor=pointer]:
+          - img [ref=e43] [cursor=pointer]
+        - button "내보내기" [ref=e47] [cursor=pointer]:
+          - img [ref=e48] [cursor=pointer]
+          - text: 내보내기
+          - img [ref=e51] [cursor=pointer]
+        - button "컨버팅" [ref=e54] [cursor=pointer]:
+          - text: 컨버팅
+          - img [ref=e55] [cursor=pointer]
+        - button "로그인" [ref=e57] [cursor=pointer]:
+          - img [ref=e58] [cursor=pointer]
+          - text: 로그인
+  - generic [ref=e61]:
+    - button "<" [ref=e62] [cursor=pointer]:
+      - generic [ref=e63] [cursor=pointer]: <
+    - complementary [ref=e64]:
+      - generic [ref=e65]:
+        - button "모듈" [ref=e66] [cursor=pointer]:
+          - img [ref=e68] [cursor=pointer]
+          - generic [ref=e73] [cursor=pointer]: 모듈
+        - button "재질" [ref=e74] [cursor=pointer]:
+          - img [ref=e76] [cursor=pointer]
+          - generic [ref=e82] [cursor=pointer]: 재질
+        - button "구조물" [ref=e83] [cursor=pointer]:
+          - img [ref=e85] [cursor=pointer]
+          - generic [ref=e88] [cursor=pointer]: 구조물
+        - button "기타" [ref=e89] [cursor=pointer]:
+          - img [ref=e91] [cursor=pointer]
+          - generic [ref=e95] [cursor=pointer]: 기타
+      - button "대시보드로 나가기" [ref=e97] [cursor=pointer]:
+        - img [ref=e98] [cursor=pointer]
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - button "키큰장" [ref=e105] [cursor=pointer]
+        - button "상부장" [ref=e106] [cursor=pointer]
+        - button "하부장" [ref=e107] [cursor=pointer]
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - button "전체 (8)" [ref=e111] [cursor=pointer]
+          - button "싱글 (3)" [ref=e112] [cursor=pointer]
+          - button "듀얼 (5)" [ref=e113] [cursor=pointer]
+        - generic [ref=e114]:
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e115]:
+            - img "2단서랍+옷장 583mm" [ref=e117]
+            - generic [ref=e118]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e119]:
+            - img "2단 옷장 583mm" [ref=e121]
+            - generic [ref=e122]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e123]:
+            - img "4단서랍+옷장 583mm" [ref=e125]
+            - generic [ref=e126]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e127]:
+            - img "듀얼 2단서랍+옷장 1168mm" [ref=e129]
+            - generic [ref=e130]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e131]:
+            - img "듀얼 2단 옷장 1168mm" [ref=e133]
+            - generic [ref=e134]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e135]:
+            - img "듀얼 4단서랍+옷장 1168mm" [ref=e137]
+            - generic [ref=e138]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e139]:
+            - img "듀얼 서랍+스타일러 1168mm" [ref=e141]
+            - generic [ref=e142]: 🚫
+          - generic "현재 공간에 배치할 수 없습니다" [ref=e143]:
+            - img "듀얼 서랍+바지걸이 1168mm" [ref=e145]
+            - generic [ref=e146]: 🚫
+    - generic [ref=e148]:
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - generic [ref=e151] [cursor=pointer]: "ON"
+          - button [ref=e152] [cursor=pointer]
+        - generic [ref=e154]:
+          - generic [ref=e155] [cursor=pointer]: 컬럼
+          - generic [ref=e157] [cursor=pointer]: 치수
+          - generic [ref=e159] [cursor=pointer]: 그리드
+          - generic [ref=e161] [cursor=pointer]: 축
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - button "솔리드" [ref=e165] [cursor=pointer]
+          - button "은선" [ref=e166] [cursor=pointer]
+        - generic [ref=e167]:
+          - button "3D" [ref=e168] [cursor=pointer]
+          - button "2D" [ref=e169] [cursor=pointer]
+        - button "도어설치" [ref=e171] [cursor=pointer]:
+          - img [ref=e172] [cursor=pointer]
+          - text: 도어설치
+    - button ">" [ref=e181] [cursor=pointer]:
+      - generic [ref=e182] [cursor=pointer]: ">"
+    - generic [ref=e184]:
+      - button "배치 속성" [ref=e188] [cursor=pointer]
+      - generic [ref=e190]:
+        - generic [ref=e191]:
+          - heading "공간 설정" [level=3] [ref=e194]
+          - generic [ref=e195]:
+            - generic [ref=e196]:
+              - generic [ref=e197]: W
+              - generic [ref=e200]:
+                - textbox "1200-8000" [ref=e201]: "3600"
+                - generic: mm
+            - generic [ref=e202]:
+              - generic [ref=e203]: H
+              - generic [ref=e206]:
+                - textbox "2010-2410" [ref=e207]: "2400"
+                - generic: mm
+        - generic [ref=e208]:
+          - heading "단내림" [level=3] [ref=e211]
+          - generic [ref=e212]:
+            - button "없음" [ref=e213] [cursor=pointer]
+            - button "있음" [ref=e214] [cursor=pointer]
+        - generic [ref=e215]:
+          - heading "컬럼 수" [level=3] [ref=e218]
+          - generic [ref=e223]:
+            - generic [ref=e224] [cursor=pointer]: "6"
+            - generic [ref=e225] [cursor=pointer]: "7"
+            - generic [ref=e226] [cursor=pointer]: "8"
+        - generic [ref=e227]:
+          - heading "설치 타입" [level=3] [ref=e230]
+          - generic [ref=e233]:
+            - button "양쪽벽" [ref=e234] [cursor=pointer]
+            - button "한쪽벽" [ref=e235] [cursor=pointer]
+            - button "벽없음" [ref=e236] [cursor=pointer]
+        - generic [ref=e237]:
+          - heading "프레임 설정" [level=3] [ref=e240]
+          - generic [ref=e241]:
+            - button "서라운드" [ref=e242] [cursor=pointer]
+            - button "노서라운드" [ref=e243] [cursor=pointer]
+          - generic [ref=e244]:
+            - generic [ref=e245]: 프레임 폭
+            - generic [ref=e246]:
+              - generic [ref=e247]:
+                - generic [ref=e248]: 좌측
+                - generic [ref=e249]:
+                  - button "−" [ref=e250] [cursor=pointer]
+                  - spinbutton [ref=e251]: "50"
+                  - button "+" [ref=e252] [cursor=pointer]
+              - generic [ref=e253]:
+                - generic [ref=e254]: 우측
+                - generic [ref=e255]:
+                  - button "−" [ref=e256] [cursor=pointer]
+                  - spinbutton [ref=e257]: "50"
+                  - button "+" [ref=e258] [cursor=pointer]
+              - generic [ref=e259]:
+                - generic [ref=e260]: 상부
+                - generic [ref=e261]:
+                  - button "−" [ref=e262] [cursor=pointer]
+                  - spinbutton [ref=e263]: "10"
+                  - button "+" [ref=e264] [cursor=pointer]
+            - generic [ref=e265]: "단위: mm"
+        - generic [ref=e266]:
+          - heading "배치 설정" [level=3] [ref=e269]
+          - generic [ref=e270]:
+            - generic [ref=e272]:
+              - button "바닥 배치" [ref=e273] [cursor=pointer]
+              - button "띄워서 배치" [ref=e274] [cursor=pointer]
+            - generic [ref=e275]:
+              - generic [ref=e276]: 받침대 높이
+              - generic [ref=e278]:
+                - textbox "65" [ref=e279]
+                - generic: mm
+        - generic [ref=e280]:
+          - heading "material.floorFinish" [level=3] [ref=e283]
+          - generic [ref=e286]:
+            - button "있음" [ref=e287] [cursor=pointer]
+            - button "없음" [ref=e288] [cursor=pointer]
+```

@@ -22,6 +22,7 @@ import FurniturePlacementPlane from './components/elements/FurniturePlacementPla
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
+import VerticalDimensions from './components/elements/VerticalDimensions';
 
 
 import { useLocation } from 'react-router-dom';
