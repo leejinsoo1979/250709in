@@ -44,7 +44,7 @@
 }
 
 .tabButton.active {
-  background: var(--theme-primary-light);
+  background: var(--theme-primary) !important;
 }
 
 .tabButton.active::before {
@@ -55,7 +55,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 24px;
-  background: var(--theme-primary);
+  background: white;
   border-radius: 0 2px 2px 0;
 }
 
@@ -69,7 +69,7 @@
 }
 
 .tabButton.active .tabIcon {
-  color: var(--theme-primary);
+  color: white !important;
   opacity: 1;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .tabButton.active .tabLabel {
-  color: var(--theme-primary);
+  color: white !important;
   font-weight: 500;
 }
 
