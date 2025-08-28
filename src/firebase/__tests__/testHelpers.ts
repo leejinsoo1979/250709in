@@ -62,7 +62,7 @@ export const resetFirebaseMocks = () => {
 };
 
 // Setup Firebase mock responses
-export const setupAuthMocks = (isAuthenticated = false, user: Partial<User> | null = null) => {
+export const setupAuthMocks = async (isAuthenticated = false, user: Partial<User> | null = null) => {
   const mockAuth = vi.mocked(await import('firebase/auth'));
   
   if (isAuthenticated && user) {
@@ -90,7 +90,7 @@ export const setupAuthMocks = (isAuthenticated = false, user: Partial<User> | nu
 };
 
 // Setup Firestore mock responses
-export const setupFirestoreMocks = (documents: any[] = []) => {
+export const setupFirestoreMocks = async (documents: any[] = []) => {
   const mockFirestore = vi.mocked(await import('firebase/firestore'));
   
   const mockSnapshot = {

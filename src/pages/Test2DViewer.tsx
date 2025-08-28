@@ -3,7 +3,6 @@ import { Space2DKonvaView } from '@/editor/shared/viewer2d';
 import { UnifiedSpaceViewer } from '@/editor/shared/viewer';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import styles from './Test2DViewer.module.css';
 
 const Test2DViewer: React.FC = () => {
   const spaceConfig = useSpaceConfigStore();

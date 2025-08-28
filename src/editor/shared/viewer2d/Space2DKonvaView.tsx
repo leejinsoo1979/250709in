@@ -8,7 +8,6 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import FurnitureItem2D from './components/FurnitureItem2D';
 import Grid2D from './components/Grid2D';
 import ViewerToolbar2D from './components/ViewerToolbar2D';
-import styles from './Space2DKonvaView.module.css';
 
 // Types
 interface Space2DKonvaViewProps {

@@ -16,7 +16,7 @@ describe('Firebase Integration Tests', () => {
   describe('Authentication Flow', () => {
     it('should handle complete login flow', async () => {
       const mockUser = createMockUser({ email: 'user@example.com' });
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const { signInWithEmailAndPassword, getAuth } = await import('firebase/auth');
       
@@ -35,7 +35,7 @@ describe('Firebase Integration Tests', () => {
     });
 
     it('should handle logout flow', async () => {
-      setupAuthMocks(true, createMockUser());
+      await setupAuthMocks(true, createMockUser());
       
       const { signOut, getAuth } = await import('firebase/auth');
       const auth = getAuth();
@@ -71,7 +71,7 @@ describe('Firebase Integration Tests', () => {
         createMockProject({ id: 'proj2', name: 'Project 2' })
       ];
       
-      setupFirestoreMocks(mockProjects);
+      await setupFirestoreMocks(mockProjects);
       
       const { 
         getDocs, 
@@ -115,7 +115,7 @@ describe('Firebase Integration Tests', () => {
 
     it('should handle real-time updates', async () => {
       const mockProjects = [createMockProject()];
-      setupFirestoreMocks(mockProjects);
+      await setupFirestoreMocks(mockProjects);
       
       const { onSnapshot, query, collection, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
@@ -194,12 +194,12 @@ describe('Firebase Integration Tests', () => {
   describe('Cross-Service Integration', () => {
     it('should coordinate auth and Firestore', async () => {
       const mockUser = createMockUser({ uid: 'user123' });
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const mockProjects = [
         createMockProject({ userId: 'user123', name: 'User Project' })
       ];
-      setupFirestoreMocks(mockProjects);
+      await setupFirestoreMocks(mockProjects);
       
       const { getAuth } = await import('firebase/auth');
       const { getDocs, collection, query, where, getFirestore } = await import('firebase/firestore');

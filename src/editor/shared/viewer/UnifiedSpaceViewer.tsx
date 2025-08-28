@@ -4,7 +4,6 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { Space2DKonvaView } from '@/editor/shared/viewer2d';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
-import styles from './UnifiedSpaceViewer.module.css';
 
 interface UnifiedSpaceViewerProps {
   // Common props
