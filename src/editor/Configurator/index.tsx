@@ -1079,6 +1079,13 @@ const Configurator: React.FC = () => {
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
             }
+            // columns와 rows가 숫자인 경우 빈 배열로 변환
+            if (typeof spaceConfig.columns === 'number') {
+              spaceConfig.columns = [];
+            }
+            if (typeof spaceConfig.rows === 'number') {
+              spaceConfig.rows = [];
+            }
             setSpaceInfo(spaceConfig);
             
             // 가구 설정
@@ -1151,6 +1158,13 @@ const Configurator: React.FC = () => {
             const spaceConfig = { ...designFile.spaceConfig };
             if (spaceConfig.installType === 'built-in') {
               spaceConfig.installType = 'builtin';
+            }
+            // columns와 rows가 숫자인 경우 빈 배열로 변환
+            if (typeof spaceConfig.columns === 'number') {
+              spaceConfig.columns = [];
+            }
+            if (typeof spaceConfig.rows === 'number') {
+              spaceConfig.rows = [];
             }
             setSpaceInfo(spaceConfig);
             
