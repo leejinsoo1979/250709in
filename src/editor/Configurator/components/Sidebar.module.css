@@ -44,7 +44,7 @@
 }
 
 .tabButton.active {
-  background: var(--theme-primary) !important;
+  background: var(--theme-primary-light);
 }
 
 .tabButton.active::before {
@@ -55,7 +55,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 24px;
-  background: white;
+  background: var(--theme-primary);
   border-radius: 0 2px 2px 0;
 }
 
@@ -69,12 +69,12 @@
 }
 
 .tabButton.active .tabIcon {
-  color: white !important;
+  color: var(--theme-primary);
   opacity: 1;
 }
 
 .tabButton:hover .tabIcon {
-  color: var(--theme-primary);
+  color: var(--theme-text);
   opacity: 0.9;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .tabButton.active .tabLabel {
-  color: white !important;
+  color: var(--theme-primary);
   font-weight: 500;
 }
 
