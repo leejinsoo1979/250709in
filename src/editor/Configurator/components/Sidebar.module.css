@@ -69,7 +69,7 @@
 }
 
 .tabButton.active .tabIcon {
-  color: var(--theme-primary-contrast);
+  color: white;
   opacity: 1;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .tabButton.active .tabLabel {
-  color: var(--theme-primary-contrast);
+  color: white;
   font-weight: 600;
 }
 
