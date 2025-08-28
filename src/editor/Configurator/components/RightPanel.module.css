@@ -40,8 +40,8 @@
 }
 
 .tabButton.active {
-  background: var(--theme-primary) !important;
-  color: white !important;
+  background: var(--theme-primary);
+  color: white;
   border-bottom-color: var(--theme-primary-dark);
   font-weight: 600;
 }
@@ -424,8 +424,8 @@
 }
 
 .toggleButton.active {
-  background: var(--theme-primary) !important;
-  color: white !important;
+  background: var(--theme-primary);
+  color: white;
   font-weight: 600;
 }
 

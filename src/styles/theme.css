@@ -200,60 +200,6 @@ input:focus, textarea:focus, select:focus {
   background: var(--theme-primary-hover) !important;
 }
 
-/* 세그먼트 토글(공통/모듈) 활성 보정 - 클래스명이 다를 수 있어 포괄 대응 */
-[data-theme="light"] .toggleButton.active,
-[data-theme="light"] .toggleButtonGroup .toggleButton.active,
-[data-theme="light"] .toggleButtonGroup .toggleButtonActive,
-[data-theme="light"] .toggleButtonActive,
-[data-theme="light"] [class*="toggleButton"][class*="active"],
-[data-theme="light"] [class*="tabButton"][class*="active"],
-[data-theme="light"] [class*="toggleButton_"][class*="active"],
-[data-theme="light"] [class*="tabButton_"][class*="active"] {
-  background: var(--theme-primary) !important;
-  color: #ffffff !important;
-  border-color: var(--theme-primary) !important;
-}
-
-[data-theme="light"] .toggleButton.active:hover,
-[data-theme="light"] .toggleButtonGroup .toggleButton.active:hover,
-[data-theme="light"] .toggleButtonGroup .toggleButtonActive:hover,
-[data-theme="light"] .toggleButtonActive:hover,
-[data-theme="light"] [class*="toggleButton"][class*="active"]:hover,
-[data-theme="light"] [class*="tabButton"][class*="active"]:hover,
-[data-theme="light"] [class*="toggleButton_"][class*="active"]:hover,
-[data-theme="light"] [class*="tabButton_"][class*="active"]:hover {
-  background: var(--theme-primary-hover) !important;
-  color: #ffffff !important;
-}
-
-/* 라이트 테마에서 활성 버튼 내부 요소들도 흰색으로 */
-[data-theme="light"] [class*="toggleButton"][class*="active"] *,
-[data-theme="light"] [class*="tabButton"][class*="active"] *,
-[data-theme="light"] [class*="toggleButton_"][class*="active"] *,
-[data-theme="light"] [class*="tabButton_"][class*="active"] * {
-  color: #ffffff !important;
-}
-
-/* CSS 모듈로 생성된 클래스들에 대한 더 구체적인 선택자 */
-body[data-theme="light"] div[class*="toggleButton"][class*="active"],
-body[data-theme="light"] button[class*="toggleButton"][class*="active"],
-body[data-theme="light"] div[class*="tabButton"][class*="active"],
-body[data-theme="light"] button[class*="tabButton"][class*="active"],
-body[data-theme="light"] [class*="Button"][class*="Active"],
-body[data-theme="light"] [class*="button"][class*="active"],
-body[data-theme="light"] [class*="btn"][class*="active"] {
-  background-color: var(--theme-primary) !important;
-  color: #ffffff !important;
-  border-color: var(--theme-primary) !important;
-}
-
-/* 모든 자식 요소들도 흰색 텍스트로 */
-body[data-theme="light"] [class*="toggleButton"][class*="active"] *,
-body[data-theme="light"] [class*="tabButton"][class*="active"] *,
-body[data-theme="light"] [class*="Button"][class*="Active"] *,
-body[data-theme="light"] [class*="button"][class*="active"] * {
-  color: #ffffff !important;
-}
 
 /* 로그인 폼 input 요소는 항상 light 모드 */
 [class*="loginForm"] input,
