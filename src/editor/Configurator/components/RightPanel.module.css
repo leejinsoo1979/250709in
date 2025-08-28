@@ -41,7 +41,7 @@
 
 .tabButton.active {
   background: var(--theme-primary);
-  color: var(--theme-primary-contrast);
+  color: white;
   border-bottom-color: var(--theme-primary-dark);
   font-weight: 600;
 }
