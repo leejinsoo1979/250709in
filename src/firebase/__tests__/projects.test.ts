@@ -19,8 +19,8 @@ describe('Firebase Projects Service', () => {
         createMockProject({ id: 'proj2', name: 'Project 2', userId: 'user1' })
       ];
       
-      setupFirestoreMocks(mockProjects);
-      setupAuthMocks(true, createMockUser({ uid: 'user1' }));
+      await setupFirestoreMocks(mockProjects);
+      await setupAuthMocks(true, createMockUser({ uid: 'user1' }));
       
       const { 
         getDocs, 
@@ -49,8 +49,8 @@ describe('Firebase Projects Service', () => {
     });
 
     it('should return empty array when no projects exist', async () => {
-      setupFirestoreMocks([]);
-      setupAuthMocks(true, createMockUser());
+      await setupFirestoreMocks([]);
+      await setupAuthMocks(true, createMockUser());
       
       const { getDocs, collection, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
@@ -83,7 +83,7 @@ describe('Firebase Projects Service', () => {
         name: 'Test Project' 
       });
       
-      setupFirestoreMocks([mockProject]);
+      await setupFirestoreMocks([mockProject]);
       
       const { getDoc, doc, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
@@ -96,7 +96,7 @@ describe('Firebase Projects Service', () => {
     });
 
     it('should handle project not found', async () => {
-      setupFirestoreMocks([]);
+      await setupFirestoreMocks([]);
       
       const { getDoc, doc, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
@@ -215,7 +215,7 @@ describe('Firebase Projects Service', () => {
         createMockProject({ id: 'proj1', name: 'Initial Name' })
       ];
       
-      setupFirestoreMocks(mockProjects);
+      await setupFirestoreMocks(mockProjects);
       
       const { onSnapshot, doc, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
@@ -267,7 +267,7 @@ describe('Firebase Projects Service', () => {
         createMockProject({ id: 'proj2' })
       ];
       
-      setupFirestoreMocks(mockProjects);
+      await setupFirestoreMocks(mockProjects);
       
       const { updateDoc, doc, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
