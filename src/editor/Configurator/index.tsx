@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
+import { 
+  useSpaceConfigStore, 
+  SPACE_LIMITS, 
+  DEFAULT_SPACE_VALUES, 
+  DEFAULT_FRAME_VALUES,
+  DEFAULT_BASE_VALUES,
+  DEFAULT_MATERIAL_VALUES,
+  DEFAULT_DROPPED_CEILING_VALUES 
+} from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -660,11 +668,11 @@ const Configurator: React.FC = () => {
         return;
       }
 
-      // 기본 설정으로 새 디자인 생성
+      // 기본 설정으로 새 디자인 생성 - DEFAULT 상수값 사용
       const defaultSpaceConfig = {
-        width: 4000,
-        height: 2400,
-        depth: 3000,
+        width: DEFAULT_SPACE_VALUES.WIDTH,  // 3600
+        height: DEFAULT_SPACE_VALUES.HEIGHT, // 2400
+        depth: DEFAULT_SPACE_VALUES.DEPTH,   // 1500
         frameThickness: 20,
         frameColor: '#E5E5DC',
         frameColorName: 'Beige',
@@ -672,18 +680,32 @@ const Configurator: React.FC = () => {
         columns: [],
         rows: [],
         showHorizontalLines: false,
-        enableSnapping: true,
-        snapDistance: 10,
-        gridVisible: true,
-        gridSize: 100,
-        selectedFinish: 'natural-wood' as const,
-        material: {
-          type: 'laminate' as const,
-          finish: 'natural-wood' as const,
-          colorName: 'Natural Wood',
-          colorCode: '#D2B48C'
+        surroundType: 'surround' as const,
+        installType: 'builtin' as const,
+        wallConfig: { left: true, right: true },
+        gapConfig: { left: 2, right: 2 },
+        frameSize: { 
+          top: DEFAULT_FRAME_VALUES.TOP,      // 10
+          left: DEFAULT_FRAME_VALUES.LEFT,    // 50
+          right: DEFAULT_FRAME_VALUES.RIGHT   // 50
         },
-        installType: 'builtin' as const
+        framePosition: 'top' as const,
+        baseConfig: {
+          type: 'floor' as const,
+          height: DEFAULT_BASE_VALUES.HEIGHT,  // 65
+          placementType: 'ground' as const
+        },
+        hasFloorFinish: false,
+        materialConfig: {
+          interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,  // '#FFFFFF'
+          doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR           // '#E0E0E0'
+        },
+        droppedCeiling: {
+          enabled: false,
+          position: 'right' as const,
+          width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,           // 500
+          dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT // 200
+        }
       };
 
       if (isFirebaseConfigured() && user) {
@@ -753,17 +775,28 @@ const Configurator: React.FC = () => {
       console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
       setSaving(true);
       
-      // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거)
+      // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거) - DEFAULT 상수값 사용
       const defaultSpaceConfig = {
-        width: 3600,
-        height: 2400,
-        depth: 1500,
+        width: DEFAULT_SPACE_VALUES.WIDTH,    // 3600
+        height: DEFAULT_SPACE_VALUES.HEIGHT,  // 2400
+        depth: DEFAULT_SPACE_VALUES.DEPTH,    // 1500
         installationType: 'builtin' as const,
         hasFloorFinish: false,
-        surroundType: 'three-sided' as const,
-        frameSize: { top: 50, bottom: 50, left: 50, right: 50 },
-        baseConfig: { type: 'floor' as const, height: 65 },
-        materialConfig: { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' },
+        surroundType: 'surround' as const,
+        frameSize: { 
+          top: DEFAULT_FRAME_VALUES.TOP,      // 10
+          bottom: 50,  // bottom은 별도 상수 없음
+          left: DEFAULT_FRAME_VALUES.LEFT,    // 50
+          right: DEFAULT_FRAME_VALUES.RIGHT   // 50
+        },
+        baseConfig: { 
+          type: 'floor' as const, 
+          height: DEFAULT_BASE_VALUES.HEIGHT  // 65
+        },
+        materialConfig: { 
+          interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,  // '#FFFFFF'
+          doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR           // '#E0E0E0'
+        },
         columns: []
       };
 
