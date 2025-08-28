@@ -5,6 +5,7 @@ import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/cor
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Window 인터페이스 확장
 declare global {
@@ -154,15 +155,45 @@ interface ToggleGroupProps {
 const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }) => {
   return (
     <div className={styles.toggleGroup}>
-      {options.map((option) => (
-        <button
-          key={option.id}
-          className={`${styles.toggleButton} ${selected === option.id ? styles.active : ''}`}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </button>
-      ))}
+      {options.map((option) => {
+        const isSelected = selected === option.id;
+        return (
+          <button
+            key={option.id}
+            className={`${styles.toggleButton} ${isSelected ? styles.active : ''}`}
+            onClick={() => onChange(option.id)}
+            style={{
+              background: isSelected ? '#3b82f6' : 'transparent',
+              backgroundColor: isSelected ? '#3b82f6' : 'transparent',
+              color: isSelected ? '#ffffff' : 'var(--theme-text-secondary)',
+              fontWeight: isSelected ? '600' : '500',
+              border: 'none',
+              flex: '1',
+              padding: '8px 12px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              ...(isSelected && {
+                setProperty: (el: HTMLElement) => {
+                  if (el) {
+                    el.style.setProperty('background-color', '#3b82f6', 'important');
+                    el.style.setProperty('color', '#ffffff', 'important');
+                  }
+                }
+              })
+            }}
+            ref={(el) => {
+              if (el && isSelected) {
+                el.style.setProperty('background-color', '#3b82f6', 'important');
+                el.style.setProperty('background', '#3b82f6', 'important');
+                el.style.setProperty('color', '#ffffff', 'important');
+              }
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -637,6 +668,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const { spaceInfo, updateSpaceInfo } = useSpaceConfigStore();
   const { setActiveDroppedCeilingTab } = useUIStore();
   const { t, currentLanguage } = useTranslation();
+  const { theme } = useTheme();
   
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['brand', 'price', 'material', 'space', 'droppedCeiling', 'mainSpace', 'layout', 'floor', 'frame'])
@@ -774,6 +806,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   setActiveDroppedCeilingTab(tab.id === 'placement' ? 'main' : 'dropped');
                 }
               }}
+              style={activeTab === tab.id ? {
+                background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                color: 'white'
+              } : {}}
             >
               {tab.label}
             </button>

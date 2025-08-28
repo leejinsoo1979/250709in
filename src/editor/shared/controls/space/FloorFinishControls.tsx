@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface FloorFinishControlsProps {
   spaceInfo: SpaceInfo;
@@ -13,6 +14,7 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
   onUpdate
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [floorThickness, setFloorThickness] = useState<string>(
     spaceInfo.floorFinish?.height?.toString() || '9'
   );
@@ -120,12 +122,20 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
           <button
             className={`${styles.toggleButton} ${spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
             onClick={() => handleFloorStatusChange(false)}
+            style={spaceInfo.hasFloorFinish ? {
+              background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+              color: 'white'
+            } : {}}
           >
             {t('common.enabled')}
           </button>
           <button
             className={`${styles.toggleButton} ${!spaceInfo.hasFloorFinish ? styles.toggleButtonActive : ''}`}
             onClick={() => handleFloorStatusChange(true)}
+            style={!spaceInfo.hasFloorFinish ? {
+              background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+              color: 'white'
+            } : {}}
           >
             {t('common.none')}
           </button>

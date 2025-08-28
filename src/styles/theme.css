@@ -238,10 +238,21 @@ input:focus, textarea:focus, select:focus {
 body[data-theme="light"] div[class*="toggleButton"][class*="active"],
 body[data-theme="light"] button[class*="toggleButton"][class*="active"],
 body[data-theme="light"] div[class*="tabButton"][class*="active"],
-body[data-theme="light"] button[class*="tabButton"][class*="active"] {
+body[data-theme="light"] button[class*="tabButton"][class*="active"],
+body[data-theme="light"] [class*="Button"][class*="Active"],
+body[data-theme="light"] [class*="button"][class*="active"],
+body[data-theme="light"] [class*="btn"][class*="active"] {
   background-color: var(--theme-primary) !important;
   color: #ffffff !important;
   border-color: var(--theme-primary) !important;
+}
+
+/* 모든 자식 요소들도 흰색 텍스트로 */
+body[data-theme="light"] [class*="toggleButton"][class*="active"] *,
+body[data-theme="light"] [class*="tabButton"][class*="active"] *,
+body[data-theme="light"] [class*="Button"][class*="Active"] *,
+body[data-theme="light"] [class*="button"][class*="active"] * {
+  color: #ffffff !important;
 }
 
 /* 로그인 폼 input 요소는 항상 light 모드 */

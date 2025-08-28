@@ -8,6 +8,7 @@ import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeaderProps {
   title: string;
@@ -65,6 +66,7 @@ const Header: React.FC<HeaderProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
+  const { theme } = useTheme();
   
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
@@ -342,6 +344,10 @@ const Header: React.FC<HeaderProps> = ({
               <button 
                 className={styles.convertButton} 
                 onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                style={{
+                  background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                  color: 'white'
+                }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '4px' }}>
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2"/>
@@ -403,6 +409,10 @@ const Header: React.FC<HeaderProps> = ({
             <button 
               className={styles.convertButton} 
               onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
+              style={{
+                background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                color: 'white'
+              }}
             >
               {t('common.converting')}
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />

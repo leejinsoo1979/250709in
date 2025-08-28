@@ -204,7 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => onTabClick(tab.id)}
             title={tab.label}
           >
-                        {tab.icon && <div className={styles.tabIcon}>{tab.icon}</div>}
+            {tab.icon && <div className={styles.tabIcon}>{tab.icon}</div>}
             <span className={styles.tabLabel}>{tab.label}</span>
           </button>
         ))}

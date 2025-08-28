@@ -212,11 +212,11 @@
 }
 
 .convertButton {
-  background: var(--theme-primary);
+  background: var(--theme-primary) !important;
   border: none;
   border-radius: 6px;
   padding: 8px 20px;
-  color: white;
+  color: white !important;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -230,7 +230,8 @@
 }
 
 .convertButton:hover {
-  background: var(--theme-primary-hover);
+  background: var(--theme-primary-hover) !important;
+  color: white !important;
 }
 
 .logoutButton {

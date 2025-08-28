@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { InstallType } from '../types';
+import { useTheme } from '@/contexts/ThemeContext';
 import styles from '../styles/common.module.css';
 
 interface InstallTypeControlsProps {
@@ -11,6 +12,7 @@ interface InstallTypeControlsProps {
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
@@ -132,6 +134,10 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
             className={`${styles.toggleButton} ${spaceInfo.installType === 'builtin' ? styles.toggleButtonActive : ''}`}
             onClick={() => handleInstallTypeChange('builtin')}
             title={t('space.builtinDesc')}
+            style={spaceInfo.installType === 'builtin' ? {
+              background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+              color: 'white'
+            } : {}}
           >
             {t('space.builtin')}
           </button>
@@ -139,6 +145,10 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
             className={`${styles.toggleButton} ${spaceInfo.installType === 'semistanding' ? styles.toggleButtonActive : ''}`}
             onClick={() => handleInstallTypeChange('semistanding')}
             title={t('space.semistandingDesc')}
+            style={spaceInfo.installType === 'semistanding' ? {
+              background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+              color: 'white'
+            } : {}}
           >
             {t('space.semistanding')}
           </button>
@@ -146,6 +156,10 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
             className={`${styles.toggleButton} ${spaceInfo.installType === 'freestanding' ? styles.toggleButtonActive : ''}`}
             onClick={() => handleInstallTypeChange('freestanding')}
             title={t('space.freestandingDesc')}
+            style={spaceInfo.installType === 'freestanding' ? {
+              background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+              color: 'white'
+            } : {}}
           >
             {t('space.freestanding')}
           </button>
@@ -160,12 +174,20 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.left ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('left')}
+              style={spaceInfo.wallConfig.left ? {
+                background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                color: 'white'
+              } : {}}
             >
               {t('furniture.left')}
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.right ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('right')}
+              style={spaceInfo.wallConfig.right ? {
+                background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                color: 'white'
+              } : {}}
             >
               {t('furniture.right')}
             </button>

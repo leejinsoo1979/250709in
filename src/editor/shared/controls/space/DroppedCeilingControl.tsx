@@ -4,6 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useTheme } from '@/contexts/ThemeContext';
 import styles from './DroppedCeilingControl.module.css';
 
 interface DroppedCeilingControlProps {
@@ -16,6 +17,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
   onToggle
 }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, removeModule } = useFurnitureStore();
   const droppedCeiling = spaceInfo.droppedCeiling;
@@ -168,12 +170,20 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
                   <button
                     className={`${styles.toggleButton} ${droppedCeiling.position === 'left' ? styles.active : ''}`}
                     onClick={() => handlePositionChange('left')}
+                    style={droppedCeiling.position === 'left' ? {
+                      background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                      color: 'white'
+                    } : {}}
                   >
                     {t('furniture.left')}
                   </button>
                   <button
                     className={`${styles.toggleButton} ${droppedCeiling.position === 'right' ? styles.active : ''}`}
                     onClick={() => handlePositionChange('right')}
+                    style={droppedCeiling.position === 'right' ? {
+                      background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
+                      color: 'white'
+                    } : {}}
                   >
                     {t('furniture.right')}
                   </button>
