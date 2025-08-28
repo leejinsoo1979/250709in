@@ -1,0 +1,20 @@
+/* Light Theme Active State Hotfix - CSS Only */
+
+:root.light, [data-theme="light"] {
+  /* 테마 하이라이트(밝은 톤) — 필요시 테마 변수 없으면 fallback 사용 */
+  --ui-active-bg: var(--theme-primary-light, #e7f0ff);
+  --ui-active-fg: var(--theme-primary, #2563eb);
+}
+
+/* 헤더: 활성 뷰 버튼 */
+.viewButton.active {
+  background: var(--ui-active-bg) !important;
+  color: var(--ui-active-fg) !important;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.06));
+}
+
+/* 사이드바: 활성 탭 */
+.tabButton.active {
+  background: var(--ui-active-bg) !important;
+  border: 1px solid var(--ui-active-fg) !important;
+}
