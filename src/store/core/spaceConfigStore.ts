@@ -127,7 +127,7 @@ interface SpaceConfigState {
 export const DEFAULT_SPACE_VALUES = {
   WIDTH: 3600,
   HEIGHT: 2400,
-  DEPTH: 1500,
+  DEPTH: 580,  // 가구 표준 깊이로 변경 (기존 1500은 너무 깊음)
 } as const;
 
 export const DEFAULT_FRAME_VALUES = {
