@@ -1,0 +1,36 @@
+/* Hotfix for disabled tab colors in right sidebar */
+
+/* Fallback 먼저 → 지원 브라우저에서는 color-mix로 덮어씀 */
+:root.light, [data-theme="light"]{
+  --ui-tab-disabled-fg: #6b7280; /* fallback (slate-500) */
+  --ui-tab-disabled-fg: color-mix(in srgb, var(--theme-primary, #2563eb) 28%, #6b7280);
+}
+:root.dark, [data-theme="dark"]{
+  --ui-tab-disabled-fg: #94a3b8; /* fallback (slate-400) */
+  --ui-tab-disabled-fg: color-mix(in srgb, var(--theme-primary, #93c5fd) 32%, #94a3b8);
+}
+
+/* ---- 우측바 탭: CSS Modules 해시/ARIA 대응 ---- */
+/* 우측 패널 클래스 프래그먼트가 있다면 우선 적용 */
+:root.light [class*="Right"][class*="Sidebar"] [class*="tabButton"][aria-disabled="true"],
+:root.light [class*="Right"][class*="Sidebar"] [role="tab"][aria-disabled="true"],
+:root.light [class*="tabButton"].isDisabled {
+  color: var(--ui-tab-disabled-fg) !important;
+  fill: var(--ui-tab-disabled-fg) !important;
+  stroke: var(--ui-tab-disabled-fg) !important;
+}
+[data-theme="dark"] [class*="Right"][class*="Sidebar"] [class*="tabButton"][aria-disabled="true"],
+[data-theme="dark"] [class*="Right"][class*="Sidebar"] [role="tab"][aria-disabled="true"],
+[data-theme="dark"] [class*="tabButton"].isDisabled {
+  color: var(--ui-tab-disabled-fg) !important;
+  fill: var(--ui-tab-disabled-fg) !important;
+  stroke: var(--ui-tab-disabled-fg) !important;
+}
+
+/* 만약 우측바에 'Right/Sidebar' 프래그먼트가 없다면, 일반 규칙도 보조로 적용 */
+:root.light [class*="tabButton"][aria-disabled="true"],
+[data-theme="dark"] [class*="tabButton"][aria-disabled="true"]{
+  color: var(--ui-tab-disabled-fg) !important;
+  fill: var(--ui-tab-disabled-fg) !important;
+  stroke: var(--ui-tab-disabled-fg) !important;
+}
