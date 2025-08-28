@@ -156,6 +156,20 @@
   transform: scale(1.05);
 }
 
+/* 라이트모드 전용 스타일 */
+[data-theme="light"] .tabButton.active {
+  background: var(--theme-primary);
+}
+
+[data-theme="light"] .tabButton.active .tabIcon {
+  color: white;
+}
+
+[data-theme="light"] .tabButton.active .tabLabel {
+  color: white;
+  font-weight: 600;
+}
+
 .onlineIndicator {
   position: absolute;
   bottom: 2px;
