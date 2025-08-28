@@ -1590,13 +1590,14 @@
 }
 
 .toggleButton.active {
-  background: var(--theme-primary);
-  color: #ffffff;
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
   font-weight: 600;
 }
 
 .toggleButton.active:hover {
-  background: var(--theme-primary-hover);
+  background: var(--theme-primary-hover) !important;
+  color: #ffffff !important;
 }
 
 /* 간단한 슬롯 정보 */
