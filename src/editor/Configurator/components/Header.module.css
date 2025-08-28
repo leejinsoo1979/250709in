@@ -459,26 +459,6 @@
   }
 }
 
-/* 라이트모드 전용 스타일 */
-[data-theme="light"] .hamburgerButton.active {
-  background: var(--theme-primary);
-  color: white;
-}
-
-[data-theme="light"] .clickableProjectName:hover {
-  background: var(--theme-primary);
-  color: white;
-}
-
-[data-theme="light"] .exportButton {
-  background: var(--theme-primary);
-  color: white;
-}
-
-[data-theme="light"] .exportButton:hover {
-  background: var(--theme-primary-hover);
-}
-
 /* 다크 모드 지원 */
 [data-theme="dark"] .fileDropdown {
   background: var(--theme-surface, #2a2a2a);

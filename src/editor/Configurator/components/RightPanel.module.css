@@ -50,13 +50,6 @@
   color: var(--theme-text);
 }
 
-/* 라이트모드 전용 스타일 */
-[data-theme="light"] .tabButton.active {
-  background: var(--theme-primary);
-  color: white;
-  font-weight: 600;
-}
-
 .panelContent {
   flex: 1;
   overflow-y: auto;
