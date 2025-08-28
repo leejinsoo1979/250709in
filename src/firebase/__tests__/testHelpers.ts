@@ -114,7 +114,10 @@ export const setupFirestoreMocks = async (documents: any[] = []) => {
   } as any));
   
   mockFirestore.onSnapshot = vi.fn((query, callback) => {
-    callback(mockSnapshot as any);
+    // Always return collection snapshot for consistency
+    if (typeof callback === 'function') {
+      callback(mockSnapshot as any);
+    }
     return vi.fn();
   });
 };

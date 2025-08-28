@@ -217,14 +217,16 @@ describe('Firebase Projects Service', () => {
       
       await setupFirestoreMocks(mockProjects);
       
-      const { onSnapshot, doc, getFirestore } = await import('firebase/firestore');
+      const { onSnapshot, collection, getFirestore } = await import('firebase/firestore');
       const db = getFirestore();
       
       const updates: any[] = [];
       const unsubscribe = onSnapshot(
-        doc(db, 'projects', 'proj1'),
-        (doc) => {
-          updates.push(doc.data());
+        collection(db, 'projects'),
+        (snapshot) => {
+          snapshot.docs.forEach(doc => {
+            updates.push(doc.data());
+          });
         }
       );
       
