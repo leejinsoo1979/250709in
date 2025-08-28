@@ -1095,10 +1095,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 컬럼 너비 텍스트 */}
             <Html
-              position={[centerX, columnDimensionY + mmToThreeUnits(25), 0.01]}
+              position={[centerX, columnDimensionY + mmToThreeUnits(25), 1]}
               center
               style={{ pointerEvents: 'none' }}
-          occlude={false}
+              occlude={false}
+              zIndexRange={[10000, 10001]}
             >
               <div
                 style={{
