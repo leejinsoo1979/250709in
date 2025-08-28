@@ -675,6 +675,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
             anchorX="center"
             anchorY="middle"
             rotation={textRotation}
+            renderOrder={999}
+            material-depthTest={false}
+            material-depthWrite={false}
           >
             {Math.round(actualWidth)}mm
           </Text>
@@ -735,6 +738,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
             color={textColor}
             anchorX="center"
             anchorY="middle"
+            renderOrder={999}
+            material-depthTest={false}
+            material-depthWrite={false}
           >
             {Math.round(actualWidth)}mm
           </Text>

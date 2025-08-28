@@ -25,7 +25,10 @@
     "firebase:login": "firebase login",
     "prod:build": "NODE_ENV=production npm run build",
     "prod:deploy": "npm run prod:build && firebase deploy",
-    "migrate:designs:nested": "cross-env TEAM_ID=$TEAM_ID ts-node --transpile-only scripts/migrate-designs-to-projects.ts"
+    "migrate:designs:nested": "cross-env TEAM_ID=$TEAM_ID ts-node --transpile-only scripts/migrate-designs-to-projects.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:visual": "playwright test e2e/visual-regression.spec.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
