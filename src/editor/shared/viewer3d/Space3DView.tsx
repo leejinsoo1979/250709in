@@ -1229,6 +1229,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
             <InternalDimensionDisplay />
+            
+            {/* 세로 치수 표시 (상/내경/하단) */}
+            {showDimensions && (
+              <VerticalDimensions viewMode={viewMode} view2DDirection={view2DDirection} />
+            )}
           </React.Suspense>
         </ThreeCanvas>
 
