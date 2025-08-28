@@ -252,12 +252,13 @@
 }
 
 .toggleButtonActive {
-  background: var(--theme-primary);
-  color: var(--theme-surface);
+  background: var(--theme-primary) !important;
+  color: white !important;
 }
 
 .toggleButtonActive:hover {
-  background: var(--theme-primary-hover);
+  background: var(--theme-primary-hover) !important;
+  color: white !important;
 }
 
 /* 버튼 */
