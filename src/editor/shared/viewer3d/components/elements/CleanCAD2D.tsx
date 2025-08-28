@@ -902,15 +902,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
             
             {/* 좌측 프레임 치수 텍스트 */}
-            <Text
-              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
+            <Html
+              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(90), 10]}
+              center
+              style={{ pointerEvents: 'none' }}
+              occlude={false}
+              zIndexRange={[10000, 10001]}
+              transform={false}
             >
-              {frameSize.left}
-            </Text>
+              <div
+                style={{
+                  background: 'white',
+                  color: 'black',
+                  padding: '1px 4px',
+                  fontSize: '15px',
+                  fontWeight: 'normal',
+                  fontFamily: 'Arial, sans-serif',
+                  border: '1px solid #999',
+                  borderRadius: '2px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none',
+                  pointerEvents: 'none'
+                }}
+              >
+                {frameSize.left}
+              </div>
+            </Html>
             
             {/* 연장선 */}
             <Line
@@ -1025,15 +1043,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
             
             {/* 우측 프레임 치수 텍스트 */}
-            <Text
-              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
+            <Html
+              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(90), 10]}
+              center
+              style={{ pointerEvents: 'none' }}
+              occlude={false}
+              zIndexRange={[10000, 10001]}
+              transform={false}
             >
-              {frameSize.right}
-            </Text>
+              <div
+                style={{
+                  background: 'white',
+                  color: 'black',
+                  padding: '1px 4px',
+                  fontSize: '15px',
+                  fontWeight: 'normal',
+                  fontFamily: 'Arial, sans-serif',
+                  border: '1px solid #999',
+                  borderRadius: '2px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none',
+                  pointerEvents: 'none'
+                }}
+              >
+                {frameSize.right}
+              </div>
+            </Html>
             
             {/* 연장선 */}
             <Line
@@ -1385,16 +1421,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   lineWidth={0.5}
                 />
-                <Text
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), 0.01]}
-                  fontSize={baseFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, -Math.PI / 2]}
+                <Html
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), 10]}
+                  center
+                  style={{ pointerEvents: 'none' }}
+                  occlude={false}
+                  zIndexRange={[10000, 10001]}
+                  transform={false}
                 >
-                  {cabinetPlacementHeight}
-                </Text>
+                  <div
+                    style={{
+                      background: 'white',
+                      color: 'black',
+                      padding: '1px 4px',
+                      fontSize: '15px',
+                      fontWeight: 'normal',
+                      fontFamily: 'Arial, sans-serif',
+                      border: '1px solid #999',
+                      borderRadius: '2px',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      whiteSpace: 'nowrap',
+                      userSelect: 'none',
+                      pointerEvents: 'none',
+                      transform: 'rotate(-90deg)'
+                    }}
+                  >
+                    {cabinetPlacementHeight}
+                  </div>
+                </Html>
               </group>
               
               {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
