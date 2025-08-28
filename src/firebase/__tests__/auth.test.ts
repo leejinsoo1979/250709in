@@ -12,7 +12,7 @@ describe('Firebase Auth Service', () => {
         email: 'test@example.com',
         displayName: 'Test User'
       });
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const { signInWithEmailAndPassword, getAuth } = await import('firebase/auth');
       
@@ -106,7 +106,7 @@ describe('Firebase Auth Service', () => {
 
   describe('signOut', () => {
     it('should successfully sign out', async () => {
-      setupAuthMocks(true, createMockUser());
+      await setupAuthMocks(true, createMockUser());
       
       const { signOut, getAuth } = await import('firebase/auth');
       const auth = getAuth();
@@ -164,7 +164,7 @@ describe('Firebase Auth Service', () => {
 
     it('should get current user', async () => {
       const mockUser = createMockUser();
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const { getAuth } = await import('firebase/auth');
       const auth = getAuth();
@@ -177,7 +177,7 @@ describe('Firebase Auth Service', () => {
   describe('profile update', () => {
     it('should update user profile', async () => {
       const mockUser = createMockUser();
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const { updateProfile, getAuth } = await import('firebase/auth');
       const auth = getAuth();
@@ -200,7 +200,7 @@ describe('Firebase Auth Service', () => {
   describe('email verification', () => {
     it('should send email verification', async () => {
       const mockUser = createMockUser({ emailVerified: false });
-      setupAuthMocks(true, mockUser);
+      await setupAuthMocks(true, mockUser);
       
       const { sendEmailVerification, getAuth } = await import('firebase/auth');
       const auth = getAuth();

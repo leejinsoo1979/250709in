@@ -14,7 +14,6 @@ import {
   Download,
   Upload
 } from 'lucide-react';
-import styles from '../Space2DKonvaView.module.css';
 
 interface ViewerToolbar2DProps {
   showGrid: boolean;
