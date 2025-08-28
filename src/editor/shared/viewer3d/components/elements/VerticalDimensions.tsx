@@ -81,7 +81,7 @@ const VerticalDimensions: React.FC<VerticalDimensionsProps> = ({ viewMode = '3D'
       center
       transform={false}
       occlude={false}
-      zIndexRange={[2000, 2001]} // 최상단 레이어
+      zIndexRange={[10000, 10001]} // 최상단 레이어
       className="dim-text" // CSS 클래스 추가
     >
       <div
@@ -121,7 +121,7 @@ const VerticalDimensions: React.FC<VerticalDimensionsProps> = ({ viewMode = '3D'
   );
 
   return (
-    <group name="vertical-dimensions" renderOrder={1000}>
+    <group name="vertical-dimensions" renderOrder={10000}>
       {/* 상단 구간 (상부프레임) */}
       {topSectionHeight > 0 && (
         <>
