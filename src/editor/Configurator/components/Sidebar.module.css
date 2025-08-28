@@ -44,7 +44,7 @@
 }
 
 .tabButton.active {
-  background: var(--theme-primary-light);
+  background: var(--theme-primary);
 }
 
 .tabButton.active::before {
@@ -69,7 +69,7 @@
 }
 
 .tabButton.active .tabIcon {
-  color: var(--theme-primary);
+  color: white;
   opacity: 1;
 }
 
@@ -89,8 +89,8 @@
 }
 
 .tabButton.active .tabLabel {
-  color: var(--theme-primary);
-  font-weight: 500;
+  color: white;
+  font-weight: 600;
 }
 
 .tabButton:hover .tabLabel {

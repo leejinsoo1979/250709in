@@ -25,7 +25,7 @@
 
 .tabButton {
   flex: 0 0 auto;
-  background: var(--theme-background-secondary);
+  background: transparent;
   border: none;
   padding: 12px 20px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -40,9 +40,10 @@
 }
 
 .tabButton.active {
-  background: var(--theme-primary-light);
-  color: var(--theme-primary);
-  border-bottom-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
+  border-bottom-color: var(--theme-primary-dark);
+  font-weight: 600;
 }
 
 .tabButton:hover:not(.active) {
