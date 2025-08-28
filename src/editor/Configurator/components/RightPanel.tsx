@@ -162,33 +162,6 @@ const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }
             key={option.id}
             className={`${styles.toggleButton} ${isSelected ? styles.active : ''}`}
             onClick={() => onChange(option.id)}
-            style={{
-              background: isSelected ? '#3b82f6' : 'transparent',
-              backgroundColor: isSelected ? '#3b82f6' : 'transparent',
-              color: isSelected ? '#ffffff' : 'var(--theme-text-secondary)',
-              fontWeight: isSelected ? '600' : '500',
-              border: 'none',
-              flex: '1',
-              padding: '8px 12px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              ...(isSelected && {
-                setProperty: (el: HTMLElement) => {
-                  if (el) {
-                    el.style.setProperty('background-color', '#3b82f6', 'important');
-                    el.style.setProperty('color', '#ffffff', 'important');
-                  }
-                }
-              })
-            }}
-            ref={(el) => {
-              if (el && isSelected) {
-                el.style.setProperty('background-color', '#3b82f6', 'important');
-                el.style.setProperty('background', '#3b82f6', 'important');
-                el.style.setProperty('color', '#ffffff', 'important');
-              }
-            }}
           >
             {option.label}
           </button>
@@ -806,10 +779,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   setActiveDroppedCeilingTab(tab.id === 'placement' ? 'main' : 'dropped');
                 }
               }}
-              style={activeTab === tab.id ? {
-                background: theme.mode === 'light' ? '#3b82f6' : '#3b82f6',
-                color: 'white'
-              } : {}}
             >
               {tab.label}
             </button>
