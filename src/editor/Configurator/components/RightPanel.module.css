@@ -40,8 +40,8 @@
 }
 
 .tabButton.active {
-  background: var(--theme-surface);
-  color: var(--theme-text);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
   border-bottom-color: var(--theme-primary);
 }
 

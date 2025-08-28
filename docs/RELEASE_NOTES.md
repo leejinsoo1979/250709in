@@ -10,6 +10,274 @@
 
 ---
 
+## 🎯 v1.10.0 - Firebase Test Harness 도입 (2025-08-27)
+
+### ✨ 주요 신기능
+- **Firebase 통합 테스트 하네스**: 완전한 Firebase 서비스 테스트 환경 구축
+  - **Auth 테스트**: 사용자 인증 및 권한 관리 테스트
+  - **Firestore 테스트**: 데이터베이스 CRUD 작업 및 보안 규칙 검증
+  - **Storage 테스트**: 파일 업로드/다운로드 및 접근 권한 테스트
+  - **에뮬레이터 통합**: 로컬 Firebase 에뮬레이터와 완벽한 연동
+
+### 🚀 실행 방법
+
+#### 개발 환경 실행
+```bash
+# 1. Firebase 에뮬레이터 시작
+npm run firebase:emulators
+
+# 2. 별도 터미널에서 테스트 실행
+npm run test:firebase
+
+# 3. 특정 테스트만 실행
+npm run test:firebase -- auth
+npm run test:firebase -- firestore
+npm run test:firebase -- storage
+```
+
+#### CI/CD 환경 실행
+```yaml
+# GitHub Actions 예시
+- name: Run Firebase Tests
+  run: |
+    # 에뮬레이터 백그라운드 실행
+    npx firebase emulators:start --only auth,firestore,storage &
+    
+    # 에뮬레이터 준비 대기
+    npx wait-on http://127.0.0.1:9099
+    
+    # 테스트 실행
+    npm run test:firebase
+```
+
+### ⚠️ 제약사항 및 한계
+
+#### 환경 제약
+- **Node.js 버전**: 14.x 이상 필요 (TextEncoder/TextDecoder API)
+- **메모리 요구사항**: 최소 2GB RAM (에뮬레이터 + 테스트 실행)
+- **포트 사용**: 다음 포트가 사용 가능해야 함
+  - 9099 (Auth)
+  - 8080 (Firestore)
+  - 9199 (Storage)
+  - 4000 (Emulator UI)
+
+#### 기능 제약
+- **실시간 리스너**: Firestore 실시간 업데이트 테스트 제한적
+- **파일 크기**: Storage 테스트에서 대용량 파일(>10MB) 처리 시 타임아웃 가능
+- **동시성**: 병렬 테스트 실행 시 에뮬레이터 리소스 경합 가능
+- **브라우저 API**: jsdom 환경에서 일부 브라우저 전용 API 미지원
+
+### 🔄 롤백 절차
+
+#### 1. 기능 플래그 비활성화
+```javascript
+// src/test/firebase-setup.ts
+export const FIREBASE_TEST_ENABLED = false; // true → false
+
+// 또는 환경변수로 제어
+// .env.test
+VITE_FIREBASE_TEST_ENABLED=false
+```
+
+#### 2. 워크플로우 비활성화
+```yaml
+# .github/workflows/test.yml
+jobs:
+  test:
+    steps:
+      # Firebase 테스트 단계 주석 처리
+      # - name: Run Firebase Tests
+      #   run: npm run test:firebase
+```
+
+#### 3. 패키지 의존성 제거 (선택사항)
+```bash
+# Firebase 테스트 관련 패키지만 제거
+npm uninstall @firebase/rules-unit-testing
+
+# 테스트 스크립트 제거
+# package.json에서 "test:firebase" 스크립트 제거
+```
+
+### 🔧 기술적 구현 세부사항
+
+#### 테스트 환경 설정
+- **Polyfills 분리**: `firebase-polyfills.ts`로 환경 호환성 확보
+  - TextEncoder/TextDecoder polyfill 적용
+  - XMLHttpRequest mock 구현
+- **Firebase Setup 모듈화**: `firebase-setup.ts`로 초기화 로직 중앙화
+  - 에뮬레이터 자동 연결
+  - 테스트 사용자 생성 헬퍼
+  - 클린업 유틸리티 제공
+
+#### Mock 시스템
+- **Firestore Mock** (`__mocks__/firebase/firestore.ts`)
+  - 컬렉션/문서 CRUD 작업 시뮬레이션
+  - 쿼리 및 필터링 지원
+  - 트랜잭션 및 배치 작업 모킹
+- **Storage Mock** (`__mocks__/firebase/storage.ts`)
+  - 파일 업로드/다운로드 시뮬레이션
+  - 메타데이터 관리
+  - URL 생성 모킹
+
+### 📊 개발 통계
+- **개발 기간**: 2025-08-26 ~ 2025-08-27
+- **커밋 범위**: `27a00d4..ab8799e`
+- **브랜치**: `feature/firebase-test-harness`
+- **주요 변경**: 
+  - Firebase Rules Unit Testing 패키지 추가
+  - jsdom 환경 설정 및 polyfill 적용
+  - Auth, Firestore, Storage 통합 테스트 구현
+  - Mock 시스템 구축
+
+### 🎯 개발자 혜택
+- **안전한 테스트**: 프로덕션 환경 영향 없이 Firebase 기능 검증
+- **빠른 피드백**: 로컬 에뮬레이터로 즉시 테스트 실행
+- **CI/CD 통합**: 자동화된 테스트로 배포 안정성 확보
+- **실제 동작 검증**: Mock이 아닌 실제 Firebase 에뮬레이터 사용
+
+### 🔮 향후 발전 방향
+- **Performance 모니터링**: Firebase Performance 테스트 추가
+- **Cloud Functions**: 서버리스 함수 테스트 통합
+- **Remote Config**: 원격 구성 테스트 지원
+- **테스트 커버리지**: 더 많은 엣지 케이스 및 시나리오 추가
+
+---
+
+## Firebase Test Harness Introduction (English Version)
+
+### ✨ Key Features
+- **Firebase Integration Test Harness**: Complete Firebase services testing environment
+  - **Auth Testing**: User authentication and authorization management tests
+  - **Firestore Testing**: Database CRUD operations and security rules validation
+  - **Storage Testing**: File upload/download and access permission tests
+  - **Emulator Integration**: Perfect integration with local Firebase emulators
+
+### 🚀 Execution Methods
+
+#### Development Environment
+```bash
+# 1. Start Firebase emulators
+npm run firebase:emulators
+
+# 2. Run tests in separate terminal
+npm run test:firebase
+
+# 3. Run specific tests
+npm run test:firebase -- auth
+npm run test:firebase -- firestore
+npm run test:firebase -- storage
+```
+
+#### CI/CD Environment
+```yaml
+# GitHub Actions example
+- name: Run Firebase Tests
+  run: |
+    # Run emulators in background
+    npx firebase emulators:start --only auth,firestore,storage &
+    
+    # Wait for emulators
+    npx wait-on http://127.0.0.1:9099
+    
+    # Execute tests
+    npm run test:firebase
+```
+
+### ⚠️ Constraints and Limitations
+
+#### Environment Constraints
+- **Node.js Version**: 14.x or higher required (TextEncoder/TextDecoder API)
+- **Memory Requirements**: Minimum 2GB RAM (emulators + test execution)
+- **Port Usage**: Following ports must be available
+  - 9099 (Auth)
+  - 8080 (Firestore)
+  - 9199 (Storage)
+  - 4000 (Emulator UI)
+
+#### Functional Constraints
+- **Realtime Listeners**: Limited Firestore realtime update testing
+- **File Size**: Potential timeout with large files (>10MB) in Storage tests
+- **Concurrency**: Resource contention possible with parallel test execution
+- **Browser APIs**: Some browser-specific APIs unsupported in jsdom environment
+
+### 🔄 Rollback Procedures
+
+#### 1. Feature Flag Deactivation
+```javascript
+// src/test/firebase-setup.ts
+export const FIREBASE_TEST_ENABLED = false; // true → false
+
+// Or control via environment variable
+// .env.test
+VITE_FIREBASE_TEST_ENABLED=false
+```
+
+#### 2. Workflow Deactivation
+```yaml
+# .github/workflows/test.yml
+jobs:
+  test:
+    steps:
+      # Comment out Firebase test step
+      # - name: Run Firebase Tests
+      #   run: npm run test:firebase
+```
+
+#### 3. Remove Package Dependencies (Optional)
+```bash
+# Remove only Firebase test-related packages
+npm uninstall @firebase/rules-unit-testing
+
+# Remove test script
+# Remove "test:firebase" script from package.json
+```
+
+### 🔧 Technical Implementation Details
+
+#### Test Environment Setup
+- **Separated Polyfills**: Environment compatibility via `firebase-polyfills.ts`
+  - TextEncoder/TextDecoder polyfill application
+  - XMLHttpRequest mock implementation
+- **Modular Firebase Setup**: Centralized initialization logic in `firebase-setup.ts`
+  - Automatic emulator connection
+  - Test user creation helpers
+  - Cleanup utilities provided
+
+#### Mock System
+- **Firestore Mock** (`__mocks__/firebase/firestore.ts`)
+  - Collection/document CRUD operation simulation
+  - Query and filtering support
+  - Transaction and batch operation mocking
+- **Storage Mock** (`__mocks__/firebase/storage.ts`)
+  - File upload/download simulation
+  - Metadata management
+  - URL generation mocking
+
+### 📊 Development Statistics
+- **Development Period**: 2025-08-26 ~ 2025-08-27
+- **Commit Range**: `27a00d4..ab8799e`
+- **Branch**: `feature/firebase-test-harness`
+- **Major Changes**: 
+  - Added Firebase Rules Unit Testing package
+  - Configured jsdom environment and applied polyfills
+  - Implemented Auth, Firestore, Storage integration tests
+  - Built mock system
+
+### 🎯 Developer Benefits
+- **Safe Testing**: Verify Firebase features without affecting production
+- **Fast Feedback**: Immediate test execution with local emulators
+- **CI/CD Integration**: Deployment stability through automated testing
+- **Real Behavior Validation**: Using actual Firebase emulators instead of mocks
+
+### 🔮 Future Roadmap
+- **Performance Monitoring**: Add Firebase Performance testing
+- **Cloud Functions**: Integrate serverless function testing
+- **Remote Config**: Support remote configuration testing
+- **Test Coverage**: Add more edge cases and scenarios
+
+---
+
 ## 🎯 v1.9.0 - 사이드바 토글 시스템 및 UI 혁신 (2025-07-04)
 
 ### ✨ 주요 신기능
