@@ -425,16 +425,8 @@
 
 .toggleButton.active {
   background: var(--theme-primary) !important;
-  background-color: var(--theme-primary) !important;
   color: white !important;
   font-weight: 600;
-}
-
-/* Light theme specific fix */
-:global(body[data-theme="light"]) .toggleButton.active {
-  background: #3b82f6 !important;
-  background-color: #3b82f6 !important;
-  color: #ffffff !important;
 }
 
 .toggleButton:hover:not(.active) {
