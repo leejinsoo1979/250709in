@@ -470,8 +470,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 모든 자식 요소의 renderOrder를 설정
   useEffect(() => {
     if (groupRef.current) {
-      // 그룹 자체의 renderOrder 설정
-      groupRef.current.renderOrder = 999999;
+      // 그룹 자체의 renderOrder 설정 - 최대값으로 설정
+      groupRef.current.renderOrder = 10000000;
       
       groupRef.current.traverse((child) => {
         // 타입 안전하게 처리
@@ -1095,11 +1095,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 컬럼 너비 텍스트 */}
             <Html
-              position={[centerX, columnDimensionY + mmToThreeUnits(25), 1]}
+              position={[centerX, columnDimensionY + mmToThreeUnits(25), 10]}
               center
               style={{ pointerEvents: 'none' }}
               occlude={false}
               zIndexRange={[10000, 10001]}
+              transform={false}
             >
               <div
                 style={{
