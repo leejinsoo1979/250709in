@@ -669,8 +669,8 @@ const Configurator: React.FC = () => {
         frameColor: '#E5E5DC',
         frameColorName: 'Beige',
         subdivisionMode: 'none' as const,
-        columns: 0,
-        rows: 0,
+        columns: [],
+        rows: [],
         showHorizontalLines: false,
         enableSnapping: true,
         snapDistance: 10,
@@ -682,7 +682,8 @@ const Configurator: React.FC = () => {
           finish: 'natural-wood' as const,
           colorName: 'Natural Wood',
           colorCode: '#D2B48C'
-        }
+        },
+        installType: 'builtin' as const
       };
 
       if (isFirebaseConfigured() && user) {
