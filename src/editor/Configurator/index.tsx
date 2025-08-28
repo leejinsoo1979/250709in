@@ -629,7 +629,30 @@ const Configurator: React.FC = () => {
     }
     
     try {
-      const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
+      // 먼저 현재 작업 내용을 저장
+      if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
+        console.log('💾 새 디자인 생성 전 현재 작업 저장 시작');
+        setSaving(true);
+        setSaveStatus('idle');
+        
+        try {
+          await saveProject();
+          console.log('✅ 현재 작업 저장 완료');
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        } catch (error) {
+          console.error('❌ 현재 작업 저장 실패:', error);
+          const continueWithoutSave = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 새 디자인을 생성하시겠습니까?');
+          if (!continueWithoutSave) {
+            setSaving(false);
+            return;
+          }
+        } finally {
+          setSaving(false);
+        }
+      }
+      
+      const confirmed = confirm('새 디자인을 시작하시겠습니까? (현재 작업은 저장되었습니다)');
       console.log('🎨 [DEBUG] 사용자 확인 응답:', confirmed);
       
       if (!confirmed) {
@@ -664,8 +687,9 @@ const Configurator: React.FC = () => {
 
       if (isFirebaseConfigured() && user) {
         // Firebase에 새 디자인파일 생성
+        const newDesignName = '제목 없음';
         const result = await createDesignFile({
-          name: '새 디자인',
+          name: newDesignName,
           projectId: currentProjectId,
           spaceConfig: defaultSpaceConfig,
           furniture: { placedModules: [] }
@@ -684,17 +708,25 @@ const Configurator: React.FC = () => {
           setSpaceInfo(defaultSpaceConfig);
           setPlacedModules([]);
           setCurrentDesignFileId(result.id);
+          setCurrentDesignFileName(newDesignName);
+          setBasicInfo({ ...basicInfo, title: newDesignName });
           
           // derivedSpaceStore 재계산
           derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
+          
+          // URL 업데이트
+          navigate(`/configurator?projectId=${currentProjectId}&designFileId=${result.id}`, { replace: true });
           
           console.log('✅ 새 디자인파일 생성 완료:', result.id);
           alert('새 디자인이 생성되었습니다!');
         }
       } else {
         // 데모 모드에서는 단순히 상태만 초기화
+        const newDesignName = '제목 없음';
         setSpaceInfo(defaultSpaceConfig);
         setPlacedModules([]);
+        setCurrentDesignFileName(newDesignName);
+        setBasicInfo({ ...basicInfo, title: newDesignName });
         derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
         alert('새 디자인이 생성되었습니다!');
       }
