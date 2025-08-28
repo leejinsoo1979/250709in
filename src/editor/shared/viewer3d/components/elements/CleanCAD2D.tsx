@@ -589,7 +589,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={textColor}
             anchorX="center"
             anchorY="middle"
-          >
+          
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
             {spaceInfo.width}
           </Text>
         )}
@@ -665,7 +669,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -719,7 +727,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -858,7 +870,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor}
                     anchorX="center"
                     anchorY="middle"
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {leftText}
                   </Text>
                 )}
@@ -908,6 +924,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {frameSize.left}
             </Text>
@@ -981,7 +1001,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   anchorX="center"
                   anchorY="middle"
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {rightText}
                 </Text>
                 
@@ -1031,6 +1055,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={textColor}
               anchorX="center"
               anchorY="middle"
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {frameSize.right}
             </Text>
@@ -1159,7 +1187,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {spaceInfo.droppedCeiling.dropHeight}
                 </Text>
               </>
@@ -1194,7 +1226,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {spaceInfo.height}
                 </Text>
               </>
@@ -1232,6 +1268,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[0, 0, -Math.PI / 2]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {spaceInfo.height}
             </Text>
@@ -1316,7 +1356,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     띄움 {floatHeight}
                   </Text>
                   {/* 연장선들 - 좌측으로 1800mm 이동 */}
@@ -1364,7 +1408,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {bottomFrameHeight}
                 </Text>
               </group>
@@ -1394,7 +1442,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {cabinetPlacementHeight}
                 </Text>
               </group>
@@ -1423,7 +1475,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {topFrameHeight}
                 </Text>
               </group>
@@ -1725,7 +1781,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -1780,7 +1840,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -1907,6 +1971,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[0, Math.PI / 2, 0]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {spaceInfo.depth}
             </Text>
@@ -1969,6 +2037,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[0, 0, Math.PI / 2]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {spaceInfo.height}
             </Text>
@@ -2026,7 +2098,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                     rotation={[0, -Math.PI / 2, 0]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {furnitureDepthMm}
                 </Text>
 
@@ -2079,7 +2155,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             anchorX="center"
             anchorY="middle"
               rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-          >
+          
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
             {spaceInfo.height}
           </Text>
           
@@ -2157,7 +2237,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                       rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {bottomFrameHeight}
                   </Text>
                 </group>
@@ -2187,7 +2271,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {cabinetPlacementHeight}
                   </Text>
                 </group>
@@ -2216,7 +2304,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {topFrameHeight}
                   </Text>
                 </group>
@@ -2309,7 +2401,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={textColor}
                 anchorX="center"
                 anchorY="middle"
-              >
+              
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                 {actualDepth}
               </Text>
 
@@ -2358,7 +2454,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={textColor}
             anchorX="center"
             anchorY="middle"
-          >
+          
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
             {spaceInfo.width}
           </Text>
           
@@ -2423,7 +2523,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo);
                       console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
@@ -2488,7 +2592,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       const frameThickness = calculateFrameThickness(spaceInfo);
                       
@@ -2601,6 +2709,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[0, -Math.PI / 2, 0]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {spaceInfo.depth}
             </Text>
@@ -2669,7 +2781,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, -Math.PI / 2]}
-                    >
+                    
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                       {spaceInfo.droppedCeiling.dropHeight}
                     </Text>
                   )}
@@ -2706,7 +2822,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, -Math.PI / 2]}
-                    >
+                    
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                       {spaceInfo.height}
                     </Text>
                   )}
@@ -2746,7 +2866,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {spaceInfo.height}
                 </Text>
               )}
@@ -2835,7 +2959,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {bottomFrameHeight}
                   </Text>
                 </group>
@@ -2865,7 +2993,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {cabinetPlacementHeight}
                   </Text>
                 </group>
@@ -2894,7 +3026,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {topFrameHeight}
                   </Text>
                 </group>
@@ -2970,7 +3106,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor}
                 anchorX="center"
                 anchorY="middle"
-              >
+              
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                 {actualDepth}
               </Text>
 
@@ -3050,7 +3190,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {spaceInfo.width}
                 </Text>
                 
@@ -3147,7 +3291,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {leftText}
                   </Text>
                 </>
@@ -3192,7 +3340,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {leftValue}
                 </Text>
               </>
@@ -3258,7 +3410,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {rightText}
                   </Text>
                 </>
@@ -3303,7 +3459,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {rightValue}
                 </Text>
               </>
@@ -3368,7 +3528,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -3421,7 +3585,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {(() => {
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -3653,6 +3821,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[-Math.PI / 2, 0, 0]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
               {cabinetDepthMm}
             </Text>
@@ -3788,6 +3960,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               rotation={[-Math.PI / 2, 0, 0]}
+            
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
             >
                 {cabinetDepthMm}
             </Text>
@@ -3982,7 +4158,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {actualDistanceMm}
                   </Text>
                   
@@ -4059,7 +4239,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorX="center"
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
-              >
+              
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                 {Math.round(actualWidth)}
               </Text>
 
@@ -4173,7 +4357,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorX="center"
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
-              >
+              
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                 {Math.round(column.width)}
               </Text>
               
@@ -4326,7 +4514,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorX="center"
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
-              >
+              
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                 {distanceMm}
               </Text>
 
@@ -4476,7 +4668,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorX="center"
                       anchorY="middle"
                       rotation={[-Math.PI / 2, 0, 0]}
-                    >
+                    
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                       {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
                     <Line
@@ -4515,7 +4711,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       anchorX="center"
                       anchorY="middle"
                       rotation={[-Math.PI / 2, 0, 0]}
-                    >
+                    
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                       {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
                     <Line
@@ -4564,7 +4764,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorX="center"
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
-                  >
+                  
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                     {actualWidthMm - 3}
                   </Text>
                   <Line
@@ -4607,7 +4811,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorX="center"
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
-                >
+                
+              renderOrder={999}
+              depthTest={false}
+              depthWrite={false}
+            >
                   {doorThicknessMm}
                 </Text>
                 {/* 도어 두께 연결선 - 실제 도어 위치에 맞춤 */}
