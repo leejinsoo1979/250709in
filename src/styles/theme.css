@@ -187,8 +187,35 @@ input:focus, textarea:focus, select:focus {
   outline: none !important;
 }
 
-/* 라이트 테마 버튼 스타일 - 개별 컴포넌트에서 관리 */
+/* 라이트 테마에서 토글/세그먼트 버튼의 활성 상태가 전역 버튼 규칙에 덮이지 않도록 보정 */
+[data-theme="light"] .toggleButtonActive,
+[data-theme="light"] .buttonActive {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--theme-primary) !important;
+}
 
+[data-theme="light"] .toggleButtonActive:hover,
+[data-theme="light"] .buttonActive:hover {
+  background: var(--theme-primary-hover) !important;
+}
+
+/* 세그먼트 토글(공통/모듈) 활성 보정 - 클래스명이 다를 수 있어 포괄 대응 */
+[data-theme="light"] .toggleButton.active,
+[data-theme="light"] .toggleButtonGroup .toggleButton.active,
+[data-theme="light"] .toggleButtonGroup .toggleButtonActive,
+[data-theme="light"] .toggleButtonActive {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--theme-primary) !important;
+}
+
+[data-theme="light"] .toggleButton.active:hover,
+[data-theme="light"] .toggleButtonGroup .toggleButton.active:hover,
+[data-theme="light"] .toggleButtonGroup .toggleButtonActive:hover,
+[data-theme="light"] .toggleButtonActive:hover {
+  background: var(--theme-primary-hover) !important;
+}
 
 /* 로그인 폼 input 요소는 항상 light 모드 */
 [class*="loginForm"] input,

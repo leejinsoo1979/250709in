@@ -129,9 +129,9 @@
 }
 
 .toggleButton.active {
-  background: var(--theme-primary) !important;
-  color: white !important;
-  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
 }
 
 .numberInput {

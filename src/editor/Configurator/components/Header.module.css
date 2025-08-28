@@ -212,11 +212,11 @@
 }
 
 .convertButton {
-  background: var(--theme-primary) !important;
+  background: var(--theme-primary);
   border: none;
   border-radius: 6px;
   padding: 8px 20px;
-  color: white !important;
+  color: white;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -230,8 +230,7 @@
 }
 
 .convertButton:hover {
-  background: var(--theme-primary-hover) !important;
-  color: white !important;
+  background: var(--theme-primary-hover);
 }
 
 .logoutButton {
@@ -493,8 +492,8 @@
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  background: var(--theme-surface);
-  border: 1px solid var(--theme-border);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   min-width: 180px;
@@ -511,19 +510,18 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  color: var(--theme-text);
+  color: #374151;
   display: flex;
   align-items: center;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 .dropdownMenu .dropdownItem:hover {
-  background-color: var(--theme-primary-light);
-  color: var(--theme-primary);
+  background-color: #f3f4f6;
 }
 
 .dropdownMenu .dropdownItem:not(:last-child) {
-  border-bottom: 1px solid var(--theme-border);
+  border-bottom: 1px solid #f3f4f6;
 }
 
 @media (max-width: 768px) {
