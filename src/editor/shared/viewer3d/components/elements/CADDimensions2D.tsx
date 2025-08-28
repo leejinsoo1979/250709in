@@ -1005,11 +1005,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               
               {/* 치수 텍스트 */}
               <Html
-                position={[centerX, dimY + mmToThreeUnits(30), 0.01]}
+                position={[centerX, dimY + mmToThreeUnits(30), 1]}
                 center
                 transform={false}
                 occlude={false}
-                zIndexRange={[1000, 1001]}
+                zIndexRange={[5000, 5001]}
               >
                 <div
                   style={{
@@ -1023,7 +1023,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     fontFamily: 'monospace',
                     whiteSpace: 'nowrap',
                     userSelect: 'none',
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    zIndex: 5000
                   }}
                 >
                   {Math.round(columnWidth)}mm
