@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getModuleById } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import FurnitureInfoModal from './FurnitureInfoModal';
+import { Module, PlacedModule } from '@/types/module';
 import styles from './PlacedFurnitureList.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -27,6 +29,11 @@ const PlacedFurnitureList: React.FC = () => {
   const removeModule = useFurnitureStore(state => state.removeModule);
   const selectedPlacedModuleId = useFurnitureStore(state => state.selectedPlacedModuleId);
   const setSelectedPlacedModuleId = useFurnitureStore(state => state.setSelectedPlacedModuleId);
+  
+  // 팝업 상태 관리
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedModuleData, setSelectedModuleData] = useState<Module | null>(null);
+  const [selectedPlacedModule, setSelectedPlacedModule] = useState<PlacedModule | null>(null);
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -77,11 +84,19 @@ const PlacedFurnitureList: React.FC = () => {
           const baseModuleType = placedModule.moduleId.replace(/-\d+$/, '');
           const iconPath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
           
+          // 가구 클릭 시 팝업 열기
+          const handleItemClick = () => {
+            setSelectedModuleData(moduleData);
+            setSelectedPlacedModule(placedModule);
+            setIsModalOpen(true);
+            setSelectedPlacedModuleId(placedModule.moduleId);
+          };
+          
           return (
             <div 
               key={placedModule.id}
               className={`${styles.itemContainer} ${isSelected ? styles.selected : ''}`}
-              onClick={() => setSelectedPlacedModuleId(isSelected ? null : placedModule.moduleId)}
+              onClick={handleItemClick}
             >
               <div className={styles.previewContainer}>
                 <img 
@@ -123,6 +138,14 @@ const PlacedFurnitureList: React.FC = () => {
           );
         })}
       </div>
+      
+      {/* 가구 정보 팝업 */}
+      <FurnitureInfoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        moduleData={selectedModuleData}
+        placedModule={selectedPlacedModule}
+      />
     </div>
   );
 };
