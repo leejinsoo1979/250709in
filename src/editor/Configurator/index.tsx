@@ -104,7 +104,8 @@ const Configurator: React.FC = () => {
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   // URL 파라미터에서 도면 편집기 상태 확인
   const showDrawingEditor = searchParams.get('editor') === 'drawing';
-  const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // PDF 미리보기 상태
+  const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // 도면 편집기 상태
+  const [showPDFDownloadModal, setShowPDFDownloadModal] = useState(false); // PDF 다운로드 모달 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -1856,17 +1857,17 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // PDF 내보내기 핸들러 - PDF 템플릿 선택 팝업 열기
+  // PDF 내보내기 핸들러 - PDF 다운로드 모달 열기
   const handleExportPDF = () => {
-    console.log('📄 PDF 템플릿 선택 팝업 열기...');
+    console.log('📄 PDF 다운로드 모달 열기...');
     
     if (!spaceInfo) {
       alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
       return;
     }
 
-    // PDF 템플릿 선택 팝업만 열기 (URL 파라미터는 추가하지 않음)
-    setShowPDFPreview(true);
+    // PDF 다운로드 모달 열기
+    setShowPDFDownloadModal(true);
   };
 
   // 개발 및 테스트를 위한 함수들을 window에 노출
@@ -2982,6 +2983,12 @@ const Configurator: React.FC = () => {
           setShowPDFPreview(false);
         }}
         capturedViews={capturedViews}
+      />
+      
+      {/* PDF 다운로드 모달 */}
+      <PDFDownloadModal
+        isOpen={showPDFDownloadModal}
+        onClose={() => setShowPDFDownloadModal(false)}
       />
 
     </div>
