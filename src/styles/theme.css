@@ -133,14 +133,14 @@ h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select {
   background-color: var(--theme-surface);
 }
 
-/* 버튼 기본 스타일 */
-button {
+/* 버튼 기본 스타일 - 컴포넌트 자체 스타일이 없는 경우만 적용 */
+button:not([class]) {
   background-color: var(--theme-surface);
   color: var(--theme-text);
   border: 1px solid var(--theme-border);
 }
 
-button:hover {
+button:not([class]):hover {
   background-color: var(--theme-background-secondary);
   border-color: var(--theme-primary);
 }
@@ -158,18 +158,8 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
-/* 라이트 테마 영역에서는 버튼/인풋을 확실히 라이트 톤으로 고정 */
-/* 활성화 버튼은 제외하고 일반 버튼만 스타일 적용 */
-[data-theme="light"] button:not(.active):not([class*="Active"]):not([class*="selected"]) {
-  background-color: #ffffff;
-  color: #111827;
-  border-color: #e5e7eb;
-}
-
-[data-theme="light"] button:not(.active):not([class*="Active"]):not([class*="selected"]):hover {
-  background-color: #f3f4f6;
-  border-color: var(--theme-primary);
-}
+/* 라이트 테마 영역에서 기본 버튼 스타일 - 모듈 CSS가 우선되도록 specificity 낮춤 */
+/* ViewerControls 등 특정 컴포넌트는 자체 스타일 유지 */
 
 [data-theme="light"] input,
 [data-theme="light"] textarea,
