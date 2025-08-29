@@ -125,14 +125,20 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간에 들어가면 무조건 경계에 스냅
-      if (xPosition < boundaryX && xPosition > droppedStartX) {
-        // 단내림 구간 안에 있음 - 무조건 경계에 붙임
+      // 단내림 구간에 있으면 무조건 경계에 스냅 (완전 강제)
+      // 기둥 중심이 단내림 구간 안에 있는지 확인
+      const droppedZoneStart = droppedStartX;
+      const droppedZoneEnd = boundaryX;
+      
+      if (xPosition >= droppedZoneStart && xPosition <= droppedZoneEnd) {
+        // 단내림 구간 안에 있음 - 무조건 경계 끝에 붙임
         const newX = boundaryX - halfColumnWidth - safetyMargin;
-        console.log('🎯 단내림 구간 강제 스냅 - 무조건 경계에 붙임:', { 
+        console.log('🔥 단내림 구간 강제 스냅!!!:', { 
           boundaryX, 
           originalX: xPosition,
-          newX
+          newX,
+          droppedZoneStart,
+          droppedZoneEnd
         });
         return { adjusted: true, newX, zone: 'dropped' };
       }
@@ -203,14 +209,19 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간에 들어가면 무조건 경계에 스냅
-      if (xPosition > boundaryX && xPosition < droppedEndX) {
-        // 단내림 구간 안에 있음 - 무조건 경계에 붙임
+      // 단내림 구간에 있으면 무조건 경계에 스냅 (완전 강제)
+      const droppedZoneStart = boundaryX;
+      const droppedZoneEnd = droppedEndX;
+      
+      if (xPosition >= droppedZoneStart && xPosition <= droppedZoneEnd) {
+        // 단내림 구간 안에 있음 - 무조건 경계 끝에 붙임
         const newX = boundaryX + halfColumnWidth + safetyMargin;
-        console.log('🎯 단내림 구간 강제 스냅 - 무조건 경계에 붙임:', { 
+        console.log('🔥 단내림 구간 강제 스냅!!!:', { 
           boundaryX, 
           originalX: xPosition,
-          newX
+          newX,
+          droppedZoneStart,
+          droppedZoneEnd
         });
         return { adjusted: true, newX, zone: 'dropped' };
       }
