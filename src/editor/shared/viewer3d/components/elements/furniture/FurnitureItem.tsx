@@ -380,7 +380,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
   const columnSlots = React.useMemo(() => {
-    return analyzeColumnSlots(spaceInfo);
+    const slots = analyzeColumnSlots(spaceInfo);
+    
+    // 디버깅: 단내림이 있을 때 columnSlots 확인
+    if (spaceInfo.droppedCeiling?.enabled) {
+      console.log('🔍 [FurnitureItem] analyzeColumnSlots 결과 (단내림):', {
+        totalSlots: slots.length,
+        slotsWithColumns: slots.filter(s => s.hasColumn).map(s => ({
+          index: s.slotIndex,
+          columnType: s.columnType,
+          availableWidth: s.availableWidth
+        })),
+        columns: spaceInfo.columns?.map(c => ({
+          id: c.id,
+          position: c.position,
+          width: c.width
+        }))
+      });
+    }
+    
+    return slots;
   }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex]);
   
   // zone 로컬 인덱스를 전체 인덱스로 변환
@@ -478,6 +497,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
+  // 디버깅: 단내림 + 기둥 상황
+  if (spaceInfo.droppedCeiling?.enabled && slotInfo) {
+    console.log('🚨 [FurnitureItem] 단내림 + 슬롯 정보:', {
+      moduleId: placedModule.moduleId,
+      zone: placedModule.zone,
+      localSlotIndex: placedModule.slotIndex,
+      globalSlotIndex,
+      slotInfo: {
+        hasColumn: slotInfo.hasColumn,
+        columnType: slotInfo.columnType,
+        availableWidth: slotInfo.availableWidth,
+        adjustedWidth: slotInfo.adjustedWidth
+      },
+      indexingSlotWidths: indexing.slotWidths,
+      willShrink: slotInfo.hasColumn && slotInfo.availableWidth < (indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth)
+    });
+  }
+  
   // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만, 기둥 C가 아닐 때만)
   let actualModuleData = moduleData;
   if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC && moduleData) {
@@ -543,6 +580,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm);
+  } else if (slotInfo && slotInfo.hasColumn && slotInfo.availableWidth) {
+    // 기둥이 있는 슬롯은 availableWidth 사용
+    furnitureWidthMm = slotInfo.availableWidth;
+    console.log('📐 기둥 슬롯 - availableWidth 사용:', {
+      width: furnitureWidthMm,
+      slotIndex: globalSlotIndex,
+      zone: placedModule.zone,
+      hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
+    });
   } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex] !== undefined) {
     // 슬롯 너비를 우선적으로 사용 - 캐비넷은 슬롯에 정확히 맞춤
     if (isDualFurniture && placedModule.slotIndex < indexing.slotWidths.length - 1) {
