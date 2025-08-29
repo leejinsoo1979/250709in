@@ -12,7 +12,7 @@
 }
 
 .modal {
-  background-color: var(--bg-primary);
+  background-color: var(--theme-surface);
   border-radius: 16px;
   width: 90%;
   max-width: 800px;
@@ -20,8 +20,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 10px 40px #000000, 0 4px 16px #000000;
-  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--theme-border);
 }
 
 .header {
@@ -29,13 +29,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .header h2 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--theme-text);
   margin: 0;
 }
 
@@ -49,11 +49,11 @@
   justify-content: center;
   border-radius: 4px;
   transition: background-color 0.2s;
-  color: var(--text-secondary);
+  color: var(--theme-text-secondary);
 }
 
 .closeButton:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--theme-background-secondary);
 }
 
 .content {
@@ -85,7 +85,7 @@
 
 .optionButton:hover:not(:disabled) {
   border-color: var(--primary-color);
-  background: var(--bg-hover);
+  background: var(--theme-background-secondary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -115,13 +115,13 @@
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--theme-text);
 }
 
 .optionInfo p {
   margin: 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--theme-text-secondary);
 }
 
 .loading {

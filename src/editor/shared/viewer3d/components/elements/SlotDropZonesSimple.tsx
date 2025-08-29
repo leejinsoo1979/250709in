@@ -186,21 +186,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           hasNormal: !!zoneInfo?.normal
         });
         
-        // zoneInfo.dropped이 null인지 확인
-        if (!zoneInfo.dropped || !zoneInfo.normal) {
-          console.error('⚠️ Zone info is incomplete, using normal zone by default:', { 
-            dropped: zoneInfo.dropped, 
-            normal: zoneInfo.normal,
-            fullZoneInfo: zoneInfo,
-            spaceInfo: {
-              surroundType: spaceInfo.surroundType,
-              installType: spaceInfo.installType,
-              droppedCeiling: spaceInfo.droppedCeiling
-            }
-          });
-          // zone info가 불완전한 경우 normal 영역으로 폴백
-          zoneToUse = 'normal';
-        } else {
+        // zoneInfo는 항상 normal과 dropped를 반환하므로 바로 사용
+        if (zoneInfo && zoneInfo.normal && zoneInfo.dropped) {
           // Three.js 단위로 영역 경계 계산
           const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
           const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
@@ -240,6 +227,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             zoneToUse = 'normal';
             console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
           }
+        } else {
+          // zoneInfo가 없거나 불완전한 경우 (이 경우는 발생하지 않아야 함)
+          console.error('⚠️ Zone info is null or incomplete:', { 
+            zoneInfo,
+            spaceInfo: {
+              surroundType: spaceInfo.surroundType,
+              installType: spaceInfo.installType,
+              droppedCeiling: spaceInfo.droppedCeiling
+            }
+          });
+          zoneToUse = 'normal';
         }
       } catch (error) {
         console.error('❌ 자동 영역 판단 중 오류:', error);
@@ -293,14 +291,29 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           columnMode: 'custom' as const,
           zone: 'dropped' as const  // zone 정보 추가
         };
-        // calculateInternalSpace를 사용하여 정확한 내경 계산
-        zoneInternalSpace = calculateInternalSpace(droppedSpaceInfo);
-        // 단내림 구간은 높이가 낮음 - dropHeight만큼 차감
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        zoneInternalSpace.height = Math.max(zoneInternalSpace.height - dropHeight, 100); // 최소 100mm 보장
         
-        console.log('🔧 [SlotDropZonesSimple] 단내림 영역 내경 계산:', {
-          originalHeight: zoneInternalSpace.height + dropHeight,
+        console.log('🚨 [SlotDropZonesSimple] 단내림 영역 spaceInfo:', {
+          surroundType: droppedSpaceInfo.surroundType,
+          installType: droppedSpaceInfo.installType,
+          width: droppedSpaceInfo.width,
+          customColumnCount: droppedSpaceInfo.customColumnCount
+        });
+        
+        // zoneInfo에서 이미 계산된 정확한 내경 사용
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        zoneInternalSpace = {
+          width: zoneInfo.dropped.width, // zoneInfo에서 계산된 정확한 내부 너비 사용
+          height: spaceInfo.height - dropHeight,
+          depth: spaceInfo.depth,
+          startX: zoneInfo.dropped.startX, // zoneInfo에서 계산된 정확한 시작점 사용
+          startY: 0,
+          startZ: -(spaceInfo.depth / 2)
+        };
+        
+        console.log('🔧 [SlotDropZonesSimple] 단내림 영역 내경 (zoneInfo 사용):', {
+          width: zoneInternalSpace.width,
+          startX: zoneInternalSpace.startX,
+          originalHeight: spaceInfo.height,
           dropHeight,
           adjustedHeight: zoneInternalSpace.height,
           zone: 'dropped'
@@ -316,17 +329,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth)
         };
       } else {
-        // 메인 영역용 spaceInfo 생성 - 외경 너비 사용
-        const normalOuterWidth = spaceInfo.width - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
-        const normalSpaceInfo = {
-          ...spaceInfo,
-          width: normalOuterWidth,  // 외경 너비 사용
-          customColumnCount: zoneInfo.normal.columnCount,
-          columnMode: 'custom' as const,
-          zone: 'normal' as const  // zone 정보 추가
+        // 메인 영역용 - zoneInfo에서 이미 계산된 정확한 값 사용
+        zoneInternalSpace = {
+          width: zoneInfo.normal.width, // zoneInfo에서 계산된 정확한 내부 너비 사용
+          height: spaceInfo.height,
+          depth: spaceInfo.depth,
+          startX: zoneInfo.normal.startX, // zoneInfo에서 계산된 정확한 시작점 사용
+          startY: 0,
+          startZ: -(spaceInfo.depth / 2)
         };
-        // calculateInternalSpace를 사용하여 정확한 내경 계산
-        zoneInternalSpace = calculateInternalSpace(normalSpaceInfo);
+        
+        console.log('🔧 [SlotDropZonesSimple] 메인 영역 내경 (zoneInfo 사용):', {
+          width: zoneInternalSpace.width,
+          startX: zoneInternalSpace.startX,
+          height: zoneInternalSpace.height,
+          zone: 'normal'
+        });
         // zoneInfo에서 직접 columnWidth 사용
         zoneIndexing = {
           columnCount: zoneInfo.normal.columnCount,
