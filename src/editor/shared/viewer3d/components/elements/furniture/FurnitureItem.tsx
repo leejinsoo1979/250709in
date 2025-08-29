@@ -380,8 +380,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
   const columnSlots = React.useMemo(() => {
-    return analyzeColumnSlots(spaceInfo, placedModules);
-  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
+    return analyzeColumnSlots(spaceInfo);
+  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex]);
   
   // zone 로컬 인덱스를 전체 인덱스로 변환
   let globalSlotIndex = placedModule.slotIndex;
