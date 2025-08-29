@@ -61,11 +61,20 @@ const CNCOptimizer: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
   const { theme } = useTheme();
+  const { placedModules } = useFurnitureStore();
   
   // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
   const projectId = searchParams.get('projectId');
   const designFileId = searchParams.get('designFileId');
   const fromConfigurator = location.state?.fromConfigurator;
+  
+  // CNC 진입 시 가구 데이터를 sessionStorage에 저장
+  useEffect(() => {
+    if (placedModules && placedModules.length > 0) {
+      sessionStorage.setItem('cnc_furniture_backup', JSON.stringify(placedModules));
+      console.log('💾 CNC: 가구 데이터 백업 완료', placedModules.length, '개');
+    }
+  }, []);
   
   // Use live panel data hook for real-time synchronization
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();

@@ -82,7 +82,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, renderMode, setRenderMode } = useUIStore();
 
   // 내보내기 훅들
   const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
@@ -99,7 +99,7 @@ const Configurator: React.FC = () => {
   const resetUnsavedChangesRef = useRef<(() => void) | null>(null);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
-  const [renderMode, setRenderMode] = useState<RenderMode>('solid');
+  // renderMode도 이제 UIStore에서 가져옴
   const [showAll, setShowAll] = useState(true);
   const [showFurniture, setShowFurniture] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태

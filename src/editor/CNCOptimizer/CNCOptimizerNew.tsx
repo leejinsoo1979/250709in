@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { StockPanel, OptimizedResult } from './types';
 import { optimizePanelsMultiple } from './utils/optimizer';
 import { showToast } from '@/utils/cutlist/csv';
@@ -15,12 +16,21 @@ const CNCOptimizerNew: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
+  const { placedModules } = useFurnitureStore();
   
   // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
   const projectId = searchParams.get('projectId');
   const designFileId = searchParams.get('designFileId');
   const fromConfigurator = location.state?.fromConfigurator;
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
+  
+  // CNC 진입 시 가구 데이터를 sessionStorage에 저장
+  useEffect(() => {
+    if (placedModules && placedModules.length > 0) {
+      sessionStorage.setItem('cnc_furniture_backup', JSON.stringify(placedModules));
+      console.log('💾 CNC: 가구 데이터 백업 완료', placedModules.length, '개');
+    }
+  }, []);
   
   // State
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
