@@ -30,9 +30,9 @@ export class SpaceCalculator {
       let rightReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-        leftReduction = spaceInfo.gapConfig?.left || 2;
-        rightReduction = spaceInfo.gapConfig?.right || 2;
+        // 빌트인: 노서라운드 모드에서는 이격거리 무시 (벽에 바로 붙음)
+        leftReduction = 0;
+        rightReduction = 0;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
         if (spaceInfo.wallConfig?.left) {

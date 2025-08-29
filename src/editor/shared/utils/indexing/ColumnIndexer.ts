@@ -770,8 +770,8 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-        leftReduction = spaceInfo.gapConfig?.left || 2;
+        // 빌트인: 노서라운드 모드에서는 이격거리 무시
+        leftReduction = 0;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
