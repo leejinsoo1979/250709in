@@ -88,7 +88,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (viewMode === '3D') {
       return "#505050"; // 3D 모드에서는 회색 엣지
     } else if (renderMode === 'wireframe') {
-      return "#ff5500"; // 2D 와이어프레임에서는 주황색
+      return "#000000"; // 2D 와이어프레임에서는 검정색 (CAD 스타일)
     } else {
       // 2D 솔리드 모드
       if (view2DDirection === 'front') {

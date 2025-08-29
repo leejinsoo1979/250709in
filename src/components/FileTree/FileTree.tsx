@@ -465,14 +465,71 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
       if (designFile && actualDesignFileId) {
         console.log('디자인파일 로드 시작:', designFile.name, actualDesignFileId);
         
-        // URL 파라미터 업데이트하여 페이지 새로고침
-        const params = new URLSearchParams();
-        params.set('projectId', currentProject?.id || '');
-        params.set('designFileId', actualDesignFileId);
-        params.set('designFileName', encodeURIComponent(designFile.name));
-        
-        // 페이지 새로고침으로 디자인파일 로드
-        window.location.search = params.toString();
+        // Firebase에서 디자인파일 데이터 로드
+        try {
+          const { getDesignFileById } = await import('@/firebase/projects');
+          const { designFile: loadedDesign, error } = await getDesignFileById(actualDesignFileId);
+          
+          if (error) {
+            console.error('디자인파일 로드 에러:', error);
+            alert('디자인파일을 불러오는데 실패했습니다: ' + error);
+            return;
+          }
+          
+          if (loadedDesign) {
+            console.log('✅ 디자인파일 로드 성공:', loadedDesign.name);
+            
+            // Store에 직접 데이터 설정
+            const { useProjectStore } = await import('@/store/core/projectStore');
+            const { useSpaceConfigStore } = await import('@/store/core/spaceConfigStore');
+            const { useFurnitureStore } = await import('@/store/core/furnitureStore');
+            
+            // 프로젝트 정보 설정
+            useProjectStore.getState().setBasicInfo({
+              title: loadedDesign.name || '새 디자인',
+              location: ''
+            });
+            
+            // 공간 설정
+            const spaceConfig = { ...loadedDesign.spaceConfig };
+            if (spaceConfig.installType === 'built-in') {
+              spaceConfig.installType = 'builtin';
+            }
+            // columns와 rows가 숫자인 경우 빈 배열로 변환
+            if (typeof spaceConfig.columns === 'number') {
+              spaceConfig.columns = [];
+            }
+            if (typeof spaceConfig.rows === 'number') {
+              spaceConfig.rows = [];
+            }
+            useSpaceConfigStore.getState().setSpaceInfo(spaceConfig);
+            
+            // 가구 설정
+            if (loadedDesign.furniture?.placedModules) {
+              useFurnitureStore.getState().setPlacedModules(loadedDesign.furniture.placedModules);
+            } else {
+              useFurnitureStore.getState().setPlacedModules([]);
+            }
+            
+            // URL 업데이트 (새로고침 없이)
+            const params = new URLSearchParams();
+            params.set('projectId', currentProject?.id || '');
+            params.set('designFileId', actualDesignFileId);
+            params.set('designFileName', encodeURIComponent(designFile.name));
+            
+            // URL 변경
+            window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+            
+            // FileTree 상태 업데이트
+            setCurrentWorkingFile(designFile.name);
+            setSelectedFile(nodeId);
+            
+            console.log('✅ 디자인파일 전환 완료');
+          }
+        } catch (error) {
+          console.error('디자인파일 로드 중 오류:', error);
+          alert('디자인파일 로드 중 오류가 발생했습니다.');
+        }
       } else {
         console.error('디자인파일을 찾을 수 없습니다:', nodeId);
         alert('디자인파일을 찾을 수 없습니다.');
