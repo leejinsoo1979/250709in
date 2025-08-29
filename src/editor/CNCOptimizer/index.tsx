@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Package, Layers, Zap, Eye, Download, Plus, Edit2, Trash2, Grid3x3, Filter, Settings, FileDown, FileSpreadsheet, Wifi, WifiOff } from 'lucide-react';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -57,8 +57,13 @@ const getMaterialName = (material: string): string => {
 
 const CNCOptimizer: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
   const { theme } = useTheme();
+  
+  // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
+  const projectId = searchParams.get('projectId');
+  const designFileId = searchParams.get('designFileId');
   
   // Use live panel data hook for real-time synchronization
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
@@ -282,7 +287,14 @@ const CNCOptimizer: React.FC = () => {
         <div className={styles.headerLeft}>
           <button 
             className={styles.backButton}
-            onClick={() => navigate('/configurator')}
+            onClick={() => {
+              // URL 파라미터를 포함하여 Configurator로 돌아가기
+              const params = new URLSearchParams();
+              if (projectId) params.set('projectId', projectId);
+              if (designFileId) params.set('designFileId', designFileId);
+              const queryString = params.toString();
+              navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
+            }}
           >
             <ArrowLeft size={18} />
             <span>돌아가기</span>

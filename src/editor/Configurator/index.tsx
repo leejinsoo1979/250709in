@@ -1827,34 +1827,17 @@ const Configurator: React.FC = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
 
-  // DXF 내보내기 핸들러 - 다중 뷰 ZIP 파일 생성
-  const handleExportDXF = async () => {
-    console.log('🔧 DXF ZIP 내보내기 시작...');
-    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
-
+  // DXF 내보내기 핸들러 - ConvertModal 열기 (DXF 탭 선택)
+  const handleExportDXF = () => {
+    console.log('📐 DXF 내보내기 팝업 열기...');
+    
     if (!spaceInfo) {
       alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
       return;
     }
 
-    try {
-      // 2D 와이어프레임 도면 - 3개 시점 (정면도, 평면도, 측면도)
-      const drawingTypes = ['front', 'plan', 'side'] as const;
-      console.log('📐 생성할 도면:', drawingTypes.join(', '));
-      
-      const result = await exportToZIP(spaceInfo, placedModules, drawingTypes);
-      
-      if (result.success) {
-        console.log('✅ DXF ZIP 내보내기 성공:', result.filename);
-        alert(`✅ ${result.message}\n\n포함된 도면:\n- 정면도 (Front Elevation)\n- 평면도 (Plan View)\n- 측면도 (Side Section)\n\n파일명: ${result.filename}`);
-      } else {
-        console.error('❌ DXF ZIP 내보내기 실패:', result.error);
-        alert(`❌ ${result.message}`);
-      }
-    } catch (error) {
-      console.error('❌ DXF ZIP 내보내기 예외:', error);
-      alert('DXF ZIP 내보내기 중 오류가 발생했습니다: ' + error.message);
-    }
+    // ConvertModal 열기 (통합된 내보내기 팝업)
+    setIsConvertPanelOpen(true);
   };
 
   // PDF 내보내기 핸들러 - ConvertModal 열기
@@ -2704,6 +2687,8 @@ const Configurator: React.FC = () => {
         title={currentDesignFileName || basicInfo.title || "새로운 디자인"}
         projectName={basicInfo.title || "새로운 프로젝트"}
         designFileName={currentDesignFileName}
+        projectId={currentProjectId}
+        designFileId={currentDesignFileId}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}

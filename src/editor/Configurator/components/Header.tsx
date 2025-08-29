@@ -13,6 +13,8 @@ interface HeaderProps {
   title: string;
   projectName?: string; // 프로젝트명 추가
   designFileName?: string; // 디자인 파일명 추가
+  projectId?: string | null; // 프로젝트 ID 추가
+  designFileId?: string | null; // 디자인 파일 ID 추가
   onSave: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
@@ -33,15 +35,16 @@ interface HeaderProps {
   // 햄버거 메뉴 관련 props 추가
   onFileTreeToggle?: () => void;
   isFileTreeOpen?: boolean;
-  // 내보내기 관련 props 추가
-  onExportDXF?: () => void;
-  onExportPDF?: () => void;
+  // 내보내기 관련 props
+  onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
 }
 
 const Header: React.FC<HeaderProps> = ({
   title,
   projectName,
   designFileName,
+  projectId,
+  designFileId,
   onSave,
   onPrevious,
   onNext,
@@ -59,7 +62,6 @@ const Header: React.FC<HeaderProps> = ({
   onDesignFileChange,
   onFileTreeToggle,
   isFileTreeOpen,
-  onExportDXF,
   onExportPDF
 }) => {
   const { user } = useAuth();
@@ -73,11 +75,9 @@ const Header: React.FC<HeaderProps> = ({
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
-  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -165,19 +165,16 @@ const Header: React.FC<HeaderProps> = ({
       if (convertMenuRef.current && !convertMenuRef.current.contains(event.target as Node)) {
         setIsConvertMenuOpen(false);
       }
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setIsExportMenuOpen(false);
-      }
     };
 
-    if (isConvertMenuOpen || isExportMenuOpen) {
+    if (isConvertMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isConvertMenuOpen, isExportMenuOpen]);
+  }, [isConvertMenuOpen]);
 
   return (
     <header className={styles.header}>
@@ -337,65 +334,21 @@ const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* 내보내기 버튼 */}
-          {(onExportDXF || onExportPDF) && (
-            <div className={styles.convertButtonContainer} ref={exportMenuRef}>
-              <button 
-                className={styles.convertButton} 
-                onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '4px' }}>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                {t('export.title')}
-                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
-              </button>
-              
-              {isExportMenuOpen && (
-                <div className={styles.dropdownMenu}>
-                  {onExportDXF && (
-                    <button 
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        console.log('DXF 내보내기 버튼 클릭됨');
-                        onExportDXF();
-                        setIsExportMenuOpen(false);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                        <path d="M16 22H8c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2z" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="0.8" fill="none"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="0.8"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="0.8"/>
-                        <circle cx="18" cy="6" r="3" stroke="currentColor" strokeWidth="1" fill="none"/>
-                        <path d="M16.5 6.5L19.5 6.5M18 5L18 8" stroke="currentColor" strokeWidth="1"/>
-                      </svg>
-                      DXF ZIP (3개 뷰)
-                    </button>
-                  )}
-                  
-                  {onExportPDF && (
-                    <button 
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        console.log('PDF 내보내기 버튼 클릭됨');
-                        onExportPDF();
-                        setIsExportMenuOpen(false);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                        <line x1="4" y1="9" x2="20" y2="9" stroke="currentColor" strokeWidth="1.5"/>
-                        <line x1="9" y1="4" x2="9" y2="20" stroke="currentColor" strokeWidth="1.5"/>
-                        <rect x="11" y="11" width="7" height="7" stroke="currentColor" strokeWidth="1.5"/>
-                      </svg>
-                      {t('export.pdf')}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+          {onExportPDF && (
+            <button 
+              className={styles.convertButton} 
+              onClick={() => {
+                console.log('내보내기 버튼 클릭됨');
+                onExportPDF(); // PDF 핸들러가 실제로는 ConvertModal을 열어줌
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '4px' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2"/>
+                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              {t('export.title')}
+            </button>
           )}
 
           {/* CNC 옵티마이저 버튼 */}
@@ -414,7 +367,12 @@ const Header: React.FC<HeaderProps> = ({
                   className={styles.dropdownItem}
                   onClick={() => {
                     console.log('CNC 옵티마이저 버튼 클릭됨');
-                    navigate('/cnc-optimizer');
+                    // 프로젝트 ID와 디자인 파일 ID를 URL 파라미터로 전달
+                    const params = new URLSearchParams();
+                    if (projectId) params.set('projectId', projectId);
+                    if (designFileId) params.set('designFileId', designFileId);
+                    const queryString = params.toString();
+                    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`);
                     setIsConvertMenuOpen(false);
                   }}
                 >

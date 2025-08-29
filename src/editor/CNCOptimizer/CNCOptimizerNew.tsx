@@ -8,11 +8,16 @@ import { exportCutList } from '@/utils/cutlist/export';
 import CuttingLayoutPreview from './components/CuttingLayoutPreview';
 import styles from './CNCOptimizerNew.module.css';
 import { ArrowLeft, Package, Settings, FileDown, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const CNCOptimizerNew: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
+  
+  // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
+  const projectId = searchParams.get('projectId');
+  const designFileId = searchParams.get('designFileId');
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
   
   // State
