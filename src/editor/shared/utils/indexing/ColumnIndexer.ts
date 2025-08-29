@@ -597,7 +597,13 @@ export class ColumnIndexer {
     const frameThickness = calculateFrameThickness(spaceInfo);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
-    if (!spaceInfo.droppedCeiling?.enabled) {
+    // droppedCeiling 체크를 더 엄격하게
+    const isDroppedCeilingEnabled = spaceInfo.droppedCeiling && 
+                                    spaceInfo.droppedCeiling.enabled === true &&
+                                    spaceInfo.droppedCeiling.width && 
+                                    spaceInfo.droppedCeiling.width > 0;
+    
+    if (!isDroppedCeilingEnabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
       let columnCount: number;
@@ -779,6 +785,15 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+    
+    console.log('🔍🔍 [calculateZoneSlotInfo] 단내림 활성화 처리:', {
+      totalWidth,
+      droppedWidth,
+      droppedPosition,
+      droppedCeilingData: spaceInfo.droppedCeiling,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType
+    });
     
     // 전체 내부 너비 (프레임 제외)
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);

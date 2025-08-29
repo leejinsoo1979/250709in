@@ -46,6 +46,7 @@ import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
+import PDFDownloadModal from './components/PDFDownloadModal';
 
 import { 
   WidthControl,
@@ -1864,13 +1865,8 @@ const Configurator: React.FC = () => {
       return;
     }
 
-    // PDF 템플릿 선택 팝업 열기
+    // PDF 템플릿 선택 팝업만 열기 (URL 파라미터는 추가하지 않음)
     setShowPDFPreview(true);
-    
-    // URL에 editor=drawing 파라미터 추가
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.set('editor', 'drawing');
-    window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
   };
 
   // 개발 및 테스트를 위한 함수들을 window에 노출
