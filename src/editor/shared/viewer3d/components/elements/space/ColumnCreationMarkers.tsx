@@ -83,7 +83,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const spaceLeftEnd = -(spaceInfo.width / 100) / 2;
     const spaceRightEnd = (spaceInfo.width / 100) / 2;
 
-    // 기둥의 왼쪽과 오른쪽 경계
+    // 기둥의 왼쪽과 오른쪽 경계 (정확한 계산)
     const columnLeft = xPosition - halfColumnWidth;
     const columnRight = xPosition + halfColumnWidth;
 
@@ -93,21 +93,34 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       const boundaryX = droppedEndX;
       
       // 무조건 경계를 걸치지 않도록 강제 조정
-      // 기둥이 경계를 걸치는지 확인 (아주 작은 여유도 없이 엄격하게)
-      const epsilon = 0.001; // 매우 작은 오차 허용
+      // 아주 엄격한 체크 - 기둥의 어느 부분도 경계를 넘지 못하게
+      const safetyMargin = 0.01; // 안전 여유 (1mm)
       
-      if (columnLeft < boundaryX + epsilon && columnRight > boundaryX - epsilon) {
+      // 기둥이 경계를 걸치는지 매우 엄격하게 확인
+      if (columnLeft <= boundaryX + safetyMargin && columnRight >= boundaryX - safetyMargin) {
         // 경계를 걸치고 있음 - 즉시 조정
-        // 중심이 어느 쪽에 더 가까운지로 결정
-        if (xPosition <= boundaryX) {
-          // 단내림 구간으로 강제 이동 - 기둥 오른쪽이 경계에 딱 붙음
-          const newX = boundaryX - halfColumnWidth;
-          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { boundaryX, newX });
+        // 기둥 중심이 경계보다 왼쪽에 있으면 단내림 구간으로
+        if (xPosition < boundaryX) {
+          // 단내림 구간으로 강제 이동 - 기둥 오른쪽이 경계에서 안전 여유만큼 떨어짐
+          const newX = boundaryX - halfColumnWidth - safetyMargin;
+          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { 
+            boundaryX, 
+            originalX: xPosition,
+            newX,
+            columnLeft: newX - halfColumnWidth,
+            columnRight: newX + halfColumnWidth
+          });
           return { adjusted: true, newX, zone: 'dropped' };
         } else {
-          // 일반 구간으로 강제 이동 - 기둥 왼쪽이 경계에 딱 붙음
-          const newX = boundaryX + halfColumnWidth;
-          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { boundaryX, newX });
+          // 일반 구간으로 강제 이동 - 기둥 왼쪽이 경계에서 안전 여유만큼 떨어짐
+          const newX = boundaryX + halfColumnWidth + safetyMargin;
+          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { 
+            boundaryX, 
+            originalX: xPosition,
+            newX,
+            columnLeft: newX - halfColumnWidth,
+            columnRight: newX + halfColumnWidth
+          });
           return { adjusted: true, newX, zone: 'normal' };
         }
       }
@@ -148,19 +161,32 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       const boundaryX = normalEndX;
       
       // 무조건 경계를 걸치지 않도록 강제 조정
-      const epsilon = 0.001;
+      const safetyMargin = 0.01; // 안전 여유 (1mm)
       
-      if (columnLeft < boundaryX + epsilon && columnRight > boundaryX - epsilon) {
+      // 기둥이 경계를 걸치는지 매우 엄격하게 확인
+      if (columnLeft <= boundaryX + safetyMargin && columnRight >= boundaryX - safetyMargin) {
         // 경계를 걸치고 있음 - 즉시 조정
-        if (xPosition <= boundaryX) {
-          // 일반 구간으로 강제 이동 - 기둥 오른쪽이 경계에 딱 붙음
-          const newX = boundaryX - halfColumnWidth;
-          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { boundaryX, newX });
+        if (xPosition < boundaryX) {
+          // 일반 구간으로 강제 이동 - 기둥 오른쪽이 경계에서 안전 여유만큼 떨어짐
+          const newX = boundaryX - halfColumnWidth - safetyMargin;
+          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { 
+            boundaryX, 
+            originalX: xPosition,
+            newX,
+            columnLeft: newX - halfColumnWidth,
+            columnRight: newX + halfColumnWidth
+          });
           return { adjusted: true, newX, zone: 'normal' };
         } else {
-          // 단내림 구간으로 강제 이동 - 기둥 왼쪽이 경계에 딱 붙음
-          const newX = boundaryX + halfColumnWidth;
-          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { boundaryX, newX });
+          // 단내림 구간으로 강제 이동 - 기둥 왼쪽이 경계에서 안전 여유만큼 떨어짐
+          const newX = boundaryX + halfColumnWidth + safetyMargin;
+          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { 
+            boundaryX, 
+            originalX: xPosition,
+            newX,
+            columnLeft: newX - halfColumnWidth,
+            columnRight: newX + halfColumnWidth
+          });
           return { adjusted: true, newX, zone: 'dropped' };
         }
       }
@@ -311,16 +337,22 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         
         let newPosition: [number, number, number] = [boundedX, 0, zPosition];
         
-        // 1. 먼저 단내림 구간 경계 체크 (최우선 순위)
-        const boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
-        if (boundaryCheck.adjusted) {
+        // 1. 먼저 단내림 구간 경계 체크 (최우선 순위) - 반복 체크로 확실하게
+        let boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
+        let maxIterations = 10; // 최대 10번 반복해서 경계 걸침을 완전히 제거
+        while (boundaryCheck.adjusted && maxIterations > 0) {
           newPosition[0] = boundaryCheck.newX;
           setIsSnapped(true);
-        } else {
-          // 2. 경계 스냅이 없을 때만 기존 기둥에 스냅
+          // 조정 후 다시 체크 (확실히 경계를 걸치지 않도록)
+          boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
+          maxIterations--;
+        }
+        
+        // 2. 경계 스냅이 없을 때만 기존 기둥에 스냅
+        if (!isSnapped) {
           const originalX = newPosition[0];
           newPosition = snapToNearestColumn(newPosition);
-          const snapped = Math.abs(originalX - newPosition[0]) > 0.01; // 스냅되었는지 확인
+          const snapped = Math.abs(originalX - newPosition[0]) > 0.01;
           setIsSnapped(snapped);
         }
         
