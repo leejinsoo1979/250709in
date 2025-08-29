@@ -249,26 +249,193 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     }));
   },
 
-  // 모듈 이동 함수 (기존 Context 로직과 동일)
+  // 모듈 이동 함수 - 충돌 감지 추가
   moveModule: (id: string, position: { x: number; y: number; z: number }) => {
+    const currentState = get();
+    const movingModule = currentState.placedModules.find(m => m.id === id);
+    
+    if (!movingModule) {
+      console.error('이동할 가구를 찾을 수 없습니다:', id);
+      return;
+    }
+    
+    // position으로부터 slotIndex 계산
+    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    let newSlotIndex = movingModule.slotIndex;
+    
+    if (indexing && indexing.threeUnitPositions) {
+      let minDistance = Infinity;
+      let closestSlot = 0;
+      
+      for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+        const distance = Math.abs(position.x - indexing.threeUnitPositions[i]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestSlot = i;
+        }
+      }
+      
+      newSlotIndex = closestSlot;
+    }
+    
+    // 충돌 검사 (자기 자신 제외)
+    const hasConflict = currentState.placedModules.some(existing => {
+      if (existing.id === id) return false; // 자기 자신은 제외
+      
+      let existingSlotIndex = existing.slotIndex;
+      
+      // 기존 가구의 slotIndex가 없으면 position으로 계산
+      if (existingSlotIndex === undefined || existingSlotIndex === null) {
+        if (indexing && indexing.threeUnitPositions) {
+          let minDistance = Infinity;
+          let closestSlot = 0;
+          
+          for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+            const distance = Math.abs(existing.position.x - indexing.threeUnitPositions[i]);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestSlot = i;
+            }
+          }
+          
+          existingSlotIndex = closestSlot;
+        }
+      }
+      
+      // zone 체크
+      if (movingModule.zone !== undefined && existing.zone !== undefined && movingModule.zone !== existing.zone) {
+        return false;
+      }
+      
+      // 슬롯 충돌 검사
+      if (movingModule.isDualSlot) {
+        return (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
+               (existing.isDualSlot && (existingSlotIndex + 1 === newSlotIndex || existingSlotIndex + 1 === newSlotIndex + 1));
+      } else {
+        return existingSlotIndex === newSlotIndex ||
+               (existing.isDualSlot && existingSlotIndex + 1 === newSlotIndex);
+      }
+    });
+    
+    if (hasConflict) {
+      console.error('🚫 이동 위치에 이미 가구가 있습니다!');
+      alert(`⚠️ 슬롯 ${newSlotIndex + 1}에 이미 가구가 있습니다!`);
+      return;
+    }
+    
+    // 충돌이 없으면 이동
     set((state) => ({
       placedModules: state.placedModules.map(module => 
         module.id === id 
-          ? { ...module, position } 
+          ? { ...module, position, slotIndex: newSlotIndex } 
           : module
       )
     }));
   },
 
-  // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
+  // 배치된 모듈 속성 업데이트 함수 - 충돌 감지 추가
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
     console.log('📦 updatePlacedModule 호출:', {
       id,
       updates,
       hasPosition: !!updates.position,
-      position: updates.position
+      position: updates.position,
+      hasSlotIndex: updates.slotIndex !== undefined
     });
     
+    // position이나 slotIndex가 변경되는 경우 충돌 검사
+    if (updates.position || updates.slotIndex !== undefined) {
+      const currentState = get();
+      const updatingModule = currentState.placedModules.find(m => m.id === id);
+      
+      if (!updatingModule) {
+        console.error('업데이트할 가구를 찾을 수 없습니다:', id);
+        return;
+      }
+      
+      // 새로운 slotIndex 결정
+      let newSlotIndex = updates.slotIndex;
+      
+      // slotIndex가 없고 position이 있으면 계산
+      if (newSlotIndex === undefined && updates.position) {
+        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        if (indexing && indexing.threeUnitPositions) {
+          let minDistance = Infinity;
+          let closestSlot = 0;
+          
+          for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+            const distance = Math.abs(updates.position.x - indexing.threeUnitPositions[i]);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestSlot = i;
+            }
+          }
+          
+          newSlotIndex = closestSlot;
+        }
+      }
+      
+      // slotIndex가 변경되는 경우에만 충돌 검사
+      if (newSlotIndex !== undefined && newSlotIndex !== updatingModule.slotIndex) {
+        const mergedModule = { ...updatingModule, ...updates, slotIndex: newSlotIndex };
+        
+        const hasConflict = currentState.placedModules.some(existing => {
+          if (existing.id === id) return false; // 자기 자신은 제외
+          
+          let existingSlotIndex = existing.slotIndex;
+          
+          // 기존 가구의 slotIndex가 없으면 position으로 계산
+          if (existingSlotIndex === undefined || existingSlotIndex === null) {
+            const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+            const indexing = calculateSpaceIndexing(spaceInfo);
+            
+            if (indexing && indexing.threeUnitPositions) {
+              let minDistance = Infinity;
+              let closestSlot = 0;
+              
+              for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+                const distance = Math.abs(existing.position.x - indexing.threeUnitPositions[i]);
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  closestSlot = i;
+                }
+              }
+              
+              existingSlotIndex = closestSlot;
+            }
+          }
+          
+          // zone 체크
+          const moduleZone = mergedModule.zone;
+          if (moduleZone !== undefined && existing.zone !== undefined && moduleZone !== existing.zone) {
+            return false;
+          }
+          
+          // 슬롯 충돌 검사
+          if (mergedModule.isDualSlot) {
+            return (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
+                   (existing.isDualSlot && (existingSlotIndex + 1 === newSlotIndex || existingSlotIndex + 1 === newSlotIndex + 1));
+          } else {
+            return existingSlotIndex === newSlotIndex ||
+                   (existing.isDualSlot && existingSlotIndex + 1 === newSlotIndex);
+          }
+        });
+        
+        if (hasConflict) {
+          console.error('🚫 업데이트 위치에 이미 가구가 있습니다!');
+          alert(`⚠️ 슬롯 ${newSlotIndex + 1}에 이미 가구가 있습니다!`);
+          return;
+        }
+        
+        // slotIndex를 updates에 추가
+        updates = { ...updates, slotIndex: newSlotIndex };
+      }
+    }
+    
+    // 충돌이 없으면 업데이트
     set((state) => ({
       placedModules: state.placedModules.map(module => 
         module.id === id 
