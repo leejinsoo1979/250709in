@@ -239,8 +239,51 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const normalizedX = (x / rect.width) * 2 - 1;
       const worldX = normalizedX * spaceWidthHalf;
       
-      // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정
-      const newX = Math.max(minX, Math.min(maxX, worldX));
+      // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정  
+      let newX = Math.max(minX, Math.min(maxX, worldX));
+      
+      // 다른 기둥에 밀착되도록 스냅 (뛰어넘기 방지)
+      const columns = spaceConfig.spaceInfo.columns || [];
+      const columnWidthInThreeUnits = width * 0.01; // mm to three units
+      const snapThreshold = columnWidthInThreeUnits * 0.3; // 30% 이내에서 스냅
+      const epsilon = 0.001; // 부동소수점 오차 허용치
+      
+      for (const column of columns) {
+        if (column.id === id || !column.position) continue; // 자기 자신은 제외
+        
+        const otherX = column.position[0];
+        const otherLeft = otherX - columnWidthInThreeUnits / 2;
+        const otherRight = otherX + columnWidthInThreeUnits / 2;
+        
+        // 현재 기둥의 왼쪽과 오른쪽 경계
+        const currentLeft = newX - columnWidthInThreeUnits / 2;
+        const currentRight = newX + columnWidthInThreeUnits / 2;
+        
+        // 겹침 감지 및 스냅
+        if (currentLeft < otherRight + epsilon && currentRight > otherLeft - epsilon) {
+          // 겹치려고 하는 경우
+          if (newX > otherX) {
+            // 오른쪽으로 밀착
+            newX = otherX + columnWidthInThreeUnits;
+          } else {
+            // 왼쪽으로 밀착
+            newX = otherX - columnWidthInThreeUnits;
+          }
+        } else {
+          // 겹치지 않는 경우 가까우면 스냅
+          const distToLeft = Math.abs(newX - (otherX - columnWidthInThreeUnits));
+          const distToRight = Math.abs(newX - (otherX + columnWidthInThreeUnits));
+          
+          if (distToLeft < snapThreshold) {
+            newX = otherX - columnWidthInThreeUnits;
+          } else if (distToRight < snapThreshold) {
+            newX = otherX + columnWidthInThreeUnits;
+          }
+        }
+      }
+      
+      // 공간 범위 내로 제한
+      newX = Math.max(minX, Math.min(maxX, newX));
       
       // 임시 위치 업데이트
       tempPositionRef.current = [newX, position[1], position[2]];

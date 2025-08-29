@@ -56,39 +56,80 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return false; // 겹치지 않음
   };
 
-  // 기둥 위치를 가장 가까운 기둥에 스냅하는 함수
+  // 기둥 위치를 가장 가까운 기둥에 스냅하는 함수 (뛰어넘기 방지)
   const snapToNearestColumn = (position: [number, number, number]): [number, number, number] => {
     const existingColumns = storeSpaceInfo?.columns || [];
     const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
     const snapThreshold = columnWidthInThreeUnits * 0.3; // 스냅 임계값 (30% 이내에서만 스냅)
     
     let snappedX = position[0];
-    let closestDistance = Infinity;
-    let closestColumn = null;
+    let shouldSnap = false;
     
-    // 가장 가까운 기둥 찾기
+    // 모든 기둥에 대해 검사
     for (const column of existingColumns) {
       if (!column.position) continue;
       
-      // 왼쪽에 붙을 위치와 오른쪽에 붙을 위치 계산
-      const leftSnapX = column.position[0] - columnWidthInThreeUnits;
-      const rightSnapX = column.position[0] + columnWidthInThreeUnits;
+      const columnX = column.position[0];
+      const columnLeft = columnX - columnWidthInThreeUnits / 2;
+      const columnRight = columnX + columnWidthInThreeUnits / 2;
       
-      const distToLeft = Math.abs(position[0] - leftSnapX);
-      const distToRight = Math.abs(position[0] - rightSnapX);
+      // 현재 위치가 기둥과 겹치려고 하는지 확인
+      const mouseLeft = position[0] - columnWidthInThreeUnits / 2;
+      const mouseRight = position[0] + columnWidthInThreeUnits / 2;
       
-      // 왼쪽 스냅 체크
-      if (distToLeft < snapThreshold && distToLeft < closestDistance) {
-        closestDistance = distToLeft;
-        snappedX = leftSnapX;
-        closestColumn = column;
+      // 겹침 감지
+      if ((mouseLeft < columnRight && mouseRight > columnLeft)) {
+        // 겹치는 경우, 가장 가까운 쪽으로 밀착
+        if (position[0] > columnX) {
+          // 오른쪽으로 밀착
+          const rightEdge = columnX + columnWidthInThreeUnits;
+          if (Math.abs(position[0] - rightEdge) < snapThreshold) {
+            snappedX = rightEdge;
+            shouldSnap = true;
+          }
+        } else {
+          // 왼쪽으로 밀착
+          const leftEdge = columnX - columnWidthInThreeUnits;
+          if (Math.abs(position[0] - leftEdge) < snapThreshold) {
+            snappedX = leftEdge;
+            shouldSnap = true;
+          }
+        }
       }
+    }
+    
+    // 스냅되지 않았다면 가장 가까운 기둥에 밀착 시도
+    if (!shouldSnap) {
+      let closestDistance = Infinity;
       
-      // 오른쪽 스냅 체크
-      if (distToRight < snapThreshold && distToRight < closestDistance) {
-        closestDistance = distToRight;
-        snappedX = rightSnapX;
-        closestColumn = column;
+      for (const column of existingColumns) {
+        if (!column.position) continue;
+        
+        const leftSnapX = column.position[0] - columnWidthInThreeUnits;
+        const rightSnapX = column.position[0] + columnWidthInThreeUnits;
+        
+        const distToLeft = Math.abs(position[0] - leftSnapX);
+        const distToRight = Math.abs(position[0] - rightSnapX);
+        
+        // 왼쪽 스냅 체크 (겹치지 않는 경우만)
+        if (distToLeft < snapThreshold && distToLeft < closestDistance) {
+          // 스냅 위치가 다른 기둥과 겹치는지 확인
+          const willOverlap = checkColumnOverlap([leftSnapX, position[1], position[2]]);
+          if (!willOverlap) {
+            closestDistance = distToLeft;
+            snappedX = leftSnapX;
+          }
+        }
+        
+        // 오른쪽 스냅 체크 (겹치지 않는 경우만)
+        if (distToRight < snapThreshold && distToRight < closestDistance) {
+          // 스냅 위치가 다른 기둥과 겹치는지 확인
+          const willOverlap = checkColumnOverlap([rightSnapX, position[1], position[2]]);
+          if (!willOverlap) {
+            closestDistance = distToRight;
+            snappedX = rightSnapX;
+          }
+        }
       }
     }
     
