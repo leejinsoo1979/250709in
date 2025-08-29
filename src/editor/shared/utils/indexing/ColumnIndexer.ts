@@ -874,7 +874,7 @@ export class ColumnIndexer {
         // 왼쪽 처리
         let leftReduction = 0;
         if (spaceInfo.wallConfig?.left) {
-          leftReduction = spaceInfo.gapConfig?.left || 2;
+          leftReduction = 0;  // 벽이 있으면 이격거리 무시, 벽에 바로 붙음
         } else {
           leftReduction = END_PANEL_THICKNESS;
         }
