@@ -2156,7 +2156,6 @@ const Configurator: React.FC = () => {
                       mainDoorCount: undefined,
                       droppedCeilingDoorCount: undefined
                     });
-                    setActiveRightPanelTab('slotA');
                   }}
                 >
                   {t('common.none')}
@@ -2190,7 +2189,6 @@ const Configurator: React.FC = () => {
                         droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
                         mainDoorCount: adjustedMainDoorCount
                       });
-                      setActiveRightPanelTab('slotA');
                     }
                   }}
                 >

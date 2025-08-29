@@ -624,7 +624,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           hasColumn: false,
           columnPosition: 'edge',
           availableWidth: indexing.columnWidth,
-          doorWidth: indexing.columnWidth - 3, // 기본 3mm 갭
+          doorWidth: indexing.columnWidth, // 기본 갭 제거
           needsMullion: false
         });
         continue;
