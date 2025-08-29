@@ -57,7 +57,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return false; // 겹치지 않음
   };
 
-  // 단내림 구간 경계 체크 함수 - 경계 걸침 절대 금지
+  // 단내림 구간 경계 체크 - 걸치면 무조건 스냅
   const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number; zone?: 'normal' | 'dropped' } => {
     if (!spaceInfo?.droppedCeiling?.enabled) {
       return { adjusted: false, newX: xPosition };
@@ -88,39 +88,24 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // 왼쪽 단내림
       const boundaryX = droppedEndX;
       
-      // 기둥이 경계를 걸치는지 체크
-      const isOverlapping = columnLeft < boundaryX && columnRight > boundaryX;
-      
-      if (isOverlapping) {
-        // 경계를 걸치고 있음 - 무조건 막음!
-        // 더 많이 있는 쪽으로 완전히 이동
-        const leftPortion = boundaryX - columnLeft;  // 단내림 구간에 있는 부분
-        const rightPortion = columnRight - boundaryX; // 일반 구간에 있는 부분
-        
-        if (leftPortion > rightPortion) {
-          // 단내림 구간에 더 많이 있음 - 단내림 구간 끝으로
-          const newX = boundaryX - halfColumnWidth - 0.01;
-          console.log('🚫 경계 걸침! → 단내림 구간으로 강제 이동');
+      // 경계를 걸치면 무조건 스냅
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥 중심이 어디에 있는지로 결정
+        if (xPosition < boundaryX) {
+          // 단내림 구간으로 스냅
+          const newX = boundaryX - halfColumnWidth;
           return { adjusted: true, newX, zone: 'dropped' };
         } else {
-          // 일반 구간에 더 많이 있음 - 일반 구간 시작으로
-          const newX = boundaryX + halfColumnWidth + 0.01;
-          console.log('🚫 경계 걸침! → 일반 구간으로 강제 이동');
+          // 일반 구간으로 스냅
+          const newX = boundaryX + halfColumnWidth;
           return { adjusted: true, newX, zone: 'normal' };
         }
       }
       
-      // 기둥 전체가 단내림 구간에 있을 때
+      // 단내림 구간에 완전히 있으면 경계 끝에 스냅
       if (columnRight <= boundaryX) {
-        // 단내림 구간 끝에 붙이기
-        const newX = boundaryX - halfColumnWidth - 0.01;
+        const newX = boundaryX - halfColumnWidth;
         return { adjusted: true, newX, zone: 'dropped' };
-      }
-      
-      // 기둥 전체가 일반 구간에 있을 때
-      if (columnLeft >= boundaryX) {
-        // 그대로 두기
-        return { adjusted: false, newX: xPosition, zone: 'normal' };
       }
       
       return { adjusted: false, newX: xPosition };
@@ -128,38 +113,23 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // 오른쪽 단내림
       const boundaryX = normalEndX;
       
-      // 기둥이 경계를 걸치는지 체크
-      const isOverlapping = columnLeft < boundaryX && columnRight > boundaryX;
-      
-      if (isOverlapping) {
-        // 경계를 걸치고 있음 - 무조건 막음!
-        // 더 많이 있는 쪽으로 완전히 이동
-        const leftPortion = boundaryX - columnLeft;  // 일반 구간에 있는 부분
-        const rightPortion = columnRight - boundaryX; // 단내림 구간에 있는 부분
-        
-        if (leftPortion > rightPortion) {
-          // 일반 구간에 더 많이 있음 - 일반 구간 끝으로
-          const newX = boundaryX - halfColumnWidth - 0.01;
-          console.log('🚫 경계 걸침! → 일반 구간으로 강제 이동');
+      // 경계를 걸치면 무조건 스냅
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥 중심이 어디에 있는지로 결정
+        if (xPosition < boundaryX) {
+          // 일반 구간으로 스냅
+          const newX = boundaryX - halfColumnWidth;
           return { adjusted: true, newX, zone: 'normal' };
         } else {
-          // 단내림 구간에 더 많이 있음 - 단내림 구간 시작으로
-          const newX = boundaryX + halfColumnWidth + 0.01;
-          console.log('🚫 경계 걸침! → 단내림 구간으로 강제 이동');
+          // 단내림 구간으로 스냅
+          const newX = boundaryX + halfColumnWidth;
           return { adjusted: true, newX, zone: 'dropped' };
         }
       }
       
-      // 기둥 전체가 일반 구간에 있을 때
-      if (columnRight <= boundaryX) {
-        // 그대로 두기
-        return { adjusted: false, newX: xPosition, zone: 'normal' };
-      }
-      
-      // 기둥 전체가 단내림 구간에 있을 때
+      // 단내림 구간에 완전히 있으면 경계 시작에 스냅
       if (columnLeft >= boundaryX) {
-        // 단내림 구간 시작에 붙이기
-        const newX = boundaryX + halfColumnWidth + 0.01;
+        const newX = boundaryX + halfColumnWidth;
         return { adjusted: true, newX, zone: 'dropped' };
       }
       

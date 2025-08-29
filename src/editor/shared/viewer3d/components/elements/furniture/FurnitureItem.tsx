@@ -541,9 +541,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
-  // 기둥이 있다는 증거 (slotInfo 또는 adjustedWidth로 판단)
+  // 기둥이 있다는 증거 (slotInfo 또는 adjustedWidth 또는 customWidth로 판단)
+  // 단내림 구간에서는 customWidth가 설정되어 있을 수도 있음
   const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
-                            (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null);
+                            (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
+                            (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
+                             placedModule.customWidth < (moduleData?.dimensions.width || 600));
   
   // 디버깅: 단내림 + 기둥 상황
   if (spaceInfo.droppedCeiling?.enabled) {
@@ -558,12 +561,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         availableWidth: slotInfo.availableWidth,
         adjustedWidth: slotInfo.adjustedWidth
       } : 'undefined',
+      placedModuleData: {
+        adjustedWidth: placedModule.adjustedWidth,
+        customWidth: placedModule.customWidth,
+        moduleWidth: moduleData?.dimensions.width
+      },
+      hasColumnEvidence,
       doorWillRender: {
         hasDoor: placedModule.hasDoor ?? true,
         hasColumn: slotInfo?.hasColumn,
-        coverDoorCondition: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && (slotInfo && slotInfo.hasColumn),
-        normalDoorCondition: !(slotInfo && slotInfo.hasColumn),
-        willRenderCoverDoor: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && Boolean(slotInfo?.hasColumn)
+        coverDoorCondition: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && hasColumnEvidence,
+        normalDoorCondition: !hasColumnEvidence,
+        willRenderCoverDoor: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && hasColumnEvidence
       },
       indexingSlotWidths: indexing.slotWidths,
       willShrink: slotInfo?.hasColumn && slotInfo?.availableWidth < (indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth)
