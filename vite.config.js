@@ -41,10 +41,20 @@ export default defineConfig({
     },
     test: {
         globals: true,
-        environment: 'happy-dom',
+        environment: 'jsdom',
         setupFiles: ['./src/test/setup.ts'],
     },
     server: {
+        watch: {
+            // 파일 감시 최적화
+            ignored: ['**/node_modules/**', '**/.git/**'],
+            // 폴링 간격 늘리기 (CPU 사용량 감소)
+            interval: 1000,
+        },
+        hmr: {
+            // HMR 타임아웃 설정
+            timeout: 60000,
+        },
         headers: {
             'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
             'Cross-Origin-Embedder-Policy': 'unsafe-none'
