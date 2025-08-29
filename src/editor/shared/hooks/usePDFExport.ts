@@ -31,7 +31,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides } = useUIStore();
+  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setRenderMode } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -41,13 +41,19 @@ export function usePDFExport() {
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
     const originalShowGuides = showGuides;
+    const originalShowAxis = showAxis;
+    const originalShowDimensions = showDimensions;
+    const originalRenderMode = renderMode;
     
     console.log('📸 PDF 캡처 시작:', {
       viewType,
       원래설정: {
         viewMode: originalViewMode,
         view2DDirection: originalView2DDirection,
-        showGuides: originalShowGuides
+        showGuides: originalShowGuides,
+        showAxis: originalShowAxis,
+        showDimensions: originalShowDimensions,
+        renderMode: originalRenderMode
       }
     });
     
@@ -55,9 +61,12 @@ export function usePDFExport() {
     if (viewInfo.viewMode === '3D') {
       setViewMode('3D');
     } else {
-      // 2D 모드로 전환하면서 그리드 컬럼 축 비활성화
+      // 2D 모드로 전환하면서 모든 가이드 비활성화 및 와이어프레임 설정
       setViewMode('2D');
-      setShowGuides(false); // 중요: 그리드 컬럼 축 라디오버튼 끄기
+      setShowGuides(false); // 그리드 끄기
+      setShowAxis(false); // 축 끄기
+      setShowDimensions(false); // 치수 끄기 (컬럼 포함)
+      setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
       }
@@ -163,20 +172,26 @@ export function usePDFExport() {
     if (originalViewMode === '2D') {
       setView2DDirection(originalView2DDirection);
     }
-    // 그리드 설정 복원
+    // 모든 설정 복원
     setShowGuides(originalShowGuides);
+    setShowAxis(originalShowAxis);
+    setShowDimensions(originalShowDimensions);
+    setRenderMode(originalRenderMode);
     
     console.log('📸 PDF 캡처 완료 - 설정 복원:', {
       viewMode: originalViewMode,
       view2DDirection: originalView2DDirection,
-      showGuides: originalShowGuides
+      showGuides: originalShowGuides,
+      showAxis: originalShowAxis,
+      showDimensions: originalShowDimensions,
+      renderMode: originalRenderMode
     });
     
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return imageData;
-  }, [viewMode, view2DDirection, showGuides, setViewMode, setView2DDirection, setShowGuides]);
+  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setRenderMode]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,

@@ -76,6 +76,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       return;
     }
     
+    // 가구 배치 모드를 먼저 활성화
+    setFurniturePlacementMode(true);
     setIsSlotDragging(true); // 슬롯 드래그 시작
     
     // 영역별 인덱싱 계산
@@ -201,9 +203,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         adjustedDimensions.width = targetWidth;
       }
     }
-
-    // 가구 배치 모드 활성화
-    setFurniturePlacementMode(true);
 
     // 드래그 데이터 설정 (영역 정보 추가)
     const dragData = {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Package, Layers, Zap, Eye, Download, Plus, Edit2, Trash2, Grid3x3, Filter, Settings, FileDown, FileSpreadsheet, Wifi, WifiOff } from 'lucide-react';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -57,6 +57,7 @@ const getMaterialName = (material: string): string => {
 
 const CNCOptimizer: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
   const { theme } = useTheme();
@@ -64,6 +65,7 @@ const CNCOptimizer: React.FC = () => {
   // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
   const projectId = searchParams.get('projectId');
   const designFileId = searchParams.get('designFileId');
+  const fromConfigurator = location.state?.fromConfigurator;
   
   // Use live panel data hook for real-time synchronization
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
@@ -292,9 +294,12 @@ const CNCOptimizer: React.FC = () => {
               const params = new URLSearchParams();
               if (projectId) params.set('projectId', projectId);
               if (designFileId) params.set('designFileId', designFileId);
-              params.set('from', 'cnc'); // CNC에서 돌아왔음을 표시
               const queryString = params.toString();
-              navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
+              
+              // state로 CNC에서 돌아왔음을 표시
+              navigate(`/configurator${queryString ? `?${queryString}` : ''}`, {
+                state: { fromCNC: true, skipReload: true }
+              });
             }}
           >
             <ArrowLeft size={18} />

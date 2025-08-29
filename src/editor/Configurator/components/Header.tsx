@@ -373,7 +373,11 @@ const Header: React.FC<HeaderProps> = ({
                     if (projectId) params.set('projectId', projectId);
                     if (designFileId) params.set('designFileId', designFileId);
                     const queryString = params.toString();
-                    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`);
+                    
+                    // state로 현재 페이지 정보 전달
+                    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
+                      state: { fromConfigurator: true }
+                    });
                     setIsConvertMenuOpen(false);
                   }}
                 >
