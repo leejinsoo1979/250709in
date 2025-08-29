@@ -349,7 +349,7 @@ export function usePDFExport() {
           pdf.setFontSize(8);
           pdf.text('SCALE: AS SHOWN', drawingAreaX + 50, viewTitleY + 22, { align: 'center' });
           
-          // 이미지를 PDF에 삽입
+          // 이미지를 PDF에 삽입 (최고 품질로)
           pdf.addImage(
             imageData,
             'PNG',
@@ -358,7 +358,7 @@ export function usePDFExport() {
             drawingAreaWidth,
             drawingAreaHeight,
             undefined,
-            'FAST'
+            'NONE' // 압축 없이 원본 품질 유지 (벡터 품질에 가깝게)
           );
         } catch (error) {
           console.error(`뷰 캡처 실패 (${viewType}):`, error);

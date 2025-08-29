@@ -89,8 +89,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     setFurniturePlacementMode(false);
     setIsSlotDragging(false); // 슬롯 드래그 종료
 
-    // 전역 드래그 상태 초기화
-    setCurrentDragData(null);
+    // 전역 드래그 상태 초기화를 지연시켜 drop 이벤트가 먼저 처리되도록 함
+    setTimeout(() => {
+      setCurrentDragData(null);
+    }, 100);
   };
 
 
