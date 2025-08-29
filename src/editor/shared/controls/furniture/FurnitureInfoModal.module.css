@@ -12,20 +12,18 @@
 
 .modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  right: 0;
+  bottom: 0;
   background: var(--theme-surface);
-  border-radius: 8px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--theme-border);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid var(--theme-border);
   z-index: 9999;
   width: 90%;
-  max-width: 800px;
-  max-height: 85vh;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.2s ease-out;
+  animation: slideInFromRight 0.2s ease-out;
 }
 
 .header {
@@ -200,13 +198,13 @@
   }
 }
 
-@keyframes slideIn {
+@keyframes slideInFromRight {
   from {
-    transform: translate(-50%, -48%);
+    transform: translateX(100%);
     opacity: 0;
   }
   to {
-    transform: translate(-50%, -50%);
+    transform: translateX(0);
     opacity: 1;
   }
 }
