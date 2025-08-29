@@ -395,7 +395,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           id: c.id,
           position: c.position,
           width: c.width
-        }))
+        })),
+        moduleInfo: {
+          moduleId: placedModule.moduleId,
+          zone: placedModule.zone,
+          localSlotIndex: placedModule.slotIndex
+        }
       });
     }
     
@@ -515,20 +520,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
   // 디버깅: 단내림 + 기둥 상황
-  if (spaceInfo.droppedCeiling?.enabled && slotInfo) {
-    console.log('🚨 [FurnitureItem] 단내림 + 슬롯 정보:', {
+  if (spaceInfo.droppedCeiling?.enabled) {
+    console.log('🚨 [FurnitureItem] 단내림 슬롯 상세 정보:', {
       moduleId: placedModule.moduleId,
       zone: placedModule.zone,
       localSlotIndex: placedModule.slotIndex,
       globalSlotIndex,
-      slotInfo: {
+      slotInfo: slotInfo ? {
         hasColumn: slotInfo.hasColumn,
         columnType: slotInfo.columnType,
         availableWidth: slotInfo.availableWidth,
         adjustedWidth: slotInfo.adjustedWidth
+      } : 'undefined',
+      doorWillRender: {
+        hasDoor: placedModule.hasDoor ?? true,
+        hasColumn: slotInfo?.hasColumn,
+        coverDoorCondition: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && (slotInfo && slotInfo.hasColumn),
+        normalDoorCondition: !(slotInfo && slotInfo.hasColumn),
+        willRenderCoverDoor: !isFurnitureDragging && !isDraggingThis && (placedModule.hasDoor ?? true) && Boolean(slotInfo?.hasColumn)
       },
       indexingSlotWidths: indexing.slotWidths,
-      willShrink: slotInfo.hasColumn && slotInfo.availableWidth < (indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth)
+      willShrink: slotInfo?.hasColumn && slotInfo?.availableWidth < (indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth)
     });
   }
   
@@ -1596,13 +1608,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
         if (spaceInfo?.droppedCeiling?.enabled) {
           console.log('🚪 [커버도어 체크] 단내림 구간:', {
+            moduleId: placedModule.moduleId,
             zone: placedModule.zone,
+            localSlotIndex: placedModule.slotIndex,
+            globalSlotIndex,
             shouldRenderCoverDoor,
-            slotInfo: {
-              hasColumn: slotInfo?.hasColumn,
-              columnType: slotInfo?.columnType,
-              availableWidth: slotInfo?.availableWidth
-            },
+            slotInfo: slotInfo ? {
+              exists: true,
+              hasColumn: slotInfo.hasColumn,
+              columnType: slotInfo.columnType,
+              availableWidth: slotInfo.availableWidth
+            } : 'slotInfo is undefined',
             conditions: {
               notDragging: !isFurnitureDragging && !isDraggingThis,
               hasDoor: placedModule.hasDoor ?? true,

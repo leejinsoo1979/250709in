@@ -57,7 +57,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return false; // 겹치지 않음
   };
 
-  // 단내림 구간 경계 체크 함수 - 단순하고 명확하게
+  // 단내림 구간 경계 체크 함수 - 완전히 진입했을 때만 이동
   const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number; zone?: 'normal' | 'dropped' } => {
     if (!spaceInfo?.droppedCeiling?.enabled) {
       return { adjusted: false, newX: xPosition };
@@ -87,68 +87,84 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     if (spaceInfo.droppedCeiling.position === 'left') {
       // 왼쪽 단내림
       const boundaryX = droppedEndX;
+      const safetyGap = 0.1; // 10mm 안전 거리
       
-      // 기둥 전체가 단내림 구간에 완전히 들어갔는지 체크 (엄격하게)
-      // 기둥의 오른쪽 끝이 경계보다 왼쪽에 있어야 함
-      if (columnRight <= boundaryX - 0.01) {  // 작은 여유를 둬서 확실히 들어갔을 때만
-        // 기둥 전체가 단내림 구간에 있음 - 경계 끝에 스냅
-        const newX = boundaryX - halfColumnWidth;
+      // 기둥 전체가 단내림 구간에 완전히 들어갔을 때만 (엄격!)
+      if (columnRight < boundaryX - safetyGap) {
+        // 단내림 구간에 완전히 있음 - 경계에서 약간 떨어뜨려 배치
+        const newX = boundaryX - halfColumnWidth - 0.01;
         console.log('✅ 단내림 구간 완전 진입 - 경계 스냅:', { 
           boundaryX, 
           newX,
           columnRight,
-          check: columnRight <= boundaryX - 0.01
+          check: `${columnRight} < ${boundaryX - safetyGap}`
         });
         return { adjusted: true, newX, zone: 'dropped' };
       }
       
-      // 기둥 전체가 일반 구간에 완전히 들어갔는지 체크
-      if (columnLeft >= boundaryX + 0.01) {  // 작은 여유를 둬서 확실히 들어갔을 때만
-        // 일반 구간에 있음 - 그대로 두기
+      // 기둥 전체가 일반 구간에 완전히 들어갔을 때만
+      if (columnLeft > boundaryX + safetyGap) {
+        // 일반 구간에 완전히 있음 - 그대로
         return { adjusted: false, newX: xPosition, zone: 'normal' };
       }
       
-      // 경계를 걸치고 있음 - 원래 위치 유지 (이동 안 함)
-      console.log('⚠️ 경계 걸침 - 이동 차단:', { 
-        boundaryX,
-        columnLeft,
-        columnRight,
-        xPosition 
-      });
-      // 경계를 걸치면 아무것도 하지 않음 (원래 위치 유지)
+      // 경계 근처이거나 걸치고 있음 - 가까운 쪽으로 밀어냄
+      if (Math.abs(xPosition - boundaryX) < columnWidthInThreeUnits) {
+        // 경계 근처에 있음
+        if (xPosition < boundaryX) {
+          // 단내림 구간 쪽으로 완전히 밀어냄
+          const newX = boundaryX - halfColumnWidth - safetyGap;
+          console.log('🔄 경계 근처 - 단내림 구간으로 밀어냄');
+          return { adjusted: true, newX, zone: 'dropped' };
+        } else {
+          // 일반 구간 쪽으로 완전히 밀어냄
+          const newX = boundaryX + halfColumnWidth + safetyGap;
+          console.log('🔄 경계 근처 - 일반 구간으로 밀어냄');
+          return { adjusted: true, newX, zone: 'normal' };
+        }
+      }
+      
       return { adjusted: false, newX: xPosition };
     } else {
       // 오른쪽 단내림
       const boundaryX = normalEndX;
+      const safetyGap = 0.1; // 10mm 안전 거리
       
-      // 기둥 전체가 단내림 구간에 완전히 들어갔는지 체크 (엄격하게)
-      // 기둥의 왼쪽 끝이 경계보다 오른쪽에 있어야 함
-      if (columnLeft >= boundaryX + 0.01) {  // 작은 여유를 둬서 확실히 들어갔을 때만
-        // 기둥 전체가 단내림 구간에 있음 - 경계 끝에 스냅
-        const newX = boundaryX + halfColumnWidth;
+      // 기둥 전체가 단내림 구간에 완전히 들어갔을 때만 (엄격!)
+      if (columnLeft > boundaryX + safetyGap) {
+        // 단내림 구간에 완전히 있음 - 경계에서 약간 떨어뜨려 배치
+        const newX = boundaryX + halfColumnWidth + 0.01;
         console.log('✅ 단내림 구간 완전 진입 - 경계 스냅:', { 
           boundaryX, 
           newX,
           columnLeft,
-          check: columnLeft >= boundaryX + 0.01
+          check: `${columnLeft} > ${boundaryX + safetyGap}`
         });
         return { adjusted: true, newX, zone: 'dropped' };
       }
       
-      // 기둥 전체가 일반 구간에 완전히 들어갔는지 체크
-      if (columnRight <= boundaryX - 0.01) {  // 작은 여유를 둬서 확실히 들어갔을 때만
-        // 일반 구간에 있음 - 그대로 두기
+      // 기둥 전체가 일반 구간에 완전히 들어갔을 때만
+      if (columnRight < boundaryX - safetyGap) {
+        // 일반 구간에 완전히 있음 - 그대로
         return { adjusted: false, newX: xPosition, zone: 'normal' };
       }
       
-      // 경계를 걸치고 있음 - 원래 위치 유지 (이동 안 함)
-      console.log('⚠️ 경계 걸침 - 이동 차단:', { 
-        boundaryX,
-        columnLeft,
-        columnRight,
-        xPosition 
-      });
-      // 경계를 걸치면 아무것도 하지 않음 (원래 위치 유지)
+      // 경계 근처이거나 걸치고 있음 - 가까운 쪽으로 밀어냄
+      if (Math.abs(xPosition - boundaryX) < columnWidthInThreeUnits) {
+        // 경계 근처에 있음
+        if (xPosition > boundaryX) {
+          // 단내림 구간 쪽으로 완전히 밀어냄
+          const newX = boundaryX + halfColumnWidth + safetyGap;
+          console.log('🔄 경계 근처 - 단내림 구간으로 밀어냄');
+          return { adjusted: true, newX, zone: 'dropped' };
+        } else {
+          // 일반 구간 쪽으로 완전히 밀어냄
+          const newX = boundaryX - halfColumnWidth - safetyGap;
+          console.log('🔄 경계 근처 - 일반 구간으로 밀어냄');
+          return { adjusted: true, newX, zone: 'normal' };
+        }
+      }
+      
       return { adjusted: false, newX: xPosition };
     }
 
