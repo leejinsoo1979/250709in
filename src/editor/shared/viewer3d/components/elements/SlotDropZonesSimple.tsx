@@ -229,6 +229,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zoneToUse = 'normal';
           console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
         }
+        } // else 블록 닫기 (zone info가 완전한 경우)
       } catch (error) {
         console.error('❌ 자동 영역 판단 중 오류:', error);
         zoneToUse = 'normal'; // 오류 발생 시 기본값
