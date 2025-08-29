@@ -29,15 +29,16 @@
 }
 
 .header {
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--theme-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
@@ -64,7 +65,7 @@
 }
 
 .content {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
   scrollbar-width: thin;
@@ -97,37 +98,41 @@
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--theme-text);
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
 }
 
 .infoGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
 .infoItem {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--theme-background-secondary);
   border-radius: 4px;
 }
 
 .label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--theme-text-muted);
-  margin-right: 6px;
+  margin-right: 8px;
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .value {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--theme-text);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .panelTable {
@@ -138,28 +143,31 @@
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  grid-template-columns: minmax(150px, 2fr) minmax(120px, 2fr) minmax(60px, 1fr) minmax(60px, 1fr) minmax(60px, 1fr);
   background: var(--theme-background-secondary);
   border-bottom: 1px solid var(--theme-border);
 }
 
 .headerCell {
-  padding: 10px 12px;
-  font-size: 11px;
+  padding: 12px 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--theme-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tableBody {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .tableRow {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  grid-template-columns: minmax(150px, 2fr) minmax(120px, 2fr) minmax(60px, 1fr) minmax(60px, 1fr) minmax(60px, 1fr);
   border-bottom: 1px solid var(--theme-border);
   transition: background-color 0.15s;
 }
@@ -173,11 +181,14 @@
 }
 
 .cell {
-  padding: 10px 12px;
-  font-size: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
   color: var(--theme-text);
   display: flex;
   align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes fadeIn {
