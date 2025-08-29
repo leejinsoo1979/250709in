@@ -293,7 +293,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         targetZone = zoneInfo.dropped;
       }
       
-      if (!targetZone || !targetZone.threeUnitPositions || localSlotIndex >= targetZone.columnCount) {
+      if (!targetZone || localSlotIndex >= targetZone.columnCount) {
         // zone 정보가 없으면 기본 슬롯 정보 추가
         slotInfos.push({
           slotIndex: globalSlotIndex,
@@ -306,8 +306,30 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         continue;
       }
       
-      const slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
+      // threeUnitPositions가 없으면 직접 계산
+      let slotCenterX: number;
       const slotWidthM = targetZone.columnWidth * 0.01;
+      
+      if (targetZone.threeUnitPositions && targetZone.threeUnitPositions[localSlotIndex] !== undefined) {
+        slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
+      } else {
+        // threeUnitPositions가 없으면 직접 계산
+        const startX = targetZone.startX || 0;
+        const slotWidth = targetZone.columnWidth;
+        // 슬롯 중심 위치 계산 (mm -> Three.js units)
+        const slotCenterXMm = startX + (localSlotIndex * slotWidth) + (slotWidth / 2);
+        slotCenterX = slotCenterXMm * 0.01;
+        
+        console.log('⚠️ threeUnitPositions 없음 - 직접 계산:', {
+          zone,
+          localSlotIndex,
+          startX,
+          slotWidth,
+          slotCenterXMm,
+          slotCenterX
+        });
+      }
+      
       const slotStartX = slotCenterX - slotWidthM / 2;
       const slotEndX = slotCenterX + slotWidthM / 2;
     
