@@ -57,7 +57,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return false; // 겹치지 않음
   };
 
-  // 단내림 구간 경계 체크 함수 - 절대 경계에 걸치지 않도록 강제
+  // 단내림 구간 경계 체크 함수 - 단순하고 명확하게
   const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number; zone?: 'normal' | 'dropped' } => {
     if (!spaceInfo?.droppedCeiling?.enabled) {
       return { adjusted: false, newX: xPosition };
@@ -73,188 +73,72 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       return { adjusted: false, newX: xPosition };
     }
 
-    // mm를 Three.js 단위로 변환 - 정확한 값 사용
+    // mm를 Three.js 단위로 변환
     const droppedStartX = (zoneInfo.dropped.startX / 100);
     const droppedEndX = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
     const normalStartX = (zoneInfo.normal.startX / 100);
     const normalEndX = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
-    
-    // 공간의 실제 끝 위치
-    const spaceLeftEnd = -(spaceInfo.width / 100) / 2;
-    const spaceRightEnd = (spaceInfo.width / 100) / 2;
 
-    // 기둥의 왼쪽과 오른쪽 경계 (정확한 계산)
+    // 기둥의 왼쪽과 오른쪽 경계
     const columnLeft = xPosition - halfColumnWidth;
     const columnRight = xPosition + halfColumnWidth;
 
     // 단내림 위치에 따른 경계 체크
     if (spaceInfo.droppedCeiling.position === 'left') {
-      // 왼쪽 단내림: 단내림 구간과 일반 구간 사이 경계
+      // 왼쪽 단내림
       const boundaryX = droppedEndX;
       
-      // 무조건 경계를 걸치지 않도록 강제 조정
-      // 아주 엄격한 체크 - 기둥의 어느 부분도 경계를 넘지 못하게
-      const safetyMargin = 0.01; // 안전 여유 (1mm)
-      
-      // 기둥이 경계를 걸치는지 매우 엄격하게 확인
-      if (columnLeft <= boundaryX + safetyMargin && columnRight >= boundaryX - safetyMargin) {
-        // 경계를 걸치고 있음 - 즉시 조정
-        // 기둥 중심이 경계보다 왼쪽에 있으면 단내림 구간으로
-        if (xPosition < boundaryX) {
-          // 단내림 구간으로 강제 이동 - 기둥 오른쪽이 경계에서 안전 여유만큼 떨어짐
-          const newX = boundaryX - halfColumnWidth - safetyMargin;
-          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX,
-            columnLeft: newX - halfColumnWidth,
-            columnRight: newX + halfColumnWidth
-          });
-          return { adjusted: true, newX, zone: 'dropped' };
-        } else {
-          // 일반 구간으로 강제 이동 - 기둥 왼쪽이 경계에서 안전 여유만큼 떨어짐
-          const newX = boundaryX + halfColumnWidth + safetyMargin;
-          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX,
-            columnLeft: newX - halfColumnWidth,
-            columnRight: newX + halfColumnWidth
-          });
-          return { adjusted: true, newX, zone: 'normal' };
-        }
-      }
-      
-      // 단내림 구간에 있으면 무조건 경계에 스냅 (완전 강제)
-      // 기둥 중심이 단내림 구간 안에 있는지 확인
-      const droppedZoneStart = droppedStartX;
-      const droppedZoneEnd = boundaryX;
-      
-      if (xPosition >= droppedZoneStart && xPosition <= droppedZoneEnd) {
-        // 단내림 구간 안에 있음 - 무조건 경계 끝에 붙임
-        const newX = boundaryX - halfColumnWidth - safetyMargin;
-        console.log('🔥 단내림 구간 강제 스냅!!!:', { 
-          boundaryX, 
-          originalX: xPosition,
-          newX,
-          droppedZoneStart,
-          droppedZoneEnd
-        });
+      // 기둥 전체가 단내림 구간에 완전히 들어갔는지 체크
+      if (columnRight < boundaryX) {
+        // 기둥 전체가 단내림 구간에 있음 - 경계 끝에 스냅
+        const newX = boundaryX - halfColumnWidth;
+        console.log('✅ 단내림 구간 스냅:', { boundaryX, newX });
         return { adjusted: true, newX, zone: 'dropped' };
       }
       
-      // 일반 구간에서 경계 근처 스냅
-      if (xPosition > boundaryX && xPosition < normalEndX) {
-        const distanceToBoundary = xPosition - boundaryX;
-        
-        if (distanceToBoundary < autoSnapDistance / 2) {
-          // 기둥 왼쪽이 경계에 정확히 붙도록
-          const newX = boundaryX + halfColumnWidth + safetyMargin;
-          console.log('🎯 일반 구간 자동 스냅 - 경계에 붙임:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX
-          });
-          return { adjusted: true, newX, zone: 'normal' };
-        }
+      // 기둥 전체가 일반 구간에 완전히 들어갔는지 체크
+      if (columnLeft > boundaryX) {
+        // 일반 구간에 있음 - 그대로 두기
+        return { adjusted: false, newX: xPosition, zone: 'normal' };
       }
       
-      // 각 구간의 끝에 스냅
-      const wallSnapDistance = columnWidthInThreeUnits * 0.5;
-      
-      // 단내림 구간 왼쪽 끝 (벽)
-      const droppedWallPosition = spaceLeftEnd + halfColumnWidth;
-      if (Math.abs(xPosition - droppedWallPosition) < wallSnapDistance && xPosition < boundaryX) {
-        return { adjusted: true, newX: droppedWallPosition, zone: 'dropped' };
+      // 경계를 걸치고 있음 - 이전 위치 유지 또는 가까운 쪽으로 이동
+      if (xPosition < boundaryX) {
+        // 단내림 구간 쪽으로
+        const newX = boundaryX - halfColumnWidth;
+        return { adjusted: true, newX, zone: 'dropped' };
+      } else {
+        // 일반 구간 쪽으로
+        const newX = boundaryX + halfColumnWidth;
+        return { adjusted: true, newX, zone: 'normal' };
       }
-      
-      // 일반 구간 오른쪽 끝 (벽)
-      const normalWallPosition = spaceRightEnd - halfColumnWidth;
-      if (Math.abs(xPosition - normalWallPosition) < wallSnapDistance && xPosition > boundaryX) {
-        return { adjusted: true, newX: normalWallPosition, zone: 'normal' };
-      }
-      
     } else {
-      // 오른쪽 단내림: 일반 구간과 단내림 구간 사이 경계
+      // 오른쪽 단내림
       const boundaryX = normalEndX;
       
-      // 무조건 경계를 걸치지 않도록 강제 조정
-      const safetyMargin = 0.01; // 안전 여유 (1mm)
-      
-      // 기둥이 경계를 걸치는지 매우 엄격하게 확인
-      if (columnLeft <= boundaryX + safetyMargin && columnRight >= boundaryX - safetyMargin) {
-        // 경계를 걸치고 있음 - 즉시 조정
-        if (xPosition < boundaryX) {
-          // 일반 구간으로 강제 이동 - 기둥 오른쪽이 경계에서 안전 여유만큼 떨어짐
-          const newX = boundaryX - halfColumnWidth - safetyMargin;
-          console.log('🚫 경계 걸침 방지 - 일반 구간으로 이동:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX,
-            columnLeft: newX - halfColumnWidth,
-            columnRight: newX + halfColumnWidth
-          });
-          return { adjusted: true, newX, zone: 'normal' };
-        } else {
-          // 단내림 구간으로 강제 이동 - 기둥 왼쪽이 경계에서 안전 여유만큼 떨어짐
-          const newX = boundaryX + halfColumnWidth + safetyMargin;
-          console.log('🚫 경계 걸침 방지 - 단내림 구간으로 이동:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX,
-            columnLeft: newX - halfColumnWidth,
-            columnRight: newX + halfColumnWidth
-          });
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
-      }
-      
-      // 단내림 구간에 있으면 무조건 경계에 스냅 (완전 강제)
-      const droppedZoneStart = boundaryX;
-      const droppedZoneEnd = droppedEndX;
-      
-      if (xPosition >= droppedZoneStart && xPosition <= droppedZoneEnd) {
-        // 단내림 구간 안에 있음 - 무조건 경계 끝에 붙임
-        const newX = boundaryX + halfColumnWidth + safetyMargin;
-        console.log('🔥 단내림 구간 강제 스냅!!!:', { 
-          boundaryX, 
-          originalX: xPosition,
-          newX,
-          droppedZoneStart,
-          droppedZoneEnd
-        });
+      // 기둥 전체가 단내림 구간에 완전히 들어갔는지 체크
+      if (columnLeft > boundaryX) {
+        // 기둥 전체가 단내림 구간에 있음 - 경계 끝에 스냅
+        const newX = boundaryX + halfColumnWidth;
+        console.log('✅ 단내림 구간 스냅:', { boundaryX, newX });
         return { adjusted: true, newX, zone: 'dropped' };
       }
       
-      // 일반 구간에서 경계 근처 스냅
-      if (xPosition < boundaryX && xPosition > normalStartX) {
-        const distanceToBoundary = boundaryX - xPosition;
-        
-        if (distanceToBoundary < autoSnapDistance / 2) {
-          // 기둥 오른쪽이 경계에 정확히 붙도록
-          const newX = boundaryX - halfColumnWidth - safetyMargin;
-          console.log('🎯 일반 구간 자동 스냅 - 경계에 붙임:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX
-          });
-          return { adjusted: true, newX, zone: 'normal' };
-        }
+      // 기둥 전체가 일반 구간에 완전히 들어갔는지 체크
+      if (columnRight < boundaryX) {
+        // 일반 구간에 있음 - 그대로 두기
+        return { adjusted: false, newX: xPosition, zone: 'normal' };
       }
       
-      // 각 구간의 끝에 스냅
-      const wallSnapDistance = columnWidthInThreeUnits * 0.5;
-      
-      // 일반 구간 왼쪽 끝 (벽)
-      const normalWallPosition = spaceLeftEnd + halfColumnWidth;
-      if (Math.abs(xPosition - normalWallPosition) < wallSnapDistance && xPosition < boundaryX) {
-        return { adjusted: true, newX: normalWallPosition, zone: 'normal' };
-      }
-      
-      // 단내림 구간 오른쪽 끝 (벽)
-      const droppedWallPosition = spaceRightEnd - halfColumnWidth;
-      if (Math.abs(xPosition - droppedWallPosition) < wallSnapDistance && xPosition > boundaryX) {
-        return { adjusted: true, newX: droppedWallPosition, zone: 'dropped' };
+      // 경계를 걸치고 있음 - 이전 위치 유지 또는 가까운 쪽으로 이동
+      if (xPosition > boundaryX) {
+        // 단내림 구간 쪽으로
+        const newX = boundaryX + halfColumnWidth;
+        return { adjusted: true, newX, zone: 'dropped' };
+      } else {
+        // 일반 구간 쪽으로
+        const newX = boundaryX - halfColumnWidth;
+        return { adjusted: true, newX, zone: 'normal' };
       }
     }
 
