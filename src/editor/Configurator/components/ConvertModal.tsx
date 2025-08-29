@@ -353,8 +353,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                         checked={selectedViews['2d-top']}
                         onChange={() => handleViewToggle('2d-top')}
                       />
-                      <span>2D 정면뷰 (지수)</span>
-                      <button className={styles.viewDetail}>지수 포함</button>
+                      <span>2D 평면도 (위에서 본 뷰)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
                       <input 
@@ -362,8 +362,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                         checked={selectedViews['2d-front']}
                         onChange={() => handleViewToggle('2d-front')}
                       />
-                      <span>2D 상부뷰 (지수)</span>
-                      <button className={styles.viewDetail}>지수 포함</button>
+                      <span>2D 정면도 (앞에서 본 뷰)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-left'] ? styles.selected : ''}`}>
                       <input 
@@ -371,8 +371,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                         checked={selectedViews['2d-left']}
                         onChange={() => handleViewToggle('2d-left')}
                       />
-                      <span>2D 좌측뷰 (지수)</span>
-                      <button className={styles.viewDetail}>지수 포함</button>
+                      <span>2D 좌측면도 (왼쪽에서 본 뷰)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-right'] ? styles.selected : ''}`}>
                       <input 
@@ -380,8 +380,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                         checked={selectedViews['2d-right']}
                         onChange={() => handleViewToggle('2d-right')}
                       />
-                      <span>2D 우측뷰 (지수)</span>
-                      <button className={styles.viewDetail}>지수 포함</button>
+                      <span>2D 우측면도 (오른쪽에서 본 뷰)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                   </div>
                 </div>

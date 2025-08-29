@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   useSpaceConfigStore, 
   SPACE_LIMITS, 
@@ -64,6 +64,7 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, currentLanguage } = useTranslation();
   // design=new인 경우 로딩을 건너뛰기 위해 초기값 설정
   const isNewDesign = searchParams.get('design') === 'new';
@@ -1075,7 +1076,7 @@ const Configurator: React.FC = () => {
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
-    const fromCNC = searchParams.get('from') === 'cnc'; // CNC에서 돌아온 경우
+    const fromCNC = location.state?.fromCNC || location.state?.skipReload; // CNC에서 돌아온 경우
     
     // Step2에서 넘어온 경우 (designFileId가 있는 경우)
     if (projectId && designFileId) {
@@ -1295,7 +1296,7 @@ const Configurator: React.FC = () => {
         setLoading(false);
       }, 500);
     }
-  }, [searchParams]); // currentProjectId 제거하여 무한 재렌더링 방지
+  }, [searchParams, location.state]); // location.state 추가하여 CNC에서 돌아올 때 감지
 
   // 폴더에서 실제 디자인파일명 찾기
   useEffect(() => {

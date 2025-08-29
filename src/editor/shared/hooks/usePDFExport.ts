@@ -60,6 +60,8 @@ export function usePDFExport() {
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
       setViewMode('3D');
+      // 3D 모드에서는 사용자가 선택한 렌더 모드 적용
+      setRenderMode(targetRenderMode);
     } else {
       // 2D 모드로 전환하면서 모든 가이드 비활성화 및 와이어프레임 설정
       setViewMode('2D');
@@ -71,8 +73,6 @@ export function usePDFExport() {
         setView2DDirection(viewInfo.viewDirection);
       }
     }
-    
-    // 렌더 모드는 이미 설정된 상태로 캡처 (targetRenderMode 파라미터는 무시)
     
     // 뷰 변경이 적용되길 기다림
     await new Promise(resolve => setTimeout(resolve, 1500));

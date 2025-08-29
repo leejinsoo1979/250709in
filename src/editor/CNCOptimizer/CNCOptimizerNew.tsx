@@ -8,16 +8,18 @@ import { exportCutList } from '@/utils/cutlist/export';
 import CuttingLayoutPreview from './components/CuttingLayoutPreview';
 import styles from './CNCOptimizerNew.module.css';
 import { ArrowLeft, Package, Settings, FileDown, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 const CNCOptimizerNew: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { basicInfo } = useProjectStore();
   
   // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
   const projectId = searchParams.get('projectId');
   const designFileId = searchParams.get('designFileId');
+  const fromConfigurator = location.state?.fromConfigurator;
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
   
   // State
@@ -211,9 +213,12 @@ const CNCOptimizerNew: React.FC = () => {
               const params = new URLSearchParams();
               if (projectId) params.set('projectId', projectId);
               if (designFileId) params.set('designFileId', designFileId);
-              params.set('from', 'cnc'); // CNC에서 돌아왔음을 표시
               const queryString = params.toString();
-              navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
+              
+              // state로 CNC에서 돌아왔음을 표시
+              navigate(`/configurator${queryString ? `?${queryString}` : ''}`, {
+                state: { fromCNC: true, skipReload: true }
+              });
             }}
           >
             <ArrowLeft size={20} />
