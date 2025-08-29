@@ -511,11 +511,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // zone별 indexing은 targetZone 정보를 직접 사용
+    // threeUnitPositions 계산 - 실제 슬롯 너비를 사용
+    const threeUnitPositions: number[] = [];
+    let currentX = targetZone.startX / 1000; // mm to three.js units
+    
+    for (let i = 0; i < targetZone.columnCount; i++) {
+      const slotWidth = targetZone.slotWidths?.[i] || targetZone.columnWidth;
+      const slotCenterX = currentX + (slotWidth / 1000) / 2;
+      threeUnitPositions.push(slotCenterX);
+      currentX += slotWidth / 1000;
+    }
+    
     indexing = {
       columnCount: targetZone.columnCount,
       columnWidth: targetZone.columnWidth,
-      slotWidths: slotWidths, // 기둥 영향이 반영된 슬롯 너비 배열
-      threeUnitPositions: [],
+      slotWidths: targetZone.slotWidths || slotWidths, // zone의 실제 슬롯 너비 사용
+      threeUnitPositions: threeUnitPositions,
       threeUnitDualPositions: {},
       threeUnitBoundaries: []
     };
