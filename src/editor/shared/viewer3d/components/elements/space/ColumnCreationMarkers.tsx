@@ -83,6 +83,9 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const columnLeft = xPosition - halfColumnWidth;
     const columnRight = xPosition + halfColumnWidth;
 
+    // 스냅 거리 설정 (가구처럼 자연스럽게)
+    const snapDistance = 2; // 20cm 이내에서 스냅
+    
     // 단내림 위치에 따른 경계 체크
     if (spaceInfo.droppedCeiling.position === 'left') {
       // 왼쪽 단내림
@@ -102,10 +105,24 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간에 완전히 있으면 경계 끝에 스냅
+      // 단내림 구간에 있고 경계에 가까우면 스냅
       if (columnRight <= boundaryX) {
-        const newX = boundaryX - halfColumnWidth;
-        return { adjusted: true, newX, zone: 'dropped' };
+        const distanceToBoundary = boundaryX - columnRight;
+        if (distanceToBoundary <= snapDistance) {
+          // 경계에 스냅
+          const newX = boundaryX - halfColumnWidth;
+          return { adjusted: true, newX, zone: 'dropped' };
+        }
+      }
+      
+      // 일반 구간에 있고 경계에 가까우면 스냅
+      if (columnLeft >= boundaryX) {
+        const distanceToBoundary = columnLeft - boundaryX;
+        if (distanceToBoundary <= snapDistance) {
+          // 경계에 스냅
+          const newX = boundaryX + halfColumnWidth;
+          return { adjusted: true, newX, zone: 'normal' };
+        }
       }
       
       return { adjusted: false, newX: xPosition };
@@ -127,10 +144,24 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간에 완전히 있으면 경계 시작에 스냅
+      // 일반 구간에 있고 경계에 가까우면 스냅
+      if (columnRight <= boundaryX) {
+        const distanceToBoundary = boundaryX - columnRight;
+        if (distanceToBoundary <= snapDistance) {
+          // 경계에 스냅
+          const newX = boundaryX - halfColumnWidth;
+          return { adjusted: true, newX, zone: 'normal' };
+        }
+      }
+      
+      // 단내림 구간에 있고 경계에 가까우면 스냅
       if (columnLeft >= boundaryX) {
-        const newX = boundaryX + halfColumnWidth;
-        return { adjusted: true, newX, zone: 'dropped' };
+        const distanceToBoundary = columnLeft - boundaryX;
+        if (distanceToBoundary <= snapDistance) {
+          // 경계에 스냅
+          const newX = boundaryX + halfColumnWidth;
+          return { adjusted: true, newX, zone: 'dropped' };
+        }
       }
       
       return { adjusted: false, newX: xPosition };
