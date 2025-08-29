@@ -329,23 +329,23 @@
 
 .demoButton {
   width: 100%;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-  color: white;
+  padding: 16px;
+  background: var(--theme-primary, #6B5EFF) !important;
+  color: white !important;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(107, 94, 255, 0.3);
   margin-top: 10px;
 }
 
 .demoButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(135deg, #FF5252 0%, #FF7043 100%);
+  background: var(--theme-primary-hover, #5A4FE6) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(107, 94, 255, 0.3);
 }
 
 .demoButton:active {

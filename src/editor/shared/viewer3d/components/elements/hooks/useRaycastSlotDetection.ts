@@ -30,11 +30,6 @@ export const useRaycastSlotDetection = (spaceInfo: SpaceInfo) => {
   const slotColliders = useMemo((): SlotCollider[] => {
     const colliders: SlotCollider[] = [];
     
-    // 슬롯 크기 계산
-    const slotWidth = mmToThreeUnits(indexing.columnWidth);
-    const slotHeight = mmToThreeUnits(internalSpace.height);
-    const slotDepth = mmToThreeUnits(internalSpace.depth);
-    
     // 슬롯 시작 높이 계산 (기존 로직과 동일)
     const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
@@ -53,26 +48,92 @@ export const useRaycastSlotDetection = (spaceInfo: SpaceInfo) => {
       slotStartY = mmToThreeUnits(floorFinishHeightMm);
     }
     
-    // 각 슬롯에 대한 콜라이더 정보 생성
-    indexing.threeUnitPositions.forEach((slotX, slotIndex) => {
-      const position = new THREE.Vector3(slotX, slotStartY + slotHeight / 2, 0);
-      const size = new THREE.Vector3(slotWidth, slotHeight, slotDepth);
+    // 단내림이 활성화된 경우 영역별로 콜라이더 생성
+    if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
+      // 단내림 영역 콜라이더
+      if (indexing.zones.dropped?.threeUnitPositions) {
+        const droppedHeight = mmToThreeUnits(internalSpace.height - (spaceInfo.droppedCeiling.dropHeight || 200));
+        const droppedSlotWidth = mmToThreeUnits(indexing.zones.dropped.columnWidth);
+        const slotDepth = mmToThreeUnits(internalSpace.depth);
+        
+        indexing.zones.dropped.threeUnitPositions.forEach((slotX, localIndex) => {
+          const position = new THREE.Vector3(slotX, slotStartY + droppedHeight / 2, 0);
+          const size = new THREE.Vector3(droppedSlotWidth, droppedHeight, slotDepth);
+          
+          const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+          const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.copy(position);
+          mesh.userData = { 
+            slotIndex: localIndex, 
+            isSlotCollider: true, 
+            zone: 'dropped' 
+          };
+          mesh.visible = false;
+          
+          colliders.push({
+            mesh,
+            slotIndex: localIndex,
+            position: position.clone(),
+            size: size.clone()
+          });
+        });
+      }
       
-      // 가상의 메시 생성 (실제로는 렌더링되지 않음)
-      const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-      const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.copy(position);
-      mesh.userData = { slotIndex, isSlotCollider: true };
-      mesh.visible = false; // 시각적으로 보이지 않음
+      // 메인 영역 콜라이더
+      if (indexing.zones.normal?.threeUnitPositions) {
+        const normalHeight = mmToThreeUnits(internalSpace.height);
+        const normalSlotWidth = mmToThreeUnits(indexing.zones.normal.columnWidth);
+        const slotDepth = mmToThreeUnits(internalSpace.depth);
+        
+        indexing.zones.normal.threeUnitPositions.forEach((slotX, localIndex) => {
+          const position = new THREE.Vector3(slotX, slotStartY + normalHeight / 2, 0);
+          const size = new THREE.Vector3(normalSlotWidth, normalHeight, slotDepth);
+          
+          const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+          const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.copy(position);
+          mesh.userData = { 
+            slotIndex: localIndex, 
+            isSlotCollider: true, 
+            zone: 'normal' 
+          };
+          mesh.visible = false;
+          
+          colliders.push({
+            mesh,
+            slotIndex: localIndex,
+            position: position.clone(),
+            size: size.clone()
+          });
+        });
+      }
+    } else {
+      // 단내림이 없는 경우 기존 로직
+      const slotWidth = mmToThreeUnits(indexing.columnWidth);
+      const slotHeight = mmToThreeUnits(internalSpace.height);
+      const slotDepth = mmToThreeUnits(internalSpace.depth);
       
-      colliders.push({
-        mesh,
-        slotIndex,
-        position: position.clone(),
-        size: size.clone()
+      indexing.threeUnitPositions.forEach((slotX, slotIndex) => {
+        const position = new THREE.Vector3(slotX, slotStartY + slotHeight / 2, 0);
+        const size = new THREE.Vector3(slotWidth, slotHeight, slotDepth);
+        
+        const geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+        const material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(position);
+        mesh.userData = { slotIndex, isSlotCollider: true };
+        mesh.visible = false;
+        
+        colliders.push({
+          mesh,
+          slotIndex,
+          position: position.clone(),
+          size: size.clone()
+        });
       });
-    });
+    }
     
     return colliders;
   }, [spaceInfo, indexing, internalSpace, mmToThreeUnits]);

@@ -59,8 +59,16 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
+      // 노서라운드의 경우 좌표 보정
+      let coordinateOffset = 0;
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드에서는 중앙 정렬 대신 실제 위치 사용
+        const totalWidth = spaceInfo.width;
+        coordinateOffset = totalWidth / 2; // 중앙 기준을 왼쪽 끝으로 이동
+      }
+      
       // mm 단위로 변환하여 영역 확인
-      const worldXMm = worldX * 100; // Three.js to mm
+      const worldXMm = (worldX * 100) + coordinateOffset; // Three.js to mm with offset
       
       // 어느 영역에 속하는지 확인
       let zone: 'normal' | 'dropped';
@@ -68,9 +76,14 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       let zoneColumnCount: number;
       let zoneColumnWidth: number;
       
+      // 노서라운드 보정된 좌표로 영역 판단
+      const adjustedWorldXMm = spaceInfo.surroundType === 'no-surround' 
+        ? worldXMm + (spaceInfo.width / 2) // 노서라운드는 중앙 기준으로 변환
+        : worldXMm;
+      
       if (zoneInfo.dropped && 
-          worldXMm >= zoneInfo.dropped.startX && 
-          worldXMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
+          adjustedWorldXMm >= zoneInfo.dropped.startX && 
+          adjustedWorldXMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
         // 단내림 영역
         zone = 'dropped';
         zoneStartX = zoneInfo.dropped.startX;
@@ -85,7 +98,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       }
       
       // 영역 내에서의 상대 위치 계산
-      const relativeX = worldXMm - zoneStartX;
+      const relativeX = adjustedWorldXMm - zoneStartX;
       const columnIndex = Math.floor(relativeX / zoneColumnWidth);
       const clampedColumnIndex = Math.max(0, Math.min(columnIndex, zoneColumnCount - 1));
       
@@ -101,15 +114,31 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
         const leftColumnCenterMm = zoneStartX + (dualPositionIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
         const rightColumnCenterMm = zoneStartX + ((dualPositionIndex + 1) * zoneColumnWidth) + (zoneColumnWidth / 2);
         const dualCenterMm = (leftColumnCenterMm + rightColumnCenterMm) / 2;
+        // 노서라운드의 경우 좌표 보정 제거 (이미 mm 단위에서 계산됨)
         targetPositionX = dualCenterMm * 0.01; // mm to Three.js
         targetColumn = dualPositionIndex;
-        console.log(`🎯 [${zone}] Dual furniture position:`, dualPositionIndex, targetPositionX);
+        console.log(`🎯 [${zone}] Dual furniture position:`, {
+          dualPositionIndex,
+          targetPositionX,
+          dualCenterMm,
+          zoneStartX,
+          adjustedWorldXMm,
+          surroundType: spaceInfo.surroundType
+        });
       } else {
         // 싱글가구: 단일 컬럼 중심에 배치
         const columnCenterMm = zoneStartX + (clampedColumnIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
+        // 노서라운드의 경우 좌표 보정 제거 (이미 mm 단위에서 계산됨)
         targetPositionX = columnCenterMm * 0.01; // mm to Three.js
         targetColumn = clampedColumnIndex;
-        console.log(`🎯 [${zone}] Single furniture position:`, clampedColumnIndex, targetPositionX);
+        console.log(`🎯 [${zone}] Single furniture position:`, {
+          clampedColumnIndex,
+          targetPositionX,
+          columnCenterMm,
+          zoneStartX,
+          adjustedWorldXMm,
+          surroundType: spaceInfo.surroundType
+        });
       }
       
       return {

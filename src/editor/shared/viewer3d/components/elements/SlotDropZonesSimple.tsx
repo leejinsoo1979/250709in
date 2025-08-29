@@ -1880,7 +1880,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   useEffect(() => {
     console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop');
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => {
-      console.log('🎯 window.handleSlotDrop called');
+      console.log('🎯 window.handleSlotDrop called', {
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        surroundType: spaceInfo.surroundType,
+        hasZones: !!indexing.zones
+      });
       // handleSlotDrop 내부에서 마우스 위치를 기반으로 영역을 자동 판단함
       return handleSlotDrop(dragEvent, canvasElement);
     };
