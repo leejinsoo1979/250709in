@@ -216,9 +216,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         slotIndex: calculatedSlotIndex,
         zone: moduleZone
       });
-      // alert 추가하여 사용자에게 알림
-      alert(`⚠️ 이미 해당 슬롯에 가구가 있습니다!\n슬롯: ${calculatedSlotIndex + 1}`);
-      // 충돌이 있으면 추가하지 않음
+      // 충돌이 있으면 추가하지 않음 (조용히 차단)
       return;
     }
     
@@ -320,7 +318,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     
     if (hasConflict) {
       console.error('🚫 이동 위치에 이미 가구가 있습니다!');
-      alert(`⚠️ 슬롯 ${newSlotIndex + 1}에 이미 가구가 있습니다!`);
+      // 조용히 이동 차단
       return;
     }
     
@@ -426,7 +424,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         if (hasConflict) {
           console.error('🚫 업데이트 위치에 이미 가구가 있습니다!');
-          alert(`⚠️ 슬롯 ${newSlotIndex + 1}에 이미 가구가 있습니다!`);
+          // 조용히 업데이트 차단
           return;
         }
         
