@@ -15,6 +15,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const addModule = useFurnitureStore(state => state.addModule);
   const placedModules = useFurnitureStore(state => state.placedModules);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
+  
+  // 최신 placedModules를 가져오는 함수
+  const getLatestPlacedModules = () => useFurnitureStore.getState().placedModules;
   const { checkSlotOccupancy } = useSlotOccupancy(spaceInfo);
   const { calculateDropPosition, findAvailableSlot } = useDropPositioning(spaceInfo);
   const { showAlert, AlertComponent } = useAlert();
@@ -125,12 +128,15 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         let finalX = dropPosition.x;
         
         // 슬롯 사용 가능 여부 확인 - 기둥이 있어도 150mm 이상 공간이 있으면 배치 가능
+        // 최신 placedModules 가져오기
+        const latestPlacedModules = getLatestPlacedModules();
+        
         console.log('🎯 새 가구 배치 시도:', {
           moduleId: currentDragData.moduleData.id,
           targetSlot: dropPosition.column,
           isDual: dropPosition.isDualFurniture,
-          totalExistingModules: placedModules.length,
-          existingModules: placedModules.map(m => ({ 
+          totalExistingModules: latestPlacedModules.length,
+          existingModules: latestPlacedModules.map(m => ({ 
             id: m.id,
             moduleId: m.moduleId, 
             slotIndex: m.slotIndex,
@@ -142,7 +148,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const isAvailable = isSlotAvailable(
           dropPosition.column,
           dropPosition.isDualFurniture,
-          placedModules,
+          latestPlacedModules,
           spaceInfo,
           currentDragData.moduleData.id
         );
@@ -151,7 +157,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         if (!isAvailable) {
           // isSlotAvailable을 사용하는 래퍼 함수
           const checkSlotWithColumn = (column: number, isDual: boolean) => {
-            return !isSlotAvailable(column, isDual, placedModules, spaceInfo, currentDragData.moduleData.id);
+            // 최신 상태 가져오기
+            const currentModules = getLatestPlacedModules();
+            return !isSlotAvailable(column, isDual, currentModules, spaceInfo, currentDragData.moduleData.id);
           };
           
           const availableSlot = findAvailableSlot(
@@ -159,7 +167,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             dropPosition.isDualFurniture,
             indexing,
             checkSlotWithColumn,
-            placedModules
+            latestPlacedModules
           );
           
           if (!availableSlot) {
@@ -178,7 +186,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const customDepth = getDefaultDepth(moduleData);
         
         // 기둥 슬롯 정보 확인
-        const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+        const columnSlots = analyzeColumnSlots(spaceInfo, latestPlacedModules);
         const targetSlotInfo = columnSlots[dropPosition.column];
         
         let adjustedWidth: number | undefined = undefined;
@@ -274,7 +282,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             
             // 싱글 가구를 Column C 슬롯에 배치하는 경우
             // 빈 서브슬롯 찾기
-            const existingModulesInSlot = placedModules.filter(m => 
+            const existingModulesInSlot = latestPlacedModules.filter(m => 
               m.slotIndex === dropPosition.column
             );
             
@@ -387,7 +395,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         // Column C의 경우 서브슬롯 위치 추가
         if (targetSlotInfo && targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture) {
           // 이미 Column C 처리 로직에서 서브슬롯이 설정된 경우
-          const existingModulesInSlot = placedModules.filter(m => 
+          const existingModulesInSlot = latestPlacedModules.filter(m => 
             m.slotIndex === dropPosition.column
           );
           
@@ -399,6 +407,15 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         }
         
         const newModule = newModuleData;
+        
+        // Store 업데이트 전에 충돌 재검사를 위한 임시 모듈 리스트
+        const tempModules = [...latestPlacedModules, newModule];
+        console.log('🟢 가구 추가 후 예상 모듈 리스트:', tempModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          isDualSlot: m.isDualSlot
+        })));
         
         addModule(newModule);
         
