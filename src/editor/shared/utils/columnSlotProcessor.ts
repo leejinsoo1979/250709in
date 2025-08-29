@@ -273,6 +273,27 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   if (spaceInfo.droppedCeiling?.enabled) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     
+    console.log('🏗️ [analyzeColumnSlots] 단내림 zone 정보:', {
+      normalZone: {
+        columnCount: zoneInfo.normal?.columnCount,
+        startX: zoneInfo.normal?.startX,
+        width: zoneInfo.normal?.width,
+        columnWidth: zoneInfo.normal?.columnWidth
+      },
+      droppedZone: {
+        columnCount: zoneInfo.dropped?.columnCount,
+        startX: zoneInfo.dropped?.startX,
+        width: zoneInfo.dropped?.width,
+        columnWidth: zoneInfo.dropped?.columnWidth
+      },
+      droppedPosition: spaceInfo.droppedCeiling.position,
+      columns: columns.map(c => ({
+        id: c.id,
+        position: c.position,
+        width: c.width
+      }))
+    });
+    
     // 전체 슬롯 수 = normal zone + dropped zone
     const totalSlotCount = (zoneInfo.normal?.columnCount || 0) + (zoneInfo.dropped?.columnCount || 0);
     
@@ -283,14 +304,29 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       let localSlotIndex: number;
       let targetZone: any;
       
-      if (globalSlotIndex < (zoneInfo.normal?.columnCount || 0)) {
-        zone = 'normal';
-        localSlotIndex = globalSlotIndex;
-        targetZone = zoneInfo.normal;
+      // 단내림 위치에 따라 zone 결정
+      if (spaceInfo.droppedCeiling.position === 'left') {
+        // 단내림이 왼쪽인 경우
+        if (globalSlotIndex < (zoneInfo.dropped?.columnCount || 0)) {
+          zone = 'dropped';
+          localSlotIndex = globalSlotIndex;
+          targetZone = zoneInfo.dropped;
+        } else {
+          zone = 'normal';
+          localSlotIndex = globalSlotIndex - (zoneInfo.dropped?.columnCount || 0);
+          targetZone = zoneInfo.normal;
+        }
       } else {
-        zone = 'dropped';
-        localSlotIndex = globalSlotIndex - (zoneInfo.normal?.columnCount || 0);
-        targetZone = zoneInfo.dropped;
+        // 단내림이 오른쪽인 경우 (기본값)
+        if (globalSlotIndex < (zoneInfo.normal?.columnCount || 0)) {
+          zone = 'normal';
+          localSlotIndex = globalSlotIndex;
+          targetZone = zoneInfo.normal;
+        } else {
+          zone = 'dropped';
+          localSlotIndex = globalSlotIndex - (zoneInfo.normal?.columnCount || 0);
+          targetZone = zoneInfo.dropped;
+        }
       }
       
       if (!targetZone || localSlotIndex >= targetZone.columnCount) {
