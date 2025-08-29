@@ -541,6 +541,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
+  // 기둥이 있다는 증거 (slotInfo 또는 adjustedWidth로 판단)
+  const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
+                            (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null);
+  
   // 디버깅: 단내림 + 기둥 상황
   if (spaceInfo.droppedCeiling?.enabled) {
     console.log('🚨 [FurnitureItem] 단내림 슬롯 상세 정보:', {
@@ -1293,7 +1297,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? false // 드래그 중에는 도어 렌더링 안 함
                   : needsEndPanelAdjustment
                   ? false // 엔드패널이 있는 경우 도어는 별도 렌더링
-                  : (slotInfo && slotInfo.hasColumn) 
+                  : hasColumnEvidence
                   ? false // 기둥이 있는 경우 도어는 별도 렌더링 (커버도어)
                   : (placedModule.hasDoor ?? false)}
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
@@ -1622,11 +1626,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 드래그 중에는 커버도어를 렌더링하지 않음 (위치 문제 방지) */}
       {/* 2D 모드에서 가구가 숨겨져도 도어는 표시 */}
       {(() => {
-        // 단내림 구간에서는 기둥이 있어도 slotInfo가 제대로 안 잡힐 수 있음
-        // adjustedWidth가 있으면 기둥이 있다는 뜻
-        const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
-                                  (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null);
-        
         const shouldRenderCoverDoor = !isFurnitureDragging && 
           !isDraggingThis &&
           (placedModule.hasDoor ?? true) && 
@@ -1650,6 +1649,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               notDragging: !isFurnitureDragging && !isDraggingThis,
               hasDoor: placedModule.hasDoor ?? true,
               hasColumn: slotInfo?.hasColumn,
+              hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
+              hasColumnEvidence,
               hasSpaceInfo: !!spaceInfo
             }
           });
