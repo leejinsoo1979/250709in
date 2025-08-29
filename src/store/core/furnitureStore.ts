@@ -164,8 +164,36 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const hasConflict = existingModules.some(existing => {
         // 기존 가구의 slotIndex도 확인
         let existingSlotIndex = existing.slotIndex;
+        
+        // 기존 가구의 slotIndex가 undefined인 경우 position으로부터 계산
         if (existingSlotIndex === undefined || existingSlotIndex === null) {
-          // 기존 가구도 slotIndex가 없으면 position 비교
+          const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+          const indexing = calculateSpaceIndexing(spaceInfo);
+          
+          if (indexing && indexing.threeUnitPositions) {
+            let minDistance = Infinity;
+            let closestSlot = 0;
+            
+            for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+              const distance = Math.abs(existing.position.x - indexing.threeUnitPositions[i]);
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestSlot = i;
+              }
+            }
+            
+            existingSlotIndex = closestSlot;
+            console.log('📍 [Store] 기존 가구 slotIndex 계산:', {
+              existingId: existing.id,
+              positionX: existing.position.x,
+              calculatedSlotIndex: existingSlotIndex
+            });
+          }
+        }
+        
+        // 둘 다 slotIndex가 없으면 position 비교
+        if ((existingSlotIndex === undefined || existingSlotIndex === null) && 
+            (calculatedSlotIndex === undefined || calculatedSlotIndex === null)) {
           if (Math.abs(existing.position.x - module.position.x) < 0.01) {
             console.log('❌ [Store] position 기반 충돌 감지:', {
               새가구_position: module.position.x,
