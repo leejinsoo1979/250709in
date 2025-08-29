@@ -146,8 +146,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
     console.log('🎯 handleSlotDrop called:', {
       hasCurrentDragData: !!currentDragData,
+      currentDragData: currentDragData,
       droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      droppedCeilingWidth: spaceInfo.droppedCeiling?.width
+      droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+      surroundType: spaceInfo.surroundType,
+      hasIndexingZones: !!indexing?.zones
     });
     
     // 드롭 위치에서 마우스 좌표 계산
@@ -258,11 +261,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     // 데이터 전송이 없으면 currentDragData로 대체
     if (!dragData) {
+      console.log('⚠️ No drag data from event, using currentDragData:', currentDragData);
       dragData = currentDragData;
     }
     console.log('📦 Effective drag data:', dragData);
     
     if (!dragData || dragData.type !== 'furniture') {
+      console.log('❌ Invalid drag data:', { dragData, type: dragData?.type });
       return false;
     }
     
