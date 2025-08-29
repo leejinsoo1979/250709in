@@ -104,7 +104,6 @@ const Configurator: React.FC = () => {
   // URL 파라미터에서 도면 편집기 상태 확인
   const showDrawingEditor = searchParams.get('editor') === 'drawing';
   const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // PDF 미리보기 상태
-  const [pdfPreviewMode, setPdfPreviewMode] = useState<'download' | 'editor'>('download'); // PDF 미리보기 모드
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -1811,8 +1810,7 @@ const Configurator: React.FC = () => {
     newSearchParams.set('editor', 'drawing');
     window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
     
-    // 도면 편집기 모드로 설정
-    setPdfPreviewMode('editor');
+    // 도면 편집기 열기
     setShowPDFPreview(true);
   };
 
@@ -2975,10 +2973,9 @@ const Configurator: React.FC = () => {
         onClose={() => setIsConvertPanelOpen(false)}
       />
       
-      {/* PDF 템플릿 미리보기 */}
+      {/* PDF 템플릿 미리보기 - 도면 편집기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
-        mode={pdfPreviewMode} // 상태로 관리되는 모드 사용
         onClose={() => {
           // URL에서 editor 파라미터 제거
           const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -2986,7 +2983,6 @@ const Configurator: React.FC = () => {
           const queryString = newSearchParams.toString();
           window.history.replaceState(null, '', `${window.location.pathname}${queryString ? '?' + queryString : ''}`);
           setShowPDFPreview(false);
-          setPdfPreviewMode('download'); // 닫을 때 모드 초기화
         }}
         capturedViews={capturedViews}
       />
