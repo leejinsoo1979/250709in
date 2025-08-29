@@ -31,7 +31,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setRenderMode } = useUIStore();
+  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setRenderMode } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -43,6 +43,7 @@ export function usePDFExport() {
     const originalShowGuides = showGuides;
     const originalShowAxis = showAxis;
     const originalShowDimensions = showDimensions;
+    const originalShowDimensionsText = showDimensionsText;
     const originalRenderMode = renderMode;
     
     console.log('📸 PDF 캡처 시작:', {
@@ -53,6 +54,7 @@ export function usePDFExport() {
         showGuides: originalShowGuides,
         showAxis: originalShowAxis,
         showDimensions: originalShowDimensions,
+        showDimensionsText: originalShowDimensionsText,
         renderMode: originalRenderMode
       }
     });
@@ -68,6 +70,7 @@ export function usePDFExport() {
       setShowGuides(false); // 그리드 끄기
       setShowAxis(false); // 축 끄기
       setShowDimensions(true); // 치수는 표시해야 함!
+      setShowDimensionsText(true); // 치수 텍스트도 표시해야 함!
       setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
@@ -176,6 +179,7 @@ export function usePDFExport() {
     setShowGuides(originalShowGuides);
     setShowAxis(originalShowAxis);
     setShowDimensions(originalShowDimensions);
+    setShowDimensionsText(originalShowDimensionsText);
     setRenderMode(originalRenderMode);
     
     console.log('📸 PDF 캡처 완료 - 설정 복원:', {
@@ -184,6 +188,7 @@ export function usePDFExport() {
       showGuides: originalShowGuides,
       showAxis: originalShowAxis,
       showDimensions: originalShowDimensions,
+      showDimensionsText: originalShowDimensionsText,
       renderMode: originalRenderMode
     });
     
@@ -191,7 +196,7 @@ export function usePDFExport() {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return imageData;
-  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setRenderMode]);
+  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setRenderMode]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -147,6 +147,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 스토어에서 직접 최신 데이터 가져오기 - 의존성 배열에서 제외하여 재생성 방지
     const storeState = useFurnitureStore.getState();
     const latestDragData = storeState.currentDragData;
+    const latestPlacedModules = storeState.placedModules;
+    
+    // spaceInfo와 indexing을 최신 상태로 다시 계산
+    const latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const latestInternalSpace = calculateInternalSpace(latestSpaceInfo);
+    const latestIndexing = calculateSpaceIndexing(latestSpaceInfo);
     
     console.log('🎯 handleSlotDrop called:', {
       hasCurrentDragData: !!currentDragData,
@@ -287,8 +293,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     
     // 단내림이 활성화된 경우 영역별 처리
-    if (spaceInfo.droppedCeiling?.enabled && zoneToUse) {
-      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (latestSpaceInfo.droppedCeiling?.enabled && zoneToUse) {
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(latestSpaceInfo, latestSpaceInfo.customColumnCount);
       
       // 활성 영역에 맞는 인덱싱 생성
       let zoneIndexing;

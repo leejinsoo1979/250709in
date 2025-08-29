@@ -388,11 +388,39 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
 
   // 저장 및 이동
   const handleSaveAndNavigate = async () => {
-    if (!pendingNavigation) return;
+    if (!pendingNavigation || !currentProject || !user) return;
     
     try {
-      // TODO: 현재 디자인파일 저장 로직 구현 필요
       console.log('현재 파일 저장 중...');
+      
+      // 현재 디자인파일 저장
+      const { saveDesignFile } = await import('@/firebase/projects');
+      
+      // 현재 작업중인 디자인파일 ID 찾기
+      const urlParams = new URLSearchParams(window.location.search);
+      const currentDesignFileId = urlParams.get('designFileId');
+      
+      if (currentDesignFileId) {
+        // 현재 상태 저장
+        const designData = {
+          name: basicInfo?.title || '새 디자인',
+          spaceConfig: spaceInfo,
+          furniture: {
+            placedModules: placedModules
+          },
+          updatedAt: new Date().toISOString()
+        };
+        
+        const saveResult = await saveDesignFile(currentDesignFileId, designData);
+        
+        if (saveResult.error) {
+          console.error('저장 실패:', saveResult.error);
+          alert('저장에 실패했습니다: ' + saveResult.error);
+          return;
+        }
+        
+        console.log('✅ 현재 파일 저장 완료');
+      }
       
       // 저장 후 이동
       await performNavigation(pendingNavigation);
@@ -421,10 +449,33 @@ const FileTree: React.FC<FileTreeProps> = ({ onFileSelect, onCreateNew }) => {
     if (nodeType === 'design') {
       // 디자인 파일 로드
       console.log('디자인 파일 로드:', nodeId);
-      const designFile = designFiles.find(df => df.id === nodeId);
-      if (designFile) {
-        // TODO: 실제 디자인파일 로드 로직 구현
-        console.log('디자인파일 로드 요청:', designFile.name);
+      
+      // 실제 Firebase 디자인파일 ID 찾기
+      let actualDesignFileId = nodeId;
+      let designFile = designFiles.find(df => df.id === nodeId);
+      
+      // 가상 ID인 경우 (루트 레벨 디자인)
+      if (!designFile && nodeId === `${currentProject?.id}-design`) {
+        designFile = designFiles.find(df => df.name === currentProject?.title);
+        if (designFile) {
+          actualDesignFileId = designFile.id;
+        }
+      }
+      
+      if (designFile && actualDesignFileId) {
+        console.log('디자인파일 로드 시작:', designFile.name, actualDesignFileId);
+        
+        // URL 파라미터 업데이트하여 페이지 새로고침
+        const params = new URLSearchParams();
+        params.set('projectId', currentProject?.id || '');
+        params.set('designFileId', actualDesignFileId);
+        params.set('designFileName', encodeURIComponent(designFile.name));
+        
+        // 페이지 새로고침으로 디자인파일 로드
+        window.location.search = params.toString();
+      } else {
+        console.error('디자인파일을 찾을 수 없습니다:', nodeId);
+        alert('디자인파일을 찾을 수 없습니다.');
       }
     } else if (nodeType === 'project' && projectId) {
       // 다른 프로젝트로 이동
