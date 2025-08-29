@@ -688,14 +688,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return distance < 10;
   });
   
-  // 가구가 600mm보다 작으면 무조건 기둥이 있다고 판단 (표준 가구는 600mm이므로)
-  hasColumnEvidence = furnitureWidthMm < 600 || // 600mm보다 작으면 무조건 기둥
-                     (slotInfo && slotInfo.hasColumn) || 
+  // 기둥이 있다는 증거를 더 정확하게 판단
+  hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
                      (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
                      (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
-                      placedModule.customWidth < originalModuleWidth) ||
+                      placedModule.customWidth < originalModuleWidth && placedModule.customWidth < 580) || // customWidth가 원래보다 작고 580mm 미만일 때만
                      (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth)) ||
-                     (furnitureWidthMm < originalModuleWidth) || 
+                     (furnitureWidthMm < originalModuleWidth && furnitureWidthMm < 580) || // 렌더링 너비가 원래보다 작고 580mm 미만일 때만
                      hasColumnInPosition;
   
   // 디버깅: hasColumnEvidence 상세 정보
@@ -1357,7 +1356,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? false // 엔드패널이 있는 경우 도어는 별도 렌더링
                   : hasColumnEvidence
                   ? false // 기둥이 있는 경우 도어는 별도 렌더링 (커버도어)
-                  : (placedModule.hasDoor ?? false)}
+                  : (placedModule.hasDoor ?? true)}
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
