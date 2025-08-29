@@ -54,19 +54,24 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     const indexing = calculateSpaceIndexing(spaceInfo);
     const columnWidth = indexing.columnWidth;
-    // 이동하는 가구의 isDual 여부: 호출 측에서 강제 지정되면 우선 사용
+    // 이동하는 가구의 isDual 여부: 모듈 ID로 먼저 판단
     const isDualFurniture = typeof treatAsDual === 'boolean'
       ? treatAsDual
-      : (movingModule.isDualSlot !== undefined
+      : (movingModule.moduleId.includes('dual-') || 
+         (movingModule.isDualSlot !== undefined
           ? movingModule.isDualSlot
-          : Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50);
+          : Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50));
 
     // 이동하는 가구가 차지할 슬롯들 계산
     let occupiedSlots: number[] = [];
     if (isDualFurniture) {
       // 듀얼 가구는 2개 슬롯 차지
       occupiedSlots = [newSlotIndex, newSlotIndex + 1];
-      console.log('🔄 듀얼 가구 이동 - 2개 슬롯 차지:', occupiedSlots);
+      console.log('🔄 듀얼 가구 이동:', {
+        moduleId: movingModule.moduleId,
+        타겟슬롯: occupiedSlots,
+        isDualSlot: movingModule.isDualSlot
+      });
     } else {
       // 싱글 가구는 1개 슬롯 차지
       occupiedSlots = [newSlotIndex];
@@ -108,9 +113,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         return; // 충돌로 간주하지 않음
       }
 
-      // 기존 가구의 isDualSlot 속성을 우선 사용
-      const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot :
-                          Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
+      // 기존 가구의 듀얼 여부 판단 - 모듈 ID로 먼저 판단
+      const isModuleDual = module.moduleId.includes('dual-') ||
+                          (module.isDualSlot !== undefined ? module.isDualSlot :
+                          Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50);
       
       // 기존 가구가 차지하는 슬롯들
       let moduleSlots: number[] = [];
@@ -315,9 +321,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           threeUnitDualPositions: {},
           threeUnitBoundaries: []
         };
-        // isDualSlot 속성을 우선 사용
-        isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
-                         Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
+        // 모듈 ID로 먼저 판단하고, isDualSlot 속성을 확인
+        isDualFurniture = currentModule.moduleId.includes('dual-') ||
+                         (currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
+                         Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50);
 
         // 단내림(현재) → 메인(목표) 이동 시 정책 적용: 듀얼은 두 칸 이동, 불가 시 싱글로 전환
         let forceTreatAsDual: boolean | undefined = undefined;
@@ -341,9 +348,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         
         indexing = calculateSpaceIndexing(spaceInfo);
         const columnWidth = indexing.columnWidth;
-        // isDualSlot 속성을 우선 사용
-        isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
-                         Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+        // 모듈 ID로 먼저 판단하고, isDualSlot 속성을 확인
+        isDualFurniture = currentModule.moduleId.includes('dual-') ||
+                         (currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
+                         Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50);
       }
 
       // 슬롯 가용성 검사 (자기 자신 제외)

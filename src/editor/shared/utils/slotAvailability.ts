@@ -147,9 +147,10 @@ export const isSlotAvailable = (
         continue; // 충돌로 간주하지 않고 다음 가구 검사
       }
       
-      // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
-      const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
-                          Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
+      // 기존 가구의 듀얼/싱글 여부 판별 - 모듈 ID로 먼저 판단
+      const isModuleDual = placedModule.moduleId.includes('dual-') || 
+                          (placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
+                          Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50);
       
       // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
       let moduleSlot = placedModule.slotIndex !== undefined ? placedModule.slotIndex : -1;
@@ -172,22 +173,20 @@ export const isSlotAvailable = (
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
         
         if (hasOverlap) {
-          console.log('🚫 슬롯 충돌 감지 (isSlotAvailable):', {
-            targetSlots,
-            existingModule: {
-              id: placedModule.id,
-              moduleId: placedModule.moduleId,
-              slotIndex: moduleSlot,
-              isDual: isModuleDual,
-              occupiedSlots: moduleSlots,
-              category: isExistingUpper ? 'upper' : (isExistingLower ? 'lower' : 'normal')
+          // 디버그 로그 간소화
+          console.log('🚫 슬롯 충돌:', {
+            타겟슬롯: targetSlots,
+            기존가구: {
+              id: placedModule.moduleId,
+              슬롯: moduleSlot,
+              듀얼: isModuleDual,
+              차지슬롯: moduleSlots
             },
-            newModule: {
-              moduleId,
-              isDualFurniture,
-              category: isNewUpper ? 'upper' : (isNewLower ? 'lower' : 'normal')
-            },
-            conflict: true
+            새가구: {
+              id: moduleId,
+              듀얼: isDualFurniture,
+              타겟슬롯: targetSlots
+            }
           });
           return false; // 충돌 발견
         }
