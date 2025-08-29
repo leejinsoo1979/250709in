@@ -1085,6 +1085,22 @@ const Configurator: React.FC = () => {
       // 이미 같은 프로젝트와 디자인이 로드되어 있고, CNC에서 돌아온 경우
       if (currentProjectId === projectId && currentDesignFileId === designFileId && (fromCNC || isDataLoaded)) {
         console.log('🔄 동일한 프로젝트/디자인 - 재로드 건너뜀');
+        
+        // CNC에서 돌아온 경우 sessionStorage에서 가구 데이터 복원
+        if (fromCNC) {
+          const backupData = sessionStorage.getItem('cnc_furniture_backup');
+          if (backupData) {
+            try {
+              const restoredModules = JSON.parse(backupData);
+              console.log('✅ CNC에서 돌아옴 - 가구 데이터 복원:', restoredModules.length, '개');
+              setPlacedModules(restoredModules);
+              sessionStorage.removeItem('cnc_furniture_backup'); // 복원 후 삭제
+            } catch (error) {
+              console.error('가구 데이터 복원 실패:', error);
+            }
+          }
+        }
+        
         setLoading(false);
         return;
       }
@@ -1132,23 +1148,42 @@ const Configurator: React.FC = () => {
             }
             setSpaceInfo(spaceConfig);
             
-            // 가구 설정
-            console.log('🪑 디자인 파일 가구 데이터 로드:', {
-              hasFurniture: !!designFile.furniture,
-              hasPlacedModules: !!designFile.furniture?.placedModules,
-              placedModulesCount: designFile.furniture?.placedModules?.length || 0,
-              placedModules: designFile.furniture?.placedModules
-            });
-            
-            if (designFile.furniture?.placedModules) {
-              console.log('🪑 [LOAD] 가구 데이터 설정 중:', designFile.furniture.placedModules);
-              console.trace('🪑 [TRACE] setPlacedModules 호출 스택');
-              setPlacedModules(designFile.furniture.placedModules);
-              console.log('🪑 [LOAD] 가구 데이터 설정 완료');
+            // 가구 설정 - CNC 백업이 있으면 우선 사용
+            const backupData = sessionStorage.getItem('cnc_furniture_backup');
+            if (backupData && fromCNC) {
+              try {
+                const restoredModules = JSON.parse(backupData);
+                console.log('✅ CNC 백업 데이터 사용:', restoredModules.length, '개');
+                setPlacedModules(restoredModules);
+                sessionStorage.removeItem('cnc_furniture_backup');
+              } catch (error) {
+                console.error('백업 데이터 복원 실패:', error);
+                // 백업 실패 시 원래 로직 실행
+                if (designFile.furniture?.placedModules) {
+                  setPlacedModules(designFile.furniture.placedModules);
+                } else {
+                  setPlacedModules([]);
+                }
+              }
             } else {
-              console.log('⚠️ [EMPTY] 가구 데이터가 없어서 빈 배열로 초기화');
-              console.trace('⚠️ [TRACE] setPlacedModules([]) 호출 스택');
-              setPlacedModules([]);
+              // 백업이 없으면 Firebase 데이터 사용
+              console.log('🪑 디자인 파일 가구 데이터 로드:', {
+                hasFurniture: !!designFile.furniture,
+                hasPlacedModules: !!designFile.furniture?.placedModules,
+                placedModulesCount: designFile.furniture?.placedModules?.length || 0,
+                placedModules: designFile.furniture?.placedModules
+              });
+              
+              if (designFile.furniture?.placedModules) {
+                console.log('🪑 [LOAD] 가구 데이터 설정 중:', designFile.furniture.placedModules);
+                console.trace('🪑 [TRACE] setPlacedModules 호출 스택');
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 [LOAD] 가구 데이터 설정 완료');
+              } else {
+                console.log('⚠️ [EMPTY] 가구 데이터가 없어서 빈 배열로 초기화');
+                console.trace('⚠️ [TRACE] setPlacedModules([]) 호출 스택');
+                setPlacedModules([]);
+              }
             }
             
             setIsDataLoaded(true); // 데이터 로드 완료 표시
@@ -1215,17 +1250,36 @@ const Configurator: React.FC = () => {
             }
             setSpaceInfo(spaceConfig);
             
-            // 가구 설정
-            console.log('🪑 디자인 파일 가구 데이터 로드:', {
-              hasFurniture: !!designFile.furniture,
-              hasPlacedModules: !!designFile.furniture?.placedModules,
-              placedModulesCount: designFile.furniture?.placedModules?.length || 0
-            });
-            
-            if (designFile.furniture?.placedModules) {
-              setPlacedModules(designFile.furniture.placedModules);
+            // 가구 설정 - CNC 백업이 있으면 우선 사용
+            const backupData = sessionStorage.getItem('cnc_furniture_backup');
+            if (backupData && fromCNC) {
+              try {
+                const restoredModules = JSON.parse(backupData);
+                console.log('✅ CNC 백업 데이터 사용 (디자인명 로드):', restoredModules.length, '개');
+                setPlacedModules(restoredModules);
+                sessionStorage.removeItem('cnc_furniture_backup');
+              } catch (error) {
+                console.error('백업 데이터 복원 실패:', error);
+                // 백업 실패 시 원래 로직 실행
+                if (designFile.furniture?.placedModules) {
+                  setPlacedModules(designFile.furniture.placedModules);
+                } else {
+                  setPlacedModules([]);
+                }
+              }
             } else {
-              setPlacedModules([]);
+              // 백업이 없으면 Firebase 데이터 사용
+              console.log('🪑 디자인 파일 가구 데이터 로드:', {
+                hasFurniture: !!designFile.furniture,
+                hasPlacedModules: !!designFile.furniture?.placedModules,
+                placedModulesCount: designFile.furniture?.placedModules?.length || 0
+              });
+              
+              if (designFile.furniture?.placedModules) {
+                setPlacedModules(designFile.furniture.placedModules);
+              } else {
+                setPlacedModules([]);
+              }
             }
             
             setLoading(false);

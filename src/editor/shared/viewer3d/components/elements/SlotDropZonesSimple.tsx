@@ -144,7 +144,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    // 스토어에서 직접 최신 데이터 가져오기
+    // 스토어에서 직접 최신 데이터 가져오기 - 의존성 배열에서 제외하여 재생성 방지
     const storeState = useFurnitureStore.getState();
     const latestDragData = storeState.currentDragData;
     
@@ -1877,13 +1877,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     return true;
   }, [
-    currentDragData,
+    // currentDragData를 제거 - 드래그 중에 변경되어 함수가 재생성됨
     camera,
     scene,
     spaceInfo,
     internalSpace,
     indexing,
-    placedModules,
+    // placedModules도 제거 - 스토어에서 직접 가져옴
     addModule, 
     setCurrentDragData,
     showAlert
@@ -1924,7 +1924,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('🎯 SlotDropZonesSimple - unregistering window.handleSlotDrop');
       delete window.handleSlotDrop;
     };
-  }, [handleSlotDrop, spaceInfo, indexing]);
+  }, [handleSlotDrop]); // spaceInfo와 indexing 제거 - handleSlotDrop 내부에서 계산
   
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
