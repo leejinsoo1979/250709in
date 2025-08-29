@@ -8,6 +8,9 @@ import Logo from '@/components/common/Logo';
 import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useProjectStore } from '@/store/core/projectStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 interface HeaderProps {
   title: string;
@@ -367,6 +370,18 @@ const Header: React.FC<HeaderProps> = ({
                   className={styles.dropdownItem}
                   onClick={() => {
                     console.log('CNC 옵티마이저 버튼 클릭됨');
+                    
+                    // 현재 전체 상태를 sessionStorage에 저장
+                    const currentState = {
+                      projectId,
+                      designFileId,
+                      basicInfo: useProjectStore.getState().basicInfo,
+                      spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+                      placedModules: useFurnitureStore.getState().placedModules,
+                      timestamp: Date.now()
+                    };
+                    sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
+                    console.log('💾 Configurator 상태 백업 완료');
                     
                     // 프로젝트 ID와 디자인 파일 ID를 URL 파라미터로 전달
                     const params = new URLSearchParams();

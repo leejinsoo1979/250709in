@@ -1069,9 +1069,33 @@ const Configurator: React.FC = () => {
 
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
-    console.log('🔍 [Configurator] useEffect 실행');
-    console.log('🔍 [Configurator] location.state:', location.state);
-    console.log('🔍 [Configurator] searchParams:', searchParams.toString());
+    // sessionStorage에서 전체 상태 백업 확인
+    const stateBackup = sessionStorage.getItem('configurator_state_backup');
+    if (stateBackup) {
+      try {
+        const savedState = JSON.parse(stateBackup);
+        console.log('🔄 Configurator 상태 복원 시작');
+        
+        // 상태 복원
+        setBasicInfo(savedState.basicInfo);
+        setSpaceInfo(savedState.spaceInfo);
+        setPlacedModules(savedState.placedModules);
+        setCurrentProjectId(savedState.projectId);
+        setCurrentDesignFileId(savedState.designFileId);
+        setProjectId(savedState.projectId);
+        
+        // 백업 데이터 삭제
+        sessionStorage.removeItem('configurator_state_backup');
+        
+        setIsDataLoaded(true);
+        setLoading(false);
+        console.log('✅ Configurator 상태 복원 완료');
+        return; // 다른 로직 실행 방지
+      } catch (error) {
+        console.error('상태 복원 실패:', error);
+        sessionStorage.removeItem('configurator_state_backup');
+      }
+    }
     
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const designFileId = searchParams.get('designFileId');
@@ -1079,49 +1103,6 @@ const Configurator: React.FC = () => {
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
-    const fromCNC = location.state?.fromCNC || location.state?.skipReload; // CNC에서 돌아온 경우
-    
-    console.log('🔍 [Configurator] fromCNC:', fromCNC);
-    console.log('🔍 [Configurator] projectId:', projectId);
-    console.log('🔍 [Configurator] designFileId:', designFileId);
-    
-    // CNC에서 돌아온 경우 - 모든 다른 로직보다 먼저 체크
-    if (fromCNC) {
-      console.log('🔄🔄🔄 CNC에서 돌아옴 - 모든 데이터 재로드 건너뜀 🔄🔄🔄');
-      
-      // sessionStorage에서 가구 데이터 복원
-      const backupData = sessionStorage.getItem('cnc_furniture_backup');
-      console.log('🔍 [Configurator] CNC 백업 데이터 존재:', !!backupData);
-      
-      if (backupData) {
-        try {
-          const restoredModules = JSON.parse(backupData);
-          console.log('✅ CNC 백업 데이터 복원:', restoredModules.length, '개');
-          setPlacedModules(restoredModules);
-          sessionStorage.removeItem('cnc_furniture_backup');
-        } catch (error) {
-          console.error('가구 데이터 복원 실패:', error);
-        }
-      } else {
-        console.log('⚠️ CNC 백업 데이터가 없습니다');
-      }
-      
-      // 프로젝트/디자인 ID는 유지
-      if (projectId) {
-        setCurrentProjectId(projectId);
-        setProjectId(projectId);
-      }
-      if (designFileId) {
-        setCurrentDesignFileId(designFileId);
-      }
-      if (designFileName) {
-        setCurrentDesignFileName(decodeURIComponent(designFileName));
-      }
-      
-      setIsDataLoaded(true);
-      setLoading(false);
-      return; // 다른 모든 로직 실행 방지
-    }
     
     // Step2에서 넘어온 경우 (designFileId가 있는 경우)
     if (projectId && designFileId) {

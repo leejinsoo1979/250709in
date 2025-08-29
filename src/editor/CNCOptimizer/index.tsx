@@ -68,13 +68,7 @@ const CNCOptimizer: React.FC = () => {
   const designFileId = searchParams.get('designFileId');
   const fromConfigurator = location.state?.fromConfigurator;
   
-  // CNC 진입 시 가구 데이터를 sessionStorage에 저장
-  useEffect(() => {
-    if (placedModules && placedModules.length > 0) {
-      sessionStorage.setItem('cnc_furniture_backup', JSON.stringify(placedModules));
-      console.log('💾 CNC: 가구 데이터 백업 완료', placedModules.length, '개');
-    }
-  }, []);
+  // CNC 진입 시 별도 백업 불필요 (Header에서 전체 상태를 백업함)
   
   // Use live panel data hook for real-time synchronization
   const { panels: livePanels, normalizedPanels: liveNormalizedPanels, stats: panelStats, isLoading } = useLivePanelData();
