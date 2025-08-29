@@ -541,12 +541,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
-  // 기둥이 있다는 증거 (slotInfo 또는 adjustedWidth 또는 customWidth로 판단)
-  // 단내림 구간에서는 customWidth가 설정되어 있을 수도 있음
+  // 기둥이 있다는 증거 (여러 방법으로 판단)
+  // 1. slotInfo에 기둥이 있다고 표시
+  // 2. adjustedWidth가 설정됨
+  // 3. customWidth가 원래 모듈 너비보다 작음
+  // 4. 실제 렌더링 너비가 슬롯 너비보다 작음 (가구가 줄어들었음)
+  const originalModuleWidth = moduleData?.dimensions.width || 600;
   const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
                             (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
                             (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
-                             placedModule.customWidth < (moduleData?.dimensions.width || 600));
+                             placedModule.customWidth < originalModuleWidth) ||
+                            (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth));
   
   // 디버깅: 단내림 + 기둥 상황
   if (spaceInfo.droppedCeiling?.enabled) {
