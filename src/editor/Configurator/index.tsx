@@ -1082,25 +1082,34 @@ const Configurator: React.FC = () => {
     if (projectId && designFileId) {
       console.log('📋 Step2에서 넘어옴 - designFileId:', designFileId);
       
-      // 이미 같은 프로젝트와 디자인이 로드되어 있고, CNC에서 돌아온 경우
-      if (currentProjectId === projectId && currentDesignFileId === designFileId && (fromCNC || isDataLoaded)) {
-        console.log('🔄 동일한 프로젝트/디자인 - 재로드 건너뜀');
+      // CNC에서 돌아온 경우 - 데이터 로드 건너뛰고 백업 복원만
+      if (fromCNC) {
+        console.log('🔄 CNC에서 돌아옴 - 데이터 재로드 건너뜀');
         
-        // CNC에서 돌아온 경우 sessionStorage에서 가구 데이터 복원
-        if (fromCNC) {
-          const backupData = sessionStorage.getItem('cnc_furniture_backup');
-          if (backupData) {
-            try {
-              const restoredModules = JSON.parse(backupData);
-              console.log('✅ CNC에서 돌아옴 - 가구 데이터 복원:', restoredModules.length, '개');
-              setPlacedModules(restoredModules);
-              sessionStorage.removeItem('cnc_furniture_backup'); // 복원 후 삭제
-            } catch (error) {
-              console.error('가구 데이터 복원 실패:', error);
-            }
+        // sessionStorage에서 가구 데이터 복원
+        const backupData = sessionStorage.getItem('cnc_furniture_backup');
+        if (backupData) {
+          try {
+            const restoredModules = JSON.parse(backupData);
+            console.log('✅ CNC에서 돌아옴 - 가구 데이터 복원:', restoredModules.length, '개');
+            setPlacedModules(restoredModules);
+            sessionStorage.removeItem('cnc_furniture_backup'); // 복원 후 삭제
+          } catch (error) {
+            console.error('가구 데이터 복원 실패:', error);
           }
         }
         
+        setCurrentProjectId(projectId);
+        setProjectId(projectId);
+        setCurrentDesignFileId(designFileId);
+        setIsDataLoaded(true);
+        setLoading(false);
+        return;
+      }
+      
+      // 이미 같은 프로젝트와 디자인이 로드되어 있는 경우
+      if (currentProjectId === projectId && currentDesignFileId === designFileId && isDataLoaded) {
+        console.log('🔄 동일한 프로젝트/디자인 - 재로드 건너뜀');
         setLoading(false);
         return;
       }
@@ -1203,6 +1212,32 @@ const Configurator: React.FC = () => {
     // designFileName으로 진입한 경우 (대시보드에서 디자인 카드 클릭)
     if (projectId && designFileName) {
       console.log('📋 디자인명으로 진입 - designFileName:', designFileName);
+      
+      // CNC에서 돌아온 경우 - 데이터 로드 건너뛰고 백업 복원만
+      if (fromCNC) {
+        console.log('🔄 CNC에서 돌아옴 (디자인명) - 데이터 재로드 건너뜀');
+        
+        // sessionStorage에서 가구 데이터 복원
+        const backupData = sessionStorage.getItem('cnc_furniture_backup');
+        if (backupData) {
+          try {
+            const restoredModules = JSON.parse(backupData);
+            console.log('✅ CNC에서 돌아옴 - 가구 데이터 복원:', restoredModules.length, '개');
+            setPlacedModules(restoredModules);
+            sessionStorage.removeItem('cnc_furniture_backup');
+          } catch (error) {
+            console.error('가구 데이터 복원 실패:', error);
+          }
+        }
+        
+        setCurrentProjectId(projectId);
+        setProjectId(projectId);
+        setCurrentDesignFileName(decodeURIComponent(designFileName));
+        setIsDataLoaded(true);
+        setLoading(false);
+        return;
+      }
+      
       setCurrentProjectId(projectId);
       setProjectId(projectId);
       setCurrentDesignFileName(decodeURIComponent(designFileName));

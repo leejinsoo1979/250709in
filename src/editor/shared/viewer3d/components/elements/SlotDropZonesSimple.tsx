@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -141,6 +141,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // mm를 Three.js 단위로 변환하는 함수
   const mmToThreeUnits = (mm: number) => mm * 0.01;
+  
+  // handleSlotDrop 함수를 위한 ref
+  const handleSlotDropRef = useRef<(dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => boolean>();
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
@@ -1891,7 +1894,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     showAlert
   ]);
   
-  // window 객체에 함수 노출
+  // handleSlotDrop ref 업데이트
+  useEffect(() => {
+    handleSlotDropRef.current = handleSlotDrop;
+  }, [handleSlotDrop]);
+  
+  // window 객체에 함수 노출 - 마운트 시 한 번만
   useEffect(() => {
     console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop', {
       componentMounted: true,
@@ -1905,18 +1913,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => {
-      // window.handleSlotDrop이 호출될 때마다 최신 currentDragData를 스토어에서 직접 가져옴
-      const latestCurrentDragData = useFurnitureStore.getState().currentDragData;
-      console.log('🎯 window.handleSlotDrop called', {
-        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-        surroundType: spaceInfo.surroundType,
-        hasZones: !!indexing.zones,
-        activeZone: activeZone,
-        currentDragData: currentDragData,
-        latestCurrentDragData: latestCurrentDragData
+      console.log('🎯 window.handleSlotDrop called - using ref.current', {
+        hasRef: !!handleSlotDropRef.current,
+        dragEventType: dragEvent.type,
+        dataTransfer: dragEvent.dataTransfer?.getData('application/json')
       });
-      // handleSlotDrop 내부에서 마우스 위치를 기반으로 영역을 자동 판단함
-      return handleSlotDrop(dragEvent, canvasElement);
+      if (handleSlotDropRef.current) {
+        return handleSlotDropRef.current(dragEvent, canvasElement);
+      } else {
+        console.error('❌ handleSlotDropRef.current is null');
+        return false;
+      }
     };
     
     // 실제로 등록되었는지 확인
@@ -1926,7 +1933,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('🎯 SlotDropZonesSimple - unregistering window.handleSlotDrop');
       delete window.handleSlotDrop;
     };
-  }, [handleSlotDrop]); // spaceInfo와 indexing 제거 - handleSlotDrop 내부에서 계산
+  }, []); // 마운트/언마운트 시에만 실행
   
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {

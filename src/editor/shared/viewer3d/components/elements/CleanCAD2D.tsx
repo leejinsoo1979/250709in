@@ -255,12 +255,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return fallback;
   };
 
-  // 3D 모드에서는 검정색, 2D 모드에서는 테마 색상 사용
+  // 3D 모드에서는 검정색, 2D 모드에서도 검정색 사용 (다크모드에서는 흰색)
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
-  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
-  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
-  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : primaryColor);  // 다크모드에서 밝은 회색
-  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : primaryColor);  // 다크모드에서 중간 회색
+  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 검정색, 다크모드에서 흰색
+  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 검정색, 다크모드에서 흰색
+  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : '#333333');  // 2D: 진한 회색, 다크모드에서 밝은 회색
+  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : '#666666');  // 2D: 중간 회색, 다크모드에서 중간 회색
   const gridColor = currentViewDirection === '3D' 
     ? primaryColor  // 3D에서는 테마 색상 사용
     : getThemeColorFromCSS('--theme-border', '#e5e7eb');  // 2D에서는 border 색상
