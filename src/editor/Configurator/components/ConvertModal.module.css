@@ -165,6 +165,7 @@
   height: 20px;
   margin-right: 12px;
   flex-shrink: 0;
+  accent-color: var(--theme-primary);
 }
 
 .renderModeContent {
@@ -218,6 +219,7 @@
   height: 20px;
   margin-right: 12px;
   cursor: pointer;
+  accent-color: var(--theme-primary);
 }
 
 .viewOption span {
