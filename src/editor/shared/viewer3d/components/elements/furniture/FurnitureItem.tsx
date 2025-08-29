@@ -676,12 +676,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // 실제 렌더링 너비로 기둥 여부 재판단
-  hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
+  // 단내림이 있고 가구 너비가 줄어들었으면 무조건 기둥이 있다고 판단
+  const isInDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
+  
+  // 기둥이 있는지 직접 확인
+  const hasColumnInPosition = spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.some(column => {
+    const furnitureCenterX = placedModule.position.x;
+    const columnCenterX = column.position[0];
+    const distance = Math.abs(furnitureCenterX - columnCenterX);
+    // 가구 중심과 기둥 중심의 거리가 10 이하면 기둥 근처
+    return distance < 10;
+  });
+  
+  // 가구가 600mm보다 작으면 무조건 기둥이 있다고 판단 (표준 가구는 600mm이므로)
+  hasColumnEvidence = furnitureWidthMm < 600 || // 600mm보다 작으면 무조건 기둥
+                     (slotInfo && slotInfo.hasColumn) || 
                      (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
                      (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
                       placedModule.customWidth < originalModuleWidth) ||
                      (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth)) ||
-                     (furnitureWidthMm < originalModuleWidth); // 실제 렌더링 너비가 원래보다 작으면 기둥 있음
+                     (furnitureWidthMm < originalModuleWidth) || 
+                     hasColumnInPosition;
   
   // 디버깅: hasColumnEvidence 상세 정보
   if (hasColumnEvidence) {
@@ -698,7 +713,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
         customWidthSmaller: placedModule.customWidth !== undefined && placedModule.customWidth < originalModuleWidth,
         availableWidthSmaller: slotInfo?.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth),
-        renderWidthSmaller: furnitureWidthMm < originalModuleWidth
+        renderWidthSmaller: furnitureWidthMm < originalModuleWidth,
+        isInDroppedZone: isInDroppedZone && furnitureWidthMm < 600,
+        hasColumnInPosition
       }
     });
   }
