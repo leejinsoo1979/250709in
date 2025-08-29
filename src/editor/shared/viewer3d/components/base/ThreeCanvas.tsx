@@ -240,35 +240,52 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (controlsRef.current && viewMode === '3D') {
       const controls = controlsRef.current;
       
-      // 현재 카메라 거리 유지
-      const currentDistance = controls.object.position.distanceTo(controls.target);
+      // 저장된 3D 초기 상태가 있으면 사용
+      if (initialCameraSetup.current.position0 && 
+          initialCameraSetup.current.target0 && 
+          initialCameraSetup.current.zoom0 !== null) {
+        
+        console.log('🎯 3D 카메라 저장된 초기 상태로 리셋:', {
+          position: initialCameraSetup.current.position0.toArray(),
+          target: initialCameraSetup.current.target0.toArray(),
+          zoom: initialCameraSetup.current.zoom0
+        });
+        
+        // OrbitControls의 저장된 초기 상태를 업데이트
+        controls.target0.copy(initialCameraSetup.current.target0);
+        controls.position0.copy(initialCameraSetup.current.position0);
+        controls.zoom0 = initialCameraSetup.current.zoom0;
+        
+        // reset()을 호출하면 target0, position0, zoom0으로 완전히 리셋됨
+        controls.reset();
+      } else {
+        // 초기 상태가 없으면 기본값으로 설정
+        const spaceHeight = spaceInfo?.height || 2400;
+        const defaultDistance = 50; // 기본 카메라 거리
+        
+        const centerX = 0; // X축 중앙은 0
+        const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
+        
+        console.log('🎯 3D 카메라 기본 위치로 리셋:', {
+          centerX, centerY, 
+          distance: defaultDistance,
+          spaceHeight
+        });
+        
+        // 카메라를 정면 중앙에 위치 (기본 거리 사용)
+        controls.object.position.set(0, centerY, defaultDistance);
+        controls.target.set(0, centerY, 0);
+        controls.object.up.set(0, 1, 0);
+        
+        // 카메라가 타겟을 바라보도록 설정
+        controls.object.lookAt(controls.target);
+        
+        // OrbitControls 업데이트
+        controls.update();
+        controls.saveState();
+      }
       
-      // 공간 정보 가져오기
-      const spaceHeight = spaceInfo?.height || 2400;
-      
-      // 정면 뷰: 공간의 정확한 중앙
-      const centerX = 0; // X축 중앙은 0
-      const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
-      
-      console.log('🎯 정면 뷰로 카메라 리셋 (거리 유지):', {
-        centerX, centerY, 
-        currentDistance,
-        spaceHeight
-      });
-      
-      // 카메라를 정면 중앙에 위치 (거리는 현재 거리 유지)
-      controls.object.position.set(0, centerY, currentDistance);
-      controls.target.set(0, centerY, 0);
-      controls.object.up.set(0, 1, 0);
-      
-      // 카메라가 타겟을 바라보도록 설정
-      controls.object.lookAt(controls.target);
-      
-      // OrbitControls 업데이트
-      controls.update();
-      controls.saveState();
-      
-      console.log('🎯 카메라 정면 뷰 리셋 완료');
+      console.log('🎯 3D 카메라 리셋 완료');
     } else if (controlsRef.current && viewMode === '2D') {
       // 2D 모드에서 저장된 초기 상태로 완전히 리셋
       const controls = controlsRef.current;
