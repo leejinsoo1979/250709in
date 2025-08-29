@@ -40,6 +40,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
+import PlacedModulesList from '@/editor/shared/controls/furniture/PlacedModulesList';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -2096,13 +2097,7 @@ const Configurator: React.FC = () => {
     if (activeRightPanelTab === 'module') {
       return (
         <div className={styles.moduleContent}>
-          <div className={styles.configSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>배치된 가구 목록</h3>
-            </div>
-            {renderPlacedFurnitureList()}
-          </div>
+          <PlacedModulesList />
         </div>
       );
     }
