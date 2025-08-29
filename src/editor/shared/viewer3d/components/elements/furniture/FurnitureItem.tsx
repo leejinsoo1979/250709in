@@ -386,6 +386,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (spaceInfo.droppedCeiling?.enabled) {
       console.log('🔍 [FurnitureItem] analyzeColumnSlots 결과 (단내림):', {
         totalSlots: slots.length,
+        allSlots: slots.map((s, idx) => ({
+          globalIndex: idx,
+          slotIndex: s.slotIndex,
+          hasColumn: s.hasColumn,
+          columnType: s.columnType,
+          availableWidth: s.availableWidth
+        })),
         slotsWithColumns: slots.filter(s => s.hasColumn).map(s => ({
           index: s.slotIndex,
           columnType: s.columnType,
@@ -516,7 +523,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     indexing = calculateSpaceIndexing(zoneSpaceInfo);
   }
   
+  // columnSlots 배열에서 globalSlotIndex에 해당하는 슬롯 찾기
+  // columnSlots[i].slotIndex가 global index이므로 배열 인덱스로 직접 접근
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
+  
+  // 디버깅: slotInfo 확인
+  if (spaceInfo.droppedCeiling?.enabled && globalSlotIndex !== undefined) {
+    console.log('🎯 [FurnitureItem] slotInfo 찾기:', {
+      globalSlotIndex,
+      columnSlotsLength: columnSlots.length,
+      slotInfo: slotInfo ? {
+        slotIndex: slotInfo.slotIndex,
+        hasColumn: slotInfo.hasColumn,
+        columnType: slotInfo.columnType
+      } : 'undefined - globalSlotIndex가 배열 범위를 벗어남'
+    });
+  }
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
   // 디버깅: 단내림 + 기둥 상황
