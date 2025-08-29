@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ZoomIn, ZoomOut, Type, Calculator, Save, User } from 'lucide-react';
 import styles from './Toolbar.module.css';
 
@@ -23,6 +23,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
   projectName = 'CNC Optimizer'
 }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // URL 파라미터에서 프로젝트 ID와 디자인 파일 ID 가져오기
+  const projectId = searchParams.get('projectId');
+  const designFileId = searchParams.get('designFileId');
 
   const handleZoomIn = () => {
     const newZoom = Math.min(200, zoom + 10);
@@ -50,7 +55,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className={styles.left}>
         <button 
           className={styles.backButton}
-          onClick={() => navigate('/configurator')}
+          onClick={() => {
+            // URL 파라미터를 포함하여 Configurator로 돌아가기
+            const params = new URLSearchParams();
+            if (projectId) params.set('projectId', projectId);
+            if (designFileId) params.set('designFileId', designFileId);
+            const queryString = params.toString();
+            navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
+          }}
         >
           <ArrowLeft />
         </button>

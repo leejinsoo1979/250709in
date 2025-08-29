@@ -206,7 +206,14 @@ const CNCOptimizerNew: React.FC = () => {
         <div className={styles.headerLeft}>
           <button 
             className={styles.backButton}
-            onClick={() => navigate('/configurator')}
+            onClick={() => {
+              // URL 파라미터를 포함하여 Configurator로 돌아가기
+              const params = new URLSearchParams();
+              if (projectId) params.set('projectId', projectId);
+              if (designFileId) params.set('designFileId', designFileId);
+              const queryString = params.toString();
+              navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
+            }}
           >
             <ArrowLeft size={20} />
             돌아가기
