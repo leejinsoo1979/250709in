@@ -31,7 +31,7 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setRenderMode } = useUIStore();
+  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode } = useUIStore();
   
   const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
@@ -44,6 +44,7 @@ export function usePDFExport() {
     const originalShowAxis = showAxis;
     const originalShowDimensions = showDimensions;
     const originalShowDimensionsText = showDimensionsText;
+    const originalShowFurniture = showFurniture;
     const originalRenderMode = renderMode;
     
     console.log('📸 PDF 캡처 시작:', {
@@ -71,6 +72,7 @@ export function usePDFExport() {
       setShowAxis(false); // 축 끄기
       setShowDimensions(true); // 치수는 표시해야 함!
       setShowDimensionsText(true); // 치수 텍스트도 표시해야 함!
+      setShowFurniture(true); // 가구도 표시해야 함!
       setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
@@ -180,6 +182,7 @@ export function usePDFExport() {
     setShowAxis(originalShowAxis);
     setShowDimensions(originalShowDimensions);
     setShowDimensionsText(originalShowDimensionsText);
+    setShowFurniture(originalShowFurniture);
     setRenderMode(originalRenderMode);
     
     console.log('📸 PDF 캡처 완료 - 설정 복원:', {
@@ -196,7 +199,7 @@ export function usePDFExport() {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     return imageData;
-  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setRenderMode]);
+  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,

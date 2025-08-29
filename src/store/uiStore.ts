@@ -23,6 +23,9 @@ interface UIState {
   
   // 치수 텍스트 표시 상태 (치수 체크박스용)
   showDimensionsText: boolean;
+  
+  // 가구 표시 상태
+  showFurniture: boolean;
 
   // 그리드(가이드) 표시 상태
   showGuides: boolean;
@@ -109,6 +112,7 @@ interface UIState {
   setShowGuides: (show: boolean) => void;
   setShowAxis: (show: boolean) => void;
   setShowAll: (show: boolean) => void;
+  setShowFurniture: (show: boolean) => void;
   setRenderMode: (mode: 'solid' | 'wireframe') => void;
   setView2DTheme: (theme: 'dark' | 'light') => void;
   
@@ -152,6 +156,7 @@ const initialUIState = {
   showGuides: true, // 기본값: 그리드(가이드) 표시
   showAxis: true, // 기본값: 축 표시
   showAll: true, // 기본값: 모든 가이드 표시
+  showFurniture: true, // 기본값: 가구 표시
   renderMode: 'solid' as const, // 기본값: 솔리드 렌더링
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null,
@@ -250,6 +255,9 @@ export const useUIStore = create<UIState>()(
       
       setShowAll: (show) =>
         set({ showAll: show }),
+      
+      setShowFurniture: (show) =>
+        set({ showFurniture: show }),
       
       setRenderMode: (mode) =>
         set({ renderMode: mode }),
