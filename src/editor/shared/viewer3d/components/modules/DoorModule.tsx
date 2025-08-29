@@ -231,14 +231,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.opacity = 1.0;
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
-          mat.map = null;  // 텍스처 제거
-          mat.color.set(doorColor);  // 도어 색상으로 설정
-          mat.transparent = true;
-          mat.opacity = viewMode === '3D' ? 0.5 : 0.0;  // 2D에서는 완전 투명, 3D에서는 반투명
-          mat.depthWrite = false;
+          // 와이어프레임 모드에서도 도어는 솔리드로 렌더링
+          mat.transparent = false;
+          mat.opacity = 1.0;
+          mat.depthWrite = true;
           mat.side = THREE.DoubleSide;
-          mat.emissive = new THREE.Color(0x000000);
-          mat.emissiveIntensity = 0;
         } else if (isSelected) {
           mat.transparent = true;
           mat.opacity = 0.5;

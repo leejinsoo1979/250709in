@@ -13,14 +13,13 @@
 .modal {
   position: fixed;
   top: 0;
+  left: 0;
   right: 0;
   bottom: 0;
   background: var(--theme-surface);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
-  border-left: 1px solid var(--theme-border);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
   z-index: 9999;
   width: 100%;
-  max-width: 900px;
   display: flex;
   flex-direction: column;
   animation: slideInFromRight 0.2s ease-out;
@@ -63,7 +62,7 @@
 }
 
 .content {
-  padding: 24px;
+  padding: 40px;
   overflow-y: auto;
   flex: 1;
   scrollbar-width: none;
@@ -187,11 +186,11 @@
 
 @keyframes slideInFromRight {
   from {
-    transform: translateX(100%);
+    transform: scale(0.95);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: scale(1);
     opacity: 1;
   }
 }
