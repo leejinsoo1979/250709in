@@ -1074,6 +1074,7 @@ const Configurator: React.FC = () => {
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
+    const fromCNC = searchParams.get('from') === 'cnc'; // CNC에서 돌아온 경우
     
     // Step2에서 넘어온 경우 (designFileId가 있는 경우)
     if (projectId && designFileId) {
@@ -1081,6 +1082,13 @@ const Configurator: React.FC = () => {
       setCurrentProjectId(projectId);
       setProjectId(projectId);
       setCurrentDesignFileId(designFileId);
+      
+      // CNC에서 돌아온 경우 데이터 재로드 건너뛰기
+      if (fromCNC) {
+        console.log('🔄 CNC에서 돌아옴 - 데이터 재로드 건너뜀');
+        setLoading(false);
+        return;
+      }
       
       // 디자인 파일 로드
       const loadDesignFile = async () => {

@@ -292,6 +292,7 @@ const CNCOptimizer: React.FC = () => {
               const params = new URLSearchParams();
               if (projectId) params.set('projectId', projectId);
               if (designFileId) params.set('designFileId', designFileId);
+              params.set('from', 'cnc'); // CNC에서 돌아왔음을 표시
               const queryString = params.toString();
               navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
             }}
