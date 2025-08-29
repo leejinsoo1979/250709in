@@ -243,36 +243,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정  
       let newX = Math.max(minX, Math.min(maxX, worldX));
       
-      // 단내림이 있을 때 구간 제한 적용
+      // 단내림이 있을 때 단내림 구간으로 이동 차단
       if (spaceInfo?.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
         const columnHalfWidthM = columnHalfWidth; // 이미 Three.js 단위로 변환됨
         
-        // 현재 기둥의 초기 구간 확인
-        const initialX = position[0];
-        const boundaryX = spaceInfo.droppedCeiling.position === 'left' 
-          ? (zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100
-          : zoneInfo.normal.startX / 100 + zoneInfo.normal.width / 100;
-        
-        // 초기 위치로 구간 결정
-        let currentZone: 'normal' | 'dropped';
+        // 단내림 구간 경계 확인
         if (spaceInfo.droppedCeiling.position === 'left') {
-          currentZone = initialX < boundaryX ? 'dropped' : 'normal';
+          // 왼쪽 단내림 - 경계보다 왼쪽으로 못가게
+          const boundaryX = (zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100;
+          newX = Math.max(boundaryX + columnHalfWidthM, newX);
         } else {
-          currentZone = initialX < boundaryX ? 'normal' : 'dropped';
-        }
-        
-        // 구간에 따라 이동 제한
-        if (currentZone === 'normal') {
-          // 일반 구간 내에서만 이동 가능
-          const normalStart = (zoneInfo.normal.startX / 100);
-          const normalEnd = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
-          newX = Math.max(normalStart + columnHalfWidthM, Math.min(normalEnd - columnHalfWidthM, newX));
-        } else {
-          // 단내림 구간 내에서만 이동 가능
-          const droppedStart = (zoneInfo.dropped.startX / 100);
-          const droppedEnd = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
-          newX = Math.max(droppedStart + columnHalfWidthM, Math.min(droppedEnd - columnHalfWidthM, newX));
+          // 오른쪽 단내림 - 경계보다 오른쪽으로 못가게
+          const boundaryX = zoneInfo.normal.startX / 100 + zoneInfo.normal.width / 100;
+          newX = Math.min(boundaryX - columnHalfWidthM, newX);
         }
       }
       
