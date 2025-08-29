@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { useSpaceConfigStore } from './spaceConfigStore';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -106,19 +107,75 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const moduleZone = module.zone;
       const isDualSlot = module.isDualSlot;
       
+      // slotIndex가 undefined인 경우 위치로부터 계산
+      let calculatedSlotIndex = moduleSlotIndex;
+      if (calculatedSlotIndex === undefined || calculatedSlotIndex === null) {
+        console.warn('⚠️ [Store] slotIndex가 undefined! position으로부터 계산 시도:', {
+          position: module.position,
+          zone: moduleZone
+        });
+        
+        // position.x를 기반으로 slotIndex 계산
+        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        
+        if (indexing && indexing.threeUnitPositions) {
+          // 가장 가까운 슬롯 찾기
+          let minDistance = Infinity;
+          let closestSlot = 0;
+          
+          for (let i = 0; i < indexing.threeUnitPositions.length; i++) {
+            const distance = Math.abs(module.position.x - indexing.threeUnitPositions[i]);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestSlot = i;
+            }
+          }
+          
+          calculatedSlotIndex = closestSlot;
+          console.log('📍 [Store] position으로부터 slotIndex 계산:', {
+            positionX: module.position.x,
+            calculatedSlotIndex,
+            minDistance
+          });
+        }
+      }
+      
+      // 여전히 slotIndex를 찾을 수 없으면 충돌 검사 건너뛰기
+      if (calculatedSlotIndex === undefined || calculatedSlotIndex === null) {
+        console.error('❌ [Store] slotIndex를 계산할 수 없음! 충돌 검사 불가');
+        // slotIndex가 없으면 일단 추가 (이전 동작과 동일)
+        const newModules = [...state.placedModules, module];
+        return { placedModules: newModules };
+      }
+      
       console.log('🔍 [Store] 충돌 검사 시작:', {
         새가구: {
           id: module.id,
-          slotIndex: moduleSlotIndex,
+          slotIndex: calculatedSlotIndex,
           isDualSlot: isDualSlot,
           zone: moduleZone,
-          점유슬롯: isDualSlot ? [moduleSlotIndex, moduleSlotIndex + 1] : [moduleSlotIndex]
+          점유슬롯: isDualSlot ? [calculatedSlotIndex, calculatedSlotIndex + 1] : [calculatedSlotIndex]
         },
         기존가구수: existingModules.length
       });
       
       // 충돌 검사
       const hasConflict = existingModules.some(existing => {
+        // 기존 가구의 slotIndex도 확인
+        let existingSlotIndex = existing.slotIndex;
+        if (existingSlotIndex === undefined || existingSlotIndex === null) {
+          // 기존 가구도 slotIndex가 없으면 position 비교
+          if (Math.abs(existing.position.x - module.position.x) < 0.01) {
+            console.log('❌ [Store] position 기반 충돌 감지:', {
+              새가구_position: module.position.x,
+              기존가구_position: existing.position.x
+            });
+            return true;
+          }
+          return false;
+        }
+        
         // 같은 zone의 가구만 검사 (zone이 없으면 모두 검사)
         if (moduleZone !== undefined && existing.zone !== undefined && moduleZone !== existing.zone) {
           return false;
@@ -127,34 +184,34 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 슬롯 충돌 검사
         if (isDualSlot) {
           // 새 가구가 듀얼인 경우: 2개 슬롯 검사
-          const conflict = (existing.slotIndex === moduleSlotIndex || existing.slotIndex === moduleSlotIndex + 1) ||
-                          (existing.isDualSlot && (existing.slotIndex + 1 === moduleSlotIndex || existing.slotIndex + 1 === moduleSlotIndex + 1));
+          const conflict = (existingSlotIndex === calculatedSlotIndex || existingSlotIndex === calculatedSlotIndex + 1) ||
+                          (existing.isDualSlot && (existingSlotIndex + 1 === calculatedSlotIndex || existingSlotIndex + 1 === calculatedSlotIndex + 1));
           
           if (conflict) {
             console.log('❌ [Store] 듀얼 가구 충돌 감지:', {
-              새가구_점유: [moduleSlotIndex, moduleSlotIndex + 1],
+              새가구_점유: [calculatedSlotIndex, calculatedSlotIndex + 1],
               기존가구: {
                 id: existing.id,
-                slotIndex: existing.slotIndex,
+                slotIndex: existingSlotIndex,
                 isDualSlot: existing.isDualSlot,
-                점유슬롯: existing.isDualSlot ? [existing.slotIndex, existing.slotIndex + 1] : [existing.slotIndex]
+                점유슬롯: existing.isDualSlot ? [existingSlotIndex, existingSlotIndex + 1] : [existingSlotIndex]
               }
             });
           }
           return conflict;
         } else {
           // 새 가구가 싱글인 경우: 1개 슬롯 검사
-          const conflict = existing.slotIndex === moduleSlotIndex ||
-                          (existing.isDualSlot && existing.slotIndex + 1 === moduleSlotIndex);
+          const conflict = existingSlotIndex === calculatedSlotIndex ||
+                          (existing.isDualSlot && existingSlotIndex + 1 === calculatedSlotIndex);
           
           if (conflict) {
             console.log('❌ [Store] 싱글 가구 충돌 감지:', {
-              새가구_점유: [moduleSlotIndex],
+              새가구_점유: [calculatedSlotIndex],
               기존가구: {
                 id: existing.id,
-                slotIndex: existing.slotIndex,
+                slotIndex: existingSlotIndex,
                 isDualSlot: existing.isDualSlot,
-                점유슬롯: existing.isDualSlot ? [existing.slotIndex, existing.slotIndex + 1] : [existing.slotIndex]
+                점유슬롯: existing.isDualSlot ? [existingSlotIndex, existingSlotIndex + 1] : [existingSlotIndex]
               }
             });
           }
@@ -165,15 +222,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (hasConflict) {
         console.error('🚫 [Store] 슬롯 충돌로 가구 추가 거부!', {
           moduleId: module.moduleId,
-          slotIndex: moduleSlotIndex,
+          slotIndex: calculatedSlotIndex,
           zone: moduleZone
         });
         // 충돌이 있으면 추가하지 않음
         return state;
       }
       
-      // 충돌이 없으면 추가
-      const newModules = [...state.placedModules, module];
+      // 충돌이 없으면 추가 (calculatedSlotIndex를 사용하도록 수정)
+      const moduleWithSlot = {
+        ...module,
+        slotIndex: calculatedSlotIndex
+      };
+      const newModules = [...state.placedModules, moduleWithSlot];
       console.log('✅ [Store] 충돌 없음, 가구 추가 완료:', newModules.map(m => ({
         id: m.id,
         moduleId: m.moduleId,
