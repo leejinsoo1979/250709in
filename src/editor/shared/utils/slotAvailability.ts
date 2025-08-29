@@ -29,6 +29,12 @@ export const isSlotAvailable = (
     isDualFurniture,
     moduleId,
     총가구수: placedModules.length,
+    placedModules: placedModules.map(m => ({
+      id: m.id,
+      moduleId: m.moduleId,
+      slotIndex: m.slotIndex,
+      position: m.position
+    })),
     excludeModuleId,
     targetZone
   });

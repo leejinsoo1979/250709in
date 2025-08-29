@@ -1520,6 +1520,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     // 슬롯 가용성 검사
+    console.log('🔍 SlotDropZonesSimple - 슬롯 가용성 검사 전:', {
+      slotIndex,
+      isDual,
+      moduleId: dragData.moduleData.id,
+      latestPlacedModulesCount: latestPlacedModules.length,
+      latestPlacedModules: latestPlacedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        position: m.position
+      }))
+    });
+    
     if (!isSlotAvailable(slotIndex, isDual, latestPlacedModules, latestSpaceInfo, dragData.moduleData.id)) {
       console.log('❌ 메인 구간 슬롯 충돌로 배치 불가');
       return false;
@@ -1834,6 +1847,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     })));
     
     addModule(newModule);
+    
+    // Store 업데이트 확인
+    setTimeout(() => {
+      const afterAddModules = useFurnitureStore.getState().placedModules;
+      console.log('🟢 가구 추가 후 Store 상태:', {
+        beforeCount: latestPlacedModules.length,
+        afterCount: afterAddModules.length,
+        newModule: {
+          id: newModule.id,
+          moduleId: newModule.moduleId,
+          slotIndex: newModule.slotIndex
+        },
+        afterModules: afterAddModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex
+        }))
+      });
+    }, 100);
     
     // 전체 슬롯 점유 상태 시각화
     const updatedModules = [...latestPlacedModules, newModule];
