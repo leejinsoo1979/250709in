@@ -2665,17 +2665,19 @@ const Configurator: React.FC = () => {
               />
             </div>
 
-            {/* 바닥 마감재 - 양쪽 탭에서 모두 표시 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('material.floorFinish')}</h3>
+            {/* 바닥 마감재 - 바닥 배치일 때만 표시 */}
+            {spaceInfo.baseConfig?.placementType !== 'float' && (
+              <div className={styles.configSection}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionDot}></span>
+                  <h3 className={styles.sectionTitle}>{t('material.floorFinish')}</h3>
+                </div>
+                <FloorFinishControls 
+                  spaceInfo={spaceInfo}
+                  onUpdate={handleSpaceInfoUpdate}
+                />
               </div>
-              <FloorFinishControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-              />
-            </div>
+            )}
 
           </div>
     );
