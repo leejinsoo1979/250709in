@@ -2032,7 +2032,12 @@ const Configurator: React.FC = () => {
 
     // 슬롯별로 가구 그룹화
     const furnitureBySlot = placedModules.reduce((acc, furniture) => {
-      const slotKey = `슬롯 ${furniture.slotIndex + 1}`;
+      // 듀얼 가구는 두 슬롯을 표시
+      const startSlot = furniture.slotIndex + 1;
+      const slotKey = furniture.isDualSlot 
+        ? `슬롯 ${startSlot}-${startSlot + 1}` 
+        : `슬롯 ${startSlot}`;
+      
       if (!acc[slotKey]) {
         acc[slotKey] = [];
       }
