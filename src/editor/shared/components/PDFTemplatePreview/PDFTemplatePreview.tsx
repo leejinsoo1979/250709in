@@ -59,6 +59,7 @@ const getPaperDimensions = (size: PaperSize, orientation: Orientation): PaperDim
 interface PDFTemplatePreviewProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: 'download' | 'editor'; // 모드 추가: download = PDF 다운로드, editor = 도면 편집
   capturedViews: {
     top?: string;
     front?: string;
@@ -132,7 +133,7 @@ const AVAILABLE_TEXT_ITEMS: ViewMenuItem[] = [
 // const SNAP_THRESHOLD = 10; // 스냅이 작동하는 거리 (픽셀) - 비활성화
 // const GRID_SIZE = 20; // 그리드 크기 - 비활성화
 
-const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose, capturedViews }) => {
+const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose, mode = 'editor', capturedViews }) => {
   const { t } = useTranslation();
   const [selectedPaperSize, setSelectedPaperSize] = useState<PaperSize>('A3');
   const [orientation, setOrientation] = useState<Orientation>('landscape');
@@ -2623,6 +2624,60 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
   if (!isOpen) return null;
 
+  // PDF 다운로드 모드일 때의 간단한 UI
+  if (mode === 'download') {
+    return (
+      <div className={`${styles.overlay} ${theme.mode === 'dark' ? styles.darkTheme : styles.lightTheme}`}>
+        <div className={styles.downloadModal}>
+          <div className={styles.downloadHeader}>
+            <h2>PDF 다운로드</h2>
+            <button onClick={onClose} className={styles.closeButton}>×</button>
+          </div>
+          <div className={styles.downloadContent}>
+            <div className={styles.downloadSection}>
+              <h3>템플릿 선택</h3>
+              <div className={styles.templateGrid}>
+                <div className={`${styles.templateOption} ${styles.selected}`}>
+                  <div className={styles.templatePreview}>
+                    <svg viewBox="0 0 210 297" width="100" height="141">
+                      <rect width="210" height="297" fill="#f5f5f5" stroke="#ddd"/>
+                      <rect x="10" y="10" width="190" height="40" fill="#e0e0e0"/>
+                      <rect x="10" y="60" width="90" height="90" fill="#e0e0e0"/>
+                      <rect x="110" y="60" width="90" height="90" fill="#e0e0e0"/>
+                      <rect x="10" y="160" width="190" height="127" fill="#e0e0e0"/>
+                    </svg>
+                  </div>
+                  <span>기본 템플릿</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.downloadSection}>
+              <h3>용지 설정</h3>
+              <div className={styles.paperSettings}>
+                <select value={selectedPaperSize} onChange={(e) => setSelectedPaperSize(e.target.value as PaperSize)}>
+                  <option value="A3">A3</option>
+                  <option value="A4">A4</option>
+                  <option value="A5">A5</option>
+                </select>
+                <select value={orientation} onChange={(e) => setOrientation(e.target.value as Orientation)}>
+                  <option value="landscape">가로</option>
+                  <option value="portrait">세로</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className={styles.downloadFooter}>
+            <button onClick={onClose} className={styles.cancelButton}>취소</button>
+            <button onClick={handleGeneratePDF} className={styles.downloadButton}>
+              {isGenerating ? '생성 중...' : 'PDF 다운로드'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 도면 편집 모드일 때의 전체 UI
   return (
     <div className={`${styles.overlay} ${theme.mode === 'dark' ? styles.darkTheme : styles.lightTheme}`}>
       <div className={styles.fullContainer}>

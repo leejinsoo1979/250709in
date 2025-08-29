@@ -26,6 +26,143 @@
   background-color: var(--theme-background-secondary);
 }
 
+/* PDF 다운로드 모달 스타일 */
+.downloadModal {
+  background: var(--theme-surface);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.downloadHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.downloadHeader h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.downloadContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.downloadSection {
+  margin-bottom: 32px;
+}
+
+.downloadSection:last-child {
+  margin-bottom: 0;
+}
+
+.downloadSection h3 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.templateOption {
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.templateOption:hover {
+  transform: translateY(-2px);
+}
+
+.templateOption.selected {
+  transform: scale(1.05);
+}
+
+.templatePreview {
+  background: white;
+  border: 2px solid var(--theme-border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.templateOption.selected .templatePreview {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
+}
+
+.templateOption span {
+  font-size: 13px;
+  color: var(--theme-text);
+}
+
+.paperSettings {
+  display: flex;
+  gap: 12px;
+}
+
+.paperSettings select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-background);
+  color: var(--theme-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.downloadFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--theme-border);
+}
+
+.downloadButton {
+  padding: 10px 24px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.downloadButton:hover:not(:disabled) {
+  background: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.downloadButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* 하단 컨테이너 - 사이드바와 메인 컨텐츠를 감싸는 요소 */
 .bottomContainer {
   flex: 1;

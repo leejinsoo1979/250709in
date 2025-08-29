@@ -2972,6 +2972,7 @@ const Configurator: React.FC = () => {
       {/* PDF 템플릿 미리보기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
+        mode={showDrawingEditor ? 'editor' : 'download'} // URL에 editor=drawing이 있으면 도면 편집, 아니면 다운로드 모드
         onClose={() => {
           // URL에서 editor 파라미터 제거
           const newSearchParams = new URLSearchParams(searchParams.toString());
