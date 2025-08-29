@@ -156,9 +156,12 @@ const WallAsset: React.FC<WallAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !hasMoved) {
-        console.log('🎯 드래그 시작 감지:', moveDistance);
+        console.log('🎯 가벽 드래그 시작 감지:', moveDistance);
         setHasMoved(true);
         setIsDragging(true);
+        
+        // 가벽 드래그 시작 시 카메라 컨트롤 비활성화
+        window.dispatchEvent(new CustomEvent('furniture-drag-start'));
       }
       
       // 마우스 움직임을 3D 공간 좌표로 변환
@@ -200,6 +203,11 @@ const WallAsset: React.FC<WallAssetProps> = ({
     
     const handleGlobalPointerUp = () => {
       console.log('🎯 가벽 포인터 업:', id, 'hasMoved:', hasMoved);
+      
+      // 드래그 중이었다면 카메라 컨트롤 재활성화
+      if (hasMoved) {
+        window.dispatchEvent(new CustomEvent('furniture-drag-end'));
+      }
       
       setIsDragging(false);
       setDragStart(null);

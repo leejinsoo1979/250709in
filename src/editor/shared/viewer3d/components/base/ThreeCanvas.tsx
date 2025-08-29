@@ -190,7 +190,17 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   useEffect(() => {
     const handleFurnitureDragStart = () => {
       console.log('🎯 가구/기둥 드래그 시작 - 카메라 회전 비활성화');
-      // UIStore에서 isFurnitureDragging 상태 관리
+      
+      // 카메라 컨트롤 비활성화
+      if (controlsRef.current) {
+        const controls = controlsRef.current;
+        controls.enabled = false;
+        controls.enablePan = false;
+        controls.enableZoom = false;
+        controls.enableRotate = false;
+        controls.update();
+        console.log('🎯 카메라 컨트롤 비활성화 완료');
+      }
     };
 
     const handleFurnitureDragEnd = () => {

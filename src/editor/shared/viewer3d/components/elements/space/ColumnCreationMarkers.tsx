@@ -14,7 +14,7 @@ interface ColumnCreationMarkersProps {
 
 const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo }) => {
   const { isColumnCreationMode } = useUIStore();
-  const { addColumn } = useSpaceConfigStore();
+  const { addColumn, spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { indexing } = useDerivedSpaceStore();
   const { viewMode } = useSpace3DView();
   const { camera, raycaster, gl } = useThree();
@@ -22,6 +22,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   // 고스트 기둥 상태
   const [ghostPosition, setGhostPosition] = useState<[number, number, number] | null>(null);
   const [isHoveringSpace, setIsHoveringSpace] = useState(false);
+  const [isValidPosition, setIsValidPosition] = useState(true);
 
   // 디버깅용 로그
   // console.log('🔍 ColumnCreationMarkers 렌더링 상태:', {
@@ -31,6 +32,33 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   //   positionsLength: indexing?.threeUnitPositions?.length,
   //   ghostPosition
   // });
+
+  // 기둥이 겹치는지 확인하는 함수
+  const checkColumnOverlap = (newPosition: [number, number, number]): boolean => {
+    const existingColumns = storeSpaceInfo?.columns || [];
+    const newColumnWidth = 300 * 0.01; // 3m (300mm를 미터로 변환)
+    const minDistance = newColumnWidth; // 기둥 너비만큼 최소 거리 필요
+
+    for (const column of existingColumns) {
+      if (!column.position) continue;
+      
+      // X축 거리만 확인 (기둥은 보통 X축으로만 이동)
+      const distance = Math.abs(column.position[0] - newPosition[0]);
+      
+      // 두 기둥 중심 간 거리가 기둥 너비보다 작으면 겹침
+      if (distance < minDistance) {
+        console.log('⚠️ 기둥 겹침 감지:', {
+          newPosition: newPosition[0],
+          existingPosition: column.position[0],
+          distance,
+          minDistance
+        });
+        return true; // 겹침
+      }
+    }
+    
+    return false; // 겹치지 않음
+  };
 
   // 마우스 움직임 추적
   useEffect(() => {
@@ -61,8 +89,13 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         
         const boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
         
-        setGhostPosition([boundedX, 0, zPosition]);
+        const newPosition: [number, number, number] = [boundedX, 0, zPosition];
+        setGhostPosition(newPosition);
         setIsHoveringSpace(true);
+        
+        // 겹침 검사
+        const isOverlapping = checkColumnOverlap(newPosition);
+        setIsValidPosition(!isOverlapping);
       }
     };
 
@@ -114,6 +147,12 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const finalPosition = position || ghostPosition;
     if (!finalPosition) return;
     
+    // 겹침 검사
+    if (checkColumnOverlap(finalPosition)) {
+      console.log('❌ 기둥 생성 실패: 기존 기둥과 겹침');
+      return; // 겹치면 생성하지 않음
+    }
+    
     // 공간 높이 가져오기
     const spaceHeightMm = spaceInfo?.height || 2400;
     
@@ -127,14 +166,14 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
     
-    // console.log('🏗️ 새 기둥 생성:', newColumn);
+    console.log('✅ 새 기둥 생성 성공:', newColumn);
     addColumn(newColumn);
   };
 
   // 클릭 핸들러
   const handleClick = (e: any) => {
     e.stopPropagation();
-    if (ghostPosition) {
+    if (ghostPosition && isValidPosition) {
       handleCreateColumn();
     }
   };
