@@ -155,13 +155,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const latestIndexing = calculateSpaceIndexing(latestSpaceInfo);
     
     console.log('🎯 handleSlotDrop called:', {
-      hasCurrentDragData: !!currentDragData,
-      currentDragData: currentDragData,
       hasLatestDragData: !!latestDragData,
       latestDragData: latestDragData,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
-      surroundType: spaceInfo.surroundType,
+      droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
+      droppedCeilingWidth: latestSpaceInfo.droppedCeiling?.width,
+      surroundType: latestSpaceInfo.surroundType,
       hasIndexingZones: !!indexing?.zones
     });
     
