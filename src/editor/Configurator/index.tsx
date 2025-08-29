@@ -90,7 +90,7 @@ const Configurator: React.FC = () => {
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
-  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
+  const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
@@ -2021,6 +2021,14 @@ const Configurator: React.FC = () => {
 
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
+    if (activeRightPanelTab === 'module') {
+      return (
+        <div className={styles.moduleContent}>
+          <ModuleContent />
+        </div>
+      );
+    }
+    
     return (
       <div className={styles.spaceControls}>
             {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
@@ -3008,9 +3016,16 @@ const Configurator: React.FC = () => {
             <div className={styles.rightPanelTabs}>
               <div className={styles.tabGroup}>
                 <button
-                  className={`${styles.rightPanelTab} ${styles.active}`}
+                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
+                  onClick={() => setActiveRightPanelTab('placement')}
                 >
-                  {currentLanguage === 'ko' ? '배치 속성' : t('placement.properties')}
+                  배치속성
+                </button>
+                <button
+                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
+                  onClick={() => setActiveRightPanelTab('module')}
+                >
+                  배치모듈
                 </button>
               </div>
             </div>
