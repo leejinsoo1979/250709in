@@ -364,7 +364,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     set((state) => {
       // 새 기둥이 기존 기둥들과 겹치는지 검사
       const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-      const minDistance = columnWidthInThreeUnits; // 정확히 기둥 너비만큼 (붙어있을 수 있음)
+      const epsilon = 0.001; // 부동소수점 오차 허용치
+      const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
       
       const existingColumns = state.spaceInfo.columns || [];
       for (const existingColumn of existingColumns) {
@@ -427,7 +428,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       // 위치 업데이트인 경우 겹침 검사
       if (updates.position) {
         const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-        const minDistance = columnWidthInThreeUnits; // 정확히 기둥 너비만큼 (붙어있을 수 있음)
+        const epsilon = 0.001; // 부동소수점 오차 허용치
+        const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
         
         // 다른 기둥들과 겹치는지 확인
         const otherColumns = (state.spaceInfo.columns || []).filter(col => col.id !== id);

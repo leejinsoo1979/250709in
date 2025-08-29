@@ -23,6 +23,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   const [ghostPosition, setGhostPosition] = useState<[number, number, number] | null>(null);
   const [isHoveringSpace, setIsHoveringSpace] = useState(false);
   const [isValidPosition, setIsValidPosition] = useState(true);
+  const [isSnapped, setIsSnapped] = useState(false); // 스냅 상태
 
   // 디버깅용 로그
   // console.log('🔍 ColumnCreationMarkers 렌더링 상태:', {
@@ -37,14 +38,8 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   const checkColumnOverlap = (newPosition: [number, number, number]): boolean => {
     const existingColumns = storeSpaceInfo?.columns || [];
     const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units (1 unit = 100mm)
-    const minDistance = columnWidthInThreeUnits; // 정확한 기둥 너비 (붙어있을 수 있도록)
-
-    // console.log('🔍 기둥 겹침 검사 시작:', {
-    //   newPosition,
-    //   existingColumnsCount: existingColumns.length,
-    //   columnWidth: columnWidthInThreeUnits,
-    //   minDistance
-    // });
+    const epsilon = 0.001; // 부동소수점 오차 허용치
+    const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
 
     for (const column of existingColumns) {
       if (!column.position) continue;
@@ -52,24 +47,52 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // X축 거리만 확인 (기둥은 보통 X축으로만 이동)
       const distance = Math.abs(column.position[0] - newPosition[0]);
       
-      // console.log('📏 기둥 간 거리 체크:', {
-      //   columnId: column.id,
-      //   existingX: column.position[0],
-      //   newX: newPosition[0],
-      //   distance,
-      //   minDistance,
-      //   willOverlap: distance < minDistance
-      // });
-      
-      // 두 기둥 중심 간 거리가 최소 거리보다 작으면 겹침
+      // 두 기둥 중심 간 거리가 최소 거리보다 작으면 겹침 (아주 약간의 허용치 포함)
       if (distance < minDistance) {
-        // console.log('❌ 기둥 겹침 감지!');
         return true; // 겹침
       }
     }
     
-    // console.log('✅ 기둥 배치 가능');
     return false; // 겹치지 않음
+  };
+
+  // 기둥 위치를 가장 가까운 기둥에 스냅하는 함수
+  const snapToNearestColumn = (position: [number, number, number]): [number, number, number] => {
+    const existingColumns = storeSpaceInfo?.columns || [];
+    const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
+    const snapThreshold = columnWidthInThreeUnits * 0.3; // 스냅 임계값 (30% 이내에서만 스냅)
+    
+    let snappedX = position[0];
+    let closestDistance = Infinity;
+    let closestColumn = null;
+    
+    // 가장 가까운 기둥 찾기
+    for (const column of existingColumns) {
+      if (!column.position) continue;
+      
+      // 왼쪽에 붙을 위치와 오른쪽에 붙을 위치 계산
+      const leftSnapX = column.position[0] - columnWidthInThreeUnits;
+      const rightSnapX = column.position[0] + columnWidthInThreeUnits;
+      
+      const distToLeft = Math.abs(position[0] - leftSnapX);
+      const distToRight = Math.abs(position[0] - rightSnapX);
+      
+      // 왼쪽 스냅 체크
+      if (distToLeft < snapThreshold && distToLeft < closestDistance) {
+        closestDistance = distToLeft;
+        snappedX = leftSnapX;
+        closestColumn = column;
+      }
+      
+      // 오른쪽 스냅 체크
+      if (distToRight < snapThreshold && distToRight < closestDistance) {
+        closestDistance = distToRight;
+        snappedX = rightSnapX;
+        closestColumn = column;
+      }
+    }
+    
+    return [snappedX, position[1], position[2]];
   };
 
   // 마우스 움직임 추적
@@ -101,7 +124,17 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         
         const boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
         
-        const newPosition: [number, number, number] = [boundedX, 0, zPosition];
+        let newPosition: [number, number, number] = [boundedX, 0, zPosition];
+        
+        // 기존 기둥에 스냅
+        const originalX = newPosition[0];
+        newPosition = snapToNearestColumn(newPosition);
+        const snapped = Math.abs(originalX - newPosition[0]) > 0.01; // 스냅되었는지 확인
+        setIsSnapped(snapped);
+        
+        // 스냅 후에도 공간 범위 체크
+        newPosition[0] = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, newPosition[0]));
+        
         setGhostPosition(newPosition);
         setIsHoveringSpace(true);
         
@@ -218,25 +251,38 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           <mesh position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <boxGeometry args={[300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01]} />
             <meshStandardMaterial
-              color={isValidPosition ? "#10b981" : "#ef4444"}
+              color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"}
               transparent
-              opacity={0.5}
-              emissive={isValidPosition ? "#10b981" : "#ef4444"}
-              emissiveIntensity={0.2}
+              opacity={isSnapped ? 0.7 : 0.5}
+              emissive={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"}
+              emissiveIntensity={isSnapped ? 0.4 : 0.2}
             />
           </mesh>
           
           {/* 고스트 기둥 윤곽선 */}
           <lineSegments position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <edgesGeometry args={[new THREE.BoxGeometry(300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01)]} />
-            <lineBasicMaterial color={isValidPosition ? "#10b981" : "#ef4444"} linewidth={2} />
+            <lineBasicMaterial color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"} linewidth={isSnapped ? 3 : 2} />
           </lineSegments>
           
           {/* 바닥 표시 */}
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.5, 32]} />
-            <meshBasicMaterial color={isValidPosition ? "#10b981" : "#ef4444"} transparent opacity={0.8} />
+            <circleGeometry args={[isSnapped ? 0.7 : 0.5, 32]} />
+            <meshBasicMaterial color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"} transparent opacity={isSnapped ? 1.0 : 0.8} />
           </mesh>
+          
+          {/* 스냅 표시 */}
+          {isSnapped && isValidPosition && (
+            <Text
+              position={[0, (spaceInfo?.height || 2400) * 0.01 + 2, 0]}
+              fontSize={0.4}
+              color="#3b82f6"
+              anchorX="center"
+              anchorY="middle"
+            >
+              완전히 붙음
+            </Text>
+          )}
           
           {/* 겹침 경고 텍스트 */}
           {!isValidPosition && (
