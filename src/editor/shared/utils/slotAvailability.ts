@@ -137,8 +137,15 @@ export const isSlotAvailable = (
       const isExistingUpper = moduleData.category === 'upper' || placedModule.moduleId.includes('upper-cabinet');
       const isExistingLower = moduleData.category === 'lower' || placedModule.moduleId.includes('lower-cabinet');
       
-      // 상부장과 하부장은 같은 슬롯에 공존 가능
-      if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+      // 싱글캐비닛끼리는 반드시 충돌 검사
+      const isNewSingle = moduleId.includes('single-');
+      const isExistingSingle = placedModule.moduleId.includes('single-');
+      
+      if (isNewSingle && isExistingSingle) {
+        // 싱글캐비닛끼리는 무조건 충돌 검사 진행
+        console.log('🔍 싱글캐비닛끼리 충돌 검사');
+      } else if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+        // 상부장과 하부장은 같은 슬롯에 공존 가능
         console.log('✅ 상부장/하부장 공존 가능 (슬롯 가용성 검사):', {
           new: { moduleId, category: isNewUpper ? 'upper' : 'lower' },
           existing: { id: placedModule.id, category: isExistingUpper ? 'upper' : 'lower' },

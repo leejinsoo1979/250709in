@@ -104,8 +104,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const isExistingUpper = moduleInfo.category === 'upper' || module.moduleId.includes('upper-cabinet');
       const isExistingLower = moduleInfo.category === 'lower' || module.moduleId.includes('lower-cabinet');
       
-      // 상부장과 하부장은 같은 슬롯에 공존 가능
-      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+      // 싱글캐비닛끼리는 반드시 충돌 검사
+      const isMovingSingle = movingModule.moduleId.includes('single-');
+      const isExistingSingle = module.moduleId.includes('single-');
+      
+      if (isMovingSingle && isExistingSingle) {
+        // 싱글캐비닛끼리는 무조건 충돌 검사 진행
+        console.log('🔍 싱글캐비닛끼리 충돌 검사 필요');
+      } else if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+        // 상부장과 하부장은 같은 슬롯에 공존 가능
         console.log('✅ 상부장/하부장 공존 가능:', {
           moving: { id: movingModuleId, category: isMovingUpper ? 'upper' : 'lower' },
           existing: { id: module.id, category: isExistingUpper ? 'upper' : 'lower' }
