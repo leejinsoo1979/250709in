@@ -5,6 +5,7 @@ on:
     branches:
       - feature/firebase-test-harness
       - main
+      - feature/dim-label-fix
   pull_request:
     branches:
       - main
