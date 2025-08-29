@@ -851,7 +851,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDoorChange = (doorEnabled: boolean) => {
     setHasDoor(doorEnabled);
     if (activePopup.id) {
+      // 현재 showDimensions 상태 저장
+      const currentShowDimensions = useUIStore.getState().showDimensions;
+      
       updatePlacedModule(activePopup.id, { hasDoor: doorEnabled });
+      
+      // showDimensions 상태 복원 (도어 변경이 슬롯 가이드를 끄지 않도록)
+      useUIStore.getState().setShowDimensions(currentShowDimensions);
     }
   };
 
