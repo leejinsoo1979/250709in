@@ -723,8 +723,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
     { id: 'placement' as RightPanelTab, label: t('space.mainSection') },
     { id: 'module' as RightPanelTab, label: t('space.droppedSection') }
   ] : [
-    { id: 'placement' as RightPanelTab, label: t('placement.properties') },
-    { id: 'module' as RightPanelTab, label: t('furniture.moduleProperties') }
+    { id: 'placement' as RightPanelTab, label: '배치속성' },
+    { id: 'module' as RightPanelTab, label: '배치모듈' }
   ];
 
   const installTypes = [
