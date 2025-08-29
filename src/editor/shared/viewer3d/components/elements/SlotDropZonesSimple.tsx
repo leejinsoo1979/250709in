@@ -1889,12 +1889,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   useEffect(() => {
     console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop');
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => {
+      // window.handleSlotDrop이 호출될 때마다 최신 currentDragData를 스토어에서 직접 가져옴
+      const latestCurrentDragData = useFurnitureStore.getState().currentDragData;
       console.log('🎯 window.handleSlotDrop called', {
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         surroundType: spaceInfo.surroundType,
         hasZones: !!indexing.zones,
         activeZone: activeZone,
-        currentDragData: currentDragData
+        currentDragData: currentDragData,
+        latestCurrentDragData: latestCurrentDragData
       });
       // handleSlotDrop 내부에서 마우스 위치를 기반으로 영역을 자동 판단함
       return handleSlotDrop(dragEvent, canvasElement);
@@ -1904,7 +1907,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('🎯 SlotDropZonesSimple - unregistering window.handleSlotDrop');
       delete window.handleSlotDrop;
     };
-  }, [handleSlotDrop]);
+  }, [handleSlotDrop, spaceInfo, indexing]);
   
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
