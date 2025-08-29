@@ -125,6 +125,13 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         let finalX = dropPosition.x;
         
         // 슬롯 사용 가능 여부 확인 - 기둥이 있어도 150mm 이상 공간이 있으면 배치 가능
+        console.log('🎯 새 가구 배치 시도:', {
+          moduleId: currentDragData.moduleData.id,
+          targetSlot: dropPosition.column,
+          isDual: dropPosition.isDualFurniture,
+          existingModules: placedModules.map(m => ({ id: m.moduleId, slot: m.slotIndex }))
+        });
+        
         const isAvailable = isSlotAvailable(
           dropPosition.column,
           dropPosition.isDualFurniture,

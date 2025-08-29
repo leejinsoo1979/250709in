@@ -121,6 +121,20 @@ export const isSlotAvailable = (
     return true;
   } else {
     // 기둥이 없는 슬롯에서는 기존 로직 사용
+    console.log('🔍 일반 슬롯 충돌 검사 시작:', {
+      targetSlots,
+      isDualFurniture,
+      moduleId,
+      기존가구수: placedModules.length,
+      기존가구정보: placedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        isDualSlot: m.isDualSlot,
+        position: m.position
+      }))
+    });
+    
     for (const placedModule of placedModules) {
       // 제외할 모듈은 건너뛰기
       if (excludeModuleId && placedModule.id === excludeModuleId) {
@@ -160,39 +174,82 @@ export const isSlotAvailable = (
                           Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50);
       
       // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
-      let moduleSlot = placedModule.slotIndex !== undefined ? placedModule.slotIndex : -1;
+      let moduleSlot = placedModule.slotIndex;
       
-      // slotIndex가 없는 경우에만 위치로부터 계산
-      if (moduleSlot === -1) {
-        if (isModuleDual && indexing.threeUnitDualPositions) {
-          moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
-            Math.abs(pos - placedModule.position.x) < 0.1
-          );
+      // slotIndex가 undefined인 경우 위치로부터 계산 시도
+      if (moduleSlot === undefined || moduleSlot === null) {
+        // position이 없는 경우 건너뛰기
+        if (!placedModule.position || placedModule.position.x === undefined) {
+          console.log('⚠️ 기존 가구의 위치 정보 없음:', placedModule.id);
+          continue;
+        }
+        
+        // 위치로부터 슬롯 인덱스 계산
+        const positions = isModuleDual && indexing.threeUnitDualPositions 
+          ? Object.values(indexing.threeUnitDualPositions)
+          : indexing.threeUnitPositions;
+        
+        // 가장 가까운 위치 찾기
+        let minDistance = Infinity;
+        let closestSlot = -1;
+        
+        positions.forEach((pos: any, idx: number) => {
+          const distance = Math.abs(pos - placedModule.position.x);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestSlot = idx;
+          }
+        });
+        
+        // 허용 오차 내에 있는지 확인 (0.1 단위 = 10mm)
+        if (minDistance < 0.1) {
+          moduleSlot = closestSlot;
         } else {
-          moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
-            Math.abs(pos - placedModule.position.x) < 0.1
-          );
+          console.log('⚠️ 기존 가구의 슬롯 위치를 찾을 수 없음:', {
+            id: placedModule.id,
+            moduleId: placedModule.moduleId,
+            position: placedModule.position,
+            isDual: isModuleDual,
+            minDistance,
+            closestSlot
+          });
+          // 슬롯을 찾지 못한 경우에도 충돌 가능성이 있으므로 보수적으로 처리
+          // 위치 기반으로 대략적인 슬롯 계산
+          const estimatedSlot = Math.floor((placedModule.position.x + (internalSpace.width * 0.005)) / (indexing.columnWidth * 0.01));
+          if (estimatedSlot >= 0 && estimatedSlot < indexing.columnCount) {
+            moduleSlot = estimatedSlot;
+            console.log('⚠️ 추정 슬롯 사용:', estimatedSlot);
+          } else {
+            continue;
+          }
         }
       }
       
-      if (moduleSlot >= 0) {
+      // 슬롯 위치를 찾은 경우만 충돌 검사
+      if (moduleSlot !== undefined && moduleSlot !== null && moduleSlot >= 0) {
         const moduleSlots = isModuleDual ? [moduleSlot, moduleSlot + 1] : [moduleSlot];
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
         
         if (hasOverlap) {
-          // 디버그 로그 간소화
-          console.log('🚫 슬롯 충돌:', {
+          // 디버그 로그 - 충돌 상세 정보
+          console.log('🚫 슬롯 충돌 감지!', {
+            충돌위치: targetSlots.filter(slot => moduleSlots.includes(slot)),
             타겟슬롯: targetSlots,
             기존가구: {
-              id: placedModule.moduleId,
+              id: placedModule.id,
+              moduleId: placedModule.moduleId,
               슬롯: moduleSlot,
               듀얼: isModuleDual,
-              차지슬롯: moduleSlots
+              차지슬롯: moduleSlots,
+              isUpper: placedModule.moduleId.includes('upper-cabinet'),
+              isLower: placedModule.moduleId.includes('lower-cabinet')
             },
             새가구: {
-              id: moduleId,
+              moduleId: moduleId,
               듀얼: isDualFurniture,
-              타겟슬롯: targetSlots
+              타겟슬롯: targetSlots,
+              isUpper: moduleId.includes('upper-cabinet'),
+              isLower: moduleId.includes('lower-cabinet')
             }
           });
           return false; // 충돌 발견
