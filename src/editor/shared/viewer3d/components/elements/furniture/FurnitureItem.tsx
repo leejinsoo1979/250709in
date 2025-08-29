@@ -524,8 +524,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // columnSlots 배열에서 globalSlotIndex에 해당하는 슬롯 찾기
-  // columnSlots[i].slotIndex가 global index이므로 배열 인덱스로 직접 접근
-  const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
+  // columnSlots[i].slotIndex가 global index이므로 find로 검색
+  const slotInfo = globalSlotIndex !== undefined 
+    ? columnSlots.find(slot => slot.slotIndex === globalSlotIndex) 
+    : undefined;
   
   // 디버깅: slotInfo 확인
   if (spaceInfo.droppedCeiling?.enabled && globalSlotIndex !== undefined) {

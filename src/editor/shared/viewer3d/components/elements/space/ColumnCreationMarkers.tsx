@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { createPortal } from 'react-dom';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -8,6 +9,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { Column } from '@/types/space';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
+import ColumnZoneSelectionModal from './ColumnZoneSelectionModal';
 
 interface ColumnCreationMarkersProps {
   spaceInfo: any;
