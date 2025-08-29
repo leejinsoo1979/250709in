@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>노서라운드 + 단내림 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            background: #f8f9fa;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .steps {
+            margin: 10px 0;
+        }
+        .step {
+            margin: 5px 0;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .expected {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e7f3ff;
+            border-radius: 4px;
+            border: 1px solid #b3d9ff;
+        }
+        .note {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 4px;
+            border: 1px solid #ffc107;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>노서라운드 + 단내림 가구 배치 테스트</h1>
+    
+    <div class="test-section">
+        <h2>🔧 수정 사항</h2>
+        <ul>
+            <li><strong>ColumnIndexer.ts</strong>: 빌트인 노서라운드 모드에서 이격거리 무시 처리</li>
+            <li><strong>ColumnIndexer.ts</strong>: 단내림 없는 경우 빌트인 actualInternalWidth 계산 추가</li>
+            <li><strong>ColumnIndexer.ts</strong>: 단내림 있는 경우 빌트인 처리 로직 추가 (왼쪽/오른쪽 모두)</li>
+            <li><strong>SpaceCalculator.ts</strong>: 빌트인 노서라운드에서 이격거리 무시</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 테스트 케이스</h2>
+        
+        <div class="test-case">
+            <h3>테스트 1: 노서라운드 + 빌트인 + 단내림(오른쪽)</h3>
+            <div class="steps">
+                <div class="step">1. 새 디자인 생성</div>
+                <div class="step">2. 서라운드 타입: <code>노서라운드</code> 선택</div>
+                <div class="step">3. 설치 타입: <code>빌트인</code> 선택</div>
+                <div class="step">4. 단내림 활성화 → 위치: <code>오른쪽</code></div>
+                <div class="step">5. 가구 라이브러리에서 가구 선택</div>
+                <div class="step">6. 메인 영역과 단내림 영역에 가구 배치 시도</div>
+            </div>
+            <div class="expected">
+                <strong>✅ 예상 결과:</strong>
+                <ul>
+                    <li>가구가 정상적으로 배치됨</li>
+                    <li>콘솔에 "Zone info is null" 에러가 없음</li>
+                    <li>메인 영역과 단내림 영역 모두 가구 배치 가능</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>테스트 2: 노서라운드 + 세미스탠딩 + 단내림(왼쪽)</h3>
+            <div class="steps">
+                <div class="step">1. 새 디자인 생성</div>
+                <div class="step">2. 서라운드 타입: <code>노서라운드</code> 선택</div>
+                <div class="step">3. 설치 타입: <code>세미스탠딩</code> 선택</div>
+                <div class="step">4. 단내림 활성화 → 위치: <code>왼쪽</code></div>
+                <div class="step">5. 가구 배치 시도</div>
+            </div>
+            <div class="expected">
+                <strong>✅ 예상 결과:</strong>
+                <ul>
+                    <li>엔드패널이 있는 쪽은 18mm 공간 차감</li>
+                    <li>가구 배치 정상 작동</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>테스트 3: 노서라운드 + 프리스탠딩 + 단내림</h3>
+            <div class="steps">
+                <div class="step">1. 새 디자인 생성</div>
+                <div class="step">2. 서라운드 타입: <code>노서라운드</code> 선택</div>
+                <div class="step">3. 설치 타입: <code>프리스탠딩</code> 선택</div>
+                <div class="step">4. 단내림 활성화</div>
+                <div class="step">5. 가구 배치 시도</div>
+            </div>
+            <div class="expected">
+                <strong>✅ 예상 결과:</strong>
+                <ul>
+                    <li>양쪽 엔드패널 각 18mm 공간 차감</li>
+                    <li>가구 배치 정상 작동</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 검증 항목</h2>
+        <ul>
+            <li>브라우저 콘솔에서 <code>Zone info is null</code> 에러가 발생하지 않는지 확인</li>
+            <li>가구를 드래그하여 배치할 때 정상적으로 스냅되는지 확인</li>
+            <li>메인 영역과 단내림 영역 경계에서 가구 이동이 자연스러운지 확인</li>
+            <li>각 설치 타입별로 내부 너비가 올바르게 계산되는지 확인</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 디버깅 로그 확인</h2>
+        <div class="note">
+            <strong>콘솔에서 확인할 로그:</strong>
+            <ul>
+                <li><code>🔍 calculateZoneSlotInfo 시작점 계산</code> - 시작점과 내부 너비 확인</li>
+                <li><code>🎯 [calculateZoneSlotInfo] 최종 계산 결과</code> - 메인/단내림 구간 정보</li>
+                <li><code>🔍 노서라운드 왼쪽/오른쪽 단내림 경계 계산</code> - 경계 갭 확인</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 테스트 URL</h2>
+        <p>
+            <a href="http://localhost:5179/configurator" target="_blank" style="
+                display: inline-block;
+                padding: 10px 20px;
+                background: #007bff;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+            ">
+                테스트 시작하기 →
+            </a>
+        </p>
+    </div>
+
+    <script>
+        console.log('테스트 페이지 로드됨');
+        console.log('개발 서버: http://localhost:5179/configurator');
+        console.log('주요 수정 파일:');
+        console.log('- src/editor/shared/utils/indexing/ColumnIndexer.ts');
+        console.log('- src/editor/shared/utils/indexing/SpaceCalculator.ts');
+    </script>
+</body>
+</html>
