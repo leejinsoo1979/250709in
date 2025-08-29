@@ -2020,11 +2020,77 @@ const Configurator: React.FC = () => {
   };
 
   // 우측 패널 컨텐츠 렌더링
+  // 배치된 가구 목록 렌더링
+  const renderPlacedFurnitureList = () => {
+    if (!placedModules || placedModules.length === 0) {
+      return (
+        <div className={styles.emptyState}>
+          <p>배치된 가구가 없습니다</p>
+        </div>
+      );
+    }
+
+    // 슬롯별로 가구 그룹화
+    const furnitureBySlot = placedModules.reduce((acc, furniture) => {
+      const slotKey = `슬롯 ${furniture.slotIndex + 1}`;
+      if (!acc[slotKey]) {
+        acc[slotKey] = [];
+      }
+      acc[slotKey].push(furniture);
+      return acc;
+    }, {} as Record<string, typeof placedModules>);
+
+    return (
+      <div className={styles.furnitureList}>
+        {Object.entries(furnitureBySlot).map(([slotName, furnitureItems]) => (
+          <div key={slotName} className={styles.slotGroup}>
+            <div className={styles.slotHeader}>
+              <span className={styles.slotName}>{slotName}</span>
+              <span className={styles.slotCount}>({furnitureItems.length}개)</span>
+            </div>
+            <div className={styles.furnitureItems}>
+              {furnitureItems.map((furniture) => (
+                <div key={furniture.id} className={styles.furnitureItem}>
+                  <div className={styles.furnitureInfo}>
+                    <span className={styles.furnitureName}>
+                      {furniture.moduleData.name || furniture.moduleData.id}
+                    </span>
+                    <span className={styles.furnitureSize}>
+                      {furniture.moduleData.dimensions.width} × {furniture.moduleData.dimensions.height} mm
+                    </span>
+                  </div>
+                  <div className={styles.furnitureActions}>
+                    <button 
+                      className={styles.removeButton}
+                      onClick={() => {
+                        const removeFurniture = useFurnitureStore.getState().removePlacedModule;
+                        removeFurniture(furniture.id);
+                      }}
+                      title="제거"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderRightPanelContent = () => {
     if (activeRightPanelTab === 'module') {
       return (
         <div className={styles.moduleContent}>
-          <ModuleContent />
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>배치된 가구 목록</h3>
+            </div>
+            {renderPlacedFurnitureList()}
+          </div>
         </div>
       );
     }
