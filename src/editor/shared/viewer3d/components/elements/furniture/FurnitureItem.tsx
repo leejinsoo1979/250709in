@@ -410,17 +410,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (columnSlots) {
       // zone에 맞는 슬롯 범위 계산
       let startIdx = 0;
-      let endIdx = targetZone.columnCount;
       
-      if (spaceInfo.droppedCeiling.position === 'right' && placedModule.zone === 'dropped') {
-        // 단내림이 오른쪽이고 단내림 구간인 경우
-        startIdx = zoneInfo.normal.columnCount;
-        endIdx = startIdx + targetZone.columnCount;
-      } else if (spaceInfo.droppedCeiling.position === 'left' && placedModule.zone === 'normal') {
-        // 단내림이 왼쪽이고 메인 구간인 경우
-        startIdx = zoneInfo.dropped.columnCount;
-        endIdx = startIdx + targetZone.columnCount;
+      if (spaceInfo.droppedCeiling.position === 'left') {
+        // 단내림이 왼쪽인 경우
+        if (placedModule.zone === 'dropped') {
+          // 단내림 구간은 처음부터
+          startIdx = 0;
+        } else {
+          // 메인 구간은 단내림 슬롯 이후부터
+          startIdx = zoneInfo.dropped.columnCount;
+        }
+      } else {
+        // 단내림이 오른쪽인 경우 (기본값)
+        if (placedModule.zone === 'dropped') {
+          // 단내림 구간은 메인 슬롯 이후부터
+          startIdx = zoneInfo.normal.columnCount;
+        } else {
+          // 메인 구간은 처음부터
+          startIdx = 0;
+        }
       }
+      
+      console.log('🔍 [FurnitureItem] 단내림 기둥 조정 체크:', {
+        zone: placedModule.zone,
+        slotIndex: placedModule.slotIndex,
+        startIdx,
+        targetZoneColumnCount: targetZone.columnCount,
+        droppedPosition: spaceInfo.droppedCeiling.position,
+        columnSlotsLength: Object.keys(columnSlots).length
+      });
       
       // 해당 zone의 슬롯들에 대해 기둥 영향 반영
       for (let i = 0; i < targetZone.columnCount; i++) {
@@ -428,7 +446,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const slot = columnSlots[globalIdx];
         if (slot && slot.hasColumn) {
           // 기둥이 있으면 사용 가능한 너비로 조정
+          const originalWidth = slotWidths[i];
           slotWidths[i] = slot.availableWidth || targetZone.columnWidth;
+          
+          console.log('🔧 [FurnitureItem] 슬롯 너비 조정:', {
+            localIdx: i,
+            globalIdx,
+            hasColumn: true,
+            columnType: slot.columnType,
+            originalWidth,
+            adjustedWidth: slotWidths[i],
+            availableWidth: slot.availableWidth
+          });
         }
       }
     }
