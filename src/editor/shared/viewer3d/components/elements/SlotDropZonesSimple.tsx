@@ -188,7 +188,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // zoneInfo.dropped이 null인지 확인
         if (!zoneInfo.dropped || !zoneInfo.normal) {
-          console.error('⚠️ Zone info is incomplete, falling back to normal zone:', { 
+          console.error('⚠️ Zone info is incomplete, using normal zone by default:', { 
             dropped: zoneInfo.dropped, 
             normal: zoneInfo.normal,
             fullZoneInfo: zoneInfo,
@@ -201,47 +201,46 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // zone info가 불완전한 경우 normal 영역으로 폴백
           zoneToUse = 'normal';
         } else {
-        
-        // Three.js 단위로 영역 경계 계산
-        const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
-        const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
-        
-        // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
-        
-        // Y=0 평면과의 교차점 계산 (바닥 평면)
-        const planeY = mmToThreeUnits(internalSpace.startY);
-        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
-        const intersectPoint = new THREE.Vector3();
-        
-        if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
-          // 단내림 위치에 따라 영역 판단
-          if (spaceInfo.droppedCeiling.position === 'left') {
-            zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
-          } else {
-            zoneToUse = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
-          }
+          // Three.js 단위로 영역 경계 계산
+          const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+          const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
           
-          console.log('🎯 자동 영역 판단:', {
-            mouseX,
-            mouseY,
-            worldX: intersectPoint.x,
-            droppedEndX,
-            normalStartX,
-            droppedPosition: spaceInfo.droppedCeiling.position,
-            detectedZone: zoneToUse,
-            zoneInfo: {
-              normal: { columnCount: zoneInfo.normal?.columnCount, startX: zoneInfo.normal?.startX, width: zoneInfo.normal?.width },
-              dropped: { columnCount: zoneInfo.dropped?.columnCount, startX: zoneInfo.dropped?.startX, width: zoneInfo.dropped?.width }
+          // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
+          const raycaster = new THREE.Raycaster();
+          raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+          
+          // Y=0 평면과의 교차점 계산 (바닥 평면)
+          const planeY = mmToThreeUnits(internalSpace.startY);
+          const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+          const intersectPoint = new THREE.Vector3();
+          
+          if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
+            // 단내림 위치에 따라 영역 판단
+            if (spaceInfo.droppedCeiling.position === 'left') {
+              zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
+            } else {
+              zoneToUse = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
             }
-          });
-        } else {
-          // 교차점을 찾지 못한 경우 기본값 사용
-          zoneToUse = 'normal';
-          console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
+            
+            console.log('🎯 자동 영역 판단:', {
+              mouseX,
+              mouseY,
+              worldX: intersectPoint.x,
+              droppedEndX,
+              normalStartX,
+              droppedPosition: spaceInfo.droppedCeiling.position,
+              detectedZone: zoneToUse,
+              zoneInfo: {
+                normal: { columnCount: zoneInfo.normal?.columnCount, startX: zoneInfo.normal?.startX, width: zoneInfo.normal?.width },
+                dropped: { columnCount: zoneInfo.dropped?.columnCount, startX: zoneInfo.dropped?.startX, width: zoneInfo.dropped?.width }
+              }
+            });
+          } else {
+            // 교차점을 찾지 못한 경우 기본값 사용
+            zoneToUse = 'normal';
+            console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
+          }
         }
-        } // else 블록 닫기 (zone info가 완전한 경우)
       } catch (error) {
         console.error('❌ 자동 영역 판단 중 오류:', error);
         zoneToUse = 'normal'; // 오류 발생 시 기본값
