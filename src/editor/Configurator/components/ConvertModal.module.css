@@ -226,6 +226,12 @@
   color: var(--theme-text);
 }
 
+.viewDescription {
+  font-size: 13px !important;
+  color: var(--theme-text-secondary) !important;
+  margin-left: 8px;
+}
+
 .viewDetail {
   padding: 4px 12px;
   font-size: 13px;

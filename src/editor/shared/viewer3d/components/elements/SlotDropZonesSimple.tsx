@@ -852,7 +852,36 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림 영역: 계산된 위치 사용
         const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
         
-        if (isDual && zoneSlotIndex < droppedPositions.length - 1) {
+        // threeUnitPositions가 없으면 직접 계산
+        if (!droppedPositions || droppedPositions.length === 0) {
+          console.error('⚠️ zones.dropped.threeUnitPositions가 없습니다. 직접 계산합니다.');
+          // zoneInfo에서 직접 계산
+          const startX = zoneInfo.dropped.startX;
+          const positions = [];
+          let currentX = startX;
+          
+          for (let i = 0; i < zoneInfo.dropped.columnCount; i++) {
+            const slotWidth = zoneInfo.dropped.slotWidths?.[i] || zoneInfo.dropped.columnWidth;
+            const slotCenterX = currentX + (slotWidth / 2);
+            positions.push(mmToThreeUnits(slotCenterX));
+            currentX += slotWidth;
+          }
+          
+          console.log('📍 직접 계산한 dropped positions:', {
+            startX,
+            positions,
+            columnCount: zoneInfo.dropped.columnCount
+          });
+          
+          // 직접 계산한 위치 사용
+          if (isDual && zoneSlotIndex < positions.length - 1) {
+            const leftSlotX = positions[zoneSlotIndex];
+            const rightSlotX = positions[zoneSlotIndex + 1];
+            finalX = (leftSlotX + rightSlotX) / 2;
+          } else {
+            finalX = positions[zoneSlotIndex] || 0;
+          }
+        } else if (isDual && zoneSlotIndex < droppedPositions.length - 1) {
           // 듀얼 가구: threeUnitDualPositions 사용
           if (fullIndexing.zones.dropped.threeUnitDualPositions && 
               fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
@@ -885,7 +914,36 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 메인 영역: 계산된 위치 사용
         const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
         
-        if (isDual && zoneSlotIndex < normalPositions.length - 1) {
+        // threeUnitPositions가 없으면 직접 계산
+        if (!normalPositions || normalPositions.length === 0) {
+          console.error('⚠️ zones.normal.threeUnitPositions가 없습니다. 직접 계산합니다.');
+          // zoneInfo에서 직접 계산
+          const startX = zoneInfo.normal.startX;
+          const positions = [];
+          let currentX = startX;
+          
+          for (let i = 0; i < zoneInfo.normal.columnCount; i++) {
+            const slotWidth = zoneInfo.normal.slotWidths?.[i] || zoneInfo.normal.columnWidth;
+            const slotCenterX = currentX + (slotWidth / 2);
+            positions.push(mmToThreeUnits(slotCenterX));
+            currentX += slotWidth;
+          }
+          
+          console.log('📍 직접 계산한 normal positions:', {
+            startX,
+            positions,
+            columnCount: zoneInfo.normal.columnCount
+          });
+          
+          // 직접 계산한 위치 사용
+          if (isDual && zoneSlotIndex < positions.length - 1) {
+            const leftSlotX = positions[zoneSlotIndex];
+            const rightSlotX = positions[zoneSlotIndex + 1];
+            finalX = (leftSlotX + rightSlotX) / 2;
+          } else {
+            finalX = positions[zoneSlotIndex] || 0;
+          }
+        } else if (isDual && zoneSlotIndex < normalPositions.length - 1) {
           // 듀얼 가구: threeUnitDualPositions 사용
           if (fullIndexing.zones.normal.threeUnitDualPositions && 
               fullIndexing.zones.normal.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
@@ -915,8 +973,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         });
       } else {
-        // fallback: zones가 없는 경우 전체 indexing 사용
-        const positions = indexing.threeUnitPositions;
+        // fallback: zones가 없는 경우 zoneInfo에서 직접 계산
+        console.warn('⚠️ fullIndexing.zones가 없습니다. zoneInfo에서 직접 계산합니다.');
+        
+        const targetZoneInfo = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+        const startX = targetZoneInfo.startX;
+        const positions = [];
+        let currentX = startX;
+        
+        for (let i = 0; i < targetZoneInfo.columnCount; i++) {
+          const slotWidth = targetZoneInfo.slotWidths?.[i] || targetZoneInfo.columnWidth;
+          const slotCenterX = currentX + (slotWidth / 2);
+          positions.push(mmToThreeUnits(slotCenterX));
+          currentX += slotWidth;
+        }
+        
+        console.log('📍 fallback - 직접 계산한 positions:', {
+          zone: zoneToUse,
+          startX,
+          positions,
+          columnCount: targetZoneInfo.columnCount
+        });
         
         if (isDual && zoneSlotIndex < positions.length - 1) {
           if (indexing.threeUnitDualPositions && 

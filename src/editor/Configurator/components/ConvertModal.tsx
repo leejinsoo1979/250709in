@@ -4,6 +4,7 @@ import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePrevie
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
+import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 
@@ -33,9 +34,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     '2d-left': false,
     '2d-right': false
   });
+  const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan']);
   
-  // PDF 내보내기 훅 사용
-  const { exportToPDF, isExporting } = usePDFExport();
+  // 내보내기 훅 사용
+  const { exportToPDF, isExporting: isPDFExporting } = usePDFExport();
+  const { exportToZIP, canExportDXF, isExporting: isDXFExporting } = useDXFExport();
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const placedModules = useFurnitureStore((state) => state.placedModules);
 
@@ -132,6 +135,53 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  const handleDXFTypeToggle = (type: DrawingType) => {
+    setSelectedDXFTypes(prev => {
+      if (prev.includes(type)) {
+        return prev.filter(t => t !== type);
+      } else {
+        return [...prev, type];
+      }
+    });
+  };
+
+  const handleDXFDownload = async () => {
+    console.log('📐 DXF 다운로드 버튼 클릭됨');
+    
+    if (!spaceInfo) {
+      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
+      return;
+    }
+    
+    if (selectedDXFTypes.length === 0) {
+      alert('최소 하나 이상의 도면을 선택해주세요.');
+      return;
+    }
+    
+    if (!canExportDXF(spaceInfo, placedModules)) {
+      alert('DXF 내보내기를 할 수 없습니다. 가구를 배치해주세요.');
+      return;
+    }
+    
+    try {
+      const result = await exportToZIP(spaceInfo, placedModules, selectedDXFTypes);
+      
+      if (result.success) {
+        console.log('✅ DXF 다운로드 성공:', result.filename);
+        // 모달 자동 닫기
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        console.error('❌ DXF 다운로드 실패:', result.message);
+        alert(`DXF 다운로드 실패: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('❌ DXF 다운로드 예외:', error);
+      alert('DXF 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
   const handlePDFDownload = async () => {
     console.log('📄 PDF 다운로드 버튼 클릭됨');
     
@@ -190,7 +240,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
                 <button 
                   className={`${styles.formatTab} ${exportType === 'dxf' ? styles.active : ''}`}
                   onClick={() => setExportType('dxf')}
-                  disabled
                 >
                   CAD 도면 (DXF)
                 </button>
@@ -203,98 +252,150 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* 렌더링 모드 선택 */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionHeader}>렌더링 모드</h3>
-              <div className={styles.renderModes}>
-                <label className={`${styles.renderMode} ${renderMode === 'solid' ? styles.active : ''}`}>
-                  <input 
-                    type="radio"
-                    name="renderMode"
-                    value="solid"
-                    checked={renderMode === 'solid'}
-                    onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
-                  />
-                  <div className={styles.renderModeContent}>
-                    <h4>솔리드</h4>
-                    <p>재질과 색상이 표현됩니다</p>
+            {/* DXF 옵션 */}
+            {exportType === 'dxf' && (
+              <>
+                <div className={styles.section}>
+                  <h3 className={styles.sectionHeader}>포함할 도면 선택</h3>
+                  <div className={styles.viewList}>
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('front') ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedDXFTypes.includes('front')}
+                        onChange={() => handleDXFTypeToggle('front')}
+                      />
+                      <span>정면도</span>
+                      <span className={styles.viewDescription}>정면에서 본 도면</span>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('plan') ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedDXFTypes.includes('plan')}
+                        onChange={() => handleDXFTypeToggle('plan')}
+                      />
+                      <span>평면도</span>
+                      <span className={styles.viewDescription}>위에서 본 도면</span>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('side') ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedDXFTypes.includes('side')}
+                        onChange={() => handleDXFTypeToggle('side')}
+                      />
+                      <span>측면도</span>
+                      <span className={styles.viewDescription}>측면에서 본 도면</span>
+                    </label>
                   </div>
-                </label>
-                <label className={`${styles.renderMode} ${renderMode === 'wireframe' ? styles.active : ''}`}>
-                  <input 
-                    type="radio"
-                    name="renderMode"
-                    value="wireframe"
-                    checked={renderMode === 'wireframe'}
-                    onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
-                  />
-                  <div className={styles.renderModeContent}>
-                    <h4>와이어프레임</h4>
-                    <p>구조만 표현됩니다</p>
+                </div>
+
+                {/* DXF 다운로드 버튼 */}
+                <button 
+                  className={styles.downloadButton}
+                  onClick={handleDXFDownload}
+                  disabled={isDXFExporting || selectedDXFTypes.length === 0 || !canExportDXF(spaceInfo, placedModules)}
+                >
+                  {isDXFExporting ? '처리 중...' : `DXF ZIP 다운로드 (${selectedDXFTypes.length}개 도면)`}
+                </button>
+              </>
+            )}
+
+            {/* PDF 옵션 */}
+            {exportType === 'pdf' && (
+              <>
+                {/* 렌더링 모드 선택 */}
+                <div className={styles.section}>
+                  <h3 className={styles.sectionHeader}>렌더링 모드</h3>
+                  <div className={styles.renderModes}>
+                    <label className={`${styles.renderMode} ${renderMode === 'solid' ? styles.active : ''}`}>
+                      <input 
+                        type="radio"
+                        name="renderMode"
+                        value="solid"
+                        checked={renderMode === 'solid'}
+                        onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
+                      />
+                      <div className={styles.renderModeContent}>
+                        <h4>솔리드</h4>
+                        <p>재질과 색상이 표현됩니다</p>
+                      </div>
+                    </label>
+                    <label className={`${styles.renderMode} ${renderMode === 'wireframe' ? styles.active : ''}`}>
+                      <input 
+                        type="radio"
+                        name="renderMode"
+                        value="wireframe"
+                        checked={renderMode === 'wireframe'}
+                        onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
+                      />
+                      <div className={styles.renderModeContent}>
+                        <h4>와이어프레임</h4>
+                        <p>구조만 표현됩니다</p>
+                      </div>
+                    </label>
                   </div>
-                </label>
-              </div>
-            </div>
+                </div>
 
-            {/* 포함할 뷰 선택 */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
-              <div className={styles.viewList}>
-                <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
-                  <input 
-                    type="checkbox"
-                    checked={selectedViews['3d']}
-                    onChange={() => handleViewToggle('3d')}
-                  />
-                  <span>3D 정면뷰</span>
-                </label>
-                <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
-                  <input 
-                    type="checkbox"
-                    checked={selectedViews['2d-top']}
-                    onChange={() => handleViewToggle('2d-top')}
-                  />
-                  <span>2D 정면뷰 (지수)</span>
-                  <button className={styles.viewDetail}>지수 포함</button>
-                </label>
-                <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
-                  <input 
-                    type="checkbox"
-                    checked={selectedViews['2d-front']}
-                    onChange={() => handleViewToggle('2d-front')}
-                  />
-                  <span>2D 상부뷰 (지수)</span>
-                  <button className={styles.viewDetail}>지수 포함</button>
-                </label>
-                <label className={`${styles.viewOption} ${selectedViews['2d-left'] ? styles.selected : ''}`}>
-                  <input 
-                    type="checkbox"
-                    checked={selectedViews['2d-left']}
-                    onChange={() => handleViewToggle('2d-left')}
-                  />
-                  <span>2D 좌측뷰 (지수)</span>
-                  <button className={styles.viewDetail}>지수 포함</button>
-                </label>
-                <label className={`${styles.viewOption} ${selectedViews['2d-right'] ? styles.selected : ''}`}>
-                  <input 
-                    type="checkbox"
-                    checked={selectedViews['2d-right']}
-                    onChange={() => handleViewToggle('2d-right')}
-                  />
-                  <span>2D 우측뷰 (지수)</span>
-                  <button className={styles.viewDetail}>지수 포함</button>
-                </label>
-              </div>
-            </div>
+                {/* 포함할 뷰 선택 */}
+                <div className={styles.section}>
+                  <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
+                  <div className={styles.viewList}>
+                    <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedViews['3d']}
+                        onChange={() => handleViewToggle('3d')}
+                      />
+                      <span>3D 정면뷰</span>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedViews['2d-top']}
+                        onChange={() => handleViewToggle('2d-top')}
+                      />
+                      <span>2D 정면뷰 (지수)</span>
+                      <button className={styles.viewDetail}>지수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedViews['2d-front']}
+                        onChange={() => handleViewToggle('2d-front')}
+                      />
+                      <span>2D 상부뷰 (지수)</span>
+                      <button className={styles.viewDetail}>지수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-left'] ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedViews['2d-left']}
+                        onChange={() => handleViewToggle('2d-left')}
+                      />
+                      <span>2D 좌측뷰 (지수)</span>
+                      <button className={styles.viewDetail}>지수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-right'] ? styles.selected : ''}`}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedViews['2d-right']}
+                        onChange={() => handleViewToggle('2d-right')}
+                      />
+                      <span>2D 우측뷰 (지수)</span>
+                      <button className={styles.viewDetail}>지수 포함</button>
+                    </label>
+                  </div>
+                </div>
 
-            {/* 다운로드 버튼 */}
-            <button 
-              className={styles.downloadButton}
-              onClick={handlePDFDownload}
-              disabled={isExporting || Object.values(selectedViews).every(v => !v)}
-            >
-              {isExporting ? '처리 중...' : `PDF 다운로드 (${Object.values(selectedViews).filter(v => v).length}개 뷰)`}
-            </button>
+                {/* PDF 다운로드 버튼 */}
+                <button 
+                  className={styles.downloadButton}
+                  onClick={handlePDFDownload}
+                  disabled={isPDFExporting || Object.values(selectedViews).every(v => !v)}
+                >
+                  {isPDFExporting ? '처리 중...' : `PDF 다운로드 (${Object.values(selectedViews).filter(v => v).length}개 뷰)`}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
