@@ -176,7 +176,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // zoneInfo.dropped이 null인지 확인
         if (!zoneInfo.dropped || !zoneInfo.normal) {
-          console.error('❌ Zone info is null:', { 
+          console.error('⚠️ Zone info is incomplete, falling back to normal zone:', { 
             dropped: zoneInfo.dropped, 
             normal: zoneInfo.normal,
             fullZoneInfo: zoneInfo,
@@ -186,8 +186,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               droppedCeiling: spaceInfo.droppedCeiling
             }
           });
-          return false;
-        }
+          // zone info가 불완전한 경우 normal 영역으로 폴백
+          zoneToUse = 'normal';
+        } else {
         
         // Three.js 단위로 영역 경계 계산
         const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);

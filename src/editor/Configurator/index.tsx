@@ -1855,33 +1855,22 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // PDF 내보내기 핸들러
-  const handleExportPDF = async () => {
-    console.log('📄 PDF 내보내기 시작...');
-    console.log('📊 현재 상태:', { spaceInfo, placedModulesCount: placedModules.length });
-
+  // PDF 내보내기 핸들러 - PDF 템플릿 선택 팝업 열기
+  const handleExportPDF = () => {
+    console.log('📄 PDF 템플릿 선택 팝업 열기...');
+    
     if (!spaceInfo) {
       alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
       return;
     }
 
-    try {
-      // 기본 뷰들 선택 (3D 정면뷰, 2D 상부뷰, 2D 정면뷰)
-      const selectedViews = ['3d-front', '2d-top', '2d-front'] as const;
-      
-      const result = await exportToPDF(spaceInfo, placedModules, selectedViews, 'solid');
-      
-      if (result.success) {
-        console.log('✅ PDF 내보내기 성공:', result.filename);
-        alert(`✅ ${result.message}\n파일명: ${result.filename}`);
-      } else {
-        console.error('❌ PDF 내보내기 실패:', result.message);
-        alert(`❌ ${result.message}`);
-      }
-    } catch (error) {
-      console.error('❌ PDF 내보내기 예외:', error);
-      alert('PDF 내보내기 중 오류가 발생했습니다: ' + error.message);
-    }
+    // PDF 템플릿 선택 팝업 열기
+    setShowPDFPreview(true);
+    
+    // URL에 editor=drawing 파라미터 추가
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('editor', 'drawing');
+    window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
   };
 
   // 개발 및 테스트를 위한 함수들을 window에 노출
