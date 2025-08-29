@@ -2049,16 +2049,22 @@ const Configurator: React.FC = () => {
               <span className={styles.slotCount}>({furnitureItems.length}개)</span>
             </div>
             <div className={styles.furnitureItems}>
-              {furnitureItems.map((furniture) => (
-                <div key={furniture.id} className={styles.furnitureItem}>
-                  <div className={styles.furnitureInfo}>
-                    <span className={styles.furnitureName}>
-                      {furniture.moduleData.name || furniture.moduleData.id}
-                    </span>
-                    <span className={styles.furnitureSize}>
-                      {furniture.moduleData.dimensions.width} × {furniture.moduleData.dimensions.height} mm
-                    </span>
-                  </div>
+              {furnitureItems.map((furniture) => {
+                const moduleData = furniture.moduleData || {};
+                const name = moduleData.name || moduleData.id || furniture.moduleId || '알 수 없음';
+                const width = moduleData.dimensions?.width || 0;
+                const height = moduleData.dimensions?.height || 0;
+                
+                return (
+                  <div key={furniture.id} className={styles.furnitureItem}>
+                    <div className={styles.furnitureInfo}>
+                      <span className={styles.furnitureName}>
+                        {name}
+                      </span>
+                      <span className={styles.furnitureSize}>
+                        {width} × {height} mm
+                      </span>
+                    </div>
                   <div className={styles.furnitureActions}>
                     <button 
                       className={styles.removeButton}
@@ -2071,8 +2077,9 @@ const Configurator: React.FC = () => {
                       ×
                     </button>
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
