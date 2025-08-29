@@ -159,13 +159,14 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* 라이트 테마 영역에서는 버튼/인풋을 확실히 라이트 톤으로 고정 */
-[data-theme="light"] button {
+/* 활성화 버튼은 제외하고 일반 버튼만 스타일 적용 */
+[data-theme="light"] button:not(.active):not([class*="Active"]):not([class*="selected"]) {
   background-color: #ffffff;
   color: #111827;
   border-color: #e5e7eb;
 }
 
-[data-theme="light"] button:hover {
+[data-theme="light"] button:not(.active):not([class*="Active"]):not([class*="selected"]):hover {
   background-color: #f3f4f6;
   border-color: var(--theme-primary);
 }
@@ -189,14 +190,24 @@ input:focus, textarea:focus, select:focus {
 
 /* 라이트 테마에서 토글/세그먼트 버튼의 활성 상태가 전역 버튼 규칙에 덮이지 않도록 보정 */
 [data-theme="light"] .toggleButtonActive,
-[data-theme="light"] .buttonActive {
+[data-theme="light"] .buttonActive,
+[data-theme="light"] button.active,
+[data-theme="light"] button[class*="Active"],
+[data-theme="light"] button[class*="selected"],
+[data-theme="light"] button[aria-pressed="true"],
+[data-theme="light"] button[aria-selected="true"] {
   background: var(--theme-primary) !important;
   color: #ffffff !important;
   border-color: var(--theme-primary) !important;
 }
 
 [data-theme="light"] .toggleButtonActive:hover,
-[data-theme="light"] .buttonActive:hover {
+[data-theme="light"] .buttonActive:hover,
+[data-theme="light"] button.active:hover,
+[data-theme="light"] button[class*="Active"]:hover,
+[data-theme="light"] button[class*="selected"]:hover,
+[data-theme="light"] button[aria-pressed="true"]:hover,
+[data-theme="light"] button[aria-selected="true"]:hover {
   background: var(--theme-primary-hover) !important;
 }
 
