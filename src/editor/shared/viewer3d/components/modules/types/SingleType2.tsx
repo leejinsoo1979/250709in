@@ -19,7 +19,7 @@ const BoxWithEdges: React.FC<{
   isBackPanel?: boolean; // 백패널 여부 추가
 }> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false, hideEdges = false, isBackPanel = false }) => {
   const { viewMode } = useSpace3DView();
-  const { view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore(); // view2DDirection 추가
+  const { view2DDirection, view2DTheme, indirectLightEnabled, indirectLightIntensity } = useUIStore(); // view2DDirection, view2DTheme 추가
   const { gl } = useThree();
   const { theme } = useTheme();
   
@@ -72,8 +72,8 @@ const BoxWithEdges: React.FC<{
               viewMode === '3D' 
                 ? "#505050"
                 : renderMode === 'wireframe' 
-                  ? "#000000"  // 2D wireframe 모드에서는 검정색 (CAD 스타일)
-                  : "#444444"  // 2D solid 모드
+                  ? (view2DTheme === 'dark' ? "#FFFFFF" : "#000000")  // 2D wireframe 다크모드는 흰색, 라이트모드는 검정색
+                  : (view2DTheme === 'dark' ? "#FFFFFF" : "#444444")  // 2D solid 다크모드는 흰색, 라이트모드는 회색
             }
             transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
             opacity={

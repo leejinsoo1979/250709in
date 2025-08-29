@@ -219,16 +219,8 @@ const CNCOptimizerNew: React.FC = () => {
           <button 
             className={styles.backButton}
             onClick={() => {
-              // URL 파라미터를 포함하여 Configurator로 돌아가기
-              const params = new URLSearchParams();
-              if (projectId) params.set('projectId', projectId);
-              if (designFileId) params.set('designFileId', designFileId);
-              const queryString = params.toString();
-              
-              // state로 CNC에서 돌아왔음을 표시
-              navigate(`/configurator${queryString ? `?${queryString}` : ''}`, {
-                state: { fromCNC: true, skipReload: true }
-              });
+              // 단순히 이전 페이지로 돌아가기
+              navigate(-1);
             }}
           >
             <ArrowLeft size={20} />

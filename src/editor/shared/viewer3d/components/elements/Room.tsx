@@ -127,6 +127,8 @@ const BoxWithEdges: React.FC<{
   const { viewMode: contextViewMode } = useSpace3DView();
   const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
+  const { view2DTheme: storeView2DTheme } = useUIStore();
+  const actualView2DTheme = view2DTheme || storeView2DTheme || 'light';
   
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
   useEffect(() => {
@@ -155,10 +157,10 @@ const BoxWithEdges: React.FC<{
               : viewMode === '2D' && isEndPanel 
                 ? "#00FF00" // 연두색 (도어 색상)
                 : renderMode === 'wireframe' 
-                  ? "#000000" // 2D wireframe에서는 검정색 (CAD 스타일)
-                  : (view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
+                  ? (actualView2DTheme === 'dark' ? "#FFFFFF" : "#000000") // 2D wireframe에서 다크모드는 흰색, 라이트모드는 검정색
+                  : (actualView2DTheme === 'dark' ? "#FFFFFF" : "#666666")
           } 
-          linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
+          linewidth={viewMode === '2D' && actualView2DTheme === 'dark' ? 1.5 : 0.5}
           opacity={viewMode === '3D' ? 0.9 : 1.0}
           transparent={viewMode === '3D'}
         />
@@ -1492,6 +1494,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
+                view2DTheme={view2DTheme}
               />
             </>
           );
@@ -1537,6 +1540,7 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
+            view2DTheme={view2DTheme}
             onClick={(e) => {
               e.stopPropagation();
               // 프레임 클릭 시 강조만 처리 (크기 변경 없음)

@@ -99,9 +99,8 @@ const Configurator: React.FC = () => {
   const resetUnsavedChangesRef = useRef<(() => void) | null>(null);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
-  // renderMode도 이제 UIStore에서 가져옴
+  // renderMode도 이제 UIStore에서 가져옴, showFurniture도 UIStore에서 관리
   const [showAll, setShowAll] = useState(true);
-  // showFurniture는 이제 UIStore에서 관리
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   // URL 파라미터에서 도면 편집기 상태 확인
   const showDrawingEditor = searchParams.get('editor') === 'drawing';
@@ -1070,6 +1069,10 @@ const Configurator: React.FC = () => {
 
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
+    console.log('🔍 [Configurator] useEffect 실행');
+    console.log('🔍 [Configurator] location.state:', location.state);
+    console.log('🔍 [Configurator] searchParams:', searchParams.toString());
+    
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const designFileId = searchParams.get('designFileId');
     const designFileName = searchParams.get('designFileName');
@@ -1078,12 +1081,18 @@ const Configurator: React.FC = () => {
     const isNewDesign = searchParams.get('design') === 'new';
     const fromCNC = location.state?.fromCNC || location.state?.skipReload; // CNC에서 돌아온 경우
     
+    console.log('🔍 [Configurator] fromCNC:', fromCNC);
+    console.log('🔍 [Configurator] projectId:', projectId);
+    console.log('🔍 [Configurator] designFileId:', designFileId);
+    
     // CNC에서 돌아온 경우 - 모든 다른 로직보다 먼저 체크
     if (fromCNC) {
-      console.log('🔄 CNC에서 돌아옴 - 모든 데이터 재로드 건너뜀');
+      console.log('🔄🔄🔄 CNC에서 돌아옴 - 모든 데이터 재로드 건너뜀 🔄🔄🔄');
       
       // sessionStorage에서 가구 데이터 복원
       const backupData = sessionStorage.getItem('cnc_furniture_backup');
+      console.log('🔍 [Configurator] CNC 백업 데이터 존재:', !!backupData);
+      
       if (backupData) {
         try {
           const restoredModules = JSON.parse(backupData);
@@ -1093,6 +1102,8 @@ const Configurator: React.FC = () => {
         } catch (error) {
           console.error('가구 데이터 복원 실패:', error);
         }
+      } else {
+        console.log('⚠️ CNC 백업 데이터가 없습니다');
       }
       
       // 프로젝트/디자인 ID는 유지
