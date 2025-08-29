@@ -755,7 +755,7 @@ export class ColumnIndexer {
         '슬롯 너비 합계': slotWidths.reduce((sum, w) => sum + w, 0)
       });
       
-      return {
+      const result = {
         normal: {
           startX: internalStartX,
           width: actualInternalWidth,  // 노서라운드의 경우 조정된 너비 사용
@@ -765,6 +765,14 @@ export class ColumnIndexer {
         },
         dropped: null
       };
+      
+      console.log('🔍🔍 [calculateZoneSlotInfo] 단내림 없음 - 반환값:', {
+        hasNormal: !!result.normal,
+        hasDropped: !!result.dropped,
+        result
+      });
+      
+      return result;
     }
     
     // 단내림이 활성화된 경우
