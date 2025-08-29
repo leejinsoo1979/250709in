@@ -182,7 +182,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       console.log('🎯 Space3DView - window.handleSlotDrop 확인:', {
         hasHandleSlotDrop: !!handleSlotDrop,
         typeofHandleSlotDrop: typeof handleSlotDrop,
-        activeZone
+        activeZone,
+        windowKeys: Object.keys(window).filter(k => k.includes('handle')),
+        furnitureStoreState: useFurnitureStore.getState().currentDragData
       });
       
       if (typeof handleSlotDrop === 'function') {

@@ -138,14 +138,30 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
   clearAllModules: () => {
+    const currentModules = get().placedModules;
+    console.log('🔴 [FURNITURE STORE] clearAllModules 호출:', {
+      previousCount: currentModules.length,
+      previousModules: currentModules.map(m => ({ id: m.id, name: m.name, slotIndex: m.slotIndex }))
+    });
+    console.trace('🔴 [TRACE] clearAllModules 호출 스택');
     set({ placedModules: [] });
   },
 
   // 가구 목록 직접 설정 함수 (함수형 업데이트 지원)
   setPlacedModules: (modules: PlacedModule[] | ((prev: PlacedModule[]) => PlacedModule[])) => {
-    set((state) => ({
-      placedModules: typeof modules === 'function' ? modules(state.placedModules) : modules
-    }));
+    const actualModules = get().placedModules;
+    const newModules = typeof modules === 'function' ? modules(actualModules) : modules;
+    
+    console.log('🔴 [FURNITURE STORE] setPlacedModules 호출:', {
+      previousCount: actualModules.length,
+      newCount: newModules.length,
+      isFunction: typeof modules === 'function',
+      newModules: newModules.map(m => ({ id: m.id, name: m.name, slotIndex: m.slotIndex })),
+      previousModules: actualModules.map(m => ({ id: m.id, name: m.name, slotIndex: m.slotIndex }))
+    });
+    console.trace('🔴 [TRACE] setPlacedModules 호출 스택');
+    
+    set({ placedModules: newModules });
   },
 
   // 선택 상태 액션들 (FurnitureSelectionProvider와 완전히 동일한 로직)
@@ -202,6 +218,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   isDirty: false,
   setIsDirty: (dirty: boolean) => set({ isDirty: dirty }),
   resetAll: () => {
+    const currentModules = get().placedModules;
+    console.log('🔴 [FURNITURE STORE] resetAll 호출:', {
+      previousCount: currentModules.length,
+      previousModules: currentModules.map(m => ({ id: m.id, name: m.name, slotIndex: m.slotIndex }))
+    });
+    console.trace('🔴 [TRACE] resetAll 호출 스택');
     set({
       placedModules: [],
       selectedLibraryModuleId: null,

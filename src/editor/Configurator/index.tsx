@@ -1141,11 +1141,13 @@ const Configurator: React.FC = () => {
             });
             
             if (designFile.furniture?.placedModules) {
-              console.log('🪑 가구 데이터 설정 중:', designFile.furniture.placedModules);
+              console.log('🪑 [LOAD] 가구 데이터 설정 중:', designFile.furniture.placedModules);
+              console.trace('🪑 [TRACE] setPlacedModules 호출 스택');
               setPlacedModules(designFile.furniture.placedModules);
-              console.log('🪑 가구 데이터 설정 완료');
+              console.log('🪑 [LOAD] 가구 데이터 설정 완료');
             } else {
-              console.log('⚠️ 가구 데이터가 없어서 빈 배열로 초기화');
+              console.log('⚠️ [EMPTY] 가구 데이터가 없어서 빈 배열로 초기화');
+              console.trace('⚠️ [TRACE] setPlacedModules([]) 호출 스택');
               setPlacedModules([]);
             }
             

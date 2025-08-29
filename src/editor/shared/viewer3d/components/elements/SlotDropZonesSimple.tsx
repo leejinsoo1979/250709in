@@ -1891,7 +1891,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // window 객체에 함수 노출
   useEffect(() => {
-    console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop');
+    console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop', {
+      componentMounted: true,
+      timestamp: new Date().toISOString()
+    });
+    
+    // 함수를 등록하기 전에 기존 함수 제거
+    if (window.handleSlotDrop) {
+      console.log('⚠️ Removing existing window.handleSlotDrop');
+      delete window.handleSlotDrop;
+    }
+    
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => {
       // window.handleSlotDrop이 호출될 때마다 최신 currentDragData를 스토어에서 직접 가져옴
       const latestCurrentDragData = useFurnitureStore.getState().currentDragData;
@@ -1906,6 +1916,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // handleSlotDrop 내부에서 마우스 위치를 기반으로 영역을 자동 판단함
       return handleSlotDrop(dragEvent, canvasElement);
     };
+    
+    // 실제로 등록되었는지 확인
+    console.log('✅ window.handleSlotDrop registered:', typeof window.handleSlotDrop);
     
     return () => {
       console.log('🎯 SlotDropZonesSimple - unregistering window.handleSlotDrop');

@@ -19,11 +19,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
 
   // 새로운 공간에 맞게 가구 업데이트 함수 (간단한 버전)
   const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
-    console.log('🚨 updateFurnitureForNewSpace 호출됨:', {
-      oldSpaceInfo,
-      newSpaceInfo,
-      caller: new Error().stack
+    console.log('🚨 [SPACE ADAPTER] updateFurnitureForNewSpace 호출됨:', {
+      oldWidth: oldSpaceInfo.width,
+      newWidth: newSpaceInfo.width,
+      oldHeight: oldSpaceInfo.height,
+      newHeight: newSpaceInfo.height,
+      oldDepth: oldSpaceInfo.depth,
+      newDepth: newSpaceInfo.depth,
+      oldColumnCount: oldSpaceInfo.customColumnCount,
+      newColumnCount: newSpaceInfo.customColumnCount
     });
+    console.trace('🚨 [TRACE] updateFurnitureForNewSpace 호출 스택');
     setPlacedModules(currentModules => {
       if (currentModules.length === 0) return currentModules;
       

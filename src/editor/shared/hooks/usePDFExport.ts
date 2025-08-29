@@ -63,11 +63,11 @@ export function usePDFExport() {
       // 3D 모드에서는 사용자가 선택한 렌더 모드 적용
       setRenderMode(targetRenderMode);
     } else {
-      // 2D 모드로 전환하면서 모든 가이드 비활성화 및 와이어프레임 설정
+      // 2D 모드로 전환하면서 그리드/축만 비활성화, 치수는 유지
       setViewMode('2D');
       setShowGuides(false); // 그리드 끄기
       setShowAxis(false); // 축 끄기
-      setShowDimensions(false); // 치수 끄기 (컬럼 포함)
+      setShowDimensions(true); // 치수는 표시해야 함!
       setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
