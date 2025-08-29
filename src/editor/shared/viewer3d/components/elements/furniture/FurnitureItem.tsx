@@ -693,6 +693,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥이 있다는 증거를 더 정확하게 판단 - slotInfo.hasColumn이 명확할 때만
   hasColumnEvidence = (slotInfo && slotInfo.hasColumn === true);
   
+  // 디버깅: 단내림 구간에서 커버도어 조건 확인
+  if (spaceInfo.droppedCeiling?.enabled) {
+    console.log('🚪 [단내림 커버도어 조건]:', {
+      moduleId: placedModule.moduleId,
+      zone: placedModule.zone,
+      globalSlotIndex,
+      slotInfoFound: !!slotInfo,
+      hasColumn: slotInfo?.hasColumn,
+      hasColumnEvidence,
+      columnSlotsLength: columnSlots.length,
+      columnSlots: columnSlots.map(s => ({
+        slotIndex: s.slotIndex,
+        hasColumn: s.hasColumn
+      }))
+    });
+  }
+  
   // 디버깅: hasColumnEvidence 상세 정보
   if (hasColumnEvidence) {
     console.log('🔍 [기둥 감지됨]:', {

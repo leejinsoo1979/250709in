@@ -27,6 +27,9 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   const [isHoveringSpace, setIsHoveringSpace] = useState(false);
   const [isValidPosition, setIsValidPosition] = useState(true);
   const [isSnapped, setIsSnapped] = useState(false); // 스냅 상태
+  const [showZoneModal, setShowZoneModal] = useState(false);
+  const [pendingColumnPosition, setPendingColumnPosition] = useState<[number, number, number] | null>(null);
+  const [selectedZone, setSelectedZone] = useState<'normal' | 'dropped' | null>(null);
 
   // 디버깅용 로그
   // console.log('🔍 ColumnCreationMarkers 렌더링 상태:', {
@@ -257,6 +260,13 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     if (!isColumnCreationMode || !gl.domElement) return;
 
     const handleMouseMove = (e: MouseEvent) => {
+      // 단내림이 있고 구간이 선택되지 않았으면 고스트 표시 안함
+      if (spaceInfo?.droppedCeiling?.enabled && !selectedZone) {
+        setIsHoveringSpace(false);
+        setGhostPosition(null);
+        return;
+      }
+
       const canvas = gl.domElement;
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -279,38 +289,32 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         const columnWidthM = 300 * 0.01; // 기둥 너비
         const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
         
-        const boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
+        let boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
+        
+        // 선택된 구간에 따라 위치 제한
+        if (spaceInfo?.droppedCeiling?.enabled && selectedZone) {
+          const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
+          
+          if (selectedZone === 'normal') {
+            // 일반 구간에만 배치 가능
+            const normalStart = (zoneInfo.normal.startX / 100);
+            const normalEnd = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
+            boundedX = Math.max(normalStart + columnWidthM/2, Math.min(normalEnd - columnWidthM/2, boundedX));
+          } else if (selectedZone === 'dropped') {
+            // 단내림 구간에만 배치 가능
+            const droppedStart = (zoneInfo.dropped.startX / 100);
+            const droppedEnd = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
+            boundedX = Math.max(droppedStart + columnWidthM/2, Math.min(droppedEnd - columnWidthM/2, boundedX));
+          }
+        }
         
         let newPosition: [number, number, number] = [boundedX, 0, zPosition];
         
-        // 1. 먼저 단내림 구간 경계 체크 (최우선 순위) - 반복 체크로 확실하게
-        let boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
-        let maxIterations = 10; // 최대 10번 반복해서 경계 걸침을 완전히 제거
-        while (boundaryCheck.adjusted && maxIterations > 0) {
-          newPosition[0] = boundaryCheck.newX;
-          setIsSnapped(true);
-          // 조정 후 다시 체크 (확실히 경계를 걸치지 않도록)
-          boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
-          maxIterations--;
-        }
-        
-        // 2. 경계 스냅이 없을 때만 기존 기둥에 스냅
-        if (!isSnapped) {
-          const originalX = newPosition[0];
-          newPosition = snapToNearestColumn(newPosition);
-          const snapped = Math.abs(originalX - newPosition[0]) > 0.01;
-          setIsSnapped(snapped);
-        }
-        
-        // 3. 스냅 후에도 공간 범위 체크
-        newPosition[0] = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, newPosition[0]));
-        
-        // 4. 최종적으로 다시 한번 경계 체크 (확실하게)
-        const finalBoundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
-        if (finalBoundaryCheck.adjusted) {
-          newPosition[0] = finalBoundaryCheck.newX;
-          setIsSnapped(true);
-        }
+        // 기존 기둥에 스냅 (구간 제한 없이)
+        const originalX = newPosition[0];
+        newPosition = snapToNearestColumn(newPosition);
+        const snapped = Math.abs(originalX - newPosition[0]) > 0.01;
+        setIsSnapped(snapped);
         
         setGhostPosition(newPosition);
         setIsHoveringSpace(true);
@@ -333,7 +337,16 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [isColumnCreationMode, camera, raycaster, gl, spaceInfo]);
+  }, [isColumnCreationMode, camera, raycaster, gl, spaceInfo, selectedZone]);
+
+  // 기둥 생성 모드가 변경되면 선택 초기화
+  useEffect(() => {
+    if (!isColumnCreationMode) {
+      setSelectedZone(null);
+      setShowZoneModal(false);
+      setPendingColumnPosition(null);
+    }
+  }, [isColumnCreationMode]);
 
   // 기둥 생성 모드가 아니면 아무것도 렌더링하지 않음
   if (!isColumnCreationMode) {
@@ -363,25 +376,46 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return positions;
   };
 
-  // 기둥 생성 핸들러
-  const handleCreateColumn = (position?: [number, number, number]) => {
-    // 위치가 제공되지 않으면 고스트 위치 사용
-    let finalPosition = position || ghostPosition;
-    if (!finalPosition) return;
+  // 구간 선택 후 기둥 생성
+  const handleZoneSelect = (zone: 'normal' | 'dropped') => {
+    setSelectedZone(zone);
+    setShowZoneModal(false);
     
-    // 단내림 구간 경계 체크 - 생성 시에도 정확한 위치로 조정
-    const boundaryCheck = checkDroppedCeilingBoundary(finalPosition[0]);
-    if (boundaryCheck.adjusted) {
-      finalPosition = [boundaryCheck.newX, finalPosition[1], finalPosition[2]];
-      console.log('🎯 기둥 생성 시 경계 조정:', { 
-        original: position?.[0] || ghostPosition?.[0], 
-        adjusted: boundaryCheck.newX 
-      });
+    if (pendingColumnPosition) {
+      // 선택된 구간에 맞게 위치 조정
+      let finalPosition = [...pendingColumnPosition] as [number, number, number];
+      const columnWidthM = 300 * 0.01;
+      
+      if (spaceInfo?.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
+        
+        if (zone === 'normal') {
+          // 일반 구간 범위 내로 제한
+          const normalStart = (zoneInfo.normal.startX / 100);
+          const normalEnd = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
+          finalPosition[0] = Math.max(normalStart + columnWidthM/2, Math.min(normalEnd - columnWidthM/2, finalPosition[0]));
+        } else if (zone === 'dropped') {
+          // 단내림 구간 범위 내로 제한
+          const droppedStart = (zoneInfo.dropped.startX / 100);
+          const droppedEnd = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
+          finalPosition[0] = Math.max(droppedStart + columnWidthM/2, Math.min(droppedEnd - columnWidthM/2, finalPosition[0]));
+        }
+      }
+      
+      createColumnAtPosition(finalPosition);
+      setPendingColumnPosition(null);
     }
     
+    // 다음 기둥을 위해 선택 유지
+    setTimeout(() => {
+      // 구간 선택 상태 유지
+    }, 100);
+  };
+
+  // 실제 기둥 생성
+  const createColumnAtPosition = (finalPosition: [number, number, number]) => {
     // 겹침 검사
     if (checkColumnOverlap(finalPosition)) {
-      // console.log('❌ 기둥 생성 실패: 기존 기둥과 겹침');
       return; // 겹치면 생성하지 않음
     }
     
@@ -398,8 +432,24 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
     
-    // console.log('✅ 새 기둥 생성 성공:', newColumn);
     addColumn(newColumn);
+  };
+
+  // 기둥 생성 핸들러
+  const handleCreateColumn = (position?: [number, number, number]) => {
+    // 위치가 제공되지 않으면 고스트 위치 사용
+    let finalPosition = position || ghostPosition;
+    if (!finalPosition) return;
+    
+    // 단내림이 활성화되어 있으면 팝업 표시
+    if (spaceInfo?.droppedCeiling?.enabled && !selectedZone) {
+      setPendingColumnPosition(finalPosition);
+      setShowZoneModal(true);
+      return;
+    }
+    
+    // 단내림이 없거나 이미 구간이 선택된 경우 바로 생성
+    createColumnAtPosition(finalPosition);
   };
 
   // 클릭 핸들러
@@ -585,6 +635,19 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           </mesh>
         </group>
       ))}
+      
+      {/* 구간 선택 모달 */}
+      {showZoneModal && typeof document !== 'undefined' && createPortal(
+        <ColumnZoneSelectionModal
+          isOpen={showZoneModal}
+          onSelect={handleZoneSelect}
+          onCancel={() => {
+            setShowZoneModal(false);
+            setPendingColumnPosition(null);
+          }}
+        />,
+        document.body
+      )}
     </group>
   );
 };
