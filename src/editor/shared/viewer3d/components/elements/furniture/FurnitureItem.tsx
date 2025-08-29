@@ -407,13 +407,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     
-    if (spaceInfo.droppedCeiling.position === 'right' && placedModule.zone === 'dropped') {
-      // 단내림이 오른쪽: 단내림 슬롯은 메인 슬롯 뒤에 위치
-      globalSlotIndex = placedModule.slotIndex + zoneInfo.normal.columnCount;
-    } else if (spaceInfo.droppedCeiling.position === 'left' && placedModule.zone === 'normal') {
-      // 단내림이 왼쪽: 메인 슬롯은 단내림 슬롯 뒤에 위치
-      globalSlotIndex = placedModule.slotIndex + zoneInfo.dropped.columnCount;
+    if (spaceInfo.droppedCeiling.position === 'left') {
+      // 단내림이 왼쪽인 경우
+      if (placedModule.zone === 'normal') {
+        // 메인 구간은 단내림 슬롯 뒤에 위치
+        globalSlotIndex = placedModule.slotIndex + zoneInfo.dropped.columnCount;
+      }
+      // dropped zone은 그대로 (0부터 시작)
+    } else {
+      // 단내림이 오른쪽인 경우 (기본값)
+      if (placedModule.zone === 'dropped') {
+        // 단내림 구간은 메인 슬롯 뒤에 위치
+        globalSlotIndex = placedModule.slotIndex + zoneInfo.normal.columnCount;
+      }
+      // normal zone은 그대로 (0부터 시작)
     }
+    
+    console.log('🔍 [FurnitureItem] globalSlotIndex 계산:', {
+      zone: placedModule.zone,
+      localIndex: placedModule.slotIndex,
+      globalIndex: globalSlotIndex,
+      droppedPosition: spaceInfo.droppedCeiling.position,
+      normalCount: zoneInfo.normal.columnCount,
+      droppedCount: zoneInfo.dropped.columnCount
+    });
   }
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
