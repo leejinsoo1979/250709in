@@ -810,7 +810,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         intrusionDirection: intrusionAnalysis.intrusionDirection,
         furniturePosition: intrusionAnalysis.furniturePosition,
         adjustedWidth: intrusionAnalysis.adjustedWidth,
-        doorWidth: indexing.columnWidth - 3,
+        doorWidth: indexing.columnWidth,
         columnType,
         hasDepthAnalysis: columnType !== undefined
       });
@@ -821,7 +821,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         column: columnInSlot,
         columnPosition,
         availableWidth,
-        doorWidth: indexing.columnWidth - 3, // 도어는 항상 원래 슬롯 크기 유지
+        doorWidth: indexing.columnWidth, // 도어는 항상 원래 슬롯 크기 유지
         needsMullion,
         mullionSide,
         intrusionDirection: intrusionAnalysis.intrusionDirection,
@@ -848,7 +848,7 @@ export const createPillarCoverDoor = (column: Column, slotWidth: number): Pillar
     type: 'pillarCover',
     isStorage: false,
     linkedTo: column.id,
-    width: slotWidth - 3, // 도어 갭 3mm 적용
+    width: slotWidth, // 도어 갭 제거
     height: column.height
   };
 };
