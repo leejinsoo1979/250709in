@@ -57,7 +57,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return false; // 겹치지 않음
   };
 
-  // 단내림 구간 경계 체크 함수
+  // 단내림 구간 경계 체크 함수 - 강력한 스냅 기능
   const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number } => {
     if (!spaceInfo?.droppedCeiling?.enabled) {
       return { adjusted: false, newX: xPosition };
@@ -83,19 +83,38 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const columnLeft = xPosition - halfColumnWidth;
     const columnRight = xPosition + halfColumnWidth;
 
+    // 스냅 임계값 - 경계 근처에서 더 넓은 범위로 스냅
+    const snapThreshold = columnWidthInThreeUnits * 1.5; // 기둥 너비의 1.5배 거리 내에서 스냅
+
     // 단내림 위치에 따른 경계 체크
     if (spaceInfo.droppedCeiling.position === 'left') {
       // 왼쪽 단내림: 단내림 구간과 일반 구간 사이 경계
       const boundaryX = droppedEndX;
       
-      // 기둥이 경계에 걸치는지 확인
-      if (columnLeft < boundaryX && columnRight > boundaryX) {
-        // 경계에 걸침 - 더 가까운 쪽으로 이동
-        if (Math.abs(xPosition - droppedEndX) < Math.abs(xPosition - normalStartX)) {
-          // 단내림 구간쪽으로 (왼쪽으로)
+      // 경계 근처에 있는지 확인 (스냅 임계값 내)
+      const distanceToBoundary = Math.abs(xPosition - boundaryX);
+      
+      if (distanceToBoundary < snapThreshold) {
+        // 가중치 계산: 경계에서의 거리 비율
+        const leftWeight = Math.abs(xPosition - (boundaryX - halfColumnWidth));
+        const rightWeight = Math.abs(xPosition - (boundaryX + halfColumnWidth));
+        
+        // 가중치가 더 낮은 쪽으로 스냅
+        if (leftWeight < rightWeight) {
+          // 단내림 구간 끝에 붙이기 (왼쪽)
           return { adjusted: true, newX: boundaryX - halfColumnWidth };
         } else {
-          // 일반 구간쪽으로 (오른쪽으로)
+          // 일반 구간 시작에 붙이기 (오른쪽)
+          return { adjusted: true, newX: boundaryX + halfColumnWidth };
+        }
+      }
+      
+      // 기둥이 경계를 넘어가는 경우 강제 조정
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥 중심이 경계 왼쪽에 있으면 왼쪽으로, 오른쪽에 있으면 오른쪽으로
+        if (xPosition < boundaryX) {
+          return { adjusted: true, newX: boundaryX - halfColumnWidth };
+        } else {
           return { adjusted: true, newX: boundaryX + halfColumnWidth };
         }
       }
@@ -103,14 +122,30 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // 오른쪽 단내림: 일반 구간과 단내림 구간 사이 경계
       const boundaryX = normalEndX;
       
-      // 기둥이 경계에 걸치는지 확인
-      if (columnLeft < boundaryX && columnRight > boundaryX) {
-        // 경계에 걸침 - 더 가까운 쪽으로 이동
-        if (Math.abs(xPosition - normalEndX) < Math.abs(xPosition - droppedStartX)) {
-          // 일반 구간쪽으로 (왼쪽으로)
+      // 경계 근처에 있는지 확인 (스냅 임계값 내)
+      const distanceToBoundary = Math.abs(xPosition - boundaryX);
+      
+      if (distanceToBoundary < snapThreshold) {
+        // 가중치 계산: 경계에서의 거리 비율
+        const leftWeight = Math.abs(xPosition - (boundaryX - halfColumnWidth));
+        const rightWeight = Math.abs(xPosition - (boundaryX + halfColumnWidth));
+        
+        // 가중치가 더 낮은 쪽으로 스냅
+        if (leftWeight < rightWeight) {
+          // 일반 구간 끝에 붙이기 (왼쪽)
           return { adjusted: true, newX: boundaryX - halfColumnWidth };
         } else {
-          // 단내림 구간쪽으로 (오른쪽으로)
+          // 단내림 구간 시작에 붙이기 (오른쪽)
+          return { adjusted: true, newX: boundaryX + halfColumnWidth };
+        }
+      }
+      
+      // 기둥이 경계를 넘어가는 경우 강제 조정
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥 중심이 경계 왼쪽에 있으면 왼쪽으로, 오른쪽에 있으면 오른쪽으로
+        if (xPosition < boundaryX) {
+          return { adjusted: true, newX: boundaryX - halfColumnWidth };
+        } else {
           return { adjusted: true, newX: boundaryX + halfColumnWidth };
         }
       }
@@ -230,20 +265,28 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         
         let newPosition: [number, number, number] = [boundedX, 0, zPosition];
         
-        // 1. 먼저 단내림 구간 경계 체크
+        // 1. 먼저 단내림 구간 경계 체크 (최우선 순위)
         const boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
         if (boundaryCheck.adjusted) {
           newPosition[0] = boundaryCheck.newX;
+          setIsSnapped(true);
+        } else {
+          // 2. 경계 스냅이 없을 때만 기존 기둥에 스냅
+          const originalX = newPosition[0];
+          newPosition = snapToNearestColumn(newPosition);
+          const snapped = Math.abs(originalX - newPosition[0]) > 0.01; // 스냅되었는지 확인
+          setIsSnapped(snapped);
         }
-        
-        // 2. 기존 기둥에 스냅
-        const originalX = newPosition[0];
-        newPosition = snapToNearestColumn(newPosition);
-        const snapped = Math.abs(originalX - newPosition[0]) > 0.01; // 스냅되었는지 확인
-        setIsSnapped(snapped || boundaryCheck.adjusted);
         
         // 3. 스냅 후에도 공간 범위 체크
         newPosition[0] = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, newPosition[0]));
+        
+        // 4. 최종적으로 다시 한번 경계 체크 (확실하게)
+        const finalBoundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
+        if (finalBoundaryCheck.adjusted) {
+          newPosition[0] = finalBoundaryCheck.newX;
+          setIsSnapped(true);
+        }
         
         setGhostPosition(newPosition);
         setIsHoveringSpace(true);
