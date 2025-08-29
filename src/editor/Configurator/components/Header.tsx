@@ -365,14 +365,8 @@ const Header: React.FC<HeaderProps> = ({
               <div className={styles.dropdownMenu}>
                 <button 
                   className={styles.dropdownItem}
-                  onClick={async () => {
+                  onClick={() => {
                     console.log('CNC 옵티마이저 버튼 클릭됨');
-                    
-                    // CNC Optimizer로 이동하기 전에 현재 상태 저장
-                    if (onSave && projectId && designFileId) {
-                      console.log('CNC Optimizer 이동 전 자동 저장 실행');
-                      await onSave(); // 저장 완료 대기
-                    }
                     
                     // 프로젝트 ID와 디자인 파일 ID를 URL 파라미터로 전달
                     const params = new URLSearchParams();

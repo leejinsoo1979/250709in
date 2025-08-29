@@ -31,7 +31,7 @@ interface SlotDropZonesSimpleProps {
 // 전역 window 타입 확장
 declare global {
   interface Window {
-    handleSlotDrop?: (dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => boolean;
+    handleSlotDrop?: (dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => boolean;
   }
 }
 

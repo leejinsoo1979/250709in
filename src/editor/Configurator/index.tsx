@@ -73,6 +73,7 @@ const Configurator: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // 데이터 로드 여부 추적
 
   // Store hooks
   const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
@@ -1079,16 +1080,17 @@ const Configurator: React.FC = () => {
     // Step2에서 넘어온 경우 (designFileId가 있는 경우)
     if (projectId && designFileId) {
       console.log('📋 Step2에서 넘어옴 - designFileId:', designFileId);
-      setCurrentProjectId(projectId);
-      setProjectId(projectId);
-      setCurrentDesignFileId(designFileId);
       
-      // CNC에서 돌아온 경우 데이터 재로드 건너뛰기
-      if (fromCNC) {
-        console.log('🔄 CNC에서 돌아옴 - 데이터 재로드 건너뜀');
+      // 이미 같은 프로젝트와 디자인이 로드되어 있고, CNC에서 돌아온 경우
+      if (currentProjectId === projectId && currentDesignFileId === designFileId && (fromCNC || isDataLoaded)) {
+        console.log('🔄 동일한 프로젝트/디자인 - 재로드 건너뜀');
         setLoading(false);
         return;
       }
+      
+      setCurrentProjectId(projectId);
+      setProjectId(projectId);
+      setCurrentDesignFileId(designFileId);
       
       // 디자인 파일 로드
       const loadDesignFile = async () => {
@@ -1146,6 +1148,7 @@ const Configurator: React.FC = () => {
               setPlacedModules([]);
             }
             
+            setIsDataLoaded(true); // 데이터 로드 완료 표시
             setLoading(false);
           }
         } catch (error) {
@@ -1292,7 +1295,7 @@ const Configurator: React.FC = () => {
         setLoading(false);
       }, 500);
     }
-  }, [searchParams, currentProjectId]);
+  }, [searchParams]); // currentProjectId 제거하여 무한 재렌더링 방지
 
   // 폴더에서 실제 디자인파일명 찾기
   useEffect(() => {
