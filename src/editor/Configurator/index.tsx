@@ -2063,8 +2063,8 @@ const Configurator: React.FC = () => {
                     <button 
                       className={styles.removeButton}
                       onClick={() => {
-                        const removeFurniture = useFurnitureStore.getState().removePlacedModule;
-                        removeFurniture(furniture.id);
+                        const { removePlacedModule } = useFurnitureStore.getState();
+                        removePlacedModule(furniture.id);
                       }}
                       title="제거"
                     >
