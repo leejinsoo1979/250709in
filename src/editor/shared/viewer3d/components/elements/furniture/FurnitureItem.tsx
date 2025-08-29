@@ -403,10 +403,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
     
+    // zone별로 슬롯 너비 계산 - 기둥 영향 반영
+    const slotWidths = Array(targetZone.columnCount).fill(targetZone.columnWidth);
+    
+    // 기둥이 있는 슬롯의 너비 조정
+    if (columnSlots) {
+      // zone에 맞는 슬롯 범위 계산
+      let startIdx = 0;
+      let endIdx = targetZone.columnCount;
+      
+      if (spaceInfo.droppedCeiling.position === 'right' && placedModule.zone === 'dropped') {
+        // 단내림이 오른쪽이고 단내림 구간인 경우
+        startIdx = zoneInfo.normal.columnCount;
+        endIdx = startIdx + targetZone.columnCount;
+      } else if (spaceInfo.droppedCeiling.position === 'left' && placedModule.zone === 'normal') {
+        // 단내림이 왼쪽이고 메인 구간인 경우
+        startIdx = zoneInfo.dropped.columnCount;
+        endIdx = startIdx + targetZone.columnCount;
+      }
+      
+      // 해당 zone의 슬롯들에 대해 기둥 영향 반영
+      for (let i = 0; i < targetZone.columnCount; i++) {
+        const globalIdx = startIdx + i;
+        const slot = columnSlots[globalIdx];
+        if (slot && slot.hasColumn) {
+          // 기둥이 있으면 사용 가능한 너비로 조정
+          slotWidths[i] = slot.availableWidth || targetZone.columnWidth;
+        }
+      }
+    }
+    
     // zone별 indexing은 targetZone 정보를 직접 사용
     indexing = {
       columnCount: targetZone.columnCount,
       columnWidth: targetZone.columnWidth,
+      slotWidths: slotWidths, // 기둥 영향이 반영된 슬롯 너비 배열
       threeUnitPositions: [],
       threeUnitDualPositions: {},
       threeUnitBoundaries: []
