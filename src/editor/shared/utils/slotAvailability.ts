@@ -24,6 +24,15 @@ export const isSlotAvailable = (
   excludeModuleId?: string,
   targetZone?: 'normal' | 'dropped'
 ): boolean => {
+  console.log('🔍 isSlotAvailable 시작:', {
+    targetSlot: slotIndex,
+    isDualFurniture,
+    moduleId,
+    총가구수: placedModules.length,
+    excludeModuleId,
+    targetZone
+  });
+  
   const indexing = calculateSpaceIndexing(spaceInfo);
   const internalSpace = calculateInternalSpace(spaceInfo);
   
