@@ -1175,21 +1175,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 기둥 타입에 따라 다르게 처리
         effectiveColumnType = isDual ? columnType : slotInfo.columnType;
         
-        if (effectiveColumnType === 'medium') {
-          // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
-          // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
-          customWidth = actualSlotWidth; // 슬롯 너비 사용
-          adjustedWidth = moduleData.dimensions.width; // 가구는 원본 크기 유지
-          
-          console.log('🔧 기둥 C 선배치 슬롯 - 원본 크기 유지:', {
-            원래폭: actualSlotWidth,
-            가구폭: moduleData.dimensions.width,
-            customWidth: customWidth,
-            위치: finalX,
-            message: '폭 조정은 FurnitureItem에서 실시간으로 처리됨'
-          });
-        } else {
-          // 기둥 A(깊은 기둥) 등 다른 기둥은 즉시 폭 조정
+        // 모든 기둥 타입에 대해 즉시 폭 조정
+        {
+          // 기둥 침범 시 즉시 폭 조정
           if (isDual) {
             // 듀얼 가구의 경우 totalAvailableWidth 사용
             customWidth = totalAvailableWidth;
@@ -1302,7 +1290,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotIndex: zoneSlotIndex,  // 영역 내 로컬 슬롯 인덱스 사용 (zone과 함께 사용)
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) && effectiveColumnType !== 'medium' ? adjustedWidth : undefined, // 기둥 C가 아닌 경우에만 조정된 너비 사용
+        adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) ? adjustedWidth : undefined, // 기둥이 있으면 조정된 너비 사용
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
         customWidth: customWidth, // 실제 슬롯 너비 사용
@@ -1748,12 +1736,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           furniturePosition: slotInfo.furniturePosition
         });
         
-        if (slotInfo.columnType === 'medium') {
-          // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
-          // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
-          console.log('🔧 기둥 C 선배치 슬롯 - 원본 크기 유지');
-        } else {
-          // 기둥 A(깊은 기둥) 등 다른 기둥은 즉시 폭 조정
+        // 모든 기둥 타입에 대해 즉시 폭 조정
+        {
           const slotWidthM = zoneTargetIndexing.columnWidth * 0.01;
           const originalSlotBounds = {
             left: finalX - slotWidthM / 2,
@@ -1789,7 +1773,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       slotIndex: slotIndex,
       isDualSlot: isDual,
       isValidInCurrentSpace: true,
-      adjustedWidth: slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined, // 기둥 C를 제외한 모든 기둥에서 조정된 너비 사용
+      adjustedWidth: slotInfo?.hasColumn ? adjustedWidthValue : undefined, // 기둥이 있으면 조정된 너비 사용
       hingePosition: 'right' as 'left' | 'right',
       // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
       customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
