@@ -690,8 +690,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return distance < 10;
   });
   
-  // 기둥이 있다는 증거를 더 정확하게 판단 - slotInfo.hasColumn이 명확할 때만
-  hasColumnEvidence = (slotInfo && slotInfo.hasColumn === true);
+  // 기둥이 있다는 증거를 더 정확하게 판단
+  // 1. slotInfo에 명확히 기둥이 있다고 표시됨
+  // 2. 또는 adjustedWidth가 설정되어 있음 (기둥 때문에 너비가 조정됨)
+  // 3. 또는 customWidth가 설정되어 있고 원래 너비보다 작음
+  hasColumnEvidence = (slotInfo && slotInfo.hasColumn === true) ||
+                     (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null && placedModule.adjustedWidth < originalModuleWidth) ||
+                     (placedModule.customWidth !== undefined && placedModule.customWidth !== null && placedModule.customWidth < originalModuleWidth);
   
   // 디버깅: 단내림 구간에서 커버도어 조건 확인
   if (spaceInfo.droppedCeiling?.enabled) {
@@ -701,6 +706,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       globalSlotIndex,
       slotInfoFound: !!slotInfo,
       hasColumn: slotInfo?.hasColumn,
+      adjustedWidth: placedModule.adjustedWidth,
+      customWidth: placedModule.customWidth,
+      originalModuleWidth,
       hasColumnEvidence,
       columnSlotsLength: columnSlots.length,
       columnSlots: columnSlots.map(s => ({
