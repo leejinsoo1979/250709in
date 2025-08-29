@@ -127,10 +127,61 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       // 기존 가구가 차지하는 슬롯들
       let moduleSlots: number[] = [];
-      if (isModuleDual && module.slotIndex !== undefined) {
-        moduleSlots = [module.slotIndex, module.slotIndex + 1];
-      } else if (module.slotIndex !== undefined) {
-        moduleSlots = [module.slotIndex];
+      let moduleSlot = module.slotIndex;
+      
+      // slotIndex가 없는 경우 위치로부터 계산
+      if (moduleSlot === undefined || moduleSlot === null) {
+        if (!module.position || module.position.x === undefined) {
+          console.log('⚠️ 가구 위치 정보 없음, 충돌 검사 스킵:', module.id);
+          return;
+        }
+        
+        // 위치로부터 슬롯 추정
+        const positions = isModuleDual && indexing.threeUnitDualPositions
+          ? Object.values(indexing.threeUnitDualPositions)
+          : indexing.threeUnitPositions;
+        
+        let minDistance = Infinity;
+        let closestSlot = -1;
+        
+        positions.forEach((pos: any, idx: number) => {
+          const distance = Math.abs(pos - module.position.x);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestSlot = idx;
+          }
+        });
+        
+        if (minDistance < 0.1) { // 10mm 허용 오차
+          moduleSlot = closestSlot;
+          console.log('⚠️ 슬롯 위치 추정:', {
+            moduleId: module.id,
+            estimatedSlot: moduleSlot,
+            distance: minDistance
+          });
+        } else {
+          // 대략적인 슬롯 계산
+          const estimatedSlot = Math.floor((module.position.x + (internalSpace.width * 0.005)) / (indexing.columnWidth * 0.01));
+          if (estimatedSlot >= 0 && estimatedSlot < indexing.columnCount) {
+            moduleSlot = estimatedSlot;
+            console.log('⚠️ 대략적 슬롯 추정:', estimatedSlot);
+          } else {
+            console.log('⚠️ 슬롯 추정 실패, 충돌 검사 스킵:', module.id);
+            return;
+          }
+        }
+      }
+      
+      // 슬롯이 확인된 경우에만 충돌 검사
+      if (moduleSlot !== undefined && moduleSlot !== null && moduleSlot >= 0) {
+        if (isModuleDual) {
+          moduleSlots = [moduleSlot, moduleSlot + 1];
+        } else {
+          moduleSlots = [moduleSlot];
+        }
+      } else {
+        console.log('⚠️ 유효한 슬롯 없음, 충돌 검사 스킵:', module.id);
+        return;
       }
 
       // 슬롯 겹침 확인
