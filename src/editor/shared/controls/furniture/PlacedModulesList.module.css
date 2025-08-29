@@ -9,7 +9,7 @@
 .title {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
   margin: 0 0 16px 0;
 }
 
@@ -20,9 +20,9 @@
   height: 200px;
   padding: 24px;
   text-align: center;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 14px;
-  background: #f5f5f5;
+  background: var(--theme-background-secondary);
   border-radius: 8px;
 }
 
@@ -38,24 +38,24 @@
   display: flex;
   align-items: center;
   padding: 12px;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .itemContainer:hover {
-  background: #f8f9fa;
-  border-color: #5b21b6;
+  background: var(--theme-background-secondary);
+  border-color: var(--accent-primary);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .itemContainer.selected {
-  background: #f3f0ff;
-  border-color: #5b21b6;
-  box-shadow: 0 0 0 2px rgba(91, 33, 182, 0.1);
+  background: var(--accent-primary-light);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary-light);
 }
 
 .previewContainer {
@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
+  background: var(--theme-background-secondary);
   border-radius: 6px;
   overflow: hidden;
   margin-right: 12px;
@@ -86,17 +86,17 @@
 .name {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text);
 }
 
 .dimensions {
   font-size: 12px;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .slotInfo {
   font-size: 12px;
-  color: #999;
+  color: var(--theme-text-muted);
   font-weight: 500;
 }
 
@@ -109,9 +109,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid #e0e0e0;
-  background: white;
-  color: #666;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
   font-size: 18px;
   cursor: pointer;
   display: flex;
@@ -121,67 +121,9 @@
 }
 
 .removeButton:hover {
-  background: #ff4444;
-  border-color: #ff4444;
+  background: var(--theme-danger);
+  border-color: var(--theme-danger);
   color: white;
   transform: scale(1.1);
 }
 
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background: #1a1a1a;
-  }
-
-  .title {
-    color: #fff;
-  }
-
-  .emptyMessage {
-    background: #2a2a2a;
-    color: #aaa;
-  }
-
-  .itemContainer {
-    background: #2a2a2a;
-    border-color: #333;
-  }
-
-  .itemContainer:hover {
-    background: #333;
-    border-color: #7c3aed;
-  }
-
-  .itemContainer.selected {
-    background: #3a2a4a;
-    border-color: #7c3aed;
-  }
-
-  .previewContainer {
-    background: #333;
-  }
-
-  .name {
-    color: #fff;
-  }
-
-  .dimensions {
-    color: #aaa;
-  }
-
-  .slotInfo {
-    color: #888;
-  }
-
-  .removeButton {
-    background: #2a2a2a;
-    border-color: #444;
-    color: #aaa;
-  }
-
-  .removeButton:hover {
-    background: #ff4444;
-    border-color: #ff4444;
-    color: white;
-  }
-}

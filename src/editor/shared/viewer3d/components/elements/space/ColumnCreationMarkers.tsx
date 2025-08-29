@@ -84,7 +84,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const columnRight = xPosition + halfColumnWidth;
 
     // 매우 넓은 스냅 임계값 - 경계 근처에서 항상 스냅
-    const snapThreshold = columnWidthInThreeUnits * 3.0; // 기둥 너비의 3배 거리 내에서 스냅
+    const snapThreshold = columnWidthInThreeUnits * 2.0; // 기둥 너비의 2배 거리 내에서 스냅
 
     // 단내림 위치에 따른 경계 체크
     if (spaceInfo.droppedCeiling.position === 'left') {
@@ -96,34 +96,33 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       
       // 스냅 임계값 내에 있으면 무조건 스냅
       if (distanceToBoundary < snapThreshold) {
-        // 경계선 기준으로 정확히 좌우 배치
-        // 기둥의 오른쪽 끝이 경계선에 일치 (단내림 구간쪽)
-        const leftPosition = boundaryX - halfColumnWidth;
-        // 기둥의 왼쪽 끝이 경계선에 일치 (일반 구간쪽)
-        const rightPosition = boundaryX + halfColumnWidth;
-        
-        // 현재 위치에서 더 가까운 쪽으로 스냅
-        const distToLeft = Math.abs(xPosition - leftPosition);
-        const distToRight = Math.abs(xPosition - rightPosition);
-        
-        if (distToLeft <= distToRight) {
-          // 단내림 구간 끝에 정확히 맞춤 - 기둥 오른쪽이 경계에 일치
-          console.log('🎯 단내림 구간 끝에 스냅:', { boundaryX, newX: leftPosition });
-          return { adjusted: true, newX: leftPosition };
+        // 마우스가 어느 구간에 더 가까운지 확인
+        if (xPosition < boundaryX) {
+          // 마우스가 단내림 구간에 있음 - 기둥을 단내림 구간에 배치
+          // 기둥의 오른쪽 끝이 경계선에 정확히 일치
+          const newX = boundaryX - halfColumnWidth;
+          console.log('🎯 단내림 구간에 스냅 (왼쪽):', { boundaryX, newX, mouseX: xPosition });
+          return { adjusted: true, newX };
         } else {
-          // 일반 구간 시작에 정확히 맞춤 - 기둥 왼쪽이 경계에 일치
-          console.log('🎯 일반 구간 시작에 스냅:', { boundaryX, newX: rightPosition });
-          return { adjusted: true, newX: rightPosition };
+          // 마우스가 일반 구간에 있음 - 기둥을 일반 구간에 배치
+          // 기둥의 왼쪽 끝이 경계선에 정확히 일치
+          const newX = boundaryX + halfColumnWidth;
+          console.log('🎯 일반 구간에 스냅 (오른쪽):', { boundaryX, newX, mouseX: xPosition });
+          return { adjusted: true, newX };
         }
       }
       
-      // 기둥이 경계를 넘어가려는 경우 무조건 강제 조정
-      if (columnLeft <= boundaryX && columnRight >= boundaryX) {
-        if (xPosition < boundaryX) {
-          // 단내림 구간쪽 - 기둥 오른쪽을 경계에 맞춤
+      // 기둥이 경계를 넘어가려는 경우 강제 조정
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥이 경계를 걸치고 있음 - 더 많이 겹치는 쪽으로 밀어냄
+        const leftOverlap = boundaryX - columnLeft;  // 단내림 구간에 있는 부분
+        const rightOverlap = columnRight - boundaryX; // 일반 구간에 있는 부분
+        
+        if (leftOverlap > rightOverlap) {
+          // 단내림 구간에 더 많이 있음 - 완전히 단내림 구간으로
           return { adjusted: true, newX: boundaryX - halfColumnWidth };
         } else {
-          // 일반 구간쪽 - 기둥 왼쪽을 경계에 맞춤
+          // 일반 구간에 더 많이 있음 - 완전히 일반 구간으로
           return { adjusted: true, newX: boundaryX + halfColumnWidth };
         }
       }
@@ -136,34 +135,33 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       
       // 스냅 임계값 내에 있으면 무조건 스냅
       if (distanceToBoundary < snapThreshold) {
-        // 경계선 기준으로 정확히 좌우 배치
-        // 기둥의 오른쪽 끝이 경계선에 일치 (일반 구간쪽)
-        const leftPosition = boundaryX - halfColumnWidth;
-        // 기둥의 왼쪽 끝이 경계선에 일치 (단내림 구간쪽)
-        const rightPosition = boundaryX + halfColumnWidth;
-        
-        // 현재 위치에서 더 가까운 쪽으로 스냅
-        const distToLeft = Math.abs(xPosition - leftPosition);
-        const distToRight = Math.abs(xPosition - rightPosition);
-        
-        if (distToLeft <= distToRight) {
-          // 일반 구간 끝에 정확히 맞춤 - 기둥 오른쪽이 경계에 일치
-          console.log('🎯 일반 구간 끝에 스냅:', { boundaryX, newX: leftPosition });
-          return { adjusted: true, newX: leftPosition };
+        // 마우스가 어느 구간에 더 가까운지 확인
+        if (xPosition < boundaryX) {
+          // 마우스가 일반 구간에 있음 - 기둥을 일반 구간에 배치
+          // 기둥의 오른쪽 끝이 경계선에 정확히 일치
+          const newX = boundaryX - halfColumnWidth;
+          console.log('🎯 일반 구간에 스냅 (왼쪽):', { boundaryX, newX, mouseX: xPosition });
+          return { adjusted: true, newX };
         } else {
-          // 단내림 구간 시작에 정확히 맞춤 - 기둥 왼쪽이 경계에 일치
-          console.log('🎯 단내림 구간 시작에 스냅:', { boundaryX, newX: rightPosition });
-          return { adjusted: true, newX: rightPosition };
+          // 마우스가 단내림 구간에 있음 - 기둥을 단내림 구간에 배치
+          // 기둥의 왼쪽 끝이 경계선에 정확히 일치
+          const newX = boundaryX + halfColumnWidth;
+          console.log('🎯 단내림 구간에 스냅 (오른쪽):', { boundaryX, newX, mouseX: xPosition });
+          return { adjusted: true, newX };
         }
       }
       
-      // 기둥이 경계를 넘어가려는 경우 무조건 강제 조정
-      if (columnLeft <= boundaryX && columnRight >= boundaryX) {
-        if (xPosition < boundaryX) {
-          // 일반 구간쪽 - 기둥 오른쪽을 경계에 맞춤
+      // 기둥이 경계를 넘어가려는 경우 강제 조정
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 기둥이 경계를 걸치고 있음 - 더 많이 겹치는 쪽으로 밀어냄
+        const leftOverlap = boundaryX - columnLeft;  // 일반 구간에 있는 부분
+        const rightOverlap = columnRight - boundaryX; // 단내림 구간에 있는 부분
+        
+        if (leftOverlap > rightOverlap) {
+          // 일반 구간에 더 많이 있음 - 완전히 일반 구간으로
           return { adjusted: true, newX: boundaryX - halfColumnWidth };
         } else {
-          // 단내림 구간쪽 - 기둥 왼쪽을 경계에 맞춤
+          // 단내림 구간에 더 많이 있음 - 완전히 단내림 구간으로
           return { adjusted: true, newX: boundaryX + halfColumnWidth };
         }
       }
