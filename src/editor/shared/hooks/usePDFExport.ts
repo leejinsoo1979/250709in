@@ -112,8 +112,8 @@ export function usePDFExport() {
         // Three.js 렌더링 대기
         await new Promise(resolve => requestAnimationFrame(resolve));
         
-        // Canvas를 캡처
-        imageData = (canvas as HTMLCanvasElement).toDataURL('image/png');
+        // Canvas를 캡처 (최고 품질로)
+        imageData = (canvas as HTMLCanvasElement).toDataURL('image/png', 1.0);
         
         // 캡처된 이미지가 비어있는지 확인
         if (!imageData || imageData === 'data:,' || imageData.length < 100) {
@@ -127,7 +127,7 @@ export function usePDFExport() {
         // Canvas 직접 캡처 실패 시 html2canvas 사용
         const capturedCanvas = await html2canvas(viewerContainer as HTMLElement, {
           backgroundColor: '#ffffff',
-          scale: 2,
+          scale: 4, // 더 높은 해상도로 캡처 (벡터 품질에 가깝게)
           logging: false,
           useCORS: true,
           allowTaint: true,
@@ -149,7 +149,7 @@ export function usePDFExport() {
       // WebGL canvas가 없으면 기존 방식으로 캡처
       const capturedCanvas = await html2canvas(viewerContainer as HTMLElement, {
         backgroundColor: '#ffffff',
-        scale: 2,
+        scale: 4, // 더 높은 해상도로 캡처 (벡터 품질에 가깝게)
         logging: false,
         useCORS: true,
         allowTaint: true,
