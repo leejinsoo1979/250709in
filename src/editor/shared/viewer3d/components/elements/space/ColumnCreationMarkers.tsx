@@ -206,10 +206,10 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           <mesh position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <boxGeometry args={[300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01]} />
             <meshStandardMaterial
-              color="#10b981"
+              color={isValidPosition ? "#10b981" : "#ef4444"}
               transparent
               opacity={0.5}
-              emissive="#10b981"
+              emissive={isValidPosition ? "#10b981" : "#ef4444"}
               emissiveIntensity={0.2}
             />
           </mesh>
@@ -217,14 +217,27 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           {/* 고스트 기둥 윤곽선 */}
           <lineSegments position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <edgesGeometry args={[new THREE.BoxGeometry(300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01)]} />
-            <lineBasicMaterial color="#10b981" linewidth={2} />
+            <lineBasicMaterial color={isValidPosition ? "#10b981" : "#ef4444"} linewidth={2} />
           </lineSegments>
           
           {/* 바닥 표시 */}
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.5, 32]} />
-            <meshBasicMaterial color="#10b981" transparent opacity={0.8} />
+            <meshBasicMaterial color={isValidPosition ? "#10b981" : "#ef4444"} transparent opacity={0.8} />
           </mesh>
+          
+          {/* 겹침 경고 텍스트 */}
+          {!isValidPosition && (
+            <Text
+              position={[0, (spaceInfo?.height || 2400) * 0.01 + 2, 0]}
+              fontSize={0.5}
+              color="#ef4444"
+              anchorX="center"
+              anchorY="middle"
+            >
+              기둥이 겹칩니다
+            </Text>
+          )}
         </group>
       )}
 
