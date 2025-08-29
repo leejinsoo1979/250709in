@@ -302,9 +302,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (zoneToUse === 'dropped' && zoneInfo.dropped) {
         // 단내림 영역용 spaceInfo 생성 - 외경 너비 사용
-        const droppedOuterWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+        const droppedOuterWidth = latestSpaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
         const droppedSpaceInfo = {
-          ...spaceInfo,
+          ...latestSpaceInfo,
           width: droppedOuterWidth,  // 외경 너비 사용
           customColumnCount: zoneInfo.dropped.columnCount,
           columnMode: 'custom' as const,
@@ -319,20 +319,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
         
         // zoneInfo에서 이미 계산된 정확한 내경 사용
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        const dropHeight = latestSpaceInfo.droppedCeiling?.dropHeight || 200;
         zoneInternalSpace = {
           width: zoneInfo.dropped.width, // zoneInfo에서 계산된 정확한 내부 너비 사용
-          height: spaceInfo.height - dropHeight,
-          depth: spaceInfo.depth,
+          height: latestSpaceInfo.height - dropHeight,
+          depth: latestSpaceInfo.depth,
           startX: zoneInfo.dropped.startX, // zoneInfo에서 계산된 정확한 시작점 사용
           startY: 0,
-          startZ: -(spaceInfo.depth / 2)
+          startZ: -(latestSpaceInfo.depth / 2)
         };
         
         console.log('🔧 [SlotDropZonesSimple] 단내림 영역 내경 (zoneInfo 사용):', {
           width: zoneInternalSpace.width,
           startX: zoneInternalSpace.startX,
-          originalHeight: spaceInfo.height,
+          originalHeight: latestSpaceInfo.height,
           dropHeight,
           adjustedHeight: zoneInternalSpace.height,
           zone: 'dropped'
@@ -355,7 +355,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           depth: spaceInfo.depth,
           startX: zoneInfo.normal.startX, // zoneInfo에서 계산된 정확한 시작점 사용
           startY: 0,
-          startZ: -(spaceInfo.depth / 2)
+          startZ: -(latestSpaceInfo.depth / 2)
         };
         
         console.log('🔧 [SlotDropZonesSimple] 메인 영역 내경 (zoneInfo 사용):', {
@@ -2467,7 +2467,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               zone: (zoneSpaceInfo as any).zone
             },
             zoneInternalSpace,
-            originalHeight: spaceInfo.height,
+            originalHeight: latestSpaceInfo.height,
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
           

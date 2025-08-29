@@ -575,6 +575,7 @@ export const updateDesignFile = async (
     spaceConfig?: any;
     furniture?: any;
     thumbnail?: string;
+    updatedAt?: string;
   }
 ): Promise<{ error: string | null }> => {
   try {
@@ -744,6 +745,9 @@ export const updateDesignFile = async (
     return { error: '디자인파일 업데이트 중 오류가 발생했습니다.' };
   }
 };
+
+// 디자인파일 저장 (updateDesignFile의 별칭)
+export const saveDesignFile = updateDesignFile;
 
 // 디자인파일 삭제
 export const deleteDesignFile = async (designFileId: string, projectId: string): Promise<{ error: string | null }> => {
