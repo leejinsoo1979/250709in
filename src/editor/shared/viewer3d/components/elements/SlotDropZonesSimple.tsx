@@ -1110,8 +1110,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           hasColumnInAnySlot = true;
           
           // 두 슬롯의 사용 가능한 너비 합계 계산
-          const slot1Width = slot1Info?.hasColumn ? slot1Info.availableWidth : targetZoneInfo.columnWidth;
-          const slot2Width = slot2Info?.hasColumn ? slot2Info.availableWidth : targetZoneInfo.columnWidth;
+          // targetZone을 사용해야 함 (zoneInfo.dropped 또는 zoneInfo.normal)
+          const targetZone = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+          const slot1Width = slot1Info?.hasColumn ? slot1Info.availableWidth : targetZone.columnWidth;
+          const slot2Width = slot2Info?.hasColumn ? slot2Info.availableWidth : targetZone.columnWidth;
           totalAvailableWidth = slot1Width + slot2Width;
           
           // 기둥 타입 결정 (둘 중 하나라도 medium이 아니면 즉시 조정)
@@ -1190,7 +1192,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             });
           } else {
             // 싱글 가구 처리 (기존 로직)
-            const slotWidthM = targetZoneInfo.columnWidth * 0.01; // mm to meters
+            const targetZone = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+            const slotWidthM = targetZone.columnWidth * 0.01; // mm to meters
             const originalSlotBounds = {
               left: finalX - slotWidthM / 2,
               right: finalX + slotWidthM / 2,
