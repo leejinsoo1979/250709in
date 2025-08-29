@@ -23,6 +23,17 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
   }>({});
   const [isCapturing, setIsCapturing] = useState(false);
   
+  // 내보내기 옵션 상태
+  const [exportType, setExportType] = useState<'pdf' | 'dxf'>('pdf');
+  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe'>('solid');
+  const [selectedViews, setSelectedViews] = useState({
+    '3d': true,
+    '2d-top': true,
+    '2d-front': false,
+    '2d-left': false,
+    '2d-right': false
+  });
+  
   // PDF 내보내기 훅 사용
   const { exportToPDF, isExporting } = usePDFExport();
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
@@ -114,6 +125,13 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleViewToggle = (view: string) => {
+    setSelectedViews(prev => ({
+      ...prev,
+      [view]: !prev[view as keyof typeof prev]
+    }));
+  };
+
   const handlePDFDownload = async () => {
     console.log('📄 PDF 다운로드 버튼 클릭됨');
     
@@ -122,12 +140,18 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       return;
     }
     
+    // 선택된 뷰만 필터링
+    const viewsToExport = Object.entries(selectedViews)
+      .filter(([_, selected]) => selected)
+      .map(([view, _]) => view);
+    
+    if (viewsToExport.length === 0) {
+      alert('최소 하나 이상의 뷰를 선택해주세요.');
+      return;
+    }
+    
     try {
-      // 정면도, 평면도, 측면도를 포함한 PDF 생성
-      // 2D 모드에서 그리드 컬럼 축 자동 비활성화 처리됨
-      const selectedViews = ['2d-front', '2d-top', '2d-left'] as const;
-      
-      const result = await exportToPDF(spaceInfo, placedModules, selectedViews, 'solid');
+      const result = await exportToPDF(spaceInfo, placedModules, viewsToExport as any, renderMode);
       
       if (result.success) {
         console.log('✅ PDF 다운로드 성공:', result.filename);
@@ -150,7 +174,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.header}>
-            <h2>{t('export.title')}</h2>
+            <h2>내보내기</h2>
             <button className={styles.closeButton} onClick={onClose}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -159,55 +183,118 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
           <div className={styles.content}>
-            <div className={styles.optionList}>
-              <button 
-                className={styles.optionButton}
-                onClick={handlePDFDownload}
-                disabled={isExporting}
-              >
-                <div className={styles.optionIcon}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                    <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <line x1="4" y1="9" x2="20" y2="9" stroke="currentColor" strokeWidth="1.5"/>
-                    <line x1="9" y1="4" x2="9" y2="20" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="11" y="11" width="7" height="7" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                </div>
-                <div className={styles.optionInfo}>
-                  <h3>{t('export.pdf')}</h3>
-                  <p>{t('export.pdfDesc')}</p>
-                </div>
-                {isExporting && <span className={styles.loading}>{t('export.capturing')}</span>}
-              </button>
-
-              <button className={styles.optionButton} disabled>
-                <div className={styles.optionIcon}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className={styles.optionInfo}>
-                  <h3>{t('export.dxf')}</h3>
-                  <p>{t('export.dxfDesc')}</p>
-                </div>
-              </button>
-
-              <button className={styles.optionButton} disabled>
-                <div className={styles.optionIcon}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M9 9L15 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M15 9L9 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div className={styles.optionInfo}>
-                  <h3>{t('export.image')}</h3>
-                  <p>{t('export.imageDesc')}</p>
-                </div>
-              </button>
+            {/* 파일 형식 선택 */}
+            <div className={styles.section}>
+              <p className={styles.sectionTitle}>현재 가구 배치를 도면 또는 PDF로 내보냅니다</p>
+              <div className={styles.formatTabs}>
+                <button 
+                  className={`${styles.formatTab} ${exportType === 'dxf' ? styles.active : ''}`}
+                  onClick={() => setExportType('dxf')}
+                  disabled
+                >
+                  CAD 도면 (DXF)
+                </button>
+                <button 
+                  className={`${styles.formatTab} ${exportType === 'pdf' ? styles.active : ''}`}
+                  onClick={() => setExportType('pdf')}
+                >
+                  PDF 문서
+                </button>
+              </div>
             </div>
+
+            {/* 렌더링 모드 선택 */}
+            <div className={styles.section}>
+              <h3 className={styles.sectionHeader}>렌더링 모드</h3>
+              <div className={styles.renderModes}>
+                <label className={`${styles.renderMode} ${renderMode === 'solid' ? styles.active : ''}`}>
+                  <input 
+                    type="radio"
+                    name="renderMode"
+                    value="solid"
+                    checked={renderMode === 'solid'}
+                    onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
+                  />
+                  <div className={styles.renderModeContent}>
+                    <h4>솔리드</h4>
+                    <p>재질과 색상이 표현됩니다</p>
+                  </div>
+                </label>
+                <label className={`${styles.renderMode} ${renderMode === 'wireframe' ? styles.active : ''}`}>
+                  <input 
+                    type="radio"
+                    name="renderMode"
+                    value="wireframe"
+                    checked={renderMode === 'wireframe'}
+                    onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
+                  />
+                  <div className={styles.renderModeContent}>
+                    <h4>와이어프레임</h4>
+                    <p>구조만 표현됩니다</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* 포함할 뷰 선택 */}
+            <div className={styles.section}>
+              <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
+              <div className={styles.viewList}>
+                <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedViews['3d']}
+                    onChange={() => handleViewToggle('3d')}
+                  />
+                  <span>3D 정면뷰</span>
+                </label>
+                <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedViews['2d-top']}
+                    onChange={() => handleViewToggle('2d-top')}
+                  />
+                  <span>2D 정면뷰 (지수)</span>
+                  <button className={styles.viewDetail}>지수 포함</button>
+                </label>
+                <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedViews['2d-front']}
+                    onChange={() => handleViewToggle('2d-front')}
+                  />
+                  <span>2D 상부뷰 (지수)</span>
+                  <button className={styles.viewDetail}>지수 포함</button>
+                </label>
+                <label className={`${styles.viewOption} ${selectedViews['2d-left'] ? styles.selected : ''}`}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedViews['2d-left']}
+                    onChange={() => handleViewToggle('2d-left')}
+                  />
+                  <span>2D 좌측뷰 (지수)</span>
+                  <button className={styles.viewDetail}>지수 포함</button>
+                </label>
+                <label className={`${styles.viewOption} ${selectedViews['2d-right'] ? styles.selected : ''}`}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedViews['2d-right']}
+                    onChange={() => handleViewToggle('2d-right')}
+                  />
+                  <span>2D 우측뷰 (지수)</span>
+                  <button className={styles.viewDetail}>지수 포함</button>
+                </label>
+              </div>
+            </div>
+
+            {/* 다운로드 버튼 */}
+            <button 
+              className={styles.downloadButton}
+              onClick={handlePDFDownload}
+              disabled={isExporting || Object.values(selectedViews).every(v => !v)}
+            >
+              {isExporting ? '처리 중...' : `PDF 다운로드 (${Object.values(selectedViews).filter(v => v).length}개 뷰)`}
+            </button>
           </div>
         </div>
       </div>

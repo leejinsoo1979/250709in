@@ -28,12 +28,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 24px 24px 20px;
   border-bottom: 1px solid var(--theme-border);
 }
 
 .header h2 {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--theme-text);
   margin: 0;
@@ -59,9 +59,213 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
 }
 
+/* 섹션 스타일 */
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.sectionHeader {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 16px 0;
+}
+
+/* 파일 형식 탭 */
+.formatTabs {
+  display: flex;
+  gap: 0;
+  border: 2px solid var(--theme-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--theme-background-secondary);
+}
+
+.formatTab {
+  flex: 1;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--theme-text-secondary);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.formatTab:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--theme-border);
+}
+
+.formatTab:hover:not(:disabled) {
+  background: var(--theme-primary-light);
+}
+
+.formatTab.active {
+  background: var(--theme-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.formatTab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 렌더링 모드 */
+.renderModes {
+  display: flex;
+  gap: 16px;
+}
+
+.renderMode {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: var(--theme-surface);
+  border: 2px solid var(--theme-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.renderMode:hover {
+  border-color: var(--theme-primary-light);
+  background: var(--theme-primary-lighter);
+}
+
+.renderMode.active {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
+}
+
+.renderMode input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.renderModeContent {
+  flex: 1;
+}
+
+.renderModeContent h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.renderModeContent p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+}
+
+/* 뷰 선택 */
+.viewList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.viewOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--theme-surface);
+  border: 2px solid var(--theme-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewOption:hover {
+  background: var(--theme-primary-lighter);
+}
+
+.viewOption.selected {
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+}
+
+.viewOption input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.viewOption span {
+  flex: 1;
+  font-size: 15px;
+  color: var(--theme-text);
+}
+
+.viewDetail {
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--theme-primary);
+  background: transparent;
+  border: 1px solid var(--theme-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewDetail:hover {
+  background: var(--theme-primary);
+  color: white;
+}
+
+/* 다운로드 버튼 */
+.downloadButton {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: var(--theme-primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.downloadButton:hover:not(:disabled) {
+  background: var(--theme-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--theme-primary-light);
+}
+
+.downloadButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 구버전 스타일 (호환성) */
 .optionList {
   display: flex;
   flex-direction: column;
@@ -74,8 +278,8 @@
   gap: 20px;
   width: 100%;
   padding: 20px;
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
+  background: var(--theme-surface);
+  border: 2px solid var(--theme-border);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
@@ -84,7 +288,7 @@
 }
 
 .optionButton:hover:not(:disabled) {
-  border-color: var(--primary-color);
+  border-color: var(--theme-primary);
   background: var(--theme-background-secondary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -102,9 +306,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
+  background: var(--theme-background-secondary);
   border-radius: 12px;
-  color: var(--primary-color);
+  color: var(--theme-primary);
 }
 
 .optionInfo {
@@ -130,7 +334,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 14px;
-  color: var(--primary-color);
+  color: var(--theme-primary);
   font-weight: 500;
 }
 
@@ -149,12 +353,12 @@
     padding: 16px;
   }
   
-  .optionButton {
-    padding: 16px;
+  .renderModes {
+    flex-direction: column;
   }
   
-  .optionIcon {
-    width: 48px;
-    height: 48px;
+  .formatTab {
+    padding: 12px 16px;
+    font-size: 14px;
   }
 }

@@ -201,27 +201,32 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             {t('viewer.dimensions')}
           </label>
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showGuides}
-              onChange={onShowGuidesToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            {t('viewer.grid')}
-          </label>
+          {/* 그리드와 축 - 2D 모드에서만 표시 */}
+          {viewMode === '2D' && (
+            <>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={showGuides}
+                  onChange={onShowGuidesToggle}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkmark}></span>
+                {t('viewer.grid')}
+              </label>
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showAxis}
-              onChange={onShowAxisToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            {t('viewer.axis')}
-          </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={showAxis}
+                  onChange={onShowAxisToggle}
+                  className={styles.checkbox}
+                />
+                <span className={styles.checkmark}></span>
+                {t('viewer.axis')}
+              </label>
+            </>
+          )}
         </div>
         )}
 

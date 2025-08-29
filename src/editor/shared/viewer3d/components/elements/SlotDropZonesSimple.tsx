@@ -819,6 +819,35 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 전체 indexing 정보를 가져와서 zone별 실제 위치 사용
       const fullIndexing = calculateSpaceIndexing(spaceInfo);
       
+      // zones 디버깅
+      console.log('🚨🚨 fullIndexing.zones 확인:', {
+        hasZones: !!fullIndexing.zones,
+        hasNormal: !!fullIndexing.zones?.normal,
+        hasDropped: !!fullIndexing.zones?.dropped,
+        normalInfo: fullIndexing.zones?.normal ? {
+          startX: fullIndexing.zones.normal.startX,
+          width: fullIndexing.zones.normal.width,
+          columnCount: fullIndexing.zones.normal.columnCount,
+          threeUnitPositions: fullIndexing.zones.normal.threeUnitPositions,
+          threeUnitDualPositions: fullIndexing.zones.normal.threeUnitDualPositions
+        } : null,
+        droppedInfo: fullIndexing.zones?.dropped ? {
+          startX: fullIndexing.zones.dropped.startX,
+          width: fullIndexing.zones.dropped.width,
+          columnCount: fullIndexing.zones.dropped.columnCount,
+          threeUnitPositions: fullIndexing.zones.dropped.threeUnitPositions,
+          threeUnitDualPositions: fullIndexing.zones.dropped.threeUnitDualPositions
+        } : null,
+        zoneToUse,
+        zoneSlotIndex,
+        isDual,
+        spaceInfo: {
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          droppedCeiling: spaceInfo.droppedCeiling
+        }
+      });
+      
       if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
         // 단내림 영역: 계산된 위치 사용
         const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
@@ -1246,13 +1275,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isDualFromModuleId: zoneTargetModuleId.startsWith('dual-'),
         occupiedSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
         position: { x: furnitureX },
+        position_mm: { x: furnitureX * 100 },
+        finalX,
+        finalX_mm: finalX * 100,
         customWidth: customWidth,
         zoneInfo: zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal,
         newModule: {
           id: newModule.id,
           moduleId: newModule.moduleId,
           isDualSlot: newModule.isDualSlot,
-          slotIndex: newModule.slotIndex
+          slotIndex: newModule.slotIndex,
+          position: newModule.position,
+          zone: newModule.zone
+        }
+      });
+      
+      console.log('🚨🚨 최종 newModule 상세:', {
+        ...newModule,
+        position_mm: {
+          x: newModule.position.x * 100,
+          y: newModule.position.y * 100,
+          z: newModule.position.z * 100
         }
       });
       
