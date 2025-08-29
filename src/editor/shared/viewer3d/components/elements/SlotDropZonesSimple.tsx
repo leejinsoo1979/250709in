@@ -259,10 +259,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     } catch (error) {
       console.error('Error parsing drag data:', error);
     }
+    
     // 데이터 전송이 없으면 currentDragData로 대체
     if (!dragData) {
       console.log('⚠️ No drag data from event, using currentDragData:', currentDragData);
-      dragData = currentDragData;
+      // currentDragData가 없으면 스토어에서 다시 가져오기
+      const latestDragData = useFurnitureStore.getState().currentDragData;
+      console.log('🔄 Latest drag data from store:', latestDragData);
+      dragData = latestDragData || currentDragData;
     }
     console.log('📦 Effective drag data:', dragData);
     
