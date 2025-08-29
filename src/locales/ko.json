@@ -178,6 +178,7 @@
   },
   "material": {
     "title": "재질 설정",
+    "floorFinish": "바닥 마감재",
     "woodGrain": "목재 무늬",
     "solid": "단색",
     "metallic": "금속",
