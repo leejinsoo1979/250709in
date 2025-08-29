@@ -36,8 +36,15 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   // 기둥이 겹치는지 확인하는 함수
   const checkColumnOverlap = (newPosition: [number, number, number]): boolean => {
     const existingColumns = storeSpaceInfo?.columns || [];
-    const newColumnWidth = 300 * 0.01; // 3m (300mm를 미터로 변환)
-    const minDistance = newColumnWidth; // 기둥 너비만큼 최소 거리 필요
+    const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units (1 unit = 100mm)
+    const minDistance = columnWidthInThreeUnits * 1.1; // 기둥 너비 + 약간의 여유 공간
+
+    console.log('🔍 기둥 겹침 검사 시작:', {
+      newPosition,
+      existingColumnsCount: existingColumns.length,
+      columnWidth: columnWidthInThreeUnits,
+      minDistance
+    });
 
     for (const column of existingColumns) {
       if (!column.position) continue;
@@ -45,18 +52,23 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // X축 거리만 확인 (기둥은 보통 X축으로만 이동)
       const distance = Math.abs(column.position[0] - newPosition[0]);
       
-      // 두 기둥 중심 간 거리가 기둥 너비보다 작으면 겹침
+      console.log('📏 기둥 간 거리 체크:', {
+        columnId: column.id,
+        existingX: column.position[0],
+        newX: newPosition[0],
+        distance,
+        minDistance,
+        willOverlap: distance < minDistance
+      });
+      
+      // 두 기둥 중심 간 거리가 최소 거리보다 작으면 겹침
       if (distance < minDistance) {
-        console.log('⚠️ 기둥 겹침 감지:', {
-          newPosition: newPosition[0],
-          existingPosition: column.position[0],
-          distance,
-          minDistance
-        });
+        console.log('❌ 기둥 겹침 감지!');
         return true; // 겹침
       }
     }
     
+    console.log('✅ 기둥 배치 가능');
     return false; // 겹치지 않음
   };
 
