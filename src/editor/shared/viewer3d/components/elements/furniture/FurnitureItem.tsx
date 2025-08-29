@@ -688,14 +688,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return distance < 10;
   });
   
-  // 기둥이 있다는 증거를 더 정확하게 판단
-  hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
-                     (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-                     (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
-                      placedModule.customWidth < originalModuleWidth && placedModule.customWidth < 580) || // customWidth가 원래보다 작고 580mm 미만일 때만
-                     (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth)) ||
-                     (furnitureWidthMm < originalModuleWidth && furnitureWidthMm < 580) || // 렌더링 너비가 원래보다 작고 580mm 미만일 때만
-                     hasColumnInPosition;
+  // 기둥이 있다는 증거를 더 정확하게 판단 - slotInfo.hasColumn이 명확할 때만
+  hasColumnEvidence = (slotInfo && slotInfo.hasColumn === true);
   
   // 디버깅: hasColumnEvidence 상세 정보
   if (hasColumnEvidence) {
