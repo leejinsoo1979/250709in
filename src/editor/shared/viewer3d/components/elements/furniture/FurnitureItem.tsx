@@ -1461,14 +1461,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </group>
 
       {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
-      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 커버도어 렌더링 */}
+      {/* 기둥 A (deep 타입)인 경우에만 커버도어 렌더링 */}
       {/* 드래그 중에는 커버도어를 렌더링하지 않음 (위치 문제 방지) */}
       {/* 2D 모드에서 가구가 숨겨져도 도어는 표시 */}
       {!isFurnitureDragging && 
        !isDraggingThis &&
        (placedModule.hasDoor ?? true) && 
-       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
-        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null)) && 
+       (slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') && 
        spaceInfo && (() => {
         console.log('🚪🚨 커버도어 렌더링 조건 체크 INSIDE:', {
           hasDoor: placedModule.hasDoor,
