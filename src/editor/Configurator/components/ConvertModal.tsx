@@ -190,10 +190,14 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       return;
     }
     
-    // 선택된 뷰만 필터링
+    // 선택된 뷰만 필터링 및 올바른 ID로 매핑
     const viewsToExport = Object.entries(selectedViews)
       .filter(([_, selected]) => selected)
-      .map(([view, _]) => view);
+      .map(([view, _]) => {
+        // '3d'를 '3d-front'로 매핑
+        if (view === '3d') return '3d-front';
+        return view;
+      });
     
     if (viewsToExport.length === 0) {
       alert('최소 하나 이상의 뷰를 선택해주세요.');

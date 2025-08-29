@@ -144,9 +144,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
+    // 스토어에서 직접 최신 데이터 가져오기
+    const storeState = useFurnitureStore.getState();
+    const latestDragData = storeState.currentDragData;
+    
     console.log('🎯 handleSlotDrop called:', {
       hasCurrentDragData: !!currentDragData,
       currentDragData: currentDragData,
+      hasLatestDragData: !!latestDragData,
+      latestDragData: latestDragData,
       droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
       surroundType: spaceInfo.surroundType,
@@ -260,13 +266,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.error('Error parsing drag data:', error);
     }
     
-    // 데이터 전송이 없으면 currentDragData로 대체
+    // 데이터 전송이 없으면 스토어에서 직접 가져오기
     if (!dragData) {
-      console.log('⚠️ No drag data from event, using currentDragData:', currentDragData);
-      // currentDragData가 없으면 스토어에서 다시 가져오기
-      const latestDragData = useFurnitureStore.getState().currentDragData;
-      console.log('🔄 Latest drag data from store:', latestDragData);
-      dragData = latestDragData || currentDragData;
+      console.log('⚠️ No drag data from event, checking store...');
+      dragData = latestDragData;  // 이미 위에서 가져온 최신 데이터 사용
+      console.log('🔄 Using latest drag data from store:', dragData);
     }
     console.log('📦 Effective drag data:', dragData);
     
