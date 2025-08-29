@@ -116,6 +116,7 @@
 
 .formatTab:hover:not(:disabled) {
   background: var(--theme-primary-light);
+  opacity: 0.8;
 }
 
 .formatTab.active {
@@ -149,8 +150,9 @@
 }
 
 .renderMode:hover {
-  border-color: var(--theme-primary-light);
-  background: var(--theme-primary-lighter);
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
+  opacity: 0.5;
 }
 
 .renderMode.active {
@@ -202,7 +204,8 @@
 }
 
 .viewOption:hover {
-  background: var(--theme-primary-lighter);
+  background: var(--theme-primary-light);
+  opacity: 0.3;
 }
 
 .viewOption.selected {
