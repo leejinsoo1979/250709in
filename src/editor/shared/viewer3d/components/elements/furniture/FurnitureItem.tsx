@@ -1622,10 +1622,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 드래그 중에는 커버도어를 렌더링하지 않음 (위치 문제 방지) */}
       {/* 2D 모드에서 가구가 숨겨져도 도어는 표시 */}
       {(() => {
+        // 단내림 구간에서는 기둥이 있어도 slotInfo가 제대로 안 잡힐 수 있음
+        // adjustedWidth가 있으면 기둥이 있다는 뜻
+        const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
+                                  (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null);
+        
         const shouldRenderCoverDoor = !isFurnitureDragging && 
           !isDraggingThis &&
           (placedModule.hasDoor ?? true) && 
-          (slotInfo && slotInfo.hasColumn) && 
+          hasColumnEvidence && 
           spaceInfo;
         
         if (spaceInfo?.droppedCeiling?.enabled) {
