@@ -1859,18 +1859,17 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // PDF 내보내기 핸들러 - PDF 템플릿 선택 팝업 열기
+  // PDF 내보내기 핸들러 - ConvertModal 열기
   const handleExportPDF = () => {
-    console.log('📄 PDF 템플릿 선택 팝업 열기...');
+    console.log('📄 PDF 내보내기 팝업 열기...');
     
     if (!spaceInfo) {
       alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
       return;
     }
 
-    // PDF 다운로드 모드로 설정
-    setPdfPreviewMode('download');
-    setShowPDFPreview(true);
+    // ConvertModal 열기 (기존 내보내기 팝업)
+    setIsConvertPanelOpen(true);
   };
 
   // 개발 및 테스트를 위한 함수들을 window에 노출
