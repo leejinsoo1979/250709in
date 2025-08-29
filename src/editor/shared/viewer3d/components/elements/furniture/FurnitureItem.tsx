@@ -547,11 +547,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 3. customWidth가 원래 모듈 너비보다 작음
   // 4. 실제 렌더링 너비가 슬롯 너비보다 작음 (가구가 줄어들었음)
   const originalModuleWidth = moduleData?.dimensions.width || 600;
-  const hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
-                            (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-                            (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
-                             placedModule.customWidth < originalModuleWidth) ||
-                            (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth));
+  
+  // 일단 false로 초기화하고 나중에 다시 계산
+  let hasColumnEvidence = false;
+  
   
   // 디버깅: 단내림 + 기둥 상황
   if (spaceInfo.droppedCeiling?.enabled) {
@@ -674,6 +673,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else {
     // 기본값은 모듈 원래 크기
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
+  }
+  
+  // 실제 렌더링 너비로 기둥 여부 재판단
+  hasColumnEvidence = (slotInfo && slotInfo.hasColumn) || 
+                     (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
+                     (placedModule.customWidth !== undefined && placedModule.customWidth !== null && 
+                      placedModule.customWidth < originalModuleWidth) ||
+                     (slotInfo && slotInfo.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth)) ||
+                     (furnitureWidthMm < originalModuleWidth); // 실제 렌더링 너비가 원래보다 작으면 기둥 있음
+  
+  // 디버깅: hasColumnEvidence 상세 정보
+  if (hasColumnEvidence) {
+    console.log('🔍 [기둥 감지됨]:', {
+      moduleId: placedModule.moduleId,
+      zone: placedModule.zone,
+      slotIndex: placedModule.slotIndex,
+      hasColumnEvidence,
+      furnitureWidthMm,
+      originalModuleWidth,
+      widthReduced: furnitureWidthMm < originalModuleWidth,
+      reasons: {
+        slotInfoHasColumn: slotInfo?.hasColumn,
+        hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
+        customWidthSmaller: placedModule.customWidth !== undefined && placedModule.customWidth < originalModuleWidth,
+        availableWidthSmaller: slotInfo?.availableWidth && slotInfo.availableWidth < (indexing.columnWidth || originalModuleWidth),
+        renderWidthSmaller: furnitureWidthMm < originalModuleWidth
+      }
+    });
   }
   
   // 키큰장/듀얼장이 상부장/하부장과 인접한 경우만 너비 조정 (상하부장 자체는 조정 안함)
@@ -1646,29 +1673,36 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           hasColumnEvidence && 
           spaceInfo;
         
-        if (spaceInfo?.droppedCeiling?.enabled) {
-          console.log('🚪 [커버도어 체크] 단내림 구간:', {
-            moduleId: placedModule.moduleId,
-            zone: placedModule.zone,
-            localSlotIndex: placedModule.slotIndex,
-            globalSlotIndex,
-            shouldRenderCoverDoor,
-            slotInfo: slotInfo ? {
-              exists: true,
-              hasColumn: slotInfo.hasColumn,
-              columnType: slotInfo.columnType,
-              availableWidth: slotInfo.availableWidth
-            } : 'slotInfo is undefined',
-            conditions: {
-              notDragging: !isFurnitureDragging && !isDraggingThis,
-              hasDoor: placedModule.hasDoor ?? true,
-              hasColumn: slotInfo?.hasColumn,
-              hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
-              hasColumnEvidence,
-              hasSpaceInfo: !!spaceInfo
-            }
-          });
-        }
+        // 항상 로그 출력 (단내림 여부 관계없이)
+        console.log('🚪 [커버도어 체크]:', {
+          moduleId: placedModule.moduleId,
+          zone: placedModule.zone,
+          localSlotIndex: placedModule.slotIndex,
+          globalSlotIndex,
+          hasDroppedCeiling: spaceInfo?.droppedCeiling?.enabled,
+          shouldRenderCoverDoor,
+          slotInfo: slotInfo ? {
+            exists: true,
+            hasColumn: slotInfo.hasColumn,
+            columnType: slotInfo.columnType,
+            availableWidth: slotInfo.availableWidth
+          } : 'slotInfo is undefined',
+          placedModule: {
+            adjustedWidth: placedModule.adjustedWidth,
+            customWidth: placedModule.customWidth,
+            originalModuleWidth,
+            hasDoor: placedModule.hasDoor
+          },
+          conditions: {
+            notDragging: !isFurnitureDragging && !isDraggingThis,
+            hasDoor: placedModule.hasDoor ?? true,
+            hasColumn: slotInfo?.hasColumn,
+            hasAdjustedWidth: placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null,
+            hasColumnEvidence,
+            hasSpaceInfo: !!spaceInfo
+          },
+          finalResult: shouldRenderCoverDoor ? '✅ 커버도어 렌더링됨' : '❌ 커버도어 렌더링 안됨'
+        });
         
         return shouldRenderCoverDoor;
       })() && (() => {
