@@ -46,6 +46,7 @@
 .tabButton.active {
   background: transparent !important;
   position: relative;
+  isolation: isolate;
 }
 
 .tabButton.active::after {
@@ -58,7 +59,8 @@
   background: var(--theme-primary);
   opacity: 0.15;
   border-radius: 8px;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .tabButton.active::before {
@@ -80,11 +82,14 @@
   color: var(--theme-text-muted);
   transition: color 0.2s ease;
   opacity: 0.7;
+  position: relative;
+  z-index: 1;
 }
 
 .tabButton.active .tabIcon {
   color: var(--theme-primary) !important;
   opacity: 1;
+  z-index: 1;
 }
 
 .tabButton:hover .tabIcon {
@@ -100,11 +105,14 @@
   transition: color 0.2s ease;
   line-height: 16px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .tabButton.active .tabLabel {
   color: var(--theme-primary) !important;
   font-weight: 500;
+  z-index: 1;
 }
 
 .tabButton:hover .tabLabel {

@@ -129,7 +129,14 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           moduleId: currentDragData.moduleData.id,
           targetSlot: dropPosition.column,
           isDual: dropPosition.isDualFurniture,
-          existingModules: placedModules.map(m => ({ id: m.moduleId, slot: m.slotIndex }))
+          totalExistingModules: placedModules.length,
+          existingModules: placedModules.map(m => ({ 
+            id: m.id,
+            moduleId: m.moduleId, 
+            slotIndex: m.slotIndex,
+            isDualSlot: m.isDualSlot,
+            position: m.position
+          }))
         });
         
         const isAvailable = isSlotAvailable(

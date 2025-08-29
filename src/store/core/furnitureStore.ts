@@ -83,6 +83,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   addModule: (module: PlacedModule) => {
     console.log('🟢 addModule 호출:', {
       id: module.id,
+      moduleId: module.moduleId,
       position: {
         x: module.position.x.toFixed(3),
         y: module.position.y.toFixed(3),
@@ -92,12 +93,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       customWidth: module.customWidth,
       adjustedWidth: module.adjustedWidth,
       slotIndex: module.slotIndex,
+      isDualSlot: module.isDualSlot,
       isSplit: module.isSplit,
       spaceType: module.columnSlotInfo?.spaceType
     });
-    set((state) => ({
-      placedModules: [...state.placedModules, module]
-    }));
+    
+    // 추가 직후 상태 확인
+    set((state) => {
+      const newModules = [...state.placedModules, module];
+      console.log('🟢 addModule 후 전체 모듈:', newModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        isDualSlot: m.isDualSlot
+      })));
+      return { placedModules: newModules };
+    });
   },
 
   // 모듈 제거 함수 (기존 Context 로직과 동일)
