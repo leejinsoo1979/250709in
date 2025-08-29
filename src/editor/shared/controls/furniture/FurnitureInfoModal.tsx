@@ -175,9 +175,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             <h3 className={styles.sectionTitle}>패널 목록 (총 {totalPanels}개)</h3>
             <div className={styles.panelTable}>
               <div className={styles.tableHeader}>
-                <div className={styles.headerCell}>패널명</div>
-                <div className={styles.headerCell}>크기 (W×H)</div>
-                <div className={styles.headerCell}>두께</div>
+                <div className={styles.headerCell}>패널</div>
+                <div className={styles.headerCell}>W×H×T</div>
                 <div className={styles.headerCell}>재질</div>
                 <div className={styles.headerCell}>수량</div>
               </div>
@@ -185,8 +184,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
                 {panels.map((panel, index) => (
                   <div key={index} className={styles.tableRow}>
                     <div className={styles.cell}>{panel.name}</div>
-                    <div className={styles.cell}>{panel.width} × {panel.height}</div>
-                    <div className={styles.cell}>{panel.thickness}mm</div>
+                    <div className={styles.cell}>{panel.width}×{panel.height}×{panel.thickness}</div>
                     <div className={styles.cell}>{panel.material}</div>
                     <div className={styles.cell}>{panel.quantity}</div>
                   </div>

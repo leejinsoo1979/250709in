@@ -252,7 +252,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           furniturePosition: intrusionAnalysis.furniturePosition,
           availableWidth: intrusionAnalysis.availableWidth,
           adjustedWidth: intrusionAnalysis.adjustedWidth,
-          doorWidth: indexing.columnWidth - 3, // 커버도어는 원래 슬롯 너비 사용
+          doorWidth: indexing.columnWidth, // 커버도어는 원래 슬롯 너비 사용
           needsMullion: false
         });
         
@@ -336,7 +336,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           hasColumn: false,
           columnPosition: 'edge',
           availableWidth: targetZone?.columnWidth || indexing.columnWidth,
-          doorWidth: (targetZone?.columnWidth || indexing.columnWidth) - 3,
+          doorWidth: (targetZone?.columnWidth || indexing.columnWidth),
           needsMullion: false
         });
         continue;
@@ -385,7 +385,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         hasColumn: false,
         columnPosition: 'edge',
         availableWidth: targetZone.columnWidth,
-        doorWidth: targetZone.columnWidth - 3, // 기본 3mm 갭
+        doorWidth: targetZone.columnWidth, // 도어 전체 너비
         needsMullion: false
       });
       continue;
@@ -576,7 +576,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       intrusionDirection: intrusionAnalysis.intrusionDirection,
       furniturePosition: intrusionAnalysis.furniturePosition,
       adjustedWidth: intrusionAnalysis.adjustedWidth,
-      doorWidth: targetZone.columnWidth - 3,
+      doorWidth: targetZone.columnWidth,
       columnType,
       hasDepthAnalysis: columnType !== undefined
     });
@@ -587,7 +587,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       column: columnInSlot,
       columnPosition,
       availableWidth,
-      doorWidth: targetZone.columnWidth - 3, // 도어는 항상 원래 슬롯 크기 유지
+      doorWidth: targetZone.columnWidth, // 도어는 항상 원래 슬롯 크기 유지
       needsMullion,
       mullionSide,
       intrusionDirection: intrusionAnalysis.intrusionDirection,
