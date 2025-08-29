@@ -351,8 +351,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 메인 영역용 - zoneInfo에서 이미 계산된 정확한 값 사용
         zoneInternalSpace = {
           width: zoneInfo.normal.width, // zoneInfo에서 계산된 정확한 내부 너비 사용
-          height: spaceInfo.height,
-          depth: spaceInfo.depth,
+          height: latestSpaceInfo.height,
+          depth: latestSpaceInfo.depth,
           startX: zoneInfo.normal.startX, // zoneInfo에서 계산된 정확한 시작점 사용
           startY: 0,
           startZ: -(latestSpaceInfo.depth / 2)
@@ -382,12 +382,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         canvasElement,
         camera,
         scene,
-        spaceInfo  // 원본 spaceInfo 사용
+        latestSpaceInfo  // 최신 spaceInfo 사용
       );
       
       // 콜라이더에서 zone 정보 가져오기
       let colliderZone: 'normal' | 'dropped' | undefined;
-      if (slotIndex !== null && spaceInfo.droppedCeiling?.enabled) {
+      if (slotIndex !== null && latestSpaceInfo.droppedCeiling?.enabled) {
         const allColliders = [];
         scene.traverse((child) => {
           if (child.userData?.isSlotCollider && child.userData?.slotIndex === slotIndex) {
@@ -737,8 +737,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
       // 단내림이 없을 때는 모든 가구를 확인해야 함
       const zoneExistingModules = spaceInfo.droppedCeiling?.enabled 
-        ? placedModules.filter(m => m.zone === zoneToUse)
-        : placedModules;
+        ? latestPlacedModules.filter(m => m.zone === zoneToUse)
+        : latestPlacedModules;
       
       // 슬롯 점유 상태 디버깅
       console.log('📊 현재 슬롯 점유 상태:', {
@@ -1403,7 +1403,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 전체 슬롯 점유 상태 디버깅
       setTimeout(() => {
-        debugSlotOccupancy(placedModules, spaceInfo);
+        debugSlotOccupancy(latestPlacedModules, latestSpaceInfo);
       }, 100);
       
       // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
@@ -1475,7 +1475,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       targetSlot: slotIndex,
       isDualDragging: isDual,
       targetSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
-      existingModules: placedModules.filter(m => !m.zone || m.zone === 'normal').map(m => ({
+      existingModules: latestPlacedModules.filter(m => !m.zone || m.zone === 'normal').map(m => ({
         id: m.id,
         moduleId: m.moduleId,
         slotIndex: m.slotIndex,
@@ -1519,7 +1519,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     // 슬롯 가용성 검사
-    if (!isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
+    if (!isSlotAvailable(slotIndex, isDual, latestPlacedModules, latestSpaceInfo, dragData.moduleData.id)) {
       console.log('❌ 메인 구간 슬롯 충돌로 배치 불가');
       return false;
     }
@@ -1824,7 +1824,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     });
     
     // 배치 전 기존 가구 상태 확인
-    console.log('📋 배치 전 가구 목록:', placedModules.map(m => ({
+    console.log('📋 배치 전 가구 목록:', latestPlacedModules.map(m => ({
       id: m.id.slice(-2),
       slotIndex: m.slotIndex,
       isDualSlot: m.isDualSlot,
@@ -1835,7 +1835,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     addModule(newModule);
     
     // 전체 슬롯 점유 상태 시각화
-    const updatedModules = [...placedModules, newModule];
+    const updatedModules = [...latestPlacedModules, newModule];
     const targetZone = 'normal'; // 기본값, 실제 zone은 가구 배치 시점에 결정됨
     const slotOccupancy: string[] = new Array(zoneTargetIndexing.columnCount).fill('[ ]');
     
@@ -1875,7 +1875,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     // 전체 슬롯 점유 상태 디버깅
     setTimeout(() => {
-      debugSlotOccupancy(placedModules, spaceInfo);
+      debugSlotOccupancy(latestPlacedModules, latestSpaceInfo);
     }, 100);
     
     // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
@@ -1886,9 +1886,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // currentDragData를 제거 - 드래그 중에 변경되어 함수가 재생성됨
     camera,
     scene,
-    spaceInfo,
-    internalSpace,
-    indexing,
+    // spaceInfo, internalSpace, indexing 제거 - 함수 내부에서 최신 상태로 가져옴
     // placedModules도 제거 - 스토어에서 직접 가져옴
     addModule, 
     setCurrentDragData,
