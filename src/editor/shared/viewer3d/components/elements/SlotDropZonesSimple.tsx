@@ -2465,7 +2465,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               zone: (zoneSpaceInfo as any).zone
             },
             zoneInternalSpace,
-            originalHeight: latestSpaceInfo.height,
+            originalHeight: spaceInfo.height,
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
           

@@ -4622,8 +4622,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 치수선 렌더링 - 조건은 renderDimensions 내부에서 처리 */}
       {renderDimensions()}
       
-      {/* 기둥 렌더링 - 조건은 renderColumns 내부에서 처리 */}
-      {renderColumns()}
+      {/* 기둥 렌더링 제거 - PDF 내보내기 시 기둥은 표시하지 않음 */}
+      {/* {renderColumns()} */}
       
       {/* 단내림 구간 경계선 및 가이드 - 2D 정면뷰에서는 숨김 */}
       {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && false && (
