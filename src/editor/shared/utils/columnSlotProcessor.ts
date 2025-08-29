@@ -299,8 +299,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           slotIndex: globalSlotIndex,
           hasColumn: false,
           columnPosition: 'edge',
-          availableWidth: indexing.columnWidth,
-          doorWidth: targetZone.columnWidth - 3,
+          availableWidth: targetZone?.columnWidth || indexing.columnWidth,
+          doorWidth: (targetZone?.columnWidth || indexing.columnWidth) - 3,
           needsMullion: false
         });
         continue;

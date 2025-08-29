@@ -7,6 +7,7 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { Column } from '@/types/space';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 interface ColumnCreationMarkersProps {
   spaceInfo: any;
@@ -54,6 +55,68 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     }
     
     return false; // 겹치지 않음
+  };
+
+  // 단내림 구간 경계 체크 함수
+  const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number } => {
+    if (!spaceInfo?.droppedCeiling?.enabled) {
+      return { adjusted: false, newX: xPosition };
+    }
+
+    const columnWidthMm = 300;
+    const columnWidthInThreeUnits = columnWidthMm / 100;
+    const halfColumnWidth = columnWidthInThreeUnits / 2;
+    
+    // 단내림 구간 정보 가져오기
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (!zoneInfo || !zoneInfo.dropped || !zoneInfo.normal) {
+      return { adjusted: false, newX: xPosition };
+    }
+
+    // mm를 Three.js 단위로 변환
+    const droppedStartX = (zoneInfo.dropped.startX / 100);
+    const droppedEndX = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
+    const normalStartX = (zoneInfo.normal.startX / 100);
+    const normalEndX = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
+
+    // 기둥의 왼쪽과 오른쪽 경계
+    const columnLeft = xPosition - halfColumnWidth;
+    const columnRight = xPosition + halfColumnWidth;
+
+    // 단내림 위치에 따른 경계 체크
+    if (spaceInfo.droppedCeiling.position === 'left') {
+      // 왼쪽 단내림: 단내림 구간과 일반 구간 사이 경계
+      const boundaryX = droppedEndX;
+      
+      // 기둥이 경계에 걸치는지 확인
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 경계에 걸침 - 더 가까운 쪽으로 이동
+        if (Math.abs(xPosition - droppedEndX) < Math.abs(xPosition - normalStartX)) {
+          // 단내림 구간쪽으로 (왼쪽으로)
+          return { adjusted: true, newX: boundaryX - halfColumnWidth };
+        } else {
+          // 일반 구간쪽으로 (오른쪽으로)
+          return { adjusted: true, newX: boundaryX + halfColumnWidth };
+        }
+      }
+    } else {
+      // 오른쪽 단내림: 일반 구간과 단내림 구간 사이 경계
+      const boundaryX = normalEndX;
+      
+      // 기둥이 경계에 걸치는지 확인
+      if (columnLeft < boundaryX && columnRight > boundaryX) {
+        // 경계에 걸침 - 더 가까운 쪽으로 이동
+        if (Math.abs(xPosition - normalEndX) < Math.abs(xPosition - droppedStartX)) {
+          // 일반 구간쪽으로 (왼쪽으로)
+          return { adjusted: true, newX: boundaryX - halfColumnWidth };
+        } else {
+          // 단내림 구간쪽으로 (오른쪽으로)
+          return { adjusted: true, newX: boundaryX + halfColumnWidth };
+        }
+      }
+    }
+
+    return { adjusted: false, newX: xPosition };
   };
 
   // 기둥 위치를 가장 가까운 기둥에 스냅하는 함수 (뛰어넘기 방지)
@@ -167,13 +230,19 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         
         let newPosition: [number, number, number] = [boundedX, 0, zPosition];
         
-        // 기존 기둥에 스냅
+        // 1. 먼저 단내림 구간 경계 체크
+        const boundaryCheck = checkDroppedCeilingBoundary(newPosition[0]);
+        if (boundaryCheck.adjusted) {
+          newPosition[0] = boundaryCheck.newX;
+        }
+        
+        // 2. 기존 기둥에 스냅
         const originalX = newPosition[0];
         newPosition = snapToNearestColumn(newPosition);
         const snapped = Math.abs(originalX - newPosition[0]) > 0.01; // 스냅되었는지 확인
-        setIsSnapped(snapped);
+        setIsSnapped(snapped || boundaryCheck.adjusted);
         
-        // 스냅 후에도 공간 범위 체크
+        // 3. 스냅 후에도 공간 범위 체크
         newPosition[0] = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, newPosition[0]));
         
         setGhostPosition(newPosition);
