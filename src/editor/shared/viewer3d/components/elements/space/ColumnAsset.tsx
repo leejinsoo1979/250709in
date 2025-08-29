@@ -8,6 +8,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
 import { TextureGenerator } from '../../../utils/materials/TextureGenerator';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 
 interface ColumnAssetProps {
