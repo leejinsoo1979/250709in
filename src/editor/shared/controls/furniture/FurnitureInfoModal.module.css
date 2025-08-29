@@ -4,9 +4,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
   z-index: 9998;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.15s ease-out;
 }
 
 .modal {
@@ -15,15 +16,16 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: var(--theme-surface);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px var(--theme-shadow);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--theme-border);
   z-index: 9999;
   width: 90%;
-  max-width: 700px;
-  max-height: 80vh;
+  max-width: 600px;
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn 0.2s ease-out;
 }
 
 .header {
