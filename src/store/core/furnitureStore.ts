@@ -82,25 +82,18 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
-    console.log('🟢 addModule 호출:', {
+    // console.log를 set 함수 밖에 배치
+    console.log('🟢🟢🟢 [Store] addModule 함수 진입!!!', {
       id: module.id,
       moduleId: module.moduleId,
-      position: {
-        x: module.position.x.toFixed(3),
-        y: module.position.y.toFixed(3),
-        z: module.position.z.toFixed(3)
-      },
-      customDepth: module.customDepth,
-      customWidth: module.customWidth,
-      adjustedWidth: module.adjustedWidth,
       slotIndex: module.slotIndex,
       isDualSlot: module.isDualSlot,
-      isSplit: module.isSplit,
-      spaceType: module.columnSlotInfo?.spaceType
+      position: module.position
     });
     
     // 추가 직후 상태 확인
     set((state) => {
+      console.log('🔍 [Store] set 함수 내부 - 충돌 검사 시작');
       // 충돌 검사 - 동일한 슬롯에 이미 가구가 있는지 확인
       const existingModules = state.placedModules;
       const moduleSlotIndex = module.slotIndex;
