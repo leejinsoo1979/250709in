@@ -630,6 +630,9 @@ export class ColumnIndexer {
             // 오른쪽 벽이 없으면 엔드패널 두께 빼기
             actualInternalWidth -= END_PANEL_THICKNESS;
           }
+        } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 빌트인: 노서라운드 모드에서는 벽에 바로 붙음 (이격거리, 엔드패널 모두 없음)
+          actualInternalWidth = spaceInfo.width;
         }
       }
       
@@ -640,8 +643,8 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-          leftReduction = spaceInfo.gapConfig?.left || 2;
+          // 빌트인: 노서라운드 모드에서는 이격거리 무시 (벽에 바로 붙음)
+          leftReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
@@ -824,18 +827,24 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 왼쪽 처리 (이격거리 무시)
-        if (spaceInfo.wallConfig?.left) {
-          leftReduction = 0;  // 벽이 있으면 이격거리 무시
+        // 빌트인인 경우: 양쪽 벽이 있으므로 엔드패널 불필요
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        
-        // 오른쪽 처리 (이격거리 무시)
-        if (spaceInfo.wallConfig?.right) {
-          rightReduction = 0;  // 벽이 있으면 이격거리 무시
-        } else {
-          rightReduction = END_PANEL_THICKNESS;
+          // 왼쪽 처리 (이격거리 무시)
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = 0;  // 벽이 있으면 이격거리 무시
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+          
+          // 오른쪽 처리 (이격거리 무시)
+          if (spaceInfo.wallConfig?.right) {
+            rightReduction = 0;  // 벽이 있으면 이격거리 무시
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
         }
         
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
@@ -871,20 +880,27 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
-        // 왼쪽 처리
         let leftReduction = 0;
-        if (spaceInfo.wallConfig?.left) {
-          leftReduction = 0;  // 벽이 있으면 이격거리 무시, 벽에 바로 붙음
-        } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        
-        // 오른쪽 처리
         let rightReduction = 0;
-        if (spaceInfo.wallConfig?.right) {
-          rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+        
+        // 빌트인인 경우: 양쪽 벽이 있으므로 엔드패널 불필요
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
-          rightReduction = END_PANEL_THICKNESS;
+          // 왼쪽 처리
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = 0;  // 벽이 있으면 이격거리 무시, 벽에 바로 붙음
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+          
+          // 오른쪽 처리
+          if (spaceInfo.wallConfig?.right) {
+            rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
         }
         
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
