@@ -1242,8 +1242,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? false // 드래그 중에는 도어 렌더링 안 함
                   : needsEndPanelAdjustment
                   ? false // 엔드패널이 있는 경우 도어는 별도 렌더링
-                  : (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) 
-                  ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 도어는 별도 렌더링
+                  : (slotInfo && slotInfo.hasColumn) 
+                  ? false // 기둥이 있는 경우 도어는 별도 렌더링 (커버도어)
                   : (placedModule.hasDoor ?? false)}
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
@@ -1573,8 +1573,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {!isFurnitureDragging && 
        !isDraggingThis &&
        (placedModule.hasDoor ?? true) && 
-       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
-        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null)) && 
+       (slotInfo && slotInfo.hasColumn) && 
        spaceInfo && (() => {
         console.log('🚪🚨 커버도어 렌더링 조건 체크 INSIDE:', {
           hasDoor: placedModule.hasDoor,

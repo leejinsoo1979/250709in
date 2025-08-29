@@ -125,25 +125,16 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간 진입 시 자동으로 경계에 스냅 (기둥이 작아질 때)
-      // 기둥 중심이 단내림 구간 안에 있고, 경계 근처에 있을 때
-      const autoSnapDistance = columnWidthInThreeUnits * 2.0; // 넓은 자동 스냅 범위
-      
+      // 단내림 구간에 들어가면 무조건 경계에 스냅
       if (xPosition < boundaryX && xPosition > droppedStartX) {
-        // 단내림 구간 안에 있음
-        const distanceToBoundary = boundaryX - xPosition;
-        
-        // 경계 근처에 있으면 자동으로 경계에 붙임
-        if (distanceToBoundary < autoSnapDistance) {
-          // 기둥 오른쪽이 경계에 정확히 붙도록
-          const newX = boundaryX - halfColumnWidth - safetyMargin;
-          console.log('🎯 단내림 구간 자동 스냅 - 경계에 붙임:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX
-          });
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
+        // 단내림 구간 안에 있음 - 무조건 경계에 붙임
+        const newX = boundaryX - halfColumnWidth - safetyMargin;
+        console.log('🎯 단내림 구간 강제 스냅 - 무조건 경계에 붙임:', { 
+          boundaryX, 
+          originalX: xPosition,
+          newX
+        });
+        return { adjusted: true, newX, zone: 'dropped' };
       }
       
       // 일반 구간에서 경계 근처 스냅
@@ -212,24 +203,16 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         }
       }
       
-      // 단내림 구간 진입 시 자동으로 경계에 스냅 (기둥이 작아질 때)
-      const autoSnapDistance = columnWidthInThreeUnits * 2.0; // 넓은 자동 스냅 범위
-      
+      // 단내림 구간에 들어가면 무조건 경계에 스냅
       if (xPosition > boundaryX && xPosition < droppedEndX) {
-        // 단내림 구간 안에 있음
-        const distanceToBoundary = xPosition - boundaryX;
-        
-        // 경계 근처에 있으면 자동으로 경계에 붙임
-        if (distanceToBoundary < autoSnapDistance) {
-          // 기둥 왼쪽이 경계에 정확히 붙도록
-          const newX = boundaryX + halfColumnWidth + safetyMargin;
-          console.log('🎯 단내림 구간 자동 스냅 - 경계에 붙임:', { 
-            boundaryX, 
-            originalX: xPosition,
-            newX
-          });
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
+        // 단내림 구간 안에 있음 - 무조건 경계에 붙임
+        const newX = boundaryX + halfColumnWidth + safetyMargin;
+        console.log('🎯 단내림 구간 강제 스냅 - 무조건 경계에 붙임:', { 
+          boundaryX, 
+          originalX: xPosition,
+          newX
+        });
+        return { adjusted: true, newX, zone: 'dropped' };
       }
       
       // 일반 구간에서 경계 근처 스냅
