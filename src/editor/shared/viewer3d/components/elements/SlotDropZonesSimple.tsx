@@ -159,11 +159,33 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let zoneToUse: 'normal' | 'dropped' | undefined;
     if (spaceInfo.droppedCeiling?.enabled) {
       try {
+        console.log('🔍 [SlotDropZonesSimple] calculateZoneSlotInfo 호출 전:', {
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          droppedCeiling: spaceInfo.droppedCeiling,
+          customColumnCount: spaceInfo.customColumnCount
+        });
+        
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        console.log('🔍 [SlotDropZonesSimple] calculateZoneSlotInfo 결과:', {
+          zoneInfo,
+          hasDropped: !!zoneInfo?.dropped,
+          hasNormal: !!zoneInfo?.normal
+        });
         
         // zoneInfo.dropped이 null인지 확인
         if (!zoneInfo.dropped || !zoneInfo.normal) {
-          console.error('❌ Zone info is null:', { dropped: zoneInfo.dropped, normal: zoneInfo.normal });
+          console.error('❌ Zone info is null:', { 
+            dropped: zoneInfo.dropped, 
+            normal: zoneInfo.normal,
+            fullZoneInfo: zoneInfo,
+            spaceInfo: {
+              surroundType: spaceInfo.surroundType,
+              installType: spaceInfo.installType,
+              droppedCeiling: spaceInfo.droppedCeiling
+            }
+          });
           return false;
         }
         

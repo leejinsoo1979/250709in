@@ -392,19 +392,21 @@
 
 .savedColorRemove {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 14px;
-  height: 14px;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #ff4444;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: none;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 2;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .savedColorButton:hover .savedColorRemove {
@@ -415,9 +417,9 @@
 .savedColorRemoveButton {
   background: none;
   border: none;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -426,6 +428,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.savedColorRemoveButton:hover {
+  transform: scale(1.2);
 }
 
 .addColorButton {

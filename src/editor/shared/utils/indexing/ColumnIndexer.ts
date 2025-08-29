@@ -585,6 +585,15 @@ export class ColumnIndexer {
    * 단내림 영역별 슬롯 정보 계산
    */
   static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number) {
+    console.log('🔍🔍 [calculateZoneSlotInfo] 함수 시작:', {
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+      droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+      customColumnCount
+    });
+    
     const frameThickness = calculateFrameThickness(spaceInfo);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
@@ -1096,7 +1105,7 @@ export class ColumnIndexer {
       }
     });
     
-    return {
+    const result = {
       normal: {
         startX: normalStartX,
         width: normalAreaInternalWidth,
@@ -1112,6 +1121,15 @@ export class ColumnIndexer {
         slotWidths: droppedSlotWidths
       }
     };
+    
+    console.log('🔍🔍 [calculateZoneSlotInfo] 최종 반환값:', {
+      hasNormal: !!result.normal,
+      hasDropped: !!result.dropped,
+      normal: result.normal,
+      dropped: result.dropped
+    });
+    
+    return result;
   }
 
   /**
