@@ -364,7 +364,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     set((state) => {
       // 새 기둥이 기존 기둥들과 겹치는지 검사
       const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-      const minDistance = columnWidthInThreeUnits * 1.1; // 기둥 너비 + 여유 공간
+      const minDistance = columnWidthInThreeUnits; // 정확히 기둥 너비만큼 (붙어있을 수 있음)
       
       const existingColumns = state.spaceInfo.columns || [];
       for (const existingColumn of existingColumns) {
@@ -372,19 +372,19 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         
         const distance = Math.abs(existingColumn.position[0] - column.position[0]);
         if (distance < minDistance) {
-          console.log('❌ 기둥 추가 실패: 기존 기둥과 겹침', {
-            newColumn: column.id,
-            existingColumn: existingColumn.id,
-            newX: column.position[0],
-            existingX: existingColumn.position[0],
-            distance,
-            minDistance
-          });
-          return state; // 겹치면 추가하지 않음
+          // console.log('❌ 기둥 추가 실패: 기존 기둥과 겹침', {
+          //   newColumn: column.id,
+          //   existingColumn: existingColumn.id,
+          //   newX: column.position[0],
+          //   existingX: existingColumn.position[0],
+          //   distance,
+          //   minDistance
+          // });
+          return state; // 겹침면 추가하지 않음
         }
       }
       
-      console.log('✅ 기둥 추가 성공:', column.id);
+      // console.log('✅ 기둥 추가 성공:', column.id);
       
       const newState = {
         spaceInfo: {
@@ -427,7 +427,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       // 위치 업데이트인 경우 겹침 검사
       if (updates.position) {
         const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-        const minDistance = columnWidthInThreeUnits * 1.1; // 기둥 너비 + 여유 공간
+        const minDistance = columnWidthInThreeUnits; // 정확히 기둥 너비만큼 (붙어있을 수 있음)
         
         // 다른 기둥들과 겹치는지 확인
         const otherColumns = (state.spaceInfo.columns || []).filter(col => col.id !== id);
@@ -436,12 +436,12 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           
           const distance = Math.abs(column.position[0] - updates.position[0]);
           if (distance < minDistance) {
-            console.log('❌ 기둥 이동 실패: 다른 기둥과 겹침', {
-              targetId: id,
-              otherColumnId: column.id,
-              distance,
-              minDistance
-            });
+            // console.log('❌ 기둥 이동 실패: 다른 기둥과 겹침', {
+            //   targetId: id,
+            //   otherColumnId: column.id,
+            //   distance,
+            //   minDistance
+            // });
             return state; // 겹치면 업데이트하지 않음
           }
         }

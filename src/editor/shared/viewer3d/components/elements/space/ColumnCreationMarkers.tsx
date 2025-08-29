@@ -37,14 +37,14 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   const checkColumnOverlap = (newPosition: [number, number, number]): boolean => {
     const existingColumns = storeSpaceInfo?.columns || [];
     const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units (1 unit = 100mm)
-    const minDistance = columnWidthInThreeUnits * 1.1; // 기둥 너비 + 약간의 여유 공간
+    const minDistance = columnWidthInThreeUnits; // 정확한 기둥 너비 (붙어있을 수 있도록)
 
-    console.log('🔍 기둥 겹침 검사 시작:', {
-      newPosition,
-      existingColumnsCount: existingColumns.length,
-      columnWidth: columnWidthInThreeUnits,
-      minDistance
-    });
+    // console.log('🔍 기둥 겹침 검사 시작:', {
+    //   newPosition,
+    //   existingColumnsCount: existingColumns.length,
+    //   columnWidth: columnWidthInThreeUnits,
+    //   minDistance
+    // });
 
     for (const column of existingColumns) {
       if (!column.position) continue;
@@ -52,23 +52,23 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       // X축 거리만 확인 (기둥은 보통 X축으로만 이동)
       const distance = Math.abs(column.position[0] - newPosition[0]);
       
-      console.log('📏 기둥 간 거리 체크:', {
-        columnId: column.id,
-        existingX: column.position[0],
-        newX: newPosition[0],
-        distance,
-        minDistance,
-        willOverlap: distance < minDistance
-      });
+      // console.log('📏 기둥 간 거리 체크:', {
+      //   columnId: column.id,
+      //   existingX: column.position[0],
+      //   newX: newPosition[0],
+      //   distance,
+      //   minDistance,
+      //   willOverlap: distance < minDistance
+      // });
       
       // 두 기둥 중심 간 거리가 최소 거리보다 작으면 겹침
       if (distance < minDistance) {
-        console.log('❌ 기둥 겹침 감지!');
+        // console.log('❌ 기둥 겹침 감지!');
         return true; // 겹침
       }
     }
     
-    console.log('✅ 기둥 배치 가능');
+    // console.log('✅ 기둥 배치 가능');
     return false; // 겹치지 않음
   };
 
@@ -161,7 +161,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     
     // 겹침 검사
     if (checkColumnOverlap(finalPosition)) {
-      console.log('❌ 기둥 생성 실패: 기존 기둥과 겹침');
+      // console.log('❌ 기둥 생성 실패: 기존 기둥과 겹침');
       return; // 겹치면 생성하지 않음
     }
     
@@ -178,7 +178,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
     
-    console.log('✅ 새 기둥 생성 성공:', newColumn);
+    // console.log('✅ 새 기둥 생성 성공:', newColumn);
     addColumn(newColumn);
   };
 
@@ -263,7 +263,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 아이콘 클릭됨:', xPosition);
+              // console.log('🎯 + 아이콘 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -282,7 +282,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0.1]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 배경 클릭됨:', xPosition);
+              // console.log('🎯 + 배경 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -305,7 +305,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             anchorY="middle"
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 + 텍스트 클릭됨:', xPosition);
+              // console.log('🎯 + 텍스트 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -319,7 +319,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             rotation={[-Math.PI / 2, 0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 바닥 원 클릭됨:', xPosition);
+              // console.log('🎯 바닥 원 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -338,7 +338,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.5, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              console.log('🎯 가이드 라인 클릭됨:', xPosition);
+              // console.log('🎯 가이드 라인 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
