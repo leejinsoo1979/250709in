@@ -243,23 +243,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정  
       let newX = Math.max(minX, Math.min(maxX, worldX));
       
-      // 단내림이 있을 때 단내림 구간으로 이동 차단
-      if (spaceInfo?.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
-        const columnHalfWidthM = columnHalfWidth; // 이미 Three.js 단위로 변환됨
-        
-        // 단내림 구간 경계 확인
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          // 왼쪽 단내림 - 경계보다 왼쪽으로 못가게
-          const boundaryX = (zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100;
-          newX = Math.max(boundaryX + columnHalfWidthM, newX);
-        } else {
-          // 오른쪽 단내림 - 경계보다 오른쪽으로 못가게
-          const boundaryX = zoneInfo.normal.startX / 100 + zoneInfo.normal.width / 100;
-          newX = Math.min(boundaryX - columnHalfWidthM, newX);
-        }
-      }
-      
       // 다른 기둥에 밀착되도록 스냅 (뛰어넘기 방지)
       const columns = spaceConfig.spaceInfo.columns || [];
       const columnWidthInThreeUnits = width * 0.01; // mm to three units

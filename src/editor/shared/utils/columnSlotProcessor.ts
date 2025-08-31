@@ -178,8 +178,23 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
         const columnRightX = column.position[0] + (column.width * 0.01) / 2;
         
-        // 기둥이 슬롯 영역과 겹치는지 확인
-        return (columnLeftX < slotEndX && columnRightX > slotStartX);
+        // 기둥이 슬롯 영역과 실제로 겹치는지 확인 (1mm 허용 오차)
+        const tolerance = 0.001; // 1mm in Three.js units
+        const overlaps = (columnLeftX < slotEndX - tolerance && columnRightX > slotStartX + tolerance);
+        
+        if (overlaps) {
+          console.log('🏛️ [analyzeColumnSlots] 노서라운드 - 기둥이 슬롯과 겹침:', {
+            slotIndex: i,
+            columnId: column.id,
+            columnLeft: columnLeftX.toFixed(3),
+            columnRight: columnRightX.toFixed(3),
+            slotStart: slotStartX.toFixed(3),
+            slotEnd: slotEndX.toFixed(3),
+            overlapAmount: Math.min(slotEndX, columnRightX) - Math.max(slotStartX, columnLeftX)
+          });
+        }
+        
+        return overlaps;
       });
       
       if (!columnInSlot) {
@@ -214,6 +229,20 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
               intrusionDirection: 'center' as const,
               furniturePosition: 'center' as const,
               adjustedWidth: 0
+            };
+          }
+          
+          // 기둥이 실제로 슬롯 안에 침범한 경우만 처리
+          // leftGap이나 rightGap이 음수면 기둥이 슬롯 경계를 넘어선 것
+          const isIntruding = leftGap < slotWidthMm && rightGap < slotWidthMm;
+          
+          if (!isIntruding) {
+            console.log('🏛️ 노서라운드 - 기둥이 슬롯을 침범하지 않음 - 전체 너비 사용');
+            return {
+              availableWidth: slotWidthMm,
+              intrusionDirection: 'center' as const,
+              furniturePosition: 'center' as const,
+              adjustedWidth: slotWidthMm
             };
           }
           
@@ -374,8 +403,25 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
       const columnRightX = column.position[0] + (column.width * 0.01) / 2;
       
-      // 기둥이 슬롯 영역과 겹치는지 확인
-      return (columnLeftX < slotEndX && columnRightX > slotStartX);
+      // 기둥이 슬롯 영역과 실제로 겹치는지 확인 (1mm 허용 오차)
+      const tolerance = 0.001; // 1mm in Three.js units
+      const overlaps = (columnLeftX < slotEndX - tolerance && columnRightX > slotStartX + tolerance);
+      
+      if (overlaps) {
+        console.log('🏛️ [analyzeColumnSlots] 기둥이 슬롯과 겹침:', {
+          globalSlotIndex,
+          zone,
+          localSlotIndex,
+          columnId: column.id,
+          columnLeft: columnLeftX.toFixed(3),
+          columnRight: columnRightX.toFixed(3),
+          slotStart: slotStartX.toFixed(3),
+          slotEnd: slotEndX.toFixed(3),
+          overlapAmount: Math.min(slotEndX, columnRightX) - Math.max(slotStartX, columnLeftX)
+        });
+      }
+      
+      return overlaps;
     });
     
     if (!columnInSlot) {
@@ -434,7 +480,21 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         };
       }
       
-      // 기둥이 슬롯과 겹치면 무조건 침범으로 처리
+      // 기둥이 실제로 슬롯 안에 침범한 경우만 처리
+      // leftGap이나 rightGap이 음수면 기둥이 슬롯 경계를 넘어선 것
+      const isIntruding = leftGap < slotWidthMm && rightGap < slotWidthMm;
+      
+      if (!isIntruding) {
+        console.log('🏛️ 기둥이 슬롯을 침범하지 않음 - 전체 너비 사용');
+        return {
+          availableWidth: slotWidthMm,
+          intrusionDirection: 'center' as const,
+          furniturePosition: 'center' as const,
+          adjustedWidth: slotWidthMm
+        };
+      }
+      
+      // 기둥이 슬롯과 겹치면 침범으로 처리
       // 왼쪽 공간이 더 작으면 왼쪽에서 침범
       if (leftGap <= rightGap) {
         const rightSpace = Math.max(0, rightGap);
@@ -613,8 +673,23 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
         const columnRightX = column.position[0] + (column.width * 0.01) / 2;
         
-        // 기둥이 슬롯 영역과 겹치는지 확인
-        return (columnLeftX < slotEndX && columnRightX > slotStartX);
+        // 기둥이 슬롯 영역과 실제로 겹치는지 확인 (1mm 허용 오차)
+        const tolerance = 0.001; // 1mm in Three.js units
+        const overlaps = (columnLeftX < slotEndX - tolerance && columnRightX > slotStartX + tolerance);
+        
+        if (overlaps) {
+          console.log('🏛️ [analyzeColumnSlots] 서라운드 - 기둥이 슬롯과 겹침:', {
+            slotIndex,
+            columnId: column.id,
+            columnLeft: columnLeftX.toFixed(3),
+            columnRight: columnRightX.toFixed(3),
+            slotStart: slotStartX.toFixed(3),
+            slotEnd: slotEndX.toFixed(3),
+            overlapAmount: Math.min(slotEndX, columnRightX) - Math.max(slotStartX, columnLeftX)
+          });
+        }
+        
+        return overlaps;
       });
       
       if (!columnInSlot) {
@@ -672,7 +747,21 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           };
         }
         
-        // 기둥이 슬롯과 겹치면 무조건 침범으로 처리
+        // 기둥이 실제로 슬롯 안에 침범한 경우만 처리
+        // leftGap이나 rightGap이 음수면 기둥이 슬롯 경계를 넘어선 것
+        const isIntruding = leftGap < slotWidthMm && rightGap < slotWidthMm;
+        
+        if (!isIntruding) {
+          console.log('🏛️ 서라운드 - 기둥이 슬롯을 침범하지 않음 - 전체 너비 사용');
+          return {
+            availableWidth: slotWidthMm,
+            intrusionDirection: 'center' as const,
+            furniturePosition: 'center' as const,
+            adjustedWidth: slotWidthMm
+          };
+        }
+        
+        // 기둥이 슬롯과 겹치면 침범으로 처리
         // 왼쪽 공간이 더 작으면 왼쪽에서 침범
         if (leftGap <= rightGap) {
           const rightSpace = Math.max(0, rightGap);
@@ -1175,25 +1264,25 @@ export const calculateOptimalHingePosition = (
   
   let hingePosition: 'left' | 'right' = 'right';
   
-  // 기둥 침범 방향에 따른 힌지 방향 결정 (캐비넷 위치에 따라 고정)
+  // 기둥 침범 방향에 따른 힌지 방향 결정 (가구가 있는 쪽에 힌지 배치)
   switch (slotInfo.intrusionDirection) {
     case 'from-left':
-      // 기둥이 왼쪽에서 침범: 캐비넷이 오른쪽에 위치 → 힌지 오른쪽 고정
+      // 기둥이 왼쪽에서 침범: 캐비넷이 오른쪽에 위치 → 힌지는 오른쪽(가구 쪽)
       hingePosition = 'right';
       break;
       
     case 'from-right':
-      // 기둥이 오른쪽에서 침범: 캐비넷이 왼쪽에 위치 → 힌지 왼쪽 고정
+      // 기둥이 오른쪽에서 침범: 캐비넷이 왼쪽에 위치 → 힌지는 왼쪽(가구 쪽)
       hingePosition = 'left';
       break;
       
     case 'center':
-      // 기둥이 중앙에 있는 경우: 캐비넷 위치에 따라 힌지 방향 고정
+      // 기둥이 중앙에 있는 경우: 캐비넷 위치 쪽에 힌지 배치
       if (slotInfo.furniturePosition === 'left-aligned') {
-        // 캐비넷이 왼쪽에 배치: 힌지 왼쪽 고정
+        // 캐비넷이 왼쪽에 배치: 힌지는 왼쪽(가구 쪽)
         hingePosition = 'left';
       } else if (slotInfo.furniturePosition === 'right-aligned') {
-        // 캐비넷이 오른쪽에 배치: 힌지 오른쪽 고정
+        // 캐비넷이 오른쪽에 배치: 힌지는 오른쪽(가구 쪽)
         hingePosition = 'right';
       }
       break;
@@ -1208,9 +1297,9 @@ export const calculateOptimalHingePosition = (
     intrusionDirection: slotInfo.intrusionDirection,
     furniturePosition: slotInfo.furniturePosition,
     calculatedHinge: hingePosition,
-    logic: slotInfo.intrusionDirection === 'from-left' ? '기둥이 왼쪽 침범 → 오른쪽 캐비넷 → 힌지 오른쪽 고정' :
-           slotInfo.intrusionDirection === 'from-right' ? '기둥이 오른쪽 침범 → 왼쪽 캐비넷 → 힌지 왼쪽 고정' :
-           slotInfo.intrusionDirection === 'center' ? `중앙 침범 → ${slotInfo.furniturePosition} → ${hingePosition} 힌지 (캐비넷 위치에 따라 고정)` :
+    logic: slotInfo.intrusionDirection === 'from-left' ? '기둥이 왼쪽 침범 → 오른쪽 캐비넷 → 힌지 오른쪽(가구 쪽)' :
+           slotInfo.intrusionDirection === 'from-right' ? '기둥이 오른쪽 침범 → 왼쪽 캐비넷 → 힌지 왼쪽(가구 쪽)' :
+           slotInfo.intrusionDirection === 'center' ? `중앙 침범 → ${slotInfo.furniturePosition} → ${hingePosition} 힌지 (가구 쪽)` :
            '기본값'
   });
   
