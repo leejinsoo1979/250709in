@@ -17,7 +17,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
+import { getNormalZoneBounds, getDroppedZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -1791,17 +1791,13 @@ const Room: React.FC<RoomProps> = ({
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
               }
               
-              // 각 영역의 시작점 계산 (ColumnIndexer와 동일하게)
-              const internalStartX = -(mmToThreeUnits(spaceInfo.width) / 2) + mmToThreeUnits(leftReduction);
+              // 각 영역의 고정된 위치 계산 (기둥 위치와 무관하게)
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
               
-              let normalStartX, droppedStartX;
-              if (isLeftDropped) {
-                droppedStartX = internalStartX;
-                normalStartX = internalStartX + droppedFrameWidth;
-              } else {
-                normalStartX = internalStartX;
-                droppedStartX = internalStartX + normalFrameWidth;
-              }
+              // Three.js 단위로 변환된 시작점
+              const normalStartX = mmToThreeUnits(normalBounds.startX);
+              const droppedStartX = mmToThreeUnits(droppedBounds.startX);
               
               // 프레임 중심 위치 계산
               const droppedX = droppedStartX + droppedFrameWidth/2;
