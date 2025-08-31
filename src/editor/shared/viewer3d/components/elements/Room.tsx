@@ -1730,8 +1730,131 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            // 기둥이 있는 경우 분절된 프레임들 렌더링
-            // 단내림만 있고 기둥이 없는 경우 처리
+            // 단내림이 있고 기둥이 있는 경우 - 각 구간별로 별도 처리
+            if (hasDroppedCeiling && hasDeepColumns) {
+              const normalSegments = [];
+              const droppedSegments = [];
+              
+              // 일반 구간 기둥들만 필터링
+              const normalColumns = columns.filter(column => {
+                const columnCenterX = column.position[0];
+                const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                const isInNormal = isLeftDropped ? columnCenterX >= boundary : columnCenterX < boundary;
+                return isInNormal && column.depth >= 730;
+              }).sort((a, b) => a.position[0] - b.position[0]);
+              
+              // 단내림 구간 기둥들만 필터링
+              const droppedColumns = columns.filter(column => {
+                const columnCenterX = column.position[0];
+                const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                const isInDropped = isLeftDropped ? columnCenterX < boundary : columnCenterX > boundary;
+                return isInDropped && column.depth >= 730;
+              }).sort((a, b) => a.position[0] - b.position[0]);
+              
+              // 일반 구간 프레임 분절
+              let currentX = normalSegmentStartX;
+              normalColumns.forEach(column => {
+                const columnWidthM = column.width * 0.01;
+                const columnLeftX = column.position[0] - columnWidthM / 2;
+                const columnRightX = column.position[0] + columnWidthM / 2;
+                
+                if (columnLeftX < normalSegmentEndX && columnRightX > normalSegmentStartX) {
+                  const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                  if (leftSegmentWidth > 0) {
+                    normalSegments.push({
+                      width: leftSegmentWidth,
+                      x: currentX + leftSegmentWidth / 2,
+                      zone: 'normal'
+                    });
+                  }
+                  currentX = columnRightX;
+                }
+              });
+              
+              // 일반 구간 마지막 세그먼트
+              const normalLastWidth = Math.max(0, normalSegmentEndX - currentX);
+              if (normalLastWidth > 0) {
+                normalSegments.push({
+                  width: normalLastWidth,
+                  x: currentX + normalLastWidth / 2,
+                  zone: 'normal'
+                });
+              }
+              
+              // 단내림 구간 프레임 분절
+              currentX = droppedSegmentStartX;
+              droppedColumns.forEach(column => {
+                const columnWidthM = column.width * 0.01;
+                const columnLeftX = column.position[0] - columnWidthM / 2;
+                const columnRightX = column.position[0] + columnWidthM / 2;
+                
+                if (columnLeftX < droppedSegmentEndX && columnRightX > droppedSegmentStartX) {
+                  const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                  if (leftSegmentWidth > 0) {
+                    droppedSegments.push({
+                      width: leftSegmentWidth,
+                      x: currentX + leftSegmentWidth / 2,
+                      zone: 'dropped'
+                    });
+                  }
+                  currentX = columnRightX;
+                }
+              });
+              
+              // 단내림 구간 마지막 세그먼트
+              const droppedLastWidth = Math.max(0, droppedSegmentEndX - currentX);
+              if (droppedLastWidth > 0) {
+                droppedSegments.push({
+                  width: droppedLastWidth,
+                  x: currentX + droppedLastWidth / 2,
+                  zone: 'dropped'
+                });
+              }
+              
+              // 모든 세그먼트 렌더링
+              const allSegments = [...normalSegments, ...droppedSegments];
+              
+              console.log('🔥 단내림+기둥 프레임 세그먼트:', {
+                normalSegments: normalSegments.map(s => ({
+                  x: s.x / 0.01,
+                  width: s.width / 0.01,
+                  zone: s.zone
+                })),
+                droppedSegments: droppedSegments.map(s => ({
+                  x: s.x / 0.01,
+                  width: s.width / 0.01,
+                  zone: s.zone
+                }))
+              });
+              
+              return allSegments.map((segment, index) => {
+                let segmentY = topElementsY;
+                if (segment.zone === 'dropped') {
+                  segmentY = topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight);
+                }
+                
+                return (
+                  <BoxWithEdges
+                    key={`top-frame-segment-${index}`}
+                    args={[
+                      segment.width,
+                      topBottomFrameHeight,
+                      mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    position={[
+                      segment.x,
+                      segmentY,
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    ]}
+                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    renderMode={renderMode}
+                  />
+                );
+              });
+            }
+            
+            // 기존 로직: 단내림만 있고 기둥이 없는 경우
             if (hasDroppedCeiling && !hasDeepColumns) {
               // 고정된 bounds 사용
               const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -2621,8 +2744,9 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            // 기둥이 있는 경우 분절된 프레임들 렌더링
-            const frameSegments: Array<{
+            // 단내림 없고 기둥만 있는 경우
+            if (!hasDroppedCeiling && hasDeepColumns) {
+              const frameSegments: Array<{
               width: number;
               x: number;
               zone?: 'normal' | 'dropped';
@@ -2690,7 +2814,7 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            return frameSegments.map((segment, index) => {
+              return frameSegments.map((segment, index) => {
               if (!baseFrameMaterial) {
                 console.warn(`⚠️ Base frame segment ${index} - material not ready, using default`);
               } else {
