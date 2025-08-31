@@ -1735,6 +1735,15 @@ const Room: React.FC<RoomProps> = ({
               const normalSegments = [];
               const droppedSegments = [];
               
+              // 각 구간의 경계 계산
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              
+              const normalSegmentStartX = mmToThreeUnits(normalBounds.startX);
+              const normalSegmentEndX = mmToThreeUnits(normalBounds.endX);
+              const droppedSegmentStartX = mmToThreeUnits(droppedBounds.startX);
+              const droppedSegmentEndX = mmToThreeUnits(droppedBounds.endX);
+              
               // 일반 구간 기둥들만 필터링
               const normalColumns = columns.filter(column => {
                 const columnCenterX = column.position[0];
@@ -2854,7 +2863,8 @@ const Room: React.FC<RoomProps> = ({
             return null;
           })()}
         </>
-      );
+      )
+      })()}
       
       {/* 하단 서브프레임 제거됨 */}
       
