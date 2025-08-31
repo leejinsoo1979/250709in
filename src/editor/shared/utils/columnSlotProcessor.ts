@@ -166,7 +166,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   
   // 노서라운드 모드에서도 기둥 처리 (기둥은 있을 수 있음)
   // 단내림이 있는 노서라운드의 경우 아래 Zone별 처리에서 함께 처리됨
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.droppedHeight === 0) {
+  if (spaceInfo.surroundType === 'no-surround' && !spaceInfo.droppedCeiling?.enabled) {
     // 노서라운드에서도 기둥 확인 필요
     for (let i = 0; i < indexing.columnCount; i++) {
       const slotCenterX = indexing.threeUnitPositions[i];
