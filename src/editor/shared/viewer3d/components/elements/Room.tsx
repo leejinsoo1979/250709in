@@ -1938,6 +1938,25 @@ const Room: React.FC<RoomProps> = ({
                 });
               }
               
+              // 단내림이 있는 경우, 세그먼트가 단내림 구간에 있는지 확인
+              let segmentY = topElementsY;
+              if (hasDroppedCeiling && spaceInfo.droppedCeiling) {
+                const segmentCenterX = segment.x;
+                const droppedBoundaryX = isLeftDropped 
+                  ? segmentFrameStartX + droppedWidth
+                  : segmentFrameEndX - droppedWidth;
+                
+                // 세그먼트 중심이 단내림 구간에 있는지 확인
+                const isInDroppedZone = isLeftDropped 
+                  ? segmentCenterX < droppedBoundaryX
+                  : segmentCenterX > droppedBoundaryX;
+                
+                if (isInDroppedZone) {
+                  // 단내림 구간의 프레임은 낮은 위치에
+                  segmentY = topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight);
+                }
+              }
+              
               return (
                 <BoxWithEdges
                   key={`top-frame-segment-${index}`}
@@ -1948,7 +1967,7 @@ const Room: React.FC<RoomProps> = ({
                   ]}
                   position={[
                     segment.x, // 분절된 위치
-                    topElementsY, 
+                    segmentY, // 단내림 구간에 따라 조정된 Y 위치
                     // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))

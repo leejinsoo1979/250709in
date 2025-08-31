@@ -165,7 +165,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   const slotInfos: ColumnSlotInfo[] = [];
   
   // 노서라운드 모드에서도 기둥 처리 (기둥은 있을 수 있음)
-  if (spaceInfo.surroundType === 'no-surround') {
+  // 단내림이 있는 노서라운드의 경우 아래 Zone별 처리에서 함께 처리됨
+  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.droppedHeight === 0) {
     // 노서라운드에서도 기둥 확인 필요
     for (let i = 0; i < indexing.columnCount; i++) {
       const slotCenterX = indexing.threeUnitPositions[i];
@@ -451,7 +452,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     const leftGap = (columnLeftX - slotStartX) * 100; // mm 단위로 변환
     const rightGap = (slotEndX - columnRightX) * 100; // mm 단위로 변환
     
-    // 기둥 침범 방향 분석
+    // 기둥 침범 방향 분석 - 노서라운드 모드도 동일한 로직 적용
     const analyzeIntrusionDirection = () => {
       const columnWidthMm = columnInSlot.width;
       const slotWidthMm = targetZone.columnWidth;
@@ -460,6 +461,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       console.log('🏛️ 기둥 침범 방향 분석:', {
         slotIndex: globalSlotIndex,
         zone,
+        surroundType: spaceInfo.surroundType,
         columnLeftX: columnLeftX.toFixed(3),
         columnRightX: columnRightX.toFixed(3),
         slotStartX: slotStartX.toFixed(3),
