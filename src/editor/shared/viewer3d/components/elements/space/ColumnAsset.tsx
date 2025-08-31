@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ThreeEvent, useThree } from '@react-three/fiber';
-import { useFrame } from '@react-three/fiber';
+import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -70,15 +69,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
   
-  const { invalidate } = useThree();
-  
   // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
   useEffect(() => {
     if (!isDragging) {
-      invalidate();
       tempPositionRef.current = position; // 위치 동기화
     }
-  }, [position, width, height, depth, isDragging, invalidate]);
+  }, [position, width, height, depth, isDragging]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
