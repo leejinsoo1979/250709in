@@ -129,12 +129,25 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     const zone = zoneInfo[targetZone];
     const columnHalfWidthMm = width / 2;
+    const innerWallThickness = 10; // 단내림 내벽 두께 10mm
     
-    // 경계에서 기둥 반폭만큼 안쪽으로 배치
-    if (side === 'left') {
-      return (zone.startX + columnHalfWidthMm) * 0.01; // mm to Three.js units
+    // 단내림 구간의 경우 내벽 두께를 고려하여 더 안쪽으로 배치
+    if (targetZone === 'dropped') {
+      // 단내림 구간은 내벽 두께만큼 더 안쪽으로
+      if (side === 'left') {
+        // 단내림 왼쪽 경계: 내벽 두께 + 기둥 반폭
+        return (zone.startX + innerWallThickness + columnHalfWidthMm) * 0.01;
+      } else {
+        // 단내림 오른쪽 경계: 내벽 두께 + 기둥 반폭만큼 안쪽
+        return (zone.startX + zone.width - innerWallThickness - columnHalfWidthMm) * 0.01;
+      }
     } else {
-      return (zone.startX + zone.width - columnHalfWidthMm) * 0.01; // mm to Three.js units
+      // 일반 구간은 기존대로
+      if (side === 'left') {
+        return (zone.startX + columnHalfWidthMm) * 0.01;
+      } else {
+        return (zone.startX + zone.width - columnHalfWidthMm) * 0.01;
+      }
     }
   };
 
