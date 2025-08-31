@@ -17,6 +17,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -1684,13 +1685,22 @@ const Room: React.FC<RoomProps> = ({
               isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
             }
             
-            // 슬롯 가이드와 동일한 범위 사용 - 모든 모드에서 calculateZoneSlotInfo 사용
-            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const normalZone = zoneInfo.normal;
+            // 단내림이 있을 때는 일반 구간의 고정된 범위 사용 (기둥 위치와 무관하게)
+            // 단내림이 없을 때는 기존 로직 사용
+            let frameStartX, frameEndX;
             
-            // mm 단위를 Three.js 단위로 변환
-            const frameStartX = mmToThreeUnits(normalZone.startX);
-            const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+            if (hasDroppedCeiling) {
+              // 단내림이 있으면 getNormalZoneBounds로 고정된 위치 계산
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              frameStartX = mmToThreeUnits(normalBounds.startX);
+              frameEndX = mmToThreeUnits(normalBounds.endX);
+            } else {
+              // 단내림이 없으면 기존 로직 사용
+              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              const normalZone = zoneInfo.normal;
+              frameStartX = mmToThreeUnits(normalZone.startX);
+              frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+            }
             
             const frameWidth = frameEndX - frameStartX;
             const frameX = (frameStartX + frameEndX) / 2;
