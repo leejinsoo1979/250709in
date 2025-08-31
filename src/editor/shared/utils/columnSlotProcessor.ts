@@ -445,9 +445,9 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     const columnRightX = columnInSlot.position[0] + (columnInSlot.width * 0.01) / 2;
     
     // 기둥이 슬롯 끝선에 정확히 일치하는지 확인 (허용 오차 5mm)
-    const tolerance = 0.05; // 5mm를 Three.js 단위로 변환
-    const isAtLeftEdge = Math.abs(columnLeftX - slotStartX) < tolerance;
-    const isAtRightEdge = Math.abs(columnRightX - slotEndX) < tolerance;
+    const edgeTolerance = 0.05; // 5mm를 Three.js 단위로 변환
+    const isAtLeftEdge = Math.abs(columnLeftX - slotStartX) < edgeTolerance;
+    const isAtRightEdge = Math.abs(columnRightX - slotEndX) < edgeTolerance;
     
     // 기둥과 슬롯 경계 간의 실제 거리 계산
     const leftGap = (columnLeftX - slotStartX) * 100; // mm 단위로 변환
@@ -472,14 +472,16 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         slotWidthMm
       });
       
-      // 기둥이 슬롯을 완전히 차지하는 경우
-      if (columnWidthMm >= slotWidthMm - margin) {
-        console.log('🏛️ 기둥이 슬롯을 완전히 차지함');
+      // 기둥이 슬롯을 거의 다 차지하는 경우에도 최소 너비 보장
+      // 도어는 여전히 원래 크기로 렌더링되어야 하므로
+      if (columnWidthMm >= slotWidthMm - margin - 50) { // 50mm 여유 두기
+        const minWidth = Math.min(100, Math.max(0, slotWidthMm - columnWidthMm));
+        console.log('🏛️ 단내림 - 기둥이 슬롯을 거의 차지함 - 최소 너비 사용:', minWidth);
         return {
-          availableWidth: 0,
+          availableWidth: minWidth || 50, // 최소 50mm는 남겨둬
           intrusionDirection: 'center' as const,
           furniturePosition: 'center' as const,
-          adjustedWidth: 0
+          adjustedWidth: minWidth || 50
         };
       }
       
