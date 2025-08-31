@@ -2753,6 +2753,9 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
+            // hasDroppedCeiling 변수 정의
+            const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+            
             // 단내림 없고 기둥만 있는 경우
             if (!hasDroppedCeiling && hasDeepColumns) {
               const frameSegments: Array<{
