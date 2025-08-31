@@ -1775,25 +1775,23 @@ const Room: React.FC<RoomProps> = ({
                 }
               }
               
+              // 각 영역의 고정된 위치와 너비 계산 (기둥 위치와 무관하게)
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              
+              // 고정된 너비 사용 (bounds에서 직접 가져옴)
+              const droppedAreaWidth = mmToThreeUnits(droppedBounds.width);
+              const normalAreaWidth = mmToThreeUnits(normalBounds.width);
+              
               if (isLeftDropped) {
                 // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
-                // ColumnIndexer 로직과 동일하게 수정
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH));
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
               } else {
                 // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
-                // ColumnIndexer 로직과 동일하게 수정
-                const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH));
-                const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
               }
-              
-              // 각 영역의 고정된 위치 계산 (기둥 위치와 무관하게)
-              const normalBounds = getNormalZoneBounds(spaceInfo);
-              const droppedBounds = getDroppedZoneBounds(spaceInfo);
               
               // Three.js 단위로 변환된 시작점
               const normalStartX = mmToThreeUnits(normalBounds.startX);
@@ -1813,7 +1811,6 @@ const Room: React.FC<RoomProps> = ({
                 단내림구간프레임너비_mm: droppedFrameWidth / 0.01,
                 단내림위치: isLeftDropped ? '왼쪽' : '오른쪽',
                 위치정보: {
-                  internalStartX_mm: internalStartX / 0.01,
                   normalStartX_mm: normalStartX / 0.01,
                   droppedStartX_mm: droppedStartX / 0.01,
                   경계점_mm: (isLeftDropped ? normalStartX : droppedStartX) / 0.01
