@@ -1,8 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ThreeEvent, useThree } from '@react-three/fiber';
-import { useFrame } from '@react-three/fiber';
+import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -305,15 +303,20 @@ const PanelBAsset: React.FC<PanelBAssetProps> = ({
                 for (let i = 0; i < 3; i++) {
                   const xPos = -widthM/2 + (i + 1) * widthM / 4;
                   lines.push(
-                    <Line
-                      key={`front-line-${i}`}
-                      points={[
-                        [xPos, -heightM/2, depthM/2 + 0.001],
-                        [xPos, heightM/2, depthM/2 + 0.001]
-                      ]}
-                      color={color}
-                      lineWidth={0.5}
-                    />
+                    <line key={`front-line-${i}`}>
+                      <bufferGeometry>
+                        <bufferAttribute
+                          attach="attributes-position"
+                          count={2}
+                          array={new Float32Array([
+                            xPos, -heightM/2, depthM/2 + 0.001,
+                            xPos, heightM/2, depthM/2 + 0.001
+                          ])}
+                          itemSize={3}
+                        />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} />
+                    </line>
                   );
                 }
                 break;
@@ -323,15 +326,20 @@ const PanelBAsset: React.FC<PanelBAssetProps> = ({
                 for (let i = 0; i < 3; i++) {
                   const xPos = -widthM/2 + (i + 1) * widthM / 4;
                   lines.push(
-                    <Line
-                      key={`top-line-${i}`}
-                      points={[
-                        [xPos, heightM/2 + 0.001, -depthM/2],
-                        [xPos, heightM/2 + 0.001, depthM/2]
-                      ]}
-                      color={color}
-                      lineWidth={0.5}
-                    />
+                    <line key={`top-line-${i}`}>
+                      <bufferGeometry>
+                        <bufferAttribute
+                          attach="attributes-position"
+                          count={2}
+                          array={new Float32Array([
+                            xPos, heightM/2 + 0.001, -depthM/2,
+                            xPos, heightM/2 + 0.001, depthM/2
+                          ])}
+                          itemSize={3}
+                        />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} />
+                    </line>
                   );
                 }
                 break;
@@ -342,15 +350,20 @@ const PanelBAsset: React.FC<PanelBAssetProps> = ({
                 for (let i = 0; i < 3; i++) {
                   const zPos = -depthM/2 + (i + 1) * depthM / 4;
                   lines.push(
-                    <Line
-                      key={`side-line-${i}`}
-                      points={[
-                        [widthM/2 + 0.001, -heightM/2, zPos],
-                        [widthM/2 + 0.001, heightM/2, zPos]
-                      ]}
-                      color={color}
-                      lineWidth={0.5}
-                    />
+                    <line key={`side-line-${i}`}>
+                      <bufferGeometry>
+                        <bufferAttribute
+                          attach="attributes-position"
+                          count={2}
+                          array={new Float32Array([
+                            widthM/2 + 0.001, -heightM/2, zPos,
+                            widthM/2 + 0.001, heightM/2, zPos
+                          ])}
+                          itemSize={3}
+                        />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} />
+                    </line>
                   );
                 }
                 break;
