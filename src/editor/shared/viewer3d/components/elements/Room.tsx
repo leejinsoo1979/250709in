@@ -1970,6 +1970,24 @@ const Room: React.FC<RoomProps> = ({
             // 단내림이 있을 때 세그먼트를 구간별로 분리
             let finalSegments = frameSegments;
             if (hasDroppedCeiling) {
+              console.log('🔥 프레임 세그먼트 분리 전:', {
+                frameSegments: frameSegments.map(s => ({
+                  x: s.x / 0.01,
+                  width: s.width / 0.01,
+                  left: (s.x - s.width/2) / 0.01,
+                  right: (s.x + s.width/2) / 0.01
+                })),
+                normalBounds: {
+                  start: normalSegmentStartX / 0.01,
+                  end: normalSegmentEndX / 0.01
+                },
+                droppedBounds: {
+                  start: droppedSegmentStartX / 0.01,
+                  end: droppedSegmentEndX / 0.01
+                },
+                boundary: (isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX) / 0.01
+              });
+              
               finalSegments = [];
               frameSegments.forEach(segment => {
                 const segmentLeftX = segment.x - segment.width / 2;
@@ -2035,6 +2053,16 @@ const Room: React.FC<RoomProps> = ({
                     }
                   }
                 }
+              });
+              
+              console.log('🔥 프레임 세그먼트 분리 후:', {
+                finalSegments: finalSegments.map(s => ({
+                  x: s.x / 0.01,
+                  width: s.width / 0.01,
+                  left: (s.x - s.width/2) / 0.01,
+                  right: (s.x + s.width/2) / 0.01,
+                  zone: s.zone
+                }))
               });
             }
             
