@@ -249,7 +249,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
-    event.nativeEvent.preventDefault();
+    // passive 이벤트 리스너 경고 방지 - preventDefault 제거
     
     // console.log('🎯 기둥 포인터 다운:', id);
     

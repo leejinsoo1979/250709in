@@ -49,15 +49,13 @@ const ColumnAssetWrapper: React.FC<ColumnAssetWrapperProps> = (props) => {
     setZoneCrossInfo(null);
   };
 
-  return (
-    <>
-      <ColumnAsset
-        {...props}
-        onZoneCross={handleZoneCross}
-      />
+  // useEffect로 Portal을 Three.js 컨텍스트 외부에서 관리
+  React.useEffect(() => {
+    if (showZoneCrossPopup && zoneCrossInfo) {
+      const portalContainer = document.createElement('div');
+      document.body.appendChild(portalContainer);
       
-      {/* 팝업을 React Three Fiber 외부에 렌더링 */}
-      {showZoneCrossPopup && zoneCrossInfo && ReactDOM.createPortal(
+      ReactDOM.render(
         <ColumnZoneCrossPopup
           isOpen={showZoneCrossPopup}
           onConfirm={handleConfirm}
@@ -66,9 +64,21 @@ const ColumnAssetWrapper: React.FC<ColumnAssetWrapperProps> = (props) => {
           toZone={zoneCrossInfo.toZone}
           boundaryPosition={zoneCrossInfo.boundaryPosition}
         />,
-        document.body
-      )}
-    </>
+        portalContainer
+      );
+      
+      return () => {
+        ReactDOM.unmountComponentAtNode(portalContainer);
+        document.body.removeChild(portalContainer);
+      };
+    }
+  }, [showZoneCrossPopup, zoneCrossInfo]);
+
+  return (
+    <ColumnAsset
+      {...props}
+      onZoneCross={handleZoneCross}
+    />
   );
 };
 
