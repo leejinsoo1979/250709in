@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
 interface NativeLineProps {
-  points: THREE.Vector3[];
+  points: THREE.Vector3[] | [number, number, number][] | number[][];
   color?: string | number;
   lineWidth?: number;
   dashed?: boolean;
@@ -10,6 +10,7 @@ interface NativeLineProps {
   gapSize?: number;
   opacity?: number;
   transparent?: boolean;
+  renderOrder?: number;
 }
 
 /**
@@ -24,16 +25,24 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   dashSize = 1,
   gapSize = 1,
   opacity = 1,
-  transparent = false
+  transparent = false,
+  renderOrder = 0
 }) => {
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(points.length * 3);
     
     points.forEach((point, index) => {
-      positions[index * 3] = point.x;
-      positions[index * 3 + 1] = point.y;
-      positions[index * 3 + 2] = point.z;
+      // Handle both Vector3 objects and arrays
+      if (point instanceof THREE.Vector3) {
+        positions[index * 3] = point.x;
+        positions[index * 3 + 1] = point.y;
+        positions[index * 3 + 2] = point.z;
+      } else if (Array.isArray(point)) {
+        positions[index * 3] = point[0] || 0;
+        positions[index * 3 + 1] = point[1] || 0;
+        positions[index * 3 + 2] = point[2] || 0;
+      }
     });
     
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -46,11 +55,30 @@ export const NativeLine: React.FC<NativeLineProps> = ({
       for (let i = 1; i < points.length; i++) {
         const prevPoint = points[i - 1];
         const currPoint = points[i];
-        const distance = Math.sqrt(
-          Math.pow(currPoint.x - prevPoint.x, 2) +
-          Math.pow(currPoint.y - prevPoint.y, 2) +
-          Math.pow(currPoint.z - prevPoint.z, 2)
-        );
+        
+        let distance: number;
+        if (prevPoint instanceof THREE.Vector3 && currPoint instanceof THREE.Vector3) {
+          distance = Math.sqrt(
+            Math.pow(currPoint.x - prevPoint.x, 2) +
+            Math.pow(currPoint.y - prevPoint.y, 2) +
+            Math.pow(currPoint.z - prevPoint.z, 2)
+          );
+        } else if (Array.isArray(prevPoint) && Array.isArray(currPoint)) {
+          const px = prevPoint[0] || 0;
+          const py = prevPoint[1] || 0;
+          const pz = prevPoint[2] || 0;
+          const cx = currPoint[0] || 0;
+          const cy = currPoint[1] || 0;
+          const cz = currPoint[2] || 0;
+          distance = Math.sqrt(
+            Math.pow(cx - px, 2) +
+            Math.pow(cy - py, 2) +
+            Math.pow(cz - pz, 2)
+          );
+        } else {
+          distance = 0;
+        }
+        
         lineDistances[i] = lineDistances[i - 1] + distance;
       }
       
@@ -83,7 +111,7 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   }, [color, dashed, dashSize, gapSize, opacity, transparent]);
   
   return (
-    <line geometry={geometry}>
+    <line geometry={geometry} renderOrder={renderOrder}>
       {material}
     </line>
   );
