@@ -4,7 +4,8 @@ import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
-import { Html, Text, Line } from '@react-three/drei';
+import { Html, Text } from '@react-three/drei';
+import NativeLine from '../../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 
