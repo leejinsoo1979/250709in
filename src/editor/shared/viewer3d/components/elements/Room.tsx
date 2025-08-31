@@ -244,6 +244,14 @@ const Room: React.FC<RoomProps> = ({
     const topBottomFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
     const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
     
+    // 하부프레임 높이 체크
+    console.log('🔴🔴🔴 baseFrameHeightMm 계산 결과:', {
+      baseFrameHeightMm,
+      'spaceInfo.baseConfig': spaceInfo.baseConfig,
+      '단내림': spaceInfo.droppedCeiling?.enabled,
+      '기둥 개수': spaceInfo.columns?.length || 0
+    });
+    
     // 노서라운드 프레임 디버그
     console.log('🔍 Room - 프레임 계산 결과:', {
       surroundType: spaceInfo.surroundType,
@@ -2672,14 +2680,26 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부프레임은 baseFrameHeightMm이 0보다 크면 무조건 렌더링 */}
-      {showFrame && baseFrameHeightMm > 0 && (() => {
-        console.log('🎯 하부프레임 렌더링:', {
+      {(() => {
+        // 하부프레임을 무조건 렌더링 (디버깅용)
+        const forceRender = true;
+        const shouldRenderBaseFrame = forceRender || (showFrame && baseFrameHeightMm > 0);
+        
+        console.log('🚨🚨🚨 하부프레임 강제 렌더링:', {
+          forceRender,
           showFrame,
           baseFrameHeightMm,
-          'baseConfig.type': spaceInfo.baseConfig?.type,
-          '단내림 여부': spaceInfo.droppedCeiling?.enabled,
-          '설명': '하부프레임은 단내림과 무관하게 항상 렌더링'
+          'shouldRenderBaseFrame': shouldRenderBaseFrame,
+          '단내림': spaceInfo.droppedCeiling?.enabled,
+          '기둥 개수': spaceInfo.columns?.length || 0
         });
+        
+        // 높이가 0이면 기본값 65 사용
+        const actualBaseFrameHeight = baseFrameHeightMm > 0 ? baseFrameHeight : mmToThreeUnits(65);
+        
+        if (!shouldRenderBaseFrame) {
+          return null;
+        }
         
         return (
         <>
@@ -2706,16 +2726,22 @@ const Room: React.FC<RoomProps> = ({
             
             if (columns.length === 0 || !hasDeepColumns) {
               // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
+              console.log('✅✅✅ 하부프레임 실제 렌더링 중!', {
+                frameWidth,
+                actualBaseFrameHeight,
+                panelStartY,
+                '위치Y': panelStartY + actualBaseFrameHeight/2
+              });
               return (
                 <BoxWithEdges
                   args={[
                     frameWidth, 
-                    baseFrameHeight, 
+                    actualBaseFrameHeight, 
                     mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                   ]}
                   position={[
                     frameX, // 조정된 X 위치
-                    panelStartY + baseFrameHeight/2, 
+                    panelStartY + actualBaseFrameHeight/2, 
                     // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
@@ -2783,12 +2809,12 @@ const Room: React.FC<RoomProps> = ({
                   <BoxWithEdges
                     args={[
                       finalPanelWidth, 
-                      baseFrameHeight, 
+                      actualBaseFrameHeight, 
                       mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                     ]}
                     position={[
                       topBottomPanelX, // 중앙 정렬
-                      panelStartY + baseFrameHeight/2, 
+                      panelStartY + actualBaseFrameHeight/2, 
                       // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
@@ -2819,12 +2845,12 @@ const Room: React.FC<RoomProps> = ({
                     key={`base-frame-segment-${index}`}
                     args={[
                       segment.width,
-                      baseFrameHeight, 
+                      actualBaseFrameHeight, 
                       mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                     ]}
                     position={[
                       segment.x, // 분절된 위치
-                      panelStartY + baseFrameHeight/2, 
+                      panelStartY + actualBaseFrameHeight/2, 
                       // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}

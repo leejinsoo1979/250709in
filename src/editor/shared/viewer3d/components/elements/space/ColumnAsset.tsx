@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -10,7 +9,6 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
 import { TextureGenerator } from '../../../utils/materials/TextureGenerator';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
-import ColumnZoneCrossPopup from '@/editor/shared/components/ColumnZoneCrossPopup';
 
 
 interface ColumnAssetProps {
@@ -25,6 +23,12 @@ interface ColumnAssetProps {
   onRemove?: (id: string) => void;
   spaceInfo?: any;
   hasBackPanelFinish?: boolean;
+  onZoneCross?: (info: {
+    fromZone: 'normal' | 'dropped';
+    toZone: 'normal' | 'dropped';
+    boundaryPosition: 'left' | 'right';
+    targetPosition: [number, number, number];
+  }) => void;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -38,7 +42,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   onPositionChange,
   onRemove,
   spaceInfo,
-  hasBackPanelFinish = false
+  hasBackPanelFinish = false,
+  onZoneCross
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,15 +62,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const tempPositionRef = useRef<[number, number, number]>(position);
   const lastUpdateTimeRef = useRef<number>(0);
   
-  // 구역 교차 팝업 상태
-  const [showZoneCrossPopup, setShowZoneCrossPopup] = useState(false);
-  const [zoneCrossInfo, setZoneCrossInfo] = useState<{
-    fromZone: 'normal' | 'dropped';
-    toZone: 'normal' | 'dropped';
-    boundaryPosition: 'left' | 'right';
-    targetX: number;
-  } | null>(null);
-  const pendingPositionRef = useRef<[number, number, number] | null>(null);
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
@@ -390,15 +386,15 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           
           const targetX = getZoneBoundaryX(newZone, boundaryPosition);
           
-          // 팝업 정보 설정 및 대기 위치 저장
-          setZoneCrossInfo({
-            fromZone: currentZone,
-            toZone: newZone,
-            boundaryPosition,
-            targetX
-          });
-          pendingPositionRef.current = [targetX, position[1], position[2]];
-          setShowZoneCrossPopup(true);
+          // onZoneCross 콜백 호출
+          if (onZoneCross) {
+            onZoneCross({
+              fromZone: currentZone,
+              toZone: newZone,
+              boundaryPosition,
+              targetPosition: [targetX, position[1], position[2]]
+            });
+          }
           
           // 드래그 중단
           handleGlobalPointerUp();
@@ -467,22 +463,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     }
   };
 
-  // 팝업 확인 핸들러
-  const handleZoneCrossConfirm = () => {
-    if (pendingPositionRef.current && onPositionChange) {
-      onPositionChange(id, pendingPositionRef.current);
-    }
-    setShowZoneCrossPopup(false);
-    setZoneCrossInfo(null);
-    pendingPositionRef.current = null;
-  };
-  
-  // 팝업 취소 핸들러
-  const handleZoneCrossCancel = () => {
-    setShowZoneCrossPopup(false);
-    setZoneCrossInfo(null);
-    pendingPositionRef.current = null;
-  };
 
   // 드래그 중일 때는 프레임마다 업데이트하지 않음 (성능 최적화)
   // React Three Fiber가 자동으로 처리하도록 함
@@ -722,18 +702,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       )}
     </group>
       
-      {/* 구역 교차 확인 팝업 */}
-      {showZoneCrossPopup && zoneCrossInfo && ReactDOM.createPortal(
-        <ColumnZoneCrossPopup
-          isOpen={showZoneCrossPopup}
-          onConfirm={handleZoneCrossConfirm}
-          onCancel={handleZoneCrossCancel}
-          fromZone={zoneCrossInfo.fromZone}
-          toZone={zoneCrossInfo.toZone}
-          boundaryPosition={zoneCrossInfo.boundaryPosition}
-        />,
-        document.body
-      )}
     </>
   );
 };

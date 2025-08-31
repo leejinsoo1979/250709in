@@ -4,7 +4,7 @@ import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
-import ColumnAsset from './components/elements/space/ColumnAsset';
+import ColumnAssetWrapper from './components/elements/space/ColumnAssetWrapper';
 import WallAsset from './components/elements/space/WallAsset';
 import ColumnDistanceLabels from './components/elements/space/ColumnDistanceLabels';
 import ColumnGhostPreview from './components/elements/space/ColumnGhostPreview';
@@ -1086,7 +1086,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               
               return (
                 <React.Fragment key={column.id}>
-                  <ColumnAsset
+                  <ColumnAssetWrapperWrapper
                     id={column.id}
                     position={column.position}
                     width={column.width} // mm 단위 그대로 전달
@@ -1339,7 +1339,7 @@ const QuadrantContent: React.FC<{
       {/* 기둥 에셋 렌더링 */}
       {(spaceInfo?.columns || []).map((column) => (
         <React.Fragment key={column.id}>
-          <ColumnAsset
+          <ColumnAssetWrapper
             id={column.id}
             position={column.position}
             width={column.width}
