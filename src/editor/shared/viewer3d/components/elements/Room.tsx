@@ -1830,9 +1830,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     position={[
                       droppedX,
-                      // 바닥 마감재가 있을 때 전체 높이에서 dropHeight를 뺀 위치
-                      // panelStartY는 바닥 마감재 높이, height는 전체 패널 높이
-                      panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2,
+                      // 단내림 구간의 상부 프레임 Y 위치
+                      // 전체 높이에서 dropHeight를 뺀 위치에 프레임 설치
+                      topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight),
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
