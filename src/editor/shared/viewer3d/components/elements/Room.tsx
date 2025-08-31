@@ -1889,8 +1889,9 @@ const Room: React.FC<RoomProps> = ({
               } else {
                 // 노서라운드: 이격거리 또는 엔드패널
                 if (spaceInfo.installType === 'builtin') {
-                  leftReduction = 2;
-                  rightReduction = 2;
+                  // calculateNoSurroundOffset 함수 사용하여 정확한 이격거리 계산
+                  leftReduction = calculateNoSurroundOffset(spaceInfo, 'left');
+                  rightReduction = calculateNoSurroundOffset(spaceInfo, 'right');
                 } else if (spaceInfo.installType === 'semistanding') {
                   // 세미스탠딩: 한쪽 벽만 있음
                   // 벽이 있는 쪽은 이격거리 무시(0), 없는 쪽은 엔드패널
@@ -2693,43 +2694,63 @@ const Room: React.FC<RoomProps> = ({
               // 단내림이 있는 경우: 전체 공간 너비 사용
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
               
-              // 단내림 위치에 따라 전체 범위 계산
-              let totalStartX, totalEndX;
-              if (spaceInfo.droppedCeiling.position === 'left') {
-                // 왼쪽 단내림: dropped가 앞, normal이 뒤
-                totalStartX = zoneInfo.dropped.startX;
-                totalEndX = zoneInfo.normal.startX + zoneInfo.normal.width;
+              // zoneInfo가 제대로 반환되었는지 확인
+              if (zoneInfo && zoneInfo.normal && zoneInfo.dropped) {
+                // 단내림 위치에 따라 전체 범위 계산
+                let totalStartX, totalEndX;
+                if (spaceInfo.droppedCeiling.position === 'left') {
+                  // 왼쪽 단내림: dropped가 앞, normal이 뒤
+                  totalStartX = zoneInfo.dropped.startX;
+                  totalEndX = zoneInfo.normal.startX + zoneInfo.normal.width;
+                } else {
+                  // 오른쪽 단내림: normal이 앞, dropped가 뒤
+                  totalStartX = zoneInfo.normal.startX;
+                  totalEndX = zoneInfo.dropped.startX + zoneInfo.dropped.width;
+                }
+                
+                const frameStartX = mmToThreeUnits(totalStartX);
+                const frameEndX = mmToThreeUnits(totalEndX);
+                
+                frameWidth = frameEndX - frameStartX;
+                frameX = (frameStartX + frameEndX) / 2;
               } else {
-                // 오른쪽 단내림: normal이 앞, dropped가 뒤
-                totalStartX = zoneInfo.normal.startX;
-                totalEndX = zoneInfo.dropped.startX + zoneInfo.dropped.width;
+                // 단내림이 있지만 zoneInfo가 불완전한 경우 - baseFrame.width 사용
+                frameWidth = baseFrame.width;
+                frameX = 0;
+                console.warn('⚠️ 단내림 모드에서 zoneInfo가 불완전함, 기본값 사용');
               }
-              
-              const frameStartX = mmToThreeUnits(totalStartX);
-              const frameEndX = mmToThreeUnits(totalEndX);
-              
-              frameWidth = frameEndX - frameStartX;
-              frameX = (frameStartX + frameEndX) / 2;
             } else {
               // 단내림이 없는 경우: 기존 로직
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              const normalZone = zoneInfo.normal;
               
-              const frameStartX = mmToThreeUnits(normalZone.startX);
-              const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
-              
-              frameWidth = frameEndX - frameStartX;
-              frameX = (frameStartX + frameEndX) / 2;
+              if (zoneInfo && zoneInfo.normal) {
+                const normalZone = zoneInfo.normal;
+                
+                const frameStartX = mmToThreeUnits(normalZone.startX);
+                const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+                
+                frameWidth = frameEndX - frameStartX;
+                frameX = (frameStartX + frameEndX) / 2;
+              } else {
+                // zoneInfo가 없는 경우 기본값 사용
+                frameWidth = baseFrame.width;
+                frameX = 0;
+                console.warn('⚠️ zoneInfo가 없음, 기본값 사용');
+              }
             }
             
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
             
-            // console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
-            //   columnsCount: columns.length,
-            //   hasDeepColumns,
-            //   columnDepths: columns.map(c => c.depth)
-            // });
+            console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
+              columnsCount: columns.length,
+              hasDeepColumns,
+              columnDepths: columns.map(c => c.depth),
+              hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+              frameWidth,
+              frameX,
+              surroundType: spaceInfo.surroundType
+            });
             
             if (columns.length === 0 || !hasDeepColumns) {
               // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
@@ -2759,114 +2780,114 @@ const Room: React.FC<RoomProps> = ({
             // 단내림 없고 기둥만 있는 경우
             if (!hasDroppedCeiling && hasDeepColumns) {
               const frameSegments: Array<{
-              width: number;
-              x: number;
-              zone?: 'normal' | 'dropped';
-            }> = [];
-            
-            // 전체 프레임 범위 계산 - frameStartX와 frameEndX를 재계산
-            const frameStartXCalc = frameX - frameWidth / 2;
-            const frameEndXCalc = frameX + frameWidth / 2;
-            
-            // 기둥들을 X 위치 기준으로 정렬
-            const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
-            
-            let currentX = frameStartXCalc;
-            
-            // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
-            sortedColumns.forEach((column, index) => {
-              const columnWidthM = column.width * 0.01; // mm to Three.js units
-              const columnLeftX = column.position[0] - columnWidthM / 2;
-              const columnRightX = column.position[0] + columnWidthM / 2;
+                width: number;
+                x: number;
+                zone?: 'normal' | 'dropped';
+              }> = [];
               
-              // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
-              if (columnLeftX < frameEndXCalc && columnRightX > frameStartXCalc && column.depth >= 730) {
-                // 기둥 왼쪽 프레임 세그먼트
-                const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
-                if (leftSegmentWidth > 0) {
-                  frameSegments.push({
-                    width: leftSegmentWidth,
-                    x: currentX + leftSegmentWidth / 2
-                  });
-                }
+              // 전체 프레임 범위 계산 - frameStartX와 frameEndX를 재계산
+              const frameStartXCalc = frameX - frameWidth / 2;
+              const frameEndXCalc = frameX + frameWidth / 2;
+              
+              // 기둥들을 X 위치 기준으로 정렬
+              const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
+              
+              let currentX = frameStartXCalc;
+              
+              // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
+              sortedColumns.forEach((column, index) => {
+                const columnWidthM = column.width * 0.01; // mm to Three.js units
+                const columnLeftX = column.position[0] - columnWidthM / 2;
+                const columnRightX = column.position[0] + columnWidthM / 2;
                 
-                // 다음 세그먼트 시작점을 기둥 오른쪽으로 설정
-                currentX = columnRightX;
-              }
-            });
-            
-            // 마지막 세그먼트 (마지막 기둥 오른쪽)
-            const lastSegmentWidth = Math.max(0, frameEndXCalc - currentX);
-            if (lastSegmentWidth > 0) {
-              frameSegments.push({
-                width: lastSegmentWidth,
-                x: currentX + lastSegmentWidth / 2
+                // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
+                if (columnLeftX < frameEndXCalc && columnRightX > frameStartXCalc && column.depth >= 730) {
+                  // 기둥 왼쪽 프레임 세그먼트
+                  const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                  if (leftSegmentWidth > 0) {
+                    frameSegments.push({
+                      width: leftSegmentWidth,
+                      x: currentX + leftSegmentWidth / 2
+                    });
+                  }
+                  
+                  // 다음 세그먼트 시작점을 기둥 오른쪽으로 설정
+                  currentX = columnRightX;
+                }
               });
-            }
-            
-            // 분절된 프레임들 렌더링 (분절이 없으면 기본 프레임 렌더링)
-            if (frameSegments.length === 0) {
-              return (
-                <BoxWithEdges
-                  args={[
-                    finalPanelWidth, 
-                    baseFrameHeight, 
-                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
-                  ]}
-                  position={[
-                    topBottomPanelX, // 중앙 정렬
-                    panelStartY + baseFrameHeight/2, 
-                    // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
-                  ]}
-                  material={baseFrameMaterial ?? createFrameMaterial('base')}
-                  renderMode={renderMode}
-                />
-              );
-            }
-            
-              return frameSegments.map((segment, index) => {
-              if (!baseFrameMaterial) {
-                console.warn(`⚠️ Base frame segment ${index} - material not ready, using default`);
-              } else {
-                console.log(`🎨 Base frame segment ${index} material:`, {
-                  hasBaseFrameMaterial: !!baseFrameMaterial,
-                  materialType: baseFrameMaterial?.type,
-                  materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'unknown',
-                  materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
-                  doorColor: materialConfig?.doorColor,
-                  doorTexture: materialConfig?.doorTexture,
-                  segmentWidth: segment.width
+              
+              // 마지막 세그먼트 (마지막 기둥 오른쪽)
+              const lastSegmentWidth = Math.max(0, frameEndXCalc - currentX);
+              if (lastSegmentWidth > 0) {
+                frameSegments.push({
+                  width: lastSegmentWidth,
+                  x: currentX + lastSegmentWidth / 2
                 });
               }
               
-              return (
-                <BoxWithEdges
-                  key={`base-frame-segment-${index}`}
-                  args={[
-                    segment.width,
-                    baseFrameHeight, 
-                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
-                  ]}
-                  position={[
-                    segment.x, // 분절된 위치
-                    panelStartY + baseFrameHeight/2, 
-                    // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
-                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
-                  ]}
-                  material={baseFrameMaterial ?? createFrameMaterial('base')}
-                  renderMode={renderMode}
-                />
-              );
-            });
+              // 분절된 프레임들 렌더링 (분절이 없으면 기본 프레임 렌더링)
+              if (frameSegments.length === 0) {
+                return (
+                  <BoxWithEdges
+                    args={[
+                      finalPanelWidth, 
+                      baseFrameHeight, 
+                      mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
+                    ]}
+                    position={[
+                      topBottomPanelX, // 중앙 정렬
+                      panelStartY + baseFrameHeight/2, 
+                      // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                    ]}
+                    material={baseFrameMaterial ?? createFrameMaterial('base')}
+                    renderMode={renderMode}
+                  />
+                );
+              }
+              
+              return frameSegments.map((segment, index) => {
+                if (!baseFrameMaterial) {
+                  console.warn(`⚠️ Base frame segment ${index} - material not ready, using default`);
+                } else {
+                  console.log(`🎨 Base frame segment ${index} material:`, {
+                    hasBaseFrameMaterial: !!baseFrameMaterial,
+                    materialType: baseFrameMaterial?.type,
+                    materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'unknown',
+                    materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
+                    doorColor: materialConfig?.doorColor,
+                    doorTexture: materialConfig?.doorTexture,
+                    segmentWidth: segment.width
+                  });
+                }
+                
+                return (
+                  <BoxWithEdges
+                    key={`base-frame-segment-${index}`}
+                    args={[
+                      segment.width,
+                      baseFrameHeight, 
+                      mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
+                    ]}
+                    position={[
+                      segment.x, // 분절된 위치
+                      panelStartY + baseFrameHeight/2, 
+                      // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                    ]}
+                    material={baseFrameMaterial ?? createFrameMaterial('base')}
+                    renderMode={renderMode}
+                  />
+                );
+              });
             }
             
             // 어떤 조건에도 해당하지 않으면 빈 배열 반환
             return null;
           })()}
         </>
-      )
+        );
       })()}
       
       {/* 하단 서브프레임 제거됨 */}
