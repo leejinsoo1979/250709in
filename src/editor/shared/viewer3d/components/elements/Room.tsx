@@ -1864,16 +1864,27 @@ const Room: React.FC<RoomProps> = ({
             const frameSegments: Array<{
               width: number;
               x: number;
+              zone?: 'normal' | 'dropped';
             }> = [];
             
-            // 전체 프레임 범위 계산 - 고정된 bounds 사용
+            // 프레임 범위 계산
             let segmentFrameStartX, segmentFrameEndX;
+            let normalSegmentStartX, normalSegmentEndX;
+            let droppedSegmentStartX, droppedSegmentEndX;
+            
             if (hasDroppedCeiling) {
-              // 단내림이 있으면 전체 공간의 고정된 범위 사용
+              // 단내림이 있으면 각 구간의 고정된 범위 사용
               const normalBounds = getNormalZoneBounds(spaceInfo);
               const droppedBounds = getDroppedZoneBounds(spaceInfo);
-              segmentFrameStartX = mmToThreeUnits(Math.min(normalBounds.startX, droppedBounds.startX));
-              segmentFrameEndX = mmToThreeUnits(Math.max(normalBounds.endX, droppedBounds.endX));
+              
+              normalSegmentStartX = mmToThreeUnits(normalBounds.startX);
+              normalSegmentEndX = mmToThreeUnits(normalBounds.endX);
+              droppedSegmentStartX = mmToThreeUnits(droppedBounds.startX);
+              droppedSegmentEndX = mmToThreeUnits(droppedBounds.endX);
+              
+              // 전체 범위 (분절 계산용)
+              segmentFrameStartX = Math.min(normalSegmentStartX, droppedSegmentStartX);
+              segmentFrameEndX = Math.max(normalSegmentEndX, droppedSegmentEndX);
             } else {
               // 단내림이 없으면 기존 로직 사용
               segmentFrameStartX = frameX - frameWidth / 2;
@@ -1938,7 +1949,78 @@ const Room: React.FC<RoomProps> = ({
               );
             }
             
-            return frameSegments.map((segment, index) => {
+            // 단내림이 있을 때 세그먼트를 구간별로 분리
+            let finalSegments = frameSegments;
+            if (hasDroppedCeiling) {
+              finalSegments = [];
+              frameSegments.forEach(segment => {
+                const segmentLeftX = segment.x - segment.width / 2;
+                const segmentRightX = segment.x + segment.width / 2;
+                
+                // 일반 구간과 단내림 구간의 경계
+                const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                
+                if (isLeftDropped) {
+                  // 왼쪽 단내림
+                  if (segmentRightX <= boundary) {
+                    // 완전히 단내림 구간에 있음
+                    finalSegments.push({...segment, zone: 'dropped'});
+                  } else if (segmentLeftX >= boundary) {
+                    // 완전히 일반 구간에 있음
+                    finalSegments.push({...segment, zone: 'normal'});
+                  } else {
+                    // 경계에 걸쳐있음 - 두 개로 분리
+                    const droppedWidth = boundary - segmentLeftX;
+                    const normalWidth = segmentRightX - boundary;
+                    
+                    if (droppedWidth > 0) {
+                      finalSegments.push({
+                        width: droppedWidth,
+                        x: segmentLeftX + droppedWidth / 2,
+                        zone: 'dropped'
+                      });
+                    }
+                    if (normalWidth > 0) {
+                      finalSegments.push({
+                        width: normalWidth,
+                        x: boundary + normalWidth / 2,
+                        zone: 'normal'
+                      });
+                    }
+                  }
+                } else {
+                  // 오른쪽 단내림
+                  if (segmentRightX <= boundary) {
+                    // 완전히 일반 구간에 있음
+                    finalSegments.push({...segment, zone: 'normal'});
+                  } else if (segmentLeftX >= boundary) {
+                    // 완전히 단내림 구간에 있음
+                    finalSegments.push({...segment, zone: 'dropped'});
+                  } else {
+                    // 경계에 걸쳐있음 - 두 개로 분리
+                    const normalWidth = boundary - segmentLeftX;
+                    const droppedWidth = segmentRightX - boundary;
+                    
+                    if (normalWidth > 0) {
+                      finalSegments.push({
+                        width: normalWidth,
+                        x: segmentLeftX + normalWidth / 2,
+                        zone: 'normal'
+                      });
+                    }
+                    if (droppedWidth > 0) {
+                      finalSegments.push({
+                        width: droppedWidth,
+                        x: boundary + droppedWidth / 2,
+                        zone: 'dropped'
+                      });
+                    }
+                  }
+                }
+              });
+            }
+            
+            return finalSegments.map((segment, index) => {
               if (!topFrameMaterial) {
                 console.warn(`⚠️ Top frame segment ${index} - material not ready, using default`);
               } else {
@@ -1951,25 +2033,15 @@ const Room: React.FC<RoomProps> = ({
                 });
               }
               
-              // 단내림이 있는 경우, 세그먼트가 단내림 구간에 있는지 확인
+              // 단내림이 있는 경우, 세그먼트의 zone에 따라 높이 조정
               let segmentY = topElementsY;
-              if (hasDroppedCeiling && spaceInfo.droppedCeiling) {
-                const segmentCenterX = segment.x;
-                // 고정된 bounds 사용
-                const droppedBounds = getDroppedZoneBounds(spaceInfo);
-                const droppedBoundaryX = isLeftDropped 
-                  ? mmToThreeUnits(droppedBounds.endX)
-                  : mmToThreeUnits(droppedBounds.startX);
-                
-                // 세그먼트 중심이 단내림 구간에 있는지 확인
-                const isInDroppedZone = isLeftDropped 
-                  ? segmentCenterX < droppedBoundaryX
-                  : segmentCenterX > droppedBoundaryX;
-                
-                if (isInDroppedZone) {
+              
+              if (hasDroppedCeiling && spaceInfo.droppedCeiling && segment.zone) {
+                if (segment.zone === 'dropped') {
                   // 단내림 구간의 프레임은 낮은 위치에
                   segmentY = topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight);
                 }
+                // normal zone은 기본 높이 유지
               }
               
               return (
@@ -2035,6 +2107,7 @@ const Room: React.FC<RoomProps> = ({
             const frameSegments: Array<{
               width: number;
               x: number;
+              zone?: 'normal' | 'dropped';
             }> = [];
             
             // 전체 프레임 범위 계산
@@ -2506,6 +2579,7 @@ const Room: React.FC<RoomProps> = ({
             const frameSegments: Array<{
               width: number;
               x: number;
+              zone?: 'normal' | 'dropped';
             }> = [];
             
             // 전체 프레임 범위 계산 - frameStartX와 frameEndX를 재계산

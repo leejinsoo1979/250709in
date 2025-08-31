@@ -83,8 +83,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
           width: defaultWidth,
           dropHeight: droppedCeiling?.dropHeight || 200
         },
-        // 단내림 구간의 도어 개수를 1개로 초기 설정 (최소값)
-        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount || 1
+        // 단내림 구간의 도어 개수를 기본값으로 설정
+        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount || defaultDoorCount
       });
     }
   };
