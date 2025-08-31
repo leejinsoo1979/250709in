@@ -661,7 +661,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               onPointerLeave={() => setIsHovered(false)}
               onContextMenu={handleContextMenu}
               userData={{ isColumn: true, columnId: id }}
-              scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
             >
               <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
             </mesh>
