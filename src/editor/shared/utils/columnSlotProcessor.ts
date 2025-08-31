@@ -166,7 +166,15 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   
     // 단내림이 있는 경우 zone별로 처리
   if (spaceInfo.droppedCeiling?.enabled) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    // calculateSpaceIndexing은 내부적으로 zones에 threeUnitPositions를 설정함
+    const fullIndexing = calculateSpaceIndexing(spaceInfo);
+    const zoneInfo = fullIndexing.zones || ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    
+    // zones가 없거나 normal zone이 없으면 기본 처리
+    if (!zoneInfo || !zoneInfo.normal) {
+      console.error('❌ Zone 정보를 가져올 수 없습니다');
+      return slotInfos;
+    }
     
     // 전체 슬롯 수 = normal zone + dropped zone
     const totalSlotCount = (zoneInfo.normal?.columnCount || 0) + (zoneInfo.dropped?.columnCount || 0);
@@ -190,12 +198,13 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       
       if (!targetZone || !targetZone.threeUnitPositions || localSlotIndex >= targetZone.columnCount) {
         // zone 정보가 없으면 기본 슬롯 정보 추가
+        const defaultWidth = targetZone?.columnWidth || indexing.columnWidth;
         slotInfos.push({
           slotIndex: globalSlotIndex,
           hasColumn: false,
           columnPosition: 'edge',
-          availableWidth: indexing.columnWidth,
-          doorWidth: targetZone.columnWidth - 3,
+          availableWidth: defaultWidth,
+          doorWidth: defaultWidth - 3,
           needsMullion: false
         });
         continue;
