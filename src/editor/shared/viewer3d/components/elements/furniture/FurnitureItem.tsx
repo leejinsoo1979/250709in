@@ -955,9 +955,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   });
   
   
-  // adjustedPosition 계산 - 마지막 슬롯의 경우 원본 슬롯 중심 사용
+  // adjustedPosition 계산 - 단내림 + 노서라운드일 때 위치 보정
   let adjustedPosition = placedModule.position;
-  if (isLastSlot && !isFurnitureDragging) {
+  
+  // 단내림 + 노서라운드일 때 올바른 슬롯 위치 계산
+  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && spaceInfo.surroundType === 'no-surround' && !isFurnitureDragging) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+    
+    // 단내림 구간에서 로컬 슬롯 인덱스 계산
+    let localSlotIndex = placedModule.slotIndex;
+    if (placedModule.zone === 'dropped' && zoneInfo.normal) {
+      localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+    }
+    
+    // threeUnitPositions 사용하여 정확한 위치 계산
+    if (targetZone.threeUnitPositions && localSlotIndex !== undefined && localSlotIndex >= 0) {
+      const correctX = isDualFurniture && localSlotIndex < targetZone.threeUnitPositions.length - 1
+        ? (targetZone.threeUnitPositions[localSlotIndex] + targetZone.threeUnitPositions[localSlotIndex + 1]) / 2
+        : targetZone.threeUnitPositions[localSlotIndex];
+      
+      adjustedPosition = {
+        ...placedModule.position,
+        x: correctX
+      };
+      
+      console.log('🌟 단내림 + 노서라운드 위치 보정:', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        slotIndex: placedModule.slotIndex,
+        localSlotIndex,
+        originalX: placedModule.position.x,
+        correctedX: correctX,
+        isDualFurniture
+      });
+    }
+  } else if (isLastSlot && !isFurnitureDragging) {
     // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
     adjustedPosition = { ...placedModule.position };
   }
@@ -1794,19 +1827,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                 const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                 
-                if (targetZone.slotCenters && placedModule.slotIndex !== undefined) {
-                  if (isDualFurniture && placedModule.slotIndex < targetZone.slotCenters.length - 1) {
+                // 단내림 구간에서 로컬 슬롯 인덱스 계산
+                let localSlotIndex = placedModule.slotIndex;
+                if (placedModule.zone === 'dropped' && zoneInfo.normal) {
+                  localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+                }
+                
+                // slotCenters가 없으면 threeUnitPositions 사용 (단내림 + 노서라운드)
+                const positions = targetZone.slotCenters || targetZone.threeUnitPositions;
+                
+                if (positions && localSlotIndex !== undefined && localSlotIndex >= 0) {
+                  if (isDualFurniture && localSlotIndex < positions.length - 1) {
                     // 듀얼 가구: 두 슬롯의 중간
-                    const slot1Center = targetZone.slotCenters[placedModule.slotIndex];
-                    const slot2Center = targetZone.slotCenters[placedModule.slotIndex + 1];
-                    // mm to Three units 변환
-                    const slot1Three = SpaceCalculator.mmToThreeUnits(slot1Center);
-                    const slot2Three = SpaceCalculator.mmToThreeUnits(slot2Center);
-                    return (slot1Three + slot2Three) / 2;
+                    const slot1 = targetZone.slotCenters 
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex])
+                      : positions[localSlotIndex];
+                    const slot2 = targetZone.slotCenters
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex + 1])
+                      : positions[localSlotIndex + 1];
+                    return (slot1 + slot2) / 2;
                   } else {
                     // 싱글 가구: 해당 슬롯의 중심
-                    const slotCenter = targetZone.slotCenters[placedModule.slotIndex];
-                    return SpaceCalculator.mmToThreeUnits(slotCenter);
+                    return targetZone.slotCenters
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex])
+                      : positions[localSlotIndex];
                   }
                 }
               }
