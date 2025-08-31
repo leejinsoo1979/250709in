@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -261,24 +259,36 @@ const WallAsset: React.FC<WallAssetProps> = ({
           {viewMode === '2D' && (
             <>
               {/* 대각선 1: 좌하단에서 우상단으로 */}
-              <Line
-                points={[
-                  [-(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],  // 좌하단 앞면
-                  [(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]     // 우상단 앞면
-                ]}
-                color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-                lineWidth={1}
-              />
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    count={2}
+                    array={new Float32Array([
+                      -(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,  // 좌하단 앞면
+                      (width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2     // 우상단 앞면
+                    ])}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
+              </line>
               
               {/* 대각선 2: 우하단에서 좌상단으로 */}
-              <Line
-                points={[
-                  [(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],   // 우하단 앞면
-                  [-(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]    // 좌상단 앞면
-                ]}
-                color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-                lineWidth={1}
-              />
+              <line>
+                <bufferGeometry>
+                  <bufferAttribute
+                    attach="attributes-position"
+                    count={2}
+                    array={new Float32Array([
+                      (width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,   // 우하단 앞면
+                      -(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2    // 좌상단 앞면
+                    ])}
+                    itemSize={3}
+                  />
+                </bufferGeometry>
+                <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
+              </line>
             </>
           )}
         </group>
