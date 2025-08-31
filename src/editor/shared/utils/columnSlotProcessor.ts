@@ -222,13 +222,16 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           const slotWidthMm = indexing.columnWidth;
           const margin = 0; // 이격거리 제거 (가구가 기둥에 딱 붙도록)
           
-          // 기둥이 슬롯을 완전히 차지하는 경우
-          if (columnWidthMm >= slotWidthMm - margin) {
+          // 기둥이 슬롯을 거의 다 차지하는 경우에도 최소 너비 보장
+          // 도어는 여전히 원래 크기로 렌더링되어야 하므로
+          if (columnWidthMm >= slotWidthMm - margin - 50) { // 50mm 여유 두기
+            const minWidth = Math.min(100, Math.max(0, slotWidthMm - columnWidthMm));
+            console.log('🏛️ 노서라운드 - 기둥이 슬롯을 거의 차지함 - 최소 너비 사용:', minWidth);
             return {
-              availableWidth: 0,
+              availableWidth: minWidth || 50, // 최소 50mm는 남겨둬
               intrusionDirection: 'center' as const,
               furniturePosition: 'center' as const,
-              adjustedWidth: 0
+              adjustedWidth: minWidth || 50
             };
           }
           
@@ -480,12 +483,14 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         };
       }
       
-      // 기둥이 실제로 슬롯 안에 침범한 경우만 처리
-      // leftGap이나 rightGap이 음수면 기둥이 슬롯 경계를 넘어선 것
-      const isIntruding = leftGap < slotWidthMm && rightGap < slotWidthMm;
+      // 기둥이 슬롯과 겹치는지 확인
+      // leftGap < 0: 기둥이 슬롯 왼쪽 경계를 넘어감
+      // rightGap < 0: 기둥이 슬롯 오른쪽 경계를 넘어감
+      // 둘 다 양수면 기둥이 슬롯 내부에 완전히 포함됨
+      const isColumnOverlapping = leftGap < slotWidthMm && rightGap < slotWidthMm;
       
-      if (!isIntruding) {
-        console.log('🏛️ 기둥이 슬롯을 침범하지 않음 - 전체 너비 사용');
+      if (!isColumnOverlapping) {
+        console.log('🏛️ 기둥이 슬롯과 겹치지 않음 - 전체 너비 사용');
         return {
           availableWidth: slotWidthMm,
           intrusionDirection: 'center' as const,
