@@ -1733,11 +1733,15 @@ const Room: React.FC<RoomProps> = ({
             // 기둥이 있는 경우 분절된 프레임들 렌더링
             // 단내림만 있고 기둥이 없는 경우 처리
             if (hasDroppedCeiling && !hasDeepColumns) {
-              const frameStartX = frameX - frameWidth / 2;
-              const frameEndX = frameX + frameWidth / 2;
+              // 고정된 bounds 사용
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              
+              const frameStartX = mmToThreeUnits(Math.min(normalBounds.startX, droppedBounds.startX));
+              const frameEndX = mmToThreeUnits(Math.max(normalBounds.endX, droppedBounds.endX));
               const droppedBoundaryX = isLeftDropped 
-                ? frameStartX + droppedWidth
-                : frameEndX - droppedWidth;
+                ? mmToThreeUnits(droppedBounds.endX)
+                : mmToThreeUnits(droppedBounds.startX);
               
               // 프레임 너비 계산 - 동적 계산
               let droppedFrameWidth, normalFrameWidth;
@@ -1774,10 +1778,6 @@ const Room: React.FC<RoomProps> = ({
                   rightReduction = END_PANEL_THICKNESS;
                 }
               }
-              
-              // 각 영역의 고정된 위치와 너비 계산 (기둥 위치와 무관하게)
-              const normalBounds = getNormalZoneBounds(spaceInfo);
-              const droppedBounds = getDroppedZoneBounds(spaceInfo);
               
               // 고정된 너비 사용 (bounds에서 직접 가져옴)
               const droppedAreaWidth = mmToThreeUnits(droppedBounds.width);
@@ -1866,9 +1866,19 @@ const Room: React.FC<RoomProps> = ({
               x: number;
             }> = [];
             
-            // 전체 프레임 범위 계산 - 변수명 중복 제거
-            const segmentFrameStartX = frameX - frameWidth / 2;
-            const segmentFrameEndX = frameX + frameWidth / 2;
+            // 전체 프레임 범위 계산 - 고정된 bounds 사용
+            let segmentFrameStartX, segmentFrameEndX;
+            if (hasDroppedCeiling) {
+              // 단내림이 있으면 전체 공간의 고정된 범위 사용
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              segmentFrameStartX = mmToThreeUnits(Math.min(normalBounds.startX, droppedBounds.startX));
+              segmentFrameEndX = mmToThreeUnits(Math.max(normalBounds.endX, droppedBounds.endX));
+            } else {
+              // 단내림이 없으면 기존 로직 사용
+              segmentFrameStartX = frameX - frameWidth / 2;
+              segmentFrameEndX = frameX + frameWidth / 2;
+            }
             
             // 기둥들을 X 위치 기준으로 정렬
             const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
@@ -1945,9 +1955,11 @@ const Room: React.FC<RoomProps> = ({
               let segmentY = topElementsY;
               if (hasDroppedCeiling && spaceInfo.droppedCeiling) {
                 const segmentCenterX = segment.x;
+                // 고정된 bounds 사용
+                const droppedBounds = getDroppedZoneBounds(spaceInfo);
                 const droppedBoundaryX = isLeftDropped 
-                  ? segmentFrameStartX + droppedWidth
-                  : segmentFrameEndX - droppedWidth;
+                  ? mmToThreeUnits(droppedBounds.endX)
+                  : mmToThreeUnits(droppedBounds.startX);
                 
                 // 세그먼트 중심이 단내림 구간에 있는지 확인
                 const isInDroppedZone = isLeftDropped 
