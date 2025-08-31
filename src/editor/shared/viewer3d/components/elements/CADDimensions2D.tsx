@@ -1,5 +1,6 @@
 import React from 'react';
-import { Line, Html } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -118,7 +119,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {/* 전체 폭 치수 (상단) */}
       <group>
         {/* 치수선 */}
-        <Line
+        <NativeLine
           points={[
             [0, dimensionOffsetY, 0.01],
             [spaceWidth, dimensionOffsetY, 0.01]
@@ -128,7 +129,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 좌측 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(0, dimensionOffsetY, 0.01),
             new THREE.Vector3(0.05, dimensionOffsetY, 0.01)
@@ -138,7 +139,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(spaceWidth, dimensionOffsetY, 0.01),
             new THREE.Vector3(spaceWidth - 0.05, dimensionOffsetY, 0.01)
@@ -175,7 +176,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </Html>
         
         {/* 좌측 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [0, floatHeight, 0.01],
             [0, dimensionOffsetY + mmToThreeUnits(20), 0.01]
@@ -186,7 +187,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [spaceWidth, floatHeight, 0.01],
             [spaceWidth, dimensionOffsetY + mmToThreeUnits(20), 0.01]
@@ -197,7 +198,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 보조 가이드 연장선 (좌측) */}
-        <Line
+        <NativeLine
           points={[
             [0, dimensionOffsetY, 0.01],
             [-mmToThreeUnits(50), dimensionOffsetY, 0.01]
@@ -207,7 +208,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 보조 가이드 연장선 (우측) */}
-        <Line
+        <NativeLine
           points={[
             [spaceWidth, dimensionOffsetY, 0.01],
             [spaceWidth + mmToThreeUnits(50), dimensionOffsetY, 0.01]
@@ -220,7 +221,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {/* 내부 공간 폭 치수 (상단 안쪽) */}
       <group>
         {/* 내부 폭 치수선 */}
-        <Line
+        <NativeLine
           points={[
             [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01],
             [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01]
@@ -230,7 +231,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 좌측 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01),
             new THREE.Vector3(mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2 + 0.05, dimensionOffsetY - mmToThreeUnits(100), 0.01)
@@ -240,7 +241,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(100), 0.01),
             new THREE.Vector3(spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2 - 0.05, dimensionOffsetY - mmToThreeUnits(100), 0.01)
@@ -277,7 +278,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </Html>
         
         {/* 좌측 내부 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
@@ -288,7 +289,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 내부 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [spaceWidth - mmToThreeUnits(spaceInfo.width - internalSpace.width) / 2, dimensionOffsetY - mmToThreeUnits(80), 0.01]
@@ -302,7 +303,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {/* 전체 높이 치수 (좌측) */}
       <group>
         {/* 치수선 */}
-        <Line
+        <NativeLine
           points={[
             [dimensionOffsetX, floatHeight, 0.01],
             [dimensionOffsetX, floatHeight + actualFrameHeight, 0.01]
@@ -312,7 +313,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 하단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(dimensionOffsetX, floatHeight, 0.01),
             new THREE.Vector3(dimensionOffsetX, floatHeight + 0.05, 0.01)
@@ -322,7 +323,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(dimensionOffsetX, floatHeight + actualFrameHeight, 0.01),
             new THREE.Vector3(dimensionOffsetX, floatHeight + actualFrameHeight - 0.05, 0.01)
@@ -360,7 +361,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </Html>
         
         {/* 하단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [0, floatHeight, 0.01],
             [dimensionOffsetX - mmToThreeUnits(20), floatHeight, 0.01]
@@ -371,7 +372,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [0, floatHeight + actualFrameHeight, 0.01],
             [dimensionOffsetX - mmToThreeUnits(20), floatHeight + actualFrameHeight, 0.01]
@@ -382,7 +383,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 좌측 보조 가이드 연장선 (하단) */}
-        <Line
+        <NativeLine
           points={[
             [dimensionOffsetX, floatHeight, 0.01],
             [dimensionOffsetX, floatHeight - mmToThreeUnits(50), 0.01]
@@ -392,7 +393,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 좌측 보조 가이드 연장선 (상단) */}
-        <Line
+        <NativeLine
           points={[
             [dimensionOffsetX, floatHeight + actualFrameHeight, 0.01],
             [dimensionOffsetX, floatHeight + actualFrameHeight + mmToThreeUnits(50), 0.01]
@@ -405,7 +406,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {/* 우측 높이 치수 */}
       <group>
         {/* 치수선 */}
-        <Line
+        <NativeLine
           points={[
             [rightDimensionOffsetX, floatHeight, 0.01],
             [rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01]
@@ -415,7 +416,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 하단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(rightDimensionOffsetX, floatHeight, 0.01),
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + 0.05, 0.01)
@@ -425,7 +426,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01),
             new THREE.Vector3(rightDimensionOffsetX, floatHeight + actualFrameHeight - 0.05, 0.01)
@@ -463,7 +464,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </Html>
         
         {/* 하단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [spaceWidth, floatHeight, 0.01],
             [rightDimensionOffsetX + mmToThreeUnits(20), floatHeight, 0.01]
@@ -474,7 +475,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [spaceWidth, floatHeight + actualFrameHeight, 0.01],
             [rightDimensionOffsetX + mmToThreeUnits(20), floatHeight + actualFrameHeight, 0.01]
@@ -485,7 +486,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 보조 가이드 연장선 (하단) */}
-        <Line
+        <NativeLine
           points={[
             [rightDimensionOffsetX, floatHeight, 0.01],
             [rightDimensionOffsetX, floatHeight - mmToThreeUnits(50), 0.01]
@@ -495,7 +496,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 우측 보조 가이드 연장선 (상단) */}
-        <Line
+        <NativeLine
           points={[
             [rightDimensionOffsetX, floatHeight + actualFrameHeight, 0.01],
             [rightDimensionOffsetX, floatHeight + actualFrameHeight + mmToThreeUnits(50), 0.01]
@@ -508,7 +509,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {/* 내부 공간 높이 치수 (좌측 안쪽) */}
       <group>
         {/* 내부 높이 치수선 */}
-        <Line
+        <NativeLine
           points={[
             [dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
@@ -518,7 +519,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 하단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01),
             new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + 0.05, 0.01)
@@ -528,7 +529,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 상단 화살표 */}
-        <Line
+        <NativeLine
           points={createArrow(
             new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01),
             new THREE.Vector3(dimensionOffsetX + mmToThreeUnits(150), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight - 0.05, 0.01)
@@ -566,7 +567,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </Html>
         
         {/* 내부 하단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [0, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01],
             [dimensionOffsetX + mmToThreeUnits(170), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0), 0.01]
@@ -577,7 +578,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         />
         
         {/* 내부 상단 연장선 */}
-        <Line
+        <NativeLine
           points={[
             [0, floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01],
             [dimensionOffsetX + mmToThreeUnits(170), floatHeight + floorFinishHeight + mmToThreeUnits(spaceInfo.baseConfig?.frameHeight || 0) + internalHeight, 0.01]
@@ -592,7 +593,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {currentViewDirection === 'front' && spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
         <group>
           {/* 바닥 마감재 치수선 */}
-          <Line
+          <NativeLine
             points={[
               [rightDimensionOffsetX + mmToThreeUnits(50), floatHeight, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight, 0.01]
@@ -602,7 +603,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 하단 화살표 */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + 0.02, 0.01)
@@ -612,7 +613,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 상단 화살표 */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(50), floatHeight + floorFinishHeight - 0.02, 0.01)
@@ -648,7 +649,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Html>
           
           {/* 바닥 마감재 하단 연장선 */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, floatHeight, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(70), floatHeight, 0.01]
@@ -659,7 +660,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 바닥 마감재 상단 연장선 */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, floatHeight + floorFinishHeight, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(70), floatHeight + floorFinishHeight, 0.01]
@@ -675,7 +676,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {isFloating && floatHeight > 0 && (
         <group>
           {/* 띄움 높이 치수선 */}
-          <Line
+          <NativeLine
             points={[
               [rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(100), floatHeight, 0.01]
@@ -685,7 +686,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 하단 화살표 */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0.05, 0.01)
@@ -695,7 +696,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 상단 화살표 */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), floatHeight, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), floatHeight - 0.05, 0.01)
@@ -733,7 +734,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Html>
           
           {/* 하단 연장선 (바닥) */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), 0, 0.01]
@@ -744,7 +745,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 상단 연장선 (프레임 하단) */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, floatHeight, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), floatHeight, 0.01]
@@ -760,7 +761,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       {spaceInfo.baseConfig?.type === 'floor' && actualBaseFrameHeight > 0 && (
         <group>
           {/* 받침대 높이 치수선 */}
-          <Line
+          <NativeLine
             points={[
               [rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight), 0.01]
@@ -770,7 +771,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 하단 화살표 (바닥) */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0, 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), 0.03, 0.01)
@@ -780,7 +781,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 상단 화살표 (받침대 상단) */}
-          <Line
+          <NativeLine
             points={createArrow(
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight), 0.01),
               new THREE.Vector3(rightDimensionOffsetX + mmToThreeUnits(100), mmToThreeUnits(actualBaseFrameHeight) - 0.03, 0.01)
@@ -818,7 +819,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Html>
           
           {/* 하단 연장선 (바닥) */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, 0, 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), 0, 0.01]
@@ -829,7 +830,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
           
           {/* 상단 연장선 (받침대 상단) */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, mmToThreeUnits(actualBaseFrameHeight), 0.01],
               [rightDimensionOffsetX + mmToThreeUnits(120), mmToThreeUnits(actualBaseFrameHeight), 0.01]
@@ -1035,7 +1036,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         return (
           <group key={`module-dim-${index}`}>
             {/* 너비 치수선 */}
-            <Line
+            <NativeLine
               points={[
                 [leftX, dimY, 0.01],
                 [rightX, dimY, 0.01]
@@ -1045,7 +1046,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
             
             {/* 좌측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrow(
                 new THREE.Vector3(leftX, dimY, 0.01),
                 new THREE.Vector3(leftX + 0.03, dimY, 0.01),
@@ -1056,7 +1057,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
             
             {/* 우측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrow(
                 new THREE.Vector3(rightX, dimY, 0.01),
                 new THREE.Vector3(rightX - 0.03, dimY, 0.01),
@@ -1153,7 +1154,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 하부장은 아래쪽 연장선도 표시하지 않음 */}
             {moduleData.category !== 'lower' && (
               <>
-                <Line
+                <NativeLine
                   points={[
                     [leftX, furnitureTopY, 0.01],
                     [leftX, dimY, 0.01]
@@ -1162,7 +1163,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   lineWidth={1}
                   dashed={false}
                 />
-                <Line
+                <NativeLine
                   points={[
                     [rightX, furnitureTopY, 0.01],
                     [rightX, dimY, 0.01]
@@ -1178,7 +1179,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 하부장은 위쪽 연장선도 표시하지 않음 */}
             {moduleData.category !== 'lower' && (
               <>
-                <Line
+                <NativeLine
                   points={[
                     [leftX, furnitureTopY, 0.01],
                     [leftX, furnitureTopY + mmToThreeUnits(30), 0.01]
@@ -1187,7 +1188,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   lineWidth={1}
                   dashed={false}
                 />
-                <Line
+                <NativeLine
                   points={[
                     [rightX, furnitureTopY, 0.01],
                     [rightX, furnitureTopY + mmToThreeUnits(30), 0.01]
@@ -1201,7 +1202,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 아래쪽 연장선 - 치수선 위아래로 짧게만 (하부장은 표시하지 않음) */}
             {moduleData.category !== 'lower' && (
               <>
-                <Line
+                <NativeLine
                   points={[
                     [leftX, dimY + mmToThreeUnits(5), 0.01],
                     [leftX, dimY - mmToThreeUnits(5), 0.01]
@@ -1210,7 +1211,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   lineWidth={1}
                   dashed={false}
                 />
-                <Line
+                <NativeLine
                   points={[
                     [rightX, dimY + mmToThreeUnits(5), 0.01],
                     [rightX, dimY - mmToThreeUnits(5), 0.01]
@@ -1241,7 +1242,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return (
             <group key={`column-dim-${index}`}>
               {/* 치수선 */}
-              <Line
+              <NativeLine
                 points={[
                   [leftX, dimY, 0.01],
                   [rightX, dimY, 0.01]
@@ -1251,7 +1252,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
               
               {/* 화살표 */}
-              <Line
+              <NativeLine
                 points={createArrow(
                   new THREE.Vector3(leftX, dimY, 0.01),
                   new THREE.Vector3(leftX + 0.025, dimY, 0.01),
@@ -1260,7 +1261,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 color={dimensionColors.column}
                 lineWidth={1.5}
               />
-              <Line
+              <NativeLine
                 points={createArrow(
                   new THREE.Vector3(rightX, dimY, 0.01),
                   new THREE.Vector3(rightX - 0.025, dimY, 0.01),

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
-import { Line, Text } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -406,7 +407,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
       
       // 바닥 가이드 라인
       guides.push(
-        <Line
+        <NativeLine
           key={`${zoneType}-floor-horizontal`}
           points={[
             new THREE.Vector3(startBoundaryX, floorY, backZ),
@@ -462,7 +463,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
       
       // 천장 가이드
       guides.push(
-        <Line
+        <NativeLine
           key={`${zoneType}-ceiling-horizontal`}
           points={[
             new THREE.Vector3(startBoundaryX, ceilingY, backZ),
@@ -567,7 +568,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           : floorY + mmToThreeUnits(internalSpace.height/2);  // 메인 구간: 전체 높이의 중간
         
         guides.push(
-          <Line
+          <NativeLine
             key={`${zoneType}-horizontal-guide-top-${index}`}
             points={[
               new THREE.Vector3(xPos, guideY, backZ),
@@ -586,7 +587,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         // 3D 및 2D 정면뷰
         // 수직 가이드
         guides.push(
-          <Line
+          <NativeLine
             key={`${zoneType}-vertical-guide-${index}`}
             points={[
               new THREE.Vector3(xPos, floorY, backZ),
@@ -606,7 +607,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         if (viewMode === '3D') {
           // 바닥 Z축 가이드
           guides.push(
-            <Line
+            <NativeLine
               key={`${zoneType}-z-guide-floor-${index}`}
               points={[
                 new THREE.Vector3(xPos, floorY, backZ),
@@ -624,7 +625,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           
           // 천장 Z축 가이드
           guides.push(
-            <Line
+            <NativeLine
               key={`${zoneType}-z-guide-ceiling-${index}`}
               points={[
                 new THREE.Vector3(xPos, ceilingY, backZ),
