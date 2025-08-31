@@ -2671,13 +2671,23 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
-        console.log('🎯 베이스프레임 높이 확인:', {
-          '최종_높이': baseFrameHeightMm,
-          baseFrameHeight_ThreeUnits: baseFrameHeight,
-          spaceInfo_baseConfig: spaceInfo.baseConfig,
-          END_PANEL_THICKNESS
+      {(() => {
+        // baseConfig가 없거나 type이 'floor'이면 하부프레임 렌더링
+        const shouldRenderBaseFrame = showFrame && baseFrameHeightMm > 0 && 
+          (!spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor');
+        
+        console.log('🎯 하부프레임 렌더링 조건 체크:', {
+          showFrame,
+          baseFrameHeightMm,
+          'baseFrameHeightMm > 0': baseFrameHeightMm > 0,
+          'baseConfig': spaceInfo.baseConfig,
+          'baseConfig.type': spaceInfo.baseConfig?.type,
+          '!baseConfig || type === floor': !spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor',
+          '최종 렌더링 여부': shouldRenderBaseFrame
         });
+        
+        if (!shouldRenderBaseFrame) return null;
+        
         return (
         <>
           {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}

@@ -231,10 +231,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.opacity = 1.0;
           mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
-          // 와이어프레임 모드에서도 도어는 솔리드로 렌더링
-          mat.transparent = false;
-          mat.opacity = 1.0;
-          mat.depthWrite = true;
+          // 와이어프레임 모드에서는 도어를 투명하게 처리 (와이어프레임 X자 방지)
+          mat.wireframe = false;  // 와이어프레임 비활성화
+          mat.transparent = true;
+          mat.opacity = 0;  // 완전히 투명하게
+          mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
         } else if (isSelected) {
           mat.transparent = true;
