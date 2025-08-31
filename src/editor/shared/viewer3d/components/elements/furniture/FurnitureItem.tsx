@@ -1879,44 +1879,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             color={furnitureColor}
             doorXOffset={0} // 사용하지 않음
             originalSlotWidth={originalSlotWidthMm}
-            slotCenterX={(() => {
-              // 커버도어의 힌지 축은 원래 슬롯 중심에서 가구 위치를 뺀 오프셋
-              // 가구가 기둥 때문에 이동했어도 도어는 슬롯 중심에 고정
-              const slotCenter = (() => {
-                if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
-                  const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                  const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-                  
-                  if (targetZone.slotCenters && placedModule.slotIndex !== undefined) {
-                    if (isDualFurniture && placedModule.slotIndex < targetZone.slotCenters.length - 1) {
-                      const slot1Center = targetZone.slotCenters[placedModule.slotIndex];
-                      const slot2Center = targetZone.slotCenters[placedModule.slotIndex + 1];
-                      const slot1Three = SpaceCalculator.mmToThreeUnits(slot1Center);
-                      const slot2Three = SpaceCalculator.mmToThreeUnits(slot2Center);
-                      return (slot1Three + slot2Three) / 2;
-                    } else {
-                      const slotCenter = targetZone.slotCenters[placedModule.slotIndex];
-                      return SpaceCalculator.mmToThreeUnits(slotCenter);
-                    }
-                  }
-                }
-                
-                if (indexing.threeUnitPositions && placedModule.slotIndex !== undefined) {
-                  if (isDualFurniture && placedModule.slotIndex < indexing.threeUnitPositions.length - 1) {
-                    const slot1 = indexing.threeUnitPositions[placedModule.slotIndex];
-                    const slot2 = indexing.threeUnitPositions[placedModule.slotIndex + 1];
-                    return (slot1 + slot2) / 2;
-                  } else {
-                    return indexing.threeUnitPositions[placedModule.slotIndex];
-                  }
-                }
-                return 0;
-              })();
-              
-              // 가구 위치에서 슬롯 중심까지의 오프셋 계산
-              // 커버도어 그룹의 position이 이미 슬롯 중심이므로, 여기서는 0을 반환
-              return 0;
-            })()}
+            slotCenterX={slotCenterX}
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
             isDragging={isDraggingThis}
