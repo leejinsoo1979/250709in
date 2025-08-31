@@ -2685,19 +2685,23 @@ const Room: React.FC<RoomProps> = ({
         const forceRender = true;
         const shouldRenderBaseFrame = forceRender || (showFrame && baseFrameHeightMm > 0);
         
-        console.log('🚨🚨🚨 하부프레임 강제 렌더링:', {
+        console.log('🚨🚨🚨 하부프레임 렌더링 시작:', {
           forceRender,
           showFrame,
           baseFrameHeightMm,
           'shouldRenderBaseFrame': shouldRenderBaseFrame,
           '단내림': spaceInfo.droppedCeiling?.enabled,
-          '기둥 개수': spaceInfo.columns?.length || 0
+          '기둥 개수': spaceInfo.columns?.length || 0,
+          'baseFrame': baseFrame,
+          'spaceInfo.baseConfig': spaceInfo.baseConfig
         });
         
         // 높이가 0이면 기본값 65 사용
         const actualBaseFrameHeight = baseFrameHeightMm > 0 ? baseFrameHeight : mmToThreeUnits(65);
         
-        if (!shouldRenderBaseFrame) {
+        // forceRender가 true이므로 무조건 렌더링
+        if (!forceRender && !shouldRenderBaseFrame) {
+          console.log('❌❌❌ 하부프레임 렌더링 스킵됨');
           return null;
         }
         
@@ -2730,7 +2734,9 @@ const Room: React.FC<RoomProps> = ({
                 frameWidth,
                 actualBaseFrameHeight,
                 panelStartY,
-                '위치Y': panelStartY + actualBaseFrameHeight/2
+                '위치Y': panelStartY + actualBaseFrameHeight/2,
+                '단내림': spaceInfo.droppedCeiling?.enabled,
+                '기둥개수': columns.length
               });
               return (
                 <BoxWithEdges

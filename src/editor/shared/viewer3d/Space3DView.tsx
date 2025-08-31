@@ -1086,7 +1086,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               
               return (
                 <React.Fragment key={column.id}>
-                  <ColumnAssetWrapperWrapper
+                  <ColumnAssetWrapper
                     id={column.id}
                     position={column.position}
                     width={column.width} // mm 단위 그대로 전달

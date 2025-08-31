@@ -114,5 +114,6 @@ dxf.drawDimensionV(x - 50, y, y + height, `${height}mm`);
 - 레이어 색상 및 타입은 CAD 표준 준수
 - Layer 0 사용 최소화 달성
 
+
 ---
 *최종 업데이트: 2025-01-27 10:45*
