@@ -2671,8 +2671,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {/* 하부프레임은 받침대가 있을 때만 렌더링 (단내림과 무관) */}
-      {showFrame && baseFrameHeightMm > 0 && (!spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor') && (() => {
+      {/* 하부프레임은 baseFrameHeightMm이 0보다 크면 무조건 렌더링 */}
+      {showFrame && baseFrameHeightMm > 0 && (() => {
         console.log('🎯 하부프레임 렌더링:', {
           showFrame,
           baseFrameHeightMm,
