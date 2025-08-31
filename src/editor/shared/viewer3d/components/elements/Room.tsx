@@ -1902,8 +1902,26 @@ const Room: React.FC<RoomProps> = ({
               const columnLeftX = column.position[0] - columnWidthM / 2;
               const columnRightX = column.position[0] + columnWidthM / 2;
               
+              // 단내림이 있을 때는 기둥이 어느 구간에 있는지 확인
+              if (hasDroppedCeiling) {
+                const columnCenterX = column.position[0];
+                const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                
+                // 기둥이 어느 구간에 있는지 확인
+                const isColumnInDropped = isLeftDropped 
+                  ? columnCenterX < boundary 
+                  : columnCenterX > boundary;
+                
+                // 기둥이 있는 구간과 현재 세그먼트가 처리중인 구간이 다르면 스킵
+                // (예: 일반 구간의 기둥은 단내림 구간 프레임을 분절하지 않음)
+                if ((isColumnInDropped && currentX >= normalSegmentStartX && currentX < normalSegmentEndX) ||
+                    (!isColumnInDropped && currentX >= droppedSegmentStartX && currentX < droppedSegmentEndX)) {
+                  return; // 이 기둥은 현재 세그먼트 구간에 영향을 주지 않음
+                }
+              }
+              
               // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
-              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+              if (columnLeftX < segmentFrameEndX && columnRightX > segmentFrameStartX && column.depth >= 730) {
                 // 기둥 왼쪽 프레임 세그먼트
                 const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                 if (leftSegmentWidth > 0) {
