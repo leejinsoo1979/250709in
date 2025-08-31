@@ -38,8 +38,23 @@ export const NativeLine: React.FC<NativeLineProps> = ({
     
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     
-    if (dashed) {
-      geo.computeLineDistances();
+    // Compute line distances for dashed lines
+    if (dashed && points.length > 1) {
+      const lineDistances = new Float32Array(points.length);
+      lineDistances[0] = 0;
+      
+      for (let i = 1; i < points.length; i++) {
+        const prevPoint = points[i - 1];
+        const currPoint = points[i];
+        const distance = Math.sqrt(
+          Math.pow(currPoint.x - prevPoint.x, 2) +
+          Math.pow(currPoint.y - prevPoint.y, 2) +
+          Math.pow(currPoint.z - prevPoint.z, 2)
+        );
+        lineDistances[i] = lineDistances[i - 1] + distance;
+      }
+      
+      geo.setAttribute('lineDistance', new THREE.BufferAttribute(lineDistances, 1));
     }
     
     return geo;
