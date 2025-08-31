@@ -324,7 +324,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     </Text>
                     
                     {/* 수직 연결선 - 왼쪽으로 이동 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15],
                         [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]
@@ -389,7 +389,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               </Text>
               
               {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <Line
+              <NativeLine
                 points={[
                   [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
                   [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
@@ -451,7 +451,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               </Text>
               
               {/* 수직 연결선 - 왼쪽으로 이동 */}
-              <Line
+              <NativeLine
                 points={[
                   [-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
                   [-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
@@ -513,7 +513,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               </Text>
               
               {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <Line
+              <NativeLine
                 points={[
                   [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
                   [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]

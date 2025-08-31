@@ -4,7 +4,7 @@ import { useThree } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { Line } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 import * as THREE from 'three';
 
 interface AdaptiveCADGrid2DProps {
@@ -130,11 +130,11 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
       {currentViewDirection === 'front' && (
         <>
           {/* 정면뷰: X축(빨간색), Y축(초록색) */}
-          <Line points={[[-100, 0, 0.001], [100, 0, 0.001]]} color="#ff3333" lineWidth={3} />
-          <Line points={[[0, -100, 0.001], [0, 100, 0.001]]} color="#33ff33" lineWidth={3} />
+          <NativeLine points={[[-100, 0, 0.001], [100, 0, 0.001]]} color="#ff3333" lineWidth={3} />
+          <NativeLine points={[[0, -100, 0.001], [0, 100, 0.001]]} color="#33ff33" lineWidth={3} />
           
           {/* 공간 경계선 */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0.002], [spaceWidth, 0, 0.002],
               [spaceWidth, spaceHeight, 0.002], [0, spaceHeight, 0.002], [0, 0, 0.002]
@@ -145,7 +145,7 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
           
           {/* 컬럼 경계선 */}
           {columnCount > 1 && threeUnitBoundaries.map((xPos, index) => (
-            <Line
+            <NativeLine
               key={`column-boundary-${index}`}
               points={[[xPos, 0, 0.001], [xPos, spaceHeight, 0.001]]}
               color="#2196f3"
@@ -161,11 +161,11 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
       {currentViewDirection === 'left' && (
         <>
           {/* 좌측뷰: Z축(빨간색), Y축(초록색) */}
-          <Line points={[[0, 0, -100], [0, 0, 100]]} color="#ff3333" lineWidth={3} />
-          <Line points={[[0, -100, 0], [0, 100, 0]]} color="#33ff33" lineWidth={3} />
+          <NativeLine points={[[0, 0, -100], [0, 0, 100]]} color="#ff3333" lineWidth={3} />
+          <NativeLine points={[[0, -100, 0], [0, 100, 0]]} color="#33ff33" lineWidth={3} />
           
           {/* 공간 경계선 (좌측면) */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0], [0, 0, spaceDepth],
               [0, spaceHeight, spaceDepth], [0, spaceHeight, 0], [0, 0, 0]
@@ -179,11 +179,11 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
       {currentViewDirection === 'right' && (
         <>
           {/* 우측뷰: Z축(빨간색), Y축(초록색) */}
-          <Line points={[[0, 0, -100], [0, 0, 100]]} color="#ff3333" lineWidth={3} />
-          <Line points={[[0, -100, 0], [0, 100, 0]]} color="#33ff33" lineWidth={3} />
+          <NativeLine points={[[0, 0, -100], [0, 0, 100]]} color="#ff3333" lineWidth={3} />
+          <NativeLine points={[[0, -100, 0], [0, 100, 0]]} color="#33ff33" lineWidth={3} />
           
           {/* 공간 경계선 (우측면) */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0], [0, 0, spaceDepth],
               [0, spaceHeight, spaceDepth], [0, spaceHeight, 0], [0, 0, 0]
@@ -197,11 +197,11 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
       {currentViewDirection === 'top' && (
         <>
           {/* 상단뷰: X축(빨간색), Z축(파란색) */}
-          <Line points={[[-100, 0, 0], [100, 0, 0]]} color="#ff3333" lineWidth={3} />
-          <Line points={[[0, 0, -100], [0, 0, 100]]} color="#3333ff" lineWidth={3} />
+          <NativeLine points={[[-100, 0, 0], [100, 0, 0]]} color="#ff3333" lineWidth={3} />
+          <NativeLine points={[[0, 0, -100], [0, 0, 100]]} color="#3333ff" lineWidth={3} />
           
           {/* 공간 경계선 (상단면) */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0], [spaceWidth, 0, 0],
               [spaceWidth, 0, spaceDepth], [0, 0, spaceDepth], [0, 0, 0]
@@ -212,7 +212,7 @@ const AdaptiveCADGrid2D: React.FC<AdaptiveCADGrid2DProps> = ({ viewDirection }) 
           
           {/* 컬럼 경계선 (상단뷰) */}
           {columnCount > 1 && threeUnitBoundaries.map((xPos, index) => (
-            <Line
+            <NativeLine
               key={`column-boundary-top-${index}`}
               points={[[xPos, 0, 0], [xPos, 0, spaceDepth]]}
               color="#2196f3"

@@ -8,7 +8,8 @@ import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
-import { Text, Line } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 // import { SectionConfig } from '@/data/modules/shelving'; // 사용되지 않음
 
 
@@ -355,7 +356,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 구분 패널 두께 수직선 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -413,7 +414,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 서랍 섹션 높이 수직선 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -471,7 +472,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 하부 프레임 두께 수직선 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -626,7 +627,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 하부 프레임 두께 수직선 */}
-                <Line
+                <NativeLine
                   points={[
                     [-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5],
                     [-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5]
@@ -648,7 +649,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === 0 && (
                   <>
                     {/* 가로 내경 수평선 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 - 0.5 : rightShelfZOffset - 0.5],
                         [rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 - 0.5 : rightShelfZOffset - 0.5]

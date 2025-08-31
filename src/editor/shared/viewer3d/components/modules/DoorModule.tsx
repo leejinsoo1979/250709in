@@ -12,7 +12,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { Line } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -1390,7 +1390,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <Line
+                          <NativeLine
                             key={`seg1-long-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1416,7 +1416,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <Line
+                          <NativeLine
                             key={`seg1-short-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1460,7 +1460,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <Line
+                          <NativeLine
                             key={`seg2-long-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
@@ -1486,7 +1486,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <Line
+                          <NativeLine
                             key={`seg2-short-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
@@ -1567,7 +1567,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <Line
+                          <NativeLine
                             key={`seg1-long-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1593,7 +1593,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <Line
+                          <NativeLine
                             key={`seg1-short-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1637,7 +1637,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <Line
+                          <NativeLine
                             key={`seg2-long-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
@@ -1663,7 +1663,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <Line
+                          <NativeLine
                             key={`seg2-short-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
@@ -1861,7 +1861,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength1;
                       const t2 = (currentPos + dashLength) / totalLength1;
                       segments1.push(
-                        <Line
+                        <NativeLine
                           key={`seg1-long-${currentPos}`}
                           points={[
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1887,7 +1887,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength1;
                       const t2 = (currentPos + dashLength) / totalLength1;
                       segments1.push(
-                        <Line
+                        <NativeLine
                           key={`seg1-short-${currentPos}`}
                           points={[
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
@@ -1931,7 +1931,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength2;
                       const t2 = (currentPos + dashLength) / totalLength2;
                       segments2.push(
-                        <Line
+                        <NativeLine
                           key={`seg2-long-${currentPos}`}
                           points={[
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
@@ -1957,7 +1957,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength2;
                       const t2 = (currentPos + dashLength) / totalLength2;
                       segments2.push(
-                        <Line
+                        <NativeLine
                           key={`seg2-short-${currentPos}`}
                           points={[
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],

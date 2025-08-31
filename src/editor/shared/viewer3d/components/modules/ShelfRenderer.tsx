@@ -2,7 +2,8 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { Text, Line } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import { ThreeEvent } from '@react-three/fiber';
 import BoxWithEdges from './components/BoxWithEdges';
@@ -224,7 +225,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     </Text>
                     
                     {/* 선반 두께 수직선 - 왼쪽으로 이동 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5],
                         [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]
@@ -315,7 +316,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   </Text>
                   
                   {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-                  <Line
+                  <NativeLine
                     points={[
                       [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5],
                       [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]
@@ -431,7 +432,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     </Text>
                     
                     {/* 수직 연결선 (치수선) - 왼쪽으로 이동 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15],
                         [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]
@@ -585,7 +586,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 </Text>
                 
                 {/* 위쪽 가이드 보조선 */}
-                <Line
+                <NativeLine
                   points={[
                     [-innerWidth/2 * 0.8, compartmentTopY, basicThickness + zOffset + 0.1],
                     [innerWidth/2 * 0.8, compartmentTopY, basicThickness + zOffset + 0.1]
@@ -598,7 +599,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 />
                 
                 {/* 아래쪽 가이드 보조선 */}
-                <Line
+                <NativeLine
                   points={[
                     [-innerWidth/2 * 0.8, compartmentBottomY, basicThickness + zOffset + 0.1],
                     [innerWidth/2 * 0.8, compartmentBottomY, basicThickness + zOffset + 0.1]
@@ -611,7 +612,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 />
                 
                 {/* 수직 연결선 (치수선) */}
-                <Line
+                <NativeLine
                   points={[
                     [0, compartmentTopY, basicThickness + zOffset + 0.15],
                     [0, compartmentBottomY, basicThickness + zOffset + 0.15]

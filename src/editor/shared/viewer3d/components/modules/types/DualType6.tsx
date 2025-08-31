@@ -7,7 +7,8 @@ import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
-import { Text, Line } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 
 
 /**
@@ -267,7 +268,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 서랍 섹션 높이 수직선 - 중간 가로선반 하단까지 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -308,7 +309,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                         </Text>
                         
-                        <Line
+                        <NativeLine
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -343,7 +344,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2))))}
                         </Text>
                         
-                        <Line
+                        <NativeLine
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -380,7 +381,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                         </Text>
                         
-                        <Line
+                        <NativeLine
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -423,7 +424,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 하부 프레임 두께 수직선 */}
-                    <Line
+                    <NativeLine
                       points={[
                         [-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -551,7 +552,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 중단선반 두께 수직선 */}
-                <Line
+                <NativeLine
                   points={[
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -607,7 +608,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 안전선반 두께 수직선 */}
-                <Line
+                <NativeLine
                   points={[
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -651,7 +652,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             </Text>
             
             {/* 상단 프레임 두께 수직선 */}
-            <Line
+            <NativeLine
               points={[
                 [-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                 [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -765,7 +766,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {showDimensions && hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <group>
             {/* 가로 내경 수평선 - 중간 칸막이 우측면부터 우측 측판 내측면까지 */}
-            <Line
+            <NativeLine
               points={[
                 [(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset],
                 [width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]

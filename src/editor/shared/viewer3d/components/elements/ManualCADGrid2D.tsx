@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Line } from '@react-three/drei';
+import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 import { useThree } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
@@ -57,7 +57,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let x = -gridSize; x <= gridSize; x += spacing) {
           const isMajor = Math.abs(x % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`front-v-${lineIndex++}`}
               points={[[x, -gridSize, 0], [x, gridSize, 0]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -70,7 +70,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let y = -gridSize; y <= gridSize; y += spacing) {
           const isMajor = Math.abs(y % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`front-h-${lineIndex++}`}
               points={[[-gridSize, y, 0], [gridSize, y, 0]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -87,7 +87,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let z = -gridSize; z <= gridSize; z += spacing) {
           const isMajor = Math.abs(z % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`left-v-${lineIndex++}`}
               points={[[0, -gridSize, z], [0, gridSize, z]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -100,7 +100,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let y = -gridSize; y <= gridSize; y += spacing) {
           const isMajor = Math.abs(y % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`left-h-${lineIndex++}`}
               points={[[0, y, -gridSize], [0, y, gridSize]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -117,7 +117,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let z = -gridSize; z <= gridSize; z += spacing) {
           const isMajor = Math.abs(z % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`right-v-${lineIndex++}`}
               points={[[spaceWidth, -gridSize, z], [spaceWidth, gridSize, z]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -130,7 +130,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let y = -gridSize; y <= gridSize; y += spacing) {
           const isMajor = Math.abs(y % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`right-h-${lineIndex++}`}
               points={[[spaceWidth, y, -gridSize], [spaceWidth, y, gridSize]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -147,7 +147,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let x = -gridSize; x <= gridSize; x += spacing) {
           const isMajor = Math.abs(x % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`top-v-${lineIndex++}`}
               points={[[x, spaceHeight, -gridSize], [x, spaceHeight, gridSize]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -160,7 +160,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let z = -gridSize; z <= gridSize; z += spacing) {
           const isMajor = Math.abs(z % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`top-h-${lineIndex++}`}
               points={[[-gridSize, spaceHeight, z], [gridSize, spaceHeight, z]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -177,7 +177,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let x = -gridSize; x <= gridSize; x += spacing) {
           const isMajor = Math.abs(x % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`default-v-${lineIndex++}`}
               points={[[x, -gridSize, 0], [x, gridSize, 0]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -190,7 +190,7 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
         for (let y = -gridSize; y <= gridSize; y += spacing) {
           const isMajor = Math.abs(y % majorSpacing) < 0.01;
           lines.push(
-            <Line
+            <NativeLine
               key={`default-h-${lineIndex++}`}
               points={[[-gridSize, y, 0], [gridSize, y, 0]]}
               color={isMajor ? "#b0b0b0" : "#e8e8e8"}
@@ -222,11 +222,11 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
       {currentViewDirection === 'front' && (
         <>
           {/* 정면뷰: X축(빨간색), Y축(초록색) */}
-          <Line points={[[-50, 0, 0.001], [50, 0, 0.001]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, -50, 0.001], [0, 50, 0.001]]} color="#44ff44" lineWidth={2} />
+          <NativeLine points={[[-50, 0, 0.001], [50, 0, 0.001]]} color="#ff4444" lineWidth={2} />
+          <NativeLine points={[[0, -50, 0.001], [0, 50, 0.001]]} color="#44ff44" lineWidth={2} />
           
           {/* 공간 경계선 */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0.002], [spaceWidth, 0, 0.002],
               [spaceWidth, spaceHeight, 0.002], [0, spaceHeight, 0.002], [0, 0, 0.002]
@@ -240,11 +240,11 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
       {currentViewDirection === 'left' && (
         <>
           {/* 좌측뷰: Z축(빨간색), Y축(초록색) */}
-          <Line points={[[0, 0, -50], [0, 0, 50]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, -50, 0], [0, 50, 0]]} color="#44ff44" lineWidth={2} />
+          <NativeLine points={[[0, 0, -50], [0, 0, 50]]} color="#ff4444" lineWidth={2} />
+          <NativeLine points={[[0, -50, 0], [0, 50, 0]]} color="#44ff44" lineWidth={2} />
           
           {/* 공간 경계선 (좌측면) */}
-          <Line
+          <NativeLine
             points={[
               [0, 0, 0], [0, 0, spaceHeight * 0.6],
               [0, spaceHeight, spaceHeight * 0.6], [0, spaceHeight, 0], [0, 0, 0]
@@ -258,11 +258,11 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
       {currentViewDirection === 'right' && (
         <>
           {/* 우측뷰: Z축(빨간색), Y축(초록색) */}
-          <Line points={[[spaceWidth, 0, -50], [spaceWidth, 0, 50]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[spaceWidth, -50, 0], [spaceWidth, 50, 0]]} color="#44ff44" lineWidth={2} />
+          <NativeLine points={[[spaceWidth, 0, -50], [spaceWidth, 0, 50]]} color="#ff4444" lineWidth={2} />
+          <NativeLine points={[[spaceWidth, -50, 0], [spaceWidth, 50, 0]]} color="#44ff44" lineWidth={2} />
           
           {/* 공간 경계선 (우측면) */}
-          <Line
+          <NativeLine
             points={[
               [spaceWidth, 0, 0], [spaceWidth, 0, spaceHeight * 0.6],
               [spaceWidth, spaceHeight, spaceHeight * 0.6], [spaceWidth, spaceHeight, 0], [spaceWidth, 0, 0]
@@ -276,11 +276,11 @@ const ManualCADGrid2D: React.FC<ManualCADGrid2DProps> = ({ viewDirection }) => {
       {currentViewDirection === 'top' && (
         <>
           {/* 상단뷰: X축(빨간색), Z축(파란색) */}
-          <Line points={[[-50, spaceHeight, 0], [50, spaceHeight, 0]]} color="#ff4444" lineWidth={2} />
-          <Line points={[[0, spaceHeight, -50], [0, spaceHeight, 50]]} color="#4444ff" lineWidth={2} />
+          <NativeLine points={[[-50, spaceHeight, 0], [50, spaceHeight, 0]]} color="#ff4444" lineWidth={2} />
+          <NativeLine points={[[0, spaceHeight, -50], [0, spaceHeight, 50]]} color="#4444ff" lineWidth={2} />
           
           {/* 공간 경계선 (상단면) */}
-          <Line
+          <NativeLine
             points={[
               [0, spaceHeight, 0], [spaceWidth, spaceHeight, 0],
               [spaceWidth, spaceHeight, spaceHeight * 0.6], [0, spaceHeight, spaceHeight * 0.6], [0, spaceHeight, 0]

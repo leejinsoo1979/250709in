@@ -46,18 +46,18 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
   return (
     <group>
       {/* 전체 치수선 (상단, 프레임 포함 전체 외경) */}
-      <Line
+      <NativeLine
         points={[[overallLeft, topY, zVal], [overallRight, topY, zVal]]}
         color={dimensionColor}
         lineWidth={2.5}
       />
       {/* 전체 치수선 양 끝 화살표 */}
-      <Line
+      <NativeLine
         points={[[overallLeft, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallLeft, topY, zVal], [overallLeft, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
         lineWidth={1.5}
       />
-      <Line
+      <NativeLine
         points={[[overallRight, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallRight, topY, zVal], [overallRight, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
         lineWidth={1.5}
@@ -80,14 +80,14 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
         return (
           <>
             {/* 내부 폭 치수선 */}
-            <Line
+            <NativeLine
               points={[[internalLeft, internalY, zVal], [internalRight, internalY, zVal]]}
               color={dimensionColor}
               lineWidth={2}
             />
             
             {/* 내부 폭 좌측 화살표 */}
-            <Line
+            <NativeLine
               points={[
                 [internalLeft, internalY + mmToThreeUnits(10), zVal], 
                 [internalLeft, internalY, zVal], 
@@ -98,7 +98,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
             />
             
             {/* 내부 폭 우측 화살표 */}
-            <Line
+            <NativeLine
               points={[
                 [internalRight, internalY + mmToThreeUnits(10), zVal], 
                 [internalRight, internalY, zVal], 

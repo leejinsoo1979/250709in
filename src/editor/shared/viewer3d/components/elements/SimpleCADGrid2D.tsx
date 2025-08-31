@@ -38,19 +38,19 @@ const SimpleCADGrid2D: React.FC<SimpleCADGrid2DProps> = ({ viewDirection }) => {
       />
       
       {/* 시각적 확인을 위한 라인들 */}
-      <Line
+      <NativeLine
         points={[[-10, 0, 0.01], [10, 0, 0.01]]}
         color="#ff0000"
         lineWidth={3}
       />
-      <Line
+      <NativeLine
         points={[[0, -10, 0.01], [0, 10, 0.01]]}
         color="#00ff00"
         lineWidth={3}
       />
       
       {/* 공간 경계 표시 */}
-      <Line
+      <NativeLine
         points={[
           [0, 0, 0.02], 
           [spaceInfo.width * 0.01, 0, 0.02],
