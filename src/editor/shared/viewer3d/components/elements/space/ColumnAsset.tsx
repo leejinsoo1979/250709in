@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -9,6 +10,7 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
 import { TextureGenerator } from '../../../utils/materials/TextureGenerator';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing';
+import ColumnZoneCrossPopup from '@/editor/shared/components/ColumnZoneCrossPopup';
 
 
 interface ColumnAssetProps {
@@ -54,6 +56,16 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 드래그 중 임시 위치 (리렌더링 최소화)
   const tempPositionRef = useRef<[number, number, number]>(position);
   const lastUpdateTimeRef = useRef<number>(0);
+  
+  // 구역 교차 팝업 상태
+  const [showZoneCrossPopup, setShowZoneCrossPopup] = useState(false);
+  const [zoneCrossInfo, setZoneCrossInfo] = useState<{
+    fromZone: 'normal' | 'dropped';
+    toZone: 'normal' | 'dropped';
+    boundaryPosition: 'left' | 'right';
+    targetX: number;
+  } | null>(null);
+  const pendingPositionRef = useRef<[number, number, number] | null>(null);
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
@@ -74,6 +86,66 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
+  
+  // 구역 판별 함수
+  const getZoneForPosition = (xPosition: number): 'normal' | 'dropped' | null => {
+    if (!spaceConfig.spaceInfo.droppedCeiling?.enabled) {
+      return 'normal';
+    }
+    
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(
+      spaceConfig.spaceInfo,
+      spaceConfig.spaceInfo.customColumnCount
+    );
+    
+    if (!zoneInfo || !zoneInfo.normal || !zoneInfo.dropped) {
+      return null;
+    }
+    
+    // Three.js 좌표를 mm로 변환
+    const xInMm = xPosition * 100;
+    
+    // 단내림 위치에 따라 구역 판별
+    if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
+      // 왼쪽 단내림: dropped가 왼쪽, normal이 오른쪽
+      if (xInMm >= zoneInfo.dropped.startX && xInMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
+        return 'dropped';
+      } else if (xInMm >= zoneInfo.normal.startX && xInMm <= zoneInfo.normal.startX + zoneInfo.normal.width) {
+        return 'normal';
+      }
+    } else {
+      // 오른쪽 단내림: normal이 왼쪽, dropped가 오른쪽
+      if (xInMm >= zoneInfo.normal.startX && xInMm <= zoneInfo.normal.startX + zoneInfo.normal.width) {
+        return 'normal';
+      } else if (xInMm >= zoneInfo.dropped.startX && xInMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
+        return 'dropped';
+      }
+    }
+    
+    return null;
+  };
+  
+  // 구역 경계 위치 계산
+  const getZoneBoundaryX = (targetZone: 'normal' | 'dropped', side: 'left' | 'right'): number => {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(
+      spaceConfig.spaceInfo,
+      spaceConfig.spaceInfo.customColumnCount
+    );
+    
+    if (!zoneInfo || !zoneInfo[targetZone]) {
+      return 0;
+    }
+    
+    const zone = zoneInfo[targetZone];
+    const columnHalfWidthMm = width / 2;
+    
+    // 경계에서 기둥 반폭만큼 안쪽으로 배치
+    if (side === 'left') {
+      return (zone.startX + columnHalfWidthMm) * 0.01; // mm to Three.js units
+    } else {
+      return (zone.startX + zone.width - columnHalfWidthMm) * 0.01; // mm to Three.js units
+    }
+  };
 
   // 기둥 재질 생성 - 그라데이션 텍스처 적용
   const material = React.useMemo(() => {
@@ -286,6 +358,54 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // 공간 범위 내로 제한
       newX = Math.max(minX, Math.min(maxX, newX));
       
+      // 구역 교차 검사 (단내림이 활성화된 경우에만)
+      if (spaceConfig.spaceInfo.droppedCeiling?.enabled) {
+        const currentZone = getZoneForPosition(position[0]);
+        const newZone = getZoneForPosition(newX);
+        
+        if (currentZone && newZone && currentZone !== newZone) {
+          // 구역을 넘으려고 함 - 드래그 중단하고 팝업 표시
+          
+          // 어느 쪽 경계에 배치할지 결정
+          let boundaryPosition: 'left' | 'right';
+          if (newZone === 'dropped') {
+            // 단내림 구간으로 이동
+            if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
+              // 왼쪽 단내림: 일반 구간에서 왼쪽으로 이동 -> 단내림 오른쪽 경계
+              boundaryPosition = 'right';
+            } else {
+              // 오른쪽 단내림: 일반 구간에서 오른쪽으로 이동 -> 단내림 왼쪽 경계
+              boundaryPosition = 'left';
+            }
+          } else {
+            // 일반 구간으로 이동
+            if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
+              // 왼쪽 단내림: 단내림에서 오른쪽으로 이동 -> 일반 왼쪽 경계
+              boundaryPosition = 'left';
+            } else {
+              // 오른쪽 단내림: 단내림에서 왼쪽으로 이동 -> 일반 오른쪽 경계
+              boundaryPosition = 'right';
+            }
+          }
+          
+          const targetX = getZoneBoundaryX(newZone, boundaryPosition);
+          
+          // 팝업 정보 설정 및 대기 위치 저장
+          setZoneCrossInfo({
+            fromZone: currentZone,
+            toZone: newZone,
+            boundaryPosition,
+            targetX
+          });
+          pendingPositionRef.current = [targetX, position[1], position[2]];
+          setShowZoneCrossPopup(true);
+          
+          // 드래그 중단
+          handleGlobalPointerUp();
+          return;
+        }
+      }
+      
       // 임시 위치 업데이트
       tempPositionRef.current = [newX, position[1], position[2]];
       
@@ -347,11 +467,29 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     }
   };
 
+  // 팝업 확인 핸들러
+  const handleZoneCrossConfirm = () => {
+    if (pendingPositionRef.current && onPositionChange) {
+      onPositionChange(id, pendingPositionRef.current);
+    }
+    setShowZoneCrossPopup(false);
+    setZoneCrossInfo(null);
+    pendingPositionRef.current = null;
+  };
+  
+  // 팝업 취소 핸들러
+  const handleZoneCrossCancel = () => {
+    setShowZoneCrossPopup(false);
+    setZoneCrossInfo(null);
+    pendingPositionRef.current = null;
+  };
+
   // 드래그 중일 때는 프레임마다 업데이트하지 않음 (성능 최적화)
   // React Three Fiber가 자동으로 처리하도록 함
 
   return (
-    <group position={position}>
+    <>
+      <group position={position}>
       {viewMode === '2D' ? (
         // 2D 모드: 옅은 회색 면에 빗살무늬 표시
         <group position={[0, (height * 0.01) / 2, 0]}>
@@ -583,6 +721,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </>
       )}
     </group>
+      
+      {/* 구역 교차 확인 팝업 */}
+      {showZoneCrossPopup && zoneCrossInfo && ReactDOM.createPortal(
+        <ColumnZoneCrossPopup
+          isOpen={showZoneCrossPopup}
+          onConfirm={handleZoneCrossConfirm}
+          onCancel={handleZoneCrossCancel}
+          fromZone={zoneCrossInfo.fromZone}
+          toZone={zoneCrossInfo.toZone}
+          boundaryPosition={zoneCrossInfo.boundaryPosition}
+        />,
+        document.body
+      )}
+    </>
   );
 };
 

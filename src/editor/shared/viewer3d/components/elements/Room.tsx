@@ -2671,83 +2671,25 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {(() => {
-        // baseConfig가 없거나 type이 'floor'이면 하부프레임 렌더링
-        const shouldRenderBaseFrame = showFrame && baseFrameHeightMm > 0 && 
-          (!spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor');
-        
-        console.log('🎯 하부프레임 렌더링 조건 체크:', {
+      {/* 하부프레임은 받침대가 있을 때만 렌더링 (단내림과 무관) */}
+      {showFrame && baseFrameHeightMm > 0 && (!spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor') && (() => {
+        console.log('🎯 하부프레임 렌더링:', {
           showFrame,
           baseFrameHeightMm,
-          'baseFrameHeightMm > 0': baseFrameHeightMm > 0,
-          'baseConfig': spaceInfo.baseConfig,
           'baseConfig.type': spaceInfo.baseConfig?.type,
-          '!baseConfig || type === floor': !spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor',
-          '최종 렌더링 여부': shouldRenderBaseFrame
+          '단내림 여부': spaceInfo.droppedCeiling?.enabled,
+          '설명': '하부프레임은 단내림과 무관하게 항상 렌더링'
         });
-        
-        if (!shouldRenderBaseFrame) return null;
         
         return (
         <>
-          {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
-          {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
-          
           {/* 기둥이 있는 경우 하부 프레임을 분절하여 렌더링 */}
           {(() => {
             const columns = spaceInfo.columns || [];
             
-            // 바닥 프레임은 항상 전체 너비 사용 (단내림 구간 포함)
-            let frameWidth, frameX;
-            
-            if (spaceInfo.droppedCeiling?.enabled) {
-              // 단내림이 있는 경우: 전체 공간 너비 사용
-              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              
-              // zoneInfo가 제대로 반환되었는지 확인
-              if (zoneInfo && zoneInfo.normal && zoneInfo.dropped) {
-                // 단내림 위치에 따라 전체 범위 계산
-                let totalStartX, totalEndX;
-                if (spaceInfo.droppedCeiling.position === 'left') {
-                  // 왼쪽 단내림: dropped가 앞, normal이 뒤
-                  totalStartX = zoneInfo.dropped.startX;
-                  totalEndX = zoneInfo.normal.startX + zoneInfo.normal.width;
-                } else {
-                  // 오른쪽 단내림: normal이 앞, dropped가 뒤
-                  totalStartX = zoneInfo.normal.startX;
-                  totalEndX = zoneInfo.dropped.startX + zoneInfo.dropped.width;
-                }
-                
-                const frameStartX = mmToThreeUnits(totalStartX);
-                const frameEndX = mmToThreeUnits(totalEndX);
-                
-                frameWidth = frameEndX - frameStartX;
-                frameX = (frameStartX + frameEndX) / 2;
-              } else {
-                // 단내림이 있지만 zoneInfo가 불완전한 경우 - baseFrame.width 사용
-                frameWidth = baseFrame.width;
-                frameX = 0;
-                console.warn('⚠️ 단내림 모드에서 zoneInfo가 불완전함, 기본값 사용');
-              }
-            } else {
-              // 단내림이 없는 경우: 기존 로직
-              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              
-              if (zoneInfo && zoneInfo.normal) {
-                const normalZone = zoneInfo.normal;
-                
-                const frameStartX = mmToThreeUnits(normalZone.startX);
-                const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
-                
-                frameWidth = frameEndX - frameStartX;
-                frameX = (frameStartX + frameEndX) / 2;
-              } else {
-                // zoneInfo가 없는 경우 기본값 사용
-                frameWidth = baseFrame.width;
-                frameX = 0;
-                console.warn('⚠️ zoneInfo가 없음, 기본값 사용');
-              }
-            }
+            // 하부프레임은 항상 baseFrame.width 사용 (단내림과 무관)
+            let frameWidth = baseFrame.width;
+            let frameX = 0;
             
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
