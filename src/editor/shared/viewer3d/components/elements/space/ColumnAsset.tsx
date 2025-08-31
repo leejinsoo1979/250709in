@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -525,15 +524,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endX = -widthM/2 + (endY - y1);
                     
                     lines.push(
-                      <Line
-                        key={`front-diag-${i}`}
-                        points={[
-                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), startY, depthM/2 + 0.001],
-                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), endY, depthM/2 + 0.001]
-                        ]}
-                        color={color}
-                        lineWidth={1}
-                      />
+                      <line key={`front-diag-${i}`}>
+                        <bufferGeometry>
+                          <bufferAttribute
+                            attach="attributes-position"
+                            count={2}
+                            array={new Float32Array([
+                              Math.max(-widthM/2, Math.min(widthM/2, startX)), startY, depthM/2 + 0.001,
+                              Math.max(-widthM/2, Math.min(widthM/2, endX)), endY, depthM/2 + 0.001
+                            ])}
+                            itemSize={3}
+                          />
+                        </bufferGeometry>
+                        <lineBasicMaterial color={color} />
+                      </line>
                     );
                   }
                 }
@@ -553,15 +557,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endX = -widthM/2 + (endZ - z1);
                     
                     lines.push(
-                      <Line
-                        key={`top-diag-${i}`}
-                        points={[
-                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), 0.001, startZ],
-                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), 0.001, endZ]
-                        ]}
-                        color={color}
-                        lineWidth={1}
-                      />
+                      <line key={`top-diag-${i}`}>
+                        <bufferGeometry>
+                          <bufferAttribute
+                            attach="attributes-position"
+                            count={2}
+                            array={new Float32Array([
+                              Math.max(-widthM/2, Math.min(widthM/2, startX)), 0.001, startZ,
+                              Math.max(-widthM/2, Math.min(widthM/2, endX)), 0.001, endZ
+                            ])}
+                            itemSize={3}
+                          />
+                        </bufferGeometry>
+                        <lineBasicMaterial color={color} />
+                      </line>
                     );
                   }
                 }
@@ -582,15 +591,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endY = -heightM/2 + (endZ - z1);
                     
                     lines.push(
-                      <Line
-                        key={`side-diag-${i}`}
-                        points={[
-                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, startY)), startZ],
-                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, endY)), endZ]
-                        ]}
-                        color={color}
-                        lineWidth={1}
-                      />
+                      <line key={`side-diag-${i}`}>
+                        <bufferGeometry>
+                          <bufferAttribute
+                            attach="attributes-position"
+                            count={2}
+                            array={new Float32Array([
+                              0.001, Math.max(-heightM/2, Math.min(heightM/2, startY)), startZ,
+                              0.001, Math.max(-heightM/2, Math.min(heightM/2, endY)), endZ
+                            ])}
+                            itemSize={3}
+                          />
+                        </bufferGeometry>
+                        <lineBasicMaterial color={color} />
+                      </line>
                     );
                   }
                 }
@@ -624,22 +638,34 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           </lineSegments>
           
           {/* X자 대각선 */}
-          <Line
-            points={[
-              [-(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
-              [(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
-            ]}
-            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-            lineWidth={1}
-          />
-          <Line
-            points={[
-              [(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
-              [-(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
-            ]}
-            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
-            lineWidth={1}
-          />
+          <line>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([
+                  -(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,
+                  (width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2
+                ])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
+          </line>
+          <line>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([
+                  (width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,
+                  -(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2
+                ])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
+          </line>
         </group>
       ) : (
         // 3D 솔리드 모드: 일반 메시
