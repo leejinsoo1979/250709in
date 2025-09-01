@@ -130,10 +130,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     const collidingModules: string[] = [];
     placedModules.forEach(module => {
       // 같은 zone의 가구만 충돌 체크
-      if (module.zone !== zone) {
+      // zone이 undefined인 경우 'normal'로 간주
+      const moduleZone = module.zone || 'normal';
+      const targetZone = zone || 'normal';
+      
+      if (moduleZone !== targetZone) {
         console.log('🔍 다른 zone 스킵:', {
-          moduleZone: module.zone,
-          targetZone: zone,
+          moduleZone,
+          targetZone,
+          originalModuleZone: module.zone,
+          originalTargetZone: zone,
           moduleId: module.moduleId
         });
         return;
@@ -163,7 +169,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           newModuleCategory,
           existingCategory,
           moduleId: module.moduleId,
-          moduleDataExists: !!moduleData
+          moduleDataExists: !!moduleData,
+          slotIndex: newSlotIndex
         });
         
         const canCoexist = 
@@ -172,8 +179,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         
         console.log('🔍 공존 가능 여부:', {
           canCoexist,
-          조건1: `${newModuleCategory} === 'upper' && ${existingCategory} === 'lower' = ${newModuleCategory === 'upper' && existingCategory === 'lower'}`,
-          조건2: `${newModuleCategory} === 'lower' && ${existingCategory} === 'upper' = ${newModuleCategory === 'lower' && existingCategory === 'upper'}`
+          조건1: `new(${newModuleCategory}) === 'upper' && existing(${existingCategory}) === 'lower' = ${newModuleCategory === 'upper' && existingCategory === 'lower'}`,
+          조건2: `new(${newModuleCategory}) === 'lower' && existing(${existingCategory}) === 'upper' = ${newModuleCategory === 'lower' && existingCategory === 'upper'}`
         });
         
         if (!canCoexist) {
