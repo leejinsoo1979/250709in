@@ -257,12 +257,20 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 듀얼/싱글 가구 판별
     const isDual = isDualFurniture(dragData.moduleData.id, spaceInfo);
     
-    // 기둥 슬롯 정보 확인 - 각 영역의 columnSlots 사용
-    const targetSlotInfo = columnSlots[zoneSlotIndex];
+    // 단내림 구간에서 전역 슬롯 인덱스 계산
+    let globalSlotIndex = zoneSlotIndex;
+    if (spaceInfo.droppedCeiling?.enabled && zone === 'normal' && indexing.zones?.dropped) {
+      // normal 영역의 경우 dropped 영역 슬롯 개수를 더함
+      globalSlotIndex = zoneSlotIndex + (indexing.zones.dropped.columnCount || 0);
+    }
+    
+    // 기둥 슬롯 정보 확인 - 전역 인덱스 사용
+    const targetSlotInfo = columnSlots[globalSlotIndex];
     
     console.log('🎯 드롭 시도:', {
       slotIndex,
       zoneSlotIndex,
+      globalSlotIndex,
       zone,
       hasColumn: targetSlotInfo?.hasColumn,
       columnId: targetSlotInfo?.column?.id,
@@ -1613,11 +1621,42 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
           if (!moduleData) return null;
         
+        // 단내림 구간에서 전역 슬롯 인덱스 계산
+        // hoveredSlotIndex는 영역 내 로컬 인덱스일 수 있음
+        // slot.zone이 'dropped'인 경우 hoveredSlotIndex를 그대로 사용
+        // slot.zone이 'normal'인 경우 dropped 영역의 슬롯 개수를 더해서 전역 인덱스 계산
+        let globalSlotIndex = hoveredSlotIndex;
+        if (hasDroppedCeiling && slot.zone === 'normal' && zoneSlotInfo.dropped) {
+          // normal 영역의 경우 dropped 영역 슬롯 개수를 더함
+          // 하지만 slotPositions에서 이미 전역 인덱스로 설정되어 있으므로 hoveredSlotIndex를 그대로 사용
+          globalSlotIndex = hoveredSlotIndex;
+        }
+        
+        console.log('🎯 SlotDropZones - 슬롯 인덱스 확인:', {
+          hoveredSlotIndex,
+          globalSlotIndex,
+          slotIndex,
+          isDual,
+          columnSlotsLength: columnSlots.length,
+          hasDroppedCeiling,
+          droppedSlotCount: zoneSlotInfo.dropped?.columnCount || 0,
+          normalSlotCount: zoneSlotInfo.normal?.columnCount || 0,
+          slotZone: slot.zone
+        });
+
         // 듀얼 가구인 경우 기둥 체크
         if (isDual) {
           // 듀얼 가구는 기둥이 있는 슬롯에 미리보기 표시 안함
-          const leftSlotInfo = columnSlots[hoveredSlotIndex];
-          const rightSlotInfo = columnSlots[hoveredSlotIndex + 1];
+          const leftSlotInfo = columnSlots[globalSlotIndex];
+          const rightSlotInfo = columnSlots[globalSlotIndex + 1];
+          
+          console.log('🔍 듀얼 가구 기둥 체크:', {
+            hoveredSlotIndex,
+            globalSlotIndex,
+            leftSlotInfo: leftSlotInfo ? { hasColumn: leftSlotInfo.hasColumn, columnType: leftSlotInfo.columnType } : 'undefined',
+            rightSlotInfo: rightSlotInfo ? { hasColumn: rightSlotInfo.hasColumn, columnType: rightSlotInfo.columnType } : 'undefined'
+          });
+          
           if (leftSlotInfo?.hasColumn || rightSlotInfo?.hasColumn) {
             return null; // 기둥이 있으면 미리보기 표시 안함
           }
@@ -1626,7 +1665,14 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         // 싱글 가구의 경우 기둥 체크 및 변환
         let previewModuleData = moduleData;
         if (!isDual) {
-          const previewSlotInfo = columnSlots[hoveredSlotIndex];
+          const previewSlotInfo = columnSlots[globalSlotIndex];
+          
+          console.log('🔍 싱글 가구 기둥 체크:', {
+            hoveredSlotIndex,
+            globalSlotIndex,
+            previewSlotInfo: previewSlotInfo ? { hasColumn: previewSlotInfo.hasColumn, columnType: previewSlotInfo.columnType } : 'undefined'
+          });
+          
           if (previewSlotInfo && previewSlotInfo.hasColumn) {
             const conversionResult = convertDualToSingleIfNeeded(moduleData, previewSlotInfo, spaceInfo);
             if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
