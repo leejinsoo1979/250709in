@@ -984,7 +984,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         let newY = module.position.y;
         
         if (isUpperCabinet) {
-          // 상부장은 천장에 매달림 (바닥 시작점과 무관)
+          // 상부장은 천장에 매달림
           const furnitureHeightMm = moduleData.dimensions.height;
           
           // zone에 따라 천장 높이 계산
@@ -994,9 +994,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             effectiveCeilingHeight = internalSpace.height - dropHeight;
           }
           
-          // 상부장 Y 위치 = 천장높이 - 가구높이/2 (바닥 시작점 더하지 않음)
-          // 상부장은 항상 천장에 고정되므로 furnitureStartY를 더하지 않음
-          newY = mmToThreeUnits(effectiveCeilingHeight - furnitureHeightMm / 2);
+          // 받침대 높이 복원 (내경 공간 계산에서 빠진 받침대 높이를 다시 더함)
+          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          
+          // 상부장 Y 위치 = (천장높이 + 받침대높이) - 가구높이/2
+          // 내경 공간은 받침대를 제외한 높이이므로, 천장 기준 계산 시 받침대 높이를 다시 더해야 함
+          newY = mmToThreeUnits(effectiveCeilingHeight + baseFrameHeightMm - furnitureHeightMm / 2);
         } else if (isLowerCabinet) {
           // 하부장은 바닥에 배치
           const furnitureHeightMm = moduleData.dimensions.height;

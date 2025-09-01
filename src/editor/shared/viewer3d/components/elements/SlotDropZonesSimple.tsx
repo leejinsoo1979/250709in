@@ -2615,9 +2615,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 깊이를 더 크게 만들어서 레이캐스트 감지 개선
-        const reducedDepth = slotDimensions.depth + mmToThreeUnits(100); // 100mm 더 두껍게
-        const zOffset = 0; // 중앙에 배치
+        // 앞쪽에서 20mm 줄이기
+        const reducedDepth = slotDimensions.depth - mmToThreeUnits(20);
+        const zOffset = -mmToThreeUnits(10); // 뒤쪽으로 10mm 이동 (앞쪽에서만 20mm 줄이기 위해)
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
