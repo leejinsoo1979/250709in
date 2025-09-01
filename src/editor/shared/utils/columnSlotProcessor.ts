@@ -1085,26 +1085,26 @@ export const calculateOptimalHingePosition = (
   
   let hingePosition: 'left' | 'right' = 'right';
   
-  // 커버도어는 기둥을 가려야 하므로, 기둥이 있는 쪽에 힌지가 위치해야 함
+  // 커버도어는 기둥을 가려야 하므로, 힌지는 가구쪽에 있고 도어가 기둥쪽으로 열려야 함
   switch (slotInfo.intrusionDirection) {
     case 'from-left':
-      // 기둥이 왼쪽에서 침범: 캐비넷이 오른쪽에 위치 → 힌지는 왼쪽(기둥쪽)에 있어야 함
-      hingePosition = 'left';
-      break;
-      
-    case 'from-right':
-      // 기둥이 오른쪽에서 침범: 캐비넷이 왼쪽에 위치 → 힌지는 오른쪽(기둥쪽)에 있어야 함
+      // 기둥이 왼쪽에서 침범: 캐비넷이 오른쪽에 위치 → 힌지는 오른쪽(가구쪽), 도어는 왼쪽으로 열림
       hingePosition = 'right';
       break;
       
+    case 'from-right':
+      // 기둥이 오른쪽에서 침범: 캐비넷이 왼쪽에 위치 → 힌지는 왼쪽(가구쪽), 도어는 오른쪽으로 열림
+      hingePosition = 'left';
+      break;
+      
     case 'center':
-      // 기둥이 중앙에 있는 경우: 기본값 유지
+      // 기둥이 중앙에 있는 경우
       if (slotInfo.furniturePosition === 'left-aligned') {
-        // 캐비넷이 왼쪽에 배치: 힌지 오른쪽 (기둥을 향해)
-        hingePosition = 'right';
-      } else if (slotInfo.furniturePosition === 'right-aligned') {
-        // 캐비넷이 오른쪽에 배치: 힌지 왼쪽 (기둥을 향해)
+        // 캐비넷이 왼쪽에 배치: 힌지 왼쪽(가구쪽), 도어는 오른쪽(기둥쪽)으로 열림
         hingePosition = 'left';
+      } else if (slotInfo.furniturePosition === 'right-aligned') {
+        // 캐비넷이 오른쪽에 배치: 힌지 오른쪽(가구쪽), 도어는 왼쪽(기둥쪽)으로 열림
+        hingePosition = 'right';
       }
       break;
       
@@ -1118,9 +1118,9 @@ export const calculateOptimalHingePosition = (
     intrusionDirection: slotInfo.intrusionDirection,
     furniturePosition: slotInfo.furniturePosition,
     calculatedHinge: hingePosition,
-    logic: slotInfo.intrusionDirection === 'from-left' ? '기둥이 왼쪽 침범 → 오른쪽 캐비넷 → 힌지 오른쪽 고정' :
-           slotInfo.intrusionDirection === 'from-right' ? '기둥이 오른쪽 침범 → 왼쪽 캐비넷 → 힌지 왼쪽 고정' :
-           slotInfo.intrusionDirection === 'center' ? `중앙 침범 → ${slotInfo.furniturePosition} → ${hingePosition} 힌지 (캐비넷 위치에 따라 고정)` :
+    logic: slotInfo.intrusionDirection === 'from-left' ? '기둥이 왼쪽 침범 → 오른쪽 캐비넷 → 힌지 오른쪽(가구쪽) → 도어는 왼쪽(기둥쪽)으로 열림' :
+           slotInfo.intrusionDirection === 'from-right' ? '기둥이 오른쪽 침범 → 왼쪽 캐비넷 → 힌지 왼쪽(가구쪽) → 도어는 오른쪽(기둥쪽)으로 열림' :
+           slotInfo.intrusionDirection === 'center' ? `중앙 침범 → ${slotInfo.furniturePosition} → 힌지 ${hingePosition}(가구쪽) → 도어는 기둥쪽으로 열림` :
            '기본값'
   });
   
