@@ -46,6 +46,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     targetZone?: 'normal' | 'dropped',
     treatAsDual?: boolean
   ) => {
+    console.log('🔍🔍 detectFurnitureCollisions 호출:', {
+      movingModuleId,
+      newSlotIndex,
+      targetZone,
+      treatAsDual
+    });
+    
     const movingModule = placedModules.find(m => m.id === movingModuleId);
     if (!movingModule) return [];
 
@@ -210,6 +217,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
+        // 상하부장 공존이 가능한 경우는 충돌로 간주하지 않음
+        // 위에서 이미 체크했으므로 여기서는 충돌로 판단
         console.log('💥 충돌 감지:', {
           이동하는가구: {
             id: movingModuleId,
@@ -226,6 +235,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         });
         collidingModules.push(module.id);
       }
+    });
+    
+    console.log('🔍🔍 detectFurnitureCollisions 결과:', {
+      충돌개수: collidingModules.length,
+      충돌모듈들: collidingModules
     });
 
     return collidingModules;
