@@ -649,29 +649,43 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // 상부장은 내경 공간 상단에 배치
         const furnitureHeightMm = moduleData.dimensions.height;
         
-        // 상부장은 항상 천장에 붙어있어야 함
-        // 내경 높이를 사용하여 계산
-        const internalHeightMm = internalSpace.height;
+        // 단내림 구간 여부에 따라 천장 높이 계산
+        let effectiveCeilingHeight = internalSpace.height;
+        
+        // detectedZone이 'dropped'이면 단내림 구간
+        if (detectedZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+          effectiveCeilingHeight = internalSpace.height - dropHeight;
+          
+          console.log('🔻 단내림 구간 상부장 높이 계산:', {
+            originalHeight: internalSpace.height,
+            dropHeight,
+            effectiveCeilingHeight,
+            detectedZone
+          });
+        }
         
         // 받침대 높이 확인 - 받침대가 있을 때만 적용
         // baseConfig.type === 'floor': 받침대 있음 (65mm)
         // baseConfig.type === 'stand': 받침대 없음 (0mm)
         const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
         
-        // 상부장 Y 위치: 내경높이 + 받침대높이 - 가구높이/2
-        calculatedY = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
+        // 상부장 Y 위치: 영역별 천장높이 + 받침대높이 - 가구높이/2
+        calculatedY = mmToThreeUnits(effectiveCeilingHeight + baseFrameHeightMm - furnitureHeightMm / 2);
         
         console.log('🔝 드래그 중 상부장 Y 위치 계산:', {
           moduleId: moduleData.id,
           currentModuleId: currentModule.moduleId,
           category: moduleData.category,
           isUpperCabinet,
-          internalHeightMm,
+          detectedZone,
+          effectiveCeilingHeight,
+          internalHeightMm: internalSpace.height,
           baseFrameHeightMm,
           furnitureHeightMm,
           calculatedY,
           previousY: currentModule.position.y,
-          설명: '상부장은 내경높이 + 받침대높이 기준'
+          설명: detectedZone === 'dropped' ? '단내림 구간 - 낮은 천장' : '일반 구간 - 정상 천장'
         });
       } else {
         // 하부장 및 일반 가구는 바닥에 배치

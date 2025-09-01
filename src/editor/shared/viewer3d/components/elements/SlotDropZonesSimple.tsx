@@ -1291,12 +1291,33 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (isUpperCabinetZone) {
         // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
-        const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
+        // 단내림 구간에서는 zoneInternalSpace 사용, 일반 구간에서는 internalSpace 사용
+        const effectiveInternalSpace = zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace : internalSpace;
+        const internalHeightMm = effectiveInternalSpace.height;
         const furnitureHeightMm = moduleData?.dimensions?.height || 600;
         const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
         
         // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
         furnitureYZone = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        
+        console.log('🔝 상부장 초기 배치 Y 위치 계산:', {
+          zone: zoneToUse,
+          zoneInternalSpace: zoneInternalSpace ? {
+            height: zoneInternalSpace.height,
+            width: zoneInternalSpace.width
+          } : null,
+          internalSpace: {
+            height: internalSpace.height,
+            width: internalSpace.width
+          },
+          effectiveHeight: internalHeightMm,
+          droppedCeiling: spaceInfo.droppedCeiling,
+          baseFrameHeightMm,
+          furnitureHeightMm,
+          furnitureYZone,
+          furnitureYZone_mm: furnitureYZone * 100,
+          설명: zoneToUse === 'dropped' ? '단내림 구간 - 낮은 천장' : '일반 구간 - 정상 천장'
+        });
       } else if (isLowerCabinetZone) {
         // 하부장: 바닥에서 시작
         const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
