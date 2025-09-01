@@ -826,7 +826,20 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         customDepth: newCustomDepth,
         adjustedWidth: newAdjustedWidth, // 기둥이 없는 슬롯으로 이동 시 undefined로 설정되어야 함
         slotIndex: finalSlotIndex,
-        isDualSlot: isDualFurniture, // 듀얼 유지 여부 반영 (전환 시 false)
+        isDualSlot: (() => {
+          // 원래 듀얼 가구였는지 확인 (moduleId 기반)
+          const wasOriginallyDual = currentModule.moduleId.includes('dual-');
+          // 단내림→메인 이동에서 강제 싱글 전환된 경우만 false
+          if (spaceInfo.droppedCeiling?.enabled && 
+              currentModule.zone === 'dropped' && 
+              detectedZone === 'normal' && 
+              !isDualFurniture && 
+              wasOriginallyDual) {
+            return false; // 강제 싱글 전환
+          }
+          // 그 외의 경우는 원래 상태 유지
+          return wasOriginallyDual || isDualFurniture;
+        })(),
         zone: detectedZone || currentModule.zone, // 감지된 zone으로 업데이트하여 cross-zone 이동 허용
         customWidth: (() => {
           // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
