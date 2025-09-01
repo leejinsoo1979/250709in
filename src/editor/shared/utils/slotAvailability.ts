@@ -337,6 +337,12 @@ export const isSlotAvailable = (
     }
   }
   
+  console.log('✅ 슬롯 사용 가능 - 모든 검사 통과:', {
+    slotIndex,
+    isDualFurniture,
+    moduleId,
+    targetZone
+  });
   return true; // 사용 가능
 };
 
