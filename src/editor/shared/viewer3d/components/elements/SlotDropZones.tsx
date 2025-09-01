@@ -191,24 +191,21 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         
         if (!canCoexist) {
           collidingModules.push(module.id);
-          if (import.meta.env.DEV) {
-            console.log('🚨 새 가구 배치로 인한 충돌 감지:', {
-              newSlots: occupiedSlots,
-              newCategory: newModuleCategory,
-              collidingModule: module.id,
-              existingCategory,
-              existingSlots: moduleSlots,
-              zone
-            });
-          }
+          console.log('🚨🚨🚨 충돌로 판단됨! 기존 가구가 제거됩니다:', {
+            newSlots: occupiedSlots,
+            newCategory: newModuleCategory,
+            collidingModule: module.id,
+            existingCategory,
+            existingSlots: moduleSlots,
+            zone
+          });
         } else {
-          if (import.meta.env.DEV) {
-            console.log('✅ 상하부장 공존 가능:', {
-              newCategory: newModuleCategory,
-              existingCategory,
-              slot: newSlotIndex
-            });
-          }
+          console.log('✅✅✅ 상하부장 공존 가능! 충돌 없음:', {
+            newCategory: newModuleCategory,
+            existingCategory,
+            slot: newSlotIndex,
+            설명: '상부장과 하부장이 같은 슬롯에 공존합니다'
+          });
         }
       }
     });

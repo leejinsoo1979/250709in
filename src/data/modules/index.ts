@@ -125,6 +125,7 @@ export const getModuleById = (
     if (found) {
       console.log('✅ [getModuleById] 모듈 찾음:', {
         id: found.id,
+        category: found.category, // category 추가
         width: found.dimensions.width
       });
       return found;

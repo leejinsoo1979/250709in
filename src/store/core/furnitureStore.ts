@@ -144,14 +144,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       기존가구수: existingModules.length
     });
     
-    // 상부장/하부장 여부 확인
-    const isNewUpper = module.moduleId.includes('upper-cabinet') || module.moduleId.includes('dual-upper-cabinet');
-    const isNewLower = module.moduleId.includes('lower-cabinet') || module.moduleId.includes('dual-lower-cabinet');
+    // 상부장/하부장 여부 확인 - getModuleById 사용
+    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const internalSpace = {
+      width: spaceInfo.width,
+      height: spaceInfo.height,
+      depth: spaceInfo.depth
+    };
+    const { getModuleById } = require('@/data/modules');
+    const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+    
+    // category 기반 판단 우선, 없으면 ID 기반
+    const isNewUpper = newModuleData?.category === 'upper' || 
+                      module.moduleId.includes('upper-cabinet') || 
+                      module.moduleId.includes('dual-upper-cabinet');
+    const isNewLower = newModuleData?.category === 'lower' || 
+                      module.moduleId.includes('lower-cabinet') || 
+                      module.moduleId.includes('dual-lower-cabinet');
     
     console.log('🔍 [Store] 새 가구 카테고리:', {
       moduleId: module.moduleId,
+      category: newModuleData?.category,
       isUpper: isNewUpper,
-      isLower: isNewLower
+      isLower: isNewLower,
+      fromCategory: newModuleData?.category === 'upper' || newModuleData?.category === 'lower',
+      fromId: module.moduleId.includes('upper-cabinet') || module.moduleId.includes('lower-cabinet')
     });
     
     const hasConflict = existingModules.some(existing => {
@@ -202,15 +219,34 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         return false;
       }
       
-      // 슬롯이 겹치는 경우 상부장/하부장 공존 체크
-      const isExistingUpper = existing.moduleId.includes('upper-cabinet') || existing.moduleId.includes('dual-upper-cabinet');
-      const isExistingLower = existing.moduleId.includes('lower-cabinet') || existing.moduleId.includes('dual-lower-cabinet');
+      // 슬롯이 겹치는 경우 상부장/하부장 공존 체크 - getModuleById 사용
+      const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
+      
+      // category 기반 판단 우선, 없으면 ID 기반
+      const isExistingUpper = existingModuleData?.category === 'upper' || 
+                             existing.moduleId.includes('upper-cabinet') || 
+                             existing.moduleId.includes('dual-upper-cabinet');
+      const isExistingLower = existingModuleData?.category === 'lower' || 
+                             existing.moduleId.includes('lower-cabinet') || 
+                             existing.moduleId.includes('dual-lower-cabinet');
       
       // 상부장과 하부장은 공존 가능
       if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
         console.log('✅ [Store] 상부장/하부장 공존 허용:', {
-          새가구: { id: module.id, moduleId: module.moduleId, isUpper: isNewUpper, isLower: isNewLower },
-          기존가구: { id: existing.id, moduleId: existing.moduleId, isUpper: isExistingUpper, isLower: isExistingLower }
+          새가구: { 
+            id: module.id, 
+            moduleId: module.moduleId, 
+            category: newModuleData?.category,
+            isUpper: isNewUpper, 
+            isLower: isNewLower 
+          },
+          기존가구: { 
+            id: existing.id, 
+            moduleId: existing.moduleId, 
+            category: existingModuleData?.category,
+            isUpper: isExistingUpper, 
+            isLower: isExistingLower 
+          }
         });
         return false; // 충돌 없음
       }
