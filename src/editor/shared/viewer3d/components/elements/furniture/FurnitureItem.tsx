@@ -1405,21 +1405,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 하부장 디버그 로그
     if (actualModuleData?.category === 'lower' || actualModuleData?.id?.includes('lower-cabinet')) {
-      console.log('📦 하부장 Y 위치 계산:', {
+      const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand' && 
+                              spaceInfo?.baseConfig?.placementType === 'float';
+      console.log('📦 하부장 Y 위치 계산 상세:', {
         moduleId: actualModuleData?.id || 'unknown',
         category: actualModuleData?.category || 'lower',
+        baseConfig_type: spaceInfo?.baseConfig?.type,
+        placementType: spaceInfo?.baseConfig?.placementType,
+        isFloatPlacement,
+        floatHeight_mm: spaceInfo?.baseConfig?.floatHeight || 0,
         furnitureStartY,
         furnitureStartY_mm: furnitureStartY * 100,
         height,
         height_mm: height * 100,
+        furnitureHeightMm_original: furnitureHeightMm,
         yPos,
         yPos_mm: yPos * 100,
         하부장_하단_mm: (yPos - height/2) * 100,
         하부장_상단_mm: (yPos + height/2) * 100,
-        baseConfig: spaceInfo?.baseConfig,
-        placementType: spaceInfo?.baseConfig?.placementType,
-        floatHeight_mm: spaceInfo?.baseConfig?.floatHeight,
-        설명: '하부장 중심 = furnitureStartY + height/2'
+        계산식: `furnitureStartY(${(furnitureStartY * 100).toFixed(1)}mm) + height/2(${(height/2 * 100).toFixed(1)}mm) = ${(yPos * 100).toFixed(1)}mm`,
+        설명: isFloatPlacement ? '띄워서 배치 - 하부장이 띄움 높이 위에 배치됨' : '일반 배치'
       });
     }
     return yPos;
