@@ -1824,19 +1824,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             (() => {
               // 단내림이 있고 zone 정보가 있는 경우
               if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
-                const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                const fullIndexing = calculateSpaceIndexing(spaceInfo);
+                const zoneInfo = fullIndexing.zones || ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                 const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                 
-                // 단내림 구간에서 로컬 슬롯 인덱스 계산
-                let localSlotIndex = placedModule.slotIndex;
+                // 전역 슬롯 인덱스를 사용 (placedModule.slotIndex는 이미 전역 인덱스)
+                const globalSlotIndex = placedModule.slotIndex;
+                
+                // 해당 zone에서의 로컬 인덱스 계산
+                let localSlotIndex: number;
                 if (placedModule.zone === 'dropped' && zoneInfo.normal) {
-                  localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+                  // dropped zone: 전역 인덱스에서 normal zone 슬롯 수를 뺀다
+                  localSlotIndex = globalSlotIndex - zoneInfo.normal.columnCount;
+                } else {
+                  // normal zone: 전역 인덱스를 그대로 사용
+                  localSlotIndex = globalSlotIndex;
                 }
                 
                 // slotCenters가 없으면 threeUnitPositions 사용 (단내림 + 노서라운드)
                 const positions = targetZone.slotCenters || targetZone.threeUnitPositions;
                 
-                if (positions && localSlotIndex !== undefined && localSlotIndex >= 0) {
+                if (positions && localSlotIndex !== undefined && localSlotIndex >= 0 && localSlotIndex < positions.length) {
                   if (isDualFurniture && localSlotIndex < positions.length - 1) {
                     // 듀얼 가구: 두 슬롯의 중간
                     const slot1 = targetZone.slotCenters 
@@ -1880,19 +1888,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             도어X위치: (() => {
               // 커버도어는 항상 원래 슬롯 중심에 고정
               if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
-                const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                const fullIndexing = calculateSpaceIndexing(spaceInfo);
+                const zoneInfo = fullIndexing.zones || ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                 const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                 
-                if (targetZone.slotCenters && placedModule.slotIndex !== undefined) {
-                  if (isDualFurniture && placedModule.slotIndex < targetZone.slotCenters.length - 1) {
-                    const slot1Center = targetZone.slotCenters[placedModule.slotIndex];
-                    const slot2Center = targetZone.slotCenters[placedModule.slotIndex + 1];
-                    const slot1Three = SpaceCalculator.mmToThreeUnits(slot1Center);
-                    const slot2Three = SpaceCalculator.mmToThreeUnits(slot2Center);
-                    return (slot1Three + slot2Three) / 2;
+                // 전역 슬롯 인덱스를 사용
+                const globalSlotIndex = placedModule.slotIndex;
+                
+                // 해당 zone에서의 로컬 인덱스 계산
+                let localSlotIndex: number;
+                if (placedModule.zone === 'dropped' && zoneInfo.normal) {
+                  localSlotIndex = globalSlotIndex - zoneInfo.normal.columnCount;
+                } else {
+                  localSlotIndex = globalSlotIndex;
+                }
+                
+                const positions = targetZone.slotCenters || targetZone.threeUnitPositions;
+                if (positions && localSlotIndex !== undefined && localSlotIndex >= 0 && localSlotIndex < positions.length) {
+                  if (isDualFurniture && localSlotIndex < positions.length - 1) {
+                    const slot1 = targetZone.slotCenters 
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex])
+                      : positions[localSlotIndex];
+                    const slot2 = targetZone.slotCenters
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex + 1])
+                      : positions[localSlotIndex + 1];
+                    return (slot1 + slot2) / 2;
                   } else {
-                    const slotCenter = targetZone.slotCenters[placedModule.slotIndex];
-                    return SpaceCalculator.mmToThreeUnits(slotCenter);
+                    return targetZone.slotCenters
+                      ? SpaceCalculator.mmToThreeUnits(positions[localSlotIndex])
+                      : positions[localSlotIndex];
                   }
                 }
               }

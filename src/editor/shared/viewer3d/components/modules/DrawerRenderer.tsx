@@ -2,7 +2,8 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { Line, Text } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
 
