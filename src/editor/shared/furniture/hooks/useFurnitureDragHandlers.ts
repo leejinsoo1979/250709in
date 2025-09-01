@@ -189,6 +189,27 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const columnSlots = analyzeColumnSlots(spaceInfo, latestPlacedModules);
         const targetSlotInfo = columnSlots[dropPosition.column];
         
+        // 듀얼장이 기둥과 겹치는지 확인
+        if (dropPosition.isDualFurniture) {
+          // 듀얼장이 차지할 두 슬롯 확인
+          const leftSlotInfo = columnSlots[dropPosition.column];
+          const rightSlotInfo = columnSlots[dropPosition.column + 1];
+          
+          // 두 슬롯 중 하나라도 기둥이 있으면 배치 불가
+          if ((leftSlotInfo && leftSlotInfo.hasColumn) || (rightSlotInfo && rightSlotInfo.hasColumn)) {
+            console.log('❌ 듀얼장 배치 불가: 기둥과 겹침', {
+              leftSlot: dropPosition.column,
+              rightSlot: dropPosition.column + 1,
+              leftHasColumn: leftSlotInfo?.hasColumn,
+              rightHasColumn: rightSlotInfo?.hasColumn
+            });
+            
+            // 배치 취소
+            setFurniturePlacementMode(false);
+            return;
+          }
+        }
+        
         let adjustedWidth: number | undefined = undefined;
         const adjustedPosition = { x: finalX, y: 0, z: 0 };
         let adjustedDepth = customDepth;
@@ -209,76 +230,14 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
           const columnDepth = targetSlotInfo.column.depth;
           
-          // Column C (300mm) 특별 처리
+          // Column C (300mm) 특별 처리 - 싱글장만 가능 (듀얼장은 이미 위에서 차단됨)
           if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture && targetSlotInfo.subSlots) {
-            console.log('🔵 Column C 슬롯에 듀얼 배치 처리:', {
+            console.log('🔵 Column C 슬롯에 싱글 배치 처리:', {
               slotIndex: dropPosition.column,
               isDualFurniture: dropPosition.isDualFurniture,
               columnDepth,
               subSlots: targetSlotInfo.subSlots
             });
-            
-            // 듀얼 가구를 Column C 슬롯에 배치하는 경우 두 개의 싱글로 분할
-            if (dropPosition.isDualFurniture) {
-              // 왼쪽 싱글 캐비넷
-              const leftModule = {
-                id: `placed-left-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
-                position: { 
-                  x: targetSlotInfo.subSlots.left.center, 
-                  y: 0, 
-                  z: 0 
-                },
-                rotation: 0,
-                slotIndex: dropPosition.column,
-                subSlotPosition: 'left', // Column C 서브슬롯 위치
-                isDualSlot: false,
-                hasDoor: false,
-                customDepth: getDefaultDepth(moduleData),
-                adjustedWidth: targetSlotInfo.subSlots.left.availableWidth
-              };
-              
-              // 오른쪽 싱글 캐비넷
-              const rightModule = {
-                id: `placed-right-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
-                position: { 
-                  x: targetSlotInfo.subSlots.right.center, 
-                  y: 0, 
-                  z: 0 
-                },
-                rotation: 0,
-                slotIndex: dropPosition.column,
-                subSlotPosition: 'right', // Column C 서브슬롯 위치
-                isDualSlot: false,
-                hasDoor: false,
-                customDepth: getDefaultDepth(moduleData),
-                adjustedWidth: targetSlotInfo.subSlots.right.availableWidth
-              };
-              
-              // 두 개의 싱글 캐비넷 추가
-              addModule(leftModule);
-              addModule(rightModule);
-              
-              console.log('✅ Column C에 듀얼 가구를 2개의 싱글로 분할 배치:', {
-                leftModule: leftModule.id,
-                rightModule: rightModule.id,
-                leftPosition: leftModule.position.x,
-                rightPosition: rightModule.position.x
-              });
-              
-              // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
-              window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
-              
-              // 그림자 업데이트
-              invalidate();
-              if (gl && gl.shadowMap) {
-                gl.shadowMap.needsUpdate = true;
-              }
-              
-              setFurniturePlacementMode(false);
-              return; // 추가 처리 방지
-            }
             
             // 싱글 가구를 Column C 슬롯에 배치하는 경우
             // 빈 서브슬롯 찾기
