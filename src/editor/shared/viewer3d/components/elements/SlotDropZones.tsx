@@ -173,9 +173,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           slotIndex: newSlotIndex
         });
         
+        // 상하부장 공존 조건을 더 명확하게
+        const isNewUpper = newModuleCategory === 'upper';
+        const isNewLower = newModuleCategory === 'lower';
+        const isExistingUpper = existingCategory === 'upper';
+        const isExistingLower = existingCategory === 'lower';
+        
         const canCoexist = 
-          (newModuleCategory === 'upper' && existingCategory === 'lower') ||
-          (newModuleCategory === 'lower' && existingCategory === 'upper');
+          (isNewUpper && isExistingLower) ||
+          (isNewLower && isExistingUpper);
         
         console.log('🔍 공존 가능 여부:', {
           canCoexist,
@@ -212,13 +218,20 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
 
   // 충돌한 가구들 제거
   const removeCollidingFurniture = React.useCallback((collidingModuleIds: string[]) => {
+    console.log('🗑️🗑️🗑️ 충돌한 가구 제거 시작:', {
+      제거할개수: collidingModuleIds.length,
+      제거할ID들: collidingModuleIds
+    });
     collidingModuleIds.forEach(moduleId => {
-      if (import.meta.env.DEV) {
-        console.log('🗑️ 새 가구 배치로 인한 기존 가구 제거:', moduleId);
-      }
+      const moduleToRemove = placedModules.find(m => m.id === moduleId);
+      console.log('🗑️ 제거되는 가구 정보:', {
+        id: moduleId,
+        moduleId: moduleToRemove?.moduleId,
+        category: moduleToRemove ? getModuleById(moduleToRemove.moduleId, internalSpace, spaceInfo)?.category : 'unknown'
+      });
       removeModule(moduleId);
     });
-  }, [removeModule]);
+  }, [removeModule, placedModules, internalSpace, spaceInfo]);
   
   // 드롭 처리 함수
   const handleSlotDrop = React.useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
@@ -781,6 +794,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 기존 로직 - 단일 배치인 경우만 실행
     if (!targetSlotInfo || !targetSlotInfo.hasColumn || !targetSlotInfo.column) {
       // 기둥이 없는 일반 슬롯인 경우
+      // Y 위치는 FurnitureItem에서 카테고리에 따라 자동 설정되므로 0으로 설정
       const finalPosition = { x: finalX, y: 0, z: 0 };
       const adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
@@ -820,7 +834,18 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       };
       
       // 충돌 감지 및 충돌한 가구 제거
+      console.log('🚨🚨🚨 충돌 감지 호출 직전:', {
+        zoneSlotIndex,
+        actualIsDual,
+        zone,
+        category: actualModuleData.category,
+        moduleId: actualModuleId
+      });
       const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleData.category);
+      console.log('🚨🚨🚨 충돌 감지 결과:', {
+        충돌개수: collidingModules.length,
+        충돌모듈: collidingModules
+      });
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
       }
@@ -1020,7 +1045,18 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     };
     
     // 충돌 감지 및 충돌한 가구 제거
+    console.log('🚨🚨🚨 충돌 감지 호출 직전 (일반):', {
+      zoneSlotIndex,
+      actualIsDual,
+      zone,
+      category: actualModuleData.category,
+      moduleId: actualModuleId
+    });
     const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleData.category);
+    console.log('🚨🚨🚨 충돌 감지 결과 (일반):', {
+      충돌개수: collidingModules.length,
+      충돌모듈: collidingModules
+    });
     if (collidingModules.length > 0) {
       removeCollidingFurniture(collidingModules);
       if (import.meta.env.DEV) {
