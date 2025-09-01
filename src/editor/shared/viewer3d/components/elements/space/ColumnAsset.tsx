@@ -251,7 +251,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     event.nativeEvent.stopPropagation();
     // passive 이벤트 리스너 경고 방지 - preventDefault 제거
     
-    // console.log('🎯 기둥 포인터 다운:', id);
+    const currentZone = getZoneForPosition(position[0]);
+    console.log('🎯 기둥 포인터 다운:', id, '현재 구역:', currentZone, '위치:', position[0]);
     
     setPointerDownTime(Date.now());
     setHasMoved(false);
@@ -280,6 +281,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !isDraggingRef.current) {
+        const zone = getZoneForPosition(position[0]);
+        console.log('🚀 기둥 드래그 시작:', id, '구역:', zone);
         setHasMoved(true);
         setIsDragging(true);
         isDraggingRef.current = true;
@@ -318,6 +321,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       
       // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정  
       let newX = Math.max(minX, Math.min(maxX, worldX));
+      
+      const debugZone = getZoneForPosition(newX);
+      console.log('📍 드래그 중 위치:', newX, '구역:', debugZone);
       
       // 다른 기둥에 밀착되도록 스냅 (뛰어넘기 방지)
       const columns = spaceConfig.spaceInfo.columns || [];
@@ -364,7 +370,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       
       // 구역 교차 검사 (단내림이 활성화된 경우에만)
       if (spaceConfig.spaceInfo.droppedCeiling?.enabled) {
-        const currentZone = getZoneForPosition(position[0]);
+        // 현재 위치를 실시간으로 체크 (tempPositionRef가 있으면 그것을 사용)
+        const currentPosX = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
+        const currentZone = getZoneForPosition(currentPosX);
         const newZone = getZoneForPosition(newX);
         
         if (currentZone && newZone && currentZone !== newZone) {
