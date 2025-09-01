@@ -41,9 +41,12 @@ export const getSlotIndexFromMousePosition = (
         // 디버깅: userData 내용 확인
         if (child.userData.isSlotCollider || child.userData.type === 'slot-collider') {
           console.log('🔍 Found slot collider candidate:', {
+            name: child.name,
             userData: child.userData,
             type: child.type,
-            visible: child.visible
+            visible: child.visible,
+            position: child.position,
+            parent: child.parent?.name
           });
         }
       }
@@ -51,9 +54,19 @@ export const getSlotIndexFromMousePosition = (
       if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
         // activeZone이 지정된 경우 해당 zone의 콜라이더만 선택
         if (activeZone && child.userData?.zone !== activeZone) {
+          console.log('⏭️ Skipping collider due to zone mismatch:', {
+            colliderZone: child.userData?.zone,
+            activeZone,
+            name: child.name
+          });
           return;
         }
         slotColliders.push(child);
+        console.log('✅ Added collider to list:', {
+          name: child.name,
+          zone: child.userData?.zone,
+          slotIndex: child.userData?.slotIndex
+        });
       }
     });
     
@@ -65,7 +78,23 @@ export const getSlotIndexFromMousePosition = (
     });
     
     // 슬롯 콜라이더들과 교차점 검사
-    const intersects = raycaster.intersectObjects(slotColliders);
+    console.log('🔍 Attempting raycast with:', {
+      numColliders: slotColliders.length,
+      mouse,
+      cameraPosition: camera.position
+    });
+    
+    const intersects = raycaster.intersectObjects(slotColliders, false); // false = don't check children
+    
+    console.log('📊 Raycast results:', {
+      numIntersections: intersects.length,
+      intersections: intersects.map(i => ({
+        object: i.object.name,
+        distance: i.distance,
+        point: i.point,
+        userData: i.object.userData
+      }))
+    });
     
     if (intersects.length > 0) {
       // 가장 가까운 교차점의 슬롯 인덱스 반환
@@ -79,10 +108,18 @@ export const getSlotIndexFromMousePosition = (
         console.log('🎯 Raycast found slot:', {
           slotIndex,
           zone: intersectedObject.userData?.zone,
-          activeZone
+          activeZone,
+          objectName: intersectedObject.name
         });
         return slotIndex;
+      } else {
+        console.log('⚠️ Invalid slot index:', {
+          slotIndex,
+          userData: intersectedObject.userData
+        });
       }
+    } else {
+      console.log('❌ No intersections found with colliders');
     }
     
     return null;
