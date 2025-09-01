@@ -57,15 +57,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const is2DMode = viewMode === '2D' || viewMode !== '3D';
   const showIndirectLight = false;
   
-  // 띄움 배치 시 캐비넷 높이 조정
-  const adjustedHeight = isFloating && floatHeight > 0 
-    ? baseFurniture.height - (floatHeight * 0.01) // floatHeight는 mm, Three.js는 m 단위
-    : baseFurniture.height;
+  // 띄움 배치 시에도 캐비넷 높이는 변경하지 않음
+  const adjustedHeight = baseFurniture.height;
   
-  // 띄움 배치 시 Y 위치 조정 (캐비넷이 위로 올라가야 함)
-  const cabinetYPosition = isFloating && floatHeight > 0
-    ? (floatHeight * 0.01) / 2 // 캐비넷 중심을 위로 이동
-    : 0;
+  // 띄움 배치 시 Y 위치는 FurnitureItem에서 처리하므로 여기서는 0
+  const cabinetYPosition = 0;
   
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;

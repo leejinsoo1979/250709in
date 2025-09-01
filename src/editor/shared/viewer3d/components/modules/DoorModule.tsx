@@ -705,15 +705,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     if (floatHeight > 0) {
       console.log('🔴🔴🔴 IF 블록 진입 - 띄움 배치 (듀얼 하부장 포함)');
-      // 띄워서 배치: 도어가 아래에서 floatHeight만큼 줄어듦
+      // 띄워서 배치: 도어 높이는 변경하지 않음
       
-      // 도어 높이: 가구 높이 - 띄움 높이 + 위 확장(18mm)
-      finalDoorHeight = furnitureHeight - floatHeight + upperExtension;
+      // 도어 높이: 가구 원래 높이 유지 + 위 확장(18mm)
+      finalDoorHeight = furnitureHeight + upperExtension;
       
-      // 도어 Y 위치 계산:
-      // 띄움 배치로 인해 도어가 위로 올라가야 함
-      // 도어 중심 = floatHeight/2 만큼 위로
-      doorYPosition = mmToThreeUnits(floatHeight / 2);
+      // 도어 Y 위치: FurnitureItem에서 처리하므로 0
+      doorYPosition = 0;
       
       console.log('🔴🔴🔴 하부장 띄움 배치:', {
         floatHeight,

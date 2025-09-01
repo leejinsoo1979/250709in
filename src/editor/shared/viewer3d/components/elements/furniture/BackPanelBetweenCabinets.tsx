@@ -125,29 +125,7 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
         const upperHeight = upperData.dimensions.height;
         const lowerHeight = lowerData.dimensions.height;
         
-        // 바닥재 및 받침대 높이 계산
-        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-        const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
-        
-        let furnitureStartYMm: number;
-        if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-          // 받침대 있음: 바닥재 + 받침대 높이
-          furnitureStartYMm = floorFinishHeightMm + baseFrameHeightMm;
-        } else if (spaceInfo.baseConfig.type === 'stand') {
-          // 받침대 없음
-          if (spaceInfo.baseConfig.placementType === 'float') {
-            // 띄워서 배치: 바닥재 + 띄움 높이
-            const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-            furnitureStartYMm = floorFinishHeightMm + floatHeightMm;
-          } else {
-            // 바닥에 배치: 바닥재만
-            furnitureStartYMm = floorFinishHeightMm;
-          }
-        } else {
-          furnitureStartYMm = 0;
-        }
-        
-        // 하부장의 실제 Y 위치 (저장된 위치 사용)
+        // 하부장의 실제 Y 위치 (저장된 위치 사용) - 저장된 위치를 그대로 사용
         // 하부장의 상단 Y 위치 = 하부장 중심 Y + 높이/2 + 상부 마감재(18mm)
         const lowerCenterY = group.lower.position.y * 100; // Three.js 단위를 mm로 변환
         const lowerTopY = lowerCenterY + lowerHeight / 2 + 18; // 하부장 상부 마감재 18mm 추가
@@ -160,7 +138,7 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
         // 갭 높이 계산 (상하부장 마감재 사이의 거리가 백패널 높이)
         const gapHeight = upperBottomY - lowerTopY;
         
-        console.log('🎨 백패널 높이 계산:', {
+        console.log('🎨 백패널 높이 계산 (실제 위치 기반):', {
           slotIndex,
           lowerModule: group.lower.moduleId,
           upperModule: group.upper.moduleId,
@@ -173,9 +151,7 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
           lowerTopY,
           upperBottomY,
           gapHeight,
-          baseConfig: spaceInfo.baseConfig,
-          placementType: spaceInfo.baseConfig?.placementType,
-          floatHeight: spaceInfo.baseConfig?.floatHeight
+          설명: '저장된 가구 위치를 직접 사용하여 백패널 위치 계산'
         });
         
         // 갭이 있는 경우만 백패널 생성
