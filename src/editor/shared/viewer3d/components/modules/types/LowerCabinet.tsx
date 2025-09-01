@@ -32,6 +32,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   adjustedWidth,
+  slotWidths, // 듀얼 가구의 개별 슬롯 너비들
   showFurniture = true
 }) => {
   const { renderMode, viewMode } = useSpace3DView();
@@ -173,6 +174,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           isDragging={isDragging}
           isEditMode={isEditMode}
+          slotWidths={slotWidths}
           slotIndex={slotIndex}
         />
       )}
