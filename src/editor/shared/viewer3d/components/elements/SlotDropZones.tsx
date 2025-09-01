@@ -94,6 +94,18 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
 
   // 가구 충돌 감지 함수 (새 가구 배치용)
   const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false, newModuleCategory?: string) => {
+    console.log('🔍 충돌 감지 시작:', {
+      newSlotIndex,
+      isDualFurniture,
+      zone,
+      newModuleCategory,
+      existingModules: placedModules.filter(m => m.slotIndex === newSlotIndex).map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        zone: m.zone
+      }))
+    });
     // Column C 슬롯인 경우 충돌 검사 건너뛰기
     if (skipColumnC) {
       const slotInfo = columnSlots[newSlotIndex];
@@ -137,9 +149,22 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       if (hasOverlap) {
         // 상부장과 하부장은 같은 슬롯에 배치 가능
         const existingCategory = moduleData.category;
+        console.log('🔍 카테고리 확인:', {
+          newModuleCategory,
+          existingCategory,
+          moduleId: module.moduleId,
+          moduleDataExists: !!moduleData
+        });
+        
         const canCoexist = 
           (newModuleCategory === 'upper' && existingCategory === 'lower') ||
           (newModuleCategory === 'lower' && existingCategory === 'upper');
+        
+        console.log('🔍 공존 가능 여부:', {
+          canCoexist,
+          조건1: `${newModuleCategory} === 'upper' && ${existingCategory} === 'lower' = ${newModuleCategory === 'upper' && existingCategory === 'lower'}`,
+          조건2: `${newModuleCategory} === 'lower' && ${existingCategory} === 'upper' = ${newModuleCategory === 'lower' && existingCategory === 'upper'}`
+        });
         
         if (!canCoexist) {
           collidingModules.push(module.id);
