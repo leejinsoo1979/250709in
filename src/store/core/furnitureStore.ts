@@ -756,22 +756,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               
               if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[module.slotIndex] !== undefined) {
                 slotCenterX = zoneIndexing.threeUnitPositions[module.slotIndex];
-                
-                // 노서라운드 모드에서 엔드패널 위치 보정
-                if (spaceInfo.surroundType === 'no-surround' && module.slotIndex !== undefined) {
-                  const endPanelThickness = 18;
-                  const slotWidth = targetZone.slotWidths?.[module.slotIndex] || targetZone.columnWidth;
-                  const hasLeftEndPanel = module.slotIndex === 0 && slotWidth < targetZone.columnWidth;
-                  const hasRightEndPanel = module.slotIndex === (targetZone.columnCount - 1) && slotWidth < targetZone.columnWidth;
-                  
-                  if (hasLeftEndPanel) {
-                    // 왼쪽 엔드패널: 오른쪽으로 9mm 이동
-                    slotCenterX += SpaceCalculator.mmToThreeUnits(endPanelThickness / 2);
-                  } else if (hasRightEndPanel) {
-                    // 오른쪽 엔드패널: 왼쪽으로 9mm 이동
-                    slotCenterX -= SpaceCalculator.mmToThreeUnits(endPanelThickness / 2);
-                  }
-                }
               }
             }
           } else if (module.slotIndex !== undefined && indexing.threeUnitPositions && indexing.threeUnitPositions[module.slotIndex] !== undefined) {

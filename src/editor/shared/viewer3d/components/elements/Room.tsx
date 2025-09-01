@@ -1732,7 +1732,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={topFrameMaterial ?? createFrameMaterial('top')}
+                  material={topFrameMaterial || undefined}
                   renderMode={renderMode}
                 />
               );
@@ -1864,7 +1864,7 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    material={topFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 );
@@ -1980,7 +1980,7 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    material={topFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                   {/* 일반 영역 상부 프레임 */}
@@ -1996,7 +1996,7 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    material={topFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 </>
@@ -2102,7 +2102,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={topFrameMaterial ?? createFrameMaterial('top')}
+                  material={topFrameMaterial || undefined}
                   renderMode={renderMode}
                 />
               );
@@ -2208,17 +2208,18 @@ const Room: React.FC<RoomProps> = ({
             }
             
             return finalSegments.map((segment, index) => {
-              if (!topFrameMaterial) {
-                console.warn(`⚠️ Top frame segment ${index} - material not ready, using default`);
-              } else {
-                console.log(`🎨 Top frame segment ${index} material:`, {
-                  hasTopFrameMaterial: !!topFrameMaterial,
-                  materialType: topFrameMaterial?.type,
-                  materialColor: topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color.getHexString() : 'unknown',
-                  materialTexture: topFrameMaterial && 'map' in topFrameMaterial ? !!(topFrameMaterial as any).map : false,
-                  segmentWidth: segment.width
-                });
-              }
+              console.log(`🎨 Top frame segment ${index} - 분절된 상부 프레임 재질:`, {
+                hasTopFrameMaterial: !!topFrameMaterial,
+                materialReady: topFrameMaterial !== undefined,
+                materialType: topFrameMaterial?.type,
+                materialColor: topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color.getHexString() : 'none',
+                materialTexture: topFrameMaterial && 'map' in topFrameMaterial ? !!(topFrameMaterial as any).map : false,
+                doorColor: materialConfig?.doorColor,
+                doorTexture: materialConfig?.doorTexture,
+                segmentWidth: segment.width,
+                segmentX: segment.x,
+                segmentZone: segment.zone
+              });
               
               // 단내림이 있는 경우, 세그먼트의 zone에 따라 높이 조정
               let segmentY = topElementsY;
@@ -2246,7 +2247,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={topFrameMaterial ?? createFrameMaterial('top')}
+                  material={topFrameMaterial || undefined}
                   renderMode={renderMode}
                 />
               );
@@ -2283,7 +2284,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    material={topFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 </group>
@@ -2355,7 +2356,7 @@ const Room: React.FC<RoomProps> = ({
                       mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                     ]}
                     position={[0, 0, 0]} // group 내에서 원점에 배치
-                    material={topFrameMaterial ?? createFrameMaterial('top')}
+                    material={topFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 </group>
@@ -2757,7 +2758,7 @@ const Room: React.FC<RoomProps> = ({
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
-                  material={baseFrameMaterial ?? createFrameMaterial('base')}
+                  material={baseFrameMaterial || undefined}
                   renderMode={renderMode}
                 />
               );
@@ -2851,7 +2852,7 @@ const Room: React.FC<RoomProps> = ({
                     panelStartY + actualBaseFrameHeight/2,
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
-                  material={baseFrameMaterial ?? createFrameMaterial('base')}
+                  material={baseFrameMaterial || undefined}
                   renderMode={renderMode}
                 />
               ));
@@ -2921,26 +2922,24 @@ const Room: React.FC<RoomProps> = ({
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
-                    material={baseFrameMaterial ?? createFrameMaterial('base')}
+                    material={baseFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 );
               }
               
               return frameSegments.map((segment, index) => {
-                if (!baseFrameMaterial) {
-                  console.warn(`⚠️ Base frame segment ${index} - material not ready, using default`);
-                } else {
-                  console.log(`🎨 Base frame segment ${index} material:`, {
-                    hasBaseFrameMaterial: !!baseFrameMaterial,
-                    materialType: baseFrameMaterial?.type,
-                    materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'unknown',
-                    materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
-                    doorColor: materialConfig?.doorColor,
-                    doorTexture: materialConfig?.doorTexture,
-                    segmentWidth: segment.width
-                  });
-                }
+                console.log(`🎨 Base frame segment ${index} - 분절된 하부 프레임 재질:`, {
+                  hasBaseFrameMaterial: !!baseFrameMaterial,
+                  materialReady: baseFrameMaterial !== undefined,
+                  materialType: baseFrameMaterial?.type,
+                  materialColor: baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color.getHexString() : 'none',
+                  materialTexture: baseFrameMaterial && 'map' in baseFrameMaterial ? !!(baseFrameMaterial as any).map : false,
+                  doorColor: materialConfig?.doorColor,
+                  doorTexture: materialConfig?.doorTexture,
+                  segmentWidth: segment.width,
+                  segmentX: segment.x
+                });
                 
                 return (
                   <BoxWithEdges
@@ -2956,7 +2955,7 @@ const Room: React.FC<RoomProps> = ({
                       // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
                     ]}
-                    material={baseFrameMaterial ?? createFrameMaterial('base')}
+                    material={baseFrameMaterial || undefined}
                     renderMode={renderMode}
                   />
                 );

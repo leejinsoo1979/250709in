@@ -379,30 +379,9 @@ export class ColumnIndexer {
     let currentX: number;
     
     if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드: 항상 전체 공간을 균등 분할하여 일관된 위치 유지
-      // 프리스탠딩: 전체 너비를 균등 분할 (양쪽 엔드패널 포함)
-      // 세미스탠딩: 전체 너비를 균등 분할 (한쪽 엔드패널 포함)
-      // 벽 설정이 변경되어도 슬롯 위치는 동일하게 유지
+      // 노서라운드: 슬롯 위치를 균등 분할 기준으로 계산
+      // 엔드패널은 슬롯 너비에만 영향을 주고, 위치에는 영향을 주지 않음
       currentX = -(totalWidth / 2);
-      
-      // 첫 슬롯 시작 위치 계산 (균등 분할 기준)
-      const baseSlotWidth = Math.floor(totalWidth / columnCount);
-      const remainder = totalWidth % columnCount;
-      
-      // 프리스탠딩은 양쪽, 세미스탠딩은 한쪽에 엔드패널 공간 확보
-      if (spaceInfo.installType === 'freestanding') {
-        // 양쪽 엔드패널 공간 확보 (18mm씩)
-        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 벽 위치에 따라 엔드패널 공간 확보
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음
-          currentX = -(totalWidth / 2);
-        } else {
-          // 왼쪽 벽이 없으면: 왼쪽에 엔드패널 공간 확보 (18mm)
-          currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
-        }
-      }
     } else {
       // 서라운드 또는 빌트인: 내경 시작점
       currentX = internalStartX;
@@ -415,16 +394,27 @@ export class ColumnIndexer {
       columnBoundaries.push(currentX);
     }
     
-    // 각 슬롯(컬럼)의 중심 위치 계산 - 실제 너비 기반
+    // 각 슬롯(컬럼)의 중심 위치 계산
     const columnPositions = [];
-    for (let i = 0; i < columnCount; i++) {
-      // 각 컬럼의 시작 위치
-      const columnStart = columnBoundaries[i];
-      // 각 컬럼의 끝 위치
-      const columnEnd = columnBoundaries[i + 1];
-      // 각 컬럼의 중심 위치
-      const columnCenter = (columnStart + columnEnd) / 2;
-      columnPositions.push(columnCenter);
+    
+    if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+      // 노서라운드: 균등 분할 위치 사용 (엔드패널과 무관하게)
+      const baseSlotWidth = totalWidth / columnCount;
+      for (let i = 0; i < columnCount; i++) {
+        const columnCenter = -(totalWidth / 2) + (i + 0.5) * baseSlotWidth;
+        columnPositions.push(columnCenter);
+      }
+    } else {
+      // 서라운드/빌트인: 실제 슬롯 너비 기반 위치 계산
+      for (let i = 0; i < columnCount; i++) {
+        // 각 컬럼의 시작 위치
+        const columnStart = columnBoundaries[i];
+        // 각 컬럼의 끝 위치
+        const columnEnd = columnBoundaries[i + 1];
+        // 각 컬럼의 중심 위치
+        const columnCenter = (columnStart + columnEnd) / 2;
+        columnPositions.push(columnCenter);
+      }
     }
     
     // Three.js 단위로 변환된 값들도 함께 제공
