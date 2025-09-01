@@ -259,9 +259,26 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     // 단내림 구간에서 전역 슬롯 인덱스 계산
     let globalSlotIndex = zoneSlotIndex;
-    if (spaceInfo.droppedCeiling?.enabled && zone === 'normal' && indexing.zones?.dropped) {
-      // normal 영역의 경우 dropped 영역 슬롯 개수를 더함
-      globalSlotIndex = zoneSlotIndex + (indexing.zones.dropped.columnCount || 0);
+    if (spaceInfo.droppedCeiling?.enabled && indexing.zones?.dropped && indexing.zones?.normal) {
+      const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+      
+      if (droppedPosition === 'left') {
+        // 왼쪽 단내림: dropped zone이 먼저 오므로
+        if (zone === 'dropped') {
+          globalSlotIndex = zoneSlotIndex; // dropped zone이 0부터 시작
+        } else if (zone === 'normal') {
+          // normal zone은 dropped zone 다음에 오므로 dropped 개수를 더함
+          globalSlotIndex = zoneSlotIndex + (indexing.zones.dropped.columnCount || 0);
+        }
+      } else {
+        // 오른쪽 단내림: normal zone이 먼저 오므로
+        if (zone === 'normal') {
+          globalSlotIndex = zoneSlotIndex; // normal zone이 0부터 시작
+        } else if (zone === 'dropped') {
+          // dropped zone은 normal zone 다음에 오므로 normal 개수를 더함
+          globalSlotIndex = zoneSlotIndex + (indexing.zones.normal.columnCount || 0);
+        }
+      }
     }
     
     // 기둥 슬롯 정보 확인 - 전역 인덱스 사용

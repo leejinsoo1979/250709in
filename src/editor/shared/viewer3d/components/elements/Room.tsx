@@ -2688,7 +2688,10 @@ const Room: React.FC<RoomProps> = ({
                 panelStartY,
                 '위치Y': panelStartY + actualBaseFrameHeight/2,
                 '단내림': spaceInfo.droppedCeiling?.enabled,
-                '기둥개수': columns.length
+                '기둥개수': columns.length,
+                'baseFrameMaterial': !!baseFrameMaterial,
+                'materialType': baseFrameMaterial?.type,
+                'materialColor': baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color?.getHexString() : 'none'
               });
               return (
                 <BoxWithEdges
