@@ -70,7 +70,8 @@ export const isSlotAvailable = (
     category: newModuleData?.category,
     isUpper: isNewUpper,
     isLower: isNewLower,
-    targetSlots
+    targetSlots,
+    targetZone
   });
 
   // 1. 먼저 같은 슬롯에 배치된 가구들과의 충돌 검사 (상하부장 공존 허용)
@@ -161,7 +162,7 @@ export const isSlotAvailable = (
         }
         
         // 같은 카테고리거나 호환되지 않는 가구는 충돌
-        console.log('🚫 슬롯 충돌! 배치 불가');
+        console.log('🚫 슬롯 충돌! 배치 불가 (같은 카테고리 또는 일반 가구)');
         return false;
       }
     }
