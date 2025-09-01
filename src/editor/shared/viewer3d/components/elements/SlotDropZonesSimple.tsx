@@ -412,6 +412,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         detectedZone  // zone 정보 전달
       );
       
+      console.log('🎯 첫 번째 시도 결과:', {
+        slotIndex,
+        detectedZone,
+        droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled
+      });
+      
       // 만약 zone을 지정했는데도 못 찾으면 zone 없이 다시 시도
       if (slotIndex === null && detectedZone) {
         console.log('⚠️ Zone 지정 실패, 전체 영역에서 다시 검색');
@@ -423,6 +429,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           scene,
           latestSpaceInfo
         );
+        console.log('🎯 두 번째 시도 결과 (zone 없이):', slotIndex);
       }
       
       console.log('🎯 After getSlotIndexFromRaycast:', {
@@ -2736,8 +2743,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 콜라이더 깊이를 공간 깊이의 절반 정도로 설정
-        const reducedDepth = slotDimensions.depth * 0.8;
+        // 콜라이더 깊이를 공간 깊이와 동일하게 설정 (전체 영역 커버)
+        const reducedDepth = slotDimensions.depth;
         const zOffset = 0; // 중앙에 배치
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
@@ -2784,19 +2791,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 슬롯의 중앙 Y 위치
         const colliderY = floorY + slotHeight / 2;
         
-        // 디버그: 모든 콜라이더 생성 정보
-        console.log(`🎯 [${slotZone}] Slot Collider ${slotLocalIndex} 생성:`, {
-          zone: slotZone,
-          index: slotLocalIndex,
-          position: { x: slotX, y: colliderY, z: zOffset },
-          size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
-          floorY,
-          ceilingY: slotZone === 'dropped' ? (floorY + slotHeight) : ceilingY,
-          hasDroppedCeiling,
-          droppedCeiling: spaceInfo.droppedCeiling,
-          slotDimensions,
-          internalSpace
-        });
+        // 디버그: 단내림 영역 콜라이더만 상세 로그
+        if (slotZone === 'dropped') {
+          console.log(`🔴 [DROPPED] Slot Collider ${slotLocalIndex} 생성:`, {
+            zone: slotZone,
+            index: slotLocalIndex,
+            position: { x: slotX, y: colliderY, z: zOffset },
+            size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
+            userData: {
+              slotIndex: slotLocalIndex,
+              isSlotCollider: true,
+              type: 'slot-collider',
+              zone: slotZone
+            }
+          });
+        }
         
         return (
           <mesh
