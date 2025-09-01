@@ -1524,7 +1524,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   });
                   return zoneSpaceInfo;
                 })()}
-                doorWidth={furnitureWidthMm} // 도어 너비는 가구 너비와 동일
+                doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비와 동일 (엔드패널 관계없이)
                 doorXOffset={0} // 도어 위치는 변경하지 않음
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}

@@ -393,7 +393,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     moduleDataId: moduleData?.id,
     isDynamic: moduleData?.isDynamic,
     spaceInfoZone: (spaceInfo as any).zone,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    baseConfig: spaceInfo.baseConfig,
+    placementType: spaceInfo.baseConfig?.placementType,
+    floatHeight: spaceInfo.baseConfig?.floatHeight
   });
   
   // mm를 Three.js 단위로 변환
