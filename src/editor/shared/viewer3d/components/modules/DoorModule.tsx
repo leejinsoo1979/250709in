@@ -1095,7 +1095,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 커버도어의 경우 기둥 반대쪽에 힌지를 둬야 기둥 반대 방향으로 열림
     // 기둥이 왼쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림 - 기둥 반대 방향)
     // 기둥이 오른쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림 - 기둥 반대 방향)
-    adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
+    
+    // 단내림 + 노서라운드 조합에서는 힌지 로직을 반대로 적용
+    const isDroppedNoSurround = (spaceInfo as any).zone === 'dropped' && 
+                                spaceInfo.droppedCeiling?.enabled && 
+                                spaceInfo.surroundType === 'no-surround';
+    
+    if (isDroppedNoSurround) {
+      // 단내림 + 노서라운드: 기둥과 같은 쪽에 힌지
+      adjustedHingePosition = columnCheck.columnSide === 'left' ? 'left' : 'right';
+    } else {
+      // 일반 경우: 기둥 반대쪽에 힌지
+      adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
+    }
     
     console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
       originalHinge: hingePosition,
@@ -1104,7 +1116,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorCenterX: slotCenterX,
       moduleData,
       isDoorModule,
-      note: '커버도어: 힌지는 기둥 반대쪽에 위치하여 기둥 반대로 열림'
+      isDroppedNoSurround,
+      zone: (spaceInfo as any).zone,
+      surroundType: spaceInfo.surroundType,
+      note: isDroppedNoSurround ? 
+        '단내림+노서라운드: 힌지는 기둥 쪽에 위치' : 
+        '일반: 힌지는 기둥 반대쪽에 위치'
     });
   } else {
     console.log('🚪 힌지 조정 안함:', {
