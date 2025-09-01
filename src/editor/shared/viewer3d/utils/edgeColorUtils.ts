@@ -46,9 +46,9 @@ export function getEdgeColor(options: EdgeColorOptions): string {
     return '#ff5500';
   }
   
-  // 2D 다크모드일 때 더 밝은 회색으로 변경
+  // 2D 다크모드일 때 진한 주황색으로 변경
   if (viewMode === '2D' && view2DTheme === 'dark') {
-    return '#999999'; // 더 밝게 변경하여 가시성 향상
+    return '#ff6600'; // 진한 주황색으로 변경하여 가시성 향상
   }
   
   // 기본 색상
