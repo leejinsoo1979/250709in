@@ -104,20 +104,43 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const isExistingUpper = moduleInfo.category === 'upper' || module.moduleId.includes('upper-cabinet');
       const isExistingLower = moduleInfo.category === 'lower' || module.moduleId.includes('lower-cabinet');
       
-      // 싱글캐비닛끼리는 반드시 충돌 검사
-      const isMovingSingle = movingModule.moduleId.includes('single-');
-      const isExistingSingle = module.moduleId.includes('single-');
+      console.log('🔍🔍🔍 이동 충돌 검사 상세:', {
+        movingModule: {
+          id: movingModuleId,
+          moduleId: movingModule.moduleId,
+          category: movingModuleInfo?.category,
+          isUpper: isMovingUpper,
+          isLower: isMovingLower
+        },
+        existingModule: {
+          id: module.id,
+          moduleId: module.moduleId,
+          category: moduleInfo.category,
+          isUpper: isExistingUpper,
+          isLower: isExistingLower
+        }
+      });
       
-      if (isMovingSingle && isExistingSingle) {
-        // 싱글캐비닛끼리는 무조건 충돌 검사 진행
-        console.log('🔍 싱글캐비닛끼리 충돌 검사 필요');
-      } else if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
-        // 상부장과 하부장은 같은 슬롯에 공존 가능
-        console.log('✅ 상부장/하부장 공존 가능:', {
+      // 상부장과 하부장은 같은 슬롯에 공존 가능
+      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+        console.log('✅✅✅ 상부장/하부장 공존 가능! 충돌 없음:', {
           moving: { id: movingModuleId, category: isMovingUpper ? 'upper' : 'lower' },
           existing: { id: module.id, category: isExistingUpper ? 'upper' : 'lower' }
         });
         return; // 충돌로 간주하지 않음
+      }
+      
+      // 싱글캐비닛끼리 중에서도 상하부장 체크
+      const isMovingSingle = movingModule.moduleId.includes('single-');
+      const isExistingSingle = module.moduleId.includes('single-');
+      
+      if (isMovingSingle && isExistingSingle) {
+        // 싱글이지만 상하부장인 경우 공존 가능
+        if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+          console.log('✅ 싱글이지만 상하부장 공존 가능');
+          return;
+        }
+        console.log('🔍 싱글캐비닛끼리 충돌 검사 필요');
       }
 
       // 기존 가구의 듀얼 여부 판단 - 모듈 ID로 먼저 판단
