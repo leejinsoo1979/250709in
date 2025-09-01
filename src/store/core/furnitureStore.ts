@@ -3,6 +3,8 @@ import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useSpaceConfigStore } from './spaceConfigStore';
+import { getModuleById } from '@/data/modules';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -936,17 +938,93 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         furnitureCount: state.placedModules.length
       });
       
-      // 강제 리렌더링을 위해 새로운 배열 생성
-      // React는 배열 참조가 변경되어야 리렌더링을 트리거함
-      const updatedModules = [...state.placedModules].map(module => ({
-        ...module,
-        // 타임스탬프를 추가하여 각 객체도 새로운 참조로 만듦
-        _lastYUpdate: Date.now(),
-        _placementType: spaceInfo.baseConfig?.placementType,
-        _floatHeight: spaceInfo.baseConfig?.floatHeight
-      }));
+      // mm를 Three.js 단위로 변환
+      const mmToThreeUnits = (mm: number) => mm * 0.01;
       
-      console.log('📍 Y 위치 업데이트 완료 - 가구 리렌더링 트리거');
+      // 내경 공간 시작점 계산 - PlacedFurnitureContainer와 동일한 로직 사용
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+      
+      let furnitureStartY: number;
+      if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
+        // 받침대 있음: 바닥마감재 + 받침대 높이
+        furnitureStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+      } else if (spaceInfo.baseConfig.type === 'stand') {
+        // 받침대 없음
+        if (spaceInfo.baseConfig.placementType === 'float') {
+          // 띄워서 배치: 바닥마감재 + 띄움 높이
+          const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+          furnitureStartY = mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
+        } else {
+          // 바닥에 배치: 바닥마감재 높이만
+          furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
+        }
+      } else {
+        // 기본값: 0
+        furnitureStartY = 0;
+      }
+      
+      // 내경 공간 계산
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      
+      // 각 가구의 Y 위치 재계산
+      const updatedModules = state.placedModules.map(module => {
+        // 모듈 데이터 가져오기
+        const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+        if (!moduleData) return module;
+        
+        // 상부장인지 하부장인지 확인
+        const isUpperCabinet = moduleData.category === 'upper' || 
+                              module.moduleId.includes('upper-cabinet');
+        const isLowerCabinet = moduleData.category === 'lower' || 
+                              module.moduleId.includes('lower-cabinet');
+        
+        let newY = module.position.y;
+        
+        if (isUpperCabinet) {
+          // 상부장은 천장에 매달림
+          const furnitureHeightMm = moduleData.dimensions.height;
+          
+          // zone에 따라 천장 높이 계산
+          let effectiveCeilingHeight = internalSpace.height;
+          if (module.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+            const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+            effectiveCeilingHeight = internalSpace.height - dropHeight;
+          }
+          
+          // 상부장 Y 위치 = 시작점 + 천장높이 - 가구높이/2
+          newY = furnitureStartY + mmToThreeUnits(effectiveCeilingHeight - furnitureHeightMm / 2);
+        } else if (isLowerCabinet) {
+          // 하부장은 바닥에 배치
+          const furnitureHeightMm = moduleData.dimensions.height;
+          newY = furnitureStartY + mmToThreeUnits(furnitureHeightMm / 2);
+          
+          console.log('📦 하부장 Y 위치 재계산:', {
+            moduleId: module.moduleId,
+            이전Y: module.position.y,
+            새Y: newY,
+            furnitureStartY,
+            furnitureStartY_mm: furnitureStartY * 100,
+            furnitureHeightMm,
+            placementType: spaceInfo.baseConfig?.placementType,
+            floatHeight: spaceInfo.baseConfig?.floatHeight
+          });
+        }
+        
+        return {
+          ...module,
+          position: {
+            ...module.position,
+            y: newY
+          },
+          // 타임스탬프를 추가하여 리렌더링 트리거
+          _lastYUpdate: Date.now(),
+          _placementType: spaceInfo.baseConfig?.placementType,
+          _floatHeight: spaceInfo.baseConfig?.floatHeight
+        };
+      });
+      
+      console.log('📍 Y 위치 업데이트 완료 - 가구 위치 재계산 및 리렌더링');
       
       return {
         placedModules: updatedModules

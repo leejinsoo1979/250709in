@@ -1323,10 +1323,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let furnitureYZone = 0; // 기본값
       
       if (isFullCabinetZone) {
-        // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
-        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        // 키큰장: 바닥부터 천장까지
+        let startHeightMm = 0;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm = spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+        }
         const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
-        furnitureYZone = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        furnitureYZone = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
         
         console.log('🏢 키큰장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
@@ -1366,10 +1371,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           설명: zoneToUse === 'dropped' ? '단내림 구간 - 낮은 천장' : '일반 구간 - 정상 천장'
         });
       } else if (isLowerCabinetZone) {
-        // 하부장: 바닥에서 시작
-        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        // 하부장: 바닥에서 시작 (띄워서 배치 고려)
+        let startHeightMm = 0;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm = spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+        }
         const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
-        furnitureYZone = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        furnitureYZone = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
       }
       
       // 새 모듈 배치
@@ -1512,10 +1522,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let furnitureYClick = 0; // 기본값
         
         if (isFullCabinetClick) {
-          // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
-          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          // 키큰장: 바닥부터 천장까지
+          let startHeightMm = 0;
+          if (spaceInfo.baseConfig?.type === 'floor') {
+            startHeightMm = spaceInfo.baseConfig?.height || 65;
+          } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+            startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+          }
           const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
-          furnitureYClick = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+          furnitureYClick = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
         } else if (isUpperCabinetClick) {
           // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
           const internalHeightMm = internalSpace.height;
@@ -1890,18 +1905,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let furnitureY = 0; // 기본값
     
     if (isFullCabinet) {
-      // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
-      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      // 키큰장: 바닥부터 천장까지
+      let startHeightMm = 0;
+      if (spaceInfo.baseConfig?.type === 'floor') {
+        // 받침대 있음
+        startHeightMm = spaceInfo.baseConfig?.height || 65;
+      } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+        // 띄워서 배치 - 키큰장도 띄움 높이부터 시작
+        startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+      }
       const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
-      furnitureY = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
       
       console.log('🏢 키큰장 드래그 Y 위치 계산:', {
         category: moduleData.category,
-        baseFrameHeightMm,
+        startHeightMm,
         furnitureHeightMm,
         furnitureY,
+        baseConfig: spaceInfo.baseConfig,
         placementType: spaceInfo.baseConfig?.placementType,
-        설명: '키큰장은 항상 바닥부터 시작'
+        floatHeight: spaceInfo.baseConfig?.floatHeight,
+        설명: '키큰장은 바닥/띄움 높이부터 시작'
       });
     } else if (isUpperCabinet) {
       // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
@@ -1920,16 +1944,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         furnitureY
       });
     } else if (isLowerCabinet) {
-      // 하부장: 바닥에서 시작
-      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      // 하부장: 바닥에서 시작 (띄워서 배치 고려)
+      let startHeightMm = 0;
+      if (spaceInfo.baseConfig?.type === 'floor') {
+        // 받침대 있음
+        startHeightMm = spaceInfo.baseConfig?.height || 65;
+      } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+        // 띄워서 배치
+        startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+      }
       const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
-      furnitureY = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
       
       console.log('🔍 하부장 Y 위치 계산:', {
         category: moduleData.category,
-        baseFrameHeightMm,
+        startHeightMm,
         furnitureHeightMm,
-        furnitureY
+        furnitureY,
+        baseConfig: spaceInfo.baseConfig,
+        placementType: spaceInfo.baseConfig?.placementType,
+        floatHeight: spaceInfo.baseConfig?.floatHeight
       });
     }
     
@@ -2567,7 +2601,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
         
         // 띄워서 배치인지 확인
-        const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+        const isFloating = spaceInfo.baseConfig?.placementType === 'float';
         const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
         
         // ColumnGuides와 정확히 동일한 Y 위치 계산
