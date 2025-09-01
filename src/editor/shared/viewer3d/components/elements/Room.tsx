@@ -22,6 +22,7 @@ import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import BoxWithEdges from '../modules/components/BoxWithEdges';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
