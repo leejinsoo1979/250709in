@@ -93,7 +93,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   }, [spaceInfo, columns, placedModules]);
 
   // 가구 충돌 감지 함수 (새 가구 배치용)
-  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false) => {
+  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false, newModuleCategory?: string) => {
     // Column C 슬롯인 경우 충돌 검사 건너뛰기
     if (skipColumnC) {
       const slotInfo = columnSlots[newSlotIndex];
@@ -135,14 +135,32 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
-        collidingModules.push(module.id);
-        if (import.meta.env.DEV) {
-          console.log('🚨 새 가구 배치로 인한 충돌 감지:', {
-            newSlots: occupiedSlots,
-            collidingModule: module.id,
-            existingSlots: moduleSlots,
-            zone
-          });
+        // 상부장과 하부장은 같은 슬롯에 배치 가능
+        const existingCategory = moduleData.category;
+        const canCoexist = 
+          (newModuleCategory === 'upper' && existingCategory === 'lower') ||
+          (newModuleCategory === 'lower' && existingCategory === 'upper');
+        
+        if (!canCoexist) {
+          collidingModules.push(module.id);
+          if (import.meta.env.DEV) {
+            console.log('🚨 새 가구 배치로 인한 충돌 감지:', {
+              newSlots: occupiedSlots,
+              newCategory: newModuleCategory,
+              collidingModule: module.id,
+              existingCategory,
+              existingSlots: moduleSlots,
+              zone
+            });
+          }
+        } else {
+          if (import.meta.env.DEV) {
+            console.log('✅ 상하부장 공존 가능:', {
+              newCategory: newModuleCategory,
+              existingCategory,
+              slot: newSlotIndex
+            });
+          }
         }
       }
     });
@@ -760,7 +778,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       };
       
       // 충돌 감지 및 충돌한 가구 제거
-      const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone);
+      const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleData.category);
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
       }
@@ -960,7 +978,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     };
     
     // 충돌 감지 및 충돌한 가구 제거
-    const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone);
+    const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleData.category);
     if (collidingModules.length > 0) {
       removeCollidingFurniture(collidingModules);
       if (import.meta.env.DEV) {
@@ -1223,7 +1241,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       };
 
       // 캐비넷 배치 시 충돌 감지 및 제거 - zone은 기본값 'normal' 사용
-      const collidingModules = detectNewFurnitureCollisions(cabinet.slotIndex, false, 'normal'); // 캐비넷은 단일 슬롯
+      const cabinetModuleData = getModuleById(cabinet.moduleId, internalSpace, spaceInfo);
+      const collidingModules = detectNewFurnitureCollisions(cabinet.slotIndex, false, 'normal', false, cabinetModuleData?.category); // 캐비넷은 단일 슬롯
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
         if (import.meta.env.DEV) {
