@@ -815,6 +815,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
       furnitureWidthMm -= reduction;
       
+      // 슬롯 경계 체크
+      const slotBoundary = (() => {
+        if (indexing.slotWidths && placedModule.slotIndex !== undefined) {
+          const slotWidth = indexing.slotWidths[placedModule.slotIndex] + 
+                           (placedModule.slotIndex < indexing.slotWidths.length - 1 ? indexing.slotWidths[placedModule.slotIndex + 1] : 0);
+          return slotWidth;
+        }
+        return 0;
+      })();
+      
       console.log('🔧🔧🔧 듀얼장 - 상하부장 인접으로 너비 조정:', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
@@ -822,6 +832,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         isDualFurniture,
         originalWidth,
         adjustedWidth: furnitureWidthMm,
+        slotBoundary,
+        '⚠️ 슬롯초과여부': furnitureWidthMm > slotBoundary ? `초과! ${furnitureWidthMm - slotBoundary}mm` : '정상',
         endPanelSide,
         reduction,
         needsEndPanelAdjustment,
@@ -1548,6 +1560,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               {/* 키큰장과 듀얼장이 상부장/하부장과 인접한 경우 가구 본체를 이동 */}
               {/* 상하부장 자체는 이동하지 않음 */}
               {/* 듀얼장: 한쪽만 맞닿으면 양쪽에서 9mm씩 줄고 반대쪽으로 9mm 이동 */}
+              {/* 싱글 키큰장: 한쪽만 맞닿으면 반대쪽으로 9mm 이동 */}
               <group position={[
                 needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower'
                   ? (endPanelSide === 'both'
