@@ -1546,6 +1546,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <>
               {/* 키큰장과 듀얼장이 상부장/하부장과 인접한 경우 가구 본체를 이동 */}
               {/* 상하부장 자체는 이동하지 않음 */}
+              {/* 듀얼 키큰장: 한쪽만 맞닿으면 반대쪽으로 9mm 이동 */}
               <group position={[
                 needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower'
                   ? (endPanelSide === 'both'
