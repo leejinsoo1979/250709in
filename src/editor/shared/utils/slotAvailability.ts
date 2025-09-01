@@ -195,10 +195,30 @@ export const isSlotAvailable = (
         
         const otherCount = furnitureInSlot.length - upperCount - lowerCount;
         
-        // 상부장/하부장은 각각 1개씩, 기타 가구는 추가 제한
-        if (isNewUpper && upperCount >= 1) return false;
-        if (isNewLower && lowerCount >= 1) return false;
-        if (!isNewUpper && !isNewLower && otherCount >= 2) return false;
+        // Column C에서도 상부장과 하부장은 공존 가능
+        // 상부장/하부장은 각각 1개씩만 허용
+        if (isNewUpper && upperCount >= 1) {
+          console.log('🚫 Column C: 이미 상부장이 있어 추가 상부장 배치 불가');
+          return false;
+        }
+        if (isNewLower && lowerCount >= 1) {
+          console.log('🚫 Column C: 이미 하부장이 있어 추가 하부장 배치 불가');
+          return false;
+        }
+        // 기타 가구는 추가 제한
+        if (!isNewUpper && !isNewLower && otherCount >= 2) {
+          console.log('🚫 Column C: 기타 가구는 최대 2개까지만 배치 가능');
+          return false;
+        }
+        
+        // 상부장과 하부장 공존은 명시적으로 허용
+        console.log('✅ Column C: 상부장/하부장 공존 체크 통과', {
+          isNewUpper,
+          isNewLower,
+          upperCount,
+          lowerCount,
+          otherCount
+        });
         
       } else {
         // 일반 기둥 처리

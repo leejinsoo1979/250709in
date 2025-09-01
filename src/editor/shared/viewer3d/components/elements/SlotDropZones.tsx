@@ -1331,7 +1331,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         const isDual = isDualFurniture(currentDragData.moduleData.id, spaceInfo);
         
         // 슬롯 가용성 검사 - zone별 슬롯 인덱스 사용
-        if (isSlotAvailable(zoneSlotIndex, isDual, placedModules.filter(m => m.zone === zone), spaceInfo, currentDragData.moduleData.id)) {
+        // isSlotAvailable 함수가 zone 필터링을 내부적으로 처리함
+        if (isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, currentDragData.moduleData.id, undefined, zone)) {
           setHoveredSlotIndex(zoneSlotIndex);
         } else {
           setHoveredSlotIndex(null); // 충돌하는 슬롯은 하이라이트 안함
