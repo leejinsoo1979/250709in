@@ -113,7 +113,13 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   // 띄워서 배치여도 내경 높이는 변하지 않음 (가구 배치 공간은 동일)
   // 단지 시작 Y 위치만 올라감
   
-  internalHeight -= topFrameHeight;
+  // 노서라운드 모드에서는 상부 프레임이 없으므로 빼지 않음
+  if (spaceInfo.surroundType !== 'no-surround') {
+    internalHeight -= topFrameHeight;
+    console.log('📐 서라운드 모드: 상부 프레임 높이 차감', { topFrameHeight, internalHeight });
+  } else {
+    console.log('📐 노서라운드 모드: 상부 프레임 없음', { internalHeight });
+  }
   internalHeight -= baseFrameHeight;
   
   // 단내림 구간의 경우 높이 조정

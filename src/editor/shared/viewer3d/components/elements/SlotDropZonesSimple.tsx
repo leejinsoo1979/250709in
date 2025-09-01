@@ -161,6 +161,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     console.log('🎯 handleSlotDrop called:', {
       hasLatestDragData: !!latestDragData,
       latestDragData: latestDragData,
+      moduleCategory: latestDragData?.moduleData?.category || 'unknown',
+      moduleType: latestDragData?.moduleData?.type,
       droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
       droppedCeilingWidth: latestSpaceInfo.droppedCeiling?.width,
       surroundType: latestSpaceInfo.surroundType,

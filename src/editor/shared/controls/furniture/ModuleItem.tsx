@@ -64,6 +64,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         name: module.name,
         dimensions: module.dimensions,
         type: module.type || 'default',
+        category: module.category, // 카테고리 정보 추가
         color: module.color,
         hasDoor: hasDoor, // 현재 도어 상태 포함
         needsWarning: needsWarning // 경고 필요 여부 추가
