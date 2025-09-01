@@ -90,7 +90,7 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              editingModule.moduleId,
+              editingModule.moduleId, // moduleId
               targetModuleId, // excludeModuleId로 전달
               editingModule.zone // targetZone 전달
             );

@@ -171,6 +171,14 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
 
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
+      console.log('🎯 슬롯 겹침 체크:', {
+        occupiedSlots,
+        moduleSlots,
+        hasOverlap,
+        moduleId: module.moduleId,
+        newSlotIndex
+      });
+      
       if (hasOverlap) {
         // 상부장과 하부장은 같은 슬롯에 배치 가능
         const existingCategory = moduleData.category;
@@ -179,6 +187,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           existingCategory,
           moduleId: module.moduleId,
           moduleDataExists: !!moduleData,
+          moduleDataCategory: moduleData?.category,
+          moduleDataId: moduleData?.id,
           slotIndex: newSlotIndex
         });
         
