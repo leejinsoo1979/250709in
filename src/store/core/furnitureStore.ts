@@ -3,6 +3,7 @@ import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useSpaceConfigStore } from './spaceConfigStore';
+import { getModuleById } from '@/data/modules';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -151,7 +152,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       height: spaceInfo.height,
       depth: spaceInfo.depth
     };
-    const { getModuleById } = require('@/data/modules');
     const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
     
     // category 기반 판단 우선, 없으면 ID 기반
