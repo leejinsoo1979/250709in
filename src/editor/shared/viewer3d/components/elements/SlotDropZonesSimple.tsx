@@ -736,6 +736,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         moduleData = dragData.moduleData;
       }
       
+      console.log('📦 최종 모듈 데이터:', {
+        moduleId: moduleData?.id,
+        moduleCategory: moduleData?.category,
+        moduleName: moduleData?.name,
+        moduleHeight: moduleData?.dimensions?.height,
+        isDragDataUsed: moduleData === dragData.moduleData,
+        dragDataCategory: dragData.moduleData?.category
+      });
+      
       
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
       
