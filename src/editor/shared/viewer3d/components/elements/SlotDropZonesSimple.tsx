@@ -2688,10 +2688,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let slotHeight = ceilingY - floorY;
         const currentZone = slotZone;
         if (hasDroppedCeiling && currentZone === 'dropped') {
-          // 단내림 구간은 높이가 낮음
-          const droppedTotalHeight = spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0);
-          const topFrameHeight = spaceInfo.frameSize?.top || 0;
-          const droppedCeilingY = mmToThreeUnits(droppedTotalHeight - topFrameHeight);
+          // 단내림 구간은 높이가 낮음 - internalSpace의 높이에서 dropHeight를 뺀다
+          const droppedHeight = internalSpace.height - (spaceInfo.droppedCeiling?.dropHeight || 0);
+          const droppedCeilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(droppedHeight);
           slotHeight = droppedCeilingY - floorY;
         }
         
@@ -2699,15 +2698,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const colliderY = floorY + slotHeight / 2;
         
         // 디버그: 콜라이더 생성 정보
-        if (slotLocalIndex === 0) {
-          console.log('🎯 Slot Collider 생성:', {
+        if (slotLocalIndex === 0 || (hasDroppedCeiling && slotZone === 'dropped' && slotLocalIndex === 0)) {
+          console.log(`🎯 [${slotZone}] Slot Collider 생성:`, {
             zone: slotZone,
             index: slotLocalIndex,
             position: { x: slotX, y: colliderY, z: zOffset },
             size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
             floorY,
-            floatHeight: isFloating ? floatHeight : 0,
-            baseConfig: spaceInfo.baseConfig
+            ceilingY: slotZone === 'dropped' ? (floorY + slotHeight) : ceilingY,
+            hasDroppedCeiling,
+            droppedCeiling: spaceInfo.droppedCeiling
           });
         }
         
@@ -2731,7 +2731,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <boxGeometry args={[slotWidth, slotHeight, reducedDepth]} />
             <meshBasicMaterial 
               transparent 
-              opacity={0} 
+              opacity={0.2} 
+              color={slotZone === 'dropped' ? '#ff0000' : '#0000ff'}
             />
           </mesh>
         );
