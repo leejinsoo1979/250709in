@@ -55,11 +55,35 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
         if (module.hasGapBackPanel) {
           slotGroups[slotIndex].hasPanel = true;
         }
+        
+        // 듀얼 상부장인 경우 다음 슬롯에도 등록
+        if (module.isDualSlot) {
+          const nextSlotIndex = slotIndex + 1;
+          if (!slotGroups[nextSlotIndex]) {
+            slotGroups[nextSlotIndex] = {};
+          }
+          slotGroups[nextSlotIndex].upper = module;
+          if (module.hasGapBackPanel) {
+            slotGroups[nextSlotIndex].hasPanel = true;
+          }
+        }
       } else if (isLower) {
         slotGroups[slotIndex].lower = module;
         // 하부장에 갭 백패널이 활성화되어 있으면 슬롯에 패널 표시
         if (module.hasGapBackPanel) {
           slotGroups[slotIndex].hasPanel = true;
+        }
+        
+        // 듀얼 하부장인 경우 다음 슬롯에도 등록
+        if (module.isDualSlot) {
+          const nextSlotIndex = slotIndex + 1;
+          if (!slotGroups[nextSlotIndex]) {
+            slotGroups[nextSlotIndex] = {};
+          }
+          slotGroups[nextSlotIndex].lower = module;
+          if (module.hasGapBackPanel) {
+            slotGroups[nextSlotIndex].hasPanel = true;
+          }
         }
       }
     });
@@ -76,10 +100,20 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
       furnitureDepth: number;
     }> = [];
     
+    // 이미 처리된 상하부장 조합을 추적하기 위한 Set
+    const processedPairs = new Set<string>();
+    
     Object.entries(slotGroups).forEach(([slotIndexStr, group]) => {
       // 상부장과 하부장이 모두 있고, 둘 중 하나라도 hasPanel이 true인 경우에만 백패널 생성
       if (group.upper && group.lower && group.hasPanel) {
         const slotIndex = parseInt(slotIndexStr);
+        
+        // 중복 처리 방지를 위한 고유 키 생성
+        const pairKey = `${group.upper.id}-${group.lower.id}`;
+        if (processedPairs.has(pairKey)) {
+          return; // 이미 처리된 조합은 건너뛰기
+        }
+        processedPairs.add(pairKey);
         
         // 상부장과 하부장의 데이터 가져오기
         const upperData = getModuleById(group.upper.moduleId, internalSpace, spaceInfo);
