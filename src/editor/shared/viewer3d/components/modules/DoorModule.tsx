@@ -1075,9 +1075,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                        moduleData?.moduleId?.toLowerCase().includes('door');
   
   if (columnCheck.isNearColumn && isDoorModule) {
-    // 기둥이 왼쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림 - 기둥 반대 방향)
-    // 기둥이 오른쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림 - 기둥 반대 방향)
-    adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
+    // 커버도어의 경우 기둥 쪽에 힌지를 둬야 기둥 반대 방향으로 열림
+    // 기둥이 왼쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림)
+    // 기둥이 오른쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림)
+    adjustedHingePosition = columnCheck.columnSide === 'left' ? 'left' : 'right';
     
     console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
       originalHinge: hingePosition,
@@ -1086,7 +1087,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorCenterX: slotCenterX,
       moduleData,
       isDoorModule,
-      note: '힌지는 기둥 반대쪽에 위치'
+      note: '커버도어: 힌지는 기둥 쪽에 위치하여 반대로 열림'
     });
   } else {
     console.log('🚪 힌지 조정 안함:', {
