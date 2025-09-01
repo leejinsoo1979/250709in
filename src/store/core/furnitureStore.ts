@@ -973,11 +973,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
         if (!moduleData) return module;
         
-        // 상부장인지 하부장인지 확인
+        // 가구 카테고리 확인
         const isUpperCabinet = moduleData.category === 'upper' || 
                               module.moduleId.includes('upper-cabinet');
         const isLowerCabinet = moduleData.category === 'lower' || 
                               module.moduleId.includes('lower-cabinet');
+        const isTallCabinet = moduleData.category === 'full' || 
+                             module.moduleId.includes('tall-cabinet');
         
         let newY = module.position.y;
         
@@ -1000,6 +1002,21 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           newY = furnitureStartY + mmToThreeUnits(furnitureHeightMm / 2);
           
           console.log('📦 하부장 Y 위치 재계산:', {
+            moduleId: module.moduleId,
+            이전Y: module.position.y,
+            새Y: newY,
+            furnitureStartY,
+            furnitureStartY_mm: furnitureStartY * 100,
+            furnitureHeightMm,
+            placementType: spaceInfo.baseConfig?.placementType,
+            floatHeight: spaceInfo.baseConfig?.floatHeight
+          });
+        } else if (isTallCabinet) {
+          // 키큰장은 바닥에서 시작
+          const furnitureHeightMm = moduleData.dimensions.height;
+          newY = furnitureStartY + mmToThreeUnits(furnitureHeightMm / 2);
+          
+          console.log('🏢 키큰장 Y 위치 재계산:', {
             moduleId: module.moduleId,
             이전Y: module.position.y,
             새Y: newY,

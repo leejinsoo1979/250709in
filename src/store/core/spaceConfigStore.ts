@@ -286,9 +286,19 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         (processedInfo.baseConfig?.floatHeight !== undefined && 
          processedInfo.baseConfig?.floatHeight !== state.spaceInfo.baseConfig?.floatHeight);
       
-      // baseConfig, frameSize, surroundType 등이 변경될 때마다 가구 업데이트
+      // 단내림 구간 변경 감지
+      const droppedCeilingChanged = 
+        (processedInfo.droppedCeiling?.enabled !== undefined && 
+         processedInfo.droppedCeiling?.enabled !== state.spaceInfo.droppedCeiling?.enabled) ||
+        (processedInfo.droppedCeiling?.width !== undefined && 
+         processedInfo.droppedCeiling?.width !== state.spaceInfo.droppedCeiling?.width) ||
+        (processedInfo.droppedCeiling?.dropHeight !== undefined && 
+         processedInfo.droppedCeiling?.dropHeight !== state.spaceInfo.droppedCeiling?.dropHeight);
+      
+      // baseConfig, frameSize, surroundType, droppedCeiling 등이 변경될 때마다 가구 업데이트
       const needsFurnitureUpdate = 
         placementChanged ||
+        droppedCeilingChanged ||
         (processedInfo.baseConfig !== undefined && 
          JSON.stringify(processedInfo.baseConfig) !== JSON.stringify(state.spaceInfo.baseConfig)) ||
         (processedInfo.frameSize !== undefined && 
@@ -301,6 +311,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       if (needsFurnitureUpdate) {
         console.log('🎯 가구 업데이트 필요 - 설정 변경 감지:', {
           placementChanged,
+          droppedCeilingChanged,
           baseConfig: processedInfo.baseConfig !== undefined,
           frameSize: processedInfo.frameSize !== undefined,
           surroundType: processedInfo.surroundType !== undefined,
