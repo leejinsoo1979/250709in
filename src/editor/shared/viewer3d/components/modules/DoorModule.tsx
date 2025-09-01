@@ -418,8 +418,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const topFrameThickness = 10;
   
   // 띄워서 배치인 경우 floatHeight 먼저 가져오기 (모든 가구 타입에 적용)
-  if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+  // 듀얼 하부장도 포함하여 체크
+  if (spaceInfo.baseConfig?.placementType === 'float') {
     floatHeight = spaceInfo.baseConfig.floatHeight || 0;
+    console.log('🔴🔴🔴 floatHeight 설정:', {
+      baseConfig_type: spaceInfo.baseConfig?.type,
+      placementType: spaceInfo.baseConfig?.placementType,
+      floatHeight,
+      moduleId: moduleData?.id,
+      isDualLowerCabinet: moduleData?.id?.includes('dual-lower-cabinet')
+    });
   }
   
   // 상부장/하부장 체크
