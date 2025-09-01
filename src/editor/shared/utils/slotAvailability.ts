@@ -98,7 +98,9 @@ export const isSlotAvailable = (
         if (isDualFurniture) {
           // Column C 슬롯에 이미 2개의 가구가 있는지 확인
           const furnitureInSlot = placedModules.filter(m => 
-            m.slotIndex === targetSlot && m.id !== excludeModuleId
+            m.slotIndex === targetSlot && 
+            m.id !== excludeModuleId &&
+            (!targetZone || m.zone === targetZone)
           );
           
           if (furnitureInSlot.length >= 2) {
@@ -110,7 +112,9 @@ export const isSlotAvailable = (
         } else {
           // 싱글 가구는 빈 서브슬롯이 있으면 배치 가능
           const furnitureInSlot = placedModules.filter(m => 
-            m.slotIndex === targetSlot && m.id !== excludeModuleId
+            m.slotIndex === targetSlot && 
+            m.id !== excludeModuleId &&
+            (!targetZone || m.zone === targetZone)
           );
           
           if (furnitureInSlot.length >= 2) {
@@ -143,7 +147,9 @@ export const isSlotAvailable = (
     // Column C 슬롯 - 3개까지 가구 배치 가능 (첫 번째 1개 + 기둥 앞 2개)
     const targetSlot = targetSlots[0]; // 단일 슬롯만 확인
     const furnitureInSlot = placedModules.filter(m => 
-      m.slotIndex === targetSlot && m.id !== excludeModuleId
+      m.slotIndex === targetSlot && 
+      m.id !== excludeModuleId &&
+      (!targetZone || m.zone === targetZone)
     );
     
     console.log('🔵 Column C 슬롯 가용성 확인:', {
@@ -176,6 +182,16 @@ export const isSlotAvailable = (
     for (const placedModule of placedModules) {
       // 제외할 모듈은 건너뛰기
       if (excludeModuleId && placedModule.id === excludeModuleId) {
+        continue;
+      }
+      
+      // zone이 다른 경우 충돌 검사 제외
+      if (targetZone && placedModule.zone && placedModule.zone !== targetZone) {
+        console.log('🔄 다른 zone이므로 건너뛰기:', {
+          targetZone,
+          placedModuleZone: placedModule.zone,
+          moduleId: placedModule.moduleId
+        });
         continue;
       }
       
@@ -244,9 +260,40 @@ export const isSlotAvailable = (
         const moduleSlots = isModuleDual ? [moduleSlot, moduleSlot + 1] : [moduleSlot];
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
         
+        console.log('🎯 슬롯 오버랩 검사:', {
+          targetSlots,
+          moduleSlots,
+          hasOverlap,
+          기존가구: {
+            id: placedModule.id,
+            moduleId: placedModule.moduleId,
+            슬롯: moduleSlot
+          }
+        });
+        
         if (hasOverlap) {
           // 상부장/하부장 카테고리 확인
           const newModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
+          
+          console.log('🔍 모듈 데이터 상세:', {
+            새가구: {
+              moduleId,
+              data: newModuleData ? {
+                id: newModuleData.id,
+                name: newModuleData.name,
+                category: newModuleData.category
+              } : null
+            },
+            기존가구: {
+              moduleId: placedModule.moduleId,
+              data: moduleData ? {
+                id: moduleData.id,
+                name: moduleData.name,
+                category: moduleData.category
+              } : null
+            }
+          });
+          
           const isNewUpper = newModuleData?.category === 'upper' || 
                             moduleId.includes('upper-cabinet') || 
                             moduleId.includes('dual-upper-cabinet');
