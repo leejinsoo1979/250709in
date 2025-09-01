@@ -914,6 +914,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         originalSlotWidthMm = targetZone.slotWidths[placedModule.slotIndex] + targetZone.slotWidths[placedModule.slotIndex + 1];
       } else {
         originalSlotWidthMm = targetZone.slotWidths[placedModule.slotIndex];
+        
+        // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우, 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+        if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture) {
+          const END_PANEL_THICKNESS = 18;
+          const columnCount = targetZone.columnCount;
+          
+          if (spaceInfo.installType === 'freestanding') {
+            // 벽없음: 양쪽 끝 슬롯
+            if (placedModule.slotIndex === 0 || placedModule.slotIndex === columnCount - 1) {
+              originalSlotWidthMm += END_PANEL_THICKNESS;
+              console.log('🔧 노서라운드 단내림 구간 - 엔드패널 슬롯 도어 크기 복원:', {
+                zone: placedModule.zone,
+                slotIndex: placedModule.slotIndex,
+                원래크기: originalSlotWidthMm - END_PANEL_THICKNESS,
+                복원크기: originalSlotWidthMm
+              });
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            // 한쪽벽: 엔드패널이 있는 쪽 슬롯
+            if (!spaceInfo.wallConfig?.left && placedModule.slotIndex === 0) {
+              originalSlotWidthMm += END_PANEL_THICKNESS;
+            } else if (!spaceInfo.wallConfig?.right && placedModule.slotIndex === columnCount - 1) {
+              originalSlotWidthMm += END_PANEL_THICKNESS;
+            }
+          }
+        }
       }
     } else {
       originalSlotWidthMm = actualModuleData?.dimensions.width || 600;
@@ -924,6 +950,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       originalSlotWidthMm = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
     } else {
       originalSlotWidthMm = indexing.slotWidths[placedModule.slotIndex];
+      
+      // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우, 엔드패널 두께를 더해서 원래 슬롯 크기 복원
+      if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture) {
+        const END_PANEL_THICKNESS = 18;
+        const columnCount = indexing.columnCount;
+        
+        if (spaceInfo.installType === 'freestanding') {
+          // 벽없음: 양쪽 끝 슬롯
+          if (placedModule.slotIndex === 0 || placedModule.slotIndex === columnCount - 1) {
+            originalSlotWidthMm += END_PANEL_THICKNESS;
+            console.log('🔧 노서라운드 일반 구간 - 엔드패널 슬롯 도어 크기 복원:', {
+              slotIndex: placedModule.slotIndex,
+              원래크기: originalSlotWidthMm - END_PANEL_THICKNESS,
+              복원크기: originalSlotWidthMm
+            });
+          }
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 한쪽벽: 엔드패널이 있는 쪽 슬롯
+          if (!spaceInfo.wallConfig?.left && placedModule.slotIndex === 0) {
+            originalSlotWidthMm += END_PANEL_THICKNESS;
+          } else if (!spaceInfo.wallConfig?.right && placedModule.slotIndex === columnCount - 1) {
+            originalSlotWidthMm += END_PANEL_THICKNESS;
+          }
+        }
+      }
     }
   } else {
     // 슬롯 너비가 없으면 모듈 기본 너비 사용
