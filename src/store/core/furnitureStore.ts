@@ -936,11 +936,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         furnitureCount: state.placedModules.length
       });
       
-      // 각 가구의 Y 위치는 FurnitureItem 컴포넌트에서 자동 계산되므로
-      // 여기서는 강제 리렌더링을 위해 타임스탬프를 추가
-      const updatedModules = state.placedModules.map(module => ({
+      // 강제 리렌더링을 위해 새로운 배열 생성
+      // React는 배열 참조가 변경되어야 리렌더링을 트리거함
+      const updatedModules = [...state.placedModules].map(module => ({
         ...module,
-        _lastYUpdate: Date.now() // 리렌더링 트리거용
+        // 타임스탬프를 추가하여 각 객체도 새로운 참조로 만듦
+        _lastYUpdate: Date.now(),
+        _placementType: spaceInfo.baseConfig?.placementType,
+        _floatHeight: spaceInfo.baseConfig?.floatHeight
       }));
       
       console.log('📍 Y 위치 업데이트 완료 - 가구 리렌더링 트리거');

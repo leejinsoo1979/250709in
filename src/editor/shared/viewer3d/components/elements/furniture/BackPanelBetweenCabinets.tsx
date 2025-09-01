@@ -147,14 +147,36 @@ const BackPanelBetweenCabinets: React.FC<BackPanelBetweenCabinetsProps> = ({
           furnitureStartYMm = 0;
         }
         
-        // 하부장의 상단 Y 위치 (Three.js 좌표계) - 하부장 상부 마감재(18mm) 포함
-        const lowerTopY = furnitureStartYMm + lowerHeight + 18; // 하부장 상부 마감재 18mm 추가
+        // 하부장의 실제 Y 위치 (저장된 위치 사용)
+        // 하부장의 상단 Y 위치 = 하부장 중심 Y + 높이/2 + 상부 마감재(18mm)
+        const lowerCenterY = group.lower.position.y * 100; // Three.js 단위를 mm로 변환
+        const lowerTopY = lowerCenterY + lowerHeight / 2 + 18; // 하부장 상부 마감재 18mm 추가
         
-        // 상부장의 하단 Y 위치 (Three.js 좌표계) - 상부장 하부 마감재(18mm) 제외
-        const upperBottomY = furnitureStartYMm + internalSpace.height - upperHeight - 18; // 상부장 하부 마감재 18mm 제외
+        // 상부장의 실제 Y 위치 (저장된 위치 사용)
+        // 상부장의 하단 Y 위치 = 상부장 중심 Y - 높이/2 - 하부 마감재(18mm)
+        const upperCenterY = group.upper.position.y * 100; // Three.js 단위를 mm로 변환
+        const upperBottomY = upperCenterY - upperHeight / 2 - 18; // 상부장 하부 마감재 18mm 제외
         
         // 갭 높이 계산 (상하부장 마감재 사이의 거리가 백패널 높이)
         const gapHeight = upperBottomY - lowerTopY;
+        
+        console.log('🎨 백패널 높이 계산:', {
+          slotIndex,
+          lowerModule: group.lower.moduleId,
+          upperModule: group.upper.moduleId,
+          lowerPosition_Y: group.lower.position.y,
+          upperPosition_Y: group.upper.position.y,
+          lowerCenterY_mm: lowerCenterY,
+          upperCenterY_mm: upperCenterY,
+          lowerHeight,
+          upperHeight,
+          lowerTopY,
+          upperBottomY,
+          gapHeight,
+          baseConfig: spaceInfo.baseConfig,
+          placementType: spaceInfo.baseConfig?.placementType,
+          floatHeight: spaceInfo.baseConfig?.floatHeight
+        });
         
         // 갭이 있는 경우만 백패널 생성
         if (gapHeight > 0) {

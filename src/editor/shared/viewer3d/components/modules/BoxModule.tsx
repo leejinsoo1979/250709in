@@ -436,6 +436,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {/* 모든 타입에서 간접조명 렌더링 */}
         {/* IndirectLight는 마지막에 한 번만 렌더링 */}
         <LowerCabinet
+        key={`lower-${spaceInfo?.baseConfig?.placementType}-${spaceInfo?.baseConfig?.floatHeight || 0}`}
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
