@@ -468,6 +468,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (isUpperCabinet || isLowerCabinet) {
     // 상부장/하부장은 가구 높이에 맞춤
     actualDoorHeight = moduleData?.dimensions?.height || (isUpperCabinet ? 600 : 1000);
+    
+    // 상부장이고 단내림 구간인 경우 높이 조정
+    if (isUpperCabinet && (spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+      const internalHeight = spaceInfo.height - dropHeight;
+      // 상부장 높이를 내부 공간 높이에 맞춤 (기본 600mm 대신 실제 내부 높이 사용)
+      actualDoorHeight = Math.min(actualDoorHeight, internalHeight);
+      console.log('🚪📏 단내림 상부장 도어 높이 조정:', {
+        originalHeight: moduleData?.dimensions?.height || 600,
+        dropHeight,
+        internalHeight,
+        adjustedHeight: actualDoorHeight,
+        zone: (spaceInfo as any).zone
+      });
+    }
+    
     doorHeightAdjusted = actualDoorHeight;
     console.log('🚪📏 상하부장 도어 높이:', {
       category: moduleData?.category,
