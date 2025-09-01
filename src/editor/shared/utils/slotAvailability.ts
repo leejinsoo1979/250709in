@@ -184,10 +184,18 @@ export const isSlotAvailable = (
       
       // 상부장/하부장 카테고리 확인
       const newModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
-      const isNewUpper = newModuleData?.category === 'upper' || moduleId.includes('upper-cabinet');
-      const isNewLower = newModuleData?.category === 'lower' || moduleId.includes('lower-cabinet');
-      const isExistingUpper = moduleData.category === 'upper' || placedModule.moduleId.includes('upper-cabinet');
-      const isExistingLower = moduleData.category === 'lower' || placedModule.moduleId.includes('lower-cabinet');
+      const isNewUpper = newModuleData?.category === 'upper' || 
+                        moduleId.includes('upper-cabinet') || 
+                        moduleId.includes('dual-upper-cabinet');
+      const isNewLower = newModuleData?.category === 'lower' || 
+                        moduleId.includes('lower-cabinet') || 
+                        moduleId.includes('dual-lower-cabinet');
+      const isExistingUpper = moduleData.category === 'upper' || 
+                             placedModule.moduleId.includes('upper-cabinet') || 
+                             placedModule.moduleId.includes('dual-upper-cabinet');
+      const isExistingLower = moduleData.category === 'lower' || 
+                             placedModule.moduleId.includes('lower-cabinet') || 
+                             placedModule.moduleId.includes('dual-lower-cabinet');
       
       // 싱글캐비닛끼리는 반드시 충돌 검사
       const isNewSingle = moduleId.includes('single-');
@@ -199,8 +207,19 @@ export const isSlotAvailable = (
       } else if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
         // 상부장과 하부장은 같은 슬롯에 공존 가능
         console.log('✅ 상부장/하부장 공존 가능 (슬롯 가용성 검사):', {
-          new: { moduleId, category: isNewUpper ? 'upper' : 'lower' },
-          existing: { id: placedModule.id, category: isExistingUpper ? 'upper' : 'lower' },
+          new: { 
+            moduleId, 
+            category: newModuleData?.category,
+            isUpper: isNewUpper,
+            isLower: isNewLower
+          },
+          existing: { 
+            id: placedModule.id, 
+            moduleId: placedModule.moduleId,
+            category: moduleData.category,
+            isUpper: isExistingUpper,
+            isLower: isExistingLower
+          },
           targetSlots
         });
         continue; // 충돌로 간주하지 않고 다음 가구 검사

@@ -1909,6 +1909,13 @@ const Room: React.FC<RoomProps> = ({
               });
               
               // 단내림 영역과 일반 영역 프레임 렌더링
+              console.log('🎨🎨 상부프레임 렌더링 (단내림 있음):', {
+                'topFrameMaterial': !!topFrameMaterial,
+                'materialType': topFrameMaterial?.type,
+                'materialColor': topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color?.getHexString() : 'none',
+                '단내림': spaceInfo.droppedCeiling?.enabled,
+                '기둥개수': columns.length
+              });
               return (
                 <>
                   {/* 단내림 영역 상부 프레임 */}
@@ -2034,6 +2041,11 @@ const Room: React.FC<RoomProps> = ({
             
             // 분절된 프레임들 렌더링 (분절이 없으면 기본 프레임 렌더링)
             if (frameSegments.length === 0) {
+              console.log('🎨🎨 상부프레임 렌더링 (기본):', {
+                'topFrameMaterial': !!topFrameMaterial,
+                'materialType': topFrameMaterial?.type,
+                'materialColor': topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color?.getHexString() : 'none'
+              });
               return (
                 <BoxWithEdges
                   args={[
@@ -2788,7 +2800,15 @@ const Room: React.FC<RoomProps> = ({
               });
               
               // 모든 세그먼트 렌더링
-              return allSegments.map((segment, index) => (
+              return allSegments.map((segment, index) => {
+                console.log(`🎨🎨 하부프레임 세그먼트 ${index} (단내림+기둥):`, {
+                  'baseFrameMaterial': !!baseFrameMaterial,
+                  'materialType': baseFrameMaterial?.type,
+                  'materialColor': baseFrameMaterial && 'color' in baseFrameMaterial ? (baseFrameMaterial as any).color?.getHexString() : 'none',
+                  'zone': segment.zone,
+                  'width': segment.width / 0.01
+                });
+                return (
                 <BoxWithEdges
                   key={`base-frame-segment-${index}`}
                   args={[
@@ -2804,7 +2824,8 @@ const Room: React.FC<RoomProps> = ({
                   material={baseFrameMaterial}
                   renderMode={renderMode}
                 />
-              ));
+                );
+              });
             }
             
             // 단내림 없고 기둥만 있는 경우

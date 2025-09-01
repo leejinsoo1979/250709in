@@ -154,7 +154,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             opacity={0}
           />
         ) : (
-          <primitive object={processedMaterial} attach="material" />
+          <primitive key={processedMaterial.uuid} object={processedMaterial} attach="material" />
         )}
       </mesh>
       {/* 윤곽선 렌더링 */}
