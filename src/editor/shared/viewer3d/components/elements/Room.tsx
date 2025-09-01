@@ -2760,6 +2760,97 @@ const Room: React.FC<RoomProps> = ({
             
             // hasDroppedCeiling 변수 정의
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+            const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
+            
+            // 단내림이 있고 기둥도 있는 경우 - 각 구간별로 별도 처리
+            if (hasDroppedCeiling && hasDeepColumns) {
+              const allSegments = [];
+              
+              // 각 구간의 경계 계산
+              const normalBounds = getNormalZoneBounds(spaceInfo);
+              const droppedBounds = getDroppedZoneBounds(spaceInfo);
+              
+              const normalSegmentStartX = mmToThreeUnits(normalBounds.startX);
+              const normalSegmentEndX = mmToThreeUnits(normalBounds.endX);
+              const droppedSegmentStartX = mmToThreeUnits(droppedBounds.startX);
+              const droppedSegmentEndX = mmToThreeUnits(droppedBounds.endX);
+              
+              // 모든 기둥들을 X 위치 기준으로 정렬
+              const sortedColumns = [...columns].filter(col => col.depth >= 730).sort((a, b) => a.position[0] - b.position[0]);
+              
+              // 전체 프레임 범위에서 분절 계산
+              let currentX = frameX - frameWidth / 2;
+              const frameEndX = frameX + frameWidth / 2;
+              
+              sortedColumns.forEach(column => {
+                const columnWidthM = column.width * 0.01;
+                const columnLeftX = column.position[0] - columnWidthM / 2;
+                const columnRightX = column.position[0] + columnWidthM / 2;
+                
+                if (columnLeftX < frameEndX && columnRightX > currentX) {
+                  const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
+                  if (leftSegmentWidth > 0) {
+                    // 세그먼트가 어느 구간에 속하는지 판단
+                    const segmentCenterX = currentX + leftSegmentWidth / 2;
+                    const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                    const zone = isLeftDropped 
+                      ? (segmentCenterX < boundary ? 'dropped' : 'normal')
+                      : (segmentCenterX < boundary ? 'normal' : 'dropped');
+                    
+                    allSegments.push({
+                      width: leftSegmentWidth,
+                      x: currentX + leftSegmentWidth / 2,
+                      zone
+                    });
+                  }
+                  currentX = columnRightX;
+                }
+              });
+              
+              // 마지막 세그먼트
+              const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+              if (lastSegmentWidth > 0) {
+                const segmentCenterX = currentX + lastSegmentWidth / 2;
+                const boundary = isLeftDropped ? droppedSegmentEndX : droppedSegmentStartX;
+                const zone = isLeftDropped 
+                  ? (segmentCenterX < boundary ? 'dropped' : 'normal')
+                  : (segmentCenterX < boundary ? 'normal' : 'dropped');
+                
+                allSegments.push({
+                  width: lastSegmentWidth,
+                  x: currentX + lastSegmentWidth / 2,
+                  zone
+                });
+              }
+              
+              console.log('🔥 [하부프레임] 단내림 구간 세그먼트 생성:', {
+                allSegments: allSegments.map(s => ({
+                  x: s.x / 0.01,
+                  width: s.width / 0.01,
+                  zone: s.zone
+                })),
+                columnsCount: sortedColumns.length
+              });
+              
+              // 모든 세그먼트 렌더링
+              return allSegments.map((segment, index) => (
+                <BoxWithEdges
+                  key={`base-frame-segment-${index}`}
+                  args={[
+                    segment.width,
+                    actualBaseFrameHeight, 
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[
+                    segment.x,
+                    panelStartY + actualBaseFrameHeight/2,
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  material={baseFrameMaterial ?? createFrameMaterial('base')}
+                  renderMode={renderMode}
+                />
+              ));
+            }
             
             // 단내림 없고 기둥만 있는 경우
             if (!hasDroppedCeiling && hasDeepColumns) {
