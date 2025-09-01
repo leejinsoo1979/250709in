@@ -597,17 +597,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 영역 검증 - 활성 영역에 맞는 슬롯인지 확인
       if (zoneToUse === 'dropped' && !zoneInfo.dropped) {
-        console.error('❌ Dropped zone info is null');
-        return false;
+        console.warn('⚠️ Dropped zone info is null, switching to normal zone');
+        zoneToUse = 'normal';
+        if (!zoneInfo.normal) {
+          console.error('❌ Both zone infos are null');
+          return false;
+        }
       } else if (zoneToUse === 'normal' && !zoneInfo.normal) {
-        console.error('❌ Normal zone info is null');
-        return false;
+        console.warn('⚠️ Normal zone info is null, switching to dropped zone');
+        zoneToUse = 'dropped';
+        if (!zoneInfo.dropped) {
+          console.error('❌ Both zone infos are null');
+          return false;
+        }
       }
       
       // 디버깅을 위해 조건을 일시적으로 수정
       const targetZoneInfo = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
       if (targetZoneInfo && slotIndex >= targetZoneInfo.columnCount) {
-        console.error('❌ Invalid slot index for zone:', { 
+        console.warn('⚠️ Slot index out of range, correcting:', { 
           zone: zoneToUse, 
           slotIndex, 
           columnCount: targetZoneInfo.columnCount,
@@ -638,9 +646,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }))
         });
         
-        // 임시로 slotIndex를 보정
-        const correctedIndex = Math.min(slotIndex, targetZoneInfo.columnCount - 1);
-        console.log('🔧 Temporarily correcting slot index:', slotIndex, '->', correctedIndex);
+        // slotIndex를 보정 - 항상 유효한 범위로 조정
+        const correctedIndex = Math.max(0, Math.min(slotIndex, targetZoneInfo.columnCount - 1));
+        console.log('🔧 Correcting slot index to valid range:', slotIndex, '->', correctedIndex);
         slotIndex = correctedIndex;
       }
       
