@@ -745,8 +745,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 슬롯 점유 상태 디버깅
       console.log('📊 현재 슬롯 점유 상태:', {
         zone: zoneToUse,
+        zoneSlotIndex,
+        isDual,
+        targetModuleId: zoneTargetModuleId,
+        surroundType: spaceInfo.surroundType,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        targetZoneInfo: targetZoneInfo ? {
+          columnCount: targetZoneInfo.columnCount,
+          startX: targetZoneInfo.startX,
+          width: targetZoneInfo.width
+        } : null,
         existingModules: zoneExistingModules.map(m => ({
           id: m.id,
+          moduleId: m.moduleId,
           slotIndex: m.slotIndex,
           isDualSlot: m.isDualSlot,
           occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
@@ -758,13 +769,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 듀얼 가구는 2개 슬롯 차지
           let conflict = false;
           if (m.isDualSlot) {
-            // 기존 가구도 듀얼인 경우: 4개 슬롯 중 하나라도 겹치면 충돌
+            // 기존 가구도 듀얼인 경우: 슬롯 범위가 겹치면 충돌
             // 새 듀얼: [zoneSlotIndex, zoneSlotIndex + 1]
             // 기존 듀얼: [m.slotIndex, m.slotIndex + 1]
-            conflict = (m.slotIndex === zoneSlotIndex) || // 같은 위치에서 시작
-                      (m.slotIndex === zoneSlotIndex + 1) || // 기존이 새 가구의 두 번째 슬롯에서 시작
-                      (m.slotIndex === zoneSlotIndex - 1) || // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯과 겹침
-                      (m.slotIndex + 1 === zoneSlotIndex); // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯
+            // 두 범위가 겹치는지 확인
+            const newStart = zoneSlotIndex;
+            const newEnd = zoneSlotIndex + 1;
+            const existingStart = m.slotIndex;
+            const existingEnd = m.slotIndex + 1;
+            
+            // 범위가 겹치는 조건: !(newEnd < existingStart || newStart > existingEnd)
+            conflict = !(newEnd < existingStart || newStart > existingEnd);
           } else {
             // 기존 가구가 싱글인 경우: 새 듀얼의 2개 슬롯 중 하나와 겹치면 충돌
             conflict = m.slotIndex === zoneSlotIndex || m.slotIndex === zoneSlotIndex + 1;
@@ -775,13 +790,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               배치하려는가구: { 
                 slotIndex: zoneSlotIndex, 
                 isDual: true,
-                occupiedSlots: [zoneSlotIndex, zoneSlotIndex + 1] 
+                occupiedSlots: [zoneSlotIndex, zoneSlotIndex + 1],
+                moduleId: zoneTargetModuleId
               },
               기존가구: { 
-                id: m.id, 
+                id: m.id,
+                moduleId: m.moduleId,
                 slotIndex: m.slotIndex, 
                 isDualSlot: m.isDualSlot,
                 occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+              },
+              충돌조건: {
+                newStart,
+                newEnd,
+                existingStart,
+                existingEnd,
+                겹침여부: !(newEnd < existingStart || newStart > existingEnd)
               }
             });
           }
