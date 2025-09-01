@@ -807,6 +807,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 키큰장/듀얼장이 상부장/하부장과 인접한 경우 너비 조정용 변수 (도어는 원래 너비 유지)
   let adjustedFurnitureWidthMm = furnitureWidthMm; // 가구 본체 조정용
   
+  // 원래 슬롯 너비 변수 먼저 선언 (나중에 값 할당)
+  let originalSlotWidthMm: number = 0;
+  
   // 키큰장/듀얼장이 상부장/하부장과 인접한 경우만 너비 조정 (상하부장 자체는 조정 안함)
   if (needsEndPanelAdjustment && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower') {
     const originalWidth = furnitureWidthMm;
@@ -897,7 +900,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 원래 슬롯 너비 저장 (기둥 침범 조정 전, 커버도어용)
   // adjustedWidth가 있어도 도어는 원래 슬롯 크기를 유지해야 함
-  let originalSlotWidthMm;
+  // (변수는 이미 위에서 선언함)
   
   // 단내림 구간 처리를 우선적으로 확인
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
