@@ -1260,6 +1260,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구의 Y 위치를 계산 (변경될 때마다 업데이트)
   const furnitureYPosition = React.useMemo(() => {
+    // placedModule.position.y가 0이 아닌 경우 저장된 Y 위치 사용
+    // (SlotDropZonesSimple에서 계산한 위치 사용)
+    if (placedModule.position.y !== 0 && !isDraggingThis) {
+      console.log('🎯 저장된 Y 위치 사용:', {
+        moduleId: placedModule.moduleId,
+        category: moduleData?.category || actualModuleData?.category,
+        savedY: placedModule.position.y,
+        savedY_mm: placedModule.position.y * 100
+      });
+      return placedModule.position.y;
+    }
+    
+    // 드래그 중이거나 Y가 0인 경우에만 계산
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
     if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
       // 내경 공간 계산 - zone 정보 고려
@@ -1349,7 +1362,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     }
     return yPos;
-  }, [furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis]);
+  }, [placedModule.position.y, furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis]);
 
   // 엔드패널이 있을 때 키큰장 위치 조정 - 도어는 위치 변경 없음
   const furnitureXAdjustment = 0; // 도어 위치는 변경하지 않음
