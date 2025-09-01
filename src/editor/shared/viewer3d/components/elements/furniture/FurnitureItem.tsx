@@ -804,6 +804,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // 키큰장/듀얼장이 상부장/하부장과 인접한 경우 너비 조정용 변수 (도어는 원래 너비 유지)
+  let adjustedFurnitureWidthMm = furnitureWidthMm; // 가구 본체 조정용
+  
   // 키큰장/듀얼장이 상부장/하부장과 인접한 경우만 너비 조정 (상하부장 자체는 조정 안함)
   if (needsEndPanelAdjustment && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower') {
     const originalWidth = furnitureWidthMm;
@@ -813,41 +816,46 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 듀얼 가구는 양쪽에 상하부장이 있을 때 양쪽 18mm씩 총 36mm 줄여야 함
       // 한쪽만 있을 때는 18mm만 줄임
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
-      furnitureWidthMm -= reduction;
+      adjustedFurnitureWidthMm = furnitureWidthMm - reduction; // 가구 본체만 조정
       
-      console.log('🔧 듀얼장 - 상하부장 인접으로 너비 조정:', {
+      console.log('🔧 듀얼장 - 상하부장 인접으로 가구 너비 조정 (도어는 유지):', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
         category: actualModuleData?.category,
         isDualFurniture,
         originalWidth,
-        adjustedWidth: furnitureWidthMm,
+        adjustedFurnitureWidth: adjustedFurnitureWidthMm,
+        doorWidth: originalSlotWidthMm,
         endPanelSide,
         reduction,
         needsEndPanelAdjustment,
         adjacentCheck,
         description: endPanelSide === 'both' 
-          ? '듀얼장 양쪽에 상하부장 - 36mm 축소 (양쪽 18mm씩)'
-          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소`
+          ? '듀얼장 가구 본체만 36mm 축소 (도어는 원래 크기 유지)'
+          : `듀얼장 가구 본체만 ${endPanelSide}쪽 18mm 축소 (도어는 원래 크기 유지)`
       });
     } else {
       // 싱글 키큰장은 기존 로직 유지
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
-      furnitureWidthMm -= reduction;
+      adjustedFurnitureWidthMm = furnitureWidthMm - reduction; // 가구 본체만 조정
       
-      console.log('🔧 키큰장 - 상하부장 인접으로 너비 조정:', {
+      console.log('🔧 키큰장 - 상하부장 인접으로 가구 너비 조정 (도어는 유지):', {
         moduleId: placedModule.moduleId,
         category: actualModuleData?.category,
         isDualFurniture,
         originalWidth,
-        adjustedWidth: furnitureWidthMm,
+        adjustedFurnitureWidth: adjustedFurnitureWidthMm,
+        doorWidth: originalSlotWidthMm,
         endPanelSide,
         reduction,
         description: endPanelSide === 'both' 
-          ? '키큰장 + 양쪽 엔드패널(36mm) = 슬롯 전체 너비'
-          : '키큰장 + 엔드패널(18mm) = 슬롯 전체 너비'
+          ? '키큰장 가구 본체만 36mm 축소 (도어는 원래 크기 유지)'
+          : `키큰장 가구 본체만 ${endPanelSide}쪽 18mm 축소 (도어는 원래 크기 유지)`
       });
     }
+  } else {
+    // 조정이 필요 없는 경우 원래 값 사용
+    adjustedFurnitureWidthMm = furnitureWidthMm;
   }
   
   // 슬롯 가이드와의 크기 비교 로그

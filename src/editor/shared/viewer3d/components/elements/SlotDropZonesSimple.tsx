@@ -687,8 +687,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
-      // 원본 ID에서 타입 부분만 추출 (너비 정보 제거)
-      const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
+      // 원본 ID에서 타입 부분만 추출 (마지막 -숫자 부분만 제거)
+      // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf
+      // 예: lower-cabinet-basic-1000 -> lower-cabinet-basic
+      const lastDashIndex = dragData.moduleData.id.lastIndexOf('-');
+      const lastPart = dragData.moduleData.id.substring(lastDashIndex + 1);
+      let moduleBaseType: string;
+      
+      // 마지막 부분이 숫자인 경우에만 제거
+      if (/^\d+$/.test(lastPart)) {
+        moduleBaseType = dragData.moduleData.id.substring(0, lastDashIndex);
+      } else {
+        // 숫자가 아니면 원본 ID 그대로 사용
+        moduleBaseType = dragData.moduleData.id;
+      }
+      
+      console.log('🔧 모듈 타입 추출:', {
+        원본ID: dragData.moduleData.id,
+        마지막부분: lastPart,
+        숫자여부: /^\d+$/.test(lastPart),
+        추출된타입: moduleBaseType
+      });
       
       // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
       let isDual = dragData.moduleData.id.startsWith('dual-');
@@ -742,8 +761,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         moduleName: moduleData?.name,
         moduleHeight: moduleData?.dimensions?.height,
         isDragDataUsed: moduleData === dragData.moduleData,
-        dragDataCategory: dragData.moduleData?.category
+        dragDataCategory: dragData.moduleData?.category,
+        isUpperCabinet: moduleData?.category === 'upper',
+        isLowerCabinet: moduleData?.category === 'lower'
       });
+      
+      // 상하부장 확인
+      if (!moduleData) {
+        console.error('❌ 모듈 데이터가 없습니다!');
+        return false;
+      }
+      
+      if (!moduleData.category) {
+        console.error('❌ 모듈에 카테고리 정보가 없습니다!', {
+          moduleId: moduleData.id,
+          moduleData
+        });
+      }
       
       
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
