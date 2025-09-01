@@ -58,14 +58,93 @@ const checkAdjacentUpperLowerToFull = (
   // 듀얼 캐비넷의 경우 두 개의 슬롯을 차지
   const isCurrentDual = isDualCabinet || currentModule.isDualSlot;
   
+  // 단내림이 활성화된 경우, 현재 모듈의 zone 판별
+  let currentZone: 'normal' | 'dropped' | undefined;
+  if (spaceInfo.droppedCeiling?.enabled) {
+    const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+    const indexing = ColumnIndexer.calculate(spaceInfo, spaceInfo.customColumnCount);
+    const droppedCount = indexing.zones?.dropped?.columnCount || 0;
+    const normalCount = indexing.zones?.normal?.columnCount || 0;
+    
+    // 단내림 위치에 따라 zone 판별
+    if (droppedPosition === 'left') {
+      currentZone = currentSlotIndex < droppedCount ? 'dropped' : 'normal';
+    } else {
+      currentZone = currentSlotIndex < normalCount ? 'normal' : 'dropped';
+    }
+    
+    console.log('🏗️ Zone 확인:', {
+      currentModule: currentModule.moduleId,
+      currentSlotIndex,
+      currentZone,
+      droppedPosition,
+      droppedCount,
+      normalCount
+    });
+  }
+  
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
   // 듀얼 캐비넷의 경우:
   // - 왼쪽 인접: 첫 번째 슬롯의 왼쪽 (currentSlotIndex - 1)
   // - 오른쪽 인접: 두 번째 슬롯의 오른쪽 (currentSlotIndex + 2)
-  const leftAdjacentModule = allModules.find(m => m.slotIndex === currentSlotIndex - 1);
-  const rightAdjacentModule = isCurrentDual 
+  let leftAdjacentModule = allModules.find(m => m.slotIndex === currentSlotIndex - 1);
+  let rightAdjacentModule = isCurrentDual 
     ? allModules.find(m => m.slotIndex === currentSlotIndex + 2)  // 듀얼은 +2
     : allModules.find(m => m.slotIndex === currentSlotIndex + 1); // 싱글은 +1
+  
+  // 단내림이 활성화된 경우, 인접 모듈이 같은 zone에 있는지 확인
+  if (currentZone && spaceInfo.droppedCeiling?.enabled) {
+    const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+    const indexing = ColumnIndexer.calculate(spaceInfo, spaceInfo.customColumnCount);
+    const droppedCount = indexing.zones?.dropped?.columnCount || 0;
+    const normalCount = indexing.zones?.normal?.columnCount || 0;
+    
+    // 왼쪽 인접 모듈이 다른 zone에 있으면 무시
+    if (leftAdjacentModule) {
+      const leftSlotIndex = leftAdjacentModule.slotIndex;
+      let leftZone: 'normal' | 'dropped';
+      
+      if (droppedPosition === 'left') {
+        leftZone = leftSlotIndex < droppedCount ? 'dropped' : 'normal';
+      } else {
+        leftZone = leftSlotIndex < normalCount ? 'normal' : 'dropped';
+      }
+      
+      if (leftZone !== currentZone) {
+        console.log('🚫 왼쪽 모듈이 다른 zone에 있음 - 인접하지 않음:', {
+          current: currentModule.moduleId,
+          currentZone,
+          leftModule: leftAdjacentModule.moduleId,
+          leftZone,
+          leftSlotIndex
+        });
+        leftAdjacentModule = undefined; // 다른 zone에 있으면 인접하지 않은 것으로 처리
+      }
+    }
+    
+    // 오른쪽 인접 모듈이 다른 zone에 있으면 무시
+    if (rightAdjacentModule) {
+      const rightSlotIndex = rightAdjacentModule.slotIndex;
+      let rightZone: 'normal' | 'dropped';
+      
+      if (droppedPosition === 'left') {
+        rightZone = rightSlotIndex < droppedCount ? 'dropped' : 'normal';
+      } else {
+        rightZone = rightSlotIndex < normalCount ? 'normal' : 'dropped';
+      }
+      
+      if (rightZone !== currentZone) {
+        console.log('🚫 오른쪽 모듈이 다른 zone에 있음 - 인접하지 않음:', {
+          current: currentModule.moduleId,
+          currentZone,
+          rightModule: rightAdjacentModule.moduleId,
+          rightZone,
+          rightSlotIndex
+        });
+        rightAdjacentModule = undefined; // 다른 zone에 있으면 인접하지 않은 것으로 처리
+      }
+    }
+  }
 
   // 양쪽 인접 가구 체크를 위한 변수
   let hasLeftAdjacent = false;
