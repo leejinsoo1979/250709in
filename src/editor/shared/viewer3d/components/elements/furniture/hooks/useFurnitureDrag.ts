@@ -684,10 +684,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // 받침대 높이 확인 - 받침대가 있을 때만 적용
         // baseConfig.type === 'floor': 받침대 있음 (65mm)
         // baseConfig.type === 'stand': 받침대 없음 (0mm)
-        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-        
-        // 상부장 Y 위치: 영역별 천장높이 + 받침대높이 - 가구높이/2
-        calculatedY = mmToThreeUnits(effectiveCeilingHeight + baseFrameHeightMm - furnitureHeightMm / 2);
+        // 상부장은 천장에 고정되므로 바닥 시작점과 무관
+        // 상부장 Y 위치: 천장높이 - 가구높이/2
+        calculatedY = mmToThreeUnits(effectiveCeilingHeight - furnitureHeightMm / 2);
         
         console.log('🔝 드래그 중 상부장 Y 위치 계산:', {
           moduleId: moduleData.id,

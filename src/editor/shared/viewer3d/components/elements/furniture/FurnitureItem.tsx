@@ -1350,17 +1350,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
       // 상부장은 항상 천장에 붙어있어야 함
-      // 바닥재 높이 확인
-      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      // 상부장은 바닥 설정(받침대, 띄워서 배치 등)과 무관하게 천장에 고정
       
-      // 받침대 높이 확인 - 받침대가 있을 때만 적용
-      // baseConfig.type === 'floor': 받침대 있음 (65mm)
-      // baseConfig.type === 'stand': 받침대 없음 (0mm)
-      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-      
-      // 상부장 Y 위치: 내경높이 + 받침대높이 - 가구높이/2
-      // 받침대가 있을 때만 받침대 높이를 더함
-      const yPos = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
+      // 상부장 Y 위치: 내경높이 - 가구높이/2
+      // 상부장은 받침대 높이나 띄워서 배치와 무관하게 항상 천장에 고정
+      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
       // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)
       console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
@@ -1368,11 +1362,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         category: moduleData?.category || actualModuleData?.category || 'unknown',
         zone: placedModule.zone,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-        floorFinishHeightMm,
-        baseFrameHeightMm,
         internalHeightMm,
         furnitureHeightMm,
-        계산식: `${internalHeightMm} + ${baseFrameHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm + baseFrameHeightMm - furnitureHeightMm/2}`,
+        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
         yPos_Three단위: yPos,
         yPos_mm: yPos / 0.01,
         furnitureStartY,
@@ -2143,8 +2135,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // 상부장인 경우 하단에 표시
               if (actualModuleData?.category === 'upper') {
                 const upperHeight = actualModuleData?.dimensions.height || 800;
-                // 상부장의 하단 Y 위치 (더 아래로 조정)
-                return furnitureStartY + mmToThreeUnits(internalSpace.height - upperHeight) - 2.5;
+                // 상부장의 하단 Y 위치 (천장 기준, 받침대와 무관)
+                return mmToThreeUnits(internalSpace.height - upperHeight) - 2.5;
               }
               // 그 외의 경우 기존 위치 (하부 프레임 아래)
               return furnitureStartY - 1.8;

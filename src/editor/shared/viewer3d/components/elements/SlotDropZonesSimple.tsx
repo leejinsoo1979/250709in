@@ -378,6 +378,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       
       // 영역별 인덱싱으로 슬롯 인덱스 계산
+      console.log('🎯 Before getSlotIndexFromRaycast:', {
+        clientX: dragEvent.clientX,
+        clientY: dragEvent.clientY,
+        hasCanvas: !!canvasElement,
+        hasCamera: !!camera,
+        hasScene: !!scene,
+        spaceInfo: {
+          width: latestSpaceInfo.width,
+          height: latestSpaceInfo.height,
+          baseConfig: latestSpaceInfo.baseConfig,
+          droppedCeiling: latestSpaceInfo.droppedCeiling
+        }
+      });
+      
       let slotIndex = getSlotIndexFromRaycast(
         dragEvent.clientX,
         dragEvent.clientY,
@@ -386,6 +400,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         scene,
         latestSpaceInfo  // 최신 spaceInfo 사용
       );
+      
+      console.log('🎯 After getSlotIndexFromRaycast:', {
+        slotIndex,
+        isNull: slotIndex === null,
+        type: typeof slotIndex
+      });
       
       // 콜라이더에서 zone 정보 가져오기
       let colliderZone: 'normal' | 'dropped' | undefined;
