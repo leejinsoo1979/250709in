@@ -394,19 +394,43 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       });
       
+      // 단내림이 있으면 먼저 zone을 판단하고, 해당 zone의 콜라이더만 검사
+      let detectedZone: 'normal' | 'dropped' | undefined;
+      if (latestSpaceInfo.droppedCeiling?.enabled) {
+        // zone 자동 판단 로직
+        detectedZone = zoneToUse;
+      }
+      
       let slotIndex = getSlotIndexFromRaycast(
         dragEvent.clientX,
         dragEvent.clientY,
         canvasElement,
         camera,
         scene,
-        latestSpaceInfo  // 최신 spaceInfo 사용
+        latestSpaceInfo,  // 최신 spaceInfo 사용
+        detectedZone  // zone 정보 전달
       );
+      
+      // 만약 zone을 지정했는데도 못 찾으면 zone 없이 다시 시도
+      if (slotIndex === null && detectedZone) {
+        console.log('⚠️ Zone 지정 실패, 전체 영역에서 다시 검색');
+        slotIndex = getSlotIndexFromRaycast(
+          dragEvent.clientX,
+          dragEvent.clientY,
+          canvasElement,
+          camera,
+          scene,
+          latestSpaceInfo
+        );
+      }
       
       console.log('🎯 After getSlotIndexFromRaycast:', {
         slotIndex,
         isNull: slotIndex === null,
-        type: typeof slotIndex
+        type: typeof slotIndex,
+        detectedZone,
+        zoneToUse,
+        droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled
       });
       
       // 콜라이더에서 zone 정보 가져오기
@@ -668,7 +692,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('🔧 [SlotDropZonesSimple] 영역별 내경 공간 재계산:', {
         zone: zoneToUse,
         originalInternalSpace: zoneInternalSpace,
-        recalculatedInternalSpace: recalculatedZoneInternalSpace
+        recalculatedInternalSpace: recalculatedZoneInternalSpace,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        dropHeight: spaceInfo.droppedCeiling?.dropHeight,
+        isHeightReducedForDropped: zoneToUse === 'dropped'
       });
       
       // 영역별 모듈 목록 생성

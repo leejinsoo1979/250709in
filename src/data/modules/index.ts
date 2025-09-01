@@ -121,6 +121,17 @@ export const getModuleById = (
     }
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
+    
+    console.log('🔍 [getModuleById] 생성된 모듈 확인:', {
+      searchingId: id,
+      generatedCount: dynamicModules.length,
+      generatedIds: dynamicModules.map(m => m.id),
+      upperModules: dynamicModules.filter(m => m.category === 'upper').map(m => m.id),
+      lowerModules: dynamicModules.filter(m => m.category === 'lower').map(m => m.id),
+      zone: (modifiedSpaceInfo as any).zone,
+      internalSpaceHeight: internalSpace.height
+    });
+    
     const found = dynamicModules.find(module => module.id === id);
     if (found) {
       console.log('✅ [getModuleById] 모듈 찾음:', {
@@ -129,6 +140,11 @@ export const getModuleById = (
         width: found.dimensions.width
       });
       return found;
+    } else {
+      console.warn('⚠️ [getModuleById] 모듈을 찾을 수 없음:', {
+        searchingId: id,
+        availableIds: dynamicModules.map(m => m.id).slice(0, 10)
+      });
     }
   }
   

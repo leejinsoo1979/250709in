@@ -1315,23 +1315,32 @@ export const generateShelvingModules = (
     modules.push(createDualType6(dualWidth, maxHeight));
     
     // === 듀얼 상부장 가구 생성 ===
-    modules.push(createDualUpperCabinet1(dualWidth));
-    modules.push(createDualUpperCabinet2(dualWidth));
-    modules.push(createDualUpperCabinet3(dualWidth));
-    modules.push(createDualUpperCabinet4(dualWidth));
+    // 상부장 높이 체크 (600mm)
+    if (internalSpace.height >= 600) {
+      modules.push(createDualUpperCabinet1(dualWidth));
+      modules.push(createDualUpperCabinet2(dualWidth));
+      modules.push(createDualUpperCabinet3(dualWidth));
+      modules.push(createDualUpperCabinet4(dualWidth));
+    }
     
     // === 듀얼 하부장 가구 생성 ===
-    modules.push(createDualLowerCabinet1(dualWidth));
-    modules.push(createDualLowerCabinet2(dualWidth));
+    // 하부장 높이 체크 (1000mm)
+    if (internalSpace.height >= 1000) {
+      modules.push(createDualLowerCabinet1(dualWidth));
+      modules.push(createDualLowerCabinet2(dualWidth));
+    }
   }
   
   // === 싱글 상부장 가구 생성 ===
+  // 상부장은 항상 생성 (단내림 구간에서도 천장 기준으로 배치되므로)
   const upperCabinet1 = createUpperCabinet1(columnWidth);
   console.log('🔨 상부장 1 생성:', {
     id: upperCabinet1.id,
     name: upperCabinet1.name,
     category: upperCabinet1.category,
-    dimensions: upperCabinet1.dimensions
+    dimensions: upperCabinet1.dimensions,
+    internalSpaceHeight: internalSpace.height,
+    zone: (indexingSpaceInfo as any).zone
   });
   modules.push(upperCabinet1);
   modules.push(createUpperCabinet2(columnWidth));
@@ -1339,12 +1348,15 @@ export const generateShelvingModules = (
   modules.push(createUpperCabinet4(columnWidth)); // 새로운 2단형 추가
   
   // === 싱글 하부장 가구 생성 ===
+  // 하부장도 항상 생성 (배치 가능 여부는 UI에서 판단)
   const lowerCabinet1 = createLowerCabinet1(columnWidth);
   console.log('🔨 하부장 생성:', {
     id: lowerCabinet1.id,
     name: lowerCabinet1.name,
     category: lowerCabinet1.category,
-    dimensions: lowerCabinet1.dimensions
+    dimensions: lowerCabinet1.dimensions,
+    internalSpaceHeight: internalSpace.height,
+    zone: (indexingSpaceInfo as any).zone
   });
   modules.push(lowerCabinet1);
   
@@ -1353,7 +1365,9 @@ export const generateShelvingModules = (
     id: lowerCabinet2.id,
     name: lowerCabinet2.name,
     category: lowerCabinet2.category,
-    dimensions: lowerCabinet2.dimensions
+    dimensions: lowerCabinet2.dimensions,
+    internalSpaceHeight: internalSpace.height,
+    zone: (indexingSpaceInfo as any).zone
   });
   modules.push(lowerCabinet2);
   
