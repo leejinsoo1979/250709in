@@ -2717,9 +2717,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 콜라이더 깊이를 적절하게 설정 (100mm 정도로 얇게)
-        const reducedDepth = mmToThreeUnits(100);
-        const zOffset = mmToThreeUnits(50); // 앞쪽으로 배치
+        // 콜라이더 깊이를 공간 깊이의 절반 정도로 설정
+        const reducedDepth = slotDimensions.depth * 0.8;
+        const zOffset = 0; // 중앙에 배치
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
@@ -2765,19 +2765,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 슬롯의 중앙 Y 위치
         const colliderY = floorY + slotHeight / 2;
         
-        // 디버그: 콜라이더 생성 정보
-        if (slotLocalIndex === 0 || (hasDroppedCeiling && slotZone === 'dropped' && slotLocalIndex === 0)) {
-          console.log(`🎯 [${slotZone}] Slot Collider 생성:`, {
-            zone: slotZone,
-            index: slotLocalIndex,
-            position: { x: slotX, y: colliderY, z: zOffset },
-            size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
-            floorY,
-            ceilingY: slotZone === 'dropped' ? (floorY + slotHeight) : ceilingY,
-            hasDroppedCeiling,
-            droppedCeiling: spaceInfo.droppedCeiling
-          });
-        }
+        // 디버그: 모든 콜라이더 생성 정보
+        console.log(`🎯 [${slotZone}] Slot Collider ${slotLocalIndex} 생성:`, {
+          zone: slotZone,
+          index: slotLocalIndex,
+          position: { x: slotX, y: colliderY, z: zOffset },
+          size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
+          floorY,
+          ceilingY: slotZone === 'dropped' ? (floorY + slotHeight) : ceilingY,
+          hasDroppedCeiling,
+          droppedCeiling: spaceInfo.droppedCeiling,
+          slotDimensions,
+          internalSpace
+        });
         
         return (
           <mesh
@@ -2799,7 +2799,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <boxGeometry args={[slotWidth, slotHeight, reducedDepth]} />
             <meshBasicMaterial 
               transparent 
-              opacity={0}
+              opacity={0.3}
+              color={slotZone === 'dropped' ? '#ff0000' : '#0000ff'}
             />
           </mesh>
         );
