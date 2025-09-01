@@ -683,19 +683,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       floatHeight,
       isLowerCabinet,
       moduleId: moduleData?.id,
+      isDualLowerCabinet: moduleData?.id?.includes('dual-lower-cabinet'),
       moduleCategory: moduleData?.category,
       baseConfig: spaceInfo.baseConfig,
-      placementType: spaceInfo.baseConfig?.placementType
+      placementType: spaceInfo.baseConfig?.placementType,
+      baseConfigType: spaceInfo.baseConfig?.type,
+      slotWidths
     });
     
     const furnitureHeight = moduleData?.dimensions?.height || 1000;
     const upperExtension = 18;  // 위로 18mm
     let lowerExtension = 0;  // 아래 확장값 (else 블록에서 설정)
     
-    console.log('🔴🔴🔴 floatHeight 체크:', floatHeight, '> 0 ?', floatHeight > 0);
+    console.log('🔴🔴🔴 floatHeight 체크:', {
+      floatHeight,
+      floatHeight_greaterThanZero: floatHeight > 0,
+      typeOfFloatHeight: typeof floatHeight,
+      baseConfig: spaceInfo.baseConfig,
+      moduleId: moduleData?.id
+    });
     
     if (floatHeight > 0) {
-      console.log('🔴🔴🔴 IF 블록 진입 - 띄움 배치');
+      console.log('🔴🔴🔴 IF 블록 진입 - 띄움 배치 (듀얼 하부장 포함)');
       // 띄워서 배치: 위로 18mm 확장, 아래는 정상
       
       // 도어 높이: 가구 높이 + 위 확장(18mm)
