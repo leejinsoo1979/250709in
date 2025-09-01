@@ -2326,7 +2326,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS) // 얇은 두께
                   ]}
                   position={[0, 0, 0]} // group 내에서 원점에 배치
-                  material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={topSubFrameMaterial}
                   renderMode={renderMode}
                 />
               </group>
@@ -2437,7 +2437,7 @@ const Room: React.FC<RoomProps> = ({
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
                 position={[0, 0, 0]}
-                material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                material={leftSubFrameMaterial}
                 renderMode={renderMode}
               />
             </group>
@@ -2473,7 +2473,7 @@ const Room: React.FC<RoomProps> = ({
                 mmToThreeUnits(END_PANEL_THICKNESS)
               ]}
               position={[0, 0, 0]}
-              material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+              material={leftSubFrameMaterial}
               renderMode={renderMode}
             />
           </group>
@@ -2582,7 +2582,7 @@ const Room: React.FC<RoomProps> = ({
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
                 position={[0, 0, 0]}
-                material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                material={rightSubFrameMaterial}
                 renderMode={renderMode}
               />
             </group>
@@ -2617,7 +2617,7 @@ const Room: React.FC<RoomProps> = ({
                 mmToThreeUnits(END_PANEL_THICKNESS)
               ]}
               position={[0, 0, 0]}
-              material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+              material={rightSubFrameMaterial}
               renderMode={renderMode}
             />
           </group>
