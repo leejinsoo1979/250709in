@@ -68,12 +68,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
   
-  // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
+  // 기둥 위치나 크기 변경 시 렌더링 업데이트
   useEffect(() => {
-    if (!isDragging) {
-      tempPositionRef.current = position; // 위치 동기화
-    }
-  }, [position, width, height, depth, isDragging]);
+    // 드래그 중이 아니거나, position이 변경되었을 때 tempPositionRef 동기화
+    // 이렇게 하면 팝업에서 확인 후 위치가 변경되었을 때도 반영됨
+    tempPositionRef.current = position; // 위치 항상 동기화
+  }, [position, width, height, depth]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
@@ -251,8 +251,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     event.nativeEvent.stopPropagation();
     // passive 이벤트 리스너 경고 방지 - preventDefault 제거
     
-    const currentZone = getZoneForPosition(position[0]);
-    console.log('🎯 기둥 포인터 다운:', id, '현재 구역:', currentZone, '위치:', position[0]);
+    // 현재 실제 위치 확인 (tempPositionRef가 있으면 그것을 사용, 없으면 props position 사용)
+    const currentActualPosition = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
+    const currentZone = getZoneForPosition(currentActualPosition);
+    console.log('🎯 기둥 포인터 다운:', id, '현재 구역:', currentZone, '위치:', currentActualPosition, 'props position:', position[0], 'temp position:', tempPositionRef.current?.[0]);
     
     setPointerDownTime(Date.now());
     setHasMoved(false);
@@ -281,8 +283,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !isDraggingRef.current) {
-        const zone = getZoneForPosition(position[0]);
-        console.log('🚀 기둥 드래그 시작:', id, '구역:', zone);
+        // 드래그 시작 시점의 실제 위치 사용
+        const startActualPosition = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
+        const zone = getZoneForPosition(startActualPosition);
+        console.log('🚀 기둥 드래그 시작:', id, '구역:', zone, '시작 위치:', startActualPosition);
         setHasMoved(true);
         setIsDragging(true);
         isDraggingRef.current = true;
@@ -370,8 +374,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       
       // 구역 교차 검사 (단내림이 활성화된 경우에만)
       if (spaceConfig.spaceInfo.droppedCeiling?.enabled) {
-        // 현재 위치를 실시간으로 체크 (tempPositionRef가 있으면 그것을 사용)
-        const currentPosX = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
+        // 현재 위치를 실시간으로 체크 (tempPositionRef를 항상 사용)
+        const currentPosX = tempPositionRef.current[0];
         const currentZone = getZoneForPosition(currentPosX);
         const newZone = getZoneForPosition(newX);
         
