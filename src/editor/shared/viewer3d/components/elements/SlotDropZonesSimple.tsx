@@ -1283,11 +1283,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
       const adjustedDepth = defaultDepth;
       
+      // 상부장/하부장 체크 및 Y 위치 계산
+      const isUpperCabinetZone = moduleData?.category === 'upper';
+      const isLowerCabinetZone = moduleData?.category === 'lower';
+      
+      let furnitureYZone = 0; // 기본값
+      
+      if (isUpperCabinetZone) {
+        // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
+        const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        
+        // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+        furnitureYZone = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      } else if (isLowerCabinetZone) {
+        // 하부장: 바닥에서 시작
+        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+        furnitureYZone = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      }
+      
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
         moduleId: zoneTargetModuleId, // 정확한 너비를 포함한 모듈 ID 사용
-        position: { x: furnitureX, y: 0, z: 0 }, // 기둥 침범 시 조정된 위치 사용
+        position: { x: furnitureX, y: furnitureYZone, z: 0 }, // 기둥 침범 시 조정된 위치 사용
         rotation: 0,
         hasDoor: false,
         customDepth: adjustedDepth, // 조정된 깊이 사용
@@ -1415,12 +1436,33 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
           ?.userData;
         
+        // 상부장/하부장 체크 및 Y 위치 계산
+        const isUpperCabinetClick = moduleData?.category === 'upper';
+        const isLowerCabinetClick = moduleData?.category === 'lower';
+        
+        let furnitureYClick = 0; // 기본값
+        
+        if (isUpperCabinetClick) {
+          // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
+          const internalHeightMm = internalSpace.height;
+          const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          
+          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+          furnitureYClick = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        } else if (isLowerCabinetClick) {
+          // 하부장: 바닥에서 시작
+          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+          furnitureYClick = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        }
+        
         // 클릭한 슬롯의 영역 정보 사용
         const targetZone = colliderUserData?.zone || 'normal';
         const newModule = {
           id: placedId,
           moduleId: moduleData.id,
-          position: { x: finalX, y: 0, z: 0 },
+          position: { x: finalX, y: furnitureYClick, z: 0 },
           rotation: 0,
           slotIndex,
           depth: defaultDepth,
@@ -1766,11 +1808,47 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     }
     
+    // 상부장/하부장 체크 및 Y 위치 계산
+    const isUpperCabinet = moduleData?.category === 'upper';
+    const isLowerCabinet = moduleData?.category === 'lower';
+    
+    let furnitureY = 0; // 기본값
+    
+    if (isUpperCabinet) {
+      // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
+      const internalHeightMm = adjustedInternalSpace?.height || internalSpace.height;
+      const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      
+      // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+      furnitureY = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      
+      console.log('🔍 상부장 Y 위치 계산:', {
+        category: moduleData.category,
+        internalHeightMm,
+        furnitureHeightMm,
+        baseFrameHeightMm,
+        furnitureY
+      });
+    } else if (isLowerCabinet) {
+      // 하부장: 바닥에서 시작
+      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+      furnitureY = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      
+      console.log('🔍 하부장 Y 위치 계산:', {
+        category: moduleData.category,
+        baseFrameHeightMm,
+        furnitureHeightMm,
+        furnitureY
+      });
+    }
+    
     // 새 모듈 배치
     const newModule: any = {
       id: placedId,
       moduleId: isDual ? dualTargetModuleId : targetModuleId, // 듀얼의 경우 합계 너비 ID 사용
-      position: { x: adjustedPosition, y: 0, z: 0 },
+      position: { x: adjustedPosition, y: furnitureY, z: 0 },
       rotation: 0,
       hasDoor: false,
       customDepth: defaultDepth,
