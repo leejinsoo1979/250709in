@@ -260,15 +260,8 @@ export const isSlotAvailable = (
                                  placedModule.moduleId.includes('lower-cabinet') || 
                                  placedModule.moduleId.includes('dual-lower-cabinet');
           
-          // 싱글캐비닛끼리는 반드시 충돌 검사
-          const isNewSingle = moduleId.includes('single-');
-          const isExistingSingle = placedModule.moduleId.includes('single-');
-          
-          if (isNewSingle && isExistingSingle) {
-            // 싱글캐비닛끼리는 무조건 충돌 검사 진행
-            console.log('🔍 싱글캐비닛끼리 충돌 검사');
-          } else if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
-            // 상부장과 하부장은 같은 슬롯에 공존 가능
+          // 상부장과 하부장은 같은 슬롯에 공존 가능
+          if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
             console.log('✅ 상부장/하부장 공존 가능 (슬롯 가용성 검사):', {
               new: { 
                 moduleId, 
@@ -287,6 +280,8 @@ export const isSlotAvailable = (
             });
             continue; // 충돌로 간주하지 않고 다음 가구 검사
           }
+          
+          // 같은 카테고리의 가구는 충돌
           // 디버그 로그 - 충돌 상세 정보
           console.log('🚫 슬롯 충돌 감지!', {
             충돌위치: targetSlots.filter(slot => moduleSlots.includes(slot)),
@@ -297,15 +292,17 @@ export const isSlotAvailable = (
               슬롯: moduleSlot,
               듀얼: isModuleDual,
               차지슬롯: moduleSlots,
-              isUpper: placedModule.moduleId.includes('upper-cabinet'),
-              isLower: placedModule.moduleId.includes('lower-cabinet')
+              category: moduleData.category,
+              isUpper: isExistingUpper,
+              isLower: isExistingLower
             },
             새가구: {
               moduleId: moduleId,
               듀얼: isDualFurniture,
               타겟슬롯: targetSlots,
-              isUpper: moduleId.includes('upper-cabinet'),
-              isLower: moduleId.includes('lower-cabinet')
+              category: newModuleData?.category,
+              isUpper: isNewUpper,
+              isLower: isNewLower
             }
           });
           return false; // 충돌 발견
