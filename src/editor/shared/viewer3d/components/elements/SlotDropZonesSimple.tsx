@@ -1315,13 +1315,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
       const adjustedDepth = defaultDepth;
       
-      // 상부장/하부장 체크 및 Y 위치 계산
+      // 상부장/하부장/키큰장 체크 및 Y 위치 계산
       const isUpperCabinetZone = moduleData?.category === 'upper';
       const isLowerCabinetZone = moduleData?.category === 'lower';
+      const isFullCabinetZone = moduleData?.category === 'full';
       
       let furnitureYZone = 0; // 기본값
       
-      if (isUpperCabinetZone) {
+      if (isFullCabinetZone) {
+        // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
+        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+        furnitureYZone = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        
+        console.log('🏢 키큰장 초기 배치 Y 위치 계산:', {
+          zone: zoneToUse,
+          baseFrameHeightMm,
+          furnitureHeightMm,
+          furnitureYZone,
+          placementType: spaceInfo.baseConfig?.placementType,
+          설명: '키큰장은 항상 바닥부터 시작'
+        });
+      } else if (isUpperCabinetZone) {
         // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
         // 단내림 구간에서는 zoneInternalSpace 사용, 일반 구간에서는 internalSpace 사용
         const effectiveInternalSpace = zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace : internalSpace;
@@ -1489,13 +1504,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
           ?.userData;
         
-        // 상부장/하부장 체크 및 Y 위치 계산
+        // 상부장/하부장/키큰장 체크 및 Y 위치 계산
         const isUpperCabinetClick = moduleData?.category === 'upper';
         const isLowerCabinetClick = moduleData?.category === 'lower';
+        const isFullCabinetClick = moduleData?.category === 'full';
         
         let furnitureYClick = 0; // 기본값
         
-        if (isUpperCabinetClick) {
+        if (isFullCabinetClick) {
+          // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
+          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+          const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+          furnitureYClick = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        } else if (isUpperCabinetClick) {
           // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
           const internalHeightMm = internalSpace.height;
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
@@ -1861,13 +1882,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     }
     
-    // 상부장/하부장 체크 및 Y 위치 계산
+    // 상부장/하부장/키큰장 체크 및 Y 위치 계산
     const isUpperCabinet = moduleData?.category === 'upper';
     const isLowerCabinet = moduleData?.category === 'lower';
+    const isFullCabinet = moduleData?.category === 'full';
     
     let furnitureY = 0; // 기본값
     
-    if (isUpperCabinet) {
+    if (isFullCabinet) {
+      // 키큰장: 바닥부터 천장까지 (띄워서 배치 시에도 바닥 기준)
+      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+      furnitureY = (baseFrameHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      
+      console.log('🏢 키큰장 드래그 Y 위치 계산:', {
+        category: moduleData.category,
+        baseFrameHeightMm,
+        furnitureHeightMm,
+        furnitureY,
+        placementType: spaceInfo.baseConfig?.placementType,
+        설명: '키큰장은 항상 바닥부터 시작'
+      });
+    } else if (isUpperCabinet) {
       // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
       const internalHeightMm = adjustedInternalSpace?.height || internalSpace.height;
       const furnitureHeightMm = moduleData?.dimensions?.height || 600;
