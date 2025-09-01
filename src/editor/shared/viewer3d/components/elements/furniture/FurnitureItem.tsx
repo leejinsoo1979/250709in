@@ -1584,17 +1584,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 })()}
                 doorWidth={(() => {
                   // originalSlotWidthMm이 이미 듀얼/싱글, 단내림 구간 모두 고려하여 계산됨
-                  console.log('🚪 도어 너비 설정:', {
+                  console.log('🚪🚪🚪 도어 너비 설정 (듀얼 체크):', {
                     moduleId: placedModule.moduleId,
                     slotIndex: placedModule.slotIndex,
                     zone: placedModule.zone,
                     isDualFurniture,
+                    isDualSlot: placedModule.isDualSlot,
                     doorWidth: originalSlotWidthMm,
                     furnitureWidthMm,
+                    customWidth: placedModule.customWidth,
+                    adjustedWidth: placedModule.adjustedWidth,
                     needsEndPanelAdjustment,
                     endPanelSide,
-                    surroundType: spaceInfo.surroundType
+                    surroundType: spaceInfo.surroundType,
+                    설명: isDualFurniture ? '듀얼 상부장 - 두 슬롯 너비 합' : '싱글 상부장'
                   });
+                  
+                  // 듀얼 상부장의 도어는 항상 원래 슬롯 너비(두 슬롯의 합) 유지
                   return originalSlotWidthMm;
                 })()} // 도어 너비는 원래 슬롯 너비와 동일 (엔드패널 관계없이)
                 doorXOffset={0} // 도어 위치는 변경하지 않음
@@ -1619,16 +1625,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       widths = [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
                     }
                     
-                    // 상하부장과 인접한 경우 슬롯 너비 조정
-                    if (widths && needsEndPanelAdjustment) {
-                      if (endPanelSide === 'both') {
-                        // 양쪽에 상하부장이 있는 경우: 각 슬롯에서 18mm씩 빼기
-                        return [widths[0] - END_PANEL_THICKNESS, widths[1] - END_PANEL_THICKNESS];
-                      } else {
-                        // 한쪽에만 상하부장이 있는 경우: 각 슬롯에서 9mm씩 빼기  
-                        return [widths[0] - END_PANEL_THICKNESS/2, widths[1] - END_PANEL_THICKNESS/2];
-                      }
-                    }
+                    // 도어는 엔드패널 조정을 받지 않음 - 원래 슬롯 너비 유지
+                    // 가구 본체는 adjustedWidth로 크기가 조정되지만 도어는 원래 크기 유지
                     
                     return widths;
                   }

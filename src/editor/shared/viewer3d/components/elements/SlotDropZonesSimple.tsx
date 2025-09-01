@@ -1368,10 +1368,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const effectiveInternalSpace = zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace : internalSpace;
         const internalHeightMm = effectiveInternalSpace.height;
         const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-        const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
         
-        // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
-        furnitureYZone = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        // 상부장은 천장에 고정되므로 받침대 높이와 무관
+        // 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+        furnitureYZone = (internalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
         
         console.log('🔝 상부장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
@@ -1385,11 +1385,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           },
           effectiveHeight: internalHeightMm,
           droppedCeiling: spaceInfo.droppedCeiling,
-          baseFrameHeightMm,
           furnitureHeightMm,
           furnitureYZone,
           furnitureYZone_mm: furnitureYZone * 100,
-          설명: zoneToUse === 'dropped' ? '단내림 구간 - 낮은 천장' : '일반 구간 - 정상 천장'
+          baseConfig: spaceInfo.baseConfig,
+          설명: '상부장은 천장 고정 (받침대/띄워서 배치와 무관)'
         });
       } else if (isLowerCabinetZone) {
         // 하부장: 바닥에서 시작 (띄워서 배치 고려)
@@ -1558,10 +1558,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
           const internalHeightMm = internalSpace.height;
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
           
-          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
-          furnitureYClick = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+          // 상부장은 천장에 고정되므로 받침대 높이와 무관
+          // 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+          furnitureYClick = (internalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
         } else if (isLowerCabinetClick) {
           // 하부장: 바닥에서 시작 (바닥마감재와 띄워서 배치 고려)
           const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
