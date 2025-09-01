@@ -1010,8 +1010,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       return { isNearColumn: false, columnSide: null };
     }
     
-    // 도어의 실제 위치 계산 (Three.js 좌표)
-    const doorCenterX = slotCenterX || 0;
+    // 노서라운드 모드에서 엔드패널 보정값 계산
+    let positionAdjustment = 0;
+    if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
+      const endPanelThickness = 18;
+      const hasLeftEndPanel = slotIndex === 0 && actualDoorWidth < indexing.columnWidth;
+      const hasRightEndPanel = slotIndex === (columnCount - 1) && actualDoorWidth < indexing.columnWidth;
+      
+      if (hasLeftEndPanel) {
+        positionAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+      } else if (hasRightEndPanel) {
+        positionAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+      }
+    }
+    
+    // 도어의 실제 위치 계산 (Three.js 좌표) - 노서라운드 보정값 포함
+    const doorCenterX = (slotCenterX || 0) + mmToThreeUnits(positionAdjustment);
     const doorLeftEdge = doorCenterX - mmToThreeUnits(actualDoorWidth / 2);
     const doorRightEdge = doorCenterX + mmToThreeUnits(actualDoorWidth / 2);
     
@@ -1020,7 +1034,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorLeftEdge,
       doorRightEdge,
       actualDoorWidth,
-      slotCenterX
+      slotCenterX,
+      positionAdjustment,
+      surroundType: spaceInfo.surroundType,
+      note: positionAdjustment !== 0 ? '노서라운드 보정 적용됨' : '보정 없음'
     });
     
     // 각 기둥과의 거리 체크
