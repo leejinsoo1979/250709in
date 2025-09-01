@@ -144,11 +144,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { view2DDirection } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   
   // 디버깅용 로그
-  console.log('🔍 BaseFurnitureShell 렌더링:', {
+  console.log('🔍🔍🔍 BaseFurnitureShell 실제 렌더링:', {
     width: width * 100 + 'mm',
     innerWidth: innerWidth * 100 + 'mm',
     basicThickness: basicThickness * 100 + 'mm',
     '계산식': `${width * 100} - ${basicThickness * 100 * 2} = ${innerWidth * 100}`,
+    '최종가구너비': (innerWidth + basicThickness * 2) * 100 + 'mm',
+    '왼쪽패널X': (-innerWidth/2 - basicThickness/2) * 100 + 'mm',
+    '오른쪽패널X': (innerWidth/2 + basicThickness/2) * 100 + 'mm',
+    '⚠️': '이 값으로 실제 3D 렌더링됨',
     '측면패널_좌': `x: ${(-innerWidth/2 - basicThickness/2) * 100}mm`,
     '측면패널_우': `x: ${(innerWidth/2 + basicThickness/2) * 100}mm`,
     '전체너비': `${((innerWidth/2 + basicThickness/2) - (-innerWidth/2 - basicThickness/2)) * 100}mm`,

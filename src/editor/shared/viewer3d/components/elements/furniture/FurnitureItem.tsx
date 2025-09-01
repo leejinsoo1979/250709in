@@ -1613,7 +1613,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}
                 slotCenterX={slotCenterX} // 미리 계산된 값 사용
-                adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
+                adjustedWidth={(() => {
+                  console.log('📦📦📦 BoxModule에 전달되는 adjustedWidth:', {
+                    moduleId: placedModule.moduleId,
+                    isDualFurniture,
+                    needsEndPanelAdjustment,
+                    endPanelSide,
+                    furnitureWidthMm,
+                    '전달값': furnitureWidthMm,
+                    '⚠️': needsEndPanelAdjustment ? '엔드패널 조정됨' : '조정 없음'
+                  });
+                  return furnitureWidthMm;
+                })()} // 조정된 너비를 adjustedWidth로 전달
                 slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
                 slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
                 adjacentCabinets={{ hasAdjacentUpperLower: needsEndPanelAdjustment, adjacentSide: endPanelSide }} // 인접 상하부장 정보 전달
