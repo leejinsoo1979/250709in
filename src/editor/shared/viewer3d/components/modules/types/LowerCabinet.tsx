@@ -57,9 +57,28 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const is2DMode = viewMode === '2D' || viewMode !== '3D';
   const showIndirectLight = false;
   
+  // 띄움 배치 시 캐비넷 높이 조정
+  const adjustedHeight = isFloating && floatHeight > 0 
+    ? baseFurniture.height - (floatHeight * 0.01) // floatHeight는 mm, Three.js는 m 단위
+    : baseFurniture.height;
+  
+  // 띄움 배치 시 Y 위치 조정 (캐비넷이 위로 올라가야 함)
+  const cabinetYPosition = isFloating && floatHeight > 0
+    ? (floatHeight * 0.01) / 2 // 캐비넷 중심을 위로 이동
+    : 0;
+  
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
-  const furnitureBottomY = -baseFurniture.height/2;
+  const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
+  
+  console.log('🏗️ 하부장 띄움 배치 조정:', {
+    isFloating,
+    floatHeight,
+    originalHeight: baseFurniture.height,
+    adjustedHeight,
+    cabinetYPosition,
+    furnitureBottomY
+  });
 
   return (
     <>
@@ -76,7 +95,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel}>
+          <group position={[0, cabinetYPosition, 0]}>
+            <BaseFurnitureShell 
+              {...baseFurniture} 
+              height={adjustedHeight}
+              isDragging={isDragging} 
+              isEditMode={isEditMode} 
+              hasBackPanel={hasBackPanel}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
               <>
@@ -87,7 +112,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     <group position={[-(baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2)/2 - baseFurniture.basicThickness/2, 0, 0]}>
                       <SectionsRenderer
                         modelConfig={{ sections: baseFurniture.modelConfig.leftSections }}
-                        height={baseFurniture.height}
+                        height={adjustedHeight}
                         innerWidth={baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2}
                         depth={baseFurniture.depth}
                         adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
@@ -101,7 +126,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     
                     {/* 중앙 분리대 - BoxWithEdges 사용 */}
                     <BoxWithEdges
-                      args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, baseFurniture.adjustedDepthForShelves]}
+                      args={[baseFurniture.basicThickness, adjustedHeight - baseFurniture.basicThickness * 2, baseFurniture.adjustedDepthForShelves]}
                       position={[0, 0, baseFurniture.shelfZOffset]}
                       material={baseFurniture.material}
                       renderMode={renderMode}
@@ -111,7 +136,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     <group position={[(baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2)/2 + baseFurniture.basicThickness/2, 0, 0]}>
                       <SectionsRenderer
                         modelConfig={{ sections: baseFurniture.modelConfig.rightSections }}
-                        height={baseFurniture.height}
+                        height={adjustedHeight}
                         innerWidth={baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2}
                         depth={baseFurniture.depth}
                         adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
@@ -127,7 +152,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   /* 싱글 가구인 경우 기존 방식 */
                   <SectionsRenderer
                     modelConfig={baseFurniture.modelConfig}
-                    height={baseFurniture.height}
+                    height={adjustedHeight}
                     innerWidth={baseFurniture.innerWidth}
                     depth={baseFurniture.depth}
                     adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
@@ -150,7 +175,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               depth={baseFurniture.depth}
               position={[
                 0,
-                (baseFurniture.height / 2) + 0.09, // 상단에 위치 (18mm의 절반만큼 위로)
+                (adjustedHeight / 2) + 0.09, // 상단에 위치 (18mm의 절반만큼 위로)
                 0
               ]}
               spaceInfo={spaceInfo}
@@ -158,6 +183,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
             />
           )}
+          </group>
         </>
       )}
       

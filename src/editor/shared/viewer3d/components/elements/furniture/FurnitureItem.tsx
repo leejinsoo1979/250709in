@@ -1296,8 +1296,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 드래그 중이거나 Y가 0인 경우에만 계산
+    // 키큰장(full)은 바닥부터 천장까지 전체 높이 사용
+    if (moduleData?.category === 'full' || actualModuleData?.category === 'full') {
+      // 키큰장은 바닥부터 시작하여 천장까지
+      const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
+      
+      // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
+      let startY = furnitureStartY;
+      
+      // 키큰장의 중심 Y 위치 = 바닥 + 높이/2
+      const yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
+      
+      console.log('🏢 키큰장(full) Y 위치 계산:', {
+        moduleId: actualModuleData?.id || 'unknown',
+        category: actualModuleData?.category || 'full',
+        zone: placedModule.zone,
+        furnitureStartY,
+        furnitureHeightMm,
+        yPos_Three단위: yPos,
+        yPos_mm: yPos / 0.01,
+        baseConfig: spaceInfo?.baseConfig,
+        placementType: spaceInfo?.baseConfig?.placementType,
+        floatHeight: spaceInfo?.baseConfig?.floatHeight,
+        설명: '키큰장은 항상 바닥부터 천장까지'
+      });
+      
+      return yPos;
+    }
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
-    if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
+    else if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
       // 내경 공간 계산 - zone 정보 고려
       let internalHeightMm;
       
