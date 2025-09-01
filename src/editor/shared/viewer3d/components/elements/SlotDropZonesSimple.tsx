@@ -2454,6 +2454,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     console.log('🎯 getZoneSlotPositions - creating colliders for both zones');
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
     
+    console.log('🔍 fullIndexing 결과:', {
+      hasZones: !!fullIndexing.zones,
+      hasNormal: !!fullIndexing.zones?.normal,
+      hasDropped: !!fullIndexing.zones?.dropped,
+      normalPositions: fullIndexing.zones?.normal?.threeUnitPositions,
+      droppedPositions: fullIndexing.zones?.dropped?.threeUnitPositions
+    });
+    
     const allPositions = [];
     
     // normal 영역 콜라이더
