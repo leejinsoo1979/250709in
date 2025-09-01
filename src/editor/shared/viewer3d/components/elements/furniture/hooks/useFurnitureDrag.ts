@@ -104,52 +104,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleInfo) return;
 
-      // 상부장/하부장 카테고리 확인
-      const movingModuleInfo = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
-      const isMovingUpper = movingModuleInfo?.category === 'upper' || movingModule.moduleId.includes('upper-cabinet');
-      const isMovingLower = movingModuleInfo?.category === 'lower' || movingModule.moduleId.includes('lower-cabinet');
-      const isExistingUpper = moduleInfo.category === 'upper' || module.moduleId.includes('upper-cabinet');
-      const isExistingLower = moduleInfo.category === 'lower' || module.moduleId.includes('lower-cabinet');
-      
-      console.log('🔍🔍🔍 이동 충돌 검사 상세:', {
-        movingModule: {
-          id: movingModuleId,
-          moduleId: movingModule.moduleId,
-          category: movingModuleInfo?.category,
-          isUpper: isMovingUpper,
-          isLower: isMovingLower
-        },
-        existingModule: {
-          id: module.id,
-          moduleId: module.moduleId,
-          category: moduleInfo.category,
-          isUpper: isExistingUpper,
-          isLower: isExistingLower
-        }
-      });
-      
-      // 상부장과 하부장은 같은 슬롯에 공존 가능
-      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
-        console.log('✅✅✅ 상부장/하부장 공존 가능! 충돌 없음:', {
-          moving: { id: movingModuleId, category: isMovingUpper ? 'upper' : 'lower' },
-          existing: { id: module.id, category: isExistingUpper ? 'upper' : 'lower' }
-        });
-        return; // 충돌로 간주하지 않음
-      }
-      
-      // 싱글캐비닛끼리 중에서도 상하부장 체크
-      const isMovingSingle = movingModule.moduleId.includes('single-');
-      const isExistingSingle = module.moduleId.includes('single-');
-      
-      if (isMovingSingle && isExistingSingle) {
-        // 싱글이지만 상하부장인 경우 공존 가능
-        if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
-          console.log('✅ 싱글이지만 상하부장 공존 가능');
-          return;
-        }
-        console.log('🔍 싱글캐비닛끼리 충돌 검사 필요');
-      }
-
       // 기존 가구의 듀얼 여부 판단 - 모듈 ID로 먼저 판단
       const isModuleDual = module.moduleId.includes('dual-') ||
                           (module.isDualSlot !== undefined ? module.isDualSlot :
@@ -217,8 +171,39 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
-        // 상하부장 공존이 가능한 경우는 충돌로 간주하지 않음
-        // 위에서 이미 체크했으므로 여기서는 충돌로 판단
+        // 상부장/하부장 카테고리 확인
+        const movingModuleInfo = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
+        const isMovingUpper = movingModuleInfo?.category === 'upper' || movingModule.moduleId.includes('upper-cabinet');
+        const isMovingLower = movingModuleInfo?.category === 'lower' || movingModule.moduleId.includes('lower-cabinet');
+        const isExistingUpper = moduleInfo.category === 'upper' || module.moduleId.includes('upper-cabinet');
+        const isExistingLower = moduleInfo.category === 'lower' || module.moduleId.includes('lower-cabinet');
+        
+        console.log('🔍🔍🔍 이동 충돌 검사 상세:', {
+          movingModule: {
+            id: movingModuleId,
+            moduleId: movingModule.moduleId,
+            category: movingModuleInfo?.category,
+            isUpper: isMovingUpper,
+            isLower: isMovingLower
+          },
+          existingModule: {
+            id: module.id,
+            moduleId: module.moduleId,
+            category: moduleInfo.category,
+            isUpper: isExistingUpper,
+            isLower: isExistingLower
+          }
+        });
+        
+        // 상부장과 하부장은 같은 슬롯에 공존 가능
+        if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+          console.log('✅✅✅ 상부장/하부장 공존 가능! 충돌 없음:', {
+            moving: { id: movingModuleId, category: isMovingUpper ? 'upper' : 'lower' },
+            existing: { id: module.id, category: isExistingUpper ? 'upper' : 'lower' }
+          });
+          return; // 충돌로 간주하지 않음 - forEach의 현재 반복만 건너뜀
+        }
+        
         console.log('💥 충돌 감지:', {
           이동하는가구: {
             id: movingModuleId,
