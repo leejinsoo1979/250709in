@@ -150,7 +150,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           dropPosition.isDualFurniture,
           latestPlacedModules,
           spaceInfo,
-          currentDragData.moduleData.id
+          currentDragData.moduleData.id,
+          undefined, // excludeModuleId
+          dropPosition.zone // zone 정보 전달
         );
         
         // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
@@ -159,7 +161,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           const checkSlotWithColumn = (column: number, isDual: boolean) => {
             // 최신 상태 가져오기
             const currentModules = getLatestPlacedModules();
-            return !isSlotAvailable(column, isDual, currentModules, spaceInfo, currentDragData.moduleData.id);
+            return !isSlotAvailable(column, isDual, currentModules, spaceInfo, currentDragData.moduleData.id, undefined, dropPosition.zone);
           };
           
           const availableSlot = findAvailableSlot(
@@ -346,6 +348,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           rotation: 0,
           slotIndex: dropPosition.column, // 슬롯 인덱스 저장
           isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
+          zone: dropPosition.zone, // zone 정보 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
           adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정 또는 노서라운드 엔드패널 슬롯 너비

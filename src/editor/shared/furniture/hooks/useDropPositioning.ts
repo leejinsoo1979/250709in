@@ -7,6 +7,7 @@ interface DropPosition {
   x: number;
   column: number;
   isDualFurniture: boolean;
+  zone?: 'normal' | 'dropped'; // zone 정보 추가
 }
 
 interface CurrentDragData {
@@ -144,7 +145,8 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       return {
         x: targetPositionX,
         column: targetColumn,
-        isDualFurniture
+        isDualFurniture,
+        zone // zone 정보 추가
       };
     }
     
