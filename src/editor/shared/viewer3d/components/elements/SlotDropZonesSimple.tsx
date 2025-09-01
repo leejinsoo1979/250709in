@@ -819,13 +819,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               배치하려는가구: { 
                 slotIndex: zoneSlotIndex,
                 isDual: false,
-                occupiedSlots: [zoneSlotIndex]
+                occupiedSlots: [zoneSlotIndex],
+                moduleId: zoneTargetModuleId
               },
               기존가구: { 
-                id: m.id, 
+                id: m.id,
+                moduleId: m.moduleId,
                 slotIndex: m.slotIndex, 
                 isDualSlot: m.isDualSlot,
                 occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+              },
+              충돌조건: {
+                싱글위치: zoneSlotIndex,
+                기존위치: m.slotIndex,
+                기존이듀얼: m.isDualSlot,
+                충돌검사: `${zoneSlotIndex} == ${m.slotIndex} OR (듀얼 && (${m.slotIndex} == ${zoneSlotIndex} OR ${m.slotIndex + 1} == ${zoneSlotIndex}))`
               }
             });
           }
