@@ -34,6 +34,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   slotWidths,
   showFurniture = true,
   adjacentCabinets,
+  adjustedWidth, // 조정된 너비 추가
 }) => {
   try {
   // 공통 로직 사용
@@ -43,6 +44,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
+    adjustedWidth, // 조정된 너비 전달
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjacentCabinets,
   });
