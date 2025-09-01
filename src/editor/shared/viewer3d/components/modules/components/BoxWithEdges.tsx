@@ -8,7 +8,7 @@ import { useUIStore } from '@/store/uiStore';
 interface BoxWithEdgesProps {
   args: [number, number, number];
   position: [number, number, number];
-  material: THREE.Material;
+  material?: THREE.Material; // material을 optional로 변경
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
   isEditMode?: boolean; // 편집 모드 여부 추가
@@ -44,10 +44,32 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   
+  // 기본 material 생성 (material prop이 없을 때 사용)
+  const defaultMaterial = React.useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({ 
+      color: '#E0E0E0',
+      roughness: 0.8,
+      metalness: 0.1
+    });
+    return mat;
+  }, []);
+  
+  // cleanup: defaultMaterial 정리
+  React.useEffect(() => {
+    return () => {
+      if (!material) {
+        defaultMaterial.dispose();
+      }
+    };
+  }, [material, defaultMaterial]);
+  
+  // 실제 사용할 material (prop이 없으면 기본값 사용)
+  const baseMaterial = material || defaultMaterial;
+  
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = material.clone();
+    if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
+      const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
       
@@ -68,14 +90,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return ghostMaterial;
     }
     // 편집 모드에서는 원래 재질 그대로 사용
-    return material;
-  }, [material, isDragging, isEditMode]);
+    return baseMaterial;
+  }, [baseMaterial, isDragging, isEditMode]);
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
     // Cabinet Texture1이 적용된 경우 정확한 색상 사용
-    if (material instanceof THREE.MeshStandardMaterial) {
-      const materialColor = material.color;
+    if (baseMaterial instanceof THREE.MeshStandardMaterial) {
+      const materialColor = baseMaterial.color;
       // RGB 값이 정확히 0.12면 Cabinet Texture1 (오차 허용)
       if (Math.abs(materialColor.r - 0.12) < 0.01 && 
           Math.abs(materialColor.g - 0.12) < 0.01 && 
@@ -99,7 +121,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FFFFFF" : "#444444";
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, material]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial]);
 
   // 디버깅: 2D 솔리드 모드에서 색상 확인
   React.useEffect(() => {
