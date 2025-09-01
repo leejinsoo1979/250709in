@@ -60,6 +60,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     is3D: viewMode === '3D',
     showAll,
     showDimensions,
+    droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
     timestamp: new Date().toISOString()
   });
   
@@ -2705,6 +2706,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     hasIndexingPositions: !!indexing?.threeUnitPositions
   });
   
+  // 렌더링 직전 씬 체크
+  useEffect(() => {
+    console.log('🔍 씬 체크 - 슬롯 콜라이더 확인:');
+    let collidersFound = 0;
+    scene.traverse((child) => {
+      if (child.userData?.isSlotCollider) {
+        collidersFound++;
+        console.log('✅ 콜라이더 발견:', {
+          name: child.name,
+          zone: child.userData.zone,
+          slotIndex: child.userData.slotIndex,
+          position: child.position
+        });
+      }
+    });
+    console.log('🔍 총 콜라이더 수:', collidersFound);
+  }, [scene, zoneSlotPositions]);
+
   return (
     <group>
       {/* 레이캐스팅용 투명 콜라이더들 */}
