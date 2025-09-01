@@ -286,16 +286,25 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         (processedInfo.baseConfig?.floatHeight !== undefined && 
          processedInfo.baseConfig?.floatHeight !== state.spaceInfo.baseConfig?.floatHeight);
       
-      if (placementChanged) {
-        console.log('🎯 띄워서 배치 설정 변경 감지:', {
-          이전: {
-            placementType: state.spaceInfo.baseConfig?.placementType,
-            floatHeight: state.spaceInfo.baseConfig?.floatHeight
-          },
-          새로운: {
-            placementType: processedInfo.baseConfig?.placementType,
-            floatHeight: processedInfo.baseConfig?.floatHeight
-          }
+      // baseConfig, frameSize, surroundType 등이 변경될 때마다 가구 업데이트
+      const needsFurnitureUpdate = 
+        placementChanged ||
+        (processedInfo.baseConfig !== undefined && 
+         JSON.stringify(processedInfo.baseConfig) !== JSON.stringify(state.spaceInfo.baseConfig)) ||
+        (processedInfo.frameSize !== undefined && 
+         JSON.stringify(processedInfo.frameSize) !== JSON.stringify(state.spaceInfo.frameSize)) ||
+        (processedInfo.surroundType !== undefined && 
+         processedInfo.surroundType !== state.spaceInfo.surroundType) ||
+        (processedInfo.installType !== undefined && 
+         processedInfo.installType !== state.spaceInfo.installType);
+      
+      if (needsFurnitureUpdate) {
+        console.log('🎯 가구 업데이트 필요 - 설정 변경 감지:', {
+          placementChanged,
+          baseConfig: processedInfo.baseConfig !== undefined,
+          frameSize: processedInfo.frameSize !== undefined,
+          surroundType: processedInfo.surroundType !== undefined,
+          installType: processedInfo.installType !== undefined
         });
         
         // 가구 Y 위치 업데이트를 위해 furnitureStore의 updateFurnitureYPositions 호출
