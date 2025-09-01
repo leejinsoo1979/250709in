@@ -36,7 +36,8 @@ export const isSlotAvailable = (
       position: m.position
     })),
     excludeModuleId,
-    targetZone
+    targetZone,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
   });
   
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -48,14 +49,28 @@ export const isSlotAvailable = (
   if (!isDualFurniture && slotIndex >= indexing.columnCount) return false;
   
   // 기둥 포함 슬롯 분석
-  const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+  const columnSlots = analyzeColumnSlots(spaceInfo);
+  
+  console.log('📊 columnSlots 분석 결과:', {
+    총슬롯수: columnSlots.length,
+    슬롯정보: columnSlots.map((slot, idx) => ({
+      index: idx,
+      hasColumn: slot.hasColumn,
+      columnType: slot.columnType,
+      availableWidth: slot.availableWidth
+    }))
+  });
   
   // 목표 슬롯들 계산
   const targetSlots = isDualFurniture 
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
   
-  // 디버그 로그 제거 (성능 문제로 인해)
+  console.log('🎯 목표 슬롯:', {
+    targetSlots,
+    isDualFurniture,
+    targetZone
+  });
   
   // 기둥이 있는 슬롯은 150mm 이상의 공간이 있으면 배치 가능
   // (가구 폭이 150mm까지 줄어들 수 있음)
@@ -63,8 +78,16 @@ export const isSlotAvailable = (
     const slotInfo = columnSlots[targetSlot];
     if (!slotInfo) {
       console.log(`⚠️ 슬롯 ${targetSlot}의 정보를 찾을 수 없음 (columnSlots 길이: ${columnSlots.length})`);
+      console.log('🔍 사용 가능한 슬롯 인덱스:', columnSlots.map((_, idx) => idx));
       continue;
     }
+    
+    console.log(`🏛️ 슬롯 ${targetSlot} 정보:`, {
+      hasColumn: slotInfo.hasColumn,
+      columnType: slotInfo.columnType,
+      availableWidth: slotInfo.availableWidth,
+      allowMultipleFurniture: slotInfo.allowMultipleFurniture
+    });
     
     // 디버그 로그 제거 (성능 문제로 인해)
     
