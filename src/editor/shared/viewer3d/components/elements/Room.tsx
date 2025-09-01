@@ -113,63 +113,8 @@ const DashedLine: React.FC<{
   );
 };
 
-// 2D 모드용 Box with Edges 컴포넌트 - EdgesGeometry 사용으로 일관성 확보
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode: 'solid' | 'wireframe';
-  onBeforeRender?: () => void;
-  viewMode?: '2D' | '3D';
-  view2DTheme?: 'dark' | 'light';
-  isEndPanel?: boolean; // 엔드패널 여부
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false }) => {
-  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
-  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
-  const { viewMode: contextViewMode } = useSpace3DView();
-  const viewMode = viewModeProp || contextViewMode;
-  const { theme } = useViewerTheme();
-  const { view2DTheme: storeView2DTheme } = useUIStore();
-  const actualView2DTheme = view2DTheme || storeView2DTheme || 'light';
-  
-  // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
-  useEffect(() => {
-    return () => {
-      geometry.dispose();
-      edgesGeometry.dispose();
-    };
-  }, [geometry, edgesGeometry]);
-  
-  return (
-    <group position={position}>
-      {/* Solid 모드일 때만 면 렌더링 */}
-      {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'} onBeforeRender={onBeforeRender}>
-          <primitive object={material} />
-        </mesh>
-      )}
-      {/* 모서리 라인 렌더링 - 항상 표시 */}
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial 
-          color={
-            // 3D 모드에서는 가구와 동일한 회색
-            viewMode === '3D'
-              ? "#505050"
-              // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
-              : viewMode === '2D' && isEndPanel 
-                ? "#00FF00" // 연두색 (도어 색상)
-                : renderMode === 'wireframe' 
-                  ? (actualView2DTheme === 'dark' ? "#FFFFFF" : "#000000") // 2D wireframe에서 다크모드는 흰색, 라이트모드는 검정색
-                  : (actualView2DTheme === 'dark' ? "#FFFFFF" : "#666666")
-          } 
-          linewidth={viewMode === '2D' && actualView2DTheme === 'dark' ? 1.5 : 0.5}
-          opacity={viewMode === '3D' ? 0.9 : 1.0}
-          transparent={viewMode === '3D'}
-        />
-      </lineSegments>
-    </group>
-  );
-};
+// BoxWithEdges 컴포넌트는 이미 import되어 있음 (line 25에서 import)
+// import BoxWithEdges from '../modules/components/BoxWithEdges';
 
 const Room: React.FC<RoomProps> = ({
   spaceInfo,
