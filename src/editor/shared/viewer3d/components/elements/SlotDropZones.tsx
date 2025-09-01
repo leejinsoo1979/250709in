@@ -94,6 +94,15 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
 
   // 가구 충돌 감지 함수 (새 가구 배치용)
   const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false, newModuleCategory?: string) => {
+    console.log('🚨🚨🚨 충돌 감지 함수 진입!!!', {
+      newSlotIndex,
+      isDualFurniture,
+      zone,
+      skipColumnC,
+      category: newModuleCategory,
+      placedModulesCount: placedModules.length
+    });
+    
     console.log('🔍 충돌 감지 시작:', {
       newSlotIndex,
       isDualFurniture,
