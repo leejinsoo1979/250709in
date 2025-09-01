@@ -1295,9 +1295,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureYPosition = React.useMemo(() => {
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
     if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
-      // 내경 공간 계산
-      const internalSpace = calculateInternalSpace(spaceInfo);
-      const internalHeightMm = internalSpace.height;
+      // 내경 공간 계산 - zone 정보 고려
+      let internalHeightMm;
+      
+      // 단내림이 활성화되고 zone 정보가 있는 경우 zone별 높이 계산
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+        // 단내림 구간: 원래 높이에서 dropHeight 빼기
+        const baseInternalSpace = calculateInternalSpace(spaceInfo);
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        internalHeightMm = baseInternalSpace.height - dropHeight;
+        
+        console.log('🎯 단내림 구간 상부장 높이 계산:', {
+          zone: placedModule.zone,
+          baseHeight: baseInternalSpace.height,
+          dropHeight: dropHeight,
+          resultHeight: internalHeightMm
+        });
+      } else {
+        // 일반 구간
+        const internalSpace = calculateInternalSpace(spaceInfo);
+        internalHeightMm = internalSpace.height;
+      }
+      
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
       // 상부장은 항상 천장에 붙어있어야 함
@@ -1317,6 +1336,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
         moduleId: actualModuleData?.id || 'unknown',
         category: moduleData?.category || actualModuleData?.category || 'unknown',
+        zone: placedModule.zone,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         floorFinishHeightMm,
         baseFrameHeightMm,
         internalHeightMm,
@@ -1330,7 +1351,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         차이: (yPos - adjustedPosition.y) / 0.01,
         isDragging: isDraggingThis,
         baseConfig: spaceInfo?.baseConfig,
-        설명: '내경높이에 받침대 높이를 더해서 천장 위치 계산'
+        설명: placedModule.zone === 'dropped' ? '단내림 구간: 낮은 천장 높이 적용' : '일반 구간: 기본 천장 높이 적용'
       });
       
       if (isDraggingThis) {
