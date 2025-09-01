@@ -91,7 +91,8 @@ export const useFurnitureKeyboard = ({
               placedModules, 
               spaceInfo, 
               editingModule.moduleId,
-              targetModuleId // excludeModuleId로 전달
+              targetModuleId, // excludeModuleId로 전달
+              editingModule.zone // targetZone 전달
             );
             
             if (nextSlot !== null) {
@@ -158,7 +159,8 @@ export const useFurnitureKeyboard = ({
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
-                adjustedWidth: adjustedWidth
+                adjustedWidth: adjustedWidth,
+                zone: editingModule.zone // zone 유지
               };
               
               if (customWidth !== undefined) {
@@ -181,7 +183,8 @@ export const useFurnitureKeyboard = ({
               placedModules, 
               spaceInfo, 
               editingModule.moduleId,
-              targetModuleId // excludeModuleId로 전달
+              targetModuleId, // excludeModuleId로 전달
+              editingModule.zone // targetZone 전달
             );
             
             if (nextSlot !== null) {
@@ -248,7 +251,8 @@ export const useFurnitureKeyboard = ({
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
-                adjustedWidth: adjustedWidth
+                adjustedWidth: adjustedWidth,
+                zone: editingModule.zone // zone 유지
               };
               
               if (customWidth !== undefined) {
@@ -326,7 +330,8 @@ export const useFurnitureKeyboard = ({
                 placedModules, 
                 spaceInfo, 
                 selectedModule.moduleId,
-                selectedPlacedModuleId // excludeModuleId로 전달
+                selectedPlacedModuleId, // excludeModuleId로 전달
+                selectedModule.zone // targetZone 전달
               );
               
               if (nextSlot !== null) {
@@ -393,7 +398,8 @@ export const useFurnitureKeyboard = ({
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
-                  adjustedWidth: adjustedWidth
+                  adjustedWidth: adjustedWidth,
+                  zone: selectedModule.zone // zone 유지
                 };
                 
                 if (customWidth !== undefined) {
@@ -416,7 +422,8 @@ export const useFurnitureKeyboard = ({
                 placedModules, 
                 spaceInfo, 
                 selectedModule.moduleId,
-                selectedPlacedModuleId // excludeModuleId로 전달
+                selectedPlacedModuleId, // excludeModuleId로 전달
+                selectedModule.zone // targetZone 전달
               );
               
               if (nextSlot !== null) {
@@ -483,7 +490,8 @@ export const useFurnitureKeyboard = ({
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
-                  adjustedWidth: adjustedWidth
+                  adjustedWidth: adjustedWidth,
+                  zone: selectedModule.zone // zone 유지
                 };
                 
                 if (customWidth !== undefined) {
