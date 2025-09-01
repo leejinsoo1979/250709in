@@ -1914,14 +1914,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let furnitureY = 0; // 기본값
     
     if (isFullCabinet) {
-      // 키큰장: 바닥부터 천장까지
-      let startHeightMm = 0;
+      // 키큰장: 바닥부터 천장까지 (바닥마감재와 띄워서 배치 고려)
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      let startHeightMm = floorFinishHeightMm;
       if (spaceInfo.baseConfig?.type === 'floor') {
         // 받침대 있음
-        startHeightMm = spaceInfo.baseConfig?.height || 65;
-      } else if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+        startHeightMm += spaceInfo.baseConfig?.height || 65;
+      } else if (spaceInfo.baseConfig?.placementType === 'float') {
         // 띄워서 배치 - 키큰장도 띄움 높이부터 시작
-        startHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+        startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
       }
       const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
       furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
