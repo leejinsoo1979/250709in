@@ -646,8 +646,10 @@ export class ColumnIndexer {
             actualInternalWidth -= END_PANEL_THICKNESS;
           }
         } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 노서라운드 모드에서는 벽에 바로 붙음 (이격거리, 엔드패널 모두 없음)
-          actualInternalWidth = spaceInfo.width;
+          // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+          const leftGap = spaceInfo.gapConfig?.left || 2;
+          const rightGap = spaceInfo.gapConfig?.right || 2;
+          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
         }
       }
       
@@ -658,8 +660,8 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 노서라운드 모드에서는 이격거리 무시 (벽에 바로 붙음)
-          leftReduction = 0;
+          // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+          leftReduction = spaceInfo.gapConfig?.left || 2;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
@@ -805,8 +807,8 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 노서라운드 모드에서는 이격거리 무시
-        leftReduction = 0;
+        // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+        leftReduction = spaceInfo.gapConfig?.left || 2;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
@@ -859,10 +861,10 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽이 있으므로 엔드패널 불필요
+        // 빌트인인 경우: 양쪽 벽이 있으므로 이격거리 반영
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = 0;
-          rightReduction = 0;
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = spaceInfo.gapConfig?.right || 2;
         } else {
           // 왼쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.left) {
@@ -915,10 +917,10 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽이 있으므로 엔드패널 불필요
+        // 빌트인인 경우: 양쪽 벽이 있으므로 이격거리 반영
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = 0;
-          rightReduction = 0;
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = spaceInfo.gapConfig?.right || 2;
         } else {
           // 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
