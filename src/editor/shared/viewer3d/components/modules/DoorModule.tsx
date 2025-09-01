@@ -663,8 +663,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 상부장 도어는 가구 중심 기준으로 확장
     // 가구 중심이 Y=0이므로, 도어는 아래로 더 확장됨
-    // 도어 중심 = (아래확장 - 위확장) / 2 만큼 아래로 이동 - 추가로 50mm 더 아래로
-    doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 50);
+    // 도어 중심 = (아래확장 - 위확장) / 2 만큼 아래로 이동
+    // 그런데 도어가 18mm 위로 올라가야 하므로 18을 더함
+    const yAdjustment = 18; // 도어를 위로 올리기 위한 값
+    doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 50 + yAdjustment);
     
     console.log('🚪📍 상부장 도어 위치:', {
       type: '상부장',
@@ -673,10 +675,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       아래확장: lowerExtension,
       도어높이: finalDoorHeight,
       doorYPosition,
-      doorYPosition_mm: (lowerExtension - upperExtension) / 2 - 50,
+      doorYPosition_mm: (lowerExtension - upperExtension) / 2 - 50 + yAdjustment,
+      yAdjustment,
       가구상단: mmToThreeUnits(furnitureHeight / 2),
       도어상단: doorYPosition + mmToThreeUnits(finalDoorHeight / 2),
-      note: '가구 기준 위 5mm, 아래 18mm 확장, Y축 50mm 추가 하향'
+      note: `가구 기준 위 ${upperExtension}mm, 아래 ${lowerExtension}mm 확장, Y축 ${yAdjustment}mm 상향 조정`
     });
   } else if (isLowerCabinet) {
     console.log('🔴🔴🔴 하부장 조건 진입!!!', {
