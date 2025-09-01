@@ -179,6 +179,11 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
     // 전체 슬롯 수 = normal zone + dropped zone
     const totalSlotCount = (zoneInfo.normal?.columnCount || 0) + (zoneInfo.dropped?.columnCount || 0);
     
+    // 단내림 위치 확인 (왼쪽이면 dropped zone이 먼저, 오른쪽이면 normal zone이 먼저)
+    const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+    const droppedColumnCount = zoneInfo.dropped?.columnCount || 0;
+    const normalColumnCount = zoneInfo.normal?.columnCount || 0;
+    
     // 각 슬롯에 대해 기둥 포함 여부 확인 (전체 슬롯 인덱스 기준)
     for (let globalSlotIndex = 0; globalSlotIndex < totalSlotCount; globalSlotIndex++) {
       // 어느 zone에 속하는지 확인
@@ -186,14 +191,30 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       let localSlotIndex: number;
       let targetZone: any;
       
-      if (globalSlotIndex < (zoneInfo.normal?.columnCount || 0)) {
-        zone = 'normal';
-        localSlotIndex = globalSlotIndex;
-        targetZone = zoneInfo.normal;
+      // 왼쪽 단내림: dropped zone이 먼저 (0 ~ droppedCount-1), 그 다음 normal zone (droppedCount ~ totalCount-1)
+      // 오른쪽 단내림: normal zone이 먼저 (0 ~ normalCount-1), 그 다음 dropped zone (normalCount ~ totalCount-1)
+      if (droppedPosition === 'left') {
+        // 왼쪽 단내림인 경우
+        if (globalSlotIndex < droppedColumnCount) {
+          zone = 'dropped';
+          localSlotIndex = globalSlotIndex;
+          targetZone = zoneInfo.dropped;
+        } else {
+          zone = 'normal';
+          localSlotIndex = globalSlotIndex - droppedColumnCount;
+          targetZone = zoneInfo.normal;
+        }
       } else {
-        zone = 'dropped';
-        localSlotIndex = globalSlotIndex - (zoneInfo.normal?.columnCount || 0);
-        targetZone = zoneInfo.dropped;
+        // 오른쪽 단내림인 경우 (기존 로직)
+        if (globalSlotIndex < normalColumnCount) {
+          zone = 'normal';
+          localSlotIndex = globalSlotIndex;
+          targetZone = zoneInfo.normal;
+        } else {
+          zone = 'dropped';
+          localSlotIndex = globalSlotIndex - normalColumnCount;
+          targetZone = zoneInfo.dropped;
+        }
       }
       
       if (!targetZone || !targetZone.threeUnitPositions || localSlotIndex >= targetZone.columnCount) {
