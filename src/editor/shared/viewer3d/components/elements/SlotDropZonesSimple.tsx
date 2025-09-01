@@ -2649,9 +2649,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 앞쪽에서 20mm 줄이기
-        const reducedDepth = slotDimensions.depth - mmToThreeUnits(20);
-        const zOffset = -mmToThreeUnits(10); // 뒤쪽으로 10mm 이동 (앞쪽에서만 20mm 줄이기 위해)
+        // 콜라이더 깊이를 적절하게 설정 (100mm 정도로 얇게)
+        const reducedDepth = mmToThreeUnits(100);
+        const zOffset = mmToThreeUnits(50); // 앞쪽으로 배치
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
@@ -2731,9 +2731,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <boxGeometry args={[slotWidth, slotHeight, reducedDepth]} />
             <meshBasicMaterial 
               transparent 
-              opacity={0.1} 
-              color={slotZone === 'dropped' ? 'red' : 'blue'}
-              wireframe={true}
+              opacity={0} 
             />
           </mesh>
         );
