@@ -2681,14 +2681,19 @@ const Room: React.FC<RoomProps> = ({
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부프레임은 baseFrameHeightMm이 0보다 크면 무조건 렌더링 */}
       {(() => {
-        // 하부프레임을 무조건 렌더링 (디버깅용)
-        const forceRender = true;
-        const shouldRenderBaseFrame = forceRender || (showFrame && baseFrameHeightMm > 0);
+        // 받침대 타입이 'stand'이고 띄워서 배치인 경우 렌더링하지 않음
+        const isFloatingStand = spaceInfo.baseConfig?.type === 'stand' && 
+                                spaceInfo.baseConfig?.placementType === 'float';
         
-        console.log('🚨🚨🚨 하부프레임 렌더링 시작:', {
-          forceRender,
+        // 받침대를 렌더링할지 결정
+        const shouldRenderBaseFrame = showFrame && baseFrameHeightMm > 0 && !isFloatingStand;
+        
+        console.log('🚨🚨🚨 하부프레임 렌더링 조건 확인:', {
           showFrame,
           baseFrameHeightMm,
+          isFloatingStand,
+          'baseConfig.type': spaceInfo.baseConfig?.type,
+          'baseConfig.placementType': spaceInfo.baseConfig?.placementType,
           'shouldRenderBaseFrame': shouldRenderBaseFrame,
           '단내림': spaceInfo.droppedCeiling?.enabled,
           '기둥 개수': spaceInfo.columns?.length || 0,
@@ -2699,9 +2704,9 @@ const Room: React.FC<RoomProps> = ({
         // 높이가 0이면 기본값 65 사용
         const actualBaseFrameHeight = baseFrameHeightMm > 0 ? baseFrameHeight : mmToThreeUnits(65);
         
-        // forceRender가 true이므로 무조건 렌더링
-        if (!forceRender && !shouldRenderBaseFrame) {
-          console.log('❌❌❌ 하부프레임 렌더링 스킵됨');
+        // 렌더링 조건 확인
+        if (!shouldRenderBaseFrame) {
+          console.log('❌❌❌ 하부프레임 렌더링 스킵됨 (띄워서 배치 또는 받침대 없음)');
           return null;
         }
         
