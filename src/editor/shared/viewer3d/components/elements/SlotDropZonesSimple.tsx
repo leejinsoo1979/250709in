@@ -2695,7 +2695,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             visible={true}
           >
             <boxGeometry args={[slotWidth, slotHeight, reducedDepth]} />
-            <meshBasicMaterial transparent opacity={0} />
+            <meshBasicMaterial 
+              transparent 
+              opacity={0.1} 
+              color={slotZone === 'dropped' ? 'red' : 'blue'}
+              wireframe={true}
+            />
           </mesh>
         );
       })}
