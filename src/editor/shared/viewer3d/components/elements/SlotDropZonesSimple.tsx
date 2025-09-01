@@ -782,18 +782,44 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }))
       });
       
-      // getModuleById를 사용하여 정확한 너비의 가구 생성 (드롭존 내부 기준)
-      let moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
+      // getModuleById를 사용하여 정확한 너비의 가구 생성
+      // 상하부장의 경우 단내림 영역에서도 전체 높이 기준으로 생성해야 함
+      let moduleData;
+      const isUpperOrLower = dragData.moduleData.category === 'upper' || dragData.moduleData.category === 'lower';
       
-      // 드롭존 높이/필터로 인해 모듈을 찾지 못한 경우 전역 기준으로 재시도
+      if (isUpperOrLower && zoneToUse === 'dropped') {
+        // 단내림 영역의 상하부장은 전체 내경 높이 기준으로 생성
+        console.log('📦 단내림 영역 상하부장 모듈 생성 - 전체 내경 기준:', {
+          targetModuleId,
+          category: dragData.moduleData.category,
+          fullInternalSpaceHeight: internalSpace.height,
+          zoneInternalSpaceHeight: recalculatedZoneInternalSpace.height,
+          zone: zoneToUse
+        });
+        // 전체 내경 높이로 생성하되, zone 정보는 유지
+        moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+      } else {
+        // 일반 가구 또는 메인 영역의 상하부장은 영역별 내경 기준으로 생성
+        moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
+      }
+      
+      // 모듈을 찾지 못한 경우 전역 기준으로 재시도
       if (!moduleData) {
-        console.warn('⚠️ 영역 기준 모듈 미존재. 전역 기준으로 재시도:', { targetModuleId, zone: zoneToUse });
+        console.warn('⚠️ 영역 기준 모듈 미존재. 전역 기준으로 재시도:', { 
+          targetModuleId, 
+          zone: zoneToUse,
+          category: dragData.moduleData.category 
+        });
         moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
       }
       
       // 그래도 없으면 원본 드래그 모듈로 대체하고 customWidth로 폭을 맞춤
       if (!moduleData) {
-        console.warn('⚠️ 전역 기준에도 모듈 미존재. 드래그 원본 모듈로 대체 후 customWidth 사용:', { targetModuleId });
+        console.warn('⚠️ 전역 기준에도 모듈 미존재. 드래그 원본 모듈로 대체 후 customWidth 사용:', { 
+          targetModuleId,
+          dragModuleId: dragData.moduleData.id,
+          dragModuleCategory: dragData.moduleData.category
+        });
         moduleData = dragData.moduleData;
       }
       

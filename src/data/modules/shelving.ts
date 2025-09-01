@@ -1315,20 +1315,14 @@ export const generateShelvingModules = (
     modules.push(createDualType6(dualWidth, maxHeight));
     
     // === 듀얼 상부장 가구 생성 ===
-    // 상부장 높이 체크 (600mm)
-    if (internalSpace.height >= 600) {
-      modules.push(createDualUpperCabinet1(dualWidth));
-      modules.push(createDualUpperCabinet2(dualWidth));
-      modules.push(createDualUpperCabinet3(dualWidth));
-      modules.push(createDualUpperCabinet4(dualWidth));
-    }
+    modules.push(createDualUpperCabinet1(dualWidth));
+    modules.push(createDualUpperCabinet2(dualWidth));
+    modules.push(createDualUpperCabinet3(dualWidth));
+    modules.push(createDualUpperCabinet4(dualWidth));
     
     // === 듀얼 하부장 가구 생성 ===
-    // 하부장 높이 체크 (1000mm)
-    if (internalSpace.height >= 1000) {
-      modules.push(createDualLowerCabinet1(dualWidth));
-      modules.push(createDualLowerCabinet2(dualWidth));
-    }
+    modules.push(createDualLowerCabinet1(dualWidth));
+    modules.push(createDualLowerCabinet2(dualWidth));
   }
   
   // === 싱글 상부장 가구 생성 ===
