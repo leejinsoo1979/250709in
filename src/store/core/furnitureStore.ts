@@ -144,6 +144,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       기존가구수: existingModules.length
     });
     
+    // 상부장/하부장 여부 확인
+    const isNewUpper = module.moduleId.includes('upper-cabinet') || module.moduleId.includes('dual-upper-cabinet');
+    const isNewLower = module.moduleId.includes('lower-cabinet') || module.moduleId.includes('dual-lower-cabinet');
+    
+    console.log('🔍 [Store] 새 가구 카테고리:', {
+      moduleId: module.moduleId,
+      isUpper: isNewUpper,
+      isLower: isNewLower
+    });
+    
     const hasConflict = existingModules.some(existing => {
       // 기존 가구의 slotIndex도 확인
       let existingSlotIndex = existing.slotIndex;
@@ -175,39 +185,42 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
       
       // 슬롯 충돌 검사
+      let hasSlotOverlap = false;
+      
       if (isDualSlot) {
         // 새 가구가 듀얼인 경우: 2개 슬롯 검사
-        const conflict = (existingSlotIndex === calculatedSlotIndex || existingSlotIndex === calculatedSlotIndex + 1) ||
+        hasSlotOverlap = (existingSlotIndex === calculatedSlotIndex || existingSlotIndex === calculatedSlotIndex + 1) ||
                         (existing.isDualSlot && (existingSlotIndex + 1 === calculatedSlotIndex || existingSlotIndex + 1 === calculatedSlotIndex + 1));
-        
-        if (conflict) {
-          console.log('❌ [Store] 듀얼 가구 충돌 감지:', {
-            새가구_점유: [calculatedSlotIndex, calculatedSlotIndex + 1],
-            기존가구: {
-              id: existing.id,
-              slotIndex: existingSlotIndex,
-              isDualSlot: existing.isDualSlot
-            }
-          });
-        }
-        return conflict;
       } else {
         // 새 가구가 싱글인 경우: 1개 슬롯 검사
-        const conflict = existingSlotIndex === calculatedSlotIndex ||
+        hasSlotOverlap = existingSlotIndex === calculatedSlotIndex ||
                         (existing.isDualSlot && existingSlotIndex + 1 === calculatedSlotIndex);
-        
-        if (conflict) {
-          console.log('❌ [Store] 싱글 가구 충돌 감지:', {
-            새가구_점유: [calculatedSlotIndex],
-            기존가구: {
-              id: existing.id,
-              slotIndex: existingSlotIndex,
-              isDualSlot: existing.isDualSlot
-            }
-          });
-        }
-        return conflict;
       }
+      
+      // 슬롯이 겹치지 않으면 충돌 없음
+      if (!hasSlotOverlap) {
+        return false;
+      }
+      
+      // 슬롯이 겹치는 경우 상부장/하부장 공존 체크
+      const isExistingUpper = existing.moduleId.includes('upper-cabinet') || existing.moduleId.includes('dual-upper-cabinet');
+      const isExistingLower = existing.moduleId.includes('lower-cabinet') || existing.moduleId.includes('dual-lower-cabinet');
+      
+      // 상부장과 하부장은 공존 가능
+      if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+        console.log('✅ [Store] 상부장/하부장 공존 허용:', {
+          새가구: { id: module.id, moduleId: module.moduleId, isUpper: isNewUpper, isLower: isNewLower },
+          기존가구: { id: existing.id, moduleId: existing.moduleId, isUpper: isExistingUpper, isLower: isExistingLower }
+        });
+        return false; // 충돌 없음
+      }
+      
+      // 같은 카테고리거나 일반 가구끼리는 충돌
+      console.log('❌ [Store] 가구 충돌 감지:', {
+        새가구: { id: module.id, slotIndex: calculatedSlotIndex, isDualSlot, isUpper: isNewUpper, isLower: isNewLower },
+        기존가구: { id: existing.id, slotIndex: existingSlotIndex, isDualSlot: existing.isDualSlot, isUpper: isExistingUpper, isLower: isExistingLower }
+      });
+      return true; // 충돌
     });
     
     if (hasConflict) {
