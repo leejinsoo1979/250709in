@@ -1084,8 +1084,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
   let optimalHingePosition = placedModule.hingePosition || 'right';
   
-  // 노서라운드 모드에서 커버도어의 힌지 위치 조정
-  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
+  // 기둥이 있는 경우 기둥 침범 로직이 최우선
+  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
+    // 기둥 침범 상황에 따른 힌지 조정
+    optimalHingePosition = calculateOptimalHingePosition(slotInfo);
+    console.log('🚪 기둥 침범에 따른 힌지 방향 조정:', {
+      slotIndex: slotInfo.slotIndex,
+      intrusionDirection: slotInfo.intrusionDirection,
+      furniturePosition: slotInfo.furniturePosition,
+      originalHinge: placedModule.hingePosition || 'right',
+      optimalHinge: optimalHingePosition
+    });
+  } 
+  // 기둥이 없는 경우에만 노서라운드 모드 체크
+  else if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlot = placedModule.slotIndex === 0;
     
     // 단내림이 있는 경우 각 구간의 columnCount를 기준으로 마지막 슬롯 판단
@@ -1133,17 +1145,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         optimalHingePosition = 'left';
       }
     }
-  } else if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
-    // 기둥 침범 상황에 따른 힌지 조정
-    optimalHingePosition = calculateOptimalHingePosition(slotInfo);
-    console.log('🚪 기둥 침범에 따른 힌지 방향 조정:', {
-      slotIndex: slotInfo.slotIndex,
-      intrusionDirection: slotInfo.intrusionDirection,
-      furniturePosition: slotInfo.furniturePosition,
-      originalHinge: placedModule.hingePosition || 'right',
-      optimalHinge: optimalHingePosition
-         });
-   }
+  }
 
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
