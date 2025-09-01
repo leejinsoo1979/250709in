@@ -62,7 +62,7 @@ const checkAdjacentUpperLowerToFull = (
   let currentZone: 'normal' | 'dropped' | undefined;
   if (spaceInfo.droppedCeiling?.enabled) {
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
-    const indexing = ColumnIndexer.calculate(spaceInfo, spaceInfo.customColumnCount);
+    const indexing = calculateSpaceIndexing(spaceInfo);
     const droppedCount = indexing.zones?.dropped?.columnCount || 0;
     const normalCount = indexing.zones?.normal?.columnCount || 0;
     
@@ -95,7 +95,7 @@ const checkAdjacentUpperLowerToFull = (
   // 단내림이 활성화된 경우, 인접 모듈이 같은 zone에 있는지 확인
   if (currentZone && spaceInfo.droppedCeiling?.enabled) {
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
-    const indexing = ColumnIndexer.calculate(spaceInfo, spaceInfo.customColumnCount);
+    const indexing = calculateSpaceIndexing(spaceInfo, spaceInfo.customColumnCount);
     const droppedCount = indexing.zones?.dropped?.columnCount || 0;
     const normalCount = indexing.zones?.normal?.columnCount || 0;
     

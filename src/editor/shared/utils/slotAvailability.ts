@@ -260,51 +260,30 @@ export const isSlotAvailable = (
                                  placedModule.moduleId.includes('lower-cabinet') || 
                                  placedModule.moduleId.includes('dual-lower-cabinet');
           
+          console.log('📋 카테고리 비교:', {
+            새가구: {
+              moduleId,
+              isUpper: isNewUpper,
+              isLower: isNewLower,
+              category: newModuleData?.category
+            },
+            기존가구: {
+              moduleId: placedModule.moduleId,
+              isUpper: isExistingUpper,
+              isLower: isExistingLower,
+              category: moduleData.category
+            },
+            상하부장조합: (isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)
+          });
+
           // 상부장과 하부장은 같은 슬롯에 공존 가능
           if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
-            console.log('✅ 상부장/하부장 공존 가능 (슬롯 가용성 검사):', {
-              new: { 
-                moduleId, 
-                category: newModuleData?.category,
-                isUpper: isNewUpper,
-                isLower: isNewLower
-              },
-              existing: { 
-                id: placedModule.id, 
-                moduleId: placedModule.moduleId,
-                category: moduleData.category,
-                isUpper: isExistingUpper,
-                isLower: isExistingLower
-              },
-              targetSlots
-            });
+            console.log('✅ 상부장/하부장 공존 가능 - 충돌 검사 건너뛰기');
             continue; // 충돌로 간주하지 않고 다음 가구 검사
           }
           
           // 같은 카테고리의 가구는 충돌
-          // 디버그 로그 - 충돌 상세 정보
-          console.log('🚫 슬롯 충돌 감지!', {
-            충돌위치: targetSlots.filter(slot => moduleSlots.includes(slot)),
-            타겟슬롯: targetSlots,
-            기존가구: {
-              id: placedModule.id,
-              moduleId: placedModule.moduleId,
-              슬롯: moduleSlot,
-              듀얼: isModuleDual,
-              차지슬롯: moduleSlots,
-              category: moduleData.category,
-              isUpper: isExistingUpper,
-              isLower: isExistingLower
-            },
-            새가구: {
-              moduleId: moduleId,
-              듀얼: isDualFurniture,
-              타겟슬롯: targetSlots,
-              category: newModuleData?.category,
-              isUpper: isNewUpper,
-              isLower: isNewLower
-            }
-          });
+          console.log('🚫 슬롯 충돌 감지! (같은 카테고리 또는 비호환 가구)');
           return false; // 충돌 발견
         }
       }

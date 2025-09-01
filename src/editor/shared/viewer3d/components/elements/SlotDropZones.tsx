@@ -259,6 +259,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     // 단내림 구간에서 전역 슬롯 인덱스 계산
     let globalSlotIndex = zoneSlotIndex;
+    
+    console.log('🔍 전역 슬롯 인덱스 계산 시작:', {
+      zoneSlotIndex,
+      zone,
+      '단내림enabled': spaceInfo.droppedCeiling?.enabled,
+      '단내림position': spaceInfo.droppedCeiling?.position,
+      'dropped_columnCount': indexing.zones?.dropped?.columnCount,
+      'normal_columnCount': indexing.zones?.normal?.columnCount
+    });
+    
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones?.dropped && indexing.zones?.normal) {
       const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
       
@@ -281,6 +291,13 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
     }
     
+    console.log('🔍 전역 슬롯 인덱스 계산 완료:', {
+      zoneSlotIndex,
+      globalSlotIndex,
+      zone,
+      '변경여부': globalSlotIndex !== zoneSlotIndex
+    });
+    
     // 기둥 슬롯 정보 확인 - 전역 인덱스 사용
     const targetSlotInfo = columnSlots[globalSlotIndex];
     
@@ -298,7 +315,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     });
     
     // 모든 슬롯에 대해 기본 가용성 검사 수행 (기둥 유무 관계없이)
-    if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
+    // 단내림이 있는 경우 zone 정보를 전달하여 올바른 영역에서 검사
+    if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id, undefined, zone)) {
       console.log('❌ 슬롯 가용성 검사 실패');
       return false; // 충돌하는 슬롯에는 배치 불가
     }
