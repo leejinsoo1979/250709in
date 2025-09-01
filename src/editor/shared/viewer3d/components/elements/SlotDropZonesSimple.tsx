@@ -39,6 +39,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // 모든 훅을 먼저 호출
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
+  const removeModule = useFurnitureStore(state => state.removeModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
@@ -1832,6 +1833,78 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       zone: m.zone,
       moduleId: m.moduleId
     })));
+    
+    // 충돌 감지 및 제거
+    const collidingModules: string[] = [];
+    const newOccupiedSlots = isDual ? [slotIndex, slotIndex + 1] : [slotIndex];
+    
+    latestPlacedModules.forEach(module => {
+      // 같은 zone의 가구만 충돌 체크
+      const moduleZone = module.zone || 'normal';
+      const targetZone = zoneToUse || 'normal';
+      
+      if (moduleZone !== targetZone) {
+        return;
+      }
+      
+      // 기존 가구가 차지하는 슬롯들
+      const moduleSlots = module.isDualSlot 
+        ? [module.slotIndex, module.slotIndex + 1] 
+        : [module.slotIndex];
+      
+      // 슬롯 겹침 확인
+      const hasOverlap = newOccupiedSlots.some(slot => moduleSlots.includes(slot));
+      
+      if (hasOverlap) {
+        // 상부장과 하부장 공존 체크
+        const existingModuleData = getModuleById(module.moduleId, internalSpace, adjustedSpaceInfo);
+        const newModuleCategory = moduleData.category;
+        const existingCategory = existingModuleData?.category;
+        
+        console.log('🔍 충돌 감지 - 카테고리 확인:', {
+          newModule: {
+            id: newModule.id,
+            moduleId: newModule.moduleId,
+            category: newModuleCategory,
+            slotIndex
+          },
+          existingModule: {
+            id: module.id,
+            moduleId: module.moduleId,
+            category: existingCategory,
+            slotIndex: module.slotIndex
+          }
+        });
+        
+        // 상하부장 공존 가능 여부
+        const canCoexist = 
+          (newModuleCategory === 'upper' && existingCategory === 'lower') ||
+          (newModuleCategory === 'lower' && existingCategory === 'upper');
+        
+        if (canCoexist) {
+          console.log('✅✅✅ 상하부장 공존 가능! 충돌 없음:', {
+            newCategory: newModuleCategory,
+            existingCategory,
+            slot: slotIndex
+          });
+        } else {
+          console.log('🚨 충돌 감지됨! 기존 가구 제거:', {
+            existingModuleId: module.id,
+            existingCategory,
+            newCategory: newModuleCategory
+          });
+          collidingModules.push(module.id);
+        }
+      }
+    });
+    
+    // 충돌한 가구들 제거
+    if (collidingModules.length > 0) {
+      console.log('🗑️ 충돌한 가구 제거:', collidingModules);
+      collidingModules.forEach(moduleId => {
+        removeModule(moduleId);
+      });
+    }
     
     addModule(newModule);
     
