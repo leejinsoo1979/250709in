@@ -421,6 +421,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth}
+        slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
       />
@@ -450,6 +451,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth}
+        slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
       />
