@@ -1622,7 +1622,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}
                 slotCenterX={slotCenterX} // 미리 계산된 값 사용
-                adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
+                adjustedWidth={adjustedFurnitureWidthMm} // 가구 본체는 조정된 너비 사용
                 slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
                 slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
                 adjacentCabinets={{ hasAdjacentUpperLower: needsEndPanelAdjustment, adjacentSide: endPanelSide }} // 인접 상하부장 정보 전달
@@ -1691,7 +1691,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               
               {/* 상부장/하부장과 인접한 키큰장의 엔드패널 렌더링 (상하부장 자체가 아닌 경우만) */}
               {needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower' && (() => {
-                const reducedFurnitureWidth = mmToThreeUnits(furnitureWidthMm);
+                const reducedFurnitureWidth = mmToThreeUnits(adjustedFurnitureWidthMm);
                 const panels = [];
                 
                 // 키큰장의 이동량 계산

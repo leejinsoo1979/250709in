@@ -683,7 +683,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zone: zoneSpaceInfo.zone,
           customColumnCount: zoneSpaceInfo.customColumnCount
         },
-        firstModule: zoneModules[0]
+        firstModule: zoneModules[0],
+        // 상하부장 카테고리 확인
+        upperModules: zoneModules.filter(m => m.category === 'upper').map(m => ({
+          id: m.id,
+          name: m.name,
+          width: m.dimensions.width,
+          height: m.dimensions.height
+        })),
+        lowerModules: zoneModules.filter(m => m.category === 'lower').map(m => ({
+          id: m.id,
+          name: m.name,
+          width: m.dimensions.width,
+          height: m.dimensions.height
+        }))
       });
       
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
@@ -729,6 +742,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       console.log('🔍 가구 검색:', {
         원본ID: dragData.moduleData.id,
+        원본카테고리: dragData.moduleData.category,
         기본타입: moduleBaseType,
         목표너비: targetWidth,
         찾는ID: targetModuleId,
@@ -736,6 +750,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         생성된모듈수: zoneModules.length,
         생성된모듈들: zoneModules.map(m => ({
           id: m.id,
+          category: m.category,
           width: m.dimensions.width
         }))
       });
