@@ -106,7 +106,7 @@ const checkAdjacentUpperLowerToFull = (
           currentZone,
           rightModule: rightAdjacentModule.moduleId,
           rightZone,
-          rightSlotIndex
+          rightSlotIndex: rightAdjacentModule.slotIndex
         });
         rightAdjacentModule = undefined; // 다른 zone에 있으면 인접하지 않은 것으로 처리
       }
