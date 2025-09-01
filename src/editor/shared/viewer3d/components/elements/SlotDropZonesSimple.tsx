@@ -1961,17 +1961,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
       const internalHeightMm = adjustedInternalSpace?.height || internalSpace.height;
       const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
       
       // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
-      furnitureY = (internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      // 상부장은 천장에 고정되므로 받침대 높이와 무관
+      furnitureY = (internalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
       
       console.log('🔍 상부장 Y 위치 계산:', {
         category: moduleData.category,
         internalHeightMm,
         furnitureHeightMm,
-        baseFrameHeightMm,
-        furnitureY
+        furnitureY,
+        설명: '상부장은 천장 고정 (받침대/띄워서 배치와 무관)'
       });
     } else if (isLowerCabinet) {
       // 하부장: 바닥에서 시작 (띄워서 배치 고려)
@@ -2604,9 +2604,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 앞쪽에서 20mm 줄이기
-        const reducedDepth = slotDimensions.depth - mmToThreeUnits(20);
-        const zOffset = -mmToThreeUnits(10); // 뒤쪽으로 10mm 이동 (앞쪽에서만 20mm 줄이기 위해)
+        // 깊이를 더 크게 만들어서 레이캐스트 감지 개선
+        const reducedDepth = slotDimensions.depth + mmToThreeUnits(100); // 100mm 더 두껍게
+        const zOffset = 0; // 중앙에 배치
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
@@ -2652,6 +2652,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 슬롯의 중앙 Y 위치
         const colliderY = floorY + slotHeight / 2;
+        
+        // 디버그: 콜라이더 생성 정보
+        if (slotLocalIndex === 0) {
+          console.log('🎯 Slot Collider 생성:', {
+            zone: slotZone,
+            index: slotLocalIndex,
+            position: { x: slotX, y: colliderY, z: zOffset },
+            size: { width: slotWidth, height: slotHeight, depth: reducedDepth },
+            floorY,
+            floatHeight: isFloating ? floatHeight : 0,
+            baseConfig: spaceInfo.baseConfig
+          });
+        }
         
         return (
           <mesh
