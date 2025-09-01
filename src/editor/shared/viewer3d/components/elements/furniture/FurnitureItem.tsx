@@ -1524,7 +1524,43 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   });
                   return zoneSpaceInfo;
                 })()}
-                doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비와 동일 (엔드패널 관계없이)
+                doorWidth={(() => {
+                  // 듀얼 가구인 경우 항상 두 슬롯의 원래 너비 합계 사용
+                  if (isDualFurniture) {
+                    let dualDoorWidth;
+                    
+                    // 단내림 구간 처리
+                    if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
+                      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+                      
+                      if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
+                        dualDoorWidth = targetZone.slotWidths[placedModule.slotIndex] + targetZone.slotWidths[placedModule.slotIndex + 1];
+                      } else {
+                        dualDoorWidth = originalSlotWidthMm; // fallback
+                      }
+                    } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
+                      // 일반 구간
+                      dualDoorWidth = indexing.slotWidths[placedModule.slotIndex] + indexing.slotWidths[placedModule.slotIndex + 1];
+                    } else {
+                      dualDoorWidth = originalSlotWidthMm; // fallback
+                    }
+                    
+                    console.log('🚪 듀얼 가구 도어 너비:', {
+                      moduleId: placedModule.moduleId,
+                      slotIndex: placedModule.slotIndex,
+                      zone: placedModule.zone,
+                      dualDoorWidth,
+                      originalSlotWidthMm,
+                      furnitureWidthMm,
+                      needsEndPanelAdjustment,
+                      endPanelSide
+                    });
+                    return dualDoorWidth;
+                  }
+                  // 싱글 가구는 원래 슬롯 너비 사용
+                  return originalSlotWidthMm;
+                })()} // 도어 너비는 원래 슬롯 너비와 동일 (엔드패널 관계없이)
                 doorXOffset={0} // 도어 위치는 변경하지 않음
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}
