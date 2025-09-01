@@ -1401,8 +1401,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 일반 가구 (하부장 포함)
-    const yPos = furnitureStartY + height / 2;
-    if (actualModuleData?.id.includes('dual-4drawer-pantshanger') || actualModuleData?.id.includes('dual-2drawer-styler')) {
+    // 띄워서 배치 시 하부장은 띄움 높이 위에 배치되어야 함
+    let yPos = furnitureStartY + height / 2;
+    
+    // 띄워서 배치 모드인지 확인
+    const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand' && 
+                            spaceInfo?.baseConfig?.placementType === 'float';
+    
+    if (isFloatPlacement && (actualModuleData?.category === 'lower' || 
+                            actualModuleData?.id?.includes('lower-cabinet'))) {
+      // 띄워서 배치 시 하부장은 하단이 띄움 높이에 맞춰져야 함
+      // furnitureStartY는 이미 floatHeight만큼 띄워진 상태
+      // 하부장 하단이 띄움 높이에 정확히 맞도록 설정
+      yPos = furnitureStartY + height / 2;
+      
+      console.log('📦 띄워서 배치 하부장 Y 위치:', {
+        moduleId: actualModuleData?.id || 'unknown',
+        category: actualModuleData?.category,
+        isFloatPlacement,
+        floatHeight: spaceInfo?.baseConfig?.floatHeight,
+        furnitureStartY,
+        furnitureStartY_mm: furnitureStartY / 0.01,
+        height,
+        height_mm: height / 0.01,
+        yPos,
+        yPos_mm: yPos / 0.01,
+        하부장_하단_높이_mm: (yPos - height/2) / 0.01,
+        설명: '하부장 하단이 띄움 높이에 정확히 위치'
+      });
+    } else if (actualModuleData?.id.includes('dual-4drawer-pantshanger') || actualModuleData?.id.includes('dual-2drawer-styler')) {
       console.log('🚀 가구 Y 위치 계산:', {
         moduleId: actualModuleData?.id || 'unknown',
         furnitureStartY,
