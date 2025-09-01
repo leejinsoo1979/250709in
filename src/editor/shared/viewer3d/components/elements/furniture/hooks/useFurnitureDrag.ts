@@ -629,12 +629,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // mm를 Three.js 단위로 변환
       const mmToThreeUnits = (mm: number) => mm * 0.01;
       
-      // 내경 공간 시작점 계산
-      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 
-                        spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float' ? 
-                        (spaceInfo.baseConfig.floatHeight || 0) : 0;
-      const furnitureStartY = mmToThreeUnits(floorHeight + baseHeight);
+      // 내경 공간 시작점 계산 - PlacedFurnitureContainer와 동일한 로직 사용
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+      
+      let furnitureStartY: number;
+      if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
+        // 받침대 있음: 바닥마감재 + 받침대 높이
+        furnitureStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
+      } else if (spaceInfo.baseConfig.type === 'stand') {
+        // 받침대 없음
+        if (spaceInfo.baseConfig.placementType === 'float') {
+          // 띄워서 배치: 바닥마감재 + 띄움 높이
+          const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+          furnitureStartY = mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
+        } else {
+          // 바닥에 배치: 바닥마감재 높이만
+          furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
+        }
+      } else {
+        // 기본값: 0
+        furnitureStartY = 0;
+      }
       
       // 상부장인지 확인 (카테고리 또는 ID로 확인)
       const isUpperCabinet = moduleData.category === 'upper' || 
@@ -693,15 +709,23 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         calculatedY = furnitureStartY + mmToThreeUnits(furnitureHeightMm / 2);
         
         if (isLowerCabinet) {
+          const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && 
+                                  spaceInfo.baseConfig?.placementType === 'float';
           console.log('📦 드래그 중 하부장 Y 위치 계산:', {
             moduleId: moduleData.id,
             currentModuleId: currentModule.moduleId,
             category: moduleData.category,
             isLowerCabinet,
+            isFloatPlacement,
+            floatHeight_mm: spaceInfo.baseConfig?.floatHeight || 0,
+            floorFinishHeightMm,
             furnitureStartY,
+            furnitureStartY_mm: furnitureStartY * 100,
             furnitureHeightMm,
             calculatedY,
-            previousY: currentModule.position.y
+            calculatedY_mm: calculatedY * 100,
+            previousY: currentModule.position.y,
+            설명: isFloatPlacement ? '띄워서 배치 모드' : '일반 배치 모드'
           });
         }
       }
