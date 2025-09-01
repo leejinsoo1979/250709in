@@ -2977,20 +2977,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
           
-          // 받침대 높이 확인 - 받침대가 있을 때만 적용
-          // baseConfig.type === 'floor': 받침대 있음 (65mm)
-          // baseConfig.type === 'stand': 받침대 없음 (0mm)
-          const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-          
-          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치 (받침대가 있을 때만 높이 포함)
-          furnitureY = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
+          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
+          // 상부장은 천장에 고정되므로 받침대 높이와 무관
+          furnitureY = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
           
           console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
             slotStartY,
             internalHeightMm,
             furnitureHeightMm,
             furnitureY,
-            category: moduleData.category
+            category: moduleData.category,
+            설명: '상부장은 천장 고정'
           });
         } else {
           // 하부장 및 일반 가구: 바닥에서 시작
