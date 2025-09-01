@@ -815,7 +815,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
       furnitureWidthMm -= reduction;
       
-      console.log('🔧 듀얼장 - 상하부장 인접으로 너비 조정:', {
+      console.log('🔧🔧🔧 듀얼장 - 상하부장 인접으로 너비 조정:', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
         category: actualModuleData?.category,
@@ -828,7 +828,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         adjacentCheck,
         description: endPanelSide === 'both' 
           ? '듀얼장 양쪽에 상하부장 - 36mm 축소 (양쪽 18mm씩)'
-          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소`
+          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소`,
+        '⚠️ 중요': '이 로그가 출력되면 듀얼장 너비가 조정되어야 함'
       });
     } else {
       // 싱글 키큰장은 기존 로직 유지

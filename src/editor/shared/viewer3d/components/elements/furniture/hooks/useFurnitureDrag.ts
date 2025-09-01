@@ -247,41 +247,26 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     
     e.stopPropagation();
     
-    // 3D 모드에서 카메라를 정면 뷰로 설정
+    // 3D 모드에서 카메라 방향만 정면으로 조정 (줌 레벨 유지)
     if (viewMode === '3D' && controls) {
-      // 현재 카메라 거리 계산
+      // 현재 카메라 거리 유지
       const currentDistance = camera.position.distanceTo(controls.target);
       
-      // 공간의 중앙 높이 계산 (mm를 Three.js 단위로 변환)
-      const centerY = (spaceInfo.height * 0.01) / 2; // 높이의 중앙
+      // 현재 타겟의 Y 위치 유지 (줌인 시 보고 있던 높이 유지)
+      const currentTargetY = controls.target.y;
       
-      // 최소 거리 설정 (공간 전체가 보이도록)
-      const minDistance = Math.max(
-        (spaceInfo.width * 0.01) * 0.8,  // 너비 기준
-        (spaceInfo.height * 0.01) * 0.8, // 높이 기준
-        15 // 최소 거리
-      );
+      // 카메라를 정면에서 보도록만 조정 (거리와 높이는 유지)
+      camera.position.set(0, currentTargetY, currentDistance);
+      camera.lookAt(0, currentTargetY, 0);
       
-      // 적절한 거리 선택 (현재 거리가 너무 가까우면 최소 거리 사용)
-      const optimalDistance = Math.max(currentDistance, minDistance);
-      
-      // 카메라를 정면 중앙으로 설정
-      camera.position.set(0, centerY, optimalDistance);
-      camera.lookAt(0, centerY, 0);
-      
-      // OrbitControls 타겟도 중앙으로 설정
-      controls.target.set(0, centerY, 0);
+      // OrbitControls 타겟은 현재 위치 유지 (X만 0으로)
+      controls.target.set(0, currentTargetY, 0);
       controls.update();
       
-      // 카메라 회전 초기화 (정면을 바라보도록)
-      camera.rotation.set(0, 0, 0);
-      camera.up.set(0, 1, 0);
-      
-      console.log('📐 가구 드래그 시작 - 정면 뷰로 고정:', {
-        centerY,
-        distance: optimalDistance,
-        spaceHeight: spaceInfo.height,
-        spaceWidth: spaceInfo.width
+      console.log('📐 가구 드래그 시작 - 정면 방향만 조정:', {
+        targetY: currentTargetY,
+        distance: currentDistance,
+        description: '줌 레벨과 높이 유지, 방향만 정면으로'
       });
     }
     
