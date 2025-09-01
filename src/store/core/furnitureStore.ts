@@ -3,7 +3,6 @@ import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useSpaceConfigStore } from './spaceConfigStore';
-import { getModuleById } from '@/data/modules';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -145,30 +144,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       기존가구수: existingModules.length
     });
     
-    // 상부장/하부장 여부 확인 - getModuleById 사용
-    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
-    const internalSpace = {
-      width: spaceInfo.width,
-      height: spaceInfo.height,
-      depth: spaceInfo.depth
-    };
-    const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-    
-    // category 기반 판단 우선, 없으면 ID 기반
-    const isNewUpper = newModuleData?.category === 'upper' || 
-                      module.moduleId.includes('upper-cabinet') || 
-                      module.moduleId.includes('dual-upper-cabinet');
-    const isNewLower = newModuleData?.category === 'lower' || 
-                      module.moduleId.includes('lower-cabinet') || 
-                      module.moduleId.includes('dual-lower-cabinet');
+    // 상부장/하부장 여부 확인 - 간단하게 ID로만 판단
+    const isNewUpper = module.moduleId.includes('upper-cabinet');
+    const isNewLower = module.moduleId.includes('lower-cabinet');
     
     console.log('🔍 [Store] 새 가구 카테고리:', {
       moduleId: module.moduleId,
-      category: newModuleData?.category,
       isUpper: isNewUpper,
-      isLower: isNewLower,
-      fromCategory: newModuleData?.category === 'upper' || newModuleData?.category === 'lower',
-      fromId: module.moduleId.includes('upper-cabinet') || module.moduleId.includes('lower-cabinet')
+      isLower: isNewLower
     });
     
     const hasConflict = existingModules.some(existing => {
@@ -219,16 +202,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         return false;
       }
       
-      // 슬롯이 겹치는 경우 상부장/하부장 공존 체크 - getModuleById 사용
-      const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-      
-      // category 기반 판단 우선, 없으면 ID 기반
-      const isExistingUpper = existingModuleData?.category === 'upper' || 
-                             existing.moduleId.includes('upper-cabinet') || 
-                             existing.moduleId.includes('dual-upper-cabinet');
-      const isExistingLower = existingModuleData?.category === 'lower' || 
-                             existing.moduleId.includes('lower-cabinet') || 
-                             existing.moduleId.includes('dual-lower-cabinet');
+      // 슬롯이 겹치는 경우 상부장/하부장 공존 체크 - 간단하게 ID로만 판단
+      const isExistingUpper = existing.moduleId.includes('upper-cabinet');
+      const isExistingLower = existing.moduleId.includes('lower-cabinet');
       
       // 상부장과 하부장은 공존 가능
       if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
@@ -236,14 +212,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           새가구: { 
             id: module.id, 
             moduleId: module.moduleId, 
-            category: newModuleData?.category,
             isUpper: isNewUpper, 
             isLower: isNewLower 
           },
           기존가구: { 
             id: existing.id, 
             moduleId: existing.moduleId, 
-            category: existingModuleData?.category,
             isUpper: isExistingUpper, 
             isLower: isExistingLower 
           }
