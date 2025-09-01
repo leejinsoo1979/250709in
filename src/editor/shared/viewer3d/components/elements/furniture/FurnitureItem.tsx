@@ -810,8 +810,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 듀얼 가구의 경우 특별 처리
     if (isDualFurniture) {
-      // 듀얼 가구는 양쪽에 상하부장이 있을 때 양쪽 18mm씩 총 36mm 줄여야 함
-      // 한쪽만 있을 때는 18mm만 줄임
+      // 듀얼 가구는 한쪽에 상하부장이 있을 때도 양쪽에서 9mm씩 총 18mm 줄어듦
+      // 양쪽에 상하부장이 있을 때는 양쪽 18mm씩 총 36mm 줄어듦
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
       furnitureWidthMm -= reduction;
       
@@ -828,8 +828,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         adjacentCheck,
         description: endPanelSide === 'both' 
           ? '듀얼장 양쪽에 상하부장 - 36mm 축소 (양쪽 18mm씩)'
-          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소`,
-        '⚠️ 중요': '이 로그가 출력되면 듀얼장 너비가 조정되어야 함'
+          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소 (양쪽 9mm씩) + 반대쪽으로 9mm 이동`,
+        '⚠️ 중요': '듀얼장은 양쪽에서 균등하게 줄어들고 반대쪽으로 이동'
       });
     } else {
       // 싱글 키큰장은 기존 로직 유지
@@ -1547,7 +1547,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <>
               {/* 키큰장과 듀얼장이 상부장/하부장과 인접한 경우 가구 본체를 이동 */}
               {/* 상하부장 자체는 이동하지 않음 */}
-              {/* 듀얼 키큰장: 한쪽만 맞닿으면 반대쪽으로 9mm 이동 */}
+              {/* 듀얼장: 한쪽만 맞닿으면 양쪽에서 9mm씩 줄고 반대쪽으로 9mm 이동 */}
               <group position={[
                 needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower'
                   ? (endPanelSide === 'both'
