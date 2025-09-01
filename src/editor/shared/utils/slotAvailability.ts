@@ -71,7 +71,9 @@ export const isSlotAvailable = (
     isUpper: isNewUpper,
     isLower: isNewLower,
     targetSlots,
-    targetZone
+    targetZone,
+    excludeModuleId,
+    isMoving: !!excludeModuleId
   });
 
   // 1. 먼저 같은 슬롯에 배치된 가구들과의 충돌 검사 (상하부장 공존 허용)
@@ -150,9 +152,20 @@ export const isSlotAvailable = (
                                placedModule.moduleId.includes('dual-lower-cabinet');
         
         console.log('🔍 충돌 검사:', {
-          새가구: { moduleId, isUpper: isNewUpper, isLower: isNewLower },
-          기존가구: { moduleId: placedModule.moduleId, isUpper: isExistingUpper, isLower: isExistingLower },
-          상하부장조합: (isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)
+          새가구: { 
+            moduleId, 
+            category: newModuleData?.category,
+            isUpper: isNewUpper, 
+            isLower: isNewLower 
+          },
+          기존가구: { 
+            moduleId: placedModule.moduleId, 
+            category: moduleData.category,
+            isUpper: isExistingUpper, 
+            isLower: isExistingLower 
+          },
+          상하부장조합: (isNewUpper && isExistingLower) || (isNewLower && isExistingUpper),
+          이동중: !!excludeModuleId
         });
         
         // 상부장과 하부장은 같은 슬롯에 공존 가능
