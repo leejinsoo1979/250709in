@@ -300,6 +300,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       newSlotIndex = closestSlot;
     }
     
+    // 상하부장 여부 확인
+    const isMovingUpper = movingModule.moduleId.includes('upper-cabinet');
+    const isMovingLower = movingModule.moduleId.includes('lower-cabinet');
+    
     // 충돌 검사 (자기 자신 제외)
     const hasConflict = currentState.placedModules.some(existing => {
       if (existing.id === id) return false; // 자기 자신은 제외
@@ -330,13 +334,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
       
       // 슬롯 충돌 검사
+      let hasSlotOverlap = false;
       if (movingModule.isDualSlot) {
-        return (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
+        hasSlotOverlap = (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
                (existing.isDualSlot && (existingSlotIndex + 1 === newSlotIndex || existingSlotIndex + 1 === newSlotIndex + 1));
       } else {
-        return existingSlotIndex === newSlotIndex ||
+        hasSlotOverlap = existingSlotIndex === newSlotIndex ||
                (existing.isDualSlot && existingSlotIndex + 1 === newSlotIndex);
       }
+      
+      // 슬롯이 겹치지 않으면 충돌 없음
+      if (!hasSlotOverlap) {
+        return false;
+      }
+      
+      // 슬롯이 겹치는 경우 상하부장 예외 처리
+      const isExistingUpper = existing.moduleId.includes('upper-cabinet');
+      const isExistingLower = existing.moduleId.includes('lower-cabinet');
+      
+      // 상부장과 하부장은 공존 가능
+      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+        console.log('✅ [moveModule] 상하부장 공존 허용');
+        return false; // 충돌 없음
+      }
+      
+      return true; // 충돌
     });
     
     if (hasConflict) {
@@ -437,11 +459,39 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           
           // 슬롯 충돌 검사
           if (mergedModule.isDualSlot) {
-            return (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
+            const hasSlotConflict = (existingSlotIndex === newSlotIndex || existingSlotIndex === newSlotIndex + 1) ||
                    (existing.isDualSlot && (existingSlotIndex + 1 === newSlotIndex || existingSlotIndex + 1 === newSlotIndex + 1));
+            
+            if (hasSlotConflict) {
+              // 상부장/하부장 예외 처리
+              const isMovingUpper = mergedModule.moduleId.includes('upper-cabinet');
+              const isMovingLower = mergedModule.moduleId.includes('lower-cabinet');
+              const isExistingUpper = existing.moduleId.includes('upper-cabinet');
+              const isExistingLower = existing.moduleId.includes('lower-cabinet');
+              
+              if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+                return false; // 충돌 없음 - 상하부장은 공존 가능
+              }
+              return true; // 다른 경우는 충돌
+            }
+            return false;
           } else {
-            return existingSlotIndex === newSlotIndex ||
+            const hasSlotConflict = existingSlotIndex === newSlotIndex ||
                    (existing.isDualSlot && existingSlotIndex + 1 === newSlotIndex);
+            
+            if (hasSlotConflict) {
+              // 상부장/하부장 예외 처리
+              const isMovingUpper = mergedModule.moduleId.includes('upper-cabinet');
+              const isMovingLower = mergedModule.moduleId.includes('lower-cabinet');
+              const isExistingUpper = existing.moduleId.includes('upper-cabinet');
+              const isExistingLower = existing.moduleId.includes('lower-cabinet');
+              
+              if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+                return false; // 충돌 없음 - 상하부장은 공존 가능
+              }
+              return true; // 다른 경우는 충돌
+            }
+            return false;
           }
         });
         
