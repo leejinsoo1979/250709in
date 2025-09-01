@@ -804,12 +804,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // 키큰장/듀얼장이 상부장/하부장과 인접한 경우 너비 조정용 변수 (도어는 원래 너비 유지)
-  let adjustedFurnitureWidthMm = furnitureWidthMm; // 가구 본체 조정용
-  
-  // 원래 슬롯 너비 변수 먼저 선언 (나중에 값 할당)
-  let originalSlotWidthMm: number = 0;
-  
   // 키큰장/듀얼장이 상부장/하부장과 인접한 경우만 너비 조정 (상하부장 자체는 조정 안함)
   if (needsEndPanelAdjustment && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower') {
     const originalWidth = furnitureWidthMm;
@@ -819,46 +813,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 듀얼 가구는 양쪽에 상하부장이 있을 때 양쪽 18mm씩 총 36mm 줄여야 함
       // 한쪽만 있을 때는 18mm만 줄임
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
-      adjustedFurnitureWidthMm = furnitureWidthMm - reduction; // 가구 본체만 조정
+      furnitureWidthMm -= reduction;
       
-      console.log('🔧 듀얼장 - 상하부장 인접으로 가구 너비 조정 (도어는 유지):', {
+      console.log('🔧 듀얼장 - 상하부장 인접으로 너비 조정:', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
         category: actualModuleData?.category,
         isDualFurniture,
         originalWidth,
-        adjustedFurnitureWidth: adjustedFurnitureWidthMm,
-        doorWidth: originalSlotWidthMm,
+        adjustedWidth: furnitureWidthMm,
         endPanelSide,
         reduction,
         needsEndPanelAdjustment,
         adjacentCheck,
         description: endPanelSide === 'both' 
-          ? '듀얼장 가구 본체만 36mm 축소 (도어는 원래 크기 유지)'
-          : `듀얼장 가구 본체만 ${endPanelSide}쪽 18mm 축소 (도어는 원래 크기 유지)`
+          ? '듀얼장 양쪽에 상하부장 - 36mm 축소 (양쪽 18mm씩)'
+          : `듀얼장 ${endPanelSide}쪽에 상하부장 - 18mm 축소`
       });
     } else {
       // 싱글 키큰장은 기존 로직 유지
       const reduction = endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS;
-      adjustedFurnitureWidthMm = furnitureWidthMm - reduction; // 가구 본체만 조정
+      furnitureWidthMm -= reduction;
       
-      console.log('🔧 키큰장 - 상하부장 인접으로 가구 너비 조정 (도어는 유지):', {
+      console.log('🔧 키큰장 - 상하부장 인접으로 너비 조정:', {
         moduleId: placedModule.moduleId,
         category: actualModuleData?.category,
         isDualFurniture,
         originalWidth,
-        adjustedFurnitureWidth: adjustedFurnitureWidthMm,
-        doorWidth: originalSlotWidthMm,
+        adjustedWidth: furnitureWidthMm,
         endPanelSide,
         reduction,
         description: endPanelSide === 'both' 
-          ? '키큰장 가구 본체만 36mm 축소 (도어는 원래 크기 유지)'
-          : `키큰장 가구 본체만 ${endPanelSide}쪽 18mm 축소 (도어는 원래 크기 유지)`
+          ? '키큰장 + 양쪽 엔드패널(36mm) = 슬롯 전체 너비'
+          : '키큰장 + 엔드패널(18mm) = 슬롯 전체 너비'
       });
     }
-  } else {
-    // 조정이 필요 없는 경우 원래 값 사용
-    adjustedFurnitureWidthMm = furnitureWidthMm;
   }
   
   // 슬롯 가이드와의 크기 비교 로그
@@ -900,7 +889,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 원래 슬롯 너비 저장 (기둥 침범 조정 전, 커버도어용)
   // adjustedWidth가 있어도 도어는 원래 슬롯 크기를 유지해야 함
-  // (변수는 이미 위에서 선언함)
+  let originalSlotWidthMm;
   
   // 단내림 구간 처리를 우선적으로 확인
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
@@ -1557,16 +1546,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <>
               {/* 키큰장과 듀얼장이 상부장/하부장과 인접한 경우 가구 본체를 이동 */}
               {/* 상하부장 자체는 이동하지 않음 */}
-              {/* 듀얼 캐비넷은 이동하지 않고 너비만 조정 */}
               <group position={[
                 needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower'
-                  ? (isDualFurniture
-                      ? 0  // 듀얼 캐비넷은 항상 중앙에 위치 유지
-                      : endPanelSide === 'both'
-                        ? 0  // 양쪽에 엔드패널이 있으면 중앙에 위치
-                        : endPanelSide === 'left' 
-                          ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 왼쪽에 상/하부장 -> 가구를 오른쪽으로 9mm 이동
-                          : -mmToThreeUnits(END_PANEL_THICKNESS/2)) // 오른쪽에 상/하부장 -> 가구를 왼쪽으로 9mm 이동
+                  ? (endPanelSide === 'both'
+                      ? 0  // 양쪽에 엔드패널이 있으면 중앙에 위치
+                      : endPanelSide === 'left' 
+                        ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 왼쪽에 상/하부장 -> 가구를 오른쪽으로 9mm 이동
+                        : -mmToThreeUnits(END_PANEL_THICKNESS/2)) // 오른쪽에 상/하부장 -> 가구를 왼쪽으로 9mm 이동
                   : 0,  // 조정이 필요 없는 경우
                 0, 
                 0
@@ -1625,7 +1611,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 onDoubleClick={(e: any) => onDoubleClick(e, placedModule.id)} // 더블클릭 이벤트 전달
                 originalSlotWidth={originalSlotWidthMm}
                 slotCenterX={slotCenterX} // 미리 계산된 값 사용
-                adjustedWidth={adjustedFurnitureWidthMm} // 가구 본체는 조정된 너비 사용
+                adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
                 slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
                 slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
                 adjacentCabinets={{ hasAdjacentUpperLower: needsEndPanelAdjustment, adjacentSide: endPanelSide }} // 인접 상하부장 정보 전달
@@ -1694,31 +1680,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               
               {/* 상부장/하부장과 인접한 키큰장의 엔드패널 렌더링 (상하부장 자체가 아닌 경우만) */}
               {needsEndPanelAdjustment && endPanelSide && actualModuleData?.category !== 'upper' && actualModuleData?.category !== 'lower' && (() => {
-                const reducedFurnitureWidth = mmToThreeUnits(adjustedFurnitureWidthMm);
+                const reducedFurnitureWidth = mmToThreeUnits(furnitureWidthMm);
                 const panels = [];
                 
-                // 듀얼 캐비넷의 경우 특별 처리
-                let furnitureOffset = 0;
-                
-                if (isDualFurniture) {
-                  // 듀얼 캐비넷은 원래 위치에서 움직이지 않음
-                  // 대신 너비만 줄어들고 엔드패널이 빈 공간을 채움
-                  furnitureOffset = 0;
-                } else {
-                  // 싱글 키큰장의 이동량 계산
-                  furnitureOffset = endPanelSide === 'both'
-                    ? 0  // 양쪽에 엔드패널이 있으면 중앙에 위치
-                    : endPanelSide === 'left' 
-                      ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 왼쪽에 상/하부장 -> 가구를 오른쪽으로 9mm 이동
-                      : -mmToThreeUnits(END_PANEL_THICKNESS/2); // 오른쪽에 상/하부장 -> 가구를 왼쪽으로 9mm 이동
-                }
+                // 키큰장의 이동량 계산
+                const furnitureOffset = endPanelSide === 'both'
+                  ? 0  // 양쪽에 엔드패널이 있으면 중앙에 위치
+                  : endPanelSide === 'left' 
+                    ? mmToThreeUnits(END_PANEL_THICKNESS/2)   // 왼쪽에 상/하부장 -> 가구를 오른쪽으로 9mm 이동
+                    : -mmToThreeUnits(END_PANEL_THICKNESS/2); // 오른쪽에 상/하부장 -> 가구를 왼쪽으로 9mm 이동
                 
                 // 양쪽 또는 왼쪽에 엔드패널이 필요한 경우
                 if (endPanelSide === 'both' || endPanelSide === 'left') {
-                  // 듀얼 캐비넷의 경우 엔드패널이 가구와 바로 붙어야 함
-                  const leftPanelX = isDualFurniture 
-                    ? -reducedFurnitureWidth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 듀얼: 줄어든 가구의 왼쪽에 바로 붙음
-                    : furnitureOffset - reducedFurnitureWidth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2; // 싱글: 이동된 가구의 왼쪽에 붙음
+                  // 왼쪽 엔드패널은 이동된 가구의 왼쪽 가장자리에 붙음
+                  const leftPanelX = furnitureOffset - reducedFurnitureWidth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2;
                     
                   panels.push(
                     <EndPanelWithTexture
@@ -1733,20 +1708,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   );
                   console.log('🔧 왼쪽 엔드패널 렌더링:', {
                     moduleId: placedModule.id,
-                    isDualFurniture,
                     leftPanelX,
                     furnitureOffset,
-                    reducedFurnitureWidth: adjustedFurnitureWidthMm,
-                    originalWidth: furnitureWidthMm
+                    reducedFurnitureWidth: furnitureWidthMm
                   });
                 }
                 
                 // 양쪽 또는 오른쪽에 엔드패널이 필요한 경우
                 if (endPanelSide === 'both' || endPanelSide === 'right') {
-                  // 듀얼 캐비넷의 경우 엔드패널이 가구와 바로 붙어야 함
-                  const rightPanelX = isDualFurniture
-                    ? reducedFurnitureWidth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2  // 듀얼: 줄어든 가구의 오른쪽에 바로 붙음
-                    : furnitureOffset + reducedFurnitureWidth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2; // 싱글: 이동된 가구의 오른쪽에 붙음
+                  // 오른쪽 엔드패널은 이동된 가구의 오른쪽 가장자리에 붙음
+                  const rightPanelX = furnitureOffset + reducedFurnitureWidth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2;
                     
                   panels.push(
                     <EndPanelWithTexture
@@ -1761,11 +1732,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   );
                   console.log('🔧 오른쪽 엔드패널 렌더링:', {
                     moduleId: placedModule.id,
-                    isDualFurniture,
                     rightPanelX,
                     furnitureOffset,
-                    reducedFurnitureWidth: adjustedFurnitureWidthMm,
-                    originalWidth: furnitureWidthMm
+                    reducedFurnitureWidth: furnitureWidthMm
                   });
                 }
                 
@@ -1775,8 +1744,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   panelCount: panels.length,
                   furnitureOffset,
                   isDualFurniture,
-                  reducedFurnitureWidth: adjustedFurnitureWidthMm,
-                  originalWidth: furnitureWidthMm,
+                  reducedFurnitureWidth: furnitureWidthMm,
                   endPanelThickness: END_PANEL_THICKNESS
                 });
                 
