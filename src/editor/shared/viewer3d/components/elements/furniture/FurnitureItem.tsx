@@ -378,28 +378,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       renderWidth: placedModule.adjustedWidth
     });
   }
-  // customWidth가 있고 adjustedWidth가 없는 경우 - 서라운드 모드에서만 적용
-  // 노서라운드 모드에서는 customWidth가 없어야 함 (이미 올바른 크기의 모듈 사용)
+  // customWidth가 있고 adjustedWidth가 없는 경우
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
-    if (spaceInfo.surroundType === 'surround') {
-      // 서라운드 모드: customWidth로 동적 모듈 ID 생성
+    // 단내림이 없을 때는 8월 28일 로직: 노서라운드에서도 customWidth 사용
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      // 단내림 없음: customWidth로 동적 모듈 ID 생성 (8월 28일 로직)
       const baseType = placedModule.moduleId.replace(/-\d+$/, '');
       targetModuleId = `${baseType}-${placedModule.customWidth}`;
-      console.log('🔧 [FurnitureItem] 서라운드 모드 - customWidth로 ModuleID 생성:', {
+      console.log('🔧 [FurnitureItem] 8월28일 로직 - customWidth로 ModuleID 생성 (단내림 없음):', {
         original: placedModule.moduleId,
         customWidth: placedModule.customWidth,
         newTargetModuleId: targetModuleId,
-        surroundType: spaceInfo.surroundType
+        surroundType: spaceInfo.surroundType,
+        droppedCeilingEnabled: false
       });
     } else {
-      // 노서라운드 모드인데 customWidth가 있는 경우 - 에러 상황
-      console.error('❌ [FurnitureItem] 노서라운드 모드에서 customWidth가 설정됨 - 이는 버그입니다:', {
-        moduleId: placedModule.moduleId,
-        customWidth: placedModule.customWidth,
-        surroundType: spaceInfo.surroundType
-      });
-      // 원본 모듈 ID 사용
-      targetModuleId = placedModule.moduleId;
+      // 단내림 있음: 기존 로직 유지
+      if (spaceInfo.surroundType === 'surround') {
+        // 서라운드 모드: customWidth로 동적 모듈 ID 생성
+        const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+        targetModuleId = `${baseType}-${placedModule.customWidth}`;
+        console.log('🔧 [FurnitureItem] 서라운드 모드 - customWidth로 ModuleID 생성 (단내림 있음):', {
+          original: placedModule.moduleId,
+          customWidth: placedModule.customWidth,
+          newTargetModuleId: targetModuleId,
+          surroundType: spaceInfo.surroundType
+        });
+      } else {
+        // 노서라운드 모드인데 customWidth가 있는 경우 - 에러 상황
+        console.error('❌ [FurnitureItem] 노서라운드 모드에서 customWidth가 설정됨 - 이는 버그입니다 (단내림 있음):', {
+          moduleId: placedModule.moduleId,
+          customWidth: placedModule.customWidth,
+          surroundType: spaceInfo.surroundType
+        });
+        // 원본 모듈 ID 사용
+        targetModuleId = placedModule.moduleId;
+      }
     }
   } else {
     // customWidth가 없는 경우 - 정상 (노서라운드 모드 또는 기본 서라운드)
