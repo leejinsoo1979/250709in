@@ -616,19 +616,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
-        // 도어 높이는 띄움높이와 단내림높이 둘 다 빼야 함
+        // 도어 높이는 일반구간 도어 높이에서 (띄움높이 + 단내림높이)를 빼야 함
+        
+        // 일반구간 키큰장 도어 높이 계산
+        // 일반구간: 천장 - 5mm(upperGap) 부터 바닥 + 25mm 까지
+        const normalZoneDoorHeight = spaceInfo.height - upperGap - 25;
+        
+        // 단내림구간 도어 높이: 일반구간 도어 높이 - (띄움높이 + 단내림높이)
+        finalDoorHeight = normalZoneDoorHeight - (floatHeight + dropHeight);
         
         // 가구 절대 위치 (단내림 구간 + 띄움 배치)
         // 가구는 단내림 천장에서 아래로 floatHeight만큼 떨어져 있음
         const furnitureTopAbsolute = droppedCeilingHeight - floatHeight;  // 단내림 천장 - 띄움높이
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-        
-        // 도어 높이는 원래 키큰장 높이에서 띄움높이와 단내림높이를 둘 다 빼야 함
-        // 일반구간 키큰장 도어 높이: actualDoorHeight - upperGap - 25
-        const normalZoneDoorHeight = actualDoorHeight - upperGap - 25;
-        // 단내림구간 도어 높이: 일반구간 도어 높이 - 띄움높이 - 단내림높이
-        finalDoorHeight = normalZoneDoorHeight - floatHeight - dropHeight;
         
         // 도어 절대 위치
         const doorTopAbsolute = furnitureTopAbsolute - upperGap;  // 가구 상단 - 5mm
@@ -646,9 +647,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           droppedCeilingHeight,
           띄움높이: floatHeight,
           가구높이: furnitureHeight,
+          공간높이: spaceInfo.height,
           normalZoneDoorHeight,
           도어높이: finalDoorHeight,
-          높이계산: `${normalZoneDoorHeight} - ${floatHeight} - ${dropHeight} = ${finalDoorHeight}`,
+          높이계산: `${normalZoneDoorHeight} - (${floatHeight} + ${dropHeight}) = ${finalDoorHeight}`,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
@@ -657,7 +659,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '도어 높이 = 일반구간 도어높이 - 띄움높이 - 단내림높이'
+          설명: '도어 높이 = 일반구간 도어높이 - (띄움높이 + 단내림높이)'
         });
       } else {
         // 받침대 배치 + 단내림
