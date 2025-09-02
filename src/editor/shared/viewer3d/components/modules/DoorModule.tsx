@@ -589,7 +589,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
       
       // 가구 절대 위치  
-      const furnitureTopAbsolute = actualDoorHeight - upperGap;  // 가구 상단도 상부프레임 하단에 맞춤
+      const furnitureTopAbsolute = actualDoorHeight;  // 가구 상단은 천장 위치
       const furnitureBottomAbsolute = floatHeight;    // 바닥+띄움높이
       const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
       
@@ -639,7 +639,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
       
       // 가구 절대 위치
-      const furnitureTopAbsolute = actualDoorHeight - upperGap;    // 가구 상단도 상부프레임 하단에 맞춤
+      const furnitureTopAbsolute = actualDoorHeight;    // 가구 상단은 천장 위치
       const furnitureBottomAbsolute = baseHeight;       // 바닥+받침대높이
       const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
       
