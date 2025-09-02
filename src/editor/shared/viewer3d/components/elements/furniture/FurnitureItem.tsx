@@ -1477,42 +1477,58 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 실제 가구 높이가 내경 공간보다 크면 내경 공간에 맞춤
       let furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
       
-      // 단내림+서라운드에서는 키큰장 높이를 상부프레임 하단까지로 제한
-      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
-        // 상부프레임 두께(10mm)를 고려하여 키큰장 높이 조정
-        const maxHeight = internalHeightMm - 10; // 상부프레임 하단까지
-        furnitureHeightMm = Math.min(furnitureHeightMm, maxHeight);
-        console.log('🔴 단내림+서라운드 키큰장 높이 제한:', {
-          원래높이: actualModuleData?.dimensions.height || 2200,
-          내경높이: internalHeightMm,
-          제한높이: maxHeight,
-          최종높이: furnitureHeightMm
-        });
-      }
-      
       // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
       let startY = furnitureStartY;
       
-      // 키큰장의 중심 Y 위치 = 바닥 + 높이/2
-      const yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
-      
-      console.log('🏢 키큰장(full) Y 위치 계산:', {
-        moduleId: actualModuleData?.id || 'unknown',
-        category: actualModuleData?.category || 'full',
-        zone: placedModule.zone,
-        furnitureStartY,
-        furnitureHeightMm,
-        internalHeightMm,
-        originalHeight: actualModuleData?.dimensions.height,
-        yPos_Three단위: yPos,
-        yPos_mm: yPos / 0.01,
-        상부끝_mm: (yPos / 0.01) + furnitureHeightMm / 2,
-        내경높이: internalHeightMm,
-        baseConfig: spaceInfo?.baseConfig,
-        placementType: spaceInfo?.baseConfig?.placementType,
-        floatHeight: spaceInfo?.baseConfig?.floatHeight,
-        설명: '키큰장은 바닥부터 상부 프레임 하단까지'
-      });
+      // 단내림+서라운드에서는 키큰장이 상부프레임 하단에서 끝나도록 Y 위치 조정
+      let yPos: number;
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
+        // 상부프레임 두께(10mm)를 고려
+        // 키큰장 상단이 상부프레임 하단에 닿도록 위치 조정
+        // 천장높이 - 상부프레임(10mm) = 상부프레임 하단 위치
+        // 키큰장 중심 Y = 상부프레임하단 - 키큰장높이/2
+        const ceilingY = spaceInfo.height; // 천장 높이 (mm)
+        const topFrameBottom = ceilingY - 10; // 상부프레임 하단 (천장 - 10mm)
+        const tallCabinetTop = topFrameBottom; // 키큰장 상단이 여기에 닿아야 함
+        const tallCabinetCenter = tallCabinetTop - (furnitureHeightMm / 2); // 키큰장 중심
+        yPos = mmToThreeUnits(tallCabinetCenter);
+        
+        console.log('🔴 단내림+서라운드 키큰장 Y 위치 조정:', {
+          원래높이: actualModuleData?.dimensions.height || 2200,
+          내경높이: internalHeightMm,
+          가구높이: furnitureHeightMm,
+          천장높이: ceilingY,
+          상부프레임하단: topFrameBottom,
+          키큰장상단: tallCabinetTop,
+          키큰장중심: tallCabinetCenter,
+          중심Y_Three: yPos,
+          중심Y_mm: yPos / 0.01,
+          상단Y_mm: (yPos / 0.01) + furnitureHeightMm / 2,
+          하단Y_mm: (yPos / 0.01) - furnitureHeightMm / 2,
+          설명: '키큰장 상단이 상부프레임 하단(천장-10mm)에 닿도록'
+        });
+      } else {
+        // 일반적인 경우: 키큰장의 중심 Y 위치 = 바닥 + 높이/2
+        yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
+        
+        console.log('🏢 키큰장(full) Y 위치 계산:', {
+          moduleId: actualModuleData?.id || 'unknown',
+          category: actualModuleData?.category || 'full',
+          zone: placedModule.zone,
+          furnitureStartY,
+          furnitureHeightMm,
+          internalHeightMm,
+          originalHeight: actualModuleData?.dimensions.height,
+          yPos_Three단위: yPos,
+          yPos_mm: yPos / 0.01,
+          상부끝_mm: (yPos / 0.01) + furnitureHeightMm / 2,
+          내경높이: internalHeightMm,
+          baseConfig: spaceInfo?.baseConfig,
+          placementType: spaceInfo?.baseConfig?.placementType,
+          floatHeight: spaceInfo?.baseConfig?.floatHeight,
+          설명: '키큰장은 바닥부터 상부 프레임 하단까지'
+        });
+      }
       
       return yPos;
     }
