@@ -517,7 +517,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const leftOffset = -mmToThreeUnits(spaceInfo.width / 2);
   
   // 프레임 사이즈 정보
-  const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+  // 노서라운드 모드일 때는 frameSize를 0으로 설정
+  const frameSize = spaceInfo.frameSize || (spaceInfo.surroundType === 'no-surround' 
+    ? { left: 0, right: 0, top: 0 } 
+    : { left: 50, right: 50, top: 50 });
   
   // 디버깅 로그
   console.log('🔍 CleanCAD2D Debug:', {
@@ -1945,7 +1948,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const actualSpaceWidth = mmToThreeUnits(spaceInfo.width);
     const actualSpaceHeight = mmToThreeUnits(spaceInfo.height);
     
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    // 노서라운드 모드일 때는 frameSize를 0으로 설정
+  const frameSize = spaceInfo.frameSize || (spaceInfo.surroundType === 'no-surround' 
+    ? { left: 0, right: 0, top: 0 } 
+    : { left: 50, right: 50, top: 50 });
     const topDimensionY = actualSpaceHeight + mmToThreeUnits(hasPlacedModules ? 280 : 200);
     const leftDimensionX = -mmToThreeUnits(150); // 좌측 치수선 X 위치 (가구와의 간격 조정)
     
@@ -2510,7 +2516,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const actualSpaceWidth = mmToThreeUnits(spaceInfo.width);
     const actualSpaceHeight = mmToThreeUnits(spaceInfo.height);
     
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    // 노서라운드 모드일 때는 frameSize를 0으로 설정
+  const frameSize = spaceInfo.frameSize || (spaceInfo.surroundType === 'no-surround' 
+    ? { left: 0, right: 0, top: 0 } 
+    : { left: 50, right: 50, top: 50 });
     const topDimensionY = actualSpaceHeight + mmToThreeUnits(hasPlacedModules ? 280 : 200);
     const rightDimensionX = actualSpaceWidth + mmToThreeUnits(200); // 우측 치수선 X 위치
     
@@ -2945,7 +2954,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const renderTopView = () => {
     const spaceWidth = mmToThreeUnits(spaceInfo.width);
     const spaceDepth = mmToThreeUnits(spaceInfo.depth);
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    // 노서라운드 모드일 때는 frameSize를 0으로 설정
+  const frameSize = spaceInfo.frameSize || (spaceInfo.surroundType === 'no-surround' 
+    ? { left: 0, right: 0, top: 0 } 
+    : { left: 50, right: 50, top: 50 });
     const topDimensionZ = -mmToThreeUnits(hasPlacedModules ? 200 : 150);
     // 상단뷰에서는 X축이 가로(폭), Z축이 세로(깊이)  
     // 공간은 중앙에서 -width/2 ~ +width/2, -depth/2 ~ +depth/2로 배치됨

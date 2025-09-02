@@ -68,7 +68,10 @@ const convertEditorDataToProjectData = (editorData: EditorData, userId: string):
     },
     // 기존 필드들 유지
     surroundType: spaceInfo.surroundType,
-    frameSize: spaceInfo.frameSize || { left: 50, right: 50, top: 50 }, // undefined 방지
+    // 노서라운드 모드일 때는 frameSize를 0으로 설정
+    frameSize: spaceInfo.frameSize || (spaceInfo.surroundType === 'no-surround' 
+      ? { left: 0, right: 0, top: 0 } 
+      : { left: 50, right: 50, top: 50 }), // undefined 방지
     gapConfig: spaceInfo.gapConfig,
     baseConfig: spaceInfo.baseConfig,
     materialConfig: spaceInfo.materialConfig,

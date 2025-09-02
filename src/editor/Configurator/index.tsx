@@ -240,7 +240,11 @@ const Configurator: React.FC = () => {
       return; // 우측 엔드패널은 20mm 고정
     }
     
-    const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    // 노서라운드 모드일 때는 frameSize를 0으로 설정
+    const defaultFrameSize = spaceInfo.surroundType === 'no-surround' 
+      ? { left: 0, right: 0, top: 0 } 
+      : { left: 50, right: 50, top: 50 };
+    const currentFrameSize = spaceInfo.frameSize || defaultFrameSize;
     handleSpaceInfoUpdate({
       frameSize: {
         ...currentFrameSize,
