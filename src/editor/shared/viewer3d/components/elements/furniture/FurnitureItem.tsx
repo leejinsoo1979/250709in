@@ -370,46 +370,45 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 너비에 따라 모듈 ID 생성
   let targetModuleId = placedModule.moduleId;
   
-  // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
-  // 폭 조정은 렌더링 시에만 적용
+  // adjustedWidth가 있는 경우 (기둥 침범) - 원본 모듈 ID 사용, 폭은 렌더링 시 조정
   if (placedModule.adjustedWidth) {
-    console.log('🔧 [FurnitureItem] 기둥 A 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정:', {
+    console.log('🔧 [FurnitureItem] 기둥 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정:', {
       moduleId: placedModule.moduleId,
       adjustedWidth: placedModule.adjustedWidth,
       renderWidth: placedModule.adjustedWidth
     });
   }
-  // customWidth가 있고 adjustedWidth가 없는 경우
-  // 노서라운드 모드에서는 원본 모듈 ID를 그대로 사용 (엔드패널 포함 너비이므로)
-  // 서라운드 모드에서만 customWidth로 모듈 ID 생성
-  else if (placedModule.customWidth && !placedModule.adjustedWidth && spaceInfo.surroundType !== 'no-surround') {
-    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
-    targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] 서라운드 모드 - customWidth로 ModuleID 생성:', {
-      original: placedModule.moduleId,
-      customWidth: placedModule.customWidth,
-      newTargetModuleId: targetModuleId,
-      surroundType: spaceInfo.surroundType,
-      endsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)
-    });
-  } else if (placedModule.customWidth && !placedModule.adjustedWidth && spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드 모드에서는 원본 모듈 ID 사용
-    console.log('🔧 [FurnitureItem] 노서라운드 모드 - 원본 모듈 ID 사용:', {
-      moduleId: placedModule.moduleId,
-      customWidth: placedModule.customWidth,
-      surroundType: spaceInfo.surroundType,
-      reason: '노서라운드 모드에서는 엔드패널 포함 너비이므로 원본 모듈 사용'
-    });
+  // customWidth가 있고 adjustedWidth가 없는 경우 - 서라운드 모드에서만 적용
+  // 노서라운드 모드에서는 customWidth가 없어야 함 (이미 올바른 크기의 모듈 사용)
+  else if (placedModule.customWidth && !placedModule.adjustedWidth) {
+    if (spaceInfo.surroundType === 'surround') {
+      // 서라운드 모드: customWidth로 동적 모듈 ID 생성
+      const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+      targetModuleId = `${baseType}-${placedModule.customWidth}`;
+      console.log('🔧 [FurnitureItem] 서라운드 모드 - customWidth로 ModuleID 생성:', {
+        original: placedModule.moduleId,
+        customWidth: placedModule.customWidth,
+        newTargetModuleId: targetModuleId,
+        surroundType: spaceInfo.surroundType
+      });
+    } else {
+      // 노서라운드 모드인데 customWidth가 있는 경우 - 에러 상황
+      console.error('❌ [FurnitureItem] 노서라운드 모드에서 customWidth가 설정됨 - 이는 버그입니다:', {
+        moduleId: placedModule.moduleId,
+        customWidth: placedModule.customWidth,
+        surroundType: spaceInfo.surroundType
+      });
+      // 원본 모듈 ID 사용
+      targetModuleId = placedModule.moduleId;
+    }
   } else {
-    console.log('🔍 [FurnitureItem] targetModuleId 변경 안함:', {
+    // customWidth가 없는 경우 - 정상 (노서라운드 모드 또는 기본 서라운드)
+    console.log('🔍 [FurnitureItem] 원본 모듈 ID 사용:', {
       moduleId: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       adjustedWidth: placedModule.adjustedWidth,
-      endsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`),
       surroundType: spaceInfo.surroundType,
-      reason: !placedModule.customWidth ? 'no customWidth' : 
-              placedModule.adjustedWidth ? 'has adjustedWidth' :
-              placedModule.moduleId.endsWith(`-${placedModule.customWidth}`) ? 'already ends with customWidth' : 'unknown'
+      reason: !placedModule.customWidth ? '노서라운드 또는 기본 모듈' : 'unknown'
     });
   }
   
