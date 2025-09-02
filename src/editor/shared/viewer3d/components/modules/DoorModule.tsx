@@ -626,15 +626,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
         // 단내림 구간 도어 높이 계산
-        // actualDoorHeight는 이미 단내림이 적용된 높이 (droppedCeilingHeight - floorHeight)
-        // 띄움 배치시: 단내림 구간 기본 도어 높이에서 floatHeight만 빼면 됨
-        const droppedZoneDoorHeight = actualDoorHeight - upperGap - 25;  // 단내림 구간 기본 도어 높이
-        // 띄움높이만큼만 도어 높이 감소 (dropHeight는 이미 actualDoorHeight에 반영됨)
-        finalDoorHeight = droppedZoneDoorHeight - floatHeight;
+        // 도어 상단: 단내림 천장 - 5mm
+        // 도어 하단: 바닥 + floatHeight + 25mm
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장 - 5mm
+        const doorBottomAbsolute = floatHeight + 25;              // 바닥 + 띄움높이 + 25mm
         
-        // 도어 절대 위치 - 단내림 구간에서는 위로 5mm 확장, 아래는 그대로
-        const doorTopAbsolute = furnitureTopAbsolute + 5;  // 가구 상단 + 5mm (위로 확장)
-        const doorBottomAbsolute = doorTopAbsolute - finalDoorHeight;  // 도어 상단 - 도어 높이
+        // 도어 높이 = 상단 위치 - 하단 위치
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
         
         // 도어 중심 절대 위치
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
@@ -649,10 +647,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           띄움높이: floatHeight,
           가구높이: furnitureHeight,
           공간높이: spaceInfo.height,
-          droppedZoneDoorHeight,
           도어높이: finalDoorHeight,
-          높이계산: `${droppedZoneDoorHeight} - ${floatHeight} = ${finalDoorHeight}`,
-          droppedZoneOffset,
+          높이계산: `${doorTopAbsolute} - ${doorBottomAbsolute} = ${finalDoorHeight}`,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
@@ -661,7 +657,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '도어 높이 = 단내림구간 기본 도어높이 - 띄움높이 (dropHeight는 이미 반영됨)'
+          설명: '도어 상단: 단내림천장-5mm, 도어 하단: 바닥+floatHeight+25mm'
         });
       } else {
         // 받침대 배치 + 단내림
