@@ -1223,22 +1223,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
-    // 노서라운드 모드에서 도어 위치 보정
-    // 듀얼 캐비넷의 도어는 doorAdjustment를 적용하지 않음
-    // doorAdjustment는 엔드패널 보정용이지만, 듀얼 캐비넷은 내부 갭이 고정되어야 함
-    if (false && spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
-      // 이 코드 블록은 비활성화됨 - 듀얼 캐비넷은 위치 보정 없이 항상 중심에 배치
-      doorGroupX += mmToThreeUnits(doorAdjustment);
-    }
-    
-    console.log('🚪 듀얼 도어 위치 보정:', {
+    // 듀얼 캐비넷은 항상 슬롯 중심에 배치 (노서라운드 모드에서도 동일)
+    console.log('🚪 듀얼 도어 위치:', {
       slotIndex,
       slotCenterX,
-      doorAdjustment,
       doorGroupX,
       isFirstSlot: slotIndex === 0,
       isLastSlot: slotIndex + 2 >= indexing.columnCount,
-      note: '듀얼 캐비넷은 위치 보정 없이 중심 유지'
+      note: '듀얼 캐비넷은 항상 중심 유지'
     });
 
     // 간단한 검증: 슬롯 크기 - 도어 크기 = 3mm이므로 양쪽 1.5mm씩
