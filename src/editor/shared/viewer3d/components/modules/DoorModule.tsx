@@ -670,7 +670,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 도어 절대 위치 - 가구 상단에서 5mm 아래
         const doorTopAbsolute = furnitureTopAbsolute - 5;  // 가구 상단 - 5mm
-        const doorBottomAbsolute = furnitureBottomAbsolute - 40;  // 가구 하단 - 40mm (받침대 높이 65mm - 25mm = 40mm)
+        const doorBottomAbsolute = 25;                      // 바닥에서 25mm (일반구간과 동일)
         
         // 도어 높이 (확장된 상단부터 바닥+25mm까지)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
