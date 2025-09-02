@@ -840,7 +840,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         rotation: 0,
         hasDoor: false,
         customDepth: getDefaultDepth(module),
-        slotIndex: localSlotIndex, // 로컬 슬롯 인덱스 사용
+        slotIndex: availableSlotIndex, // 글로벌 슬롯 인덱스 사용 (zone 정보는 별도로 저장)
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true,
         // 단내림이 있을 때는 customWidth를 사용하지 않고 adjustedWidth도 설정하지 않음
