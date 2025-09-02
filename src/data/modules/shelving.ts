@@ -637,6 +637,7 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
   
   return {
     ...base,
+    hasDoor: true, // 상부장은 기본적으로 도어 있음
     modelConfig: {
       ...base.modelConfig,
       sections: [
