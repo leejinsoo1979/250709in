@@ -1412,32 +1412,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
     // 노서라운드 모드에서 도어 위치 보정
-    // slotCenterX가 이미 보정된 값이 아닌 경우에만 적용
-    if (spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
-      // slotCenterX가 0이 아닌 값이면 이미 FurnitureItem에서 보정됨
-      const needsAdjustment = slotCenterX === 0 || slotCenterX === undefined;
-      if (needsAdjustment) {
-        doorGroupX += mmToThreeUnits(doorAdjustment);
-        console.log('🚪 듀얼 도어 위치 보정 적용:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          doorGroupX,
-          isFirstSlot: slotIndex === 0,
-          isLastSlot: slotIndex + 2 >= indexing.columnCount,
-          note: 'DoorModule에서 보정'
-        });
-      } else {
-        console.log('🚪 듀얼 도어 위치 보정 건너뜀:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          isFirstSlot: slotIndex === 0,
-          isLastSlot: slotIndex + 2 >= indexing.columnCount,
-          note: 'FurnitureItem에서 이미 보정됨'
-        });
-      }
+    // 듀얼 캐비넷의 도어는 doorAdjustment를 적용하지 않음
+    // doorAdjustment는 엔드패널 보정용이지만, 듀얼 캐비넷은 내부 갭이 고정되어야 함
+    if (false && spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
+      // 이 코드 블록은 비활성화됨 - 듀얼 캐비넷은 위치 보정 없이 항상 중심에 배치
+      doorGroupX += mmToThreeUnits(doorAdjustment);
     }
+    
+    console.log('🚪 듀얼 도어 위치 보정:', {
+      slotIndex,
+      slotCenterX,
+      doorAdjustment,
+      doorGroupX,
+      isFirstSlot: slotIndex === 0,
+      isLastSlot: slotIndex + 2 >= indexing.columnCount,
+      note: '듀얼 캐비넷은 위치 보정 없이 중심 유지'
+    });
 
     // 실제 렌더링 위치 계산
     // 왼쪽 도어의 힌지는 leftHingeX 위치에 있고, 도어는 힌지에서 (leftDoorWidthUnits/2 - hingeOffsetUnits) 만큼 떨어진 곳에 렌더링됨
