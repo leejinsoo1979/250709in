@@ -607,13 +607,44 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         placedModules: placedModules.map(m => ({ id: m.id, slotIndex: m.slotIndex, zone: m.zone }))
       });
       
+      // 먼저 단내림 구역 정보를 파악
+      let droppedZoneStart = 0;
+      let droppedZoneEnd = 0;
+      let normalZoneStart = 0;
+      let normalZoneEnd = 0;
+      
+      if (spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        if (spaceInfo.droppedCeiling.position === 'left') {
+          droppedZoneStart = 0;
+          droppedZoneEnd = zoneInfo.dropped.columnCount;
+          normalZoneStart = zoneInfo.dropped.columnCount;
+          normalZoneEnd = indexing.columnCount;
+        } else {
+          normalZoneStart = 0;
+          normalZoneEnd = zoneInfo.normal.columnCount;
+          droppedZoneStart = zoneInfo.normal.columnCount;
+          droppedZoneEnd = indexing.columnCount;
+        }
+      }
+      
       // 첫 번째 빈 슬롯 찾기
       let availableSlotIndex = -1;
       
-      // 모든 슬롯을 순회하며 빈 슬롯 찾기
+      // 모든 슬롯을 순회하며 빈 슬롯 찾기 (zone 정보 포함)
       for (let i = 0; i < indexing.columnCount; i++) {
-        const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id);
-        console.log(`🔍 Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+        // 슬롯이 어느 zone에 속하는지 파악
+        let checkZone: 'normal' | 'dropped' | undefined = undefined;
+        if (spaceInfo.droppedCeiling?.enabled) {
+          if (i >= droppedZoneStart && i < droppedZoneEnd) {
+            checkZone = 'dropped';
+          } else if (i >= normalZoneStart && i < normalZoneEnd) {
+            checkZone = 'normal';
+          }
+        }
+        
+        const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, checkZone);
+        console.log(`🔍 Slot ${i} (zone: ${checkZone || 'none'}): ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
         if (isAvailable) {
           availableSlotIndex = i;
           break;
@@ -623,7 +654,22 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 첫 번째 슬롯에서 찾지 못하면 다음 사용 가능한 슬롯 찾기
       if (availableSlotIndex === -1) {
         console.log('🔍 No slot found in first pass, trying findNextAvailableSlot...');
-        availableSlotIndex = findNextAvailableSlot(0, 'right', isDualFurniture, placedModules, fullSpaceInfo, module.id) || -1;
+        // 처음부터 다시 시작하여 zone을 고려하여 찾기
+        for (let startSlot = 0; startSlot < indexing.columnCount; startSlot++) {
+          let checkZone: 'normal' | 'dropped' | undefined = undefined;
+          if (spaceInfo.droppedCeiling?.enabled) {
+            if (startSlot >= droppedZoneStart && startSlot < droppedZoneEnd) {
+              checkZone = 'dropped';
+            } else if (startSlot >= normalZoneStart && startSlot < normalZoneEnd) {
+              checkZone = 'normal';
+            }
+          }
+          const nextSlot = findNextAvailableSlot(startSlot, 'right', isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, checkZone);
+          if (nextSlot !== null) {
+            availableSlotIndex = nextSlot;
+            break;
+          }
+        }
       }
       
       console.log('🎯 Final availableSlotIndex:', availableSlotIndex);
