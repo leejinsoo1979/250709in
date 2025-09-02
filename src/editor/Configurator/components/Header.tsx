@@ -317,9 +317,9 @@ const Header: React.FC<HeaderProps> = ({
           {/* 조작법 버튼 */}
           <button className={styles.actionButton} onClick={handleHelpClick}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="2"/>
-              <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
-              <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2"/>
+              <rect x="2" y="7" width="20" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
+              <path d="M6 10h1m2 0h1m2 0h1m2 0h1m2 0h1" stroke="currentColor" strokeWidth="2"/>
+              <path d="M5 13h2m2 0h6m2 0h2" stroke="currentColor" strokeWidth="2"/>
             </svg>
             {t('help.title')}
           </button>
