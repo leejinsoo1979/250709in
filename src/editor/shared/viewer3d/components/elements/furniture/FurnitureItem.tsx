@@ -1385,9 +1385,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구의 Y 위치를 계산 (변경될 때마다 업데이트)
   const furnitureYPosition = React.useMemo(() => {
-    // 상부장의 경우 항상 저장된 Y 위치 사용 (드래그 중이 아니면)
+    // 상부장 여부 확인
     const isUpperCabinet = moduleData?.category === 'upper' || actualModuleData?.category === 'upper';
     
+    // 상부장 드래그 중인 경우 - 항상 천장에 붙어있어야 함
+    if (isUpperCabinet && isDraggingThis) {
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const internalHeightMm = internalSpace.height;
+      const furnitureHeightMm = actualModuleData?.dimensions?.height || 600;
+      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+      
+      console.log('🆙 상부장 드래그 중 Y 위치:', {
+        moduleId: placedModule.moduleId,
+        internalHeightMm,
+        furnitureHeightMm,
+        yPos,
+        yPos_mm: yPos * 100,
+        설명: '상부장은 드래그 중에도 천장에 고정'
+      });
+      return yPos;
+    }
+    
+    // 상부장 저장된 위치 사용 (드래그 중이 아닐 때)
     if (isUpperCabinet && placedModule.position.y !== 0 && !isDraggingThis) {
       console.log('🎯 상부장 저장된 Y 위치 사용:', {
         moduleId: placedModule.moduleId,
