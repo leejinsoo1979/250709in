@@ -68,6 +68,11 @@ export class ColumnIndexer {
       };
     }
     
+    // 빌트인+노서라운드인 경우 getThreeUnitPositions를 사용
+    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      return ColumnIndexer.getThreeUnitPositions(spaceInfo);
+    }
+    
     // 단내림이 활성화된 경우에도 전체 영역 정보는 유지하되, zones에 영역별 정보 추가
     if (spaceInfo.droppedCeiling?.enabled) {
       // 전체 영역에 대한 기본 계산 수행
@@ -117,36 +122,11 @@ export class ColumnIndexer {
       const columnBoundaries = [];
       const columnPositions = [];
       
-      // 빌트인+노서라운드일 때 특별 처리가 필요한지 먼저 계산
-      const needsBuiltinNoSurroundHandling = spaceInfo.surroundType === 'no-surround' && 
-                                            (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in');
-      
-      if (needsBuiltinNoSurroundHandling) {
-        // 빌트인+노서라운드: 이격거리만 고려한 시작점에서 실제 슬롯 너비로 위치 계산
-        const leftGap = spaceInfo.gapConfig?.left || 2;
-        let currentX = -(totalWidth / 2) + leftGap;
-        columnBoundaries.push(currentX);
-        
-        // 슬롯 너비 배열이 아래에서 계산될 것이므로 여기서는 균등 분할
-        const availableWidth = totalWidth - leftGap - (spaceInfo.gapConfig?.right || 2);
-        const slotWidth = availableWidth / columnCount;
-        
-        for (let i = 0; i < columnCount; i++) {
-          currentX += slotWidth;
-          columnBoundaries.push(currentX);
-        }
-        
-        for (let i = 0; i < columnCount; i++) {
-          columnPositions.push((columnBoundaries[i] + columnBoundaries[i + 1]) / 2);
-        }
-      } else {
-        // 기존 로직
-        for (let i = 0; i <= columnCount; i++) {
-          columnBoundaries.push(internalStartX + (i * columnWidth));
-        }
-        for (let i = 0; i < columnCount; i++) {
-          columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
-        }
+      for (let i = 0; i <= columnCount; i++) {
+        columnBoundaries.push(internalStartX + (i * columnWidth));
+      }
+      for (let i = 0; i < columnCount; i++) {
+        columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
       }
       
       // Three.js 단위 변환
@@ -154,37 +134,11 @@ export class ColumnIndexer {
       const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       
       // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해)
-      // 빌트인+노서라운드의 경우 calculateZoneSlotInfo의 로직 사용
-      let slotWidths: number[] = [];
-      
-      if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-        // 빌트인+노서라운드: 이격거리만 고려하여 균등 분할
-        const leftGap = spaceInfo.gapConfig?.left || 2;
-        const rightGap = spaceInfo.gapConfig?.right || 2;
-        const availableWidth = totalWidth - leftGap - rightGap;
-        const baseSlotWidth = Math.floor(availableWidth / columnCount);
-        const remainder = availableWidth % columnCount;
-        
-        for (let i = 0; i < columnCount; i++) {
-          slotWidths.push(i < remainder ? baseSlotWidth + 1 : baseSlotWidth);
-        }
-        
-        console.log('🎯 calculateSpaceIndexing - 빌트인+노서라운드 슬롯 너비:', {
-          totalWidth,
-          leftGap,
-          rightGap,
-          availableWidth,
-          baseSlotWidth,
-          remainder,
-          slotWidths
-        });
-      } else {
-        // 기본 계산
-        const baseWidth = Math.floor(internalWidth / columnCount);
-        const remainder = internalWidth % columnCount;
-        for (let i = 0; i < columnCount; i++) {
-          slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
-        }
+      const baseWidth = Math.floor(internalWidth / columnCount);
+      const remainder = internalWidth % columnCount;
+      const slotWidths: number[] = [];
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
       }
       
       // 듀얼 가구용 위치 계산
