@@ -616,7 +616,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
-        // 도어는 띄움높이만큼 줄어들어야 함
+        // 도어는 단내림 천장에서 5mm 갭을 두고, 하단은 일반구간 키큰장과 같은 높이
         
         // 가구 절대 위치 (단내림 구간 + 띄움 배치)
         // 가구는 단내림 천장에서 아래로 floatHeight만큼 떨어져 있음
@@ -624,13 +624,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
-        // 도어 높이는 원래 높이에서 띄움높이만큼 빼기
-        finalDoorHeight = furnitureHeight - floatHeight;
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장 - 5mm
+        const doorBottomAbsolute = floatHeight;  // 일반구간 키큰장과 같은 하단 높이
         
-        // 도어 절대 위치 - 단내림 구간에서는 추가로 내려야 함
-        const droppedZoneOffset = upperGap * 2;  // 단내림 구간에서 10mm (upperGap의 2배)
-        const doorTopAbsolute = furnitureTopAbsolute - droppedZoneOffset;  // 가구 상단 - 10mm
-        const doorBottomAbsolute = doorTopAbsolute - finalDoorHeight;  // 도어 상단 - 도어 높이
+        // 도어 높이 계산
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
         
         // 도어 중심 절대 위치
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
@@ -645,8 +644,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           띄움높이: floatHeight,
           가구높이: furnitureHeight,
           도어높이: finalDoorHeight,
-          높이차이: `${furnitureHeight} - ${floatHeight} = ${finalDoorHeight}`,
-          droppedZoneOffset,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
@@ -655,14 +652,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '단내림 + 띄움: 도어가 10mm 내려오고 높이가 띄움높이만큼 줄어듦'
+          설명: '단내림 천장-5mm부터 일반구간과 같은 하단 높이까지'
         });
       } else {
         // 받침대 배치 + 단내림
-        // 도어 절대 위치 - 단내림 구간에서는 추가로 내려야 함
-        const droppedZoneOffset = upperGap * 2;  // 단내림 구간에서 10mm (upperGap의 2배)
-        const doorTopAbsolute = droppedCeilingHeight - droppedZoneOffset;  // 단내림 천장-10mm
-        const doorBottomAbsolute = 25;                                     // 바닥+25mm
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장-5mm
+        const doorBottomAbsolute = 25;                            // 바닥+25mm (일반구간과 동일)
         
         // 도어 높이 (단내림 천장부터 바닥+25mm까지)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
