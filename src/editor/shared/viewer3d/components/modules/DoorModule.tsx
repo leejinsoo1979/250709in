@@ -627,9 +627,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 단내림 구간 도어 높이 계산
         // 띄워서 배치: 도어 높이를 floatHeight만큼 줄임
-        // 도어 상단: 가구 상단과 동일
+        // 도어 상단: 가구 상단에서 upperGap(5mm) 아래
         // 도어 하단: floatHeight만큼 올라감
-        const doorTopAbsolute = furnitureTopAbsolute;  // 가구 상단과 동일
+        const doorTopAbsolute = furnitureTopAbsolute - upperGap;  // 가구 상단 - 5mm
         const doorBottomAbsolute = floatHeight;         // 띄움높이만큼 올라감 (바닥에서 floatHeight 위치)
         
         // 도어 높이 = 상단 위치 - 하단 위치 (띄움높이만큼 줄어듦)
