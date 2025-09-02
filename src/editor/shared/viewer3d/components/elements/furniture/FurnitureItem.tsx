@@ -1646,62 +1646,106 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // slotCenterX 계산 (도어 위치용) - 이 변수를 미리 계산하여 BoxModule과 별도 도어 렌더링에서 모두 사용
   const slotCenterX = (() => {
-    // 도어 위치 계산 함수: 논리적으로 도어가 커버해야 할 영역의 중심을 계산
+    // 도어 위치 계산 함수: zone을 고려한 올바른 도어 X 위치 계산
     const calculateDoorCenterOffset = () => {
+      // 단내림이 있고 zone 정보가 있는 경우
+      if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        
+        // 단내림 구간에서 로컬 슬롯 인덱스 계산
+        let localSlotIndex = placedModule.slotIndex;
+        if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+          // 단내림이 오른쪽: dropped zone는 normal zone 뒤에 위치
+          localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+        } else if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+          // 단내림이 왼쪽: normal zone는 dropped zone 뒤에 위치
+          localSlotIndex = placedModule.slotIndex - zoneInfo.dropped.columnCount;
+        }
+        
+        // targetZone의 threeUnitPositions 사용하여 정확한 X 위치 계산
+        if (targetZone.threeUnitPositions && localSlotIndex !== undefined && localSlotIndex >= 0) {
+          let doorX = 0;
+          if (isDualFurniture && localSlotIndex < targetZone.threeUnitPositions.length - 1) {
+            // 듀얼 가구: 두 슬롯의 중간 위치
+            doorX = (targetZone.threeUnitPositions[localSlotIndex] + targetZone.threeUnitPositions[localSlotIndex + 1]) / 2;
+          } else if (localSlotIndex < targetZone.threeUnitPositions.length) {
+            // 싱글 가구: 해당 슬롯의 중심 위치
+            doorX = targetZone.threeUnitPositions[localSlotIndex];
+          }
+          
+          // 노서라운드 엔드패널 슬롯인 경우 추가 오프셋 적용
+          if (isNoSurroundEndSlot) {
+            const doorWidth = originalSlotWidthMm;
+            const furnitureWidth = furnitureWidthMm;
+            const widthDifference = doorWidth - furnitureWidth;
+            
+            if (placedModule.slotIndex === 0 && 
+                (spaceInfo.installType === 'freestanding' || 
+                 (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right))) {
+              // 첫 번째 슬롯: 엔드패널이 왼쪽에 있음
+              doorX -= mmToThreeUnits(widthDifference / 2);
+            } else if (isLastSlot && 
+                      (spaceInfo.installType === 'freestanding' || 
+                       (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left))) {
+              // 마지막 슬롯: 엔드패널이 오른쪽에 있음
+              doorX += mmToThreeUnits(widthDifference / 2);
+            }
+          }
+          
+          console.log('🚪 단내림 구간 도어 X 위치 계산:', {
+            moduleId: placedModule.moduleId,
+            zone: placedModule.zone,
+            globalSlotIndex: placedModule.slotIndex,
+            localSlotIndex,
+            doorX,
+            isDualFurniture,
+            targetZone: {
+              startX: targetZone.startX,
+              columnCount: targetZone.columnCount
+            }
+          });
+          
+          // 도어의 절대 X 위치 반환 (가구 위치로부터의 오프셋)
+          return doorX - adjustedPosition.x;
+        }
+      }
+      
+      // 단내림이 없는 경우 노서라운드 엔드패널 처리
       if (!isNoSurroundEndSlot) {
         // 일반 슬롯: 도어는 가구 중심에 위치
         return 0;
       }
       
       // 노서라운드 엔드패널 슬롯의 경우
-      // 도어가 커버해야 할 영역 = 가구 공간 + 엔드패널 공간
-      // 도어 너비는 이미 originalSlotWidthMm로 설정됨 (엔드패널 포함)
+      const doorWidth = originalSlotWidthMm;
+      const furnitureWidth = furnitureWidthMm;
+      const widthDifference = doorWidth - furnitureWidth;
       
-      // 슬롯의 실제 경계 계산
-      const doorWidth = originalSlotWidthMm; // 도어 너비 (엔드패널 포함)
-      const furnitureWidth = furnitureWidthMm; // 가구 너비 (엔드패널 18mm 제외)
-      
-      // 도어가 커버해야 할 영역의 시작점과 끝점 계산
-      let doorCoverStartX: number;
-      let doorCoverEndX: number;
-      let doorCoverCenterX: number;
-      
-      // 엔드패널이 포함된 슬롯의 중앙에 도어 배치
-      // 슬롯 너비(600mm)와 가구 너비(582mm)의 차이를 계산
-      const slotWidth = originalSlotWidthMm; // 600mm (엔드패널 포함)
-      const furnitureActualWidth = furnitureWidthMm; // 582mm (가구 실제 너비)
-      const widthDifference = slotWidth - furnitureActualWidth; // 18mm
+      let doorCoverCenterX = 0;
       
       if (placedModule.slotIndex === 0 && 
           (spaceInfo.installType === 'freestanding' || 
            (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right))) {
-        // 첫 번째 슬롯: 엔드패널이 왼쪽에 있음 (벽없음 또는 오른쪽벽 모드)
-        // 도어는 슬롯 중앙 = 가구 중심에서 왼쪽으로 (18mm/2 = 9mm) 이동
+        // 첫 번째 슬롯: 엔드패널이 왼쪽에 있음
         doorCoverCenterX = -mmToThreeUnits(widthDifference / 2);
       } else if (isLastSlot && 
                 (spaceInfo.installType === 'freestanding' || 
                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left))) {
-        // 마지막 슬롯: 엔드패널이 오른쪽에 있음 (벽없음 또는 왼쪽벽 모드)
-        // 도어는 슬롯 중앙 = 가구 중심에서 오른쪽으로 (18mm/2 = 9mm) 이동
+        // 마지막 슬롯: 엔드패널이 오른쪽에 있음
         doorCoverCenterX = mmToThreeUnits(widthDifference / 2);
-      } else {
-        // 중간 슬롯 또는 예외 케이스 - 도어 오프셋 없음
-        doorCoverCenterX = 0;
       }
-      
-      // 도어 오프셋은 이미 상대 위치로 계산됨
-      const doorOffsetX = doorCoverCenterX;
       
       console.log('🚪 노서라운드 엔드패널 도어 위치 계산:', {
         슬롯인덱스: placedModule.slotIndex,
         가구위치: adjustedPosition.x,
         가구너비: furnitureWidth,
         도어너비: doorWidth,
-        도어오프셋: doorOffsetX,
+        도어오프셋: doorCoverCenterX,
         설명: '도어가 가구 중심에서 상대적으로 이동하여 엔드패널 커버'
       });
       
-      return doorOffsetX;
+      return doorCoverCenterX;
     };
     
     return calculateDoorCenterOffset();
