@@ -532,11 +532,17 @@ const Room: React.FC<RoomProps> = ({
     ? mmToThreeUnits(spaceInfo.baseConfig.floatHeight || 0) 
     : 0;
   
-  // 좌우 프레임 높이 (띄워서 배치일 때 줄어듦)
-  const adjustedPanelHeight = height - floatHeight;
+  // 좌우 프레임 높이 (띄워서 배치일 때 줄어듦, 서라운드 모드에서는 상부 프레임 두께도 제외)
+  const adjustedPanelHeight = spaceInfo.surroundType === 'surround'
+    ? height - floatHeight - topBottomFrameHeight  // 서라운드: 상부 프레임 두께만큼 줄어듦
+    : height - floatHeight;  // 노서라운드: 전체 높이 사용
   
-  // 상단 요소들의 Y 위치 (띄워서 배치일 때 위로 이동)
-  const topElementsY = panelStartY + height - topBottomFrameHeight/2;
+  // 상단 요소들의 Y 위치 (서라운드 모드에서는 상부 프레임 두께를 고려)
+  // 서라운드 모드: 전체 높이에서 상부 프레임 두께만큼 내려온 위치
+  // 노서라운드 모드: 전체 높이의 상단
+  const topElementsY = spaceInfo.surroundType === 'surround' 
+    ? panelStartY + height - topBottomFrameHeight - topBottomFrameHeight/2
+    : panelStartY + height - topBottomFrameHeight/2;
   
   // 좌우 프레임의 시작 Y 위치 (띄워서 배치일 때 위로 이동)
   const sideFrameStartY = panelStartY + floatHeight;
