@@ -123,21 +123,16 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   // 띄워서 배치여도 내경 높이는 변하지 않음 (가구 배치 공간은 동일)
   // 단지 시작 Y 위치만 올라감
   
+  // 상부 프레임 높이 차감 (모든 모드에서 상부프레임 있음)
+  internalHeight -= topFrameHeight;
+  internalHeight -= baseFrameHeight;
+  
   // 단내림 구간의 경우 높이 조정
   if (spaceInfo.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-    // 단내림 구간: 내경 높이에서 단내림 높이 차이를 빼기
+    // 단내림 구간: 내경 높이에서 단내림 높이 차이를 추가로 빼기
     const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
     internalHeight -= dropHeight;
-    // 단내림+서라운드에서는 상부프레임이 이미 단내림 천장에 있으므로 상부프레임 높이는 빼지 않음
-    if (!spaceInfo.surround?.use) {
-      internalHeight -= topFrameHeight;
-    }
-  } else {
-    // 일반 구간: 상부 프레임 높이 차감
-    internalHeight -= topFrameHeight;
   }
-  
-  internalHeight -= baseFrameHeight;
   
   // 내경 깊이 = 설정된 공간 깊이 그대로 (백패널은 별도 구조물)
   const internalDepth = spaceInfo.depth || 1500; // 기본값 1500mm
