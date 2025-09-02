@@ -546,8 +546,17 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 슬롯 너비 계산 - 슬롯에 정확히 맞는 너비 설정
     let customWidth: number | undefined;
     
-    // 우선 전체 슬롯 너비 배열 확인 (기본값)
-    if (indexing.slotWidths && zoneSlotIndex !== undefined) {
+    // dragData에서 customWidth가 제공되면 우선 사용 (ModuleGallery에서 계산된 값)
+    if (dragData.moduleData?.customWidth) {
+      customWidth = dragData.moduleData.customWidth;
+      console.log('📏 dragData에서 customWidth 사용:', {
+        customWidth,
+        moduleId: dragData.moduleData.id,
+        surroundType: spaceInfo.surroundType
+      });
+    }
+    // dragData에 customWidth가 없으면 기존 로직으로 계산
+    else if (indexing.slotWidths && zoneSlotIndex !== undefined) {
       if (actualIsDual && zoneSlotIndex < indexing.slotWidths.length - 1) {
         // 듀얼 가구: 두 슬롯의 너비 합
         customWidth = indexing.slotWidths[zoneSlotIndex] + indexing.slotWidths[zoneSlotIndex + 1];

@@ -263,7 +263,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         color: module.color,
         hasDoor: module.hasDoor || false,
         isDynamic: module.isDynamic,
-        furnType: module.id.includes('dual-') ? 'dual' : 'single'
+        furnType: module.id.includes('dual-') ? 'dual' : 'single',
+        customWidth: adjustedDimensions.width // customWidth 추가
       }
     };
 
