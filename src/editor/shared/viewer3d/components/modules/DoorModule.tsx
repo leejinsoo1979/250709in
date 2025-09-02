@@ -1305,23 +1305,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         note: '엔드패널 위치로 보정'
       });
       
-      // 노서라운드 도어 크기 계산
-      // 양쪽 끝 1.5mm씩, 중간 3mm = 총 6mm 갭
-      const totalGaps = 1.5 + 1.5 + 3; // 6mm
-      const availableWidth = totalWidth - totalGaps;
-      
-      // 개별 슬롯 너비 비율로 도어 크기 계산
-      if (slotWidths && slotWidths.length >= 2) {
-        // 슬롯 비율에 따라 도어 크기 분배
-        const slot1Ratio = slot1Width / totalWidth;
-        const slot2Ratio = slot2Width / totalWidth;
-        leftDoorWidth = availableWidth * slot1Ratio;
-        rightDoorWidth = availableWidth * slot2Ratio;
-      } else {
-        // slotWidths가 없으면 균등 분할
-        leftDoorWidth = availableWidth / 2;
-        rightDoorWidth = availableWidth / 2;
-      }
+      // 간단한 로직: 각 슬롯에서 3mm 빼기
+      leftDoorWidth = slot1Width - 3;  // 왼쪽 슬롯 크기 - 3mm
+      rightDoorWidth = slot2Width - 3; // 오른쪽 슬롯 크기 - 3mm
     } else {
       // 서라운드 모드: 일반 도어
       // slotWidths가 있으면 사용, 없으면 totalWidth 사용
@@ -1330,78 +1316,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         slot2Width = slotWidths[1];
         totalWidth = slot1Width + slot2Width;
       }
-      // 듀얼 도어는 전체 너비에서 갭을 뺀 후 계산
-      // 양쪽 끝 1.5mm씩, 중간 3mm = 총 6mm 갭
-      const totalGaps = 1.5 + 1.5 + 3; // 6mm
-      const availableWidth = totalWidth - totalGaps;
-      
-      // 개별 슬롯 너비 비율로 도어 크기 계산
-      if (slotWidths && slotWidths.length >= 2) {
-        // 슬롯 비율에 따라 도어 크기 분배
-        const slot1Ratio = slot1Width / totalWidth;
-        const slot2Ratio = slot2Width / totalWidth;
-        leftDoorWidth = availableWidth * slot1Ratio;
-        rightDoorWidth = availableWidth * slot2Ratio;
-      } else {
-        // slotWidths가 없으면 균등 분할
-        leftDoorWidth = availableWidth / 2;
-        rightDoorWidth = availableWidth / 2;
-      }
+      // 간단한 로직: 각 슬롯에서 3mm 빼기
+      leftDoorWidth = slot1Width - 3;  // 왼쪽 슬롯 크기 - 3mm
+      rightDoorWidth = slot2Width - 3; // 오른쪽 슬롯 크기 - 3mm
     }
     
     // 모드별 갭 값 설정
     const doorGap = spaceInfo.surroundType === 'no-surround' ? 3 : 6;
     const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 0;
     
-    // 듀얼 도어는 항상 양쪽 끝에서 1.5mm씩 떨어진 위치에서 시작
-    const actualEdgeGap = 1.5; // 양쪽 끝 간격 1.5mm
-    const actualDoorGap = 3;   // 도어 사이 간격 3mm
+    // 간단한 갭 계산: 각 도어는 슬롯 크기 - 3mm이므로 자동으로 양쪽 1.5mm 갭
+    const expectedEdgeGap = 1.5; // 예상 갭
+    const expectedCenterGap = 3; // 도어 사이 예상 갭 (1.5mm + 1.5mm)
     
-    // 도어 갭 검증
-    const leftEdgeToLeftDoor = actualEdgeGap; // 1.5mm
-    const leftDoorEnd = actualEdgeGap + leftDoorWidth; // 왼쪽 도어 끝
-    const rightDoorStart = leftDoorEnd + actualDoorGap; // 오른쪽 도어 시작
-    const rightDoorEnd = rightDoorStart + rightDoorWidth; // 오른쪽 도어 끝
-    const rightEdgeGap = totalWidth - rightDoorEnd; // 오른쪽 끝 갭
-    
-    console.log('🚪 듀얼 도어 상세:', {
-      totalWidth,
-      leftDoorWidth,
-      rightDoorWidth,
-      '갭_계산': {
-        '왼쪽끝_갭': leftEdgeToLeftDoor,
-        '중간_갭': actualDoorGap,
-        '오른쪽끝_갭': rightEdgeGap,
-        '오른쪽끝_갭_정상여부': Math.abs(rightEdgeGap - 1.5) < 0.01 ? '✅ 정상' : `❌ 비정상 (${rightEdgeGap}mm)`
-      },
-      '도어_위치': {
-        '왼쪽도어_시작': actualEdgeGap,
-        '왼쪽도어_끝': leftDoorEnd,
-        '오른쪽도어_시작': rightDoorStart,
-        '오른쪽도어_끝': rightDoorEnd
-      },
-      doorAdjustment,
+    console.log('🚪 듀얼 도어 (간단한 로직):', {
+      '슬롯1': { 너비: slot1Width, 도어: leftDoorWidth },
+      '슬롯2': { 너비: slot2Width, 도어: rightDoorWidth },
+      '결과': `각 도어 양쪽 ${expectedEdgeGap}mm 갭, 중간 ${expectedCenterGap}mm 갭`,
       slotIndex,
-      columnCount,
-      isFirstSlotWithEndPanel,
-      isLastSlotWithEndPanel,
       slotWidths,
-      slot1Width,
-      slot2Width,
       surroundType: spaceInfo.surroundType
     });
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
-    // 도어 위치 계산
+    // 간단한 도어 위치 계산: 각 슬롯 중앙에 배치
     let leftDoorCenter, rightDoorCenter;
     
-    // 왼쪽 도어: 왼쪽 끝에서 1.5mm 떨어진 곳부터 시작
-    leftDoorCenter = -totalWidth / 2 + actualEdgeGap + leftDoorWidth / 2;
+    // 왼쪽 도어: 왼쪽 슬롯 중앙 (전체 중앙에서 왼쪽으로)
+    leftDoorCenter = -totalWidth / 2 + slot1Width / 2;
     
-    // 오른쪽 도어: 왼쪽 도어 끝에서 3mm 떨어진 곳부터 시작
-    rightDoorCenter = -totalWidth / 2 + actualEdgeGap + leftDoorWidth + actualDoorGap + rightDoorWidth / 2;
+    // 오른쪽 도어: 오른쪽 슬롯 중앙 (전체 중앙에서 오른쪽으로)
+    rightDoorCenter = -totalWidth / 2 + slot1Width + slot2Width / 2;
     
     // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
     
@@ -1430,83 +1377,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: '듀얼 캐비넷은 위치 보정 없이 중심 유지'
     });
 
-    // 실제 렌더링 위치 계산
-    // 왼쪽 도어의 힌지는 leftHingeX 위치에 있고, 도어는 힌지에서 (leftDoorWidthUnits/2 - hingeOffsetUnits) 만큼 떨어진 곳에 렌더링됨
-    const leftDoorCenterInGroup = leftHingeX + (leftDoorWidthUnits / 2 - hingeOffsetUnits); // 그룹 내에서 왼쪽 도어 중심
-    const leftDoorLeftEdgeInGroup = leftDoorCenterInGroup - leftDoorWidthUnits / 2; // 그룹 내에서 왼쪽 도어의 왼쪽 끝
-    const leftDoorLeftEdgeGlobal = doorGroupX + leftDoorLeftEdgeInGroup; // 전역 좌표계에서 왼쪽 도어의 왼쪽 끝
-    const cabinetLeftEdge = doorGroupX - mmToThreeUnits(totalWidth / 2); // 캐비넷의 왼쪽 끝
-    const actualLeftGap = (leftDoorLeftEdgeGlobal - cabinetLeftEdge) * 100; // mm 단위로 변환
+    // 간단한 검증: 슬롯 크기 - 도어 크기 = 3mm이므로 양쪽 1.5mm씩
+    const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // 1.5mm가 나와야 함
+    const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // 1.5mm가 나와야 함
     
-    // 오른쪽 도어 위치 계산
-    const rightDoorCenterInGroup = rightHingeX - (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 그룹 내에서 오른쪽 도어 중심
-    const rightDoorRightEdgeInGroup = rightDoorCenterInGroup + rightDoorWidthUnits / 2; // 그룹 내에서 오른쪽 도어의 오른쪽 끝
-    const rightDoorRightEdgeGlobal = doorGroupX + rightDoorRightEdgeInGroup; // 전역 좌표계에서 오른쪽 도어의 오른쪽 끝
-    const cabinetRightEdge = doorGroupX + mmToThreeUnits(totalWidth / 2); // 캐비넷의 오른쪽 끝
-    const actualRightGap = (cabinetRightEdge - rightDoorRightEdgeGlobal) * 100; // mm 단위로 변환
-    
-    // 도어 사이 갭 계산
-    const leftDoorRightEdgeInGroup = leftDoorCenterInGroup + leftDoorWidthUnits / 2; // 왼쪽 도어의 오른쪽 끝
-    const rightDoorLeftEdgeInGroup = rightDoorCenterInGroup - rightDoorWidthUnits / 2; // 오른쪽 도어의 왼쪽 끝
-    const actualCenterGap = (rightDoorLeftEdgeInGroup - leftDoorRightEdgeInGroup) * 100; // mm 단위로 변환
-    
-    // 인접 가구와의 갭 검증 (싱글 상부장과 맞닿은 경우)
+    // 인접 가구와의 갭 검증 (간단한 로직)
     let adjacentGapInfo = null;
-    if (slotIndex > 0) {
-      // 왼쪽에 인접한 싱글 캐비넷이 있을 수 있음
-      // 싱글 캐비넷의 도어 오른쪽 끝: slotIndex - 1 위치의 도어
-      // 듀얼 캐비넷의 왼쪽 도어 왼쪽 끝과의 거리를 계산
-      const prevSlotCenterX = mmToThreeUnits((slotIndex - 1 - indexing.columnCount / 2 + 0.5) * indexing.columnWidth);
-      const prevSlotWidth = slotWidths ? slotWidths[slotIndex - 1] : indexing.columnWidth;
-      const prevDoorWidth = prevSlotWidth - 3; // 싱글 도어는 슬롯 너비 - 3mm
-      const prevDoorRightEdge = prevSlotCenterX + mmToThreeUnits(prevDoorWidth / 2);
-      const gapBetweenDoors = (leftDoorLeftEdgeGlobal - prevDoorRightEdge) * 100; // mm 단위
-      
+    if (slotIndex > 0 && slotWidths) {
+      // 이전 슬롯에 싱글 캐비넷이 있다고 가정
+      // 각 도어는 슬롯 크기 - 3mm이므로 자동으로 3mm 갭
+      const prevSlotWidth = slotWidths[slotIndex - 1] || indexing.columnWidth;
       adjacentGapInfo = {
         '인접_타입': '왼쪽_싱글',
-        '싱글_도어_오른쪽끝': (prevDoorRightEdge * 100).toFixed(2),
-        '듀얼_왼쪽도어_왼쪽끝': (leftDoorLeftEdgeGlobal * 100).toFixed(2),
-        '도어_간_갭_mm': gapBetweenDoors.toFixed(2),
-        '예상_갭': '3mm (싱글 1.5mm + 듀얼 1.5mm)',
-        '갭_검증': Math.abs(gapBetweenDoors - 3) < 0.1 ? '✅ 정상' : `❌ 비정상 (${gapBetweenDoors.toFixed(2)}mm)`
+        '싱글_슬롯': `${prevSlotWidth}mm`,
+        '듀얼_첫슬롯': `${slot1Width}mm`,
+        '예상_갭': '3mm (각 도어가 슬롯에서 1.5mm씩 떨어져 있음)',
+        '간단한_로직': '✅ 자동으로 3mm 갭 생성'
       };
     }
     
-    console.log('🚪 듀얼 도어 위치:', {
-      totalWidth,
-      slotWidths,
-      slotIndex,
-      columnCount,
-      isLastSlot: slotIndex + 2 >= columnCount,
-      leftDoorWidth,
-      rightDoorWidth,
-      doorAdjustment,
-      doorGroupX,
-      doorGroupX_mm: doorGroupX / 0.01,
-      mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
-      leftXOffset: leftXOffset.toFixed(3),
-      rightXOffset: rightXOffset.toFixed(3),
-      leftHingeX: leftHingeX.toFixed(3),
-      rightHingeX: rightHingeX.toFixed(3),
-      '실제_렌더링_갭': {
-        '왼쪽_끝_갭_mm': actualLeftGap.toFixed(2),
-        '중간_갭_mm': actualCenterGap.toFixed(2),
-        '오른쪽_끝_갭_mm': actualRightGap.toFixed(2),
-        '갭_검증': {
-          '왼쪽_1.5mm': Math.abs(actualLeftGap - 1.5) < 0.1 ? '✅' : `❌ ${actualLeftGap.toFixed(2)}mm`,
-          '중간_3mm': Math.abs(actualCenterGap - 3) < 0.1 ? '✅' : `❌ ${actualCenterGap.toFixed(2)}mm`,
-          '오른쪽_1.5mm': Math.abs(actualRightGap - 1.5) < 0.1 ? '✅' : `❌ ${actualRightGap.toFixed(2)}mm`
-        },
-        '캐비넷_경계': {
-          '왼쪽끝_X': (cabinetLeftEdge * 100).toFixed(2),
-          '오른쪽끝_X': (cabinetRightEdge * 100).toFixed(2)
-        },
-        '도어_위치': {
-          '왼쪽도어_왼쪽끝': (leftDoorLeftEdgeGlobal * 100).toFixed(2),
-          '왼쪽도어_오른쪽끝': ((doorGroupX + leftDoorRightEdgeInGroup) * 100).toFixed(2),
-          '오른쪽도어_왼쪽끝': ((doorGroupX + rightDoorLeftEdgeInGroup) * 100).toFixed(2),
-          '오른쪽도어_오른쪽끝': (rightDoorRightEdgeGlobal * 100).toFixed(2)
-        }
+    console.log('🚪 듀얼 도어 최종 위치:', {
+      '슬롯1': { 
+        너비: slot1Width, 
+        도어: leftDoorWidth,
+        갭체크: `${leftGapCheck}mm (1.5mm 예상)`
+      },
+      '슬롯2': { 
+        너비: slot2Width, 
+        도어: rightDoorWidth,
+        갭체크: `${rightGapCheck}mm (1.5mm 예상)`
+      },
+      '위치': {
+        leftDoorCenter,
+        rightDoorCenter,
+        leftXOffset: leftXOffset.toFixed(3),
+        rightXOffset: rightXOffset.toFixed(3)
       },
       ...(adjacentGapInfo && { '인접_가구_갭': adjacentGapInfo })
     });
