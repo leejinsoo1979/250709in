@@ -262,6 +262,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     }
   }, [furnitureStartY, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, placedModule.moduleId]);
+  
+  // 단내림 설정 변경 시 강제 리렌더링
+  const [forceUpdate, setForceUpdate] = React.useState(0);
+  React.useEffect(() => {
+    // 단내림 설정이나 띄움 설정 변경 시 강제 업데이트
+    setForceUpdate(prev => prev + 1);
+    console.log('🔄 단내림/띄움 설정 변경 감지:', {
+      zone: placedModule.zone,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      dropHeight: spaceInfo.droppedCeiling?.dropHeight,
+      placementType: spaceInfo.baseConfig?.placementType,
+      floatHeight: spaceInfo.baseConfig?.floatHeight,
+      furnitureStartY
+    });
+  }, [
+    spaceInfo.droppedCeiling?.enabled,
+    spaceInfo.droppedCeiling?.dropHeight,
+    spaceInfo.droppedCeiling?.position,
+    spaceInfo.droppedCeiling?.width,
+    spaceInfo.baseConfig?.placementType,
+    spaceInfo.baseConfig?.floatHeight,
+    spaceInfo.baseConfig?.type,
+    spaceInfo.gapConfig?.left,
+    spaceInfo.gapConfig?.right,
+    placedModule.zone,
+    furnitureStartY
+  ]);
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
   const { isFurnitureDragging, showDimensions, view2DTheme, highlightedCompartment } = useUIStore();
@@ -1690,7 +1717,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     }
     return yPos;
-  }, [placedModule.position.y, furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis]);
+  }, [placedModule.position.y, furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis, forceUpdate]);
 
   // 엔드패널이 있을 때 키큰장 위치 조정 - 도어는 위치 변경 없음
   const furnitureXAdjustment = 0; // 도어 위치는 변경하지 않음

@@ -183,7 +183,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
         return (
           <FurnitureItem
-            key={`${placedModule.id}-${JSON.stringify(spaceInfo.baseConfig)}-${JSON.stringify(spaceInfo.frameSize)}-${spaceInfo.surroundType}-${spaceInfo.installType}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}-${(placedModule as any)._lastYUpdate || 0}`}
+            key={`${placedModule.id}-${JSON.stringify(spaceInfo.baseConfig)}-${JSON.stringify(spaceInfo.droppedCeiling)}-${placedModule.zone}-${JSON.stringify(spaceInfo.frameSize)}-${spaceInfo.surroundType}-${spaceInfo.installType}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}-${(placedModule as any)._lastYUpdate || 0}`}
             placedModule={placedModule}
             placedModules={placedModules}
             spaceInfo={spaceInfo}
