@@ -482,11 +482,32 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     });
     
     try {
+      // 🔴🔴🔴 CRITICAL: 노서라운드 모드에서 frameSize 확인 및 수정
+      console.log('🔴🔴🔴 [CRITICAL] handleDoubleClick - spaceInfo 상태:', {
+        surroundType: spaceInfo.surroundType,
+        frameSize: spaceInfo.frameSize,
+        'frameSize가 50인가?': spaceInfo.frameSize?.left === 50 || spaceInfo.frameSize?.right === 50,
+        '문제': spaceInfo.surroundType === 'no-surround' && (spaceInfo.frameSize?.left === 50 || spaceInfo.frameSize?.right === 50) ? '🔴🔴🔴 노서라운드인데 frameSize가 50임!!!' : '정상'
+      });
+      
+      // 노서라운드 모드에서 frameSize를 강제로 0으로 수정
+      let correctedSpaceInfo = spaceInfo;
+      if (spaceInfo.surroundType === 'no-surround' && spaceInfo.frameSize && 
+          (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+        console.error('🔴🔴🔴 [ModuleGallery] 더블클릭 - 노서라운드인데 frameSize가 잘못됨! 강제 수정!', {
+          '원래 frameSize': spaceInfo.frameSize
+        });
+        correctedSpaceInfo = {
+          ...spaceInfo,
+          frameSize: { left: 0, right: 0, top: 0 }
+        };
+      }
+      
       // 단내림 사용 여부에 따라 할당될 수 있는 영역 값
       let targetZone: 'normal' | 'dropped' | undefined = undefined;
       // 전체 공간 사용 (통합된 공간)
-      const fullSpaceInfo = spaceInfo;
-      const fullInternalSpace = calculateInternalSpace(spaceInfo);
+      const fullSpaceInfo = correctedSpaceInfo;
+      const fullInternalSpace = calculateInternalSpace(correctedSpaceInfo);
       
       // 전체 공간에 대한 인덱싱 계산
       const indexing = calculateSpaceIndexing(fullSpaceInfo);
