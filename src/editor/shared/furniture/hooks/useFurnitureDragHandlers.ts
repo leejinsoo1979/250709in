@@ -155,6 +155,24 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           dropPosition.zone // zone 정보 전달
         );
         
+        // 상하부장 디버깅
+        const isUpperCabinet = currentDragData.moduleData.id.includes('upper-cabinet');
+        const isLowerCabinet = currentDragData.moduleData.id.includes('lower-cabinet');
+        
+        if (isUpperCabinet || isLowerCabinet) {
+          console.log('🔍 상하부장 배치 시도:', {
+            moduleId: currentDragData.moduleData.id,
+            isUpperCabinet,
+            isLowerCabinet,
+            targetSlot: dropPosition.column,
+            isAvailable,
+            existingModulesInSlot: latestPlacedModules.filter(m => m.slotIndex === dropPosition.column).map(m => ({
+              id: m.id,
+              moduleId: m.moduleId
+            }))
+          });
+        }
+        
         // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
         if (!isAvailable) {
           // isSlotAvailable을 사용하는 래퍼 함수

@@ -1604,7 +1604,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         >
           {/* 노서라운드 모드에서 가구 위치 디버깅 */}
           {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && placedModule.position && (() => {
-            console.log(`🪑 [가구위치] 이격거리${spaceInfo.gapConfig.left}mm: X=${placedModule.position.x?.toFixed(3) || '0.000'}, 폭=${moduleData?.dimensions.width}mm`);
+            console.log(`🪑 [가구위치] 이격거리${spaceInfo.gapConfig.left}mm: X=${placedModule.position.x?.toFixed(3) || '0.000'}, 원래폭=${moduleData?.dimensions.width}mm, 실제폭=${furnitureWidthMm}mm`);
             return null;
           })()}
 
@@ -1646,6 +1646,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 hasBackPanel={placedModule.hasBackPanel} // 백패널 유무 전달
                 customDepth={actualDepthMm}
                 hingePosition={optimalHingePosition}
+                adjustedWidth={furnitureWidthMm} // 계산된 가구 너비 전달
                 spaceInfo={(() => {
                   console.log('🚨 FurnitureItem -> BoxModule spaceInfo 전달:', {
                     moduleId: actualModuleData?.id || 'unknown',
