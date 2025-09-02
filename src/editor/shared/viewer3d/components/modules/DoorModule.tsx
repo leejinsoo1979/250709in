@@ -630,7 +630,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 도어 상단: 가구 상단과 동일
         // 도어 하단: floatHeight만큼 올라감
         const doorTopAbsolute = furnitureTopAbsolute;  // 가구 상단과 동일
-        const doorBottomAbsolute = floatHeight + 20;    // 바닥 + 띄움높이 + 20mm
+        const doorBottomAbsolute = floatHeight;         // 띄움높이만큼 올라감 (바닥에서 floatHeight 위치)
         
         // 도어 높이 = 상단 위치 - 하단 위치 (띄움높이만큼 줄어듦)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
