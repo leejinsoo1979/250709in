@@ -1191,12 +1191,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     totalWidth = slot1Width + slot2Width;
     
-    // 듀얼 캐비넷은 0.5mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 2.5mm만 빼기)
-    // 원래: 슬롯 - 3mm → 수정: 슬롯 - 2.5mm
-    leftDoorWidth = slot1Width - 2.5;  // 왼쪽 슬롯 크기 - 2.5mm
-    rightDoorWidth = slot2Width - 2.5; // 오른쪽 슬롯 크기 - 2.5mm
+    // 듀얼 캐비넷은 1mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 2mm만 빼기)
+    // 원래: 슬롯 - 3mm → 수정: 슬롯 - 2mm
+    leftDoorWidth = slot1Width - 2;  // 왼쪽 슬롯 크기 - 2mm
+    rightDoorWidth = slot2Width - 2; // 오른쪽 슬롯 크기 - 2mm
     
-    // 갭 계산: 듀얼은 2.5mm만 빼기
+    // 갭 계산: 듀얼은 2mm만 빼기
     
     console.log('🚪 듀얼 도어 (1mm 덜 빼기):', {
       '슬롯1': { 너비: slot1Width, 도어: leftDoorWidth },
