@@ -853,6 +853,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
   const { activeDroppedCeilingTab } = useUIStore();
+  
+  // 디버깅: spaceInfo 상태 확인
+  console.log('🔍 [ModuleGallery] spaceInfo 상태:', {
+    width: spaceInfo.width,
+    surroundType: spaceInfo.surroundType,
+    frameSize: spaceInfo.frameSize,
+    gapConfig: spaceInfo.gapConfig,
+    installType: spaceInfo.installType
+  });
 
   // 단내림이 활성화되어 있고 단내림 탭이 선택된 경우 영역별 공간 정보 사용
   let zoneSpaceInfo = spaceInfo;
