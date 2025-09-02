@@ -708,33 +708,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     
     if (isDroppedZone) {
-      // 단내림 구간: 상부장이 낮아진 천장에 맞춰 내려왔으므로 도어도 같이 내려와야 함
-      // 단내림 높이만큼 도어를 아래로 이동
-      const droppedHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+      // 단내림 구간: 가구가 이미 dropHeight만큼 내려왔으므로
+      // 도어는 가구 기준 상대 위치만 사용 (추가 이동 불필요)
       
       // 기본 오프셋 계산 (일반 구간과 동일)
       const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
       const additionalOffset = -10;  // 10mm 더 아래로
       
-      // 단내림 구간에서는 단내림 높이만큼 더 아래로 (음수로 빼야 아래로 이동)
-      const droppedOffset = -droppedHeight;
+      // 도어는 가구의 자식이므로, 가구가 이미 내려온 만큼 자동으로 내려옴
+      // 추가로 내리면 안됨!
       
       // Three.js 단위로 변환
-      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset + droppedOffset);
+      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
       
       console.log('🚪📍 단내림 상부장 도어 위치 계산:', {
         type: '단내림 상부장',
         zone,
-        단내림높이: droppedHeight,
         가구높이: furnitureHeight,
         도어높이: finalDoorHeight,
         기본오프셋: baseOffset,
         추가오프셋: additionalOffset,
-        단내림오프셋: droppedOffset,
-        총오프셋: baseOffset + additionalOffset + droppedOffset,
+        총오프셋: baseOffset + additionalOffset,
         doorYPosition_units: doorYPosition,
         doorYPosition_mm: doorYPosition / 0.01,
-        설명: '단내림 구간에서 상부장과 함께 도어도 낮아진 천장에 맞춰 아래로 이동'
+        설명: '도어는 가구 기준 상대 위치 사용 (가구가 이미 내려왔으므로 추가 이동 불필요)'
       });
     } else {
       // 일반 구간: 기존 로직 유지

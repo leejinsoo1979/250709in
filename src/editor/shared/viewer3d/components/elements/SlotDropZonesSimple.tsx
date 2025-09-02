@@ -1012,12 +1012,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // zone이 undefined인 경우 slotIndex로 판단
             let moduleZone = m.zone;
             if (!moduleZone && m.slotIndex !== undefined) {
-              // slotIndex로 zone 판단
-              const normalColumnCount = zoneInfo.normal.columnCount;
-              if (m.slotIndex < normalColumnCount) {
-                moduleZone = 'normal';
+              // 단내림 위치에 따라 zone 판단
+              if (spaceInfo.droppedCeiling?.position === 'left') {
+                // 왼쪽 단내림: 첫 부분이 dropped zone
+                if (m.slotIndex < zoneInfo.dropped.columnCount) {
+                  moduleZone = 'dropped';
+                } else {
+                  moduleZone = 'normal';
+                }
               } else {
-                moduleZone = 'dropped';
+                // 오른쪽 단내림: 뒷 부분이 dropped zone
+                const normalColumnCount = zoneInfo.normal.columnCount;
+                if (m.slotIndex < normalColumnCount) {
+                  moduleZone = 'normal';
+                } else {
+                  moduleZone = 'dropped';
+                }
               }
             }
             moduleZone = moduleZone || 'normal';
@@ -1051,15 +1061,31 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let hasSlotConflict = zoneExistingModules.some(m => {
         // 단내림 영역에서는 영역 내 슬롯 인덱스로 비교
         // zoneSlotIndex는 해당 zone 내에서의 인덱스
-        // m.slotIndex도 해당 zone 내에서의 인덱스여야 함
+        // m.slotIndex는 전체 인덱스이므로 zone 내 인덱스로 변환 필요
         
         // 기존 모듈의 zone 내 슬롯 인덱스 계산
         let moduleZoneSlotIndex = m.slotIndex;
-        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right') {
-          // 단내림이 오른쪽에 있는 경우
-          if (zoneToUse === 'dropped' && m.slotIndex >= zoneInfo.normal.columnCount) {
-            // 단내림 영역 모듈: 전체 인덱스에서 메인 영역 슬롯 수를 뺄
-            moduleZoneSlotIndex = m.slotIndex - zoneInfo.normal.columnCount;
+        
+        // 기존 모듈의 실제 zone 판단 (filter에서 이미 같은 zone으로 필터링됨)
+        if (spaceInfo.droppedCeiling?.enabled) {
+          if (spaceInfo.droppedCeiling?.position === 'left') {
+            // 왼쪽 단내림
+            if (zoneToUse === 'dropped') {
+              // dropped zone 내의 모듈들은 인덱스 그대로 (0부터 시작)
+              moduleZoneSlotIndex = m.slotIndex;
+            } else {
+              // normal zone 내의 모듈들은 dropped 영역 수를 뺌
+              moduleZoneSlotIndex = m.slotIndex - zoneInfo.dropped.columnCount;
+            }
+          } else {
+            // 오른쪽 단내림
+            if (zoneToUse === 'normal') {
+              // normal zone 내의 모듈들은 인덱스 그대로
+              moduleZoneSlotIndex = m.slotIndex;
+            } else {
+              // dropped zone 내의 모듈들은 normal 영역 수를 뺌
+              moduleZoneSlotIndex = m.slotIndex - zoneInfo.normal.columnCount;
+            }
           }
         }
         
