@@ -1497,10 +1497,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
-      // 상부장 Y 위치: 내경높이 - 가구높이/2
-      // 서라운드 모드에서는 내경 공간이 이미 상부 프레임을 제외한 높이
-      // 노서라운드 모드에서는 상부 프레임이 없으므로 전체 높이에서 가구 배치
-      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+      // 띄워서 배치 모드일 때 상부장 위치 보정
+      // 띄워서 배치해도 상부장은 천장에 붙어야 함
+      const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand' && 
+                              spaceInfo?.baseConfig?.placementType === 'float';
+      const floatHeight = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+      
+      // 상부장 Y 위치: 내경높이 - 가구높이/2 + 띄움높이(상부장 위치 보정)
+      // 띄워서 배치 시 상부장이 천장에서 내려오는 문제 해결
+      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2 + floatHeight);
       
       // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)
       console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
@@ -1510,7 +1515,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         internalHeightMm,
         furnitureHeightMm,
-        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
+        isFloatPlacement,
+        floatHeight,
+        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} + ${floatHeight} = ${internalHeightMm - furnitureHeightMm/2 + floatHeight}`,
         yPos_Three단위: yPos,
         yPos_mm: yPos / 0.01,
         furnitureStartY,
@@ -1519,7 +1526,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         차이: (yPos - adjustedPosition.y) / 0.01,
         isDragging: isDraggingThis,
         baseConfig: spaceInfo?.baseConfig,
-        설명: '상부장은 상부 프레임 하단에 맞닿음'
+        설명: isFloatPlacement ? '띄워서 배치 - 상부장 천장 위치 보정' : '상부장은 상부 프레임 하단에 맞닿음'
       });
       
       if (isDraggingThis) {
