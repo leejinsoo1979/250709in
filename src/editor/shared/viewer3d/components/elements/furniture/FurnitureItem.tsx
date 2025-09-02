@@ -1477,14 +1477,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 실제 가구 높이가 내경 공간보다 크면 내경 공간에 맞춤
       let furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
       
-      // 단내림+서라운드에서는 상부프레임 두께(10mm)만큼 더 줄임
+      // 단내림+서라운드에서는 키큰장 높이를 상부프레임 하단까지로 제한
       if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
-        furnitureHeightMm -= 20; // 상부프레임 두께 + 추가 여유
-        console.log('🔴 단내림+서라운드 키큰장 높이 조정:', {
-          원래높이: furnitureHeightMm + 20,
-          조정후높이: furnitureHeightMm,
-          상부프레임두께: 10,
-          추가여유: 10
+        // 상부프레임 두께(10mm)를 고려하여 키큰장 높이 조정
+        const maxHeight = internalHeightMm - 10; // 상부프레임 하단까지
+        furnitureHeightMm = Math.min(furnitureHeightMm, maxHeight);
+        console.log('🔴 단내림+서라운드 키큰장 높이 제한:', {
+          원래높이: actualModuleData?.dimensions.height || 2200,
+          내경높이: internalHeightMm,
+          제한높이: maxHeight,
+          최종높이: furnitureHeightMm
         });
       }
       
@@ -1492,18 +1494,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       let startY = furnitureStartY;
       
       // 키큰장의 중심 Y 위치 = 바닥 + 높이/2
-      let yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
-      
-      // 단내림+서라운드에서는 Y 위치를 20mm 낮춤 (확실한 분리를 위해)
-      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
-        yPos -= mmToThreeUnits(20); // 20mm 아래로
-        console.log('🔴🔴🔴 단내림+서라운드 키큰장 Y 위치 강제 조정:', {
-          원래Y위치_mm: (yPos + mmToThreeUnits(20)) / 0.01,
-          조정후Y위치_mm: yPos / 0.01,
-          하향조정: -20,
-          설명: '천장과 확실히 분리하기 위해 20mm 하향'
-        });
-      }
+      const yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
       
       console.log('🏢 키큰장(full) Y 위치 계산:', {
         moduleId: actualModuleData?.id || 'unknown',
