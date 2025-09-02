@@ -643,44 +643,62 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 첫 번째 빈 슬롯 찾기
       let availableSlotIndex = -1;
       
-      // 모든 슬롯을 순회하며 빈 슬롯 찾기 (zone 정보 포함)
-      for (let i = 0; i < indexing.columnCount; i++) {
-        // 슬롯이 어느 zone에 속하는지 파악
-        let checkZone: 'normal' | 'dropped' | undefined = undefined;
-        if (spaceInfo.droppedCeiling?.enabled) {
-          if (i >= droppedZoneStart && i < droppedZoneEnd) {
-            checkZone = 'dropped';
-          } else if (i >= normalZoneStart && i < normalZoneEnd) {
-            checkZone = 'normal';
-          }
-        }
-        
-        // 듀얼장인 경우 두 슬롯이 모두 같은 zone에 있는지 확인
-        if (isDualFurniture && spaceInfo.droppedCeiling?.enabled) {
-          const slot2 = i + 1;
-          let zone2: 'normal' | 'dropped' | undefined = undefined;
-          if (slot2 >= droppedZoneStart && slot2 < droppedZoneEnd) {
-            zone2 = 'dropped';
-          } else if (slot2 >= normalZoneStart && slot2 < normalZoneEnd) {
-            zone2 = 'normal';
+      // 단내림이 있는 경우: 일반 구간 먼저 시도, 그 다음 단내림 구간 시도
+      if (spaceInfo.droppedCeiling?.enabled) {
+        // 1단계: 일반(normal) 구간에서 먼저 찾기
+        console.log('🔍 Step 1: Searching in normal zone first...');
+        for (let i = normalZoneStart; i < normalZoneEnd; i++) {
+          // 듀얼장인 경우 두 슬롯이 모두 normal zone에 있는지 확인
+          if (isDualFurniture) {
+            const slot2 = i + 1;
+            if (slot2 >= normalZoneEnd) {
+              console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed normal zone boundary`);
+              continue;
+            }
           }
           
-          // 두 슬롯이 다른 zone에 있으면 건너뛰기
-          if (checkZone !== zone2) {
-            console.log(`🚫 Slot ${i} and ${slot2} are in different zones (${checkZone} vs ${zone2}), skipping for dual furniture`);
-            continue;
+          const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'normal');
+          console.log(`🔍 Normal zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+          if (isAvailable) {
+            availableSlotIndex = i;
+            break;
           }
         }
         
-        const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, checkZone);
-        console.log(`🔍 Slot ${i} (zone: ${checkZone || 'none'}): ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
-        if (isAvailable) {
-          availableSlotIndex = i;
-          break;
+        // 2단계: 일반 구간에서 못 찾았으면 단내림(dropped) 구간에서 찾기
+        if (availableSlotIndex === -1) {
+          console.log('🔍 Step 2: Normal zone full, searching in dropped zone...');
+          for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
+            // 듀얼장인 경우 두 슬롯이 모두 dropped zone에 있는지 확인
+            if (isDualFurniture) {
+              const slot2 = i + 1;
+              if (slot2 >= droppedZoneEnd) {
+                console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed dropped zone boundary`);
+                continue;
+              }
+            }
+            
+            const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
+            console.log(`🔍 Dropped zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+            if (isAvailable) {
+              availableSlotIndex = i;
+              break;
+            }
+          }
+        }
+      } else {
+        // 단내림이 없는 경우: 모든 슬롯을 순회
+        for (let i = 0; i < indexing.columnCount; i++) {
+          const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id);
+          console.log(`🔍 Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+          if (isAvailable) {
+            availableSlotIndex = i;
+            break;
+          }
         }
       }
       
-      // 첫 번째 슬롯에서 찾지 못하면 배치 불가
+      // 빈 슬롯을 찾지 못한 경우
       if (availableSlotIndex === -1) {
         console.log('🔍 No available slot found for furniture placement');
       }
