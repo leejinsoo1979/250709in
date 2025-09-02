@@ -81,8 +81,15 @@ export class ColumnIndexer {
         let leftReduction = 0;
         
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-          leftReduction = spaceInfo.gapConfig?.left || 2;
+          // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+          leftReduction = 0;
+          console.log('🔍 [ColumnIndexer] builtin+no-surround 초기 위치 계산 (단내림 영역):', {
+            surroundType: spaceInfo.surroundType,
+            installType: spaceInfo.installType,
+            gapConfig: spaceInfo.gapConfig,
+            leftReduction: 0,
+            reason: 'builtin+no-surround는 벽에 바로 붙음'
+          });
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음, 이격거리 무시
           if (spaceInfo.wallConfig?.left) {
@@ -363,8 +370,15 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-        leftReduction = spaceInfo.gapConfig?.left || 2;
+        // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+        leftReduction = 0;
+        console.log('🔍 [ColumnIndexer] builtin+no-surround 위치 계산:', {
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          gapConfig: spaceInfo.gapConfig,
+          leftReduction: 0,
+          reason: 'builtin+no-surround는 벽에 바로 붙음'
+        });
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
@@ -646,10 +660,8 @@ export class ColumnIndexer {
             actualInternalWidth -= END_PANEL_THICKNESS;
           }
         } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-          const leftGap = spaceInfo.gapConfig?.left || 2;
-          const rightGap = spaceInfo.gapConfig?.right || 2;
-          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
+          // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+          actualInternalWidth = spaceInfo.width;
         }
       }
       
@@ -660,8 +672,8 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-          leftReduction = spaceInfo.gapConfig?.left || 2;
+          // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+          leftReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
@@ -807,8 +819,8 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-        leftReduction = spaceInfo.gapConfig?.left || 2;
+        // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+        leftReduction = 0;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
@@ -861,10 +873,10 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽이 있으므로 이격거리 반영
+        // 빌트인인 경우: 노서라운드에서는 이격거리 무시
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-          rightReduction = spaceInfo.gapConfig?.right || 2;
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
           // 왼쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.left) {
@@ -917,10 +929,10 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽이 있으므로 이격거리 반영
+        // 빌트인인 경우: 노서라운드에서는 이격거리 무시
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-          rightReduction = spaceInfo.gapConfig?.right || 2;
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
           // 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
