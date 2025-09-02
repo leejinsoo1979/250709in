@@ -398,14 +398,15 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
-        leftReduction = 0;
+        // 빌트인: 이격거리 적용
+        const leftGap = spaceInfo.gapConfig?.left || 0;
+        leftReduction = leftGap;
         console.log('🔍 [ColumnIndexer] builtin+no-surround 위치 계산:', {
           surroundType: spaceInfo.surroundType,
           installType: spaceInfo.installType,
           gapConfig: spaceInfo.gapConfig,
-          leftReduction: 0,
-          reason: 'builtin+no-surround는 벽에 바로 붙음'
+          leftReduction: leftGap,
+          reason: 'builtin+no-surround는 이격거리 적용'
         });
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
@@ -706,8 +707,10 @@ export class ColumnIndexer {
             actualInternalWidth -= END_PANEL_THICKNESS;
           }
         } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
-          actualInternalWidth = spaceInfo.width;
+          // 빌트인: 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          const rightGap = spaceInfo.gapConfig?.right || 0;
+          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
         }
       }
       
