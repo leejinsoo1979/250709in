@@ -1390,21 +1390,38 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 상부장은 항상 천장에 고정 (저장된 위치 무시)
     if (isUpperCabinet) {
+      // 내경 공간 계산
       const internalSpace = calculateInternalSpace(spaceInfo);
-      const internalHeightMm = internalSpace.height;
+      let internalHeightMm = internalSpace.height;
+      
+      // 단내림 구간 처리
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        internalHeightMm = internalHeightMm - dropHeight;
+      }
+      
       const furnitureHeightMm = actualModuleData?.dimensions?.height || moduleData?.dimensions?.height || 600;
+      
+      // 상부장 상단이 천장(내경 높이)에 맞닿도록 배치
+      // Y 위치 = 내경높이 - 가구높이/2
       const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
       console.log('🔝 상부장 Y 위치 (천장 고정):', {
         moduleId: placedModule.moduleId,
+        spaceHeight: spaceInfo.height,
         internalHeightMm,
         furnitureHeightMm,
+        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
         yPos,
         yPos_mm: yPos * 100,
+        상부장_상단_mm: (yPos * 100) + furnitureHeightMm/2,
+        상부장_하단_mm: (yPos * 100) - furnitureHeightMm/2,
         savedY: placedModule.position.y,
         savedY_mm: placedModule.position.y * 100,
         차이_mm: (placedModule.position.y - yPos) * 100,
         isDragging: isDraggingThis || isFurnitureDragging,
+        baseConfig: spaceInfo?.baseConfig,
+        zone: placedModule.zone,
         설명: '상부장은 항상 계산된 천장 위치 사용 (저장된 위치 무시)'
       });
       return yPos;
