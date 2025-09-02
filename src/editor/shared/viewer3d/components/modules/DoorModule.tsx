@@ -77,7 +77,7 @@ const BoxWithEdges: React.FC<{
         <lineBasicMaterial 
           color={
             viewMode === '2D'
-              ? "#00FF00"  // 2D는 항상 초록색
+              ? "#000000"  // 2D는 검정색 (다크모드에서도 검정색 유지)
               : renderMode === 'wireframe'
                 ? "#808080"  // 3D 와이어프레임: 회색
                 : "#505050"  // 3D solid: 진한 회색
