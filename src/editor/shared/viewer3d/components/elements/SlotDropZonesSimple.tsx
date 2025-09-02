@@ -1399,19 +1399,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       } else {
         // 기둥이 없는 경우 기존 로직
-        // 노서라운드 모드에서는 customWidth도 설정하지 않음
-        if (spaceInfo.surroundType !== 'no-surround') {
-          if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-            customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
-          } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-            // 싱글 가구의 경우 실제 슬롯 너비 사용
-            customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
-          } else {
-            customWidth = actualSlotWidth;
-          }
+        // 노서라운드 모드에서도 customWidth를 계산해야 함
+        if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+          customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
+        } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+          // 싱글 가구의 경우 실제 슬롯 너비 사용
+          customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
         } else {
-          customWidth = undefined;
+          customWidth = actualSlotWidth;
         }
+        
+        console.log('🔧 [노서라운드] customWidth 계산:', {
+          surroundType: spaceInfo.surroundType,
+          isDual,
+          zoneSlotIndex,
+          slotWidths: zoneIndexing.slotWidths,
+          customWidth,
+          actualSlotWidth
+        });
+        
         // 노서라운드 모드에서는 adjustedWidth를 설정하지 않음
         // adjustedWidth는 기둥 침범 시에만 사용
         adjustedWidth = undefined;
