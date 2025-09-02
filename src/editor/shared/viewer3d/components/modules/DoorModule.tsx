@@ -639,9 +639,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        // 도어를 아래로 이동 (upperGap 사용하여 상대적 조정)
-        const doorYOffset = -upperGap;  // upperGap(5mm)만큼 아래로
-        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute + doorYOffset);
+        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
