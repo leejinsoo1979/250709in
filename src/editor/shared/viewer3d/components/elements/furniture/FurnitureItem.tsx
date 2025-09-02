@@ -1575,7 +1575,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         });
       } else {
         // 일반적인 경우: 키큰장의 중심 Y 위치 = 바닥 + 높이/2
-        yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
+        // height는 이미 Three.js 단위로 변환되어 있음
+        yPos = startY + height / 2;
         
         console.log('🏢 키큰장(full) Y 위치 계산:', {
           moduleId: actualModuleData?.id || 'unknown',
