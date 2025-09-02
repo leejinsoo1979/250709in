@@ -633,8 +633,26 @@ export class ColumnIndexer {
       droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
       droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
+      frameSize: spaceInfo.frameSize,
       customColumnCount
     });
+    
+    // 노서라운드 모드에서 frameSize가 잘못 설정된 경우 경고 및 수정
+    if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.frameSize && 
+        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+      console.error('🚨🚨🚨 [calculateZoneSlotInfo] 노서라운드 모드인데 frameSize가 0이 아님! 강제로 0으로 수정합니다.', {
+        '원래 frameSize': spaceInfo.frameSize,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        설명: '노서라운드 모드에서는 frameSize가 모두 0이어야 합니다!'
+      });
+      
+      // 강제로 frameSize를 0으로 수정
+      spaceInfo = {
+        ...spaceInfo,
+        frameSize: { left: 0, right: 0, top: 0 }
+      };
+    }
     
     const frameThickness = calculateFrameThickness(spaceInfo);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
