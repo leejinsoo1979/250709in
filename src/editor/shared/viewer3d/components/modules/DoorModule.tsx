@@ -502,18 +502,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상부장/하부장은 가구 높이에 맞춤
     actualDoorHeight = moduleData?.dimensions?.height || (isUpperCabinet ? 600 : 1000);
     
-    // 상부장이고 단내림 구간인 경우 높이 조정
+    // 상부장이고 단내림 구간인 경우 - 높이 조정 불필요
+    // 가구 자체의 높이는 변하지 않음, Y 위치만 낮아짐
     if (isUpperCabinet && (spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-      const internalHeight = spaceInfo.height - dropHeight;
-      // 상부장 높이를 내부 공간 높이에 맞춤 (기본 600mm 대신 실제 내부 높이 사용)
-      actualDoorHeight = Math.min(actualDoorHeight, internalHeight);
-      console.log('🚪📏 단내림 상부장 도어 높이 조정:', {
+      // 단내림 구간에서도 상부장 자체의 높이는 변하지 않음
+      // actualDoorHeight는 그대로 유지
+      console.log('🚪📏 단내림 상부장 도어 높이:', {
         originalHeight: moduleData?.dimensions?.height || 600,
-        dropHeight,
-        internalHeight,
-        adjustedHeight: actualDoorHeight,
-        zone: (spaceInfo as any).zone
+        actualDoorHeight,
+        zone: (spaceInfo as any).zone,
+        설명: '단내림 구간에서도 상부장 자체 높이는 동일, Y 위치만 낮아짐'
       });
     }
     
@@ -697,6 +695,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 18mm 확장
     const upperExtension = 5;   // 가구 상단에서 위로 5mm
     const lowerExtension = 18;  // 가구 하단에서 아래로 18mm (하단 마감재 덮기)
+    // 상부장은 항상 원래 높이 유지 (단내림에서도 가구 높이는 변하지 않음)
     const furnitureHeight = moduleData?.dimensions?.height || 600;
     
     // 도어 높이 = 가구 높이 + 위 확장 + 아래 확장
@@ -707,16 +706,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const zone = (spaceInfo as any).zone; // zone 정보 가져오기
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     
-    if (isDroppedZone) {
-      // 단내림 구간: 가구가 이미 dropHeight만큼 내려왔으므로
-      // 도어는 가구 기준 상대 위치만 사용 (추가 이동 불필요)
+    // 띄워서 배치인 경우
+    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeightForUpper = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+    
+    if (isDroppedZone && floatHeightForUpper > 0) {
+      // 단내림 구간 + 띄워서 배치: 상부장이 단내림 천장에서 floatHeight만큼 떨어진 위치
+      // 도어는 가구 기준 상대 위치 사용
       
       // 기본 오프셋 계산 (일반 구간과 동일)
       const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
       const additionalOffset = -10;  // 10mm 더 아래로
       
-      // 도어는 가구의 자식이므로, 가구가 이미 내려온 만큼 자동으로 내려옴
-      // 추가로 내리면 안됨!
+      // Three.js 단위로 변환
+      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
+      
+      console.log('🚪📍 단내림 + 띄워서 배치 상부장 도어 위치:', {
+        type: '단내림 + 띄워서 배치 상부장',
+        zone,
+        floatHeight: floatHeightForUpper,
+        가구높이: furnitureHeight,
+        도어높이: finalDoorHeight,
+        기본오프셋: baseOffset,
+        추가오프셋: additionalOffset,
+        총오프셋: baseOffset + additionalOffset,
+        doorYPosition_units: doorYPosition,
+        doorYPosition_mm: doorYPosition / 0.01,
+        설명: '도어는 가구 기준 상대 위치 사용 (가구 Y 위치는 FurnitureItem에서 처리)'
+      });
+    } else if (isDroppedZone) {
+      // 단내림 구간 (띄워서 배치 아님): 가구가 이미 dropHeight만큼 내려왔으므로
+      // 도어는 가구 기준 상대 위치만 사용 (추가 이동 불필요)
+      
+      // 기본 오프셋 계산 (일반 구간과 동일)
+      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
+      const additionalOffset = -10;  // 10mm 더 아래로
       
       // Three.js 단위로 변환
       doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
