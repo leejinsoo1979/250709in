@@ -1504,7 +1504,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // placedModule.position.y가 0이 아닌 경우 저장된 Y 위치 사용
     // (SlotDropZonesSimple에서 계산한 위치 사용)
-    if (placedModule.position.y !== 0 && !isDraggingThis) {
+    // 단, baseConfig나 droppedCeiling 설정이 변경되면 재계산
+    // forceUpdate가 변경되면 재계산 필요
+    if (placedModule.position.y !== 0 && !isDraggingThis && forceUpdate === 0) {
       console.log('🎯 저장된 Y 위치 사용:', {
         moduleId: placedModule.moduleId,
         category: moduleData?.category || actualModuleData?.category,

@@ -352,6 +352,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const zone = (spaceInfo as any).zone;
   const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
   
+  console.log('🚨🚨🚨 DoorModule 받은 spaceInfo:', {
+    moduleId: moduleData?.id,
+    zone,
+    isDroppedZone,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    baseConfig: spaceInfo.baseConfig,
+    placementType: spaceInfo.baseConfig?.placementType,
+    floatHeight: spaceInfo.baseConfig?.floatHeight,
+    spaceHeight: spaceInfo.height
+  });
+  
   let indexing = calculateSpaceIndexing(spaceInfo);
   
   // 단내림 구간에서는 zone별 columnWidth 사용
@@ -571,6 +582,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const zone = (spaceInfo as any).zone;
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     const dropHeight = isDroppedZone ? (spaceInfo.droppedCeiling?.dropHeight || 200) : 0;
+    
+    console.log('🔴🔴🔴 키큰장 도어 계산 시작:', {
+      moduleId: moduleData?.id,
+      zone,
+      isDroppedZone,
+      dropHeight,
+      floatHeight,
+      furnitureHeight,
+      spaceHeight: spaceInfo.height
+    });
     
     console.log('✅ 키큰장 블록 진입!', {
       moduleId: moduleData?.id,
