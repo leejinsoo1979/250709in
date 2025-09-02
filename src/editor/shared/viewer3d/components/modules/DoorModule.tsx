@@ -1208,11 +1208,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 간단한 도어 위치 계산: 각 슬롯 중앙에 배치
     let leftDoorCenter, rightDoorCenter;
     
-    // 왼쪽 도어: 왼쪽 슬롯 중앙 (전체 중앙에서 왼쪽으로)
-    leftDoorCenter = -totalWidth / 2 + slot1Width / 2;
+    // 듀얼 캐비넷의 중심은 두 슬롯의 경계선
+    // 왼쪽 도어: 왼쪽 슬롯의 중앙 (경계선에서 왼쪽으로 슬롯1너비의 절반)
+    leftDoorCenter = -slot1Width / 2;
     
-    // 오른쪽 도어: 오른쪽 슬롯 중앙 (전체 중앙에서 오른쪽으로)
-    rightDoorCenter = -totalWidth / 2 + slot1Width + slot2Width / 2;
+    // 오른쪽 도어: 오른쪽 슬롯의 중앙 (경계선에서 오른쪽으로 슬롯2너비의 절반)
+    rightDoorCenter = slot2Width / 2;
     
     // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
     
