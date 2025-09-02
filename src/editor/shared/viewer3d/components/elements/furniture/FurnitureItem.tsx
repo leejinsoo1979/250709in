@@ -1405,26 +1405,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 상부장은 항상 천장에 고정 (저장된 위치 무시)
     if (isUpperCabinet) {
-      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
-      // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
+      // 상부장은 상부 프레임 하단에 바로 맞닿아야 함
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
-      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
       // 상부장은 항상 원본 spaceInfo의 height 사용 (zoneSpaceInfo 사용 안함!)
       let totalHeightMm = spaceInfo.height;
       
-      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
+      // 서라운드 모드일 때 상부 프레임 두께만 뺌 (간격 없음)
       if (spaceInfo.surroundType !== 'no-surround') {
-        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
       } else {
-        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
-        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
+        // 노서라운드 모드에서는 프레임이 없으므로 천장에 바로 붙음
+        // totalHeightMm = totalHeightMm; // 빼지 않음
       }
       
-      // 단내림 구간 처리
-      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        totalHeightMm = totalHeightMm - dropHeight;
-      }
+      // 상부장은 단내림 구간에서도 천장에 고정되어야 하므로 dropHeight를 빼면 안됨!
       
       const furnitureHeightMm = actualModuleData?.dimensions?.height || moduleData?.dimensions?.height || 600;
       
@@ -1535,21 +1529,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
     else if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
-      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
-      // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
+      // 상부장은 상부 프레임 하단에 바로 맞닿아야 함
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
-      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
       
       // 상부장은 zone에 관계없이 항상 천장 높이 기준으로 계산
       // zone별 spaceInfo를 사용하면 안되고, 원본 spaceInfo 사용
       let totalHeightMm = spaceInfo.height;
       
-      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
+      // 서라운드 모드일 때 상부 프레임 두께만 뺌 (간격 없음)
       if (spaceInfo.surroundType !== 'no-surround') {
-        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
       } else {
-        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
-        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
+        // 노서라운드 모드에서는 프레임이 없으므로 천장에 바로 붙음
+        // totalHeightMm = totalHeightMm; // 빼지 않음
       }
       
       // 단내림 구간에서도 상부장은 천장(상부프레임 하단)에 붙어야 함
