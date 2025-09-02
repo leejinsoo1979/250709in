@@ -1178,12 +1178,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let slot1Width = 0;
     let slot2Width = 0;
     
-    // 간단한 로직: slotWidths를 그대로 사용
-    if (slotWidths && slotWidths.length >= 2) {
-      slot1Width = slotWidths[0];
-      slot2Width = slotWidths[1];
+    // 간단한 로직: 듀얼 캐비넷이 차지하는 실제 슬롯의 너비 사용
+    if (slotWidths && slotIndex !== undefined && slotIndex < slotWidths.length - 1) {
+      // 듀얼 캐비넷은 slotIndex와 slotIndex+1을 차지
+      slot1Width = slotWidths[slotIndex];
+      slot2Width = slotWidths[slotIndex + 1];
     } else {
-      // slotWidths가 없으면 균등 분할
+      // slotWidths가 없거나 인덱스가 범위를 벗어나면 균등 분할
       slot1Width = indexing.columnWidth;
       slot2Width = indexing.columnWidth;
     }
@@ -1244,14 +1245,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 인접 가구와의 갭 검증 (간단한 로직)
     let adjacentGapInfo = null;
-    if (slotIndex > 0 && slotWidths) {
+    if (slotIndex !== undefined && slotIndex > 0 && slotWidths) {
       // 이전 슬롯에 싱글 캐비넷이 있다고 가정
       // 각 도어는 슬롯 크기 - 3mm이므로 자동으로 3mm 갭
       const prevSlotWidth = slotWidths[slotIndex - 1] || indexing.columnWidth;
       const prevDoorWidth = prevSlotWidth - 3;
-      const prevDoorRightEdge = prevSlotWidth / 2 - 1.5; // 이전 도어의 오른쪽 가장자리
-      const currDoorLeftEdge = -slot1Width / 2 + 1.5; // 현재 듀얼 도어의 왼쪽 가장자리
-      const actualGap = -currDoorLeftEdge + prevDoorRightEdge; // 실제 갭 계산
+      
+      // 갭 계산을 단순화: 각 도어는 자신의 슬롯에서 1.5mm씩 떨어져 있음
+      // 따라서 인접한 두 도어 사이의 갭은 항상 3mm가 되어야 함
+      const expectedGap = 3; // 1.5mm + 1.5mm
       
       adjacentGapInfo = {
         '인접_타입': '왼쪽_싱글',
@@ -1259,10 +1261,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         '싱글_도어': `${prevDoorWidth}mm`,
         '듀얼_첫슬롯': `${slot1Width}mm`,
         '듀얼_왼쪽도어': `${leftDoorWidth}mm`,
-        '예상_갭': '3mm',
-        '실제_갭_계산': `${actualGap}mm`,
+        '예상_갭': `${expectedGap}mm`,
+        'slotIndex': slotIndex,
         'slotCenterX': slotCenterX,
-        'doorGroupX': doorGroupX
+        'doorGroupX': doorGroupX,
+        '설명': '각 도어는 슬롯-3mm이므로 자동으로 3mm 갭'
       };
     }
     
