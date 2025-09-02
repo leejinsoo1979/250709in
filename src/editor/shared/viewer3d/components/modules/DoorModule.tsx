@@ -653,33 +653,45 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
     });
   } else if (isUpperCabinet) {
-    // 상부장 도어: 위로 5mm, 아래로 18mm 확장
-    const upperExtension = 5;  // 위로 5mm
-    const lowerExtension = 18; // 아래로 18mm
+    // 상부장 도어: 키큰장과 상단 정렬을 위해 조정
     const furnitureHeight = moduleData?.dimensions?.height || 600;
     
-    // 도어 높이 = 가구 높이 + 확장분
-    finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
+    // 키큰장과 동일하게 천장에서 5mm 갭
+    const upperGap = 5;
     
-    // 상부장 도어는 가구 중심 기준으로 확장
-    // 가구 중심이 Y=0이므로, 도어는 아래로 더 확장됨
-    // 도어 중심 = (아래확장 - 위확장) / 2 만큼 아래로 이동
-    // 그런데 도어가 18mm 위로 올라가야 하므로 18을 더함
-    const yAdjustment = 18; // 도어를 위로 올리기 위한 값
-    doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 50 + yAdjustment);
+    // 상부장 도어 높이: 가구 높이 + 아래로 18mm 확장
+    const lowerExtension = 18;
+    finalDoorHeight = furnitureHeight + lowerExtension;
     
-    console.log('🚪📍 상부장 도어 위치:', {
+    // 상부장 도어 Y 위치 계산
+    // 도어 상단이 천장-5mm 위치에 오도록 조정
+    // 상부장은 보통 천장에서 1800mm 아래에 위치 (600mm 높이 기준)
+    const spaceHeight = actualDoorHeight; // 전체 공간 높이
+    const upperCabinetTop = spaceHeight - 1800; // 상부장 상단 위치 (바닥 기준)
+    const upperCabinetCenter = upperCabinetTop + furnitureHeight / 2; // 상부장 중심
+    
+    // 도어 상단이 천장-5mm에 위치하도록 조정
+    const doorTop = spaceHeight - upperGap;
+    const doorCenter = doorTop - finalDoorHeight / 2;
+    
+    // 상부장 중심 기준 상대 위치로 변환
+    doorYPosition = mmToThreeUnits(doorCenter - upperCabinetCenter);
+    
+    console.log('🚪📍 상부장 도어 위치 (키큰장 정렬):', {
       type: '상부장',
       가구높이: furnitureHeight,
-      위확장: upperExtension,
+      천장갭: upperGap,
       아래확장: lowerExtension,
       도어높이: finalDoorHeight,
       doorYPosition,
-      doorYPosition_mm: (lowerExtension - upperExtension) / 2 - 50 + yAdjustment,
-      yAdjustment,
+      doorYPosition_mm: doorYPosition / 0.01,
+      공간높이: spaceHeight,
+      상부장상단: upperCabinetTop,
+      도어상단: doorTop,
+      도어중심: doorCenter,
       가구상단: mmToThreeUnits(furnitureHeight / 2),
-      도어상단: doorYPosition + mmToThreeUnits(finalDoorHeight / 2),
-      note: `가구 기준 위 ${upperExtension}mm, 아래 ${lowerExtension}mm 확장, Y축 ${yAdjustment}mm 상향 조정`
+      도어상단_units: doorYPosition + mmToThreeUnits(finalDoorHeight / 2),
+      note: `키큰장과 상단 정렬: 천장-${upperGap}mm 위치`
     });
   } else if (isLowerCabinet) {
     console.log('🔴🔴🔴 하부장 조건 진입!!!', {
