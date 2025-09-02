@@ -632,7 +632,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         finalDoorHeight = normalZoneDoorHeight - floatHeight - dropHeight;
         
         // 도어 절대 위치 - 단내림 구간에서는 10mm 더 내려야 함
-        const droppedZoneOffset = upperGap * 2;  // 10mm (upperGap의 2배)
+        const droppedZoneOffset = 10;  // 10mm 직접 지정
         const doorTopAbsolute = furnitureTopAbsolute - droppedZoneOffset;  // 가구 상단 - 10mm
         const doorBottomAbsolute = doorTopAbsolute - finalDoorHeight;  // 도어 상단 - 도어 높이
         
@@ -640,7 +640,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
+        // 단내림 구간에서 추가로 10mm 더 내려야 함
+        const additionalDropOffset = -10;
+        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute + additionalDropOffset);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -666,7 +668,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       } else {
         // 받침대 배치 + 단내림
         // 도어 절대 위치 - 단내림 구간에서는 10mm 더 내려야 함
-        const droppedZoneOffset = upperGap * 2;  // 10mm (upperGap의 2배)
+        const droppedZoneOffset = 10;  // 10mm 직접 지정
         const doorTopAbsolute = droppedCeilingHeight - droppedZoneOffset;  // 단내림 천장-10mm
         const doorBottomAbsolute = 25;                                     // 바닥+25mm (일반구간과 동일)
         
@@ -684,7 +686,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
+        // 단내림 구간에서 추가로 10mm 더 내려야 함
+        const additionalDropOffset = -10;
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute + additionalDropOffset) * 0.01; // mm to Three.js units
         
         console.log('🔍 단내림 + 받침대 배치 키큰장 도어 계산:', {
           zone: 'dropped',
