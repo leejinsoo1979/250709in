@@ -1191,17 +1191,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     totalWidth = slot1Width + slot2Width;
     
-    // 듀얼 캐비넷은 5mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 덜 빼기)
-    // 원래: 슬롯 - 3mm → 수정: 슬롯 + 2mm (5mm 덜 빼기)
-    leftDoorWidth = slot1Width + 2;  // 왼쪽 슬롯 크기 + 2mm (원래 -3mm에서 5mm 더함)
-    rightDoorWidth = slot2Width + 2; // 오른쪽 슬롯 크기 + 2mm (원래 -3mm에서 5mm 더함)
+    // 듀얼 캐비넷은 2mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 1mm만 빼기)
+    // 원래: 슬롯 - 3mm → 수정: 슬롯 - 1mm (2mm 덜 빼기)
+    leftDoorWidth = slot1Width - 1;  // 왼쪽 슬롯 크기 - 1mm (3mm 대신 1mm만 빼기)
+    rightDoorWidth = slot2Width - 1; // 오른쪽 슬롯 크기 - 1mm (3mm 대신 1mm만 빼기)
     
-    // 갭 계산: 듀얼은 슬롯보다 2mm 크게 (오버랩)
+    // 갭 계산: 듀얼은 1mm만 빼기
     
-    console.log('🚪 듀얼 도어 (5mm 덜 빼기):', {
+    console.log('🚪 듀얼 도어 (2mm 덜 빼기):', {
       '슬롯1': { 너비: slot1Width, 도어: leftDoorWidth },
       '슬롯2': { 너비: slot2Width, 도어: rightDoorWidth },
-      '결과': '각 슬롯에서 2mm 더하기 (원래 -3mm에서 5mm 추가)',
+      '결과': '각 슬롯에서 1mm만 빼기 (싱글은 3mm)',
       'slotCenterX': slotCenterX,
       'doorGroupX': doorGroupX,
       'surroundType': spaceInfo.surroundType,
@@ -1240,12 +1240,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: '듀얼 캐비넷은 항상 중심 유지'
     });
 
-    // 갭 검증: 도어가 슬롯보다 2mm 크므로 음수 갭 (오버랩)
-    const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // -1mm가 나와야 함 (오버랩)
-    const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // -1mm가 나와야 함 (오버랩)
+    // 갭 검증: 슬롯에서 1mm만 뺐으므로 양쪽 0.5mm씩 갭
+    const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // 0.5mm가 나와야 함
+    const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // 0.5mm가 나와야 함
     
-    // 듀얼 캐비넷 내부 갭 (두 도어 사이) - 도어가 커졌으므로 갭이 줄어듦
-    const internalGap = -1 + (-1); // 두 도어가 오버랩되므로 실제로는 거의 맞닿음
+    // 듀얼 캐비넷 내부 갭 (두 도어 사이)
+    const internalGap = 0.5 + 0.5; // 양쪽 0.5mm씩 = 1mm 갭
     
     // 인접 가구와의 갭 검증 (간단한 로직)
     let adjacentGapInfo = null;
@@ -1255,9 +1255,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const prevSlotWidth = slotWidths[slotIndex - 1] || indexing.columnWidth;
       const prevDoorWidth = prevSlotWidth - 3;
       
-      // 갭 계산을 단순화: 각 도어는 자신의 슬롯에서 1.5mm씩 떨어져 있음
-      // 따라서 인접한 두 도어 사이의 갭은 항상 3mm가 되어야 함
-      const expectedGap = 3; // 1.5mm + 1.5mm
+      // 갭 계산: 싱글은 1.5mm, 듀얼은 0.5mm씩 떨어져 있음
+      // 따라서 싱글과 듀얼 사이의 갭은 2mm가 되어야 함
+      const expectedGap = 2; // 싱글 1.5mm + 듀얼 0.5mm
       
       adjacentGapInfo = {
         '인접_타입': '왼쪽_싱글',
