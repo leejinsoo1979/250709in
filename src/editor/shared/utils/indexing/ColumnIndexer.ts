@@ -735,50 +735,23 @@ export class ColumnIndexer {
       // 슬롯별 실제 너비 배열 생성
       const slotWidths: number[] = [];
       
-      if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
-        // 노서라운드 벽없음: 커버도어 방식 - 전체너비를 균등 분할 후, 양쪽 끝 슬롯에서 18mm씩 빼기
-        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
-        const remainder = spaceInfo.width % columnCount;
-        
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드 모드: 가구는 고정 사이즈(600mm)로 표시되어야 함
+        // 실제 슬롯 공간과 무관하게 모든 슬롯을 균등 너비로 계산
+        const baseWidth = Math.floor(internalWidth / columnCount);
+        const remainder = internalWidth % columnCount;
         for (let i = 0; i < columnCount; i++) {
-          let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
-          
-          // 첫 번째 슬롯은 왼쪽 엔드패널 두께를 뺌
-          if (i === 0) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 마지막 슬롯은 오른쪽 엔드패널 두께를 뺌
-          else if (i === columnCount - 1) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 중간 슬롯들은 그대로
-          
-          slotWidths.push(slotWidth);
+          slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
         }
-      } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-        // 노서라운드 한쪽벽: 커버도어 방식 - 전체너비를 균등 분할 후, 엔드패널 쪽 슬롯만 18mm 빼기
-        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
-        const remainder = spaceInfo.width % columnCount;
         
-        for (let i = 0; i < columnCount; i++) {
-          let slotWidth = baseSlotWidth;
-          
-          // remainder 분배 (앞쪽부터)
-          if (i < remainder) {
-            slotWidth += 1;
-          }
-          
-          // 엔드패널이 있는 쪽 슬롯에서만 18mm 빼기 (커버도어는 엔드패널이 슬롯 밖에 있음)
-          if (!spaceInfo.wallConfig?.left && i === 0) {
-            // 왼쪽 벽이 없으면 첫 번째 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          } else if (!spaceInfo.wallConfig?.right && i === columnCount - 1) {
-            // 오른쪽 벽이 없으면 마지막 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          }
-          
-          slotWidths.push(slotWidth);
-        }
+        console.log('🔧 [노서라운드] 슬롯 너비 계산:', {
+          installType: spaceInfo.installType,
+          internalWidth,
+          columnCount,
+          baseWidth,
+          slotWidths,
+          설명: '노서라운드에서는 모든 슬롯이 균등 너비 (가구는 600mm 고정 표시)'
+        });
       } else {
         // 서라운드 모드 또는 빌트인: 기존 로직
         const baseWidth = Math.floor(internalWidth / columnCount);
@@ -1040,43 +1013,27 @@ export class ColumnIndexer {
     const normalSlotWidths: number[] = [];
     const droppedSlotWidths: number[] = [];
     
-    // 세미스탠딩 노서라운드인 경우 특별 처리
-    if (spaceInfo.surroundType === 'no-surround' && 
-        (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      
-      // 메인 영역 슬롯 너비 계산
+    // 노서라운드 모드: 가구는 고정 사이즈로 표시되어야 함
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드에서는 엔드패널 빼지 않고 균등 분배
+      // 메인 영역
       for (let i = 0; i < normalColumnCount; i++) {
-        let slotWidth = i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth;
-        
-        // 왼쪽 단내림인 경우, 메인 영역의 마지막 슬롯에 엔드패널이 있을 수 있음
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.right && i === normalColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림인 경우, 메인 영역의 첫 슬롯에 엔드패널이 있을 수 있음
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
-        normalSlotWidths.push(slotWidth);
+        normalSlotWidths.push(i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth);
       }
       
-      // 단내림 영역 슬롯 너비 계산
+      // 단내림 영역
       for (let i = 0; i < droppedColumnCount; i++) {
-        let slotWidth = i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth;
-        
-        // 왼쪽 단내림이고 왼쪽 벽이 없는 경우, 첫 슬롯에 엔드패널
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림이고 오른쪽 벽이 없는 경우, 마지막 슬롯에 엔드패널
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.right && i === droppedColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
-        droppedSlotWidths.push(slotWidth);
+        droppedSlotWidths.push(i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth);
       }
+      
+      console.log('🔧 [노서라운드 단내림] 슬롯 너비 계산:', {
+        installType: spaceInfo.installType,
+        normalSlotWidths,
+        droppedSlotWidths,
+        설명: '노서라운드에서는 엔드패널 관계없이 균등 분배'
+      });
     } else {
-      // 기존 로직: 서라운드 또는 빌트인
+      // 서라운드 모드 또는 빌트인
       for (let i = 0; i < normalColumnCount; i++) {
         normalSlotWidths.push(i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth);
       }
