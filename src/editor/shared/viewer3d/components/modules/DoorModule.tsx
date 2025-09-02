@@ -712,11 +712,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       if (floatHeight > 0) {
         console.log('✅ 키큰장 + 띄움 배치 모드!', { floatHeight, furnitureHeight });
         
+        // 일반구간: 띄워서 배치해도 도어는 천장까지 올라감
         // 도어 절대 위치
         const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-        const doorBottomAbsolute = floatHeight + 25;          // 띄움높이 + 25mm (바닥에서 floatHeight + 25mm 위치)
+        const doorBottomAbsolute = 25;                        // 바닥+25mm (띄움높이 무관하게 바닥 기준)
         
-        // 도어 높이
+        // 도어 높이 (띄움높이와 무관하게 전체 높이 사용)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
         
         // 가구 절대 위치  
