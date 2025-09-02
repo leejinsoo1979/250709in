@@ -378,10 +378,18 @@ export class ColumnIndexer {
     const columnBoundaries = [];
     let currentX: number;
     
-    if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드: 슬롯 위치를 균등 분할 기준으로 계산
-      // 엔드패널은 슬롯 너비에만 영향을 주고, 위치에는 영향을 주지 않음
-      currentX = -(totalWidth / 2);
+    if (isNoSurround && spaceInfo.installType === 'freestanding') {
+      // 노서라운드 프리스탠딩: 첫 슬롯은 엔드패널 바로 안쪽에서 시작
+      currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
+    } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+      // 노서라운드 세미스탠딩: 엔드패널이 있는 쪽만 고려
+      if (!spaceInfo.wallConfig?.left) {
+        // 왼쪽 벽이 없으면 왼쪽에 엔드패널
+        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
+      } else {
+        // 왼쪽 벽이 있으면 벽에 바로 붙음
+        currentX = -(totalWidth / 2);
+      }
     } else {
       // 서라운드 또는 빌트인: 내경 시작점
       currentX = internalStartX;
