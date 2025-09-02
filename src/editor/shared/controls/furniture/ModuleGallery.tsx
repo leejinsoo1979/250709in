@@ -719,13 +719,17 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       console.log('🎯 [ModuleGallery] Position calculation:', {
         zone: targetZone,
         positionX,
+        positionX_mm: positionX * 100,
         globalSlotIndex: availableSlotIndex,
         localSlotIndex: localSlotIndex,
         isDualFurniture,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
         zoneIndexingInfo: {
           columnCount: zoneIndexing.columnCount,
           columnWidth: zoneIndexing.columnWidth,
           internalStartX: zoneIndexing.internalStartX,
+          internalStartX_three: SpaceCalculator.mmToThreeUnits(zoneIndexing.internalStartX),
           threeUnitPositions: zoneIndexing.threeUnitPositions
         }
       });

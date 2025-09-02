@@ -50,7 +50,14 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
   const [frameSize, setFrameSize] = useState<FrameSize | any>(() => {
-    if (!spaceInfo.frameSize) return { left: '50', right: '50', top: '50' };
+    // 노서라운드 모드에서는 frameSize를 0으로 설정
+    if (!spaceInfo.frameSize) {
+      if (isNoSurround) {
+        return { left: '0', right: '0', top: '0' };
+      } else {
+        return { left: '50', right: '50', top: '10' };
+      }
+    }
     return {
       left: String(!hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left),
       right: String(!hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right),

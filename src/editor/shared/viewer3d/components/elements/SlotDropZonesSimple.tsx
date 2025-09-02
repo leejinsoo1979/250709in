@@ -1170,8 +1170,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           
           console.log('📍 직접 계산한 normal positions:', {
             startX,
+            startX_three: mmToThreeUnits(startX),
             positions,
-            columnCount: zoneInfo.normal.columnCount
+            columnCount: zoneInfo.normal.columnCount,
+            surroundType: spaceInfo.surroundType,
+            installType: spaceInfo.installType
           });
           
           // 직접 계산한 위치 사용
