@@ -681,31 +681,69 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
     
     // 상부장 도어 Y 위치 계산
-    // 도어 크기는 그대로 유지 (위 5mm, 아래 18mm 확장)
-    // 기본 도어 중심 위치 = (5 - 18) / 2 = -6.5mm
-    // 추가로 10mm 더 아래로 이동
-    const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
-    const additionalOffset = -10;  // 10mm 더 아래로
+    // 단내림 구간인지 확인
+    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     
-    // Three.js 단위로 변환
-    doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
-    
-    console.log('🚪📍 상부장 도어 위치 계산:', {
-      type: '상부장',
-      가구높이: furnitureHeight,
-      위확장: upperExtension,
-      아래확장: lowerExtension,
-      도어높이: finalDoorHeight,
-      가구상단_mm: furnitureHeight/2,
-      가구하단_mm: -furnitureHeight/2,
-      기본오프셋_mm: baseOffset,
-      추가오프셋_mm: additionalOffset,
-      최종오프셋_mm: baseOffset + additionalOffset,
-      doorYPosition_units: doorYPosition,
-      doorYPosition_mm: doorYPosition / 0.01,
-      계산식: `${baseOffset} + ${additionalOffset} = ${baseOffset + additionalOffset}`,
-      note: `도어 중심이 가구 중심보다 ${-(baseOffset + additionalOffset)}mm 아래로 이동`
-    });
+    if (isDroppedZone) {
+      // 단내림 구간: 도어 상단이 키큰장 도어 상단과 같은 높이가 되도록
+      // 단내림 구간에서는 상부장 도어를 더 아래로 내려야 함
+      // 키큰장 도어는 상부프레임 하단까지 올라가므로, 상부장 도어도 그 높이에 맞춤
+      
+      // 단내림 높이만큼 추가로 아래로 이동
+      const droppedHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+      
+      // 기본 오프셋 계산 (일반 구간과 동일)
+      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
+      const additionalOffset = -10;  // 10mm 더 아래로
+      
+      // 단내림 구간에서는 단내림 높이만큼 더 아래로
+      const droppedOffset = droppedHeight;
+      
+      // Three.js 단위로 변환
+      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset + droppedOffset);
+      
+      console.log('🚪📍 단내림 상부장 도어 위치 계산:', {
+        type: '단내림 상부장',
+        zone,
+        단내림높이: droppedHeight,
+        가구높이: furnitureHeight,
+        도어높이: finalDoorHeight,
+        기본오프셋: baseOffset,
+        추가오프셋: additionalOffset,
+        단내림오프셋: droppedOffset,
+        총오프셋: baseOffset + additionalOffset + droppedOffset,
+        doorYPosition_units: doorYPosition,
+        doorYPosition_mm: doorYPosition / 0.01,
+        설명: '단내림 구간에서 도어를 단내림 높이만큼 추가로 아래로 이동'
+      });
+    } else {
+      // 일반 구간: 기존 로직 유지
+      // 도어 크기는 그대로 유지 (위 5mm, 아래 18mm 확장)
+      // 기본 도어 중심 위치 = (5 - 18) / 2 = -6.5mm
+      // 추가로 10mm 더 아래로 이동
+      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
+      const additionalOffset = -10;  // 10mm 더 아래로
+      
+      // Three.js 단위로 변환
+      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
+      
+      console.log('🚪📍 상부장 도어 위치 계산:', {
+        type: '상부장',
+        가구높이: furnitureHeight,
+        위확장: upperExtension,
+        아래확장: lowerExtension,
+        도어높이: finalDoorHeight,
+        가구상단_mm: furnitureHeight/2,
+        가구하단_mm: -furnitureHeight/2,
+        기본오프셋_mm: baseOffset,
+        추가오프셋_mm: additionalOffset,
+        최종오프셋_mm: baseOffset + additionalOffset,
+        doorYPosition_units: doorYPosition,
+        doorYPosition_mm: doorYPosition / 0.01,
+        계산식: `${baseOffset} + ${additionalOffset} = ${baseOffset + additionalOffset}`,
+        note: `도어 중심이 가구 중심보다 ${-(baseOffset + additionalOffset)}mm 아래로 이동`
+      });
+    }
   } else if (isLowerCabinet) {
     console.log('🔴🔴🔴 하부장 조건 진입!!!', {
       floatHeight,
