@@ -155,9 +155,35 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const latestPlacedModules = storeState.placedModules;
     
     // spaceInfo와 indexing을 최신 상태로 다시 계산
-    const latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    let latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    
+    // 🔴🔴🔴 CRITICAL: 노서라운드 모드에서 frameSize 확인 및 수정
+    console.log('🔴🔴🔴 [CRITICAL] handleSlotDrop 시점의 상태:', {
+      surroundType: latestSpaceInfo.surroundType,
+      frameSize: latestSpaceInfo.frameSize,
+      'frameSize가 50인가?': latestSpaceInfo.frameSize?.left === 50 || latestSpaceInfo.frameSize?.right === 50,
+      '문제': latestSpaceInfo.surroundType === 'no-surround' && (latestSpaceInfo.frameSize?.left === 50 || latestSpaceInfo.frameSize?.right === 50) ? '🔴🔴🔴 노서라운드인데 frameSize가 50임!!!' : '정상'
+    });
+    
+    // 노서라운드 모드에서 frameSize를 강제로 0으로 수정
+    if (latestSpaceInfo.surroundType === 'no-surround' && latestSpaceInfo.frameSize && 
+        (latestSpaceInfo.frameSize.left > 0 || latestSpaceInfo.frameSize.right > 0)) {
+      console.error('🔴🔴🔴 [CRITICAL] 노서라운드 모드인데 frameSize가 0이 아님! 강제로 0으로 수정합니다.');
+      latestSpaceInfo = {
+        ...latestSpaceInfo,
+        frameSize: { left: 0, right: 0, top: 0 }
+      };
+    }
+    
     const latestInternalSpace = calculateInternalSpace(latestSpaceInfo);
     const latestIndexing = calculateSpaceIndexing(latestSpaceInfo);
+    
+    console.log('🔴🔴🔴 [CRITICAL] frameSize 수정 후 indexing:', {
+      '첫슬롯 위치': latestIndexing.threeUnitPositions?.[0],
+      '마지막슬롯 위치': latestIndexing.threeUnitPositions?.[latestIndexing.threeUnitPositions.length - 1],
+      internalStartX: latestIndexing.internalStartX,
+      internalWidth: latestIndexing.internalWidth
+    });
     
     console.log('🎯 handleSlotDrop called:', {
       hasLatestDragData: !!latestDragData,

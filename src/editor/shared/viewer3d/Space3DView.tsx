@@ -136,7 +136,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
   // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
-    console.log('🎯 [Space3DView] handleDrop 호출됨!', {
+    console.log('🔴🔴🔴 [CRITICAL] Space3DView handleDrop 호출됨!', {
       windowHandleSlotDrop: typeof window.handleSlotDrop,
       currentTarget: e.currentTarget.tagName,
       dataTransfer: e.dataTransfer.getData('application/json')
