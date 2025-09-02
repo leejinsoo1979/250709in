@@ -626,14 +626,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
         // 단내림 구간 + 띄움 배치 도어 높이 계산
-        // 도어는 가구 전체를 덮되 상하 갭 고려
+        // 띄워서 배치 시 도어 높이를 200mm 줄임
         // 도어 상단: 가구 상단 + 5mm (가구보다 5mm 위로 확장)
-        // 도어 하단: 가구 하단 - 10mm (가구보다 10mm 아래로 확장)
+        // 도어 하단: 가구 하단 + 185mm (200mm 줄이되 상하 확장 고려)
         const doorTopAbsolute = furnitureTopAbsolute + 5;  // 가구 상단 + 5mm
-        const doorBottomAbsolute = furnitureBottomAbsolute - 10;  // 가구 하단 - 10mm
+        const doorBottomAbsolute = furnitureBottomAbsolute + 185;  // 가구 하단 + 185mm (200mm 줄임)
         
-        // 도어 높이 = 가구 높이 + 확장 (15mm)
-        finalDoorHeight = furnitureHeight + 15;  // 가구 높이 + 상하 확장
+        // 도어 높이 = 가구 높이 - 200mm + 확장 (15mm)
+        finalDoorHeight = furnitureHeight - 200 + 15;  // 가구 높이 - 200mm + 상하 확장
         
         // 도어 중심 절대 위치 (10mm 아래로 확장되어 중심도 5mm 아래로 이동)
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
@@ -649,7 +649,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           가구높이: furnitureHeight,
           공간높이: spaceInfo.height,
           도어높이: finalDoorHeight,
-          높이계산: `가구높이(${furnitureHeight}) + 확장(15) = ${finalDoorHeight}`,
+          높이계산: `가구높이(${furnitureHeight}) - 200mm + 확장(15) = ${finalDoorHeight}`,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
