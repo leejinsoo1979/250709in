@@ -1191,17 +1191,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     totalWidth = slot1Width + slot2Width;
     
-    // 듀얼 캐비넷은 1.5mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 1.5mm만 빼기)
-    // 원래: 슬롯 - 3mm → 수정: 슬롯 - 1.5mm
-    leftDoorWidth = slot1Width - 1.5;  // 왼쪽 슬롯 크기 - 1.5mm
-    rightDoorWidth = slot2Width - 1.5; // 오른쪽 슬롯 크기 - 1.5mm
+    // 듀얼 캐비넷은 0.5mm 덜 빼기 (싱글은 3mm 빼는데 듀얼은 2.5mm만 빼기)
+    // 원래: 슬롯 - 3mm → 수정: 슬롯 - 2.5mm
+    leftDoorWidth = slot1Width - 2.5;  // 왼쪽 슬롯 크기 - 2.5mm
+    rightDoorWidth = slot2Width - 2.5; // 오른쪽 슬롯 크기 - 2.5mm
     
-    // 갭 계산: 듀얼은 1.5mm만 빼기
+    // 갭 계산: 듀얼은 2.5mm만 빼기
     
-    console.log('🚪 듀얼 도어 (1.5mm 덜 빼기):', {
+    console.log('🚪 듀얼 도어 (1mm 덜 빼기):', {
       '슬롯1': { 너비: slot1Width, 도어: leftDoorWidth },
       '슬롯2': { 너비: slot2Width, 도어: rightDoorWidth },
-      '결과': '각 슬롯에서 1.5mm만 빼기 (싱글은 3mm)',
+      '결과': '각 슬롯에서 2mm만 빼기 (싱글은 3mm)',
       'slotCenterX': slotCenterX,
       'doorGroupX': doorGroupX,
       'surroundType': spaceInfo.surroundType,
@@ -1240,12 +1240,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: '듀얼 캐비넷은 항상 중심 유지'
     });
 
-    // 갭 검증: 슬롯에서 1.5mm 뺐으므로 양쪽 0.75mm씩 갭
-    const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // 0.75mm가 나와야 함
-    const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // 0.75mm가 나와야 함
+    // 갭 검증: 슬롯에서 2mm 뺐으므로 양쪽 1mm씩 갭
+    const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // 1mm가 나와야 함
+    const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // 1mm가 나와야 함
     
     // 듀얼 캐비넷 내부 갭 (두 도어 사이)
-    const internalGap = 0.75 + 0.75; // 양쪽 0.75mm씩 = 1.5mm 갭
+    const internalGap = 1 + 1; // 양쪽 1mm씩 = 2mm 갭
     
     // 인접 가구와의 갭 검증 (간단한 로직)
     let adjacentGapInfo = null;
