@@ -433,10 +433,16 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
 /**
  * 상단/하단 프레임 높이 계산 (mm 단위)
  * 기본값은 10mm이고, frameSize 설정이 있으면 그 값을 사용
+ * 노서라운드 모드에서는 상부프레임이 없으므로 0 반환
  */
 export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return SURROUND_FRAME_THICKNESS;
+  }
+  
+  // 노서라운드 모드에서는 상부프레임이 없음
+  if (spaceInfo.surroundType === 'no-surround') {
+    return 0;
   }
   
   // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
