@@ -310,9 +310,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let dragData: any = null;
     try {
       const dragDataString = dragEvent.dataTransfer?.getData('application/json');
-      console.log('📋 Drag data string:', dragDataString);
+      console.log('📋 Drag data string from dataTransfer:', {
+        hasDataTransfer: !!dragEvent.dataTransfer,
+        types: dragEvent.dataTransfer?.types,
+        effectAllowed: dragEvent.dataTransfer?.effectAllowed,
+        dropEffect: dragEvent.dataTransfer?.dropEffect,
+        dataString: dragDataString,
+        dataStringLength: dragDataString?.length
+      });
       if (dragDataString) {
         dragData = JSON.parse(dragDataString);
+        console.log('✅ Successfully parsed drag data from dataTransfer:', dragData);
       }
     } catch (error) {
       console.error('Error parsing drag data:', error);
@@ -320,11 +328,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     // 데이터 전송이 없으면 스토어에서 직접 가져오기
     if (!dragData) {
-      console.log('⚠️ No drag data from event, checking store...');
+      console.log('⚠️ No drag data from event dataTransfer, using store data instead');
       dragData = latestDragData;  // 이미 위에서 가져온 최신 데이터 사용
-      console.log('🔄 Using latest drag data from store:', dragData);
+      console.log('🔄 Using latest drag data from store:', {
+        hasData: !!dragData,
+        type: dragData?.type,
+        moduleId: dragData?.moduleData?.id,
+        moduleCategory: dragData?.moduleData?.category
+      });
     }
-    console.log('📦 Effective drag data:', dragData);
+    console.log('📦 Final effective drag data:', dragData);
     
     if (!dragData || dragData.type !== 'furniture') {
       console.log('❌ Invalid drag data:', { dragData, type: dragData?.type });
