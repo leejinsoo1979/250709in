@@ -1058,41 +1058,35 @@ export class ColumnIndexer {
     const normalSlotWidths: number[] = [];
     const droppedSlotWidths: number[] = [];
     
-    // 세미스탠딩 노서라운드인 경우 특별 처리
+    // 노서라운드인 경우 특별 처리 (세미스탠딩, 프리스탠딩 모두)
     if (spaceInfo.surroundType === 'no-surround' && 
-        (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+        (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
+         spaceInfo.installType === 'freestanding')) {
       
       // 메인 영역 슬롯 너비 계산
+      // 내부 너비 계산 시 이미 엔드패널을 뺐으므로, 슬롯 너비에서 추가로 빼면 안됨!
       for (let i = 0; i < normalColumnCount; i++) {
         let slotWidth = i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth;
-        
-        // 왼쪽 단내림인 경우, 메인 영역의 마지막 슬롯에 엔드패널이 있을 수 있음
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.right && i === normalColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림인 경우, 메인 영역의 첫 슬롯에 엔드패널이 있을 수 있음
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
         normalSlotWidths.push(slotWidth);
       }
       
       // 단내림 영역 슬롯 너비 계산
+      // 내부 너비 계산 시 이미 엔드패널을 뺐으므로, 슬롯 너비에서 추가로 빼면 안됨!
       for (let i = 0; i < droppedColumnCount; i++) {
         let slotWidth = i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth;
-        
-        // 왼쪽 단내림이고 왼쪽 벽이 없는 경우, 첫 슬롯에 엔드패널
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림이고 오른쪽 벽이 없는 경우, 마지막 슬롯에 엔드패널
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.right && i === droppedColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
         droppedSlotWidths.push(slotWidth);
       }
+      
+      console.log('🔧 노서라운드 슬롯 너비 (엔드패널 중복 차감 제거):', {
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig,
+        droppedPosition,
+        normalAreaInternalWidth,
+        normalSlotWidths,
+        droppedAreaInternalWidth, 
+        droppedSlotWidths,
+        '설명': '내부 너비 계산 시 이미 엔드패널 두께를 뺐으므로 슬롯 너비에서 추가로 빼지 않음'
+      });
     } else {
       // 기존 로직: 서라운드 또는 빌트인
       for (let i = 0; i < normalColumnCount; i++) {
