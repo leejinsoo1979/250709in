@@ -390,8 +390,12 @@ export class ColumnIndexer {
         // 왼쪽 벽이 있으면 벽에 바로 붙음
         currentX = -(totalWidth / 2);
       }
+    } else if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      // 노서라운드 빌트인: 이격거리만 고려
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      currentX = -(totalWidth / 2) + leftGap;
     } else {
-      // 서라운드 또는 빌트인: 내경 시작점
+      // 서라운드: 내경 시작점
       currentX = internalStartX;
     }
     
