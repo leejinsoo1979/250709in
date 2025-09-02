@@ -1352,12 +1352,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = spaceInfo.surroundType === 'no-surround' ? 3 : 6;
     const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 0;
     
-    console.log('🚪 듀얼 도어:', {
+    // 듀얼 도어는 항상 양쪽 끝에서 1.5mm씩 떨어진 위치에서 시작
+    const actualEdgeGap = 1.5; // 양쪽 끝 간격 1.5mm
+    const actualDoorGap = 3;   // 도어 사이 간격 3mm
+    
+    // 도어 갭 검증
+    const leftEdgeToLeftDoor = actualEdgeGap; // 1.5mm
+    const leftDoorEnd = actualEdgeGap + leftDoorWidth; // 왼쪽 도어 끝
+    const rightDoorStart = leftDoorEnd + actualDoorGap; // 오른쪽 도어 시작
+    const rightDoorEnd = rightDoorStart + rightDoorWidth; // 오른쪽 도어 끝
+    const rightEdgeGap = totalWidth - rightDoorEnd; // 오른쪽 끝 갭
+    
+    console.log('🚪 듀얼 도어 상세:', {
       totalWidth,
       leftDoorWidth,
       rightDoorWidth,
-      doorGap,
-      edgeGap,
+      '갭_계산': {
+        '왼쪽끝_갭': leftEdgeToLeftDoor,
+        '중간_갭': actualDoorGap,
+        '오른쪽끝_갭': rightEdgeGap,
+        '오른쪽끝_갭_정상여부': Math.abs(rightEdgeGap - 1.5) < 0.01 ? '✅ 정상' : `❌ 비정상 (${rightEdgeGap}mm)`
+      },
+      '도어_위치': {
+        '왼쪽도어_시작': actualEdgeGap,
+        '왼쪽도어_끝': leftDoorEnd,
+        '오른쪽도어_시작': rightDoorStart,
+        '오른쪽도어_끝': rightDoorEnd
+      },
       doorAdjustment,
       slotIndex,
       columnCount,
@@ -1374,11 +1395,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 도어 위치 계산
     let leftDoorCenter, rightDoorCenter;
-    
-    // 듀얼 도어는 항상 양쪽 끝에서 1.5mm씩 떨어진 위치에서 시작
-    // 서라운드 모드든 노서라운드 모드든 동일
-    const actualEdgeGap = 1.5; // 양쪽 끝 간격 1.5mm
-    const actualDoorGap = 3;   // 도어 사이 간격 3mm
     
     // 왼쪽 도어: 왼쪽 끝에서 1.5mm 떨어진 곳부터 시작
     leftDoorCenter = -totalWidth / 2 + actualEdgeGap + leftDoorWidth / 2;
