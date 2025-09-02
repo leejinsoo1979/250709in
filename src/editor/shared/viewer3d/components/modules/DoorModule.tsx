@@ -1191,19 +1191,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     totalWidth = slot1Width + slot2Width;
     
-    // 듀얼 캐비넷 도어 갭 규칙: 거의 슬롯 크기와 동일하게 (최소 갭)
-    // 실제로 10mm 갭이 생기고 있으므로 대폭 증가
-    leftDoorWidth = slot1Width + 8;  // 왼쪽 슬롯 크기 + 8mm (10mm 갭 보정)
-    rightDoorWidth = slot2Width + 8; // 오른쪽 슬롯 크기 + 8mm (10mm 갭 보정)
+    // 듀얼 캐비넷 도어: 실제 렌더링 갭 분석 필요
+    // 목표: 싱글과 동일한 비율의 갭
+    leftDoorWidth = slot1Width - 2;  // 슬롯 크기 - 2mm
+    rightDoorWidth = slot2Width - 2; // 슬롯 크기 - 2mm
     
     // 갭 계산: 듀얼은 항상 2mm만 빼기
     
-    console.log('🚪 듀얼 도어 일관된 갭 규칙:', {
-      '슬롯1': { 너비: slot1Width, 도어: leftDoorWidth, 갭: `양쪽 ${(slot1Width - leftDoorWidth) / 2}mm씩` },
-      '슬롯2': { 너비: slot2Width, 도어: rightDoorWidth, 갭: `양쪽 ${(slot2Width - rightDoorWidth) / 2}mm씩` },
-      '규칙': '모든 환경에서 슬롯-2mm (싱글은 슬롯-3mm)',
-      'slotCenterX': slotCenterX,
-      'doorGroupX': doorGroupX,
+    console.log('🚪🔍 듀얼 도어 갭 분석:', {
+      '슬롯1': { 
+        너비: slot1Width, 
+        도어: leftDoorWidth, 
+        차이: slot1Width - leftDoorWidth,
+        예상갭: `양쪽 ${(slot1Width - leftDoorWidth) / 2}mm씩` 
+      },
+      '슬롯2': { 
+        너비: slot2Width, 
+        도어: rightDoorWidth,
+        차이: slot2Width - rightDoorWidth, 
+        예상갭: `양쪽 ${(slot2Width - rightDoorWidth) / 2}mm씩` 
+      },
+      '실제육안': '약 5mm 갭',
+      '코드규칙': '슬롯-2mm',
+      'slotWidths배열': slotWidths,
+      'slotIndex': slotIndex,
+      'indexing.columnWidth': indexing.columnWidth,
+      'actualDoorWidth': actualDoorWidth,
+      'moduleWidth': moduleWidth,
       'surroundType': spaceInfo.surroundType,
       'zone': (spaceInfo as any).zone
     });
@@ -1660,16 +1674,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       slotWidth = slotWidths[slotIndex];
     }
     
-    // 싱글 캐비넷 도어 갭 규칙: 거의 슬롯 크기와 동일하게 (최소 갭)
-    // 실제로 5mm 갭이 생기고 있으므로 증가
-    let doorWidth = slotWidth + 2; // 슬롯 크기 + 2mm (5mm 갭 보정)
+    // 싱글 캐비넷 도어: 실제 렌더링 갭 분석 필요
+    // 목표: 적절한 갭 유지
+    let doorWidth = slotWidth - 3; // 슬롯 크기 - 3mm
     
     // 모든 환경(서라운드, 노서라운드, 단내림 등)에서 동일한 규칙 적용
-    console.log('🚪 싱글 도어 일관된 갭 규칙:', { 
+    console.log('🚪🔍 싱글 도어 갭 분석:', { 
       슬롯크기: slotWidth, 
       도어크기: doorWidth,
-      슬롯인덱스: slotIndex,
-      갭: `${slotWidth - doorWidth}mm (양쪽 ${(slotWidth - doorWidth) / 2}mm씩)`,
+      차이: slotWidth - doorWidth,
+      예상갭: `양쪽 ${(slotWidth - doorWidth) / 2}mm씩`,
+      실제육안: '약 3mm 갭',
+      코드규칙: '슬롯-3mm',
+      slotWidths배열: slotWidths,
+      slotIndex: slotIndex,
+      'indexing.columnWidth': indexing.columnWidth,
+      'actualDoorWidth': actualDoorWidth,
+      'moduleWidth': moduleWidth,
       surroundType: spaceInfo.surroundType,
       zone: (spaceInfo as any).zone
     });
