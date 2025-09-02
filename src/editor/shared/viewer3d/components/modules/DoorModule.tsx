@@ -708,19 +708,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     
     if (isDroppedZone) {
-      // 단내림 구간: 도어 상단이 키큰장 도어 상단과 같은 높이가 되도록
-      // 단내림 구간에서는 상부장 도어를 더 아래로 내려야 함
-      // 키큰장 도어는 상부프레임 하단까지 올라가므로, 상부장 도어도 그 높이에 맞춤
-      
-      // 단내림 높이만큼 추가로 아래로 이동
+      // 단내림 구간: 상부장이 낮아진 천장에 맞춰 내려왔으므로 도어도 같이 내려와야 함
+      // 단내림 높이만큼 도어를 아래로 이동
       const droppedHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
       
       // 기본 오프셋 계산 (일반 구간과 동일)
       const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
       const additionalOffset = -10;  // 10mm 더 아래로
       
-      // 단내림 구간에서는 단내림 높이만큼 더 아래로
-      const droppedOffset = droppedHeight;
+      // 단내림 구간에서는 단내림 높이만큼 더 아래로 (음수로 빼야 아래로 이동)
+      const droppedOffset = -droppedHeight;
       
       // Three.js 단위로 변환
       doorYPosition = mmToThreeUnits(baseOffset + additionalOffset + droppedOffset);
@@ -737,7 +734,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         총오프셋: baseOffset + additionalOffset + droppedOffset,
         doorYPosition_units: doorYPosition,
         doorYPosition_mm: doorYPosition / 0.01,
-        설명: '단내림 구간에서 도어를 단내림 높이만큼 추가로 아래로 이동'
+        설명: '단내림 구간에서 상부장과 함께 도어도 낮아진 천장에 맞춰 아래로 이동'
       });
     } else {
       // 일반 구간: 기존 로직 유지
