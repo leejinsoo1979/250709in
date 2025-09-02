@@ -1493,13 +1493,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 키큰장의 중심 Y 위치 = 바닥 + 높이/2
       let yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
       
-      // 단내림+서라운드에서는 Y 위치를 5mm 낮춤 (상부프레임 하단에 맞추기 위해)
+      // 단내림+서라운드에서는 Y 위치를 10mm 낮춤 (상부프레임 두께만큼)
       if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
-        yPos -= mmToThreeUnits(5); // 5mm 아래로
-        console.log('🔴 단내림+서라운드 키큰장 Y 위치 조정:', {
-          원래Y위치_mm: (yPos + mmToThreeUnits(5)) / 0.01,
+        yPos -= mmToThreeUnits(10); // 10mm 아래로 (상부프레임 두께)
+        console.log('🔴🔴🔴 단내림+서라운드 키큰장 Y 위치 강제 조정:', {
+          원래Y위치_mm: (yPos + mmToThreeUnits(10)) / 0.01,
           조정후Y위치_mm: yPos / 0.01,
-          하향조정: -5
+          하향조정: -10,
+          설명: '상부프레임 두께만큼 전체를 아래로 이동'
         });
       }
       
