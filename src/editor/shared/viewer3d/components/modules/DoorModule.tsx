@@ -616,10 +616,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
-        // 키큰장 도어는 가구와 동일한 높이 유지 (사이즈 변경 없음)
-        
-        // 도어 높이는 가구 높이와 동일하게 유지
-        finalDoorHeight = furnitureHeight;
+        // 도어는 단내림 천장 높이에 맞춰 크기가 줄어야 함
         
         // 가구 절대 위치 (단내림 구간 + 띄움 배치)
         // 가구는 단내림 천장에서 아래로 floatHeight만큼 떨어져 있음
@@ -627,15 +624,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
-        // 도어 상단은 가구 상단보다 5mm 아래 (upperGap)
-        const doorTopAbsolute = furnitureTopAbsolute - upperGap;  // 가구 상단 - 5mm
-        const doorBottomAbsolute = furnitureBottomAbsolute;       // 가구 하단과 동일
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장 - 5mm
+        const doorBottomAbsolute = floatHeight + 25;              // 띄움높이 + 25mm (도어 하단 갭)
+        
+        // 도어 높이 계산 (줄어든 높이)
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        
+        // 도어 중심 절대 위치
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        // 도어가 가구보다 5mm 아래에 있음
-        const doorOffset = -upperGap / 2;  // -2.5mm (도어 중심이 가구 중심보다 아래)
-        doorYPosition = mmToThreeUnits(doorOffset);
+        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -648,11 +648,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
           doorTopAbsolute,
+          doorBottomAbsolute,
           doorCenterAbsolute,
-          doorOffset,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '단내림 + 띄움: 도어는 가구 상단보다 5mm 아래 위치'
+          설명: '단내림 + 띄움: 도어 크기가 단내림 천장 높이에 맞춰 줄어듦'
         });
       } else {
         // 받침대 배치 + 단내림
