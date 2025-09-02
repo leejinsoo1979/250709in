@@ -627,9 +627,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 단내림 구간 도어 높이 계산
         // 도어 상단: 가구 상단에서 5mm 아래
-        // 도어 하단: 가구 하단과 동일
+        // 도어 하단: 일반구간과 동일하게 바닥에서 25mm
         const doorTopAbsolute = furnitureTopAbsolute - 5;  // 가구 상단 - 5mm
-        const doorBottomAbsolute = furnitureBottomAbsolute; // 가구 하단과 동일
+        const doorBottomAbsolute = 25;                      // 바닥에서 25mm (일반구간과 동일)
         
         // 도어 높이 = 상단 위치 - 하단 위치
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
@@ -2046,17 +2046,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
       
       // 엔드패널이 있는 경우 도어 크기 복원 및 위치 조정
+      // 단, 단내림이 활성화된 경우 이미 actualDoorWidth에 엔드패널이 포함되어 있으므로 추가하지 않음
       if (isLeftEndPanel || isRightEndPanel) {
-        // 노서라운드 커버도어: 엔드패널을 덮는 원래 슬롯 크기로 복원
-        doorWidth = actualDoorWidth + endPanelThickness - 3; // 582 + 18 - 3 = 597mm
+        if (spaceInfo.droppedCeiling?.enabled) {
+          // 단내림이 활성화된 경우: actualDoorWidth에 이미 엔드패널 두께가 포함됨
+          doorWidth = actualDoorWidth - 3; // 그대로 사용
+          console.log('단내림 + 노서라운드 엔드패널: 도어 크기 그대로 사용', { 
+            actualDoorWidth, 
+            doorWidth,
+            설명: 'zone별 slotWidth에 이미 엔드패널이 고려됨' 
+          });
+        } else {
+          // 단내림이 없는 경우: 엔드패널을 덮는 원래 슬롯 크기로 복원
+          doorWidth = actualDoorWidth + endPanelThickness - 3; // 582 + 18 - 3 = 597mm
+        }
         
-        // 도어 위치 보정
-        if (isLeftEndPanel) {
-          doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
-          console.log('왼쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
-        } else if (isRightEndPanel) {
-          doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
-          console.log('오른쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+        // 도어 위치 보정 (단내림이 없는 경우에만)
+        if (!spaceInfo.droppedCeiling?.enabled) {
+          if (isLeftEndPanel) {
+            doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+            console.log('왼쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+          } else if (isRightEndPanel) {
+            doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+            console.log('오른쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+          }
         }
       } else {
         // 중간 슬롯 또는 엔드패널 없는 경우
