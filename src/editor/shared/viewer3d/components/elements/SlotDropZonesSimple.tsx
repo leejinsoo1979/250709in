@@ -1009,8 +1009,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 단내림이 없을 때는 모든 가구를 확인해야 함
       const zoneExistingModules = spaceInfo.droppedCeiling?.enabled 
         ? latestPlacedModules.filter(m => {
-            // zone이 undefined인 경우 normal로 간주
-            const moduleZone = m.zone || 'normal';
+            // zone이 undefined인 경우 slotIndex로 판단
+            let moduleZone = m.zone;
+            if (!moduleZone && m.slotIndex !== undefined) {
+              // slotIndex로 zone 판단
+              const normalColumnCount = zoneInfo.normal.columnCount;
+              if (m.slotIndex < normalColumnCount) {
+                moduleZone = 'normal';
+              } else {
+                moduleZone = 'dropped';
+              }
+            }
+            moduleZone = moduleZone || 'normal';
             return moduleZone === zoneToUse;
           })
         : latestPlacedModules;
@@ -1033,20 +1043,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           moduleId: m.moduleId,
           slotIndex: m.slotIndex,
           isDualSlot: m.isDualSlot,
+          zone: m.zone,
           occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
         }))
       });
 
       let hasSlotConflict = zoneExistingModules.some(m => {
-        // zone이 다른 경우 충돌 검사 제외 (이미 필터링됨)
-        const moduleZone = m.zone || 'normal';
-        if (moduleZone !== zoneToUse) {
-          console.log('🔄 Zone이 다르므로 충돌 검사 제외:', {
-            targetZone: zoneToUse,
-            moduleZone: moduleZone,
-            moduleId: m.moduleId
-          });
-          return false;
+        // 단내림 영역에서는 영역 내 슬롯 인덱스로 비교
+        // zoneSlotIndex는 해당 zone 내에서의 인덱스
+        // m.slotIndex도 해당 zone 내에서의 인덱스여야 함
+        
+        // 기존 모듈의 zone 내 슬롯 인덱스 계산
+        let moduleZoneSlotIndex = m.slotIndex;
+        if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right') {
+          // 단내림이 오른쪽에 있는 경우
+          if (zoneToUse === 'dropped' && m.slotIndex >= zoneInfo.normal.columnCount) {
+            // 단내림 영역 모듈: 전체 인덱스에서 메인 영역 슬롯 수를 뺄
+            moduleZoneSlotIndex = m.slotIndex - zoneInfo.normal.columnCount;
+          }
         }
         
         if (isDual) {

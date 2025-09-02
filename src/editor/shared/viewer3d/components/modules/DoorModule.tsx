@@ -5,7 +5,7 @@ import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
-import { calculateSpaceIndexing } from '../../../utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
