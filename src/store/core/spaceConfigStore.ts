@@ -245,6 +245,12 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.installType = 'builtin';
       }
       
+      // 노서라운드 모드일 때 frameSize를 0으로 자동 설정
+      if (processedInfo.surroundType === 'no-surround' && !processedInfo.frameSize) {
+        processedInfo.frameSize = { left: 0, right: 0, top: 0 };
+        console.log('🔧 [SpaceConfigStore] 노서라운드 모드 - frameSize를 0으로 자동 설정');
+      }
+      
       // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
       if (processedInfo.droppedCeiling?.enabled && 
           (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {

@@ -265,6 +265,15 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       '문제': 'frameSize가 50이면 잘못된 값임!'
     });
     
+    // 노서라운드에서 frameSize가 잘못 설정된 경우 경고
+    if (frameSize && (frameSize.left > 0 || frameSize.right > 0)) {
+      console.error('🚨🚨🚨 [calculateFrameThickness] 노서라운드인데 frameSize가 0이 아님! 무시하고 0으로 처리합니다.', {
+        frameSize,
+        surroundType,
+        installType
+      });
+    }
+    
     // 노서라운드 모드에서는 frameSize를 무시하고 설치 타입과 벽 구성에 따라 자동 계산
     {
       // frameSize가 없으면 설치 타입과 벽 구성에 따라 자동 계산

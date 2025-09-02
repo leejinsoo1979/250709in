@@ -63,6 +63,17 @@ export class ColumnIndexer {
       timestamp: new Date().toISOString()
     });
     
+    // 노서라운드 모드에서 frameSize가 잘못 설정된 경우 경고
+    if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.frameSize && 
+        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+      console.error('🚨🚨🚨 [ColumnIndexer] 노서라운드 모드인데 frameSize가 0이 아님!', {
+        frameSize: spaceInfo.frameSize,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        설명: '노서라운드 모드에서는 frameSize가 모두 0이어야 합니다!'
+      });
+    }
+    
     if (!spaceInfo) {
       return {
         columnCount: 0,

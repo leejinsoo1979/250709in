@@ -33,6 +33,20 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
   const hasRightWall = spaceInfo.wallConfig.right;
+  
+  // 초기화 시 노서라운드 모드에서 frameSize가 잘못 설정된 경우 수정
+  React.useEffect(() => {
+    if (isNoSurround && spaceInfo.frameSize && 
+        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+      console.warn('⚠️ [SurroundControls] 노서라운드 모드인데 frameSize가 0이 아님. 수정합니다.', {
+        현재값: spaceInfo.frameSize,
+        surroundType: spaceInfo.surroundType
+      });
+      onUpdate({
+        frameSize: { left: 0, right: 0, top: 0 }
+      });
+    }
+  }, [isNoSurround]);
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
   const [frameSize, setFrameSize] = useState<FrameSize | any>(() => {
