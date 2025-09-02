@@ -284,6 +284,23 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     const indexing = calculateSpaceIndexing(spaceInfo);
     
+    // 빌트인+노서라운드 디버깅
+    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      console.log('🚨 [handleSlotDrop] 빌트인+노서라운드 indexing:', {
+        columnCount: indexing.columnCount,
+        columnWidth: indexing.columnWidth,
+        slotWidths: indexing.slotWidths,
+        threeUnitPositions: indexing.threeUnitPositions,
+        internalWidth: indexing.internalWidth,
+        spaceInfo: {
+          width: spaceInfo.width,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          gapConfig: spaceInfo.gapConfig
+        }
+      });
+    }
+    
     // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
     if (isSpecialDualFurniture && indexing.columnWidth < 550) {
       showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
@@ -860,6 +877,19 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         console.log('🎯 SlotDropZones - 노서라운드 엔드패널 슬롯 감지:', {
           슬롯인덱스: zoneSlotIndex,
           설명: 'FurnitureItem에서 자동으로 18mm 감소 처리'
+        });
+      }
+      
+      // 빌트인+노서라운드 디버깅
+      if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+        console.log('🚨 빌트인+노서라운드 새 모듈 배치:', {
+          moduleId: actualModuleId,
+          slotIndex: zoneSlotIndex,
+          position: finalPosition,
+          customWidth,
+          adjustedFurnitureWidth,
+          originalModuleWidth: actualModuleData.dimensions.width,
+          indexingSlotWidth: indexing.slotWidths?.[zoneSlotIndex]
         });
       }
       
