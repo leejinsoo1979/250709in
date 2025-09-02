@@ -155,8 +155,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const latestPlacedModules = storeState.placedModules;
     
     // spaceInfo와 indexing을 최신 상태로 다시 계산
-    // 드래그 데이터에 spaceInfo가 있으면 사용, 없으면 스토어에서 가져오기
-    let latestSpaceInfo = latestDragData?.spaceInfo || useSpaceConfigStore.getState().spaceInfo;
+    // 🔴🔴🔴 CRITICAL: 드래그 데이터의 spaceInfo를 무시하고 항상 최신 스토어 값 사용
+    // 드래그 시작 시점과 드롭 시점의 spaceInfo가 다를 수 있기 때문
+    let latestSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
     
     // 🔴🔴🔴 CRITICAL: 노서라운드 모드에서 frameSize 확인 및 수정
     console.log('🔴🔴🔴 [CRITICAL] handleSlotDrop 시점의 상태:', {
