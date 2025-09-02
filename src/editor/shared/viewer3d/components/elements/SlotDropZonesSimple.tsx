@@ -977,7 +977,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
       // 단내림이 없을 때는 모든 가구를 확인해야 함
       const zoneExistingModules = spaceInfo.droppedCeiling?.enabled 
-        ? latestPlacedModules.filter(m => m.zone === zoneToUse)
+        ? latestPlacedModules.filter(m => {
+            // zone이 undefined인 경우 normal로 간주
+            const moduleZone = m.zone || 'normal';
+            return moduleZone === zoneToUse;
+          })
         : latestPlacedModules;
       
       // 슬롯 점유 상태 디버깅
@@ -1003,6 +1007,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
 
       let hasSlotConflict = zoneExistingModules.some(m => {
+        // zone이 다른 경우 충돌 검사 제외 (이미 필터링됨)
+        const moduleZone = m.zone || 'normal';
+        if (moduleZone !== zoneToUse) {
+          console.log('🔄 Zone이 다르므로 충돌 검사 제외:', {
+            targetZone: zoneToUse,
+            moduleZone: moduleZone,
+            moduleId: m.moduleId
+          });
+          return false;
+        }
+        
         if (isDual) {
           // 듀얼 가구는 2개 슬롯 차지
           let conflict = false;
