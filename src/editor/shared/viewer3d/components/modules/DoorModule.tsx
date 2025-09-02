@@ -1305,10 +1305,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
       
       // 노서라운드 도어 크기: 1200mm 기준 균등분할
-      const doorGap = 3; // 도어 사이 간격
-      const edgeGap = 1.5; // 양쪽 끝 간격
-      leftDoorWidth = (totalWidth - doorGap - 2 * edgeGap) / 2;  // 597mm
-      rightDoorWidth = (totalWidth - doorGap - 2 * edgeGap) / 2; // 597mm
+      const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
+      const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
+      leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;  // 597mm
+      rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2; // 597mm
     } else {
       // 서라운드 모드: 일반 도어
       // slotWidths가 있으면 사용, 없으면 totalWidth 사용
@@ -1317,15 +1317,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         slot2Width = slotWidths[1];
         totalWidth = slot1Width + slot2Width;
       }
-      const doorGap = 6; // 도어 사이 간격 (각 3mm씩)
-      leftDoorWidth = (totalWidth - doorGap) / 2;
-      rightDoorWidth = (totalWidth - doorGap) / 2;
+      const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
+      leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
+      rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
     }
+    
+    // 모드별 갭 값 설정
+    const doorGap = spaceInfo.surroundType === 'no-surround' ? 3 : 6;
+    const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 0;
     
     console.log('🚪 듀얼 도어:', {
       totalWidth,
       leftDoorWidth,
       rightDoorWidth,
+      doorGap,
+      edgeGap,
       doorAdjustment,
       slotIndex,
       columnCount,
@@ -1342,11 +1348,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 도어 위치 계산
     let leftDoorCenter, rightDoorCenter;
-    
-    // 노서라운드: 1200mm 기준으로 배치
-    // 서라운드: 1182mm 기준으로 배치
-    const doorGap = 3;
-    const edgeGap = 1.5;
     
     // 도어 위치는 전체 너비 기준으로 계산
     // doorAdjustment가 도어 그룹 전체를 이동시킴
