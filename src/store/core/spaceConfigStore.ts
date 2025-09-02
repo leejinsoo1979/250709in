@@ -196,9 +196,9 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   // Configurator 초기값 설정
   surroundType: 'surround',  // 기본값을 서라운드로 변경
   frameSize: {
-    left: 50,  // 서라운드 기본 프레임 크기
-    right: 50,
-    top: 10
+    left: DEFAULT_FRAME_VALUES.LEFT,  // 서라운드 기본 프레임 크기
+    right: DEFAULT_FRAME_VALUES.RIGHT,
+    top: DEFAULT_FRAME_VALUES.TOP
   },
   gapConfig: {
     left: 2, // 기본 이격거리 2mm
