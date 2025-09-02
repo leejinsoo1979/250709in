@@ -727,6 +727,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 영역별 내경 공간 재계산
       const recalculatedZoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+      
+      console.log('🔴🔴🔴 [CRITICAL DEBUG] zoneSpaceInfo at drop:', {
+        zone: zoneToUse,
+        surroundType: zoneSpaceInfo.surroundType,
+        frameSize: zoneSpaceInfo.frameSize,
+        width: zoneSpaceInfo.width,
+        internalSpace: recalculatedZoneInternalSpace
+      });
+      
       if (zoneToUse === 'dropped') {
         // 단내림 영역은 높이 조정
         const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
@@ -1586,6 +1595,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       
       // 새 모듈 배치
+      console.log('🔴🔴🔴 [CRITICAL] Final furniture position:', {
+        moduleId: zoneTargetModuleId,
+        furnitureX,
+        furnitureX_mm: furnitureX * 100,
+        zone: zoneToUse,
+        slotIndex: zoneSlotIndex,
+        surroundType: spaceInfo.surroundType,
+        frameSize: spaceInfo.frameSize,
+        zoneStartX: zoneToUse === 'dropped' ? zoneInfo.dropped?.startX : zoneInfo.normal?.startX
+      });
+      
       const newModule: any = {
         id: placedId,
         moduleId: zoneTargetModuleId, // 정확한 너비를 포함한 모듈 ID 사용
