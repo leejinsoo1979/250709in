@@ -326,8 +326,30 @@ export class ColumnIndexer {
         '마지막 슬롯': slotWidths[slotWidths.length - 1],
         '엔드패널 위치': !spaceInfo.wallConfig?.left ? '좌측' : (!spaceInfo.wallConfig?.right ? '우측' : '없음')
       });
+    } else if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      // 노서라운드 빌트인: 전체 너비에서 이격거리만 빼고 균등 분할
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      const rightGap = spaceInfo.gapConfig?.right || 2;
+      const availableWidth = totalWidth - leftGap - rightGap;
+      const baseSlotWidth = Math.floor(availableWidth / columnCount);
+      const remainder = availableWidth % columnCount;
+      
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(i < remainder ? baseSlotWidth + 1 : baseSlotWidth);
+      }
+      
+      // 디버깅 로그
+      console.log('🔧 노서라운드 빌트인 슬롯 계산:', {
+        '전체 공간 너비': totalWidth,
+        '좌측 이격거리': leftGap,
+        '우측 이격거리': rightGap,
+        '사용 가능 너비': availableWidth,
+        '컬럼 수': columnCount,
+        '기본 슬롯 너비': baseSlotWidth,
+        '슬롯 너비 배열': slotWidths
+      });
     } else {
-      // 서라운드 모드 또는 노서라운드 빌트인: 기존 로직 (내경 기준)
+      // 서라운드 모드: 기존 로직 (내경 기준)
       const baseWidth = Math.floor(internalWidth / columnCount);
       const remainder = internalWidth % columnCount;
       
@@ -732,8 +754,19 @@ export class ColumnIndexer {
           
           slotWidths.push(slotWidth);
         }
+      } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+        // 노서라운드 빌트인: 전체 너비에서 이격거리만 빼고 균등 분할
+        const leftGap = spaceInfo.gapConfig?.left || 2;
+        const rightGap = spaceInfo.gapConfig?.right || 2;
+        const availableWidth = spaceInfo.width - leftGap - rightGap;
+        const baseSlotWidth = Math.floor(availableWidth / columnCount);
+        const remainder = availableWidth % columnCount;
+        
+        for (let i = 0; i < columnCount; i++) {
+          slotWidths.push(i < remainder ? baseSlotWidth + 1 : baseSlotWidth);
+        }
       } else {
-        // 서라운드 모드 또는 빌트인: 기존 로직
+        // 서라운드 모드: 기존 로직 (내경 기준)
         const baseWidth = Math.floor(internalWidth / columnCount);
         const remainder = internalWidth % columnCount;
         for (let i = 0; i < columnCount; i++) {
