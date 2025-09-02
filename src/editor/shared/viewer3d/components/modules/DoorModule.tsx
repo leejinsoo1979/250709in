@@ -1439,6 +1439,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
     }
 
+    // 실제 렌더링 위치 계산
+    // 왼쪽 도어의 힌지는 leftHingeX 위치에 있고, 도어는 힌지에서 (leftDoorWidthUnits/2 - hingeOffsetUnits) 만큼 떨어진 곳에 렌더링됨
+    const leftDoorCenterInGroup = leftHingeX + (leftDoorWidthUnits / 2 - hingeOffsetUnits); // 그룹 내에서 왼쪽 도어 중심
+    const leftDoorLeftEdgeInGroup = leftDoorCenterInGroup - leftDoorWidthUnits / 2; // 그룹 내에서 왼쪽 도어의 왼쪽 끝
+    const leftDoorLeftEdgeGlobal = doorGroupX + leftDoorLeftEdgeInGroup; // 전역 좌표계에서 왼쪽 도어의 왼쪽 끝
+    const cabinetLeftEdge = doorGroupX - mmToThreeUnits(totalWidth / 2); // 캐비넷의 왼쪽 끝
+    const actualLeftGap = (leftDoorLeftEdgeGlobal - cabinetLeftEdge) * 100; // mm 단위로 변환
+    
     console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
       slotWidths,
@@ -1454,7 +1462,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftXOffset: leftXOffset.toFixed(3),
       rightXOffset: rightXOffset.toFixed(3),
       leftHingeX: leftHingeX.toFixed(3),
-      rightHingeX: rightHingeX.toFixed(3)
+      rightHingeX: rightHingeX.toFixed(3),
+      '실제_렌더링_갭': {
+        '왼쪽_도어_왼쪽끝_갭_mm': actualLeftGap.toFixed(2),
+        '갭_정상여부': Math.abs(actualLeftGap - 1.5) < 0.01 ? '✅ 정상 1.5mm' : `❌ 비정상 (${actualLeftGap.toFixed(2)}mm)`,
+        '캐비넷_왼쪽끝_X': (cabinetLeftEdge * 100).toFixed(2),
+        '왼쪽도어_왼쪽끝_X': (leftDoorLeftEdge * 100).toFixed(2)
+      }
     });
 
     return (
