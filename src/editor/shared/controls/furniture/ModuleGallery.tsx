@@ -80,22 +80,51 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setFurniturePlacementMode(true);
     setIsSlotDragging(true); // 슬롯 드래그 시작
     
-    console.log('🎯 [ModuleGallery] handleDragStart - spaceInfo 체크:', {
+    console.log('🚨🚨🚨 [CRITICAL DEBUG] handleDragStart - spaceInfo 완전 분석:', {
       width: spaceInfo.width,
       surroundType: spaceInfo.surroundType,
       installType: spaceInfo.installType,
       gapConfig: spaceInfo.gapConfig,
-      frameSize: spaceInfo.frameSize
+      frameSize: spaceInfo.frameSize,
+      'frameSize.left 값': spaceInfo.frameSize?.left,
+      'frameSize.right 값': spaceInfo.frameSize?.right,
+      'frameSize가 50인가?': spaceInfo.frameSize?.left === 50 || spaceInfo.frameSize?.right === 50,
+      '문제': spaceInfo.surroundType === 'no-surround' && (spaceInfo.frameSize?.left === 50 || spaceInfo.frameSize?.right === 50) ? '🔴🔴🔴 노서라운드인데 frameSize가 50임!!!' : '정상',
+      timestamp: new Date().toISOString()
     });
     
-    // 영역별 인덱싱 계산
-    const indexing = calculateSpaceIndexing(spaceInfo);
+    // 노서라운드 모드에서 frameSize를 강제로 0으로 수정
+    let correctedSpaceInfo = spaceInfo;
+    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.frameSize && 
+        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+      console.error('🔴🔴🔴 [ModuleGallery] 노서라운드인데 frameSize가 잘못됨! 강제 수정!', {
+        '원래 frameSize': spaceInfo.frameSize
+      });
+      correctedSpaceInfo = {
+        ...spaceInfo,
+        frameSize: { left: 0, right: 0, top: 0 }
+      };
+    }
     
-    console.log('🎯 [ModuleGallery] indexing 결과:', {
+    // 영역별 인덱싱 계산
+    const indexing = calculateSpaceIndexing(correctedSpaceInfo);
+    
+    console.log('🚨🚨🚨 [CRITICAL DEBUG] indexing 계산 결과 완전 분석:', {
       columnWidth: indexing.columnWidth,
       slotWidths: indexing.slotWidths,
       columnCount: indexing.columnCount,
-      columnBoundaries: indexing.columnBoundaries
+      columnBoundaries: indexing.columnBoundaries,
+      threeUnitPositions: indexing.threeUnitPositions,
+      '첫번째 슬롯 위치': indexing.threeUnitPositions?.[0],
+      '마지막 슬롯 위치': indexing.threeUnitPositions?.[indexing.columnCount - 1],
+      internalWidth: indexing.internalWidth,
+      internalStartX: indexing.internalStartX,
+      '문제체크': {
+        '첫슬롯이 -15가 아님?': indexing.threeUnitPositions?.[0] !== -15,
+        '실제 첫슬롯 위치': indexing.threeUnitPositions?.[0],
+        '예상 첫슬롯 위치': -15,
+        '차이': indexing.threeUnitPositions?.[0] ? indexing.threeUnitPositions[0] - (-15) : 0
+      }
     });
     
     // 노서라운드 모드 디버깅

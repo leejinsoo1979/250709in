@@ -282,16 +282,36 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     const isSpecialDualFurniture = dragData.moduleData.id.includes('dual-2drawer-styler-') || 
                                  dragData.moduleData.id.includes('dual-4drawer-pantshanger-');
     
-    const indexing = calculateSpaceIndexing(spaceInfo);
+    // 노서라운드 모드에서 frameSize를 강제로 0으로 수정
+    let correctedSpaceInfo = spaceInfo;
+    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.frameSize && 
+        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+      console.error('🔴🔴🔴 [SlotDropZones] 노서라운드인데 frameSize가 잘못됨! 강제 수정!', {
+        '원래 frameSize': spaceInfo.frameSize
+      });
+      correctedSpaceInfo = {
+        ...spaceInfo,
+        frameSize: { left: 0, right: 0, top: 0 }
+      };
+    }
+    
+    const indexing = calculateSpaceIndexing(correctedSpaceInfo);
     
     // 빌트인+노서라운드 디버깅
     if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-      console.log('🚨 [handleSlotDrop] 빌트인+노서라운드 indexing:', {
+      console.log('🔴🔴🔴 [CRITICAL] handleSlotDrop 시점의 상태:', {
+        'spaceInfo.frameSize': spaceInfo.frameSize,
+        'frameSize.left': spaceInfo.frameSize?.left,
+        'frameSize.right': spaceInfo.frameSize?.right,
+        'frameSize가 50인가?': spaceInfo.frameSize?.left === 50 || spaceInfo.frameSize?.right === 50,
         columnCount: indexing.columnCount,
         columnWidth: indexing.columnWidth,
         slotWidths: indexing.slotWidths,
         threeUnitPositions: indexing.threeUnitPositions,
+        '첫슬롯 위치': indexing.threeUnitPositions?.[0],
+        '마지막슬롯 위치': indexing.threeUnitPositions?.[indexing.columnCount - 1],
         internalWidth: indexing.internalWidth,
+        internalStartX: indexing.internalStartX,
         spaceInfo: {
           width: spaceInfo.width,
           surroundType: spaceInfo.surroundType,
@@ -478,22 +498,29 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
     }
     
-    // 최종 위치 계산 - zone 정보 전달
-    const finalX = calculateFurniturePosition(zoneSlotIndex, actualModuleId, spaceInfo, zone);
+    // 최종 위치 계산 - zone 정보 전달 (수정된 spaceInfo 사용)
+    const finalX = calculateFurniturePosition(zoneSlotIndex, actualModuleId, correctedSpaceInfo, zone);
     
     // 빌트인+노서라운드 모드 디버깅
     if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-      console.log('🚨 빌트인+노서라운드 가구 배치 위치:', {
+      console.log('🔴🔴🔴 [CRITICAL] 최종 배치 위치 분석:', {
         slotIndex: zoneSlotIndex,
         moduleId: actualModuleId,
-        calculatedX: finalX,
+        '계산된 X 위치': finalX,
+        '예상 위치 (슬롯0)': -15,
+        '실제와 예상 차이': finalX !== null ? finalX - (-15) : 'null',
+        '차이가 0.5인가?': finalX !== null ? Math.abs(finalX - (-15) - 0.5) < 0.01 : false,
+        '차이가 0.5면 50mm 이격!!!': finalX !== null && Math.abs(finalX - (-15) - 0.5) < 0.01,
         customWidth,
         indexing: {
           columnCount: indexing.columnCount,
           slotWidths: indexing.slotWidths,
-          threeUnitPositions: indexing.threeUnitPositions
+          threeUnitPositions: indexing.threeUnitPositions,
+          '첫슬롯위치': indexing.threeUnitPositions?.[0],
+          internalStartX: indexing.internalStartX
         },
         spaceInfo: {
+          frameSize: spaceInfo.frameSize,
           surroundType: spaceInfo.surroundType,
           installType: spaceInfo.installType,
           gapConfig: spaceInfo.gapConfig
