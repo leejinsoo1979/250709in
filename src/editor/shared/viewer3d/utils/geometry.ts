@@ -113,20 +113,9 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   // 띄워서 배치여도 내경 높이는 변하지 않음 (가구 배치 공간은 동일)
   // 단지 시작 Y 위치만 올라감
   
-  // 상부 프레임 높이 차감 (노서라운드 빌트인은 calculateTopBottomFrameHeight에서 0 반환)
+  // 상부 프레임 높이 차감 (모든 모드에서 상부프레임 있음)
   internalHeight -= topFrameHeight;
   internalHeight -= baseFrameHeight;
-  
-  if (spaceInfo.surroundType === 'no-surround') {
-    console.log('📐 노서라운드 모드 내경 계산:', { 
-      installType: spaceInfo.installType,
-      topFrameHeight,
-      internalHeight,
-      설명: spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' 
-        ? '빌트인(양쪽벽) - 상부프레임 없음' 
-        : '세미스탠딩/프리스탠딩 - 상부프레임 있음'
-    });
-  }
   
   // 단내림 구간의 경우 높이 조정
   if (spaceInfo.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
@@ -439,19 +428,14 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
 /**
  * 상단/하단 프레임 높이 계산 (mm 단위)
  * 기본값은 10mm이고, frameSize 설정이 있으면 그 값을 사용
- * 노서라운드 빌트인(양쪽 벽)에서는 상부프레임이 없으므로 0 반환
+ * 모든 모드에서 상부프레임은 항상 존재함
  */
 export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
     return SURROUND_FRAME_THICKNESS;
   }
   
-  // 노서라운드 빌트인 모드에서는 상부프레임이 없음 (양쪽 벽이 있을 때)
-  if (spaceInfo.surroundType === 'no-surround' && 
-      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-    return 0;
-  }
-  
   // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
+  // 모든 모드(서라운드, 노서라운드)에서 상부프레임은 항상 존재
   return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
 }; 
