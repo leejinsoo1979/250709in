@@ -721,10 +721,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         ...latestSpaceInfo,
         zone: zoneToUse,  // zone 정보 추가
         width: zoneOuterWidth,  // 영역별 너비 설정
-        // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
-        frameSize: latestSpaceInfo.surroundType === 'no-surround' 
-          ? { left: 0, right: 0, top: 0 } 
-          : latestSpaceInfo.frameSize
+        // 드래그 데이터의 frameSize 사용 (노서라운드 모드에서는 0)
+        frameSize: latestSpaceInfo.frameSize
       };
       
       console.log('🔧 [SlotDropZonesSimple] zoneSpaceInfo 생성:', {
