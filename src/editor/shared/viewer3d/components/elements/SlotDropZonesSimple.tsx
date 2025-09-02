@@ -1176,7 +1176,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let finalX: number;
       
       // 전체 indexing 정보를 가져와서 zone별 실제 위치 사용
-      const fullIndexing = calculateSpaceIndexing(spaceInfo);
+      const fullIndexing = calculateSpaceIndexing(latestSpaceInfo); // spaceInfo 대신 latestSpaceInfo 사용
       
       // zones 디버깅
       console.log('🚨🚨 fullIndexing.zones 확인:', {
@@ -1201,9 +1201,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneSlotIndex,
         isDual,
         spaceInfo: {
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          droppedCeiling: spaceInfo.droppedCeiling
+          surroundType: latestSpaceInfo.surroundType,
+          installType: latestSpaceInfo.installType,
+          droppedCeiling: latestSpaceInfo.droppedCeiling
         }
       });
       
@@ -1213,7 +1213,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // threeUnitPositions가 없으면 직접 계산
         if (!droppedPositions || droppedPositions.length === 0) {
-          console.error('⚠️ zones.dropped.threeUnitPositions가 없습니다. 직접 계산합니다.');
+          console.log('⚠️ zones.dropped.threeUnitPositions가 없습니다. 직접 계산합니다.');
           // zoneInfo에서 직접 계산
           const startX = zoneInfo.dropped.startX;
           const positions = [];
