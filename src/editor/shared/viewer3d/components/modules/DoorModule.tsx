@@ -1447,6 +1447,40 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const cabinetLeftEdge = doorGroupX - mmToThreeUnits(totalWidth / 2); // 캐비넷의 왼쪽 끝
     const actualLeftGap = (leftDoorLeftEdgeGlobal - cabinetLeftEdge) * 100; // mm 단위로 변환
     
+    // 오른쪽 도어 위치 계산
+    const rightDoorCenterInGroup = rightHingeX - (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 그룹 내에서 오른쪽 도어 중심
+    const rightDoorRightEdgeInGroup = rightDoorCenterInGroup + rightDoorWidthUnits / 2; // 그룹 내에서 오른쪽 도어의 오른쪽 끝
+    const rightDoorRightEdgeGlobal = doorGroupX + rightDoorRightEdgeInGroup; // 전역 좌표계에서 오른쪽 도어의 오른쪽 끝
+    const cabinetRightEdge = doorGroupX + mmToThreeUnits(totalWidth / 2); // 캐비넷의 오른쪽 끝
+    const actualRightGap = (cabinetRightEdge - rightDoorRightEdgeGlobal) * 100; // mm 단위로 변환
+    
+    // 도어 사이 갭 계산
+    const leftDoorRightEdgeInGroup = leftDoorCenterInGroup + leftDoorWidthUnits / 2; // 왼쪽 도어의 오른쪽 끝
+    const rightDoorLeftEdgeInGroup = rightDoorCenterInGroup - rightDoorWidthUnits / 2; // 오른쪽 도어의 왼쪽 끝
+    const actualCenterGap = (rightDoorLeftEdgeInGroup - leftDoorRightEdgeInGroup) * 100; // mm 단위로 변환
+    
+    // 인접 가구와의 갭 검증 (싱글 상부장과 맞닿은 경우)
+    let adjacentGapInfo = null;
+    if (slotIndex > 0) {
+      // 왼쪽에 인접한 싱글 캐비넷이 있을 수 있음
+      // 싱글 캐비넷의 도어 오른쪽 끝: slotIndex - 1 위치의 도어
+      // 듀얼 캐비넷의 왼쪽 도어 왼쪽 끝과의 거리를 계산
+      const prevSlotCenterX = mmToThreeUnits((slotIndex - 1 - indexing.columnCount / 2 + 0.5) * indexing.columnWidth);
+      const prevSlotWidth = slotWidths ? slotWidths[slotIndex - 1] : indexing.columnWidth;
+      const prevDoorWidth = prevSlotWidth - 3; // 싱글 도어는 슬롯 너비 - 3mm
+      const prevDoorRightEdge = prevSlotCenterX + mmToThreeUnits(prevDoorWidth / 2);
+      const gapBetweenDoors = (leftDoorLeftEdgeGlobal - prevDoorRightEdge) * 100; // mm 단위
+      
+      adjacentGapInfo = {
+        '인접_타입': '왼쪽_싱글',
+        '싱글_도어_오른쪽끝': (prevDoorRightEdge * 100).toFixed(2),
+        '듀얼_왼쪽도어_왼쪽끝': (leftDoorLeftEdgeGlobal * 100).toFixed(2),
+        '도어_간_갭_mm': gapBetweenDoors.toFixed(2),
+        '예상_갭': '3mm (싱글 1.5mm + 듀얼 1.5mm)',
+        '갭_검증': Math.abs(gapBetweenDoors - 3) < 0.1 ? '✅ 정상' : `❌ 비정상 (${gapBetweenDoors.toFixed(2)}mm)`
+      };
+    }
+    
     console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
       slotWidths,
@@ -1464,11 +1498,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftHingeX: leftHingeX.toFixed(3),
       rightHingeX: rightHingeX.toFixed(3),
       '실제_렌더링_갭': {
-        '왼쪽_도어_왼쪽끝_갭_mm': actualLeftGap.toFixed(2),
-        '갭_정상여부': Math.abs(actualLeftGap - 1.5) < 0.01 ? '✅ 정상 1.5mm' : `❌ 비정상 (${actualLeftGap.toFixed(2)}mm)`,
-        '캐비넷_왼쪽끝_X': (cabinetLeftEdge * 100).toFixed(2),
-        '왼쪽도어_왼쪽끝_X': (leftDoorLeftEdgeGlobal * 100).toFixed(2)
-      }
+        '왼쪽_끝_갭_mm': actualLeftGap.toFixed(2),
+        '중간_갭_mm': actualCenterGap.toFixed(2),
+        '오른쪽_끝_갭_mm': actualRightGap.toFixed(2),
+        '갭_검증': {
+          '왼쪽_1.5mm': Math.abs(actualLeftGap - 1.5) < 0.1 ? '✅' : `❌ ${actualLeftGap.toFixed(2)}mm`,
+          '중간_3mm': Math.abs(actualCenterGap - 3) < 0.1 ? '✅' : `❌ ${actualCenterGap.toFixed(2)}mm`,
+          '오른쪽_1.5mm': Math.abs(actualRightGap - 1.5) < 0.1 ? '✅' : `❌ ${actualRightGap.toFixed(2)}mm`
+        },
+        '캐비넷_경계': {
+          '왼쪽끝_X': (cabinetLeftEdge * 100).toFixed(2),
+          '오른쪽끝_X': (cabinetRightEdge * 100).toFixed(2)
+        },
+        '도어_위치': {
+          '왼쪽도어_왼쪽끝': (leftDoorLeftEdgeGlobal * 100).toFixed(2),
+          '왼쪽도어_오른쪽끝': ((doorGroupX + leftDoorRightEdgeInGroup) * 100).toFixed(2),
+          '오른쪽도어_왼쪽끝': ((doorGroupX + rightDoorLeftEdgeInGroup) * 100).toFixed(2),
+          '오른쪽도어_오른쪽끝': (rightDoorRightEdgeGlobal * 100).toFixed(2)
+        }
+      },
+      ...(adjacentGapInfo && { '인접_가구_갭': adjacentGapInfo })
     });
 
     return (
@@ -1920,6 +1969,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
     }
     
+    // 싱글 도어 갭 검증
+    const singleDoorLeftEdge = doorGroupX - doorWidthUnits / 2; // 도어 왼쪽 끝
+    const singleDoorRightEdge = doorGroupX + doorWidthUnits / 2; // 도어 오른쪽 끝
+    const singleCabinetLeftEdge = doorGroupX - mmToThreeUnits(actualDoorWidth / 2); // 캐비넷 왼쪽 끝
+    const singleCabinetRightEdge = doorGroupX + mmToThreeUnits(actualDoorWidth / 2); // 캐비넷 오른쪽 끝
+    const singleLeftGap = (singleDoorLeftEdge - singleCabinetLeftEdge) * 100; // mm 단위
+    const singleRightGap = (singleCabinetRightEdge - singleDoorRightEdge) * 100; // mm 단위
+    
     console.log('🚪 싱글 도어 크기:', {
       actualDoorWidth,
       doorWidth,
@@ -1932,7 +1989,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorGroupX,
       surroundType: spaceInfo.surroundType,
       fallbackColumnWidth: indexing.columnWidth,
-      moduleDataId: moduleData?.id
+      moduleDataId: moduleData?.id,
+      '갭_검증': {
+        '왼쪽_갭_mm': singleLeftGap.toFixed(2),
+        '오른쪽_갭_mm': singleRightGap.toFixed(2),
+        '갭_정상여부': Math.abs(singleLeftGap - 1.5) < 0.1 && Math.abs(singleRightGap - 1.5) < 0.1 ? '✅ 양쪽 1.5mm' : `❌ 비정상`,
+        '캐비넷_너비': actualDoorWidth,
+        '도어_너비': doorWidth
+      }
     });
     
     // 조정된 힌지 위치 사용
