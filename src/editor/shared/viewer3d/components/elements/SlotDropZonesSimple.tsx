@@ -206,27 +206,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 단내림이 활성화되어 있는 경우, 마우스 X 위치로 영역 판단
     let zoneToUse: 'normal' | 'dropped' | undefined;
     
-    // droppedCeiling 객체 자체가 있는지 먼저 확인
-    const hasDroppedCeiling = spaceInfo.droppedCeiling && spaceInfo.droppedCeiling.enabled === true;
+    // droppedCeiling 객체 자체가 있는지 먼저 확인 - latestSpaceInfo 사용
+    const hasDroppedCeiling = latestSpaceInfo.droppedCeiling && latestSpaceInfo.droppedCeiling.enabled === true;
     
     console.log('🔍 [SlotDropZonesSimple] 단내림 체크:', {
       hasDroppedCeiling,
-      droppedCeiling: spaceInfo.droppedCeiling,
-      enabled: spaceInfo.droppedCeiling?.enabled,
-      width: spaceInfo.droppedCeiling?.width,
-      position: spaceInfo.droppedCeiling?.position
+      droppedCeiling: latestSpaceInfo.droppedCeiling,
+      enabled: latestSpaceInfo.droppedCeiling?.enabled,
+      width: latestSpaceInfo.droppedCeiling?.width,
+      position: latestSpaceInfo.droppedCeiling?.position
     });
     
     if (hasDroppedCeiling) {
       try {
         console.log('🔍 [SlotDropZonesSimple] calculateZoneSlotInfo 호출 전:', {
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          droppedCeiling: spaceInfo.droppedCeiling,
-          customColumnCount: spaceInfo.customColumnCount
+          surroundType: latestSpaceInfo.surroundType,
+          installType: latestSpaceInfo.installType,
+          droppedCeiling: latestSpaceInfo.droppedCeiling,
+          customColumnCount: latestSpaceInfo.customColumnCount
         });
         
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(latestSpaceInfo, latestSpaceInfo.customColumnCount);
         
         console.log('🔍 [SlotDropZonesSimple] calculateZoneSlotInfo 결과:', {
           zoneInfo,

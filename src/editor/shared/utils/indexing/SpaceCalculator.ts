@@ -25,24 +25,30 @@ export class SpaceCalculator {
     
     // 내경 계산: 노서라운드인 경우 엔드패널과 gapConfig 고려, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 이격거리는 빌트인에서만 반영
+      // 노서라운드: 이격거리와 엔드패널 고려
       let leftReduction = 0;
       let rightReduction = 0;
+      const leftGap = spaceInfo.gapConfig?.left || 0;
+      const rightGap = spaceInfo.gapConfig?.right || 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 노서라운드 모드에서는 이격거리 무시 (벽에 바로 붙음)
-        leftReduction = 0;
-        rightReduction = 0;
+        // 빌트인: 양쪽 벽 이격거리 고려
+        leftReduction = leftGap;
+        rightReduction = rightGap;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면 오른쪽에 엔드패널
-          leftReduction = 0;  // 이격거리 무시
-          rightReduction = END_PANEL_THICKNESS;  // 오른쪽은 엔드패널(18mm)만
+        // 세미스탠딩: 벽 있는 쪽 이격거리 + 벽 없는 쪽 엔드패널
+        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+          // 왼쪽 벽, 오른쪽 엔드패널
+          leftReduction = leftGap;
+          rightReduction = END_PANEL_THICKNESS;
+        } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
+          // 오른쪽 벽, 왼쪽 엔드패널
+          leftReduction = END_PANEL_THICKNESS;
+          rightReduction = rightGap;
         } else {
-          // 오른쪽 벽이 있으면 왼쪽에 엔드패널
-          leftReduction = END_PANEL_THICKNESS;    // 왼쪽은 엔드패널(18mm)만
-          rightReduction = 0;  // 이격거리 무시
+          // fallback (일반적으로 오른쪽 엔드패널)
+          leftReduction = leftGap;
+          rightReduction = END_PANEL_THICKNESS;
         }
       } else {
         // 프리스탠딩: 양쪽 벽이 없으므로 양쪽 모두 엔드패널(18mm)만

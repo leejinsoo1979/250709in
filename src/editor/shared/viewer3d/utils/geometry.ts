@@ -83,12 +83,24 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   if (spaceInfo.surroundType === 'no-surround') {
     // 노서라운드: 설치 유형에 따라 다르게 계산
+    const leftGap = spaceInfo.gapConfig?.left || 0;
+    const rightGap = spaceInfo.gapConfig?.right || 0;
+    
     if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
-      internalWidth = spaceInfo.width;
+      // 빌트인: 양쪽 벽 이격거리 고려
+      internalWidth = spaceInfo.width - leftGap - rightGap;
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
-      internalWidth = spaceInfo.width - 18; // 엔드패널 두께 18mm
+      // 세미스탠딩: 벽 있는 쪽 이격거리 + 벽 없는 쪽 엔드패널
+      if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+        // 왼쪽 벽, 오른쪽 엔드패널
+        internalWidth = spaceInfo.width - leftGap - 18;
+      } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
+        // 오른쪽 벽, 왼쪽 엔드패널
+        internalWidth = spaceInfo.width - 18 - rightGap;
+      } else {
+        // fallback (일반적으로 오른쪽 엔드패널)
+        internalWidth = spaceInfo.width - leftGap - 18;
+      }
     } else {
       // 프리스탠딩: 양쪽 엔드패널
       internalWidth = spaceInfo.width - 36; // 양쪽 엔드패널 18mm * 2
