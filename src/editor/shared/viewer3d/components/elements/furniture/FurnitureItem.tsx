@@ -947,11 +947,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
     
-    if (targetZone.slotWidths && placedModule.slotIndex !== undefined && targetZone.slotWidths[placedModule.slotIndex] !== undefined) {
-      if (isDualFurniture && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-        originalSlotWidthMm = targetZone.slotWidths[placedModule.slotIndex] + targetZone.slotWidths[placedModule.slotIndex + 1];
+    // 단내림 구간에서 로컬 슬롯 인덱스 계산
+    let localSlotIndex = placedModule.slotIndex;
+    if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+      // 단내림이 오른쪽: dropped zone는 normal zone 뒤에 위치
+      localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+    } else if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+      // 단내림이 왼쪽: normal zone는 dropped zone 뒤에 위치  
+      localSlotIndex = placedModule.slotIndex - zoneInfo.dropped.columnCount;
+    }
+    
+    if (targetZone.slotWidths && localSlotIndex !== undefined && localSlotIndex >= 0 && targetZone.slotWidths[localSlotIndex] !== undefined) {
+      if (isDualFurniture && localSlotIndex < targetZone.slotWidths.length - 1) {
+        originalSlotWidthMm = targetZone.slotWidths[localSlotIndex] + targetZone.slotWidths[localSlotIndex + 1];
       } else {
-        originalSlotWidthMm = targetZone.slotWidths[placedModule.slotIndex];
+        originalSlotWidthMm = targetZone.slotWidths[localSlotIndex];
         
         // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우, 엔드패널 두께를 더해서 원래 슬롯 크기 복원
         if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture) {
@@ -960,20 +970,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           
           if (spaceInfo.installType === 'freestanding') {
             // 벽없음: 양쪽 끝 슬롯
-            if (placedModule.slotIndex === 0 || placedModule.slotIndex === columnCount - 1) {
+            if (localSlotIndex === 0 || localSlotIndex === columnCount - 1) {
               originalSlotWidthMm += END_PANEL_THICKNESS;
               console.log('🔧 노서라운드 단내림 구간 - 엔드패널 슬롯 도어 크기 복원:', {
                 zone: placedModule.zone,
                 slotIndex: placedModule.slotIndex,
+                localSlotIndex,
                 원래크기: originalSlotWidthMm - END_PANEL_THICKNESS,
                 복원크기: originalSlotWidthMm
               });
             }
           } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
             // 한쪽벽: 엔드패널이 있는 쪽 슬롯
-            if (!spaceInfo.wallConfig?.left && placedModule.slotIndex === 0) {
+            if (!spaceInfo.wallConfig?.left && localSlotIndex === 0) {
               originalSlotWidthMm += END_PANEL_THICKNESS;
-            } else if (!spaceInfo.wallConfig?.right && placedModule.slotIndex === columnCount - 1) {
+            } else if (!spaceInfo.wallConfig?.right && localSlotIndex === columnCount - 1) {
               originalSlotWidthMm += END_PANEL_THICKNESS;
             }
           }
@@ -1129,15 +1140,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // adjustedPosition 계산 - 단내림 + 노서라운드일 때 위치 보정
   let adjustedPosition = placedModule.position;
   
-  // 단내림 + 노서라운드일 때 올바른 슬롯 위치 계산
-  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && spaceInfo.surroundType === 'no-surround' && !isFurnitureDragging) {
+  // 단내림일 때 올바른 슬롯 위치 계산 (서라운드/노서라운드 모두)
+  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && !isFurnitureDragging) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
     
     // 단내림 구간에서 로컬 슬롯 인덱스 계산
     let localSlotIndex = placedModule.slotIndex;
-    if (placedModule.zone === 'dropped' && zoneInfo.normal) {
+    if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+      // 단내림이 오른쪽: dropped zone는 normal zone 뒤에 위치
       localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+    } else if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+      // 단내림이 왼쪽: normal zone는 dropped zone 뒤에 위치
+      localSlotIndex = placedModule.slotIndex - zoneInfo.dropped.columnCount;
     }
     
     // threeUnitPositions 사용하여 정확한 위치 계산
