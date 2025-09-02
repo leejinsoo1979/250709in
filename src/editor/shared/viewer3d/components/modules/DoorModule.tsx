@@ -1191,10 +1191,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     totalWidth = slot1Width + slot2Width;
     
-    // 듀얼 캐비넷 도어: 균일한 갭 적용 (모든 도어 동일)
-    // 통일된 규칙: 슬롯 - 1mm (매우 타이트한 갭)
-    leftDoorWidth = slot1Width - 1;  // 슬롯 크기 - 1mm
-    rightDoorWidth = slot2Width - 1; // 슬롯 크기 - 1mm
+    // 듀얼 캐비넷 도어: 도어 간 3mm 갭 유지
+    // 각 슬롯에서 3mm 빼면 중앙에 3mm 갭 생성
+    leftDoorWidth = slot1Width - 3;  // 슬롯 크기 - 3mm (양쪽 1.5mm씩)
+    rightDoorWidth = slot2Width - 3; // 슬롯 크기 - 3mm (양쪽 1.5mm씩)
     
     // 갭 계산: 듀얼은 항상 2mm만 빼기
     
@@ -1674,9 +1674,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       slotWidth = slotWidths[slotIndex];
     }
     
-    // 싱글 캐비넷 도어: 균일한 갭 적용 (모든 도어 동일)
-    // 통일된 규칙: 슬롯 - 1mm (매우 타이트한 갭)
-    let doorWidth = slotWidth - 1; // 슬롯 크기 - 1mm
+    // 싱글 캐비넷 도어: 도어 간 3mm 갭 유지
+    // 듀얼 캐비넷과 동일한 규칙 적용: 슬롯 - 3mm (양쪽 1.5mm씩)
+    let doorWidth = slotWidth - 3; // 슬롯 크기 - 3mm
     
     // 모든 환경(서라운드, 노서라운드, 단내림 등)에서 동일한 규칙 적용
     console.log('🚪🔍 싱글 도어 갭 분석:', { 
@@ -1685,7 +1685,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       차이: slotWidth - doorWidth,
       예상갭: `양쪽 ${(slotWidth - doorWidth) / 2}mm씩`,
       실제육안: '균일한 갭 목표',
-      코드규칙: '슬롯-1mm',
+      코드규칙: '슬롯-3mm (듀얼과 동일)',
       slotWidths배열: slotWidths,
       slotIndex: slotIndex,
       'indexing.columnWidth': indexing.columnWidth,
