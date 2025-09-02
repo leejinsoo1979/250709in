@@ -234,6 +234,27 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const adjustedPosition = { x: finalX, y: 0, z: 0 };
         let adjustedDepth = customDepth;
         
+        // 상부장 Y 위치 계산
+        const isUpperCabinet = currentDragData.moduleData.id.includes('upper-cabinet');
+        const isLowerCabinet = currentDragData.moduleData.id.includes('lower-cabinet');
+        
+        if (isUpperCabinet) {
+          // 상부장: 내경 공간 상단에 배치
+          const internalHeight = spaceInfo.height - (spaceInfo.baseConfig?.height || 0);
+          const furnitureHeight = moduleData?.dimensions?.height || 600;
+          adjustedPosition.y = (internalHeight - furnitureHeight) / 1000; // mm를 m로 변환, 가구 높이의 절반은 Three.js에서 자동 처리
+          
+          console.log('🔝 상부장 Y 위치 설정:', {
+            internalHeight,
+            furnitureHeight,
+            yPosition: adjustedPosition.y,
+            moduleId: currentDragData.moduleData.id
+          });
+        } else if (isLowerCabinet) {
+          // 하부장은 바닥(y: 0)에 배치
+          adjustedPosition.y = 0;
+        }
+        
         // 디버그 로그 추가
         console.log('🔍 가구 배치 전 기둥 슬롯 정보:', {
           slotIndex: dropPosition.column,
