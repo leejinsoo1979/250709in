@@ -255,12 +255,14 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
     
     // frameSize가 명시적으로 설정되고 0이 아닌 경우 사용 (프레임 크기 조정 시)
     // 노서라운드 모드에서는 frameSize가 0이므로 무시하고 자동 계산
-    console.log('🔍 노서라운드 frameSize 체크:', {
+    console.log('🔍🔍🔍 노서라운드 frameSize 체크 (IMPORTANT):', {
       frameSize,
       'frameSize?.left': frameSize?.left,
       'frameSize?.right': frameSize?.right,
+      'frameSize가 50인가?': frameSize?.left === 50 || frameSize?.right === 50,
       installType,
-      wallConfig
+      wallConfig,
+      '문제': 'frameSize가 50이면 잘못된 값임!'
     });
     
     // 노서라운드 모드에서는 frameSize를 무시하고 설치 타입과 벽 구성에 따라 자동 계산

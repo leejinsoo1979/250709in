@@ -52,10 +52,13 @@ export class ColumnIndexer {
    * - customColumnCount가 설정된 경우 해당 값 우선 사용
    */
   static calculateSpaceIndexing(spaceInfo: SpaceInfo): SpaceIndexingResult {
-    console.log('🎯 [calculateSpaceIndexing] 호출됨:', {
+    console.log('🎯🎯🎯 [calculateSpaceIndexing] 호출됨 (CRITICAL):', {
       surroundType: spaceInfo?.surroundType,
       installType: spaceInfo?.installType,
       gapConfig: spaceInfo?.gapConfig,
+      frameSize: spaceInfo?.frameSize,
+      'frameSize.left': spaceInfo?.frameSize?.left,
+      'frameSize.right': spaceInfo?.frameSize?.right,
       width: spaceInfo?.width,
       timestamp: new Date().toISOString()
     });

@@ -362,7 +362,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     moduleId: placedModule.moduleId,
     customWidth: placedModule.customWidth,
     zone: placedModule.zone,
-    internalSpace: internalSpace
+    internalSpace: internalSpace,
+    surroundType: spaceInfo.surroundType,
+    moduleIdEndsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)
   });
   
   // 너비에 따라 모듈 ID 생성
@@ -384,7 +386,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
-      newTargetModuleId: targetModuleId
+      newTargetModuleId: targetModuleId,
+      surroundType: spaceInfo.surroundType
+    });
+  } else {
+    console.log('🔍 [FurnitureItem] targetModuleId 변경 안함:', {
+      moduleId: placedModule.moduleId,
+      customWidth: placedModule.customWidth,
+      adjustedWidth: placedModule.adjustedWidth,
+      endsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`),
+      surroundType: spaceInfo.surroundType,
+      reason: !placedModule.customWidth ? 'no customWidth' : 
+              placedModule.adjustedWidth ? 'has adjustedWidth' :
+              placedModule.moduleId.endsWith(`-${placedModule.customWidth}`) ? 'already ends with customWidth' : 'unknown'
     });
   }
   
