@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById } from '@/data/modules';
-import { calculateInternalSpace } from '../../../utils/geometry';
+import { calculateInternalSpace, calculateRoomDimensions } from '../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
@@ -1362,9 +1362,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 드래그 중이거나 Y가 0인 경우에만 계산
     // 키큰장(full)은 바닥부터 상부 프레임 하단까지
     if (moduleData?.category === 'full' || actualModuleData?.category === 'full') {
-      // 내경 공간 높이 가져오기 (상부 프레임 제외)
-      const internalSpace = calculateInternalSpace(spaceInfo);
-      const internalHeightMm = internalSpace.height;
+      let internalHeightMm;
+      
+      // 노서라운드 모드에서는 상부프레임이 없음
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드: 상부프레임이 없으므로 전체 높이 사용
+        const roomDimensions = calculateRoomDimensions(spaceInfo);
+        internalHeightMm = roomDimensions.height;
+        
+        // 받침대 높이 빼기
+        const baseFrameHeight = spaceInfo.baseConfig?.height || 0;
+        internalHeightMm -= baseFrameHeight;
+        
+        console.log('🏢 노서라운드 모드 - 키큰장 높이 계산:', {
+          roomHeight: roomDimensions.height,
+          baseFrameHeight,
+          internalHeightMm,
+          surroundType: spaceInfo.surroundType
+        });
+      } else {
+        // 서라운드 모드: 내경 공간 높이 가져오기 (상부 프레임 제외)
+        const internalSpace = calculateInternalSpace(spaceInfo);
+        internalHeightMm = internalSpace.height;
+      }
       
       // 키큰장 높이는 내경 공간 높이와 같아야 함
       // 실제 가구 높이가 내경 공간보다 크면 내경 공간에 맞춤
@@ -1400,36 +1420,54 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     else if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
       // 내경 공간 계산 - zone 정보 고려
       let internalHeightMm;
+      let topFrameExists = false;
       
-      // 단내림이 활성화되고 zone 정보가 있는 경우 zone별 높이 계산
-      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        // 단내림 구간: 원래 높이에서 dropHeight 빼기
-        const baseInternalSpace = calculateInternalSpace(spaceInfo);
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        internalHeightMm = baseInternalSpace.height - dropHeight;
+      // 노서라운드 모드에서는 상부프레임이 없음
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드: 상부프레임이 없으므로 전체 높이 사용
+        const roomDimensions = calculateRoomDimensions(spaceInfo);
+        internalHeightMm = roomDimensions.height;
         
-        console.log('🎯 단내림 구간 상부장 높이 계산:', {
-          zone: placedModule.zone,
-          baseHeight: baseInternalSpace.height,
-          dropHeight: dropHeight,
-          resultHeight: internalHeightMm
+        // 받침대 높이 빼기
+        const baseFrameHeight = spaceInfo.baseConfig?.height || 0;
+        internalHeightMm -= baseFrameHeight;
+        
+        topFrameExists = false;
+        console.log('🔝 노서라운드 모드 - 상부프레임 없음:', {
+          roomHeight: roomDimensions.height,
+          baseFrameHeight,
+          internalHeightMm,
+          surroundType: spaceInfo.surroundType
         });
       } else {
-        // 일반 구간
-        const internalSpace = calculateInternalSpace(spaceInfo);
-        internalHeightMm = internalSpace.height;
+        // 서라운드 모드: 상부프레임이 있음
+        topFrameExists = true;
+        
+        // 단내림이 활성화되고 zone 정보가 있는 경우 zone별 높이 계산
+        if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+          // 단내림 구간: 원래 높이에서 dropHeight 빼기
+          const baseInternalSpace = calculateInternalSpace(spaceInfo);
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          internalHeightMm = baseInternalSpace.height - dropHeight;
+          
+          console.log('🎯 단내림 구간 상부장 높이 계산:', {
+            zone: placedModule.zone,
+            baseHeight: baseInternalSpace.height,
+            dropHeight: dropHeight,
+            resultHeight: internalHeightMm
+          });
+        } else {
+          // 일반 구간: 기본 내경 공간 높이
+          const baseInternalSpace = calculateInternalSpace(spaceInfo);
+          internalHeightMm = baseInternalSpace.height;
+        }
       }
       
       const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
       
-      // 상부장은 항상 천장에 붙어있어야 함
-      // 상부장은 바닥 설정(받침대, 띄워서 배치 등)과 무관하게 천장에 고정
-      
-      // 상부 프레임 두께 (상부장은 상부 프레임 하단에 맞닿아야 함)
-      const topFrameThickness = 30; // 상부 프레임 두께 30mm
-      
       // 상부장 Y 위치: 내경높이 - 가구높이/2
-      // 내경 공간은 이미 상부 프레임을 제외한 높이이므로 추가 계산 불필요
+      // 서라운드 모드에서는 내경 공간이 이미 상부 프레임을 제외한 높이
+      // 노서라운드 모드에서는 상부 프레임이 없으므로 전체 높이에서 가구 배치
       const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
       // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)

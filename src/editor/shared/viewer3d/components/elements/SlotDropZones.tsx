@@ -508,29 +508,38 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 슬롯 너비 계산 - 슬롯에 정확히 맞는 너비 설정
     let customWidth: number | undefined;
     
-    // 슬롯 너비 배열이 있으면 우선 사용
-    if (indexing.slotWidths && zoneSlotIndex !== undefined) {
-      if (actualIsDual && zoneSlotIndex < indexing.slotWidths.length - 1) {
-        // 듀얼 가구: 두 슬롯의 너비 합
-        customWidth = indexing.slotWidths[zoneSlotIndex] + indexing.slotWidths[zoneSlotIndex + 1];
-        console.log('📏 듀얼 가구 슬롯 너비 설정:', {
+    // 단내림이 있는 경우 zone별 슬롯 너비를 우선 사용
+    if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
+      if (zone === 'dropped' && indexing.zones.dropped?.slotWidths) {
+        const droppedSlotWidths = indexing.zones.dropped.slotWidths;
+        if (actualIsDual && zoneSlotIndex < droppedSlotWidths.length - 1) {
+          customWidth = droppedSlotWidths[zoneSlotIndex] + droppedSlotWidths[zoneSlotIndex + 1];
+        } else if (droppedSlotWidths[zoneSlotIndex] !== undefined) {
+          customWidth = droppedSlotWidths[zoneSlotIndex];
+        }
+        console.log('📏 단내림 영역 슬롯 너비 설정:', {
+          zone,
           slotIndex: zoneSlotIndex,
-          slot1Width: indexing.slotWidths[zoneSlotIndex],
-          slot2Width: indexing.slotWidths[zoneSlotIndex + 1],
-          totalWidth: customWidth
+          customWidth,
+          slotWidths: droppedSlotWidths
         });
-      } else if (indexing.slotWidths[zoneSlotIndex] !== undefined) {
-        // 싱글 가구: 해당 슬롯의 너비
-        customWidth = indexing.slotWidths[zoneSlotIndex];
-        console.log('📏 싱글 가구 슬롯 너비 설정:', {
+      } else if (zone === 'normal' && indexing.zones.normal?.slotWidths) {
+        const normalSlotWidths = indexing.zones.normal.slotWidths;
+        if (actualIsDual && zoneSlotIndex < normalSlotWidths.length - 1) {
+          customWidth = normalSlotWidths[zoneSlotIndex] + normalSlotWidths[zoneSlotIndex + 1];
+        } else if (normalSlotWidths[zoneSlotIndex] !== undefined) {
+          customWidth = normalSlotWidths[zoneSlotIndex];
+        }
+        console.log('📏 일반 영역 슬롯 너비 설정:', {
+          zone,
           slotIndex: zoneSlotIndex,
-          slotWidth: customWidth
+          customWidth,
+          slotWidths: normalSlotWidths
         });
       }
     }
-    
-    // zone별 슬롯 너비가 있으면 사용
-    else if (zone === 'dropped' && indexing.zones?.dropped?.slotWidths) {
+    // 단내림이 없는 경우 전체 슬롯 너비 배열 사용
+    else if (indexing.slotWidths && zoneSlotIndex !== undefined) {
       const droppedSlotWidths = indexing.zones.dropped.slotWidths;
       if (actualIsDual && zoneSlotIndex < droppedSlotWidths.length - 1) {
         customWidth = droppedSlotWidths[zoneSlotIndex] + droppedSlotWidths[zoneSlotIndex + 1];
