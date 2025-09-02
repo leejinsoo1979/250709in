@@ -499,7 +499,22 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       let actualWidth = module.dimensions.width;
       if (isDynamicFurniture) {
         const isDualFurniture = module.id.startsWith('dual-');
-        actualWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        
+        // 노서라운드 모드에서는 slotWidths 사용
+        if (spaceInfo.surroundType === 'no-surround' && indexing.slotWidths && indexing.slotWidths.length > 0) {
+          if (isDualFurniture && indexing.slotWidths.length >= 2) {
+            actualWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
+          } else {
+            actualWidth = indexing.slotWidths[0];
+          }
+          console.log('🚨 [ModuleGallery] 더블클릭 - 노서라운드 모드 slotWidths 사용:', {
+            isDualFurniture,
+            actualWidth,
+            slotWidths: indexing.slotWidths
+          });
+        } else {
+          actualWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        }
       }
       
       console.log('🎯 [ModuleGallery] Dynamic width calculation:', {
