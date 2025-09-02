@@ -626,6 +626,18 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           droppedZoneStart = zoneInfo.normal.columnCount;
           droppedZoneEnd = indexing.columnCount;
         }
+        
+        console.log('🎯 Zone ranges for dual furniture placement:', {
+          droppedCeilingPosition: spaceInfo.droppedCeiling.position,
+          droppedZone: { start: droppedZoneStart, end: droppedZoneEnd, count: droppedZoneEnd - droppedZoneStart },
+          normalZone: { start: normalZoneStart, end: normalZoneEnd, count: normalZoneEnd - normalZoneStart },
+          zoneInfo: {
+            dropped: { columnCount: zoneInfo.dropped.columnCount, width: zoneInfo.dropped.width },
+            normal: { columnCount: zoneInfo.normal.columnCount, width: zoneInfo.normal.width }
+          },
+          totalSlots: indexing.columnCount,
+          isDualFurniture
+        });
       }
       
       // 첫 번째 빈 슬롯 찾기
