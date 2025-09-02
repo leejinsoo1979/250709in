@@ -389,13 +389,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
     // originalSlotWidth가 없으면 indexing의 columnWidth 사용
     if (!originalSlotWidth) {
+      // 단내림 구간에서는 zone별 columnWidth 사용 (이미 위에서 수정됨)
       // indexing.columnWidth가 이미 엔드패널을 고려해서 계산됨
       actualDoorWidth = indexing.columnWidth;
       console.log(`🚪 노서라운드 도어 너비 계산 (fallback):`, {
         전체너비: spaceInfo.width,
         columnCount: indexing.columnCount,
         columnWidth: indexing.columnWidth,
-        actualDoorWidth
+        actualDoorWidth,
+        zone: (spaceInfo as any).zone,
+        isDroppedZone
       });
     }
   }
@@ -614,7 +617,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
         // 키큰장 도어는 가구와 동일한 높이 유지 (사이즈 변경 없음)
-        // Y축 위치만 단내림만큼 내려옴
         
         // 도어 높이는 가구 높이와 동일하게 유지
         finalDoorHeight = furnitureHeight;
@@ -625,8 +627,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
-        // 도어는 가구와 동일한 위치 (가구 중심 기준 상대 좌표 0)
-        doorYPosition = 0; // 가구와 동일한 Y 위치
+        // 도어 상단은 가구 상단보다 5mm 아래 (upperGap)
+        const doorTopAbsolute = furnitureTopAbsolute - upperGap;  // 가구 상단 - 5mm
+        const doorBottomAbsolute = furnitureBottomAbsolute;       // 가구 하단과 동일
+        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
+        
+        // 가구 중심 기준 상대 좌표로 변환
+        // 도어가 가구보다 5mm 아래에 있음
+        const doorOffset = -upperGap / 2;  // -2.5mm (도어 중심이 가구 중심보다 아래)
+        doorYPosition = mmToThreeUnits(doorOffset);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -638,9 +647,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
+          doorTopAbsolute,
+          doorCenterAbsolute,
+          doorOffset,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '단내림 + 띄움: 도어 사이즈 유지, Y축 위치만 가구와 함께 내려옴'
+          설명: '단내림 + 띄움: 도어는 가구 상단보다 5mm 아래 위치'
         });
       } else {
         // 받침대 배치 + 단내림
