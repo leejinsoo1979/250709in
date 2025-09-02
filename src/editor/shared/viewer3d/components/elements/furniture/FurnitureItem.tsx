@@ -1360,10 +1360,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 드래그 중이거나 Y가 0인 경우에만 계산
-    // 키큰장(full)은 바닥부터 천장까지 전체 높이 사용
+    // 키큰장(full)은 바닥부터 상부 프레임 하단까지
     if (moduleData?.category === 'full' || actualModuleData?.category === 'full') {
-      // 키큰장은 바닥부터 시작하여 천장까지
-      const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
+      // 내경 공간 높이 가져오기 (상부 프레임 제외)
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const internalHeightMm = internalSpace.height;
+      
+      // 키큰장 높이는 내경 공간 높이와 같아야 함
+      // 실제 가구 높이가 내경 공간보다 크면 내경 공간에 맞춤
+      const furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
       
       // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
       let startY = furnitureStartY;
@@ -1377,12 +1382,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         furnitureStartY,
         furnitureHeightMm,
+        internalHeightMm,
+        originalHeight: actualModuleData?.dimensions.height,
         yPos_Three단위: yPos,
         yPos_mm: yPos / 0.01,
+        상부끝_mm: (yPos / 0.01) + furnitureHeightMm / 2,
+        내경높이: internalHeightMm,
         baseConfig: spaceInfo?.baseConfig,
         placementType: spaceInfo?.baseConfig?.placementType,
         floatHeight: spaceInfo?.baseConfig?.floatHeight,
-        설명: '키큰장은 항상 바닥부터 천장까지'
+        설명: '키큰장은 바닥부터 상부 프레임 하단까지'
       });
       
       return yPos;
@@ -1430,9 +1439,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         internalHeightMm,
-        baseFrameHeightMm,
+        topFrameThickness,
         furnitureHeightMm,
-        계산식: `(${internalHeightMm} + ${baseFrameHeightMm}) - ${furnitureHeightMm/2} = ${internalHeightMm + baseFrameHeightMm - furnitureHeightMm/2}`,
+        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
         yPos_Three단위: yPos,
         yPos_mm: yPos / 0.01,
         furnitureStartY,
@@ -1441,7 +1450,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         차이: (yPos - adjustedPosition.y) / 0.01,
         isDragging: isDraggingThis,
         baseConfig: spaceInfo?.baseConfig,
-        설명: '상부장은 천장에 고정 (받침대 높이 복원하여 계산)'
+        설명: '상부장은 상부 프레임 하단에 맞닿음'
       });
       
       if (isDraggingThis) {
