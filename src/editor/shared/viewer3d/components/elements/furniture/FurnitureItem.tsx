@@ -1004,7 +1004,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       originalSlotWidthMm = indexing.slotWidths[placedModule.slotIndex];
       
       // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우, 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-      if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture) {
+      // 단, 단내림이 활성화된 경우 zone별 slotWidths에 이미 엔드패널이 고려되어 있으므로 추가하지 않음
+      if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture && !spaceInfo.droppedCeiling?.enabled) {
         const END_PANEL_THICKNESS = 18;
         const columnCount = indexing.columnCount;
         
@@ -1015,7 +1016,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             console.log('🔧 노서라운드 일반 구간 - 엔드패널 슬롯 도어 크기 복원:', {
               slotIndex: placedModule.slotIndex,
               원래크기: originalSlotWidthMm - END_PANEL_THICKNESS,
-              복원크기: originalSlotWidthMm
+              복원크기: originalSlotWidthMm,
+              단내림없음: true
             });
           }
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
@@ -1026,6 +1028,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             originalSlotWidthMm += END_PANEL_THICKNESS;
           }
         }
+      } else if (spaceInfo.surroundType === 'no-surround' && spaceInfo.droppedCeiling?.enabled) {
+        console.log('🔧 노서라운드 + 단내림: 엔드패널 두께 추가하지 않음', {
+          slotIndex: placedModule.slotIndex,
+          originalSlotWidthMm,
+          설명: '단내림 zone별 slotWidths에 이미 엔드패널이 고려되어 있음'
+        });
       }
     }
   } else {
