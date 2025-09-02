@@ -1390,8 +1390,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 상부장은 항상 천장에 고정 (저장된 위치 무시)
     if (isUpperCabinet) {
-      // 상부장은 전체 공간 높이 기준으로 배치
+      // 상부장은 상부 프레임 하단에 맞닿아야 함
+      const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
       let totalHeightMm = spaceInfo.height;
+      
+      // 서라운드 모드일 때만 상부 프레임 두께를 뺌
+      if (spaceInfo.surroundType !== 'no-surround') {
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
+      }
       
       // 단내림 구간 처리
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
@@ -1401,13 +1407,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       
       const furnitureHeightMm = actualModuleData?.dimensions?.height || moduleData?.dimensions?.height || 600;
       
-      // 상부장 상단이 공간 최상단에 맞닿도록 배치
-      // Y 위치 = 전체높이 - 가구높이/2
+      // 상부장 상단이 상부 프레임 하단에 맞닿도록 배치
+      // Y 위치 = (전체높이 - 상부프레임) - 가구높이/2
       const yPos = mmToThreeUnits(totalHeightMm - furnitureHeightMm / 2);
       
-      console.log('🔝 상부장 Y 위치 (천장 고정):', {
+      console.log('🔝 상부장 Y 위치 (상부 프레임 하단):', {
         moduleId: placedModule.moduleId,
         spaceHeight: spaceInfo.height,
+        surroundType: spaceInfo.surroundType,
+        frameThickness: spaceInfo.surroundType !== 'no-surround' ? SURROUND_FRAME_THICKNESS : 0,
         totalHeightMm,
         furnitureHeightMm,
         계산식: `${totalHeightMm} - ${furnitureHeightMm/2} = ${totalHeightMm - furnitureHeightMm/2}`,
@@ -1421,7 +1429,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         isDragging: isDraggingThis || isFurnitureDragging,
         baseConfig: spaceInfo?.baseConfig,
         zone: placedModule.zone,
-        설명: '상부장은 전체 공간 최상단 기준 (프레임 무시)'
+        설명: spaceInfo.surroundType !== 'no-surround' ? '상부장은 상부 프레임 하단에 맞닿음' : '노서라운드 - 상부장은 공간 최상단에 맞닿음'
       });
       return yPos;
     }
