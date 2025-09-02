@@ -626,10 +626,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
         // 단내림 구간 도어 높이 계산
-        // 도어 상단: 가구 상단에서 5mm 아래 (현재 위치 유지)
-        // 도어 하단: 현재보다 10mm 더 아래로 확장하여 바닥에서 25mm
-        const doorTopAbsolute = furnitureTopAbsolute - 5;  // 가구 상단 - 5mm (현재 위치 유지)
-        const doorBottomAbsolute = 25;                      // 바닥에서 25mm (10mm 더 확장)
+        // 도어 상단: 가구 상단과 동일 (위로 5mm 확장)
+        // 도어 하단: 바닥에서 20mm (아래로 5mm 확장)
+        const doorTopAbsolute = furnitureTopAbsolute;  // 가구 상단과 동일 (위로 5mm 확장)
+        const doorBottomAbsolute = 20;                  // 바닥에서 20mm (아래로 5mm 확장)
         
         // 도어 높이 = 상단 위치 - 하단 위치 (10mm 더 길어짐)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
@@ -638,9 +638,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        // 도어를 10mm 아래로 이동시켜 하단이 25mm가 되도록 조정
-        const additionalOffset = -5;  // 도어 중심을 5mm 아래로 (도어가 10mm 확장되므로)
-        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute + additionalOffset);
+        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -671,10 +669,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
         // 도어 절대 위치
-        // 도어 상단: 가구 상단에서 5mm 아래 (현재 위치 유지)
-        // 도어 하단: 10mm 더 아래로 확장하여 바닥에서 25mm
-        const doorTopAbsolute = furnitureTopAbsolute - 5;  // 가구 상단 - 5mm (현재 위치 유지)
-        const doorBottomAbsolute = 25;                      // 바닥에서 25mm (10mm 더 확장)
+        // 도어 상단: 가구 상단과 동일 (위로 5mm 확장)
+        // 도어 하단: 바닥에서 20mm (아래로 5mm 확장)
+        const doorTopAbsolute = furnitureTopAbsolute;  // 가구 상단과 동일 (위로 5mm 확장)
+        const doorBottomAbsolute = 20;                  // 바닥에서 20mm (아래로 5mm 확장)
         
         // 도어 높이 (10mm 더 길어짐)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
@@ -683,9 +681,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        // 도어를 10mm 아래로 이동시켜 하단이 25mm가 되도록 조정
-        const additionalOffset = -5;  // 도어 중심을 5mm 아래로
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute + additionalOffset) * 0.01; // mm to Three.js units
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
         
         console.log('🔍 단내림 + 받침대 배치 키큰장 도어 계산:', {
           zone: 'dropped',

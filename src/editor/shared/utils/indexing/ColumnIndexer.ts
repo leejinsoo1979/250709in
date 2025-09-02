@@ -718,8 +718,9 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
-          leftReduction = 0;
+          // 빌트인: 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          leftReduction = leftGap;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
@@ -865,8 +866,9 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
-        leftReduction = 0;
+        // 빌트인: 이격거리 적용
+        const leftGap = spaceInfo.gapConfig?.left || 0;
+        leftReduction = leftGap;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
@@ -919,10 +921,15 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 노서라운드에서는 이격거리 무시
+        // 빌트인인 경우: 양쪽 벽에 이격거리 적용
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = 0;
-          rightReduction = 0;
+          // 빌트인은 양쪽 벽이 있으므로 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          const rightGap = spaceInfo.gapConfig?.right || 0;
+          
+          // 왼쪽 단내림이므로: 왼쪽은 단내림구간 벽, 오른쪽은 일반구간 벽
+          leftReduction = leftGap;  // 단내림구간 벽쪽 이격거리
+          rightReduction = rightGap;  // 일반구간 벽쪽 이격거리
         } else {
           // 왼쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.left) {
@@ -975,10 +982,15 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 빌트인인 경우: 노서라운드에서는 이격거리 무시
+        // 빌트인인 경우: 양쪽 벽에 이격거리 적용
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = 0;
-          rightReduction = 0;
+          // 빌트인은 양쪽 벽이 있으므로 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          const rightGap = spaceInfo.gapConfig?.right || 0;
+          
+          // 오른쪽 단내림이므로: 왼쪽은 일반구간 벽, 오른쪽은 단내림구간 벽
+          leftReduction = leftGap;  // 일반구간 벽쪽 이격거리
+          rightReduction = rightGap;  // 단내림구간 벽쪽 이격거리
         } else {
           // 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
