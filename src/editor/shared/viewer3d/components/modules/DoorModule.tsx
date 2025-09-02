@@ -348,8 +348,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
-  // 인덱싱 정보 계산
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // zone별 인덱싱 정보 계산
+  const zone = (spaceInfo as any).zone;
+  const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
+  
+  let indexing = calculateSpaceIndexing(spaceInfo);
+  
+  // 단내림 구간에서는 zone별 columnWidth 사용
+  if (isDroppedZone && spaceInfo.droppedCeiling?.enabled) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (zoneInfo && zoneInfo.dropped) {
+      // 단내림 구간의 columnWidth로 indexing 수정
+      indexing = {
+        ...indexing,
+        columnWidth: zoneInfo.dropped.columnWidth || indexing.columnWidth,
+        columnCount: zoneInfo.dropped.columnCount || indexing.columnCount
+      };
+      console.log('🚨 단내림 구간 indexing 수정:', {
+        zone,
+        originalColumnWidth: calculateSpaceIndexing(spaceInfo).columnWidth,
+        droppedColumnWidth: zoneInfo.dropped.columnWidth,
+        droppedColumnCount: zoneInfo.dropped.columnCount
+      });
+    }
+  }
   
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
@@ -1239,9 +1261,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let slot1Width = 0;
     let slot2Width = 0;
     
-    // 단내림 구간에서 슬롯 너비가 없는 경우 처리
-    const zone = (spaceInfo as any).zone;
-    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
+    // 단내림 구간에서 슬롯 너비가 없는 경우 처리 (zone 변수는 이미 위에서 선언됨)
     
     if (isDroppedZone && (!slotWidths || slotWidths.length < 2)) {
       console.log('🚨 단내림 구간 듀얼장 도어 너비 계산 - slotWidths 없음, 기본값 사용', {
