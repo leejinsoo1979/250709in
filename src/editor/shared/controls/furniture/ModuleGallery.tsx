@@ -80,8 +80,23 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setFurniturePlacementMode(true);
     setIsSlotDragging(true); // 슬롯 드래그 시작
     
+    console.log('🎯 [ModuleGallery] handleDragStart - spaceInfo 체크:', {
+      width: spaceInfo.width,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      gapConfig: spaceInfo.gapConfig,
+      frameSize: spaceInfo.frameSize
+    });
+    
     // 영역별 인덱싱 계산
     const indexing = calculateSpaceIndexing(spaceInfo);
+    
+    console.log('🎯 [ModuleGallery] indexing 결과:', {
+      columnWidth: indexing.columnWidth,
+      slotWidths: indexing.slotWidths,
+      columnCount: indexing.columnCount,
+      columnBoundaries: indexing.columnBoundaries
+    });
     
     // 노서라운드 모드 디버깅
     if (spaceInfo.surroundType === 'no-surround') {

@@ -331,6 +331,17 @@ export class ColumnIndexer {
       const baseWidth = Math.floor(internalWidth / columnCount);
       const remainder = internalWidth % columnCount;
       
+      // 디버깅 로그 추가
+      console.log('🔍 [ColumnIndexer] 슬롯 너비 계산 (builtin+no-surround or surround):', {
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        totalWidth,
+        internalWidth,
+        columnCount,
+        baseWidth,
+        remainder
+      });
+      
       for (let i = 0; i < columnCount; i++) {
         // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
         slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);

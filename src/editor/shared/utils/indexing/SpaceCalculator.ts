@@ -50,10 +50,33 @@ export class SpaceCalculator {
         rightReduction = END_PANEL_THICKNESS;
       }
       
-      return totalWidth - (leftReduction + rightReduction);
+      const internalWidth = totalWidth - (leftReduction + rightReduction);
+      
+      // 디버깅 로그
+      console.log('🔬 [SpaceCalculator] 내경 계산 (no-surround):', {
+        installType: spaceInfo.installType,
+        totalWidth,
+        leftReduction,
+        rightReduction,
+        internalWidth,
+        calculation: `${totalWidth} - ${leftReduction} - ${rightReduction} = ${internalWidth}`
+      });
+      
+      return internalWidth;
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임
-      return totalWidth - frameThickness.left - frameThickness.right;
+      const internalWidth = totalWidth - frameThickness.left - frameThickness.right;
+      
+      // 디버깅 로그
+      console.log('🔬 [SpaceCalculator] 내경 계산 (surround):', {
+        totalWidth,
+        frameLeft: frameThickness.left,
+        frameRight: frameThickness.right,
+        internalWidth,
+        calculation: `${totalWidth} - ${frameThickness.left} - ${frameThickness.right} = ${internalWidth}`
+      });
+      
+      return internalWidth;
     }
   }
 
