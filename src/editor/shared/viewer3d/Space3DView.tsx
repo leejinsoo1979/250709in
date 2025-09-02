@@ -138,15 +138,49 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     console.log('🔴🔴🔴 [CRITICAL] Space3DView handleDrop 호출됨!', {
       windowHandleSlotDrop: typeof window.handleSlotDrop,
       currentTarget: e.currentTarget.tagName,
-      dataTransfer: e.dataTransfer.getData('application/json')
+      dataTransfer: e.dataTransfer.getData('application/json'),
+      clientX: e.clientX,
+      clientY: e.clientY,
+      eventType: e.type
     });
     e.preventDefault();
     e.stopPropagation();
     
     // Canvas 요소 찾기
     const canvas = e.currentTarget.querySelector('canvas');
+    console.log('🔍 [Space3DView] Canvas 검색:', {
+      currentTarget: e.currentTarget,
+      tagName: e.currentTarget.tagName,
+      className: e.currentTarget.className,
+      children: e.currentTarget.children.length,
+      canvas: !!canvas,
+      allCanvases: document.querySelectorAll('canvas').length
+    });
+    
     if (!canvas) {
-      console.log('❌ [Space3DView] Canvas 요소를 찾을 수 없음');
+      console.log('❌ [Space3DView] Canvas 요소를 찾을 수 없음 - 대체 방법 시도');
+      // 전체 문서에서 canvas 찾기
+      const allCanvases = document.querySelectorAll('canvas');
+      if (allCanvases.length > 0) {
+        const firstCanvas = allCanvases[0] as HTMLCanvasElement;
+        console.log('✅ [Space3DView] 대체 Canvas 발견:', firstCanvas);
+        // 대체 canvas로 계속 진행
+        const dragData = e.dataTransfer.getData('application/json');
+        if (dragData) {
+          try {
+            const parsedData = JSON.parse(dragData);
+            if (parsedData.type !== 'column' && parsedData.type !== 'wall' && parsedData.type !== 'panelB') {
+              const handleSlotDrop = window.handleSlotDrop;
+              if (typeof handleSlotDrop === 'function') {
+                console.log('🎯 대체 Canvas로 handleSlotDrop 호출');
+                handleSlotDrop(e.nativeEvent, firstCanvas, activeZone);
+              }
+            }
+          } catch (err) {
+            console.error('대체 처리 중 에러:', err);
+          }
+        }
+      }
       return;
     }
 
@@ -378,6 +412,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   };
   
   const handleDragOver = (e: React.DragEvent) => {
+    console.log('🎯 [DRAG] Space3DView handleDragOver 호출됨!', {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      eventType: e.type
+    });
     e.preventDefault(); // 드롭 허용
   };
   
