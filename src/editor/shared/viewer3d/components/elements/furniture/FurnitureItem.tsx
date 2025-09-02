@@ -1491,7 +1491,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       let startY = furnitureStartY;
       
       // 키큰장의 중심 Y 위치 = 바닥 + 높이/2
-      const yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
+      let yPos = startY + mmToThreeUnits(furnitureHeightMm / 2);
+      
+      // 단내림+서라운드에서는 Y 위치를 5mm 낮춤 (상부프레임 하단에 맞추기 위해)
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
+        yPos -= mmToThreeUnits(5); // 5mm 아래로
+        console.log('🔴 단내림+서라운드 키큰장 Y 위치 조정:', {
+          원래Y위치_mm: (yPos + mmToThreeUnits(5)) / 0.01,
+          조정후Y위치_mm: yPos / 0.01,
+          하향조정: -5
+        });
+      }
       
       console.log('🏢 키큰장(full) Y 위치 계산:', {
         moduleId: actualModuleData?.id || 'unknown',
