@@ -627,9 +627,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 단내림 구간 도어 높이 계산
         // 도어 상단: 가구 상단에서 5mm 아래
-        // 도어 하단: 바닥에서 25mm (띄움 배치와 관계없이 항상 25mm)
+        // 도어 하단: 가구 하단과 동일
         const doorTopAbsolute = furnitureTopAbsolute - 5;  // 가구 상단 - 5mm
-        const doorBottomAbsolute = 25;                      // 바닥 + 25mm (항상 고정)
+        const doorBottomAbsolute = furnitureBottomAbsolute; // 가구 하단과 동일
         
         // 도어 높이 = 상단 위치 - 하단 위치
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
@@ -657,7 +657,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '도어 상단: 단내림천장-5mm, 도어 하단: 바닥+floatHeight+25mm'
+          설명: '도어 상단: 가구상단-5mm, 도어 하단: 바닥+floatHeight+25mm'
         });
       } else {
         // 받침대 배치 + 단내림
