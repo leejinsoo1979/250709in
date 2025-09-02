@@ -379,17 +379,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       renderWidth: placedModule.adjustedWidth
     });
   }
-  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
-  // 노서라운드 모드에서는 moduleId가 customWidth를 포함하지 않으므로 항상 재계산
-  else if (placedModule.customWidth && !placedModule.adjustedWidth) {
+  // customWidth가 있고 adjustedWidth가 없는 경우
+  // 노서라운드 모드에서는 원본 모듈 ID를 그대로 사용 (엔드패널 포함 너비이므로)
+  // 서라운드 모드에서만 customWidth로 모듈 ID 생성
+  else if (placedModule.customWidth && !placedModule.adjustedWidth && spaceInfo.surroundType !== 'no-surround') {
     const baseType = placedModule.moduleId.replace(/-\d+$/, '');
     targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
+    console.log('🔧 [FurnitureItem] 서라운드 모드 - customWidth로 ModuleID 생성:', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       newTargetModuleId: targetModuleId,
       surroundType: spaceInfo.surroundType,
       endsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)
+    });
+  } else if (placedModule.customWidth && !placedModule.adjustedWidth && spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드 모드에서는 원본 모듈 ID 사용
+    console.log('🔧 [FurnitureItem] 노서라운드 모드 - 원본 모듈 ID 사용:', {
+      moduleId: placedModule.moduleId,
+      customWidth: placedModule.customWidth,
+      surroundType: spaceInfo.surroundType,
+      reason: '노서라운드 모드에서는 엔드패널 포함 너비이므로 원본 모듈 사용'
     });
   } else {
     console.log('🔍 [FurnitureItem] targetModuleId 변경 안함:', {
