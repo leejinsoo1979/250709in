@@ -2269,18 +2269,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 const zoneInfo = fullIndexing.zones || ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                 const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                 
-                // 전역 슬롯 인덱스를 사용 (placedModule.slotIndex는 이미 전역 인덱스)
-                const globalSlotIndex = placedModule.slotIndex;
-                
-                // 해당 zone에서의 로컬 인덱스 계산
-                let localSlotIndex: number;
-                if (placedModule.zone === 'dropped' && zoneInfo.normal) {
-                  // dropped zone: 전역 인덱스에서 normal zone 슬롯 수를 뺀다
-                  localSlotIndex = globalSlotIndex - zoneInfo.normal.columnCount;
-                } else {
-                  // normal zone: 전역 인덱스를 그대로 사용
-                  localSlotIndex = globalSlotIndex;
-                }
+                // placedModule.slotIndex는 이미 zone 내의 로컬 인덱스
+                const localSlotIndex = placedModule.slotIndex;
                 
                 // slotCenters가 없으면 threeUnitPositions 사용 (단내림 + 노서라운드)
                 const positions = targetZone.slotCenters || targetZone.threeUnitPositions;
@@ -2333,16 +2323,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 const zoneInfo = fullIndexing.zones || ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                 const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
                 
-                // 전역 슬롯 인덱스를 사용
-                const globalSlotIndex = placedModule.slotIndex;
-                
-                // 해당 zone에서의 로컬 인덱스 계산
-                let localSlotIndex: number;
-                if (placedModule.zone === 'dropped' && zoneInfo.normal) {
-                  localSlotIndex = globalSlotIndex - zoneInfo.normal.columnCount;
-                } else {
-                  localSlotIndex = globalSlotIndex;
-                }
+                // placedModule.slotIndex는 이미 zone 내의 로컬 인덱스
+                const localSlotIndex = placedModule.slotIndex;
                 
                 const positions = targetZone.slotCenters || targetZone.threeUnitPositions;
                 if (positions && localSlotIndex !== undefined && localSlotIndex >= 0 && localSlotIndex < positions.length) {
