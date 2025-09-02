@@ -1489,59 +1489,57 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           // zoneSlotInfo는 이미 위에서 계산됨
           
           if (hasDroppedCeiling && zoneSlotInfo.dropped) {
-            // 단내림 활성화된 경우 - 현재 활성 탭의 영역만 콜라이더 생성
+            // 단내림 활성화된 경우 - 두 영역 모두 콜라이더 생성 (드래그앤드롭이 모든 영역에서 작동하도록)
             const colliders = [];
             
-            if (activeDroppedCeilingTab === 'main') {
-              // 메인구간 콜라이더
-              const { startX, columnCount, columnWidth } = zoneSlotInfo.normal;
-              for (let i = 0; i < columnCount; i++) {
-                const slotCenterMm = startX + (i * columnWidth) + (columnWidth / 2);
-                const slotCenterX = mmToThreeUnits(slotCenterMm);
-                const slotWidthThree = mmToThreeUnits(columnWidth);
-                
-                colliders.push(
-                  <mesh
-                    key={`main-slot-collider-${i}`}
-                    position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
-                    userData={{ 
-                      slotIndex: i, 
-                      isSlotCollider: true,
-                      type: 'slot-collider',
-                      zone: 'normal'
-                    }}
-                    visible={false}
-                  >
-                    <boxGeometry args={[slotWidthThree, slotDimensions.height, slotDimensions.depth]} />
-                    <meshBasicMaterial transparent opacity={0} />
-                  </mesh>
-                );
-              }
-            } else if (activeDroppedCeilingTab === 'dropped') {
-              // 단내림구간 콜라이더
-              const { startX, columnCount, columnWidth } = zoneSlotInfo.dropped;
-              for (let i = 0; i < columnCount; i++) {
-                const slotCenterMm = startX + (i * columnWidth) + (columnWidth / 2);
-                const slotCenterX = mmToThreeUnits(slotCenterMm);
-                const slotWidthThree = mmToThreeUnits(columnWidth);
-                
-                colliders.push(
-                  <mesh
-                    key={`dropped-slot-collider-${i}`}
-                    position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
-                    userData={{ 
-                      slotIndex: i, 
-                      isSlotCollider: true,
-                      type: 'slot-collider',
-                      zone: 'dropped'
-                    }}
-                    visible={false}
-                  >
-                    <boxGeometry args={[slotWidthThree, slotDimensions.height, slotDimensions.depth]} />
-                    <meshBasicMaterial transparent opacity={0} />
-                  </mesh>
-                );
-              }
+            // 메인구간 콜라이더 항상 생성
+            const { startX: normalStartX, columnCount: normalColumnCount, columnWidth: normalColumnWidth } = zoneSlotInfo.normal;
+            for (let i = 0; i < normalColumnCount; i++) {
+              const slotCenterMm = normalStartX + (i * normalColumnWidth) + (normalColumnWidth / 2);
+              const slotCenterX = mmToThreeUnits(slotCenterMm);
+              const slotWidthThree = mmToThreeUnits(normalColumnWidth);
+              
+              colliders.push(
+                <mesh
+                  key={`main-slot-collider-${i}`}
+                  position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
+                  userData={{ 
+                    slotIndex: i, 
+                    isSlotCollider: true,
+                    type: 'slot-collider',
+                    zone: 'normal'
+                  }}
+                  visible={false}
+                >
+                  <boxGeometry args={[slotWidthThree, slotDimensions.height, slotDimensions.depth]} />
+                  <meshBasicMaterial transparent opacity={0} />
+                </mesh>
+              );
+            }
+            
+            // 단내림구간 콜라이더도 항상 생성
+            const { startX: droppedStartX, columnCount: droppedColumnCount, columnWidth: droppedColumnWidth } = zoneSlotInfo.dropped;
+            for (let i = 0; i < droppedColumnCount; i++) {
+              const slotCenterMm = droppedStartX + (i * droppedColumnWidth) + (droppedColumnWidth / 2);
+              const slotCenterX = mmToThreeUnits(slotCenterMm);
+              const slotWidthThree = mmToThreeUnits(droppedColumnWidth);
+              
+              colliders.push(
+                <mesh
+                  key={`dropped-slot-collider-${i}`}
+                  position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
+                  userData={{ 
+                    slotIndex: i, 
+                    isSlotCollider: true,
+                    type: 'slot-collider',
+                    zone: 'dropped'
+                  }}
+                  visible={false}
+                >
+                  <boxGeometry args={[slotWidthThree, slotDimensions.height, slotDimensions.depth]} />
+                  <meshBasicMaterial transparent opacity={0} />
+                </mesh>
+              );
             }
             
             return colliders;

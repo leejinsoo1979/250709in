@@ -1416,12 +1416,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 항상 천장에 붙어있어야 함
       // 상부장은 바닥 설정(받침대, 띄워서 배치 등)과 무관하게 천장에 고정
       
-      // 받침대 높이 복원 (내경 공간 계산에서 빠진 받침대 높이를 다시 더함)
-      const baseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+      // 상부 프레임 두께 (상부장은 상부 프레임 하단에 맞닿아야 함)
+      const topFrameThickness = 30; // 상부 프레임 두께 30mm
       
-      // 상부장 Y 위치: (내경높이 + 받침대높이) - 가구높이/2
-      // 내경 공간은 받침대를 제외한 높이이므로, 천장 기준 계산 시 받침대 높이를 다시 더해야 함
-      const yPos = mmToThreeUnits(internalHeightMm + baseFrameHeightMm - furnitureHeightMm / 2);
+      // 상부장 Y 위치: 내경높이 - 가구높이/2
+      // 내경 공간은 이미 상부 프레임을 제외한 높이이므로 추가 계산 불필요
+      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
       // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)
       console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
