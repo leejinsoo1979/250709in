@@ -2679,6 +2679,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const droppedMax = Math.max(...fullIndexing.zones.dropped.threeUnitPositions);
       console.log('📏 Dropped zone range:', { min: droppedMin, max: droppedMax });
       
+      // 단내림 영역의 실제 범위 출력
+      console.log('🎯 Dropped zone actual bounds:', {
+        startX: fullIndexing.zones.dropped.startX,
+        endX: fullIndexing.zones.dropped.startX + fullIndexing.zones.dropped.width,
+        width: fullIndexing.zones.dropped.width,
+        columnCount: fullIndexing.zones.dropped.columnCount,
+        position: spaceInfo.droppedCeiling?.position
+      });
+      
       allPositions.push(...fullIndexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'dropped' as const,
@@ -2811,7 +2820,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               isSlotCollider: true,
               type: 'slot-collider',
               zone: slotZone
-            }
+            },
+            zoneInfo: zoneSlotInfo?.dropped ? {
+              startX: zoneSlotInfo.dropped.startX,
+              width: zoneSlotInfo.dropped.width,
+              columnCount: zoneSlotInfo.dropped.columnCount
+            } : null
+          });
+        } else if (slotLocalIndex === 0) {
+          // 첫 번째 normal 슬롯 로깅
+          console.log(`🟢 [NORMAL] First Slot Collider 생성:`, {
+            zone: slotZone,
+            index: slotLocalIndex,
+            position: { x: slotX, y: colliderY, z: zOffset },
+            zoneInfo: zoneSlotInfo?.normal ? {
+              startX: zoneSlotInfo.normal.startX,
+              width: zoneSlotInfo.normal.width,
+              columnCount: zoneSlotInfo.normal.columnCount
+            } : null
           });
         }
         
