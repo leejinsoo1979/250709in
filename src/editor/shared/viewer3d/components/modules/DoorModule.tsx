@@ -564,6 +564,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let finalDoorHeight = doorHeightAdjusted; // 최종 도어 높이 변수
   
   if (isTallCabinet) {
+    // 단내림 구간인지 확인
+    const zone = (spaceInfo as any).zone;
+    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
+    const dropHeight = isDroppedZone ? (spaceInfo.droppedCeiling?.dropHeight || 200) : 0;
+    
     console.log('✅ 키큰장 블록 진입!', {
       moduleId: moduleData?.id,
       floatHeight,
@@ -572,20 +577,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       moduleHeight: moduleData?.dimensions?.height,
       spaceHeight: spaceInfo.height,
       hasTopFrame: topFrameThickness,
-      zone: (spaceInfo as any).zone,
+      zone,
+      isDroppedZone,
+      dropHeight,
       surroundUse: spaceInfo.surround?.use
     });
     
     // 단내림+서라운드에서는 키큰장이 상부프레임 하단에 맞닿음 (프레임 두께만큼 갭)
     // 일반 구간에서는 천장-5mm 갭 유지
-    const isDroppedWithSurround = (spaceInfo as any).zone === 'dropped' && 
-                                   spaceInfo.droppedCeiling?.enabled && 
-                                   spaceInfo.surround?.use;
+    const isDroppedWithSurround = isDroppedZone && spaceInfo.surround?.use;
     const upperGap = isDroppedWithSurround ? topFrameThickness : 5;  // 단내림+서라운드: 10mm(프레임 두께), 일반: 5mm
     const lowerGap = 0;      // 바닥까지 (갭 없음)
     
-    // furnitureHeight를 가져옴
-    const furnitureHeight = moduleData?.dimensions?.height || actualDoorHeight;
+    // 키큰장 가구 높이는 단내림 구간에서도 동일하게 유지
+    const furnitureHeight = moduleData?.dimensions?.height || 2400;
     
     const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
     
@@ -594,101 +599,178 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       furnitureHeight,
       actualDoorHeight,
       spaceInfoHeight: spaceInfo.height,
-      계산된_가구높이: actualDoorHeight - 10 - (floatHeight || baseHeight || 0),
-      설명: 'furnitureHeight가 이미 2390인지, 아니면 다른 값인지 확인'
+      zone,
+      isDroppedZone,
+      dropHeight,
+      설명: '키큰장은 단내림 구간에서도 높이 동일'
     });
     
-    if (floatHeight > 0) {
-      console.log('✅ 키큰장 + 띄움 배치 모드!', { floatHeight, furnitureHeight });
+    // 단내림 구간에서 키큰장 도어 처리
+    if (isDroppedZone) {
+      // 단내림 구간: 가구는 dropHeight만큼 내려와 있음
+      // 도어 높이는 단내림 천장 높이에 맞춤
+      const droppedCeilingHeight = spaceInfo.height - dropHeight;
       
-      // 도어 절대 위치
-      const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-      const doorBottomAbsolute = floatHeight;               // 가구 하단과 동일 (더 이상 내려가지 않음)
-      
-      // 도어 높이
-      finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
-      
-      // 가구 절대 위치  
-      const furnitureTopAbsolute = actualDoorHeight;  // 가구 상단은 천장 위치
-      const furnitureBottomAbsolute = floatHeight;    // 바닥+띄움높이
-      const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-      
-      // 도어 중심 절대 위치
-      const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-      
-      // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
-      // 5mm 더 내림 (2단서랍+옷장도 동일하게 적용)
-      doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
-      
-      console.log('🔍 띄움 배치 키큰장 도어 계산:', {
-        띄움높이: floatHeight,
-        가구높이: furnitureHeight,
-        actualDoorHeight,
-        도어높이: finalDoorHeight,
-        doorYPosition_units: doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        is2DrawerHanging,
-        설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
-      });
-      
-      if (is2DrawerHanging) {
-        console.log('🚨🚨🚨 2단서랍+옷장 도어 계산 상세:', {
-          doorTopAbsolute,
-          doorBottomAbsolute,
-          finalDoorHeight,
-          furnitureCenterAbsolute,
-          doorCenterAbsolute,
-          doorYPosition,
+      if (floatHeight > 0) {
+        // 띄워서 배치 + 단내림
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장-5mm
+        const doorBottomAbsolute = floatHeight;                   // 띄움 높이
+        
+        // 도어 높이
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        
+        // 가구 절대 위치 (단내림 구간)
+        const furnitureTopAbsolute = droppedCeilingHeight;     // 단내림 천장
+        const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
+        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
+        
+        // 도어 중심 절대 위치
+        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
+        
+        // 가구 중심 기준 상대 좌표로 변환
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
+        
+        console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
+          zone: 'dropped',
+          dropHeight,
+          droppedCeilingHeight,
+          띄움높이: floatHeight,
+          가구높이: furnitureHeight,
+          도어높이: finalDoorHeight,
+          doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          계산과정: {
-            '도어중심-가구중심': doorCenterAbsolute - furnitureCenterAbsolute,
-            '5mm조정': -5,
-            '최종': (doorCenterAbsolute - furnitureCenterAbsolute - 5)
-          }
+          설명: '단내림 구간: 도어 높이는 단내림 천장에 맞춤'
+        });
+      } else {
+        // 받침대 배치 + 단내림
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장-5mm
+        const doorBottomAbsolute = 25;                            // 바닥+25mm
+        
+        // 도어 높이
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        
+        // 가구 절대 위치 (단내림 구간)
+        const furnitureTopAbsolute = droppedCeilingHeight;     // 단내림 천장
+        const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
+        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
+        
+        // 도어 중심 절대 위치
+        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
+        
+        // 가구 중심 기준 상대 좌표로 변환
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
+        
+        console.log('🔍 단내림 + 받침대 배치 키큰장 도어 계산:', {
+          zone: 'dropped',
+          dropHeight,
+          droppedCeilingHeight,
+          받침대높이: baseHeight,
+          가구높이: furnitureHeight,
+          도어높이: finalDoorHeight,
+          doorYPosition_units: doorYPosition,
+          doorYPosition_mm: doorYPosition / 0.01,
+          설명: '단내림 구간: 도어 높이는 단내림 천장에 맞춤'
         });
       }
     } else {
-      // 받침대 배치: 도어는 천장-5mm부터 바닥+25mm까지
-      const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-      
-      // 도어 절대 위치
-      const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-      const doorBottomAbsolute = 25;                        // 바닥+25mm (바닥에서 25mm 띄움)
-      
-      // 도어 높이
-      finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
-      
-      // 가구 절대 위치
-      const furnitureTopAbsolute = actualDoorHeight;    // 가구 상단은 천장 위치
-      const furnitureBottomAbsolute = baseHeight;       // 바닥+받침대높이
-      const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-      
-      // 도어 중심 절대 위치
-      const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-      
-      // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
-      // 5mm 더 내림
-      doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
-      
-      console.log('🔍 받침대 배치 키큰장 도어 계산:', {
-        받침대높이: baseHeight,
-        가구높이: furnitureHeight,
-        actualDoorHeight,
-        도어높이: finalDoorHeight,
-        doorYPosition_units: doorYPosition,
-        설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
-      });
+      // 일반 구간 (기존 로직)
+      if (floatHeight > 0) {
+        console.log('✅ 키큰장 + 띄움 배치 모드!', { floatHeight, furnitureHeight });
+        
+        // 도어 절대 위치
+        const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
+        const doorBottomAbsolute = floatHeight;               // 가구 하단과 동일 (더 이상 내려가지 않음)
+        
+        // 도어 높이
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        
+        // 가구 절대 위치  
+        const furnitureTopAbsolute = actualDoorHeight;  // 가구 상단은 천장 위치
+        const furnitureBottomAbsolute = floatHeight;    // 바닥+띄움높이
+        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
+        
+        // 도어 중심 절대 위치
+        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
+        
+        // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
+        // 5mm 더 내림 (2단서랍+옷장도 동일하게 적용)
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
+        
+        console.log('🔍 띄움 배치 키큰장 도어 계산:', {
+          띄움높이: floatHeight,
+          가구높이: furnitureHeight,
+          actualDoorHeight,
+          도어높이: finalDoorHeight,
+          doorYPosition_units: doorYPosition,
+          doorYPosition_mm: doorYPosition / 0.01,
+          is2DrawerHanging,
+          설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
+        });
+        
+        if (is2DrawerHanging) {
+          console.log('🚨🚨🚨 2단서랍+옷장 도어 계산 상세:', {
+            doorTopAbsolute,
+            doorBottomAbsolute,
+            finalDoorHeight,
+            furnitureCenterAbsolute,
+            doorCenterAbsolute,
+            doorYPosition,
+            doorYPosition_mm: doorYPosition / 0.01,
+            계산과정: {
+              '도어중심-가구중심': doorCenterAbsolute - furnitureCenterAbsolute,
+              '5mm조정': -5,
+              '최종': (doorCenterAbsolute - furnitureCenterAbsolute - 5)
+            }
+          });
+        }
+      } else {
+        // 받침대 배치: 도어는 천장-5mm부터 바닥+25mm까지
+        const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+        
+        // 도어 절대 위치
+        const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
+        const doorBottomAbsolute = 25;                        // 바닥+25mm (바닥에서 25mm 띄움)
+        
+        // 도어 높이
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        
+        // 가구 절대 위치
+        const furnitureTopAbsolute = actualDoorHeight;    // 가구 상단은 천장 위치
+        const furnitureBottomAbsolute = baseHeight;       // 바닥+받침대높이
+        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
+        
+        // 도어 중심 절대 위치
+        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
+        
+        // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
+        // 5mm 더 내림
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
+        
+        console.log('🔍 받침대 배치 키큰장 도어 계산:', {
+          받침대높이: baseHeight,
+          가구높이: furnitureHeight,
+          actualDoorHeight,
+          도어높이: finalDoorHeight,
+          doorYPosition_units: doorYPosition,
+          설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
+        });
+      }
     }
     
     console.log('🚪📏 키큰장 도어 최종 계산:', {
       type: '키큰장',
+      zone,
+      isDroppedZone,
+      dropHeight,
       가구높이_mm: furnitureHeight,
       전체공간높이_mm: actualDoorHeight,
       띄움높이_mm: floatHeight,
       최종도어높이_mm: finalDoorHeight,
       doorYPosition_units: doorYPosition,
       doorYPosition_mm: doorYPosition / 0.01,
-      설명: '도어는 가구와 동일한 크기로 설정',
+      설명: isDroppedZone ? '단내림: 도어 높이는 단내림 천장에 맞춤' : '일반: 전체 높이 사용',
       note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
     });
   } else if (isUpperCabinet) {
