@@ -397,24 +397,15 @@ export class ColumnIndexer {
     // 각 슬롯(컬럼)의 중심 위치 계산
     const columnPositions = [];
     
-    if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드: 균등 분할 위치 사용 (엔드패널과 무관하게)
-      const baseSlotWidth = totalWidth / columnCount;
-      for (let i = 0; i < columnCount; i++) {
-        const columnCenter = -(totalWidth / 2) + (i + 0.5) * baseSlotWidth;
-        columnPositions.push(columnCenter);
-      }
-    } else {
-      // 서라운드/빌트인: 실제 슬롯 너비 기반 위치 계산
-      for (let i = 0; i < columnCount; i++) {
-        // 각 컬럼의 시작 위치
-        const columnStart = columnBoundaries[i];
-        // 각 컬럼의 끝 위치
-        const columnEnd = columnBoundaries[i + 1];
-        // 각 컬럼의 중심 위치
-        const columnCenter = (columnStart + columnEnd) / 2;
-        columnPositions.push(columnCenter);
-      }
+    // 모든 모드에서 실제 슬롯 너비 기반 위치 계산 사용
+    for (let i = 0; i < columnCount; i++) {
+      // 각 컬럼의 시작 위치
+      const columnStart = columnBoundaries[i];
+      // 각 컬럼의 끝 위치
+      const columnEnd = columnBoundaries[i + 1];
+      // 각 컬럼의 중심 위치
+      const columnCenter = (columnStart + columnEnd) / 2;
+      columnPositions.push(columnCenter);
     }
     
     // Three.js 단위로 변환된 값들도 함께 제공
