@@ -149,6 +149,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
+    console.log('🚀🚀🚀 [handleSlotDrop] 함수 시작:', {
+      dragEvent: !!dragEvent,
+      dragEventType: dragEvent?.type,
+      canvasElement: !!canvasElement,
+      canvasTagName: canvasElement?.tagName,
+      clientX: dragEvent?.clientX,
+      clientY: dragEvent?.clientY
+    });
     // 스토어에서 직접 최신 데이터 가져오기 - 의존성 배열에서 제외하여 재생성 방지
     const storeState = useFurnitureStore.getState();
     const latestDragData = storeState.currentDragData;
@@ -2595,15 +2603,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => {
-      console.log('🎯 window.handleSlotDrop called - using ref.current', {
+      console.log('🎯🎯🎯 window.handleSlotDrop called - using ref.current', {
         hasRef: !!handleSlotDropRef.current,
-        dragEventType: dragEvent.type,
-        dataTransfer: dragEvent.dataTransfer?.getData('application/json')
+        dragEvent: !!dragEvent,
+        dragEventType: dragEvent?.type,
+        canvasElement: !!canvasElement,
+        activeZone,
+        dataTransfer: dragEvent?.dataTransfer?.getData('application/json')
       });
       if (handleSlotDropRef.current) {
-        return handleSlotDropRef.current(dragEvent, canvasElement);
+        const result = handleSlotDropRef.current(dragEvent, canvasElement);
+        console.log('🎯🎯🎯 window.handleSlotDrop result:', result);
+        return result;
       } else {
-        console.error('❌ handleSlotDropRef.current is null');
+        console.error('❌❌❌ handleSlotDropRef.current is null');
         return false;
       }
     };
