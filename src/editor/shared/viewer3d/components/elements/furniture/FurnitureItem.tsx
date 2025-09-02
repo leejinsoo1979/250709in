@@ -1475,7 +1475,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       
       // 키큰장 높이는 내경 공간 높이와 같아야 함
       // 실제 가구 높이가 내경 공간보다 크면 내경 공간에 맞춤
-      const furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
+      let furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
+      
+      // 단내림+서라운드에서는 상부프레임 두께(10mm)만큼 더 줄임
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
+        furnitureHeightMm -= 10; // 상부프레임 두께만큼 추가로 줄임
+        console.log('🔴 단내림+서라운드 키큰장 높이 조정:', {
+          원래높이: furnitureHeightMm + 10,
+          조정후높이: furnitureHeightMm,
+          상부프레임두께: 10
+        });
+      }
       
       // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
       let startY = furnitureStartY;
