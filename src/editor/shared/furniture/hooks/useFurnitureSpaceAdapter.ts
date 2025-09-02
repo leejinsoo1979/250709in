@@ -341,19 +341,23 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         // 실제 가구 너비 계산 - 슬롯에 맞는 너비 사용
         let newCustomWidth: number | undefined;
         
-        // slotWidths가 있으면 사용
-        if (newIndexing.slotWidths && newIndexing.slotWidths[slotIndex] !== undefined) {
-          if (isDualModule && slotIndex + 1 < newIndexing.slotWidths.length) {
-            // 듀얼 가구: 두 슬롯의 너비 합
-            newCustomWidth = newIndexing.slotWidths[slotIndex] + newIndexing.slotWidths[slotIndex + 1];
-          } else {
-            // 싱글 가구: 해당 슬롯의 너비
-            newCustomWidth = newIndexing.slotWidths[slotIndex];
+        // 서라운드 모드에서만 customWidth 계산
+        if (newSpaceInfo.surroundType === 'surround') {
+          // slotWidths가 있으면 사용
+          if (newIndexing.slotWidths && newIndexing.slotWidths[slotIndex] !== undefined) {
+            if (isDualModule && slotIndex + 1 < newIndexing.slotWidths.length) {
+              // 듀얼 가구: 두 슬롯의 너비 합
+              newCustomWidth = newIndexing.slotWidths[slotIndex] + newIndexing.slotWidths[slotIndex + 1];
+            } else {
+              // 싱글 가구: 해당 슬롯의 너비
+              newCustomWidth = newIndexing.slotWidths[slotIndex];
+            }
+          } else if (zone === 'dropped' && customWidth) {
+            // 단내림 영역은 이미 계산된 customWidth 사용
+            newCustomWidth = customWidth;
           }
-        } else if (zone === 'dropped' && customWidth) {
-          // 단내림 영역은 이미 계산된 customWidth 사용
-          newCustomWidth = customWidth;
         }
+        // 노서라운드 모드에서는 customWidth를 undefined로 설정
         
         updatedModules.push({
           ...module,
