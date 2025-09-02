@@ -1472,7 +1472,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         internalHeightMm,
-        topFrameThickness,
         furnitureHeightMm,
         계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
         yPos_Three단위: yPos,
