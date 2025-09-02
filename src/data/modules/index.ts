@@ -163,16 +163,23 @@ export const validateModuleForInternalSpace = (
   // 스타일러장이나 바지걸이장인지 확인
   const isStylerOrPantshanger = module.id.includes('styler') || module.id.includes('pantshanger');
   
+  // 상부장과 하부장은 높이 검증을 하지 않음
+  // 상부장은 상단에, 하부장은 하단에 배치되므로 전체 내경 높이와 비교할 필요가 없음
+  const isUpperOrLowerCabinet = module.category === 'upper' || module.category === 'lower';
+  
   // 스타일러장과 바지걸이장은 폭 체크를 하지 않고 항상 표시
   const fitsWidth = isStylerOrPantshanger ? true : width <= internalSpace.width;
   const actualFitsWidth = width <= internalSpace.width;
   
+  // 상하부장은 높이 체크를 하지 않음
+  const fitsHeight = isUpperOrLowerCabinet ? true : height <= internalSpace.height;
+  
   return {
     fitsWidth: actualFitsWidth, // 실제 맞는지 여부
-    fitsHeight: height <= internalSpace.height,
+    fitsHeight: fitsHeight,
     fitsDepth: depth <= internalSpace.depth,
     isValid: fitsWidth && // 표시용 (스타일러/바지걸이는 항상 true)
-             height <= internalSpace.height && 
+             fitsHeight && 
              depth <= internalSpace.depth,
     needsWarning: isStylerOrPantshanger && !actualFitsWidth // 경고가 필요한 경우
   };
