@@ -1671,10 +1671,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 일반 가구 (하부장 포함)
-    // 단내림 구간에서도 바닥마감재 높이는 적용, 띄움 높이만 제외
     let yPos: number;
     if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      // 단내림 구간: 바닥마감재 높이는 적용, 띄움 높이는 제외
+      // 단내림 구간: 바닥마감재와 받침대/띄움 설정 모두 적용
       const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
       const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
       
@@ -1682,10 +1681,38 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
         const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
         yPos = (floorFinishHeight + baseFrameHeightMm * 0.01) + height / 2;
+        console.log('🔴 단내림구간 - 받침대 배치:', {
+          zone: 'dropped',
+          baseFrameHeightMm,
+          floorFinishHeightMm,
+          yPos,
+          yPos_mm: yPos * 100
+        });
       } 
-      // 받침대 없음 - 띄워서 배치인 경우에도 단내림 구간에서는 띄움 높이 무시
+      // 받침대 없음 - 띄워서 배치 확인
+      else if (spaceInfo.baseConfig.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+        // 띄워서 배치: 바닥마감재 + 띄움 높이
+        const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+        yPos = (floorFinishHeight + floatHeightMm * 0.01) + height / 2;
+        console.log('🔴 단내림구간 - 띄워서 배치:', {
+          zone: 'dropped',
+          floatHeightMm,
+          floorFinishHeightMm,
+          yPos,
+          yPos_mm: yPos * 100,
+          baseConfig: spaceInfo.baseConfig
+        });
+      }
+      // 받침대 없음 - 바닥 배치
       else {
         yPos = floorFinishHeight + height / 2;
+        console.log('🔴 단내림구간 - 바닥 배치:', {
+          zone: 'dropped',
+          floorFinishHeightMm,
+          yPos,
+          yPos_mm: yPos * 100,
+          baseConfig: spaceInfo.baseConfig
+        });
       }
     } else {
       // 일반 구간: 모든 높이 적용 (바닥마감재 + 받침대/띄움)
