@@ -64,6 +64,21 @@ export const isSlotAvailable = (
   const isNewLower = newModuleData?.category === 'lower' || 
                     moduleId.includes('lower-cabinet') || 
                     moduleId.includes('dual-lower-cabinet');
+  
+  // 상부장 디버깅 로그 추가
+  if (isNewUpper) {
+    console.log('🔵 상부장 배치 검증:', {
+      moduleId,
+      category: newModuleData?.category,
+      isNewUpper,
+      slotIndex,
+      targetSlots,
+      existingModulesInSlot: placedModules.filter(m => {
+        const mSlot = m.slotIndex;
+        return targetSlots.includes(mSlot);
+      }).map(m => ({ id: m.id, moduleId: m.moduleId, slotIndex: m.slotIndex }))
+    });
+  }
 
   console.log('📋 새 가구 정보:', {
     moduleId,
