@@ -1881,25 +1881,25 @@ const Room: React.FC<RoomProps> = ({
                 // 왼쪽 단내림: 
                 // - 단내림 구간은 왼쪽 프레임 안쪽부터 경계까지
                 // - 일반 구간은 경계부터 오른쪽 프레임 안쪽까지
-                droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
-                normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
+                droppedFrameWidth = droppedAreaWidth;
+                normalFrameWidth = normalAreaWidth;
                 
-                // 서라운드 모드에서는 프레임 두께 고려
+                // 서라운드 모드에서는 프레임 안쪽에 위치하도록 조정
                 if (spaceInfo.surroundType === 'surround') {
-                  droppedFrameWidth += mmToThreeUnits(leftReduction)/2;  // 단내림은 왼쪽 프레임 중심부터
-                  normalFrameWidth += mmToThreeUnits(rightReduction)/2;  // 일반은 오른쪽 프레임 중심까지
+                  droppedFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임 안쪽
+                  normalFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임 안쪽
                 }
               } else {
                 // 오른쪽 단내림: 
                 // - 일반 구간은 왼쪽 프레임 안쪽부터 경계까지
                 // - 단내림 구간은 경계부터 오른쪽 프레임 안쪽까지
-                normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
-                droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
+                normalFrameWidth = normalAreaWidth;
+                droppedFrameWidth = droppedAreaWidth;
                 
-                // 서라운드 모드에서는 프레임 두께 고려
+                // 서라운드 모드에서는 프레임 안쪽에 위치하도록 조정
                 if (spaceInfo.surroundType === 'surround') {
-                  normalFrameWidth += mmToThreeUnits(leftReduction)/2;  // 일반은 왼쪽 프레임 중심부터
-                  droppedFrameWidth += mmToThreeUnits(rightReduction)/2;  // 단내림은 오른쪽 프레임 중심까지
+                  normalFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임 안쪽
+                  droppedFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임 안쪽
                 }
               }
               
@@ -1907,20 +1907,20 @@ const Room: React.FC<RoomProps> = ({
               const normalStartX = mmToThreeUnits(normalBounds.startX);
               const droppedStartX = mmToThreeUnits(droppedBounds.startX);
               
-              // 프레임 중심 위치 계산 (서라운드 모드에서 조정)
+              // 프레임 중심 위치 계산
               let droppedX, normalX;
               
               if (spaceInfo.surroundType === 'surround') {
                 if (isLeftDropped) {
                   // 왼쪽 단내림: 단내림 프레임은 왼쪽 프레임 안쪽에서 시작
-                  droppedX = droppedStartX + mmToThreeUnits(leftReduction)/2 + droppedFrameWidth/2;
-                  // 일반 프레임은 경계에서 시작해서 오른쪽 프레임 안쪽에서 끝남
-                  normalX = normalStartX + normalFrameWidth/2 - mmToThreeUnits(rightReduction)/2;
+                  droppedX = droppedStartX + mmToThreeUnits(leftReduction) + droppedFrameWidth/2;
+                  // 일반 프레임은 경계에서 시작
+                  normalX = normalStartX + normalFrameWidth/2;
                 } else {
                   // 오른쪽 단내림: 일반 프레임은 왼쪽 프레임 안쪽에서 시작
-                  normalX = normalStartX + mmToThreeUnits(leftReduction)/2 + normalFrameWidth/2;
-                  // 단내림 프레임은 경계에서 시작해서 오른쪽 프레임 안쪽에서 끝남
-                  droppedX = droppedStartX + droppedFrameWidth/2 - mmToThreeUnits(rightReduction)/2;
+                  normalX = normalStartX + mmToThreeUnits(leftReduction) + normalFrameWidth/2;
+                  // 단내림 프레임은 경계에서 시작
+                  droppedX = droppedStartX + droppedFrameWidth/2;
                 }
               } else {
                 // 노서라운드 모드는 기존 로직 유지

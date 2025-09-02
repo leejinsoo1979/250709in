@@ -551,11 +551,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorHeightAdjusted,
       moduleHeight: moduleData?.dimensions?.height,
       spaceHeight: spaceInfo.height,
-      hasTopFrame: topFrameThickness
+      hasTopFrame: topFrameThickness,
+      zone: (spaceInfo as any).zone,
+      surroundUse: spaceInfo.surround?.use
     });
     
-    // 키큰장 도어는 공간 기준으로 천장-5mm, 바닥까지
-    const upperGap = 5;      // 천장에서 5mm 갭
+    // 단내림+서라운드에서는 키큰장이 상부프레임 하단에 맞닿음 (갭 없음)
+    // 일반 구간에서는 천장-5mm 갭 유지
+    const isDroppedWithSurround = (spaceInfo as any).zone === 'dropped' && 
+                                   spaceInfo.droppedCeiling?.enabled && 
+                                   spaceInfo.surround?.use;
+    const upperGap = isDroppedWithSurround ? 0 : 5;  // 단내림+서라운드: 0mm, 일반: 5mm
     const lowerGap = 0;      // 바닥까지 (갭 없음)
     
     // furnitureHeight를 가져옴
