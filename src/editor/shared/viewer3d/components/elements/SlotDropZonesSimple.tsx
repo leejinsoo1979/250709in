@@ -1511,10 +1511,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 정확한 너비를 포함한 moduleId 생성
       // 원본 모듈의 타입(single/dual)을 유지
       const originalBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
-      // 노서라운드 모드에서는 원본 moduleId를 사용하고 customWidth만 별도로 저장
+      // 노서라운드 모드에서는 getModuleById로 가져온 모듈 ID 사용
       // 서라운드 모드에서만 customWidth를 포함한 moduleId 생성
       const zoneTargetModuleId = spaceInfo.surroundType === 'no-surround' 
-        ? dragData.moduleData.id  // 노서라운드: 원본 ID 사용
+        ? moduleData.id  // 노서라운드: getModuleById로 가져온 모듈 ID 사용
         : `${originalBaseType}-${customWidth}`;  // 서라운드: customWidth 포함
       
       console.log('🎯 모듈 ID 생성:', {
