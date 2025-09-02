@@ -1876,23 +1876,57 @@ const Room: React.FC<RoomProps> = ({
               const droppedAreaWidth = mmToThreeUnits(droppedBounds.width);
               const normalAreaWidth = mmToThreeUnits(normalBounds.width);
               
+              // 서라운드 모드에서 일반 구간 프레임은 좌우 프레임 안쪽에 위치
               if (isLeftDropped) {
-                // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
+                // 왼쪽 단내림: 
+                // - 단내림 구간은 왼쪽 프레임 안쪽부터 경계까지
+                // - 일반 구간은 경계부터 오른쪽 프레임 안쪽까지
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
+                
+                // 서라운드 모드에서는 프레임 두께 고려
+                if (spaceInfo.surroundType === 'surround') {
+                  droppedFrameWidth += mmToThreeUnits(leftReduction)/2;  // 단내림은 왼쪽 프레임 중심부터
+                  normalFrameWidth += mmToThreeUnits(rightReduction)/2;  // 일반은 오른쪽 프레임 중심까지
+                }
               } else {
-                // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
+                // 오른쪽 단내림: 
+                // - 일반 구간은 왼쪽 프레임 안쪽부터 경계까지
+                // - 단내림 구간은 경계부터 오른쪽 프레임 안쪽까지
                 normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
+                
+                // 서라운드 모드에서는 프레임 두께 고려
+                if (spaceInfo.surroundType === 'surround') {
+                  normalFrameWidth += mmToThreeUnits(leftReduction)/2;  // 일반은 왼쪽 프레임 중심부터
+                  droppedFrameWidth += mmToThreeUnits(rightReduction)/2;  // 단내림은 오른쪽 프레임 중심까지
+                }
               }
               
               // Three.js 단위로 변환된 시작점
               const normalStartX = mmToThreeUnits(normalBounds.startX);
               const droppedStartX = mmToThreeUnits(droppedBounds.startX);
               
-              // 프레임 중심 위치 계산
-              const droppedX = droppedStartX + droppedFrameWidth/2;
-              const normalX = normalStartX + normalFrameWidth/2;
+              // 프레임 중심 위치 계산 (서라운드 모드에서 조정)
+              let droppedX, normalX;
+              
+              if (spaceInfo.surroundType === 'surround') {
+                if (isLeftDropped) {
+                  // 왼쪽 단내림: 단내림 프레임은 왼쪽 프레임 안쪽에서 시작
+                  droppedX = droppedStartX + mmToThreeUnits(leftReduction)/2 + droppedFrameWidth/2;
+                  // 일반 프레임은 경계에서 시작해서 오른쪽 프레임 안쪽에서 끝남
+                  normalX = normalStartX + normalFrameWidth/2 - mmToThreeUnits(rightReduction)/2;
+                } else {
+                  // 오른쪽 단내림: 일반 프레임은 왼쪽 프레임 안쪽에서 시작
+                  normalX = normalStartX + mmToThreeUnits(leftReduction)/2 + normalFrameWidth/2;
+                  // 단내림 프레임은 경계에서 시작해서 오른쪽 프레임 안쪽에서 끝남
+                  droppedX = droppedStartX + droppedFrameWidth/2 - mmToThreeUnits(rightReduction)/2;
+                }
+              } else {
+                // 노서라운드 모드는 기존 로직 유지
+                droppedX = droppedStartX + droppedFrameWidth/2;
+                normalX = normalStartX + normalFrameWidth/2;
+              }
               
               console.log('🔥 상부 프레임 너비 상세 계산:', {
                 전체너비mm: width / 0.01,

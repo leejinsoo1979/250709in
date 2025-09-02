@@ -1813,8 +1813,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
                       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                       const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-                      if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-                        widths = [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
+                      
+                      // 단내림 구간에서 로컬 슬롯 인덱스 계산
+                      let localSlotIndex = placedModule.slotIndex;
+                      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+                        localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+                      } else if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+                        localSlotIndex = placedModule.slotIndex - zoneInfo.dropped.columnCount;
+                      }
+                      
+                      if (targetZone.slotWidths && localSlotIndex >= 0 && localSlotIndex < targetZone.slotWidths.length - 1) {
+                        widths = [targetZone.slotWidths[localSlotIndex], targetZone.slotWidths[localSlotIndex + 1]];
                       }
                     } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
                       widths = [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
@@ -2307,8 +2316,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
                   const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                   const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-                  if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-                    return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
+                  
+                  // 단내림 구간에서 로컬 슬롯 인덱스 계산
+                  let localSlotIndex = placedModule.slotIndex;
+                  if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+                    localSlotIndex = placedModule.slotIndex - zoneInfo.normal.columnCount;
+                  } else if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+                    localSlotIndex = placedModule.slotIndex - zoneInfo.dropped.columnCount;
+                  }
+                  
+                  if (targetZone.slotWidths && localSlotIndex >= 0 && localSlotIndex < targetZone.slotWidths.length - 1) {
+                    return [targetZone.slotWidths[localSlotIndex], targetZone.slotWidths[localSlotIndex + 1]];
                   }
                 } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
                   return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
