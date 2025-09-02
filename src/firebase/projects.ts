@@ -162,10 +162,17 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     const now = serverTimestamp() as Timestamp;
 
     // undefined 필드들을 제외한 데이터 생성
+    // mainDoorCount와 droppedCeilingDoorCount가 undefined인 경우 0으로 설정
+    const spaceConfigWithDefaults = {
+      ...data.spaceConfig,
+      mainDoorCount: data.spaceConfig.mainDoorCount ?? 0,
+      droppedCeilingDoorCount: data.spaceConfig.droppedCeilingDoorCount ?? 0,
+    };
+    
     const baseData: any = {
       name: data.name,
       projectId: data.projectId,
-      spaceConfig: data.spaceConfig,
+      spaceConfig: spaceConfigWithDefaults,
       furniture: data.furniture,
       userId: user.uid,
       teamId: teamId || '',
@@ -656,10 +663,17 @@ export const updateDesignFile = async (
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
+    // spaceConfig가 있는 경우 mainDoorCount와 droppedCeilingDoorCount의 기본값 설정
+    const spaceConfigWithDefaults = updates.spaceConfig ? {
+      ...updates.spaceConfig,
+      mainDoorCount: updates.spaceConfig.mainDoorCount ?? 0,
+      droppedCeilingDoorCount: updates.spaceConfig.droppedCeilingDoorCount ?? 0,
+    } : undefined;
+    
     const updateData = {
       updatedAt: serverTimestamp(),
       ...(updates.name && { name: updates.name }),
-      ...(updates.spaceConfig && { spaceConfig: updates.spaceConfig }),
+      ...(spaceConfigWithDefaults && { spaceConfig: spaceConfigWithDefaults }),
       ...(updates.furniture && { furniture: updates.furniture }),
       ...(updates.thumbnail && { thumbnail: updates.thumbnail })
     };
