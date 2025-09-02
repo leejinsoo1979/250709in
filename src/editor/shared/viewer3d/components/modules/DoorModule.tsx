@@ -653,24 +653,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
     });
   } else if (isUpperCabinet) {
-    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 48mm 확장
+    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 18mm 확장
     const upperExtension = 5;   // 가구 상단에서 위로 5mm
-    const lowerExtension = 48;  // 가구 하단에서 아래로 48mm (하단 마감재 18mm + 조정값 30mm)
+    const lowerExtension = 18;  // 가구 하단에서 아래로 18mm (하단 마감재 덮기)
     const furnitureHeight = moduleData?.dimensions?.height || 600;
     
     // 도어 높이 = 가구 높이 + 위 확장 + 아래 확장
     finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
     
     // 상부장 도어 Y 위치 계산
-    // 도어 상단 위치 (가구 중심 기준) = furnitureHeight/2 + upperExtension
-    // 도어 하단 위치 (가구 중심 기준) = -furnitureHeight/2 - lowerExtension
-    // 도어 중심 = (도어상단 + 도어하단) / 2
-    const doorTop = furnitureHeight/2 + upperExtension;
-    const doorBottom = -furnitureHeight/2 - lowerExtension;
-    const doorCenter = (doorTop + doorBottom) / 2;
+    // 도어 크기는 그대로 유지 (위 5mm, 아래 18mm 확장)
+    // 기본 도어 중심 위치 = (5 - 18) / 2 = -6.5mm
+    // 추가로 10mm 더 아래로 이동
+    const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
+    const additionalOffset = -10;  // 10mm 더 아래로
     
     // Three.js 단위로 변환
-    doorYPosition = mmToThreeUnits(doorCenter);
+    doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
     
     console.log('🚪📍 상부장 도어 위치 계산:', {
       type: '상부장',
@@ -680,13 +679,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       도어높이: finalDoorHeight,
       가구상단_mm: furnitureHeight/2,
       가구하단_mm: -furnitureHeight/2,
-      도어상단_mm: doorTop,
-      도어하단_mm: doorBottom,
-      도어중심_mm: doorCenter,
+      기본오프셋_mm: baseOffset,
+      추가오프셋_mm: additionalOffset,
+      최종오프셋_mm: baseOffset + additionalOffset,
       doorYPosition_units: doorYPosition,
-      doorYPosition_mm: doorCenter,
-      계산식: `(${doorTop} + ${doorBottom}) / 2 = ${doorCenter}`,
-      note: `도어 중심이 가구 중심보다 ${-doorCenter}mm ${doorCenter < 0 ? '아래로' : '위로'} 이동`
+      doorYPosition_mm: doorYPosition / 0.01,
+      계산식: `${baseOffset} + ${additionalOffset} = ${baseOffset + additionalOffset}`,
+      note: `도어 중심이 가구 중심보다 ${-(baseOffset + additionalOffset)}mm 아래로 이동`
     });
   } else if (isLowerCabinet) {
     console.log('🔴🔴🔴 하부장 조건 진입!!!', {
