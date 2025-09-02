@@ -638,7 +638,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
+        // 도어를 10mm 아래로 이동시켜 하단이 25mm가 되도록 조정
+        const additionalOffset = -5;  // 도어 중심을 5mm 아래로 (도어가 10mm 확장되므로)
+        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute + additionalOffset);
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -681,7 +683,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
         
         // 가구 중심 기준 상대 좌표로 변환
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
+        // 도어를 10mm 아래로 이동시켜 하단이 25mm가 되도록 조정
+        const additionalOffset = -5;  // 도어 중심을 5mm 아래로
+        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute + additionalOffset) * 0.01; // mm to Three.js units
         
         console.log('🔍 단내림 + 받침대 배치 키큰장 도어 계산:', {
           zone: 'dropped',
