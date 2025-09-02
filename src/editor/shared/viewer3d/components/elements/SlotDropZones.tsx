@@ -463,6 +463,27 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     // 최종 위치 계산 - zone 정보 전달
     const finalX = calculateFurniturePosition(zoneSlotIndex, actualModuleId, spaceInfo, zone);
+    
+    // 빌트인+노서라운드 모드 디버깅
+    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      console.log('🚨 빌트인+노서라운드 가구 배치 위치:', {
+        slotIndex: zoneSlotIndex,
+        moduleId: actualModuleId,
+        calculatedX: finalX,
+        customWidth,
+        indexing: {
+          columnCount: indexing.columnCount,
+          slotWidths: indexing.slotWidths,
+          threeUnitPositions: indexing.threeUnitPositions
+        },
+        spaceInfo: {
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          gapConfig: spaceInfo.gapConfig
+        }
+      });
+    }
+    
     if (finalX === null) {
       return false;
     }
