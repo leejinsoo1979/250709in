@@ -84,10 +84,8 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   if (spaceInfo.surroundType === 'no-surround') {
     // 노서라운드: 설치 유형에 따라 다르게 계산
     if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-      const leftGap = spaceInfo.gapConfig?.left || 2;
-      const rightGap = spaceInfo.gapConfig?.right || 2;
-      internalWidth = spaceInfo.width - leftGap - rightGap;
+      // 빌트인: 노서라운드에서는 이격거리 무시 (벽에 바로 붙음)
+      internalWidth = spaceInfo.width;
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
       // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
       internalWidth = spaceInfo.width - 18; // 엔드패널 두께 18mm
@@ -129,9 +127,15 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   // 시작 위치 계산 (X 좌표)
   let startX;
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 시작 위치 = 좌측 이격거리
-    startX = spaceInfo.gapConfig.left;
+  if (spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드: 빌트인은 0, 그 외는 이격거리/엔드패널 고려
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      startX = 0; // 빌트인: 벽에 바로 붙음
+    } else if (spaceInfo.gapConfig) {
+      startX = spaceInfo.gapConfig.left;
+    } else {
+      startX = 0;
+    }
   } else {
     // 서라운드: 시작 위치 = 좌측 프레임 두께
     startX = frameThickness.left;
@@ -360,9 +364,15 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
   
   let baseWidthMm;
   
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 이격거리를 고려한 너비 계산
-    baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
+  if (spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드: 빌트인은 전체 너비, 그 외는 이격거리 고려
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      baseWidthMm = spaceInfo.width; // 빌트인: 벽에 바로 붙음
+    } else if (spaceInfo.gapConfig) {
+      baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
+    } else {
+      baseWidthMm = spaceInfo.width;
+    }
     
     // 디버깅 로그 추가 (개발 모드에서만 출력)
     // if (import.meta.env.DEV) {
