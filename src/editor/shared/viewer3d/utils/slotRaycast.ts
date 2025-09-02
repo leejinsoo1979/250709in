@@ -25,6 +25,14 @@ export const getSlotIndexFromMousePosition = (
     mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     
+    console.log('🎯 [slotRaycast] Starting raycast detection:', {
+      clientX,
+      clientY,
+      normalizedMouse: { x: mouse.x, y: mouse.y },
+      activeZone,
+      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled
+    });
+    
     // 레이캐스터 생성
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
@@ -33,6 +41,8 @@ export const getSlotIndexFromMousePosition = (
     const slotColliders: THREE.Object3D[] = [];
     let totalSceneObjects = 0;
     let objectsWithUserData = 0;
+    let droppedZoneColliders = 0;
+    let normalZoneColliders = 0;
     
     scene.traverse((child) => {
       totalSceneObjects++;
@@ -52,12 +62,20 @@ export const getSlotIndexFromMousePosition = (
       }
       
       if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
+        // Count colliders by zone
+        if (child.userData?.zone === 'dropped') {
+          droppedZoneColliders++;
+        } else if (child.userData?.zone === 'normal') {
+          normalZoneColliders++;
+        }
+        
         // activeZone이 지정된 경우 해당 zone의 콜라이더만 선택
         if (activeZone && child.userData?.zone !== activeZone) {
           console.log('⏭️ Skipping collider due to zone mismatch:', {
             colliderZone: child.userData?.zone,
             activeZone,
-            name: child.name
+            name: child.name,
+            slotIndex: child.userData?.slotIndex
           });
           return;
         }
@@ -65,7 +83,8 @@ export const getSlotIndexFromMousePosition = (
         console.log('✅ Added collider to list:', {
           name: child.name,
           zone: child.userData?.zone,
-          slotIndex: child.userData?.slotIndex
+          slotIndex: child.userData?.slotIndex,
+          position: child.position
         });
       }
     });
@@ -74,7 +93,14 @@ export const getSlotIndexFromMousePosition = (
       totalSceneObjects,
       objectsWithUserData,
       slotCollidersFound: slotColliders.length,
-      activeZone
+      droppedZoneColliders,
+      normalZoneColliders,
+      activeZone,
+      selectedColliders: slotColliders.map(c => ({
+        name: c.name,
+        zone: c.userData?.zone,
+        slotIndex: c.userData?.slotIndex
+      }))
     });
     
     // 슬롯 콜라이더들과 교차점 검사
@@ -82,6 +108,17 @@ export const getSlotIndexFromMousePosition = (
       numColliders: slotColliders.length,
       mouse,
       cameraPosition: camera.position
+    });
+    
+    // Calculate ray and world position for debugging
+    const ray = raycaster.ray;
+    const rayOrigin = ray.origin;
+    const rayDirection = ray.direction;
+    
+    console.log('🎯 Ray details:', {
+      origin: { x: rayOrigin.x, y: rayOrigin.y, z: rayOrigin.z },
+      direction: { x: rayDirection.x, y: rayDirection.y, z: rayDirection.z },
+      cameraPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z }
     });
     
     const intersects = raycaster.intersectObjects(slotColliders, false); // false = don't check children
@@ -92,7 +129,9 @@ export const getSlotIndexFromMousePosition = (
         object: i.object.name,
         distance: i.distance,
         point: i.point,
-        userData: i.object.userData
+        userData: i.object.userData,
+        zone: i.object.userData?.zone,
+        slotIndex: i.object.userData?.slotIndex
       }))
     });
     
