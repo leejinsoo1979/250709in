@@ -187,12 +187,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       internalWidth: latestIndexing.internalWidth
     });
     
-    console.log('🎯 handleSlotDrop called:', {
+    console.log('🎯🎯🎯 [핵심] handleSlotDrop 호출됨!', {
       hasLatestDragData: !!latestDragData,
       latestDragData: latestDragData,
       moduleCategory: latestDragData?.moduleData?.category || 'unknown',
       moduleType: latestDragData?.moduleData?.type,
       droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
+      surroundType: latestSpaceInfo.surroundType,
+      frameSize: latestSpaceInfo.frameSize,
+      installType: latestSpaceInfo.installType,
+      gapConfig: latestSpaceInfo.gapConfig,
       droppedCeilingWidth: latestSpaceInfo.droppedCeiling?.width,
       surroundType: latestSpaceInfo.surroundType,
       hasIndexingZones: !!indexing?.zones
