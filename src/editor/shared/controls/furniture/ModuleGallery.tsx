@@ -294,7 +294,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         isDynamic: module.isDynamic,
         furnType: module.id.includes('dual-') ? 'dual' : 'single',
         customWidth: adjustedDimensions.width // customWidth 추가
-      }
+      },
+      // 🔴🔴🔴 CRITICAL: correctedSpaceInfo를 dragData에 포함
+      spaceInfo: correctedSpaceInfo
     };
 
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));

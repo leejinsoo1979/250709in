@@ -246,9 +246,17 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
       
       // 노서라운드 모드일 때 frameSize를 0으로 자동 설정
-      if (processedInfo.surroundType === 'no-surround' && !processedInfo.frameSize) {
+      if (processedInfo.surroundType === 'no-surround') {
         processedInfo.frameSize = { left: 0, right: 0, top: 0 };
-        console.log('🔧 [SpaceConfigStore] 노서라운드 모드 - frameSize를 0으로 자동 설정');
+        console.log('🔴🔴🔴 [CRITICAL] SpaceConfigStore - 노서라운드 모드 frameSize 강제 0 설정');
+      }
+      
+      // 기존 상태도 확인하여 노서라운드인 경우 frameSize 수정
+      const currentSurroundType = processedInfo.surroundType || state.spaceInfo.surroundType;
+      if (currentSurroundType === 'no-surround' && state.spaceInfo.frameSize && 
+          (state.spaceInfo.frameSize.left > 0 || state.spaceInfo.frameSize.right > 0)) {
+        processedInfo.frameSize = { left: 0, right: 0, top: 0 };
+        console.log('🔴🔴🔴 [CRITICAL] 기존 상태도 노서라운드인데 frameSize가 잘못됨! 강제 수정');
       }
       
       // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
@@ -358,9 +366,20 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   
   // 공간 정보 초기화
   resetSpaceInfo: () =>
-    set({
-      spaceInfo: initialState.spaceInfo,
-      isDirty: true,
+    set((state) => {
+      let resetInfo = initialState.spaceInfo;
+      // 노서라운드 모드일 경우 frameSize를 0으로 설정
+      if (resetInfo.surroundType === 'no-surround') {
+        resetInfo = {
+          ...resetInfo,
+          frameSize: { left: 0, right: 0, top: 0 }
+        };
+        console.log('🔴🔴🔴 [CRITICAL] resetSpaceInfo - 노서라운드 모드 frameSize 강제 0 설정');
+      }
+      return {
+        spaceInfo: resetInfo,
+        isDirty: true,
+      };
     }),
   
   // 재질 설정 초기화
