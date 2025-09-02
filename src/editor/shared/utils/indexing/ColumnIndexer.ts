@@ -68,19 +68,7 @@ export class ColumnIndexer {
       };
     }
     
-    // 빌트인+노서라운드인 경우 getThreeUnitPositions를 사용
-    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-      console.log('🚨 [calculateSpaceIndexing] 빌트인+노서라운드 감지 - getThreeUnitPositions로 위임');
-      const result = ColumnIndexer.getThreeUnitPositions(spaceInfo);
-      console.log('🚨 [calculateSpaceIndexing] getThreeUnitPositions 결과:', {
-        columnCount: result.columnCount,
-        slotWidths: result.slotWidths,
-        threeUnitPositions: result.threeUnitPositions,
-        firstSlot: result.threeUnitPositions?.[0],
-        lastSlot: result.threeUnitPositions?.[result.threeUnitPositions?.length - 1]
-      });
-      return result;
-    }
+    // 빌트인+노서라운드인 경우는 아래에서 특별 처리됨
     
     // 단내림이 활성화된 경우에도 전체 영역 정보는 유지하되, zones에 영역별 정보 추가
     if (spaceInfo.droppedCeiling?.enabled) {
@@ -629,23 +617,7 @@ export class ColumnIndexer {
       customColumnCount
     });
     
-    // 빌트인+노서라운드인 경우 getThreeUnitPositions 사용
-    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-      console.log('🚨 [calculateZoneSlotInfo] 빌트인+노서라운드 감지 - getThreeUnitPositions 사용');
-      const result = ColumnIndexer.getThreeUnitPositions(spaceInfo);
-      
-      // calculateZoneSlotInfo 형식으로 변환
-      return {
-        normal: {
-          columnCount: result.columnCount,
-          columnWidth: result.columnWidth,
-          slotWidths: result.slotWidths,
-          startX: result.columnBoundaries?.[0] || 0,
-          endX: result.columnBoundaries?.[result.columnBoundaries.length - 1] || 0
-        },
-        dropped: null
-      };
-    }
+    // 빌트인+노서라운드인 경우는 아래에서 특별 처리됨
     
     const frameThickness = calculateFrameThickness(spaceInfo);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
