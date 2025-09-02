@@ -715,7 +715,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 일반구간에서도 띄움 배치 시 도어 높이 줄이기
         // 도어 절대 위치
         const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-        const doorBottomAbsolute = floatHeight + 25;          // 띄움높이 + 25mm (바닥에서 floatHeight + 25mm 위치)
+        const doorBottomAbsolute = floatHeight;               // 띄움높이만큼 (25mm 제외)
         
         // 도어 높이 (띄움높이만큼 줄어듦)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
