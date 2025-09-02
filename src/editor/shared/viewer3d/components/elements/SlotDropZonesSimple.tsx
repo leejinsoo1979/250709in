@@ -1500,7 +1500,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             surroundType: latestSpaceInfo.surroundType,
             isDual,
             zoneSlotIndex,
-            moduleId: zoneTargetModuleId,
+            moduleId: moduleData.id,
             moduleWidth: moduleData.dimensions.width,
             reason: '노서라운드에서는 원본 모듈 크기 사용'
           });
@@ -1551,7 +1551,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               surroundType: spaceInfo.surroundType,
               isDual,
               zoneSlotIndex,
-              moduleId: zoneTargetModuleId,
+              moduleId: moduleData.id,
               reason: '노서라운드에서는 원본 모듈 사용'
             });
           }
