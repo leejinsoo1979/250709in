@@ -817,16 +817,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         targetWidth = isDual ? zoneColumnWidth * 2 : zoneColumnWidth;
       }
       
-      // 모듈 ID 생성: 노서라운드 모드에서는 원본 ID 사용, 서라운드 모드에서만 targetWidth 사용
+      // 모듈 ID 생성: 단내림이 없을 때는 8월 28일 로직 사용
       let targetModuleId;
-      if (spaceInfo.surroundType === 'no-surround') {
-        // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
-        targetModuleId = dragData.moduleData.id;
-        console.log('🔧 [노서라운드] 원본 모듈 ID 사용:', targetModuleId);
-      } else {
-        // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+      
+      // 단내림이 없을 때는 8월 28일 버전 로직 사용: 항상 슬롯 너비 기반 ID 생성
+      if (!spaceInfo.droppedCeiling?.enabled) {
+        // 2025년 8월 28일 로직: 슬롯 너비 기반 모듈 ID 생성
         targetModuleId = `${moduleBaseType}-${targetWidth}`;
-        console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성:', targetModuleId);
+        console.log('🔧 [8월28일 로직] 슬롯 너비 기반 ID 생성 (단내림 없음):', targetModuleId);
+      } else {
+        // 단내림이 있을 때는 현재 로직 유지
+        if (spaceInfo.surroundType === 'no-surround') {
+          // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
+          targetModuleId = dragData.moduleData.id;
+          console.log('🔧 [노서라운드] 원본 모듈 ID 사용 (단내림 있음):', targetModuleId);
+        } else {
+          // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+          targetModuleId = `${moduleBaseType}-${targetWidth}`;
+          console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성 (단내림 있음):', targetModuleId);
+        }
       }
       
       console.log('🔍 가구 검색:', {
@@ -1631,8 +1640,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) ? adjustedWidth : undefined, // 기둥이 있으면 조정된 너비 사용
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
-        // 노서라운드 모드에서는 customWidth를 설정하지 않음
-        customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth,
+        // 단내림이 없을 때는 8월 28일 로직: 노서라운드에서도 customWidth 설정
+        customWidth: !spaceInfo.droppedCeiling?.enabled ? customWidth : (spaceInfo.surroundType === 'no-surround' ? undefined : customWidth),
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined // 단내림 구간의 줄어든 높이 저장
       };
       
@@ -1802,8 +1811,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           isValidInCurrentSpace: true,
           adjustedWidth: moduleData.dimensions.width,
           hingePosition: 'right' as 'left' | 'right',
-          // 노서라운드 모드에서는 customWidth를 설정하지 않음
-          customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth,
+          // 단내림이 없을 때는 8월 28일 로직: 노서라운드에서도 customWidth 설정
+          customWidth: !spaceInfo.droppedCeiling?.enabled ? customWidth : (spaceInfo.surroundType === 'no-surround' ? undefined : customWidth),
           zone: targetZone // 클릭한 슬롯의 영역 사용
         };
         
@@ -1932,16 +1941,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 베이스 타입 추출 (숫자 제거)
     const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
     
-    // 모듈 ID 생성: 노서라운드 모드에서는 원본 ID 사용, 서라운드 모드에서만 targetWidth 사용
+    // 모듈 ID 생성: 단내림이 없을 때는 8월 28일 로직 사용
     let targetModuleId;
-    if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
-      targetModuleId = dragData.moduleData.id;
-      console.log('🔧 [노서라운드] 원본 모듈 ID 사용:', targetModuleId);
-    } else {
-      // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+    
+    // 단내림이 없을 때는 8월 28일 버전 로직 사용: 항상 슬롯 너비 기반 ID 생성
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      // 2025년 8월 28일 로직: 슬롯 너비 기반 모듈 ID 생성
       targetModuleId = `${moduleBaseType}-${targetWidth}`;
-      console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성:', targetModuleId);
+      console.log('🔧 [8월28일 로직] 슬롯 너비 기반 ID 생성 (단내림 없음):', targetModuleId);
+    } else {
+      // 단내림이 있을 때는 현재 로직 유지
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
+        targetModuleId = dragData.moduleData.id;
+        console.log('🔧 [노서라운드] 원본 모듈 ID 사용 (단내림 있음):', targetModuleId);
+      } else {
+        // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+        targetModuleId = `${moduleBaseType}-${targetWidth}`;
+        console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성 (단내림 있음):', targetModuleId);
+      }
     }
     
     console.log('🎯 [SlotDropZones] Non-dropped module lookup:', {
@@ -2235,8 +2253,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       isValidInCurrentSpace: true,
       adjustedWidth: slotInfo?.hasColumn ? adjustedWidthValue : undefined, // 기둥이 있으면 조정된 너비 사용
       hingePosition: 'right' as 'left' | 'right',
-      // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
-      customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
+      // 단내림이 없을 때는 8월 28일 로직: 노서라운드에서도 customWidth 설정
+      customWidth: !spaceInfo.droppedCeiling?.enabled ? adjustedCustomWidth : (spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth),
       zone: zoneToUse // 단내림 영역 정보 저장
     };
     
