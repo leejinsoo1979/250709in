@@ -1049,10 +1049,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
     노서라운드: spaceInfo.surroundType === 'no-surround',
     슬롯인덱스: placedModule.slotIndex,
-    targetZone: targetZone ? {
-      columnCount: targetZone.columnCount,
-      slotWidths: targetZone.slotWidths
-    } : null,
     가구실제너비: actualModuleData?.dimensions.width
   });
   
