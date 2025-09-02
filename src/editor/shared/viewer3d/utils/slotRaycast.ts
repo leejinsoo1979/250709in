@@ -272,12 +272,22 @@ export const calculateFurniturePosition = (
   spaceInfo: SpaceInfo,
   zone?: 'normal' | 'dropped'
 ): number | null => {
+  console.log('🎯 [calculateFurniturePosition] 시작:', {
+    slotIndex,
+    moduleId,
+    surroundType: spaceInfo.surroundType,
+    installType: spaceInfo.installType,
+    gapConfig: spaceInfo.gapConfig,
+    zone,
+    timestamp: new Date().toISOString()
+  });
+  
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
   // 빌트인+노서라운드 디버깅
   if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-    console.log('🎯 [calculateFurniturePosition] 빌트인+노서라운드 위치 계산:', {
+    console.log('🎯 [calculateFurniturePosition] 빌트인+노서라운드 위치 상세:', {
       slotIndex,
       moduleId,
       isDual,
