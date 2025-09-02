@@ -849,9 +849,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 단내림이 없을 때는 8월 28일 버전 로직 사용: 항상 슬롯 너비 기반 ID 생성
       if (!spaceInfo.droppedCeiling?.enabled) {
-        // 2025년 8월 28일 로직: 슬롯 너비 기반 모듈 ID 생성
-        targetModuleId = `${moduleBaseType}-${targetWidth}`;
-        console.log('🔧 [8월28일 로직] 슬롯 너비 기반 ID 생성 (단내림 없음):', targetModuleId);
+        // 노서라운드 모드인지 확인
+        if (latestSpaceInfo.surroundType === 'no-surround') {
+          // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
+          targetModuleId = dragData.moduleData.id;
+          console.log('🔧 [노서라운드] 원본 모듈 ID 사용 (단내림 없음):', targetModuleId);
+        } else {
+          // 서라운드: 슬롯 너비 기반 모듈 ID 생성
+          targetModuleId = `${moduleBaseType}-${targetWidth}`;
+          console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성 (단내림 없음):', targetModuleId);
+        }
       } else {
         // 단내림이 있을 때는 현재 로직 유지
         if (spaceInfo.surroundType === 'no-surround') {
@@ -1484,9 +1491,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       } else {
         // 기둥이 없는 경우
-        // 8월 28일 로직: 단내림이 없을 때는 노서라운드에서도 customWidth 설정
-        if (!spaceInfo.droppedCeiling?.enabled) {
-          // 단내림이 없으면 모든 모드에서 customWidth 설정 (8월 28일 로직)
+        // 노서라운드 모드인지 먼저 확인
+        if (latestSpaceInfo.surroundType === 'no-surround') {
+          // 노서라운드 모드: customWidth 설정하지 않음 (원본 모듈 사용)
+          customWidth = undefined;
+          
+          console.log('🔧 [노서라운드] customWidth 설정 안함 (기둥 없음):', {
+            surroundType: latestSpaceInfo.surroundType,
+            isDual,
+            zoneSlotIndex,
+            moduleId: zoneTargetModuleId,
+            moduleWidth: moduleData.dimensions.width,
+            reason: '노서라운드에서는 원본 모듈 크기 사용'
+          });
+        } else if (!spaceInfo.droppedCeiling?.enabled) {
+          // 서라운드 모드이면서 단내림이 없는 경우: customWidth 설정
           if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
             customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
           } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
@@ -1496,8 +1515,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             customWidth = actualSlotWidth;
           }
           
-          console.log('🔧 [8월28일 로직] customWidth 계산 (단내림 없음):', {
-            surroundType: spaceInfo.surroundType,
+          console.log('🔧 [서라운드] customWidth 계산 (단내림 없음):', {
+            surroundType: latestSpaceInfo.surroundType,
             isDual,
             zoneSlotIndex,
             slotWidths: zoneIndexing.slotWidths,
