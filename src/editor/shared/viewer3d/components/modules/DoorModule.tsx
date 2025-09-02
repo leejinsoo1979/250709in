@@ -613,12 +613,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
-        // 도어 절대 위치
-        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장-5mm
-        const doorBottomAbsolute = floatHeight;                   // 띄움 높이
+        // 키큰장 도어는 가구와 동일한 높이 유지 (사이즈 변경 없음)
+        // Y축 위치만 단내림만큼 내려옴
         
-        // 도어 높이 (단내림 천장 - 띄움높이로 줄어듦)
-        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
+        // 도어 높이는 가구 높이와 동일하게 유지
+        finalDoorHeight = furnitureHeight;
         
         // 가구 절대 위치 (단내림 구간 + 띄움 배치)
         // 가구는 단내림 천장에서 아래로 floatHeight만큼 떨어져 있음
@@ -626,12 +625,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
-        // 도어 중심 절대 위치
-        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-        
-        // 가구 중심 기준 상대 좌표로 변환
-        // 도어가 가구보다 위에 있으므로 양수값이 나와야 함
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute) * 0.01; // mm to Three.js units
+        // 도어는 가구와 동일한 위치 (가구 중심 기준 상대 좌표 0)
+        doorYPosition = 0; // 가구와 동일한 Y 위치
         
         console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
           zone: 'dropped',
@@ -640,15 +635,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           띄움높이: floatHeight,
           가구높이: furnitureHeight,
           도어높이: finalDoorHeight,
-          doorTopAbsolute,
-          doorBottomAbsolute,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
-          doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '단내림 구간 + 띄움: 도어 높이 줄어들고 위치 조정'
+          설명: '단내림 + 띄움: 도어 사이즈 유지, Y축 위치만 가구와 함께 내려옴'
         });
       } else {
         // 받침대 배치 + 단내림
