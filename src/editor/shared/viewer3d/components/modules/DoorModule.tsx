@@ -578,6 +578,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let finalDoorHeight = doorHeightAdjusted; // 최종 도어 높이 변수
   
   if (isTallCabinet) {
+    // 키큰장 가구 높이는 항상 모듈 자체 높이 유지
+    // 단내림 구간에서도 가구 자체 높이는 변하지 않음
+    const furnitureHeight = moduleData?.dimensions?.height || 2400;
+    
     // 단내림 구간인지 확인
     const zone = (spaceInfo as any).zone;
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
@@ -612,10 +616,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isDroppedWithSurround = isDroppedZone && spaceInfo.surround?.use;
     const upperGap = isDroppedWithSurround ? topFrameThickness : 5;  // 단내림+서라운드: 10mm(프레임 두께), 일반: 5mm
     const lowerGap = 0;      // 바닥까지 (갭 없음)
-    
-    // 키큰장 가구 높이는 항상 모듈 자체 높이 유지
-    // 단내림 구간에서도 가구 자체 높이는 변하지 않음
-    const furnitureHeight = moduleData?.dimensions?.height || 2400;
     
     const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
     

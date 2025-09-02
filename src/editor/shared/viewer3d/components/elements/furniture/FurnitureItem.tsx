@@ -264,10 +264,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [furnitureStartY, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, placedModule.moduleId]);
   
   // 단내림 설정 변경 시 강제 리렌더링
-  const [forceUpdate, setForceUpdate] = React.useState(0);
+  const [settingsChanged, setSettingsChanged] = React.useState(false);
   React.useEffect(() => {
-    // 단내림 설정이나 띄움 설정 변경 시 강제 업데이트
-    setForceUpdate(prev => prev + 1);
+    // 단내림 설정이나 띄움 설정 변경 시 설정 변경 플래그 설정
+    setSettingsChanged(true);
+    // 다음 프레임에서 플래그 리셋 (재계산 후 다시 저장된 위치 사용 가능)
+    const timer = setTimeout(() => setSettingsChanged(false), 0);
+    
     console.log('🔄 단내림/띄움 설정 변경 감지:', {
       zone: placedModule.zone,
       droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
@@ -276,6 +279,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       floatHeight: spaceInfo.baseConfig?.floatHeight,
       furnitureStartY
     });
+    
+    return () => clearTimeout(timer);
   }, [
     spaceInfo.droppedCeiling?.enabled,
     spaceInfo.droppedCeiling?.dropHeight,
@@ -1505,8 +1510,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // placedModule.position.y가 0이 아닌 경우 저장된 Y 위치 사용
     // (SlotDropZonesSimple에서 계산한 위치 사용)
     // 단, baseConfig나 droppedCeiling 설정이 변경되면 재계산
-    // forceUpdate가 변경되면 재계산 필요
-    if (placedModule.position.y !== 0 && !isDraggingThis && forceUpdate === 0) {
+    // settingsChanged가 true면 재계산 필요 (설정이 방금 변경됨)
+    if (placedModule.position.y !== 0 && !isDraggingThis && !settingsChanged) {
       console.log('🎯 저장된 Y 위치 사용:', {
         moduleId: placedModule.moduleId,
         category: moduleData?.category || actualModuleData?.category,
