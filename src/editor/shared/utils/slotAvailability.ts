@@ -1,6 +1,6 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleById } from '@/data/modules';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, ColumnSlotInfo } from './columnSlotProcessor';
@@ -102,9 +102,8 @@ export const isSlotAvailable = (
     // placedModule.zone이 없는 경우를 위해 슬롯 인덱스로 zone 추정
     let placedModuleZone = placedModule.zone;
     
-    if (!placedModuleZone && targetZone && spaceInfo.droppedCeiling?.enabled) {
+    if (!placedModuleZone && targetZone && spaceInfo.droppedCeiling?.enabled && placedModule.slotIndex !== undefined) {
       // zone 정보가 없는 경우 슬롯 인덱스로 추정
-      const { ColumnIndexer } = await import('@/editor/shared/utils/indexing');
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
       if (spaceInfo.droppedCeiling.position === 'left') {
