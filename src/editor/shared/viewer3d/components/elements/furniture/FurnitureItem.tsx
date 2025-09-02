@@ -1485,33 +1485,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
     else if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
-      // 내경 공간 계산 - zone 정보 고려
-      let internalHeightMm;
+      // 상부장은 상부 프레임 하단에 맞닿아야 함
+      const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
+      let totalHeightMm = spaceInfo.height;
       
-      // 단내림이 활성화되고 zone 정보가 있는 경우 zone별 높이 계산
+      // 서라운드 모드일 때만 상부 프레임 두께를 뺌
+      if (spaceInfo.surroundType !== 'no-surround') {
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
+      }
+      
+      // 단내림 구간 처리
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        // 단내림 구간: 원래 높이에서 dropHeight 빼기
-        const baseInternalSpace = calculateInternalSpace(spaceInfo);
         const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        internalHeightMm = baseInternalSpace.height - dropHeight;
+        totalHeightMm = totalHeightMm - dropHeight;
         
         console.log('🎯 단내림 구간 상부장 높이 계산:', {
           zone: placedModule.zone,
-          baseHeight: baseInternalSpace.height,
+          baseHeight: spaceInfo.height,
           dropHeight: dropHeight,
-          resultHeight: internalHeightMm
+          resultHeight: totalHeightMm
         });
-      } else {
-        // 일반 구간: 기본 내경 공간 높이 (calculateInternalSpace가 이미 노서라운드 처리함)
-        const baseInternalSpace = calculateInternalSpace(spaceInfo);
-        internalHeightMm = baseInternalSpace.height;
       }
       
-      const furnitureHeightMm = actualModuleData?.dimensions.height || 2200;
+      const furnitureHeightMm = actualModuleData?.dimensions.height || 600;
       
-      // 상부장 Y 위치: 내경높이 - 가구높이/2
-      // 상부장은 띄워서 배치와 관계없이 항상 천장(상부 프레임 하단)에 고정
-      const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+      // 상부장 Y 위치: (전체높이 - 상부프레임) - 가구높이/2
+      const yPos = mmToThreeUnits(totalHeightMm - furnitureHeightMm / 2);
       
       // 상부장은 항상 로그를 출력 (드래그 여부 관계없이)
       console.log('🔝🔝🔝 상부장 Y 위치 계산 (FurnitureItem):', {
