@@ -1304,11 +1304,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         note: '엔드패널 위치로 보정'
       });
       
-      // 노서라운드 도어 크기: 1200mm 기준 균등분할
-      const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
-      const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
-      leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;  // 597mm
-      rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2; // 597mm
+      // 노서라운드 도어 크기 계산
+      // 양쪽 끝 1.5mm씩, 중간 3mm = 총 6mm 갭
+      const totalGaps = 1.5 + 1.5 + 3; // 6mm
+      const availableWidth = totalWidth - totalGaps;
+      
+      // 개별 슬롯 너비 비율로 도어 크기 계산
+      if (slotWidths && slotWidths.length >= 2) {
+        // 슬롯 비율에 따라 도어 크기 분배
+        const slot1Ratio = slot1Width / totalWidth;
+        const slot2Ratio = slot2Width / totalWidth;
+        leftDoorWidth = availableWidth * slot1Ratio;
+        rightDoorWidth = availableWidth * slot2Ratio;
+      } else {
+        // slotWidths가 없으면 균등 분할
+        leftDoorWidth = availableWidth / 2;
+        rightDoorWidth = availableWidth / 2;
+      }
     } else {
       // 서라운드 모드: 일반 도어
       // slotWidths가 있으면 사용, 없으면 totalWidth 사용
@@ -1317,17 +1329,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         slot2Width = slotWidths[1];
         totalWidth = slot1Width + slot2Width;
       }
-      const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
+      // 듀얼 도어는 전체 너비에서 갭을 뺀 후 계산
+      // 양쪽 끝 1.5mm씩, 중간 3mm = 총 6mm 갭
+      const totalGaps = 1.5 + 1.5 + 3; // 6mm
+      const availableWidth = totalWidth - totalGaps;
       
-      // 개별 슬롯 너비를 기준으로 도어 크기 계산
+      // 개별 슬롯 너비 비율로 도어 크기 계산
       if (slotWidths && slotWidths.length >= 2) {
-        // 각 슬롯에서 3mm씩 뺀 크기가 도어 크기
-        leftDoorWidth = slot1Width - 3;
-        rightDoorWidth = slot2Width - 3;
+        // 슬롯 비율에 따라 도어 크기 분배
+        const slot1Ratio = slot1Width / totalWidth;
+        const slot2Ratio = slot2Width / totalWidth;
+        leftDoorWidth = availableWidth * slot1Ratio;
+        rightDoorWidth = availableWidth * slot2Ratio;
       } else {
         // slotWidths가 없으면 균등 분할
-        leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
-        rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
+        leftDoorWidth = availableWidth / 2;
+        rightDoorWidth = availableWidth / 2;
       }
     }
     
@@ -1358,20 +1375,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 위치 계산
     let leftDoorCenter, rightDoorCenter;
     
-    // 도어 위치는 개별 슬롯 중심 기준으로 계산
-    if (slotWidths && slotWidths.length >= 2) {
-      // 각 슬롯의 중심 위치 계산
-      const slot1Center = -totalWidth / 2 + slot1Width / 2;
-      const slot2Center = -totalWidth / 2 + slot1Width + slot2Width / 2;
-      
-      // 각 도어는 해당 슬롯의 중심에 위치
-      leftDoorCenter = slot1Center;
-      rightDoorCenter = slot2Center;
-    } else {
-      // slotWidths가 없으면 기존 방식 (균등 분할)
-      leftDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth / 2;
-      rightDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth + doorGap + rightDoorWidth / 2;
-    }
+    // 듀얼 도어는 항상 양쪽 끝에서 1.5mm씩 떨어진 위치에서 시작
+    // 서라운드 모드든 노서라운드 모드든 동일
+    const actualEdgeGap = 1.5; // 양쪽 끝 간격 1.5mm
+    const actualDoorGap = 3;   // 도어 사이 간격 3mm
+    
+    // 왼쪽 도어: 왼쪽 끝에서 1.5mm 떨어진 곳부터 시작
+    leftDoorCenter = -totalWidth / 2 + actualEdgeGap + leftDoorWidth / 2;
+    
+    // 오른쪽 도어: 왼쪽 도어 끝에서 3mm 떨어진 곳부터 시작
+    rightDoorCenter = -totalWidth / 2 + actualEdgeGap + leftDoorWidth + actualDoorGap + rightDoorWidth / 2;
     
     // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
     
