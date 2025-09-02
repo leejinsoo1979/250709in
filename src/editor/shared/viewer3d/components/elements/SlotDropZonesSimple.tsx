@@ -1744,16 +1744,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         } else if (spaceInfo.baseConfig?.placementType === 'float') {
           startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
         }
-        const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+        
+        // 단내림 구간에서는 키큰장 높이도 조정
+        let furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          // 키큰장의 전체 높이를 단내림만큼 줄임
+          const adjustedTotalHeight = spaceInfo.height - dropHeight;
+          furnitureHeightMm = Math.min(furnitureHeightMm, adjustedTotalHeight - startHeightMm);
+        }
+        
         furnitureYZone = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
         
         console.log('🏢 키큰장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
-          baseFrameHeightMm,
+          baseFrameHeightMm: startHeightMm,
           furnitureHeightMm,
           furnitureYZone,
           placementType: spaceInfo.baseConfig?.placementType,
-          설명: '키큰장은 항상 바닥부터 시작'
+          isDroppedZone: zoneToUse === 'dropped',
+          설명: zoneToUse === 'dropped' ? '단내림 구간 - 높이 조정됨' : '키큰장은 바닥부터 시작'
         });
       } else if (isUpperCabinetZone) {
         // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)

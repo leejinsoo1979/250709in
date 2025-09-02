@@ -1485,7 +1485,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       let furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
       
       // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
-      let startY = furnitureStartY;
+      // 단내림 구간에서는 furnitureStartY를 적용하지 않음
+      let startY = (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) 
+        ? 0  // 단내림 구간: 바닥부터 시작
+        : furnitureStartY;  // 일반 구간: 띄움 높이 적용
       
       // 단내림+서라운드에서는 키큰장이 상부프레임 하단에서 끝나도록 Y 위치 조정
       let yPos: number;
@@ -1612,7 +1615,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 일반 가구 (하부장 포함)
-    const yPos = furnitureStartY + height / 2;
+    // 단내림 구간에서는 furnitureStartY를 더하지 않음 (이미 높이가 조정됨)
+    const yPos = (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) 
+      ? height / 2  // 단내림 구간: 바닥부터 시작
+      : furnitureStartY + height / 2;  // 일반 구간: 띄움 높이 적용
     
     // 하부장 디버그 로그
     if (actualModuleData?.category === 'lower' || actualModuleData?.id?.includes('lower-cabinet')) {
