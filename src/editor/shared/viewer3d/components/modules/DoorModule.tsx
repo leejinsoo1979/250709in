@@ -506,8 +506,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 일반 가구(키큰장 등)는 전체 공간 높이 사용
     // floatHeight는 이미 위에서 설정됨
     
-    // 단내림 구간인 경우 높이 조정
-    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+    // 단내림 + 서라운드 구간인 경우 키큰장도 단내림 천장 높이 적용
+    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
+      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+      fullSpaceHeight = spaceInfo.height - dropHeight;
+      console.log('🚪📏 단내림+서라운드 키큰장 도어 높이 조정:', {
+        originalHeight: spaceInfo.height,
+        dropHeight,
+        adjustedHeight: fullSpaceHeight,
+        zone: (spaceInfo as any).zone,
+        isTallCabinet,
+        surroundUse: spaceInfo.surround?.use
+      });
+    }
+    // 단내림만 있는 경우 (서라운드 없음)
+    else if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && !spaceInfo.surround?.use) {
       const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
       fullSpaceHeight = spaceInfo.height - dropHeight;
       console.log('🚪📏 단내림 도어 높이 조정:', {
