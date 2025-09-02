@@ -1385,6 +1385,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구의 Y 위치를 계산 (변경될 때마다 업데이트)
   const furnitureYPosition = React.useMemo(() => {
+    // 상부장의 경우 항상 저장된 Y 위치 사용 (드래그 중이 아니면)
+    const isUpperCabinet = moduleData?.category === 'upper' || actualModuleData?.category === 'upper';
+    
+    if (isUpperCabinet && placedModule.position.y !== 0 && !isDraggingThis) {
+      console.log('🎯 상부장 저장된 Y 위치 사용:', {
+        moduleId: placedModule.moduleId,
+        category: moduleData?.category || actualModuleData?.category,
+        savedY: placedModule.position.y,
+        설명: '상부장은 저장된 Y 위치를 그대로 사용'
+      });
+      return placedModule.position.y;
+    }
+    
     // placedModule.position.y가 0이 아닌 경우 저장된 Y 위치 사용
     // (SlotDropZonesSimple에서 계산한 위치 사용)
     if (placedModule.position.y !== 0 && !isDraggingThis) {

@@ -653,19 +653,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
     });
   } else if (isUpperCabinet) {
-    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 18mm 확장
-    const upperExtension = 5;  // 가구 상단에서 위로 5mm
-    const lowerExtension = 18; // 가구 하단에서 아래로 18mm (하단 마감재 덮기)
+    // 상부장 도어: 가구 하단에서 아래로 28mm 확장 (하단 마감재 18mm + 추가 10mm)
+    const upperExtension = 0;   // 가구 상단 확장 없음
+    const lowerExtension = 28;  // 가구 하단에서 아래로 28mm (18mm 마감재 + 10mm 추가)
     const furnitureHeight = moduleData?.dimensions?.height || 600;
     
     // 도어 높이 = 가구 높이 + 위 확장 + 아래 확장
     finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
     
     // 상부장 도어 Y 위치 계산
-    // 도어는 가구보다 위로 5mm, 아래로 18mm 확장되므로
-    // 도어 중심은 가구 중심보다 아래로 이동해야 함
-    // 이동 거리 = (아래 확장 - 위 확장) / 2 = (18 - 5) / 2 = 6.5mm 아래로
-    doorYPosition = mmToThreeUnits(-(lowerExtension - upperExtension) / 2);
+    // 도어는 가구 상단과 일치, 하단은 28mm 아래로 확장
+    // 도어 중심 = 가구 중심에서 아래로 14mm 이동
+    doorYPosition = mmToThreeUnits(-lowerExtension / 2);
     
     console.log('🚪📍 상부장 도어 위치 계산:', {
       type: '상부장',
@@ -677,11 +676,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       가구하단_mm: -furnitureHeight/2,
       도어상단_mm: furnitureHeight/2 + upperExtension,
       도어하단_mm: -furnitureHeight/2 - lowerExtension,
-      도어중심이동_mm: -(lowerExtension - upperExtension) / 2,
+      도어중심이동_mm: -lowerExtension / 2,
       doorYPosition_units: doorYPosition,
       doorYPosition_mm: doorYPosition / 0.01,
-      계산식: `-(${lowerExtension} - ${upperExtension}) / 2 = ${-(lowerExtension - upperExtension) / 2}`,
-      note: `도어 중심이 가구 중심보다 ${(lowerExtension - upperExtension) / 2}mm 아래로 이동`
+      계산식: `-${lowerExtension} / 2 = ${-lowerExtension / 2}`,
+      note: `도어 중심이 가구 중심보다 ${lowerExtension / 2}mm 아래로 이동`
     });
   } else if (isLowerCabinet) {
     console.log('🔴🔴🔴 하부장 조건 진입!!!', {
