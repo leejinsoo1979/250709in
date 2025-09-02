@@ -70,7 +70,16 @@ export class ColumnIndexer {
     
     // 빌트인+노서라운드인 경우 getThreeUnitPositions를 사용
     if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-      return ColumnIndexer.getThreeUnitPositions(spaceInfo);
+      console.log('🚨 [calculateSpaceIndexing] 빌트인+노서라운드 감지 - getThreeUnitPositions로 위임');
+      const result = ColumnIndexer.getThreeUnitPositions(spaceInfo);
+      console.log('🚨 [calculateSpaceIndexing] getThreeUnitPositions 결과:', {
+        columnCount: result.columnCount,
+        slotWidths: result.slotWidths,
+        threeUnitPositions: result.threeUnitPositions,
+        firstSlot: result.threeUnitPositions?.[0],
+        lastSlot: result.threeUnitPositions?.[result.threeUnitPositions?.length - 1]
+      });
+      return result;
     }
     
     // 단내림이 활성화된 경우에도 전체 영역 정보는 유지하되, zones에 영역별 정보 추가
@@ -421,6 +430,12 @@ export class ColumnIndexer {
       // 노서라운드 빌트인: 이격거리만 고려
       const leftGap = spaceInfo.gapConfig?.left || 2;
       currentX = -(totalWidth / 2) + leftGap;
+      console.log('🎯 [getThreeUnitPositions] 빌트인+노서라운드 시작점 계산:', {
+        totalWidth,
+        leftGap,
+        startX: currentX,
+        설명: '전체폭의 절반에서 왼쪽 이격거리만큼 오른쪽으로 이동'
+      });
     } else {
       // 서라운드: 내경 시작점
       currentX = internalStartX;
@@ -613,6 +628,24 @@ export class ColumnIndexer {
       droppedCeilingWidth: spaceInfo.droppedCeiling?.width,
       customColumnCount
     });
+    
+    // 빌트인+노서라운드인 경우 getThreeUnitPositions 사용
+    if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      console.log('🚨 [calculateZoneSlotInfo] 빌트인+노서라운드 감지 - getThreeUnitPositions 사용');
+      const result = ColumnIndexer.getThreeUnitPositions(spaceInfo);
+      
+      // calculateZoneSlotInfo 형식으로 변환
+      return {
+        normal: {
+          columnCount: result.columnCount,
+          columnWidth: result.columnWidth,
+          slotWidths: result.slotWidths,
+          startX: result.columnBoundaries?.[0] || 0,
+          endX: result.columnBoundaries?.[result.columnBoundaries.length - 1] || 0
+        },
+        dropped: null
+      };
+    }
     
     const frameThickness = calculateFrameThickness(spaceInfo);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한

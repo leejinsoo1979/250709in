@@ -236,6 +236,19 @@ export const calculateFurniturePosition = (
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
+  // 빌트인+노서라운드 디버깅
+  if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+    console.log('🎯 [calculateFurniturePosition] 빌트인+노서라운드 위치 계산:', {
+      slotIndex,
+      moduleId,
+      isDual,
+      indexingType: indexing.threeUnitPositions ? 'getThreeUnitPositions' : 'calculateSpaceIndexing',
+      threeUnitPositions: indexing.threeUnitPositions,
+      slotWidths: indexing.slotWidths,
+      selectedPosition: indexing.threeUnitPositions?.[slotIndex]
+    });
+  }
+  
   // 단내림이 활성화되고 영역이 지정된 경우
   if (spaceInfo.droppedCeiling?.enabled && zone && indexing.zones) {
     const zoneIndexing = zone === 'normal' ? indexing.zones.normal : indexing.zones.dropped;
