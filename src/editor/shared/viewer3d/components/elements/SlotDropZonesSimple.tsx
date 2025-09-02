@@ -371,14 +371,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zone: 'dropped'
         });
         
-        // zoneInfo에서 직접 columnWidth 사용
+        // zoneInfo에서 직접 columnWidth와 slotWidths 사용
         zoneIndexing = {
           columnCount: zoneInfo.dropped.columnCount,
           columnWidth: zoneInfo.dropped.columnWidth,
+          slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth),  // slotWidths 추가
           threeUnitPositions: [],
           threeUnitDualPositions: [],
-          threeUnitBoundaries: [],
-          slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth)
+          threeUnitBoundaries: []
         };
       } else {
         // 메인 영역용 - zoneInfo에서 이미 계산된 정확한 값 사용
@@ -397,14 +397,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           height: zoneInternalSpace.height,
           zone: 'normal'
         });
-        // zoneInfo에서 직접 columnWidth 사용
+        // zoneInfo에서 직접 columnWidth와 slotWidths 사용
         zoneIndexing = {
           columnCount: zoneInfo.normal.columnCount,
           columnWidth: zoneInfo.normal.columnWidth,
+          slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),  // slotWidths 추가
           threeUnitPositions: [],
           threeUnitDualPositions: [],
-          threeUnitBoundaries: [],
-          slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth)
+          threeUnitBoundaries: []
         };
       }
       
@@ -807,14 +807,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
+      
+      console.log('🔍 [노서라운드 디버깅] targetWidth 계산 시작:', {
+        surroundType: spaceInfo.surroundType,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        zoneSlotIndex,
+        zoneIndexing: {
+          columnCount: zoneIndexing.columnCount,
+          columnWidth: zoneIndexing.columnWidth,
+          slotWidths: zoneIndexing.slotWidths
+        },
+        isDual
+      });
+      
       if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex] + zoneIndexing.slotWidths[zoneSlotIndex + 1];
+        console.log('🔍 [노서라운드 디버깅] 듀얼 가구 targetWidth:', targetWidth);
       } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex];
+        console.log('🔍 [노서라운드 디버깅] 싱글 가구 targetWidth (slotWidths 사용):', targetWidth);
       } else {
         // fallback
         const zoneColumnWidth = zoneIndexing.columnWidth;
         targetWidth = isDual ? zoneColumnWidth * 2 : zoneColumnWidth;
+        console.log('🔍 [노서라운드 디버깅] Fallback targetWidth (columnWidth 사용):', targetWidth);
       }
       
       // 모듈 ID 생성: 단내림이 없을 때는 8월 28일 로직 사용
