@@ -1010,7 +1010,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 도어 위치 계산: slotCenterX는 실제로 오프셋 값임
   // 도어는 기본적으로 가구 중심(0,0,0)에 위치하고, slotCenterX 오프셋만큼 이동
-  let doorGroupX = slotCenterX !== undefined ? slotCenterX : 0; // 도어 X축 오프셋 (Three.js 단위)
+  // 듀얼 캐비넷의 경우 slotCenterX는 엔드패널 보정용이므로 무시하고 0 사용
+  let doorGroupX = isDualFurniture ? 0 : (slotCenterX !== undefined ? slotCenterX : 0); // 도어 X축 오프셋 (Three.js 단위)
   let doorAdjustment = 0; // 도어 위치 보정값 (듀얼 가구에서 사용)
   
   console.log('🚪 도어 초기 위치:', {
