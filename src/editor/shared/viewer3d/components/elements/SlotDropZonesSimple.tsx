@@ -1622,7 +1622,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) ? adjustedWidth : undefined, // 기둥이 있으면 조정된 너비 사용
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
-        customWidth: customWidth, // 실제 슬롯 너비 사용
+        // 노서라운드 모드에서는 customWidth를 설정하지 않음
+        customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth,
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined // 단내림 구간의 줄어든 높이 저장
       };
       
@@ -1792,7 +1793,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           isValidInCurrentSpace: true,
           adjustedWidth: moduleData.dimensions.width,
           hingePosition: 'right' as 'left' | 'right',
-          customWidth: customWidth,
+          // 노서라운드 모드에서는 customWidth를 설정하지 않음
+          customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth,
           zone: targetZone // 클릭한 슬롯의 영역 사용
         };
         
