@@ -1116,6 +1116,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       if (hasSlotConflict) {
+        console.log('🚨 슬롯 충돌 감지됨! 단내림 구간 디버깅:', {
+          zone: zoneToUse,
+          droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+          zoneSlotIndex,
+          zoneExistingModules: zoneExistingModules.map(m => ({
+            id: m.id,
+            moduleId: m.moduleId,
+            slotIndex: m.slotIndex,
+            zone: m.zone || 'normal'
+          })),
+          targetModuleZone: zoneToUse,
+          충돌원인: '같은 zone의 같은 슬롯에 이미 가구가 있음'
+        });
+        
         if (isDual) {
           // 듀얼 충돌: 싱글로 자동 전환 후 재검사
           console.log('🔁 듀얼 충돌 → 싱글로 재시도');
@@ -1131,11 +1145,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             return conflict;
           });
           if (hasSlotConflict) {
-            console.log('❌ 싱글 전환 후에도 충돌. 배치 불가');
+            console.log('❌ 싱글 전환 후에도 충돌. 배치 불가', {
+              zone: zoneToUse,
+              zoneSlotIndex,
+              existingModulesInSlot: zoneExistingModules.filter(m => m.slotIndex === zoneSlotIndex)
+            });
             return false;
           }
         } else {
-          console.log('❌ 슬롯 충돌로 배치 불가');
+          console.log('❌ 슬롯 충돌로 배치 불가', {
+            zone: zoneToUse,
+            zoneSlotIndex,
+            existingModulesInSlot: zoneExistingModules.filter(m => m.slotIndex === zoneSlotIndex)
+          });
           return false;
         }
       }

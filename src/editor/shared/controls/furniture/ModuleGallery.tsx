@@ -654,35 +654,70 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       
       if (spaceInfo.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        if (zoneInfo.dropped && availableSlotIndex >= zoneInfo.normal.columnCount) {
-          targetZone = 'dropped';
-          // 단내림 구간 내에서의 로컬 슬롯 인덱스로 변환
-          localSlotIndex = availableSlotIndex - zoneInfo.normal.columnCount;
-          // 단내림 구간의 indexing 정보 사용
-          zoneIndexing = {
-            columnCount: zoneInfo.dropped.columnCount,
-            columnWidth: zoneInfo.dropped.columnWidth,
-            slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth),
-            threeUnitPositions: zoneInfo.dropped.threeUnitPositions || [],
-            threeUnitDualPositions: zoneInfo.dropped.threeUnitDualPositions || [],
-            threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.dropped.columnWidth),
-            internalStartX: zoneInfo.dropped.startX,
-            zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-          };
+        
+        // 단내림 위치에 따라 zone 판단
+        if (spaceInfo.droppedCeiling.position === 'left') {
+          // 왼쪽 단내림: 첫 번째 슬롯부터 dropped 구간
+          if (zoneInfo.dropped && availableSlotIndex < zoneInfo.dropped.columnCount) {
+            targetZone = 'dropped';
+            localSlotIndex = availableSlotIndex;
+            // 단내림 구간의 indexing 정보 사용
+            zoneIndexing = {
+              columnCount: zoneInfo.dropped.columnCount,
+              columnWidth: zoneInfo.dropped.columnWidth,
+              slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth),
+              threeUnitPositions: zoneInfo.dropped.threeUnitPositions || [],
+              threeUnitDualPositions: zoneInfo.dropped.threeUnitDualPositions || [],
+              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.dropped.columnWidth),
+              internalStartX: zoneInfo.dropped.startX,
+              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
+            };
+          } else {
+            targetZone = 'normal';
+            localSlotIndex = availableSlotIndex - zoneInfo.dropped.columnCount;
+            // 메인 구간의 indexing 정보 사용
+            zoneIndexing = {
+              columnCount: zoneInfo.normal.columnCount,
+              columnWidth: zoneInfo.normal.columnWidth,
+              slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),
+              threeUnitPositions: zoneInfo.normal.threeUnitPositions || [],
+              threeUnitDualPositions: zoneInfo.normal.threeUnitDualPositions || [],
+              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.normal.columnWidth),
+              internalStartX: zoneInfo.normal.startX,
+              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
+            };
+          }
         } else {
-          targetZone = 'normal';
-          localSlotIndex = availableSlotIndex;
-          // 메인 구간의 indexing 정보 사용
-          zoneIndexing = {
-            columnCount: zoneInfo.normal.columnCount,
-            columnWidth: zoneInfo.normal.columnWidth,
-            slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),
-            threeUnitPositions: zoneInfo.normal.threeUnitPositions || [],
-            threeUnitDualPositions: zoneInfo.normal.threeUnitDualPositions || [],
-            threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.normal.columnWidth),
-            internalStartX: zoneInfo.normal.startX,
-            zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-          };
+          // 오른쪽 단내림: normal 구간이 먼저, 그 다음 dropped 구간
+          if (zoneInfo.normal && availableSlotIndex < zoneInfo.normal.columnCount) {
+            targetZone = 'normal';
+            localSlotIndex = availableSlotIndex;
+            // 메인 구간의 indexing 정보 사용
+            zoneIndexing = {
+              columnCount: zoneInfo.normal.columnCount,
+              columnWidth: zoneInfo.normal.columnWidth,
+              slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),
+              threeUnitPositions: zoneInfo.normal.threeUnitPositions || [],
+              threeUnitDualPositions: zoneInfo.normal.threeUnitDualPositions || [],
+              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.normal.columnWidth),
+              internalStartX: zoneInfo.normal.startX,
+              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
+            };
+          } else {
+            targetZone = 'dropped';
+            localSlotIndex = availableSlotIndex - zoneInfo.normal.columnCount;
+            // 단내림 구간의 indexing 정보 사용
+            zoneIndexing = {
+              columnCount: zoneInfo.dropped.columnCount,
+              columnWidth: zoneInfo.dropped.columnWidth,
+              slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth),
+              threeUnitPositions: zoneInfo.dropped.threeUnitPositions || [],
+              threeUnitDualPositions: zoneInfo.dropped.threeUnitDualPositions || [],
+              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.dropped.columnWidth),
+              internalStartX: zoneInfo.dropped.startX,
+              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
+            };
+          }
         }
       }
       
