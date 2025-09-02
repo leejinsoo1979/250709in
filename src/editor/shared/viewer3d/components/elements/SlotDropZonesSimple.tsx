@@ -352,7 +352,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     
     // 단내림이 활성화된 경우 영역별 처리
+    console.log('🚨🚨🚨 단내림 영역별 처리 시작:', {
+      droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
+      zoneToUse,
+      조건충족: !!(latestSpaceInfo.droppedCeiling?.enabled && zoneToUse)
+    });
+    
     if (latestSpaceInfo.droppedCeiling?.enabled && zoneToUse) {
+      console.log('✅ 단내림 영역별 처리 진입!', {
+        zone: zoneToUse,
+        droppedCeiling: latestSpaceInfo.droppedCeiling
+      });
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(latestSpaceInfo, latestSpaceInfo.customColumnCount);
       
       // 활성 영역에 맞는 인덱싱 생성
@@ -1884,9 +1894,77 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
       return true;
     } else {
+      console.log('🚨🚨🚨 else 블록 진입! 단내림 있지만 zone 미결정 케이스:', {
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        zoneToUse,
+        spaceInfo: latestSpaceInfo.droppedCeiling
+      });
       
       // 단내림이 활성화되어 있지만 zone이 결정되지 않은 경우 자동으로 적절한 영역 결정
-      if (spaceInfo.droppedCeiling?.enabled) {
+      if (latestSpaceInfo.droppedCeiling?.enabled) {
+        console.log('✅ 단내림 활성화 확인, zone 자동 결정 시도');
+        
+        // zone이 결정되지 않았으므로 기본값으로 normal 사용
+        zoneToUse = 'normal';
+        
+        // 레이캐스트로 실제 위치에서 zone 판단 시도
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // 슬롯 인덱스 가져오기
+        let detectedSlotIndex = slotIndex;
+        if (detectedSlotIndex === null || detectedSlotIndex === undefined) {
+          detectedSlotIndex = getSlotIndexFromRaycast(
+            dragEvent.clientX,
+            dragEvent.clientY,
+            canvasElement,
+            camera,
+            scene
+          );
+        }
+        
+        console.log('🎯 감지된 슬롯 인덱스:', detectedSlotIndex);
+        
+        // 단내림 zone 정보 다시 계산
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(latestSpaceInfo, latestSpaceInfo.customColumnCount);
+        
+        if (zoneInfo && detectedSlotIndex !== null) {
+          // 슬롯 인덱스로 zone 판단
+          if (latestSpaceInfo.droppedCeiling.position === 'left') {
+            // 단내림이 왼쪽: dropped 슬롯이 먼저 오고 normal이 뒤에
+            if (detectedSlotIndex < zoneInfo.dropped.columnCount) {
+              zoneToUse = 'dropped';
+            } else {
+              zoneToUse = 'normal';
+            }
+          } else {
+            // 단내림이 오른쪽: normal 슬롯이 먼저 오고 dropped가 뒤에
+            if (detectedSlotIndex < zoneInfo.normal.columnCount) {
+              zoneToUse = 'normal';
+            } else {
+              zoneToUse = 'dropped';
+            }
+          }
+          
+          console.log('🎯 Zone 자동 결정 완료:', {
+            zoneToUse,
+            slotIndex: detectedSlotIndex,
+            droppedPosition: latestSpaceInfo.droppedCeiling.position,
+            normalCount: zoneInfo.normal.columnCount,
+            droppedCount: zoneInfo.dropped.columnCount
+          });
+        }
+        
+        // 이제 zone이 결정되었으므로 위의 if 블록 로직을 재실행해야 함
+        // 재귀적으로 handleSlotDrop을 다시 호출하는 대신, 여기서 직접 처리
+        if (zoneToUse) {
+          console.log('🔄 Zone 결정 후 재처리 시작');
+          // 여기서 위의 if 블록 로직을 복사하거나 함수로 분리해서 호출
+          // 일단은 return을 통해 다시 시도하도록 유도
+          return window.handleSlotDrop(dragEvent, canvasElement, zoneToUse);
+        }
+        
+        // 여전히 zone을 결정할 수 없는 경우 기존 로직 계속
         // 클릭한 위치의 슬롯 인덱스를 기반으로 영역 결정
         const allColliders = scene.children
           .filter(obj => obj.userData?.isSlotCollider && obj.visible)

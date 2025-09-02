@@ -643,6 +643,23 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           }
         }
         
+        // 듀얼장인 경우 두 슬롯이 모두 같은 zone에 있는지 확인
+        if (isDualFurniture && spaceInfo.droppedCeiling?.enabled) {
+          const slot2 = i + 1;
+          let zone2: 'normal' | 'dropped' | undefined = undefined;
+          if (slot2 >= droppedZoneStart && slot2 < droppedZoneEnd) {
+            zone2 = 'dropped';
+          } else if (slot2 >= normalZoneStart && slot2 < normalZoneEnd) {
+            zone2 = 'normal';
+          }
+          
+          // 두 슬롯이 다른 zone에 있으면 건너뛰기
+          if (checkZone !== zone2) {
+            console.log(`🚫 Slot ${i} and ${slot2} are in different zones (${checkZone} vs ${zone2}), skipping for dual furniture`);
+            continue;
+          }
+        }
+        
         const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, checkZone);
         console.log(`🔍 Slot ${i} (zone: ${checkZone || 'none'}): ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
         if (isAvailable) {
@@ -651,25 +668,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
       }
       
-      // 첫 번째 슬롯에서 찾지 못하면 다음 사용 가능한 슬롯 찾기
+      // 첫 번째 슬롯에서 찾지 못하면 배치 불가
       if (availableSlotIndex === -1) {
-        console.log('🔍 No slot found in first pass, trying findNextAvailableSlot...');
-        // 처음부터 다시 시작하여 zone을 고려하여 찾기
-        for (let startSlot = 0; startSlot < indexing.columnCount; startSlot++) {
-          let checkZone: 'normal' | 'dropped' | undefined = undefined;
-          if (spaceInfo.droppedCeiling?.enabled) {
-            if (startSlot >= droppedZoneStart && startSlot < droppedZoneEnd) {
-              checkZone = 'dropped';
-            } else if (startSlot >= normalZoneStart && startSlot < normalZoneEnd) {
-              checkZone = 'normal';
-            }
-          }
-          const nextSlot = findNextAvailableSlot(startSlot, 'right', isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, checkZone);
-          if (nextSlot !== null) {
-            availableSlotIndex = nextSlot;
-            break;
-          }
-        }
+        console.log('🔍 No available slot found for furniture placement');
       }
       
       console.log('🎯 Final availableSlotIndex:', availableSlotIndex);
