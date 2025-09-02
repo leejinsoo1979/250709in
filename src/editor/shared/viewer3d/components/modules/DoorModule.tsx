@@ -653,9 +653,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
     });
   } else if (isUpperCabinet) {
-    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 38mm 확장
+    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 48mm 확장
     const upperExtension = 5;   // 가구 상단에서 위로 5mm
-    const lowerExtension = 38;  // 가구 하단에서 아래로 38mm (하단 마감재 18mm + 조정값 20mm)
+    const lowerExtension = 48;  // 가구 하단에서 아래로 48mm (하단 마감재 18mm + 조정값 30mm)
     const furnitureHeight = moduleData?.dimensions?.height || 600;
     
     // 도어 높이 = 가구 높이 + 위 확장 + 아래 확장
