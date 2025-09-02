@@ -162,19 +162,35 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         if (isUpperCabinet || isLowerCabinet) {
           console.log('🔍 상하부장 배치 시도:', {
             moduleId: currentDragData.moduleData.id,
+            moduleCategory: currentDragData.moduleData.category,
+            moduleType: currentDragData.moduleData.type,
             isUpperCabinet,
             isLowerCabinet,
             targetSlot: dropPosition.column,
             isAvailable,
             existingModulesInSlot: latestPlacedModules.filter(m => m.slotIndex === dropPosition.column).map(m => ({
               id: m.id,
-              moduleId: m.moduleId
-            }))
+              moduleId: m.moduleId,
+              category: m.category
+            })),
+            문제: isAvailable ? '사용 가능' : '🔴 슬롯 사용 불가!'
           });
+          
+          // 상부장이 배치 불가능한 이유 추가 확인
+          if (isUpperCabinet && !isAvailable) {
+            console.error('🚨 상부장 배치 실패!', {
+              원인: 'isSlotAvailable이 false를 반환',
+              moduleId: currentDragData.moduleData.id,
+              targetSlot: dropPosition.column,
+              해결방법: '상부장 배치를 강제로 허용'
+            });
+          }
         }
         
         // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
-        if (!isAvailable) {
+        // 단, 상부장은 하부장과 공존 가능하므로 특별 처리
+        if (!isAvailable && !isUpperCabinet) {
+          // 상부장이 아닌 경우에만 다른 슬롯 찾기
           // isSlotAvailable을 사용하는 래퍼 함수
           const checkSlotWithColumn = (column: number, isDual: boolean) => {
             // 최신 상태 가져오기
@@ -195,6 +211,13 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           }
           
           finalX = availableSlot.x;
+        } else if (!isAvailable && isUpperCabinet) {
+          // 상부장의 경우 하부장과 공존 가능하므로 강제 배치 허용
+          console.log('✅ 상부장 강제 배치 허용:', {
+            moduleId: currentDragData.moduleData.id,
+            targetSlot: dropPosition.column,
+            설명: '상부장은 하부장과 공존 가능'
+          });
         }
         
         // 고유 ID 생성
