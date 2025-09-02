@@ -380,14 +380,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
-  else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
+  // 노서라운드 모드에서는 moduleId가 customWidth를 포함하지 않으므로 항상 재계산
+  else if (placedModule.customWidth && !placedModule.adjustedWidth) {
     const baseType = placedModule.moduleId.replace(/-\d+$/, '');
     targetModuleId = `${baseType}-${placedModule.customWidth}`;
     console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       newTargetModuleId: targetModuleId,
-      surroundType: spaceInfo.surroundType
+      surroundType: spaceInfo.surroundType,
+      endsWithCustomWidth: placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)
     });
   } else {
     console.log('🔍 [FurnitureItem] targetModuleId 변경 안함:', {
