@@ -1243,6 +1243,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftGapCheck = (slot1Width - leftDoorWidth) / 2; // 1.5mm가 나와야 함
     const rightGapCheck = (slot2Width - rightDoorWidth) / 2; // 1.5mm가 나와야 함
     
+    // 듀얼 캐비넷 내부 갭 (두 도어 사이)
+    const internalGap = 1.5 + 1.5; // 왼쪽 도어 오른쪽 갭 + 오른쪽 도어 왼쪽 갭
+    
     // 인접 가구와의 갭 검증 (간단한 로직)
     let adjacentGapInfo = null;
     if (slotIndex !== undefined && slotIndex > 0 && slotWidths) {
@@ -1280,6 +1283,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         도어: rightDoorWidth,
         갭체크: `${rightGapCheck}mm (1.5mm 예상)`
       },
+      '내부갭': `${internalGap}mm (두 도어 사이)`,
       '위치': {
         leftDoorCenter,
         rightDoorCenter,
@@ -1650,9 +1654,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 싱글 가구: 간단한 로직 - 슬롯 크기 - 3mm
     let slotWidth = indexing.columnWidth; // 기본값: 표준 슬롯 너비
     
-    // slotWidths가 있으면 해당 슬롯의 너비 사용
-    if (slotWidths && slotWidths.length > 0) {
-      slotWidth = slotWidths[0];
+    // slotWidths가 있고 slotIndex가 유효하면 해당 슬롯의 너비 사용
+    if (slotWidths && slotIndex !== undefined && slotIndex < slotWidths.length) {
+      slotWidth = slotWidths[slotIndex];
     }
     
     let doorWidth = slotWidth - 3; // 슬롯 크기 - 3mm
@@ -1661,6 +1665,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     console.log('🚪 싱글 도어 간단한 로직:', { 
       슬롯크기: slotWidth, 
       도어크기: doorWidth,
+      슬롯인덱스: slotIndex,
+      갭: `${slotWidth - doorWidth}mm (양쪽 ${(slotWidth - doorWidth) / 2}mm씩)`,
       surroundType: spaceInfo.surroundType
     });
     
