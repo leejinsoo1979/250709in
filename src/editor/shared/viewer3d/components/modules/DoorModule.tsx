@@ -1369,9 +1369,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let leftDoorCenter, rightDoorCenter;
     
     // 도어 위치는 전체 너비 기준으로 계산
-    // doorAdjustment가 도어 그룹 전체를 이동시킴
+    // 왼쪽 도어: 왼쪽 끝에서 edgeGap 떨어진 위치
     leftDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth / 2;
-    rightDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth + doorGap + rightDoorWidth / 2;
+    // 오른쪽 도어: 오른쪽 끝에서 edgeGap 떨어진 위치
+    rightDoorCenter = totalWidth / 2 - edgeGap - rightDoorWidth / 2;
     
     // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
     
