@@ -1445,8 +1445,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       const slotInfo = columnSlots[globalSlotIndex]; // 전체 공간 기준 슬롯 인덱스 사용
       
-      console.log('🏛️ 기둥 분석 인덱스:', {
+      console.log('🏛️ 기둥 분석 및 슬롯 인덱스 변환:', {
         zoneToUse,
+        zoneSlotIndex,
+        globalSlotIndex,
+        droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+        normalColumnCount: zoneInfo.normal.columnCount,
+        droppedColumnCount: zoneInfo.dropped.columnCount,
         zoneSlotIndex,
         slotIndex,
         globalSlotIndex,
@@ -1835,7 +1840,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         rotation: 0,
         hasDoor: false,
         customDepth: adjustedDepth, // 조정된 깊이 사용
-        slotIndex: zoneSlotIndex,  // 영역 내 로컬 슬롯 인덱스 사용 (zone과 함께 사용)
+        slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
         adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) ? adjustedWidth : undefined, // 기둥이 있으면 조정된 너비 사용
