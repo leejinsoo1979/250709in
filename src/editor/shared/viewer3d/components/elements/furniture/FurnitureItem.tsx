@@ -963,8 +963,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       } else {
         originalSlotWidthMm = targetZone.slotWidths[localSlotIndex];
         
-        // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우, 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-        if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture) {
+        // 노서라운드 모드에서 싱글 가구가 엔드패널 슬롯에 있는 경우
+        // 단내림이 있을 때는 이미 zone별 slotWidths 계산 시 엔드패널이 고려되었으므로 추가로 더하지 않음
+        // 단내림이 없을 때만 엔드패널 두께 추가
+        if (spaceInfo.surroundType === 'no-surround' && !isDualFurniture && !spaceInfo.droppedCeiling?.enabled) {
           const END_PANEL_THICKNESS = 18;
           const columnCount = targetZone.columnCount;
           
@@ -972,12 +974,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             // 벽없음: 양쪽 끝 슬롯
             if (localSlotIndex === 0 || localSlotIndex === columnCount - 1) {
               originalSlotWidthMm += END_PANEL_THICKNESS;
-              console.log('🔧 노서라운드 단내림 구간 - 엔드패널 슬롯 도어 크기 복원:', {
+              console.log('🔧 노서라운드 일반 구간 - 엔드패널 슬롯 도어 크기 복원:', {
                 zone: placedModule.zone,
                 slotIndex: placedModule.slotIndex,
                 localSlotIndex,
                 원래크기: originalSlotWidthMm - END_PANEL_THICKNESS,
-                복원크기: originalSlotWidthMm
+                복원크기: originalSlotWidthMm,
+                단내림없음: true
               });
             }
           } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
@@ -1035,7 +1038,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     zone: placedModule.zone,
     isDualFurniture,
     originalSlotWidthMm,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    노서라운드: spaceInfo.surroundType === 'no-surround',
+    슬롯인덱스: placedModule.slotIndex,
+    targetZone: targetZone ? {
+      columnCount: targetZone.columnCount,
+      slotWidths: targetZone.slotWidths
+    } : null,
+    가구실제너비: actualModuleData?.dimensions.width
   });
   
   // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기
