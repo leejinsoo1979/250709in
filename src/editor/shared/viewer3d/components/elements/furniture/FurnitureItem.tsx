@@ -1408,8 +1408,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장 위치 계산
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
       const NO_SURROUND_GAP = 10; // 노서라운드에서 천장과 상부장 사이 간격 10mm
-      // 상부장은 항상 원본 spaceInfo의 height 사용 (zoneSpaceInfo 사용 안함!)
+      
+      // 단내림 구간인 경우 높이 조정
       let totalHeightMm = spaceInfo.height;
+      
+      // 단내림 구간에서는 dropHeight만큼 천장이 낮아짐
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+        totalHeightMm = totalHeightMm - (spaceInfo.droppedCeiling.dropHeight || 200);
+        console.log('🔻 단내림 구간 상부장 - 낮아진 천장 적용:', {
+          originalHeight: spaceInfo.height,
+          dropHeight: spaceInfo.droppedCeiling.dropHeight,
+          adjustedHeight: totalHeightMm,
+          zone: placedModule.zone
+        });
+      }
       
       // 서라운드 모드: 상부프레임 하단에 바로 맞닿음 (프레임 두께만 뺌)
       // 노서라운드 모드: 천장에서 10mm 아래
@@ -1419,8 +1431,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
         totalHeightMm = totalHeightMm - NO_SURROUND_GAP;
       }
-      
-      // 상부장은 단내림 구간에서도 천장에 고정되어야 하므로 dropHeight를 빼면 안됨!
       
       const furnitureHeightMm = actualModuleData?.dimensions?.height || moduleData?.dimensions?.height || 600;
       
@@ -1548,15 +1558,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         totalHeightMm = totalHeightMm - NO_SURROUND_GAP;
       }
       
-      // 단내림 구간에서도 상부장은 천장(상부프레임 하단)에 붙어야 함
-      // internalSpace를 사용하면 안되고, 직접 계산해야 함!
+      // 단내림 구간에서는 낮아진 천장에 맞춰 상부장 위치 조정
       if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-        console.log('🎯 단내림 구간 상부장 - 천장에 고정:', {
+        console.log('🎯 단내림 구간 상부장 - 낮아진 천장에 고정:', {
           zone: placedModule.zone,
           baseHeight: spaceInfo.height,
           dropHeight: spaceInfo.droppedCeiling?.dropHeight || 200,
-          totalHeightMm,
-          설명: '상부장은 단내림 구간에서도 천장(상부프레임 하단)에 고정'
+          adjustedCeilingHeight: totalHeightMm,
+          설명: '상부장은 단내림 구간의 낮아진 천장에 고정'
         });
       }
       
