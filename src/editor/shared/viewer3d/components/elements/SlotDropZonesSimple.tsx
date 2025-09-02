@@ -1069,18 +1069,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           if (m.isDualSlot) {
             // 기존 가구도 듀얼인 경우: 슬롯 범위가 겹치면 충돌
             // 새 듀얼: [zoneSlotIndex, zoneSlotIndex + 1]
-            // 기존 듀얼: [m.slotIndex, m.slotIndex + 1]
+            // 기존 듀얼: [moduleZoneSlotIndex, moduleZoneSlotIndex + 1]
             // 두 범위가 겹치는지 확인
             const newStart = zoneSlotIndex;
             const newEnd = zoneSlotIndex + 1;
-            const existingStart = m.slotIndex;
-            const existingEnd = m.slotIndex + 1;
+            const existingStart = moduleZoneSlotIndex;
+            const existingEnd = moduleZoneSlotIndex + 1;
             
-            // 범위가 겹치는 조건: !(newEnd < existingStart || newStart > existingEnd)
+            // 범위가 겹치는 조겄: !(newEnd < existingStart || newStart > existingEnd)
             conflict = !(newEnd < existingStart || newStart > existingEnd);
           } else {
             // 기존 가구가 싱글인 경우: 새 듀얼의 2개 슬롯 중 하나와 겹치면 충돌
-            conflict = m.slotIndex === zoneSlotIndex || m.slotIndex === zoneSlotIndex + 1;
+            conflict = moduleZoneSlotIndex === zoneSlotIndex || moduleZoneSlotIndex === zoneSlotIndex + 1;
           }
           
           if (conflict) {
@@ -1094,9 +1094,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               기존가구: { 
                 id: m.id,
                 moduleId: m.moduleId,
-                slotIndex: m.slotIndex, 
+                slotIndex: m.slotIndex,
+                zoneSlotIndex: moduleZoneSlotIndex, 
                 isDualSlot: m.isDualSlot,
-                occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+                occupiedSlots: m.isDualSlot ? [moduleZoneSlotIndex, moduleZoneSlotIndex + 1] : [moduleZoneSlotIndex]
               },
               충돌조건: {
                 newStart,
@@ -1110,8 +1111,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return conflict;
         } else {
           // 싱글 가구는 1개 슬롯 차지하지만, 듀얼 가구가 차지한 슬롯도 확인해야 함
-          const conflict = m.slotIndex === zoneSlotIndex || 
-                          (m.isDualSlot && (m.slotIndex === zoneSlotIndex || m.slotIndex + 1 === zoneSlotIndex));
+          const conflict = moduleZoneSlotIndex === zoneSlotIndex || 
+                          (m.isDualSlot && (moduleZoneSlotIndex === zoneSlotIndex || moduleZoneSlotIndex + 1 === zoneSlotIndex));
           if (conflict) {
             console.log('🚫 싱글 가구 슬롯 충돌:', {
               배치하려는가구: { 
@@ -1123,15 +1124,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               기존가구: { 
                 id: m.id,
                 moduleId: m.moduleId,
-                slotIndex: m.slotIndex, 
+                slotIndex: m.slotIndex,
+                zoneSlotIndex: moduleZoneSlotIndex, 
                 isDualSlot: m.isDualSlot,
-                occupiedSlots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+                occupiedSlots: m.isDualSlot ? [moduleZoneSlotIndex, moduleZoneSlotIndex + 1] : [moduleZoneSlotIndex]
               },
               충돌조건: {
                 싱글위치: zoneSlotIndex,
                 기존위치: m.slotIndex,
                 기존이듀얼: m.isDualSlot,
-                충돌검사: `${zoneSlotIndex} == ${m.slotIndex} OR (듀얼 && (${m.slotIndex} == ${zoneSlotIndex} OR ${m.slotIndex + 1} == ${zoneSlotIndex}))`
+                충돌검사: `${zoneSlotIndex} == ${moduleZoneSlotIndex} OR (듀얼 && (${moduleZoneSlotIndex} == ${zoneSlotIndex} OR ${moduleZoneSlotIndex + 1} == ${zoneSlotIndex}))`
               }
             });
           }
