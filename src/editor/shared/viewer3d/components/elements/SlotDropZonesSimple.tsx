@@ -251,7 +251,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           
           if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
             // 단내림 위치에 따라 영역 판단
-            if (spaceInfo.droppedCeiling.position === 'left') {
+            if (latestSpaceInfo.droppedCeiling.position === 'left') {
               zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
             } else {
               zoneToUse = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
@@ -263,7 +263,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               worldX: intersectPoint.x,
               droppedEndX,
               normalStartX,
-              droppedPosition: spaceInfo.droppedCeiling.position,
+              droppedPosition: latestSpaceInfo.droppedCeiling.position,
               detectedZone: zoneToUse,
               zoneInfo: {
                 normal: { columnCount: zoneInfo.normal?.columnCount, startX: zoneInfo.normal?.startX, width: zoneInfo.normal?.width },
@@ -688,8 +688,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 영역별 spaceInfo 생성 (가구 크기 계산용)
       // 단내림 영역별 외경 너비 계산 (프레임 포함)
-      const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
-      const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+      const droppedCeilingWidth = latestSpaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+      const droppedPosition = latestSpaceInfo.droppedCeiling?.position || 'right';
       let zoneOuterWidth: number;
       
       if (zoneToUse === 'dropped') {
@@ -697,7 +697,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneOuterWidth = droppedCeilingWidth;
       } else {
         // 메인 영역의 외경 너비
-        zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
+        zoneOuterWidth = latestSpaceInfo.width - droppedCeilingWidth;
       }
       
       // targetZone 객체 가져오기
@@ -708,9 +708,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return false;
       }
       
-      // generateDynamicModules에 전달할 spaceInfo - 전체 spaceInfo에 zone 정보만 추가
+      // generateDynamicModules에 전달할 spaceInfo - 전체 latestSpaceInfo에 zone 정보만 추가
       const zoneSpaceInfo = {
-        ...spaceInfo,
+        ...latestSpaceInfo,
         zone: zoneToUse,  // zone 정보 추가
         width: zoneOuterWidth  // 영역별 너비 설정
       };
