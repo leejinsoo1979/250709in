@@ -255,27 +255,38 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       if (module.isDynamic) {
         const isDualFurniture = module.id.startsWith('dual-');
         
-        // 노서라운드 모드에서는 slotWidths 사용
+        // 노서라운드 모드에서는 원본 모듈 ID 사용 (고정 크기)
+        // 서라운드 모드에서만 slotWidths 사용
         let targetWidth;
-        if (spaceInfo.surroundType === 'no-surround' && indexing.slotWidths && indexing.slotWidths.length > 0) {
+        if (spaceInfo.surroundType === 'surround' && indexing.slotWidths && indexing.slotWidths.length > 0) {
+          // 서라운드 모드: slotWidths 사용
           if (isDualFurniture && indexing.slotWidths.length >= 2) {
             targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
           } else {
             targetWidth = indexing.slotWidths[0];
           }
-          console.log('🚨 [ModuleGallery] 노서라운드 모드 - slotWidths 사용:', {
+          console.log('🚨 [ModuleGallery] 서라운드 모드 - slotWidths 사용:', {
             isDualFurniture,
             targetWidth,
             slotWidths: indexing.slotWidths
           });
-        } else {
-          // 서라운드 모드 또는 fallback
+          const baseType = module.id.replace(/-\d+$/, '');
+          dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+          adjustedDimensions.width = targetWidth;
+        } else if (spaceInfo.surroundType === 'surround') {
+          // 서라운드 모드 fallback
           targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+          const baseType = module.id.replace(/-\d+$/, '');
+          dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+          adjustedDimensions.width = targetWidth;
+        } else {
+          // 노서라운드 모드: 원본 ID와 크기 사용
+          console.log('🚨 [ModuleGallery] 노서라운드 모드 - 원본 모듈 사용:', {
+            originalId: module.id,
+            originalWidth: module.dimensions.width
+          });
+          // dragModuleId와 adjustedDimensions는 변경하지 않음 (원본 사용)
         }
-        
-        const baseType = module.id.replace(/-\d+$/, '');
-        dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
-        adjustedDimensions.width = targetWidth;
       }
     }
 
