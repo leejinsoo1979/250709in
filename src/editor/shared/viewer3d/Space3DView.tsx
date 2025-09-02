@@ -29,7 +29,6 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { Environment } from '@react-three/drei';
 import { getThemeHex } from '@/theme';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
