@@ -3348,8 +3348,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
           
-          // 상부장은 내경 공간 맨 위에서 가구 높이의 절반을 뺀 위치
-          // 상부장은 천장에 고정되므로 받침대 높이와 무관
+          // 상부장은 천장에 붙어있으므로 내경 높이에서 가구 높이의 절반을 뺄
+          // 받침대 높이는 이미 internalSpace에 반영되어 있음
           furnitureY = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
           
           console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
