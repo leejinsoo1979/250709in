@@ -1388,33 +1388,38 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 상부장 여부 확인
     const isUpperCabinet = moduleData?.category === 'upper' || actualModuleData?.category === 'upper';
     
-    // 상부장 드래그 중인 경우 - 항상 천장에 붙어있어야 함
-    if (isUpperCabinet && isDraggingThis) {
+    // 상부장은 항상 천장에 고정 (드래그 여부와 관계없이)
+    if (isUpperCabinet) {
       const internalSpace = calculateInternalSpace(spaceInfo);
       const internalHeightMm = internalSpace.height;
-      const furnitureHeightMm = actualModuleData?.dimensions?.height || 600;
+      const furnitureHeightMm = actualModuleData?.dimensions?.height || moduleData?.dimensions?.height || 600;
       const yPos = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
       
-      console.log('🆙 상부장 드래그 중 Y 위치:', {
+      // 저장된 위치가 있고 드래그 중이 아닌 경우에만 저장된 위치 사용
+      if (placedModule.position.y !== 0 && !isDraggingThis && !isFurnitureDragging) {
+        // 저장된 위치와 계산된 위치의 차이가 크면 경고
+        const diff = Math.abs(placedModule.position.y - yPos);
+        if (diff > 0.1) {
+          console.warn('⚠️ 상부장 저장된 Y 위치와 계산된 위치 차이:', {
+            savedY: placedModule.position.y,
+            calculatedY: yPos,
+            difference: diff,
+            moduleId: placedModule.moduleId
+          });
+        }
+        return placedModule.position.y;
+      }
+      
+      console.log('🔝 상부장 Y 위치 (천장 고정):', {
         moduleId: placedModule.moduleId,
         internalHeightMm,
         furnitureHeightMm,
         yPos,
         yPos_mm: yPos * 100,
-        설명: '상부장은 드래그 중에도 천장에 고정'
+        isDragging: isDraggingThis || isFurnitureDragging,
+        설명: '상부장은 항상 천장에 고정'
       });
       return yPos;
-    }
-    
-    // 상부장 저장된 위치 사용 (드래그 중이 아닐 때)
-    if (isUpperCabinet && placedModule.position.y !== 0 && !isDraggingThis) {
-      console.log('🎯 상부장 저장된 Y 위치 사용:', {
-        moduleId: placedModule.moduleId,
-        category: moduleData?.category || actualModuleData?.category,
-        savedY: placedModule.position.y,
-        설명: '상부장은 저장된 Y 위치를 그대로 사용'
-      });
-      return placedModule.position.y;
     }
     
     // placedModule.position.y가 0이 아닌 경우 저장된 Y 위치 사용

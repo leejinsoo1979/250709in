@@ -189,35 +189,38 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
         // 단, 상부장은 하부장과 공존 가능하므로 특별 처리
-        if (!isAvailable && !isUpperCabinet) {
-          // 상부장이 아닌 경우에만 다른 슬롯 찾기
-          // isSlotAvailable을 사용하는 래퍼 함수
-          const checkSlotWithColumn = (column: number, isDual: boolean) => {
-            // 최신 상태 가져오기
-            const currentModules = getLatestPlacedModules();
-            return !isSlotAvailable(column, isDual, currentModules, spaceInfo, currentDragData.moduleData.id, undefined, dropPosition.zone);
-          };
-          
-          const availableSlot = findAvailableSlot(
-            dropPosition.column,
-            dropPosition.isDualFurniture,
-            indexing,
-            checkSlotWithColumn,
-            latestPlacedModules
-          );
-          
-          if (!availableSlot) {
-            return;
+        if (!isAvailable) {
+          if (isUpperCabinet) {
+            // 상부장의 경우 하부장과 공존 가능하므로 강제 배치 허용
+            console.log('✅ 상부장 강제 배치 허용:', {
+              moduleId: currentDragData.moduleData.id,
+              targetSlot: dropPosition.column,
+              설명: '상부장은 하부장과 공존 가능하므로 그대로 배치'
+            });
+            // finalX는 이미 설정되어 있으므로 그대로 진행
+          } else {
+            // 상부장이 아닌 경우에만 다른 슬롯 찾기
+            // isSlotAvailable을 사용하는 래퍼 함수
+            const checkSlotWithColumn = (column: number, isDual: boolean) => {
+              // 최신 상태 가져오기
+              const currentModules = getLatestPlacedModules();
+              return !isSlotAvailable(column, isDual, currentModules, spaceInfo, currentDragData.moduleData.id, undefined, dropPosition.zone);
+            };
+            
+            const availableSlot = findAvailableSlot(
+              dropPosition.column,
+              dropPosition.isDualFurniture,
+              indexing,
+              checkSlotWithColumn,
+              latestPlacedModules
+            );
+            
+            if (!availableSlot) {
+              return;
+            }
+            
+            finalX = availableSlot.x;
           }
-          
-          finalX = availableSlot.x;
-        } else if (!isAvailable && isUpperCabinet) {
-          // 상부장의 경우 하부장과 공존 가능하므로 강제 배치 허용
-          console.log('✅ 상부장 강제 배치 허용:', {
-            moduleId: currentDragData.moduleData.id,
-            targetSlot: dropPosition.column,
-            설명: '상부장은 하부장과 공존 가능'
-          });
         }
         
         // 고유 ID 생성
