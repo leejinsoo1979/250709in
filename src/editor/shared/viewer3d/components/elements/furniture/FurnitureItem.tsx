@@ -1390,13 +1390,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 상부장은 항상 천장에 고정 (저장된 위치 무시)
     if (isUpperCabinet) {
-      // 상부장은 상부 프레임 하단에 맞닿아야 함
+      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
+      // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
+      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
       let totalHeightMm = spaceInfo.height;
       
-      // 서라운드 모드일 때만 상부 프레임 두께를 뺌
+      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
       if (spaceInfo.surroundType !== 'no-surround') {
-        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+      } else {
+        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
+        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
       }
       
       // 단내림 구간 처리
@@ -1485,13 +1490,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     // 상부장은 내경 공간 상단에 붙여서 배치 (드래그 중에도 적용)
     else if (moduleData?.category === 'upper' || actualModuleData?.category === 'upper') {
-      // 상부장은 상부 프레임 하단에 맞닿아야 함
+      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
+      // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
+      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
       let totalHeightMm = spaceInfo.height;
       
-      // 서라운드 모드일 때만 상부 프레임 두께를 뺌
+      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
       if (spaceInfo.surroundType !== 'no-surround') {
-        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS;
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+      } else {
+        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
+        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
       }
       
       // 단내림 구간 처리
