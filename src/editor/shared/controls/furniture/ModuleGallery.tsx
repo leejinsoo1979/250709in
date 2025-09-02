@@ -82,6 +82,19 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     
     // 영역별 인덱싱 계산
     const indexing = calculateSpaceIndexing(spaceInfo);
+    
+    // 노서라운드 모드 디버깅
+    if (spaceInfo.surroundType === 'no-surround') {
+      console.log('🚨🚨🚨 [ModuleGallery] 드래그 시작 - 노서라운드 모드:', {
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        columnWidth: indexing.columnWidth,
+        slotWidths: indexing.slotWidths,
+        expectedWidth: indexing.slotWidths?.[0],
+        spaceWidth: spaceInfo.width,
+        internalWidth: indexing.internalWidth
+      });
+    }
     let targetZone: 'normal' | 'dropped' = 'normal';
     const adjustedDimensions = { ...module.dimensions };
     let dragModuleId = module.id; // 드래그에 사용할 모듈 ID
@@ -197,7 +210,25 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 동적 가구인 경우 정확한 너비로 ID 생성
       if (module.isDynamic) {
         const isDualFurniture = module.id.startsWith('dual-');
-        const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        
+        // 노서라운드 모드에서는 slotWidths 사용
+        let targetWidth;
+        if (spaceInfo.surroundType === 'no-surround' && indexing.slotWidths && indexing.slotWidths.length > 0) {
+          if (isDualFurniture && indexing.slotWidths.length >= 2) {
+            targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
+          } else {
+            targetWidth = indexing.slotWidths[0];
+          }
+          console.log('🚨 [ModuleGallery] 노서라운드 모드 - slotWidths 사용:', {
+            isDualFurniture,
+            targetWidth,
+            slotWidths: indexing.slotWidths
+          });
+        } else {
+          // 서라운드 모드 또는 fallback
+          targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+        }
+        
         const baseType = module.id.replace(/-\d+$/, '');
         dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
         adjustedDimensions.width = targetWidth;
