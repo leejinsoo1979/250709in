@@ -817,8 +817,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         targetWidth = isDual ? zoneColumnWidth * 2 : zoneColumnWidth;
       }
       
-      // 정확한 너비를 포함한 ID 생성
-      const targetModuleId = `${moduleBaseType}-${targetWidth}`;
+      // 모듈 ID 생성: 노서라운드 모드에서는 원본 ID 사용, 서라운드 모드에서만 targetWidth 사용
+      let targetModuleId;
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
+        targetModuleId = dragData.moduleData.id;
+        console.log('🔧 [노서라운드] 원본 모듈 ID 사용:', targetModuleId);
+      } else {
+        // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+        targetModuleId = `${moduleBaseType}-${targetWidth}`;
+        console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성:', targetModuleId);
+      }
       
       console.log('🔍 가구 검색:', {
         원본ID: dragData.moduleData.id,
@@ -1923,8 +1932,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 베이스 타입 추출 (숫자 제거)
     const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
     
-    // 정확한 너비를 포함한 ID 생성
-    const targetModuleId = `${moduleBaseType}-${targetWidth}`;
+    // 모듈 ID 생성: 노서라운드 모드에서는 원본 ID 사용, 서라운드 모드에서만 targetWidth 사용
+    let targetModuleId;
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
+      targetModuleId = dragData.moduleData.id;
+      console.log('🔧 [노서라운드] 원본 모듈 ID 사용:', targetModuleId);
+    } else {
+      // 서라운드: 슬롯 너비에 맞는 모듈 ID 생성
+      targetModuleId = `${moduleBaseType}-${targetWidth}`;
+      console.log('🔧 [서라운드] 슬롯 너비 기반 ID 생성:', targetModuleId);
+    }
     
     console.log('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
