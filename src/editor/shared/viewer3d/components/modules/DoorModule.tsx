@@ -1631,12 +1631,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 간단한 로직 - 슬롯 크기 - 3mm
-    let doorWidth = originalSlotWidthMm - 3; // 슬롯 크기 - 3mm
+    let slotWidth = indexing.columnWidth; // 기본값: 표준 슬롯 너비
+    
+    // slotWidths가 있으면 해당 슬롯의 너비 사용
+    if (slotWidths && slotWidths.length > 0) {
+      slotWidth = slotWidths[0];
+    }
+    
+    let doorWidth = slotWidth - 3; // 슬롯 크기 - 3mm
     
     // 간단한 로직: 노서라운드도 서라운드도 동일
-    // originalSlotWidthMm는 이미 정확한 슬롯 크기 (엔드패널 포함)
     console.log('🚪 싱글 도어 간단한 로직:', { 
-      슬롯크기: originalSlotWidthMm, 
+      슬롯크기: slotWidth, 
       도어크기: doorWidth,
       surroundType: spaceInfo.surroundType
     });
@@ -1647,10 +1653,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어는 항상 가구 중심 (slotCenterX 사용)
     
     // 간단한 갭 검증: 슬롯 크기 - 도어 크기 = 3mm이므로 양쪽 1.5mm씩
-    const gapCheck = (originalSlotWidthMm - doorWidth) / 2; // 1.5mm가 나와야 함
+    const gapCheck = (slotWidth - doorWidth) / 2; // 1.5mm가 나와야 함
     
     console.log('🚪 싱글 도어 (간단한 로직):', {
-      슬롯크기: originalSlotWidthMm,
+      슬롯크기: slotWidth,
       도어크기: doorWidth,
       갭체크: `${gapCheck}mm (1.5mm 예상)`,
       slotIndex,
