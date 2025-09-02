@@ -682,6 +682,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 상부장 도어 Y 위치 계산
     // 단내림 구간인지 확인
+    const zone = (spaceInfo as any).zone; // zone 정보 가져오기
     const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
     
     if (isDroppedZone) {
