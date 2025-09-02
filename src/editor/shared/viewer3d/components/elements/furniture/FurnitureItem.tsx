@@ -1485,10 +1485,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       let furnitureHeightMm = Math.min(actualModuleData?.dimensions.height || 2200, internalHeightMm);
       
       // 띄워서 배치(float)인 경우에도 키큰장은 바닥부터 시작
-      // 단내림 구간에서는 furnitureStartY를 적용하지 않음
-      let startY = (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) 
-        ? 0  // 단내림 구간: 바닥부터 시작
-        : furnitureStartY;  // 일반 구간: 띄움 높이 적용
+      // 단내림 구간에서도 바닥마감재와 받침대 높이는 적용
+      let startY: number;
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+        // 단내림 구간: 바닥마감재와 받침대 높이만 적용 (띄움 높이 제외)
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+        
+        // 받침대가 있는 경우
+        if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
+          const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+          startY = floorFinishHeight + baseFrameHeightMm * 0.01;
+        } else {
+          // 받침대 없음 - 바닥마감재 높이만
+          startY = floorFinishHeight;
+        }
+      } else {
+        // 일반 구간: 모든 높이 적용
+        startY = furnitureStartY;
+      }
       
       // 단내림+서라운드에서는 키큰장이 상부프레임 하단에서 끝나도록 Y 위치 조정
       let yPos: number;
@@ -1615,10 +1630,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 일반 가구 (하부장 포함)
-    // 단내림 구간에서는 furnitureStartY를 더하지 않음 (이미 높이가 조정됨)
-    const yPos = (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) 
-      ? height / 2  // 단내림 구간: 바닥부터 시작
-      : furnitureStartY + height / 2;  // 일반 구간: 띄움 높이 적용
+    // 단내림 구간에서도 바닥마감재 높이는 적용, 띄움 높이만 제외
+    let yPos: number;
+    if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+      // 단내림 구간: 바닥마감재 높이는 적용, 띄움 높이는 제외
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+      
+      // 받침대가 있는 경우
+      if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
+        const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+        yPos = (floorFinishHeight + baseFrameHeightMm * 0.01) + height / 2;
+      } 
+      // 받침대 없음 - 띄워서 배치인 경우에도 단내림 구간에서는 띄움 높이 무시
+      else {
+        yPos = floorFinishHeight + height / 2;
+      }
+    } else {
+      // 일반 구간: 모든 높이 적용 (바닥마감재 + 받침대/띄움)
+      yPos = furnitureStartY + height / 2;
+    }
     
     // 하부장 디버그 로그
     if (actualModuleData?.category === 'lower' || actualModuleData?.id?.includes('lower-cabinet')) {
