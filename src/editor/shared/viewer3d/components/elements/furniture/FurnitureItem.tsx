@@ -1409,6 +1409,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
       const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
+      // 상부장은 항상 원본 spaceInfo의 height 사용 (zoneSpaceInfo 사용 안함!)
       let totalHeightMm = spaceInfo.height;
       
       // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
