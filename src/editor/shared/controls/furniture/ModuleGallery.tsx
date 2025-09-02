@@ -643,18 +643,75 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 첫 번째 빈 슬롯 찾기
       let availableSlotIndex = -1;
       
-      // 단내림이 있는 경우: 일반 구간 먼저 시도, 그 다음 단내림 구간 시도
+      // 단내림이 있는 경우: activeDroppedCeilingTab에 따라 우선 순위 결정
       if (spaceInfo.droppedCeiling?.enabled) {
-        // 1단계: 일반(normal) 구간에서 먼저 찾기
-        console.log('🔍 Step 1: Searching in normal zone first...', {
-          normalZone: { start: normalZoneStart, end: normalZoneEnd },
-          droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
-          placedModulesWithZone: placedModules.map(m => ({
-            slotIndex: m.slotIndex,
-            zone: m.zone || 'unknown'
-          }))
-        });
-        for (let i = normalZoneStart; i < normalZoneEnd; i++) {
+        // activeDroppedCeilingTab이 'dropped'면 단내림 구간 우선, 아니면 일반 구간 우선
+        const preferDropped = activeDroppedCeilingTab === 'dropped';
+        
+        if (preferDropped) {
+          // 단내림 구간 우선 검색
+          console.log('🔍 Step 1: Searching in dropped zone first (tab selected)...', {
+            activeTab: activeDroppedCeilingTab,
+            droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
+            normalZone: { start: normalZoneStart, end: normalZoneEnd },
+            placedModulesWithZone: placedModules.map(m => ({
+              slotIndex: m.slotIndex,
+              zone: m.zone || 'unknown'
+            }))
+          });
+          
+          // 단내림 구간에서 먼저 찾기
+          for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
+            // 듀얼장인 경우 두 슬롯이 모두 dropped zone에 있는지 확인
+            if (isDualFurniture) {
+              const slot2 = i + 1;
+              if (slot2 >= droppedZoneEnd) {
+                console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed dropped zone boundary`);
+                continue;
+              }
+            }
+            
+            const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
+            console.log(`🔍 Dropped zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+            if (isAvailable) {
+              availableSlotIndex = i;
+              break;
+            }
+          }
+          
+          // 단내림 구간에서 못 찾았으면 일반 구간에서 찾기
+          if (availableSlotIndex === -1) {
+            console.log('🔍 Step 2: Dropped zone full, searching in normal zone...');
+            for (let i = normalZoneStart; i < normalZoneEnd; i++) {
+              // 듀얼장인 경우 두 슬롯이 모두 normal zone에 있는지 확인
+              if (isDualFurniture) {
+                const slot2 = i + 1;
+                if (slot2 >= normalZoneEnd) {
+                  console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed normal zone boundary`);
+                  continue;
+                }
+              }
+              
+              const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'normal');
+              console.log(`🔍 Normal zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+              if (isAvailable) {
+                availableSlotIndex = i;
+                break;
+              }
+            }
+          }
+        } else {
+          // 일반 구간 우선 검색 (기존 로직)
+          console.log('🔍 Step 1: Searching in normal zone first...', {
+            activeTab: activeDroppedCeilingTab,
+            normalZone: { start: normalZoneStart, end: normalZoneEnd },
+            droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
+            placedModulesWithZone: placedModules.map(m => ({
+              slotIndex: m.slotIndex,
+              zone: m.zone || 'unknown'
+            }))
+          });
+          for (let i = normalZoneStart; i < normalZoneEnd; i++) {
           // 듀얼장인 경우 두 슬롯이 모두 normal zone에 있는지 확인
           if (isDualFurniture) {
             const slot2 = i + 1;
@@ -672,28 +729,29 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           }
         }
         
-        // 2단계: 일반 구간에서 못 찾았으면 단내림(dropped) 구간에서 찾기
-        if (availableSlotIndex === -1) {
-          console.log('🔍 Step 2: Normal zone full, searching in dropped zone...', {
-            reason: 'Normal zone is full',
-            droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
-            willSearchSlots: Array.from({ length: droppedZoneEnd - droppedZoneStart }, (_, i) => droppedZoneStart + i)
-          });
-          for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
-            // 듀얼장인 경우 두 슬롯이 모두 dropped zone에 있는지 확인
-            if (isDualFurniture) {
-              const slot2 = i + 1;
-              if (slot2 >= droppedZoneEnd) {
-                console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed dropped zone boundary`);
-                continue;
+          // 2단계: 일반 구간에서 못 찾았으면 단내림(dropped) 구간에서 찾기
+          if (availableSlotIndex === -1) {
+            console.log('🔍 Step 2: Normal zone full, searching in dropped zone...', {
+              reason: 'Normal zone is full',
+              droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
+              willSearchSlots: Array.from({ length: droppedZoneEnd - droppedZoneStart }, (_, i) => droppedZoneStart + i)
+            });
+            for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
+              // 듀얼장인 경우 두 슬롯이 모두 dropped zone에 있는지 확인
+              if (isDualFurniture) {
+                const slot2 = i + 1;
+                if (slot2 >= droppedZoneEnd) {
+                  console.log(`🚫 Slot ${i} and ${slot2}: dual furniture would exceed dropped zone boundary`);
+                  continue;
+                }
               }
-            }
-            
-            const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
-            console.log(`🔍 Dropped zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
-            if (isAvailable) {
-              availableSlotIndex = i;
-              break;
+              
+              const isAvailable = isSlotAvailable(i, isDualFurniture, placedModules, fullSpaceInfo, module.id, undefined, 'dropped');
+              console.log(`🔍 Dropped zone - Slot ${i}: ${isAvailable ? '✅ Available' : '❌ Occupied'}`);
+              if (isAvailable) {
+                availableSlotIndex = i;
+                break;
+              }
             }
           }
         }
