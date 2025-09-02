@@ -616,14 +616,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       
       if (floatHeight > 0) {
         // 띄워서 배치 + 단내림
-        // 도어 높이는 일반구간 도어 높이에서 (띄움높이 + 단내림높이)를 빼야 함
+        // 도어 상단: 단내림 천장 - 5mm
+        // 도어 하단: 바닥 + floatHeight + 25mm
         
-        // 일반구간 키큰장 도어 높이 계산
-        // 일반구간: 천장 - 5mm(upperGap) 부터 바닥 + 25mm 까지
-        const normalZoneDoorHeight = spaceInfo.height - upperGap - 25;
+        // 도어 절대 위치
+        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장 - 5mm
+        const doorBottomAbsolute = floatHeight + 25;              // 바닥 + 띄움높이 + 25mm
         
-        // 단내림구간 도어 높이: 일반구간 도어 높이 - (띄움높이 + 단내림높이)
-        finalDoorHeight = normalZoneDoorHeight - (floatHeight + dropHeight);
+        // 도어 높이 계산
+        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
         
         // 가구 절대 위치 (단내림 구간 + 띄움 배치)
         // 가구는 단내림 천장에서 아래로 floatHeight만큼 떨어져 있음
@@ -631,8 +632,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
         const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
         
-        // 도어 절대 위치
-        const doorTopAbsolute = furnitureTopAbsolute - upperGap;  // 가구 상단 - 5mm
+        // 도어 절대 위치 - 단내림 구간에서는 10mm 더 내려야 함
+        const droppedZoneOffset = upperGap * 2;  // 10mm (upperGap의 2배)
+        const doorTopAbsolute = furnitureTopAbsolute - droppedZoneOffset;  // 가구 상단 - 10mm
         const doorBottomAbsolute = doorTopAbsolute - finalDoorHeight;  // 도어 상단 - 도어 높이
         
         // 도어 중심 절대 위치
@@ -648,9 +650,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           띄움높이: floatHeight,
           가구높이: furnitureHeight,
           공간높이: spaceInfo.height,
-          normalZoneDoorHeight,
           도어높이: finalDoorHeight,
-          높이계산: `${normalZoneDoorHeight} - (${floatHeight} + ${dropHeight}) = ${finalDoorHeight}`,
+          높이계산: `${doorTopAbsolute} - ${doorBottomAbsolute} = ${finalDoorHeight}`,
           furnitureTopAbsolute,
           furnitureBottomAbsolute,
           furnitureCenterAbsolute,
@@ -659,13 +660,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           doorCenterAbsolute,
           doorYPosition_units: doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: '도어 높이 = 일반구간 도어높이 - (띄움높이 + 단내림높이)'
+          설명: '도어 상단: 단내림천장-5mm, 도어 하단: 바닥+띄움높이+25mm'
         });
       } else {
         // 받침대 배치 + 단내림
-        // 도어 절대 위치
-        const doorTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장-5mm
-        const doorBottomAbsolute = 25;                            // 바닥+25mm (일반구간과 동일)
+        // 도어 절대 위치 - 단내림 구간에서는 10mm 더 내려야 함
+        const droppedZoneOffset = upperGap * 2;  // 10mm (upperGap의 2배)
+        const doorTopAbsolute = droppedCeilingHeight - droppedZoneOffset;  // 단내림 천장-10mm
+        const doorBottomAbsolute = 25;                                     // 바닥+25mm (일반구간과 동일)
         
         // 도어 높이 (단내림 천장부터 바닥+25mm까지)
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
@@ -709,7 +711,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 도어 절대 위치
         const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-        const doorBottomAbsolute = floatHeight;               // 가구 하단과 동일 (더 이상 내려가지 않음)
+        const doorBottomAbsolute = floatHeight + 25;          // 띄움높이 + 25mm (바닥에서 floatHeight + 25mm 위치)
         
         // 도어 높이
         finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
