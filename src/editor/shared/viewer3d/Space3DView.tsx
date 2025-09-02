@@ -218,7 +218,18 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         // 첫 번째 빈 슬롯에 배치
         const placedModules = useFurnitureStore.getState().placedModules;
         const addModule = useFurnitureStore.getState().addModule;
-        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        let spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        
+        // 🔴🔴🔴 CRITICAL: 노서라운드 모드에서 frameSize 강제 수정
+        if (spaceInfo.surroundType === 'no-surround' && spaceInfo.frameSize && 
+            (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
+          console.error('🔴🔴🔴 [CRITICAL] Space3DView 폴백 - 노서라운드인데 frameSize가 잘못됨! 강제 수정!');
+          spaceInfo = {
+            ...spaceInfo,
+            frameSize: { left: 0, right: 0, top: 0 }
+          };
+        }
+        
         const indexing = calculateSpaceIndexing(spaceInfo);
         
         // 첫 번째 빈 슬롯 찾기
