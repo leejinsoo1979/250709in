@@ -1467,7 +1467,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         '왼쪽_도어_왼쪽끝_갭_mm': actualLeftGap.toFixed(2),
         '갭_정상여부': Math.abs(actualLeftGap - 1.5) < 0.01 ? '✅ 정상 1.5mm' : `❌ 비정상 (${actualLeftGap.toFixed(2)}mm)`,
         '캐비넷_왼쪽끝_X': (cabinetLeftEdge * 100).toFixed(2),
-        '왼쪽도어_왼쪽끝_X': (leftDoorLeftEdge * 100).toFixed(2)
+        '왼쪽도어_왼쪽끝_X': (leftDoorLeftEdgeGlobal * 100).toFixed(2)
       }
     });
 
