@@ -1538,6 +1538,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 프레임 두께 10mm + 실제 가구 위치까지 간격 10mm = 총 20mm
       const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
       const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
+      
+      // 상부장은 zone에 관계없이 항상 천장 높이 기준으로 계산
+      // zone별 spaceInfo를 사용하면 안되고, 원본 spaceInfo 사용
       let totalHeightMm = spaceInfo.height;
       
       // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
@@ -1549,7 +1552,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
       
       // 단내림 구간에서도 상부장은 천장(상부프레임 하단)에 붙어야 함
-      // 단내림 높이를 빼면 안됨! 상부장은 항상 천장에 고정
+      // internalSpace를 사용하면 안되고, 직접 계산해야 함!
       if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
         console.log('🎯 단내림 구간 상부장 - 천장에 고정:', {
           zone: placedModule.zone,
@@ -1571,15 +1574,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         category: moduleData?.category || actualModuleData?.category || 'unknown',
         zone: placedModule.zone,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-        internalHeightMm,
+        spaceHeight: spaceInfo.height,
+        totalHeightMm,
         furnitureHeightMm,
-        계산식: `${internalHeightMm} - ${furnitureHeightMm/2} = ${internalHeightMm - furnitureHeightMm/2}`,
+        계산식: `${totalHeightMm} - ${furnitureHeightMm/2} = ${totalHeightMm - furnitureHeightMm/2}`,
         yPos_Three단위: yPos,
         yPos_mm: yPos / 0.01,
-        furnitureStartY,
-        adjustedPosition_Y: adjustedPosition.y,
-        adjustedPosition_Y_mm: adjustedPosition.y / 0.01,
-        차이: (yPos - adjustedPosition.y) / 0.01,
+        상부장_상단_mm: (yPos / 0.01) + furnitureHeightMm/2,
+        상부장_하단_mm: (yPos / 0.01) - furnitureHeightMm/2,
+        천장높이: spaceInfo.height,
+        상부프레임두께: spaceInfo.surroundType !== 'no-surround' ? 10 : 0,
         isDragging: isDraggingThis,
         baseConfig: spaceInfo?.baseConfig,
         설명: '상부장은 항상 천장(상부 프레임 하단)에 고정'
