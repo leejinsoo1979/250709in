@@ -113,30 +113,40 @@ export class ColumnIndexer {
       // 전체 영역 기준 컬럼 너비
       const columnWidth = Math.floor(internalWidth / columnCount);
       
-      // 전체 영역의 경계와 위치 (호환성을 위해 유지)
+      // 전체 영역의 경계와 위치 계산
       const columnBoundaries = [];
       const columnPositions = [];
       
-      // 빌트인+노서라운드 모드에서 올바른 시작 위치 사용
-      let currentBoundary = internalStartX;
-      columnBoundaries.push(currentBoundary);
+      // 빌트인+노서라운드일 때 특별 처리가 필요한지 먼저 계산
+      const needsBuiltinNoSurroundHandling = spaceInfo.surroundType === 'no-surround' && 
+                                            (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in');
       
-      // 슬롯 너비 기반 경계 계산 (빌트인+노서라운드에서 중요)
-      for (let i = 0; i < columnCount; i++) {
-        // slotWidths가 있으면 사용, 없으면 columnWidth 사용
-        const slotWidth = (i === 0 && spaceInfo.surroundType === 'no-surround' && 
-                          (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) 
-                          ? (totalWidth - (spaceInfo.gapConfig?.left || 2) - (spaceInfo.gapConfig?.right || 2)) / columnCount
-                          : columnWidth;
-        currentBoundary += slotWidth;
-        columnBoundaries.push(currentBoundary);
-      }
-      
-      // 슬롯 중심 위치 계산
-      for (let i = 0; i < columnCount; i++) {
-        const slotStart = columnBoundaries[i];
-        const slotEnd = columnBoundaries[i + 1];
-        columnPositions.push((slotStart + slotEnd) / 2);
+      if (needsBuiltinNoSurroundHandling) {
+        // 빌트인+노서라운드: 이격거리만 고려한 시작점에서 실제 슬롯 너비로 위치 계산
+        const leftGap = spaceInfo.gapConfig?.left || 2;
+        let currentX = -(totalWidth / 2) + leftGap;
+        columnBoundaries.push(currentX);
+        
+        // 슬롯 너비 배열이 아래에서 계산될 것이므로 여기서는 균등 분할
+        const availableWidth = totalWidth - leftGap - (spaceInfo.gapConfig?.right || 2);
+        const slotWidth = availableWidth / columnCount;
+        
+        for (let i = 0; i < columnCount; i++) {
+          currentX += slotWidth;
+          columnBoundaries.push(currentX);
+        }
+        
+        for (let i = 0; i < columnCount; i++) {
+          columnPositions.push((columnBoundaries[i] + columnBoundaries[i + 1]) / 2);
+        }
+      } else {
+        // 기존 로직
+        for (let i = 0; i <= columnCount; i++) {
+          columnBoundaries.push(internalStartX + (i * columnWidth));
+        }
+        for (let i = 0; i < columnCount; i++) {
+          columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
+        }
       }
       
       // Three.js 단위 변환

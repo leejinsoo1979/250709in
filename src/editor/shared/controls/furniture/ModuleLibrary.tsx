@@ -27,6 +27,17 @@ const ModuleLibrary: React.FC = () => {
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   
+  // 디버깅: 내경 공간 확인
+  console.log('🏠 내경 공간 계산 결과:', {
+    internalSpace,
+    spaceInfoHeight: spaceInfo?.height,
+    hasFloorFinish: spaceInfo?.hasFloorFinish,
+    floorFinishHeight: spaceInfo?.floorFinish?.height,
+    baseConfigHeight: spaceInfo?.baseConfig?.height,
+    topFrameHeight: spaceInfo?.topFrame?.height,
+    droppedCeiling: spaceInfo?.droppedCeiling
+  });
+  
   // 인덱싱 정보 계산 (컬럼 정보)
   const indexing = calculateSpaceIndexing(spaceInfo);
   
