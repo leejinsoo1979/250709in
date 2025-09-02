@@ -341,7 +341,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           width: droppedOuterWidth,  // 외경 너비 사용
           customColumnCount: zoneInfo.dropped.columnCount,
           columnMode: 'custom' as const,
-          zone: 'dropped' as const  // zone 정보 추가
+          zone: 'dropped' as const,  // zone 정보 추가
+          // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
+          frameSize: latestSpaceInfo.surroundType === 'no-surround' 
+            ? { left: 0, right: 0, top: 0 } 
+            : latestSpaceInfo.frameSize
         };
         
         console.log('🚨 [SlotDropZonesSimple] 단내림 영역 spaceInfo:', {
@@ -712,7 +716,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const zoneSpaceInfo = {
         ...latestSpaceInfo,
         zone: zoneToUse,  // zone 정보 추가
-        width: zoneOuterWidth  // 영역별 너비 설정
+        width: zoneOuterWidth,  // 영역별 너비 설정
+        // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
+        frameSize: latestSpaceInfo.surroundType === 'no-surround' 
+          ? { left: 0, right: 0, top: 0 } 
+          : latestSpaceInfo.frameSize
       };
       
       console.log('🔧 [SlotDropZonesSimple] zoneSpaceInfo 생성:', {
@@ -1938,7 +1946,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         ...spaceInfo,
         mainDoorCount: spaceInfo.mainDoorCount,  // mainDoorCount 유지
         customColumnCount: spaceInfo.mainDoorCount,
-        columnMode: 'custom' as const
+        columnMode: 'custom' as const,
+        // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
+        frameSize: spaceInfo.surroundType === 'no-surround' 
+          ? { left: 0, right: 0, top: 0 } 
+          : spaceInfo.frameSize
       };
       console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
         mainDoorCount: spaceInfo.mainDoorCount,
@@ -1946,6 +1958,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         internalWidth: internalSpace.width,
         adjustedSpaceInfo
       });
+    } else {
+      // 분할창이 아닌 경우에도 노서라운드에서는 frameSize를 0으로
+      adjustedSpaceInfo = {
+        ...spaceInfo,
+        // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
+        frameSize: spaceInfo.surroundType === 'no-surround' 
+          ? { left: 0, right: 0, top: 0 } 
+          : spaceInfo.frameSize
+      };
     }
     
     // 타겟 슬롯의 실제 너비 가져오기
