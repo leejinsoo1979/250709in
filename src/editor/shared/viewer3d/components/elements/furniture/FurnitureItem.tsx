@@ -1548,16 +1548,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
       }
       
-      // 단내림 구간 처리
-      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        totalHeightMm = totalHeightMm - dropHeight;
-        
-        console.log('🎯 단내림 구간 상부장 높이 계산:', {
+      // 단내림 구간에서도 상부장은 천장(상부프레임 하단)에 붙어야 함
+      // 단내림 높이를 빼면 안됨! 상부장은 항상 천장에 고정
+      if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+        console.log('🎯 단내림 구간 상부장 - 천장에 고정:', {
           zone: placedModule.zone,
           baseHeight: spaceInfo.height,
-          dropHeight: dropHeight,
-          resultHeight: totalHeightMm
+          dropHeight: spaceInfo.droppedCeiling?.dropHeight || 200,
+          totalHeightMm,
+          설명: '상부장은 단내림 구간에서도 천장(상부프레임 하단)에 고정'
         });
       }
       
