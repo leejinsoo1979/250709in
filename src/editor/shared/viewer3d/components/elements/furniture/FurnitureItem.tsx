@@ -1759,7 +1759,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     }
     return yPos;
-  }, [placedModule.position.y, furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis, forceUpdate]);
+  }, [placedModule.position.y, furnitureStartY, height, actualModuleData?.id, actualModuleData?.category, moduleData?.category, spaceInfo, spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight, isDraggingThis]);
 
   // 엔드패널이 있을 때 키큰장 위치 조정 - 도어는 위치 변경 없음
   const furnitureXAdjustment = 0; // 도어 위치는 변경하지 않음
