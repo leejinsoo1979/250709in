@@ -1665,14 +1665,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
         // targetZone의 threeUnitPositions 사용하여 정확한 X 위치 계산
         if (targetZone.threeUnitPositions && localSlotIndex !== undefined && localSlotIndex >= 0) {
-          let doorX = 0;
-          if (isDualFurniture && localSlotIndex < targetZone.threeUnitPositions.length - 1) {
-            // 듀얼 가구: 두 슬롯의 중간 위치
-            doorX = (targetZone.threeUnitPositions[localSlotIndex] + targetZone.threeUnitPositions[localSlotIndex + 1]) / 2;
-          } else if (localSlotIndex < targetZone.threeUnitPositions.length) {
-            // 싱글 가구: 해당 슬롯의 중심 위치
-            doorX = targetZone.threeUnitPositions[localSlotIndex];
-          }
+          // 도어는 가구 중심 기준이므로 오프셋을 0으로 시작
+          let doorOffset = 0;
+          
+          // 단내림 구간에서는 도어 오프셋이 필요 없음 (가구와 도어가 같이 움직임)
+          // 도어는 항상 가구 중심에 위치해야 함
+          doorOffset = 0;
           
           // 노서라운드 엔드패널 슬롯인 경우 추가 오프셋 적용
           if (isNoSurroundEndSlot) {
@@ -1684,12 +1682,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 (spaceInfo.installType === 'freestanding' || 
                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right))) {
               // 첫 번째 슬롯: 엔드패널이 왼쪽에 있음
-              doorX -= mmToThreeUnits(widthDifference / 2);
+              doorOffset -= mmToThreeUnits(widthDifference / 2);
             } else if (isLastSlot && 
                       (spaceInfo.installType === 'freestanding' || 
                        (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left))) {
               // 마지막 슬롯: 엔드패널이 오른쪽에 있음
-              doorX += mmToThreeUnits(widthDifference / 2);
+              doorOffset += mmToThreeUnits(widthDifference / 2);
             }
           }
           
@@ -1698,16 +1696,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             zone: placedModule.zone,
             globalSlotIndex: placedModule.slotIndex,
             localSlotIndex,
-            doorX,
+            adjustedPositionX: adjustedPosition.x,
+            doorOffset,
             isDualFurniture,
             targetZone: {
               startX: targetZone.startX,
               columnCount: targetZone.columnCount
-            }
+            },
+            설명: '단내림 구간에서는 도어가 가구 중심에 위치 (오프셋 0)'
           });
           
-          // 도어의 절대 X 위치 반환 (가구 위치로부터의 오프셋)
-          return doorX - adjustedPosition.x;
+          // 도어의 오프셋 반환 (가구 위치로부터의 상대 오프셋)
+          // slotCenterX는 DoorModule에서 가구 중심으로부터의 오프셋으로 사용됨
+          return doorOffset;
         }
       }
       
