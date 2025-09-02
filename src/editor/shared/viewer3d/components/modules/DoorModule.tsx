@@ -582,14 +582,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       console.log('✅ 키큰장 + 띄움 배치 모드!', { floatHeight, furnitureHeight });
       
       // 도어 절대 위치
-      const doorTopAbsolute = actualDoorHeight - upperGap;  // 천장-5mm
+      const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
       const doorBottomAbsolute = floatHeight;               // 가구 하단과 동일 (더 이상 내려가지 않음)
       
       // 도어 높이
       finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
       
       // 가구 절대 위치  
-      const furnitureTopAbsolute = actualDoorHeight;  // 가구 상단은 천장 위치
+      const furnitureTopAbsolute = actualDoorHeight - upperGap;  // 가구 상단도 상부프레임 하단에 맞춤
       const furnitureBottomAbsolute = floatHeight;    // 바닥+띄움높이
       const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
       
@@ -632,14 +632,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
       
       // 도어 절대 위치
-      const doorTopAbsolute = actualDoorHeight - upperGap;  // 천장-5mm
+      const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
       const doorBottomAbsolute = 25;                        // 바닥+25mm (바닥에서 25mm 띄움)
       
       // 도어 높이
       finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
       
       // 가구 절대 위치
-      const furnitureTopAbsolute = actualDoorHeight;    // 가구 상단은 천장 위치
+      const furnitureTopAbsolute = actualDoorHeight - upperGap;    // 가구 상단도 상부프레임 하단에 맞춤
       const furnitureBottomAbsolute = baseHeight;       // 바닥+받침대높이
       const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
       
@@ -1343,7 +1343,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 모드별 갭 값 설정
     const doorGap = spaceInfo.surroundType === 'no-surround' ? 3 : 6;
-    const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 0;
+    const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 1.5; // 서라운드에서도 1.5mm 갭 적용
     
     console.log('🚪 듀얼 도어:', {
       totalWidth,
