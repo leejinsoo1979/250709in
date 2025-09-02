@@ -152,8 +152,20 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     
     // 단내림이 없는 경우 기존 로직
     const columnCount = indexing.columnCount;
-    const columnIndex = Math.floor((normalizedX + 1) * columnCount / 2);
-    const clampedColumnIndex = Math.max(0, Math.min(columnIndex, columnCount - 1));
+    
+    // 마우스 위치에서 가장 가까운 슬롯 찾기
+    let closestColumnIndex = 0;
+    let minDistance = Infinity;
+    
+    // 각 슬롯의 실제 위치와 마우스 위치 비교
+    for (let i = 0; i < columnCount; i++) {
+      const slotX = indexing.threeUnitPositions[i];
+      const distance = Math.abs(worldX - slotX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestColumnIndex = i;
+      }
+    }
     
     const columnWidth = indexing.columnWidth;
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
@@ -162,7 +174,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     let targetColumn: number;
     
     if (isDualFurniture) {
-      const dualPositionIndex = Math.max(0, Math.min(clampedColumnIndex, columnCount - 2));
+      const dualPositionIndex = Math.max(0, Math.min(closestColumnIndex, columnCount - 2));
       if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[dualPositionIndex] !== undefined) {
         targetPositionX = indexing.threeUnitDualPositions[dualPositionIndex];
       } else {
@@ -172,9 +184,9 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       targetColumn = dualPositionIndex;
       console.log('🎯 Dual furniture position (슬롯 경계):', dualPositionIndex, targetPositionX);
     } else {
-      targetPositionX = indexing.threeUnitPositions[clampedColumnIndex];
-      targetColumn = clampedColumnIndex;
-      console.log('🎯 Single furniture position:', clampedColumnIndex, targetPositionX);
+      targetPositionX = indexing.threeUnitPositions[closestColumnIndex];
+      targetColumn = closestColumnIndex;
+      console.log('🎯 Single furniture position:', closestColumnIndex, targetPositionX);
     }
     
     return {
