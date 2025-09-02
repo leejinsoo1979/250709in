@@ -755,7 +755,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         // 이렇게 하면 실제 슬롯 너비에 맞게 가구가 렌더링됨
         hingePosition: 'right' as 'left' | 'right',
         zone: targetZone || undefined, // 영역 정보 저장
-        customWidth: customWidth // 실제 슬롯 너비 추가
+        // 노서라운드 모드에서는 customWidth를 설정하지 않음
+        customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth
       };
       
       console.log('🚨 [ModuleGallery] New module created:', {
