@@ -1239,6 +1239,37 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let slot1Width = 0;
     let slot2Width = 0;
     
+    // 단내림 구간에서 슬롯 너비가 없는 경우 처리
+    const zone = (spaceInfo as any).zone;
+    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
+    
+    if (isDroppedZone && (!slotWidths || slotWidths.length < 2)) {
+      console.log('🚨 단내림 구간 듀얼장 도어 너비 계산 - slotWidths 없음, 기본값 사용', {
+        zone,
+        slotWidths,
+        indexingColumnWidth: indexing.columnWidth,
+        actualDoorWidth,
+        moduleWidth
+      });
+      // 단내림 구간에서 slotWidths가 없으면 columnWidth 사용
+      slot1Width = indexing.columnWidth;
+      slot2Width = indexing.columnWidth;
+      totalWidth = slot1Width + slot2Width;
+      
+      // 서라운드 모드인 경우
+      if (spaceInfo.surroundType !== 'no-surround') {
+        const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
+        leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
+        rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
+      } else {
+        // 노서라운드 모드
+        const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
+        const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
+        leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
+        rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
+      }
+    } else {
+    
     // 노서라운드 모드: 커버도어 (엔드패널을 가림)
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드에서는 도어가 엔드패널을 덮으므로, 
@@ -1378,6 +1409,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
       leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
       rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
+    }
     }
     
     // 모드별 갭 값 설정
