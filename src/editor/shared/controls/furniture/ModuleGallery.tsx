@@ -810,15 +810,42 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         zoneColumnWidth: zoneIndexing.columnWidth
       });
       
-      // Zone별 위치 계산
-      if (isDualFurniture && zoneIndexing.threeUnitDualPositions && zoneIndexing.threeUnitDualPositions[localSlotIndex] !== undefined) {
-        positionX = zoneIndexing.threeUnitDualPositions[localSlotIndex];
-      } else if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[localSlotIndex] !== undefined) {
-        positionX = zoneIndexing.threeUnitPositions[localSlotIndex];
+      // Zone별 위치 계산 - 직접 계산 (threeUnitPositions이 없을 수 있음)
+      console.log('📍 Position calculation inputs:', {
+        isDualFurniture,
+        localSlotIndex,
+        zoneInternalStartX: zoneIndexing.internalStartX,
+        zoneColumnWidth: zoneIndexing.columnWidth,
+        targetZone,
+        availableSlotIndex
+      });
+      
+      if (isDualFurniture) {
+        // 듀얼장의 경우 두 슬롯의 중앙에 배치
+        const slot1StartX = zoneIndexing.internalStartX + (localSlotIndex * zoneIndexing.columnWidth);
+        const slot1CenterX = slot1StartX + (zoneIndexing.columnWidth / 2);
+        const slot2StartX = zoneIndexing.internalStartX + ((localSlotIndex + 1) * zoneIndexing.columnWidth);
+        const slot2CenterX = slot2StartX + (zoneIndexing.columnWidth / 2);
+        const dualCenterX = (slot1CenterX + slot2CenterX) / 2;
+        positionX = SpaceCalculator.mmToThreeUnits(dualCenterX);
+        
+        console.log('📍 Dual furniture position details:', {
+          slot1: { startX: slot1StartX, centerX: slot1CenterX },
+          slot2: { startX: slot2StartX, centerX: slot2CenterX },
+          dualCenterX,
+          positionX_three: positionX
+        });
       } else {
-        // Fallback: 수동 계산
-        const slotCenterX = zoneIndexing.internalStartX + (localSlotIndex * zoneIndexing.columnWidth) + (zoneIndexing.columnWidth / 2);
+        // 싱글장의 경우 슬롯 중앙에 배치
+        const slotStartX = zoneIndexing.internalStartX + (localSlotIndex * zoneIndexing.columnWidth);
+        const slotCenterX = slotStartX + (zoneIndexing.columnWidth / 2);
         positionX = SpaceCalculator.mmToThreeUnits(slotCenterX);
+        
+        console.log('📍 Single furniture position details:', {
+          slotStartX,
+          slotCenterX,
+          positionX_three: positionX
+        });
       }
       
       console.log('🎯 [ModuleGallery] Position calculation:', {

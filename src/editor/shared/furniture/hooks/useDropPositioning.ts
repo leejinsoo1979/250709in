@@ -192,7 +192,8 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     return {
       x: targetPositionX,
       column: targetColumn,
-      isDualFurniture
+      isDualFurniture,
+      zone: undefined // 단내림이 없는 경우 zone은 undefined
     };
   };
 
