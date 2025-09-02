@@ -267,16 +267,27 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         if (isUpperCabinet) {
           // 상부장: 내경 공간 상단에 배치
           const furnitureHeight = moduleData?.dimensions?.height || 600;
+          
+          // 단내림 구간에서는 단내림된 높이 사용
+          let effectiveHeight = internalSpace.height;
+          if (dropPosition.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+            const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+            effectiveHeight = internalSpace.height - dropHeight;
+          }
+          
           // 내경 높이에서 가구 높이의 절반을 뺀 위치 (Three.js는 중심점 기준)
-          adjustedPosition.y = (internalSpace.height - furnitureHeight / 2) / 100; // mm를 m로 변환 (100mm = 1 Three.js unit)
+          adjustedPosition.y = (effectiveHeight - furnitureHeight / 2) / 100; // mm를 m로 변환 (100mm = 1 Three.js unit)
           
           console.log('🔝 상부장 Y 위치 설정:', {
+            zone: dropPosition.zone,
             internalSpaceHeight: internalSpace.height,
+            effectiveHeight,
+            dropHeight: dropPosition.zone === 'dropped' ? spaceInfo.droppedCeiling?.dropHeight : 0,
             furnitureHeight,
             yPosition: adjustedPosition.y,
             yPositionMm: adjustedPosition.y * 100,
             moduleId: currentDragData.moduleData.id,
-            설명: '상부장은 천장에서 아래로 매달림'
+            설명: dropPosition.zone === 'dropped' ? '단내림 구간 - 낮아진 천장' : '일반 구간 - 원래 천장'
           });
         } else if (isLowerCabinet) {
           // 하부장은 바닥(y: 0)에 배치

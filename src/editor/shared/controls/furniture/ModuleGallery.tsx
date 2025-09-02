@@ -646,7 +646,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 단내림이 있는 경우: 일반 구간 먼저 시도, 그 다음 단내림 구간 시도
       if (spaceInfo.droppedCeiling?.enabled) {
         // 1단계: 일반(normal) 구간에서 먼저 찾기
-        console.log('🔍 Step 1: Searching in normal zone first...');
+        console.log('🔍 Step 1: Searching in normal zone first...', {
+          normalZone: { start: normalZoneStart, end: normalZoneEnd },
+          droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
+          placedModulesWithZone: placedModules.map(m => ({
+            slotIndex: m.slotIndex,
+            zone: m.zone || 'unknown'
+          }))
+        });
         for (let i = normalZoneStart; i < normalZoneEnd; i++) {
           // 듀얼장인 경우 두 슬롯이 모두 normal zone에 있는지 확인
           if (isDualFurniture) {
@@ -667,7 +674,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         
         // 2단계: 일반 구간에서 못 찾았으면 단내림(dropped) 구간에서 찾기
         if (availableSlotIndex === -1) {
-          console.log('🔍 Step 2: Normal zone full, searching in dropped zone...');
+          console.log('🔍 Step 2: Normal zone full, searching in dropped zone...', {
+            reason: 'Normal zone is full',
+            droppedZone: { start: droppedZoneStart, end: droppedZoneEnd },
+            willSearchSlots: Array.from({ length: droppedZoneEnd - droppedZoneStart }, (_, i) => droppedZoneStart + i)
+          });
           for (let i = droppedZoneStart; i < droppedZoneEnd; i++) {
             // 듀얼장인 경우 두 슬롯이 모두 dropped zone에 있는지 확인
             if (isDualFurniture) {

@@ -99,10 +99,34 @@ export const isSlotAvailable = (
     }
     
     // zone이 다른 경우 충돌 검사 제외
-    if (targetZone && placedModule.zone && placedModule.zone !== targetZone) {
+    // placedModule.zone이 없는 경우를 위해 슬롯 인덱스로 zone 추정
+    let placedModuleZone = placedModule.zone;
+    
+    if (!placedModuleZone && targetZone && spaceInfo.droppedCeiling?.enabled) {
+      // zone 정보가 없는 경우 슬롯 인덱스로 추정
+      const { ColumnIndexer } = await import('@/editor/shared/utils/indexing');
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      
+      if (spaceInfo.droppedCeiling.position === 'left') {
+        // 왼쪽 단내림: 첫 부분이 dropped zone
+        placedModuleZone = placedModule.slotIndex < zoneInfo.dropped.columnCount ? 'dropped' : 'normal';
+      } else {
+        // 오른쪽 단내림: 뒷 부분이 dropped zone
+        placedModuleZone = placedModule.slotIndex < zoneInfo.normal.columnCount ? 'normal' : 'dropped';
+      }
+      
+      console.log('📍 Zone 추정:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        estimatedZone: placedModuleZone,
+        droppedPosition: spaceInfo.droppedCeiling.position
+      });
+    }
+    
+    if (targetZone && placedModuleZone && placedModuleZone !== targetZone) {
       console.log('🔄 다른 zone이므로 건너뛰기:', {
         targetZone,
-        placedModuleZone: placedModule.zone,
+        placedModuleZone,
         moduleId: placedModule.moduleId
       });
       continue;

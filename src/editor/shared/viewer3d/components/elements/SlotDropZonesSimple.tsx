@@ -1734,7 +1734,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
         const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
         const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
-        let totalHeightMm = spaceInfo.height;
+        
+        // 단내림 구간에서는 단내림된 높이 사용
+        let totalHeightMm;
+        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          // 단내림 구간: 단내림된 높이 사용
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          totalHeightMm = spaceInfo.height - dropHeight;
+        } else {
+          // 일반 구간: 전체 높이 사용
+          totalHeightMm = spaceInfo.height;
+        }
         
         // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
         if (spaceInfo.surroundType !== 'no-surround') {
@@ -1749,21 +1759,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         console.log('🔝 상부장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
-          zoneInternalSpace: zoneInternalSpace ? {
-            height: zoneInternalSpace.height,
-            width: zoneInternalSpace.width
-          } : null,
-          internalSpace: {
-            height: internalSpace.height,
-            width: internalSpace.width
-          },
-          effectiveHeight: internalHeightMm,
-          droppedCeiling: spaceInfo.droppedCeiling,
+          isDroppedZone: zoneToUse === 'dropped',
+          droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+          dropHeight: spaceInfo.droppedCeiling?.dropHeight || 0,
+          originalHeight: spaceInfo.height,
+          totalHeightMm,
           furnitureHeightMm,
           furnitureYZone,
           furnitureYZone_mm: furnitureYZone * 100,
-          baseConfig: spaceInfo.baseConfig,
-          설명: '상부장은 천장 고정 (받침대/띄워서 배치와 무관)'
+          계산과정: {
+            '1_원래높이': spaceInfo.height,
+            '2_단내림높이차감': zoneToUse === 'dropped' ? spaceInfo.droppedCeiling?.dropHeight || 0 : 0,
+            '3_최종높이': totalHeightMm,
+            '4_가구높이절반': furnitureHeightMm / 2,
+            '5_최종Y위치_mm': totalHeightMm - furnitureHeightMm / 2,
+            '6_최종Y위치_m': furnitureYZone
+          },
+          설명: zoneToUse === 'dropped' ? '단내림 구간 - 낮아진 천장 기준' : '일반 구간 - 원래 천장 기준'
         });
       } else if (isLowerCabinetZone) {
         // 하부장: 바닥에서 시작 (띄워서 배치 고려)
