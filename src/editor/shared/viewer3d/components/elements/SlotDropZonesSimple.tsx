@@ -637,7 +637,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         console.log('❌ No slot index found (dropped zone)');
         
         // Fallback: 마우스 위치로 슬롯 인덱스 추정
-        if (spaceInfo.droppedCeiling?.enabled && zoneToUse && zoneInfo[zoneToUse]) {
+        if (latestSpaceInfo.droppedCeiling?.enabled && zoneToUse && zoneInfo[zoneToUse]) {
           const targetZone = zoneInfo[zoneToUse];
           const rect = canvasElement.getBoundingClientRect();
           const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
@@ -815,7 +815,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       if (zoneToUse === 'dropped') {
         // 단내림 영역은 높이 조정
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+        const dropHeight = latestSpaceInfo.droppedCeiling?.dropHeight || 200;
         recalculatedZoneInternalSpace.height = Math.max(recalculatedZoneInternalSpace.height - dropHeight, 100);
       }
       
@@ -823,8 +823,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zone: zoneToUse,
         originalInternalSpace: zoneInternalSpace,
         recalculatedInternalSpace: recalculatedZoneInternalSpace,
-        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-        dropHeight: spaceInfo.droppedCeiling?.dropHeight,
+        droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
+        dropHeight: latestSpaceInfo.droppedCeiling?.dropHeight,
         isHeightReducedForDropped: zoneToUse === 'dropped'
       });
       
@@ -886,8 +886,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let targetWidth: number;
       
       console.log('🔍 [노서라운드 디버깅] targetWidth 계산 시작:', {
-        surroundType: spaceInfo.surroundType,
-        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        surroundType: latestSpaceInfo.surroundType,
+        droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
         zoneSlotIndex,
         zoneIndexing: {
           columnCount: zoneIndexing.columnCount,
@@ -914,7 +914,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let targetModuleId;
       
       // 단내림이 없을 때는 8월 28일 버전 로직 사용: 항상 슬롯 너비 기반 ID 생성
-      if (!spaceInfo.droppedCeiling?.enabled) {
+      if (!latestSpaceInfo.droppedCeiling?.enabled) {
         // 노서라운드 모드인지 확인
         if (latestSpaceInfo.surroundType === 'no-surround') {
           // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
@@ -927,7 +927,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       } else {
         // 단내림이 있을 때는 현재 로직 유지
-        if (spaceInfo.surroundType === 'no-surround') {
+        if (latestSpaceInfo.surroundType === 'no-surround') {
           // 노서라운드: 원본 모듈 ID 사용 (600mm 등 고정 크기)
           targetModuleId = dragData.moduleData.id;
           console.log('🔧 [노서라운드] 원본 모듈 ID 사용 (단내림 있음):', targetModuleId);
@@ -1076,8 +1076,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneSlotIndex,
         isDual,
         targetModuleId: zoneTargetModuleId,
-        surroundType: spaceInfo.surroundType,
-        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        surroundType: latestSpaceInfo.surroundType,
+        droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
         targetZoneInfo: targetZoneInfo ? {
           columnCount: targetZoneInfo.columnCount,
           startX: targetZoneInfo.startX,
@@ -1699,7 +1699,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
           
           // 노서라운드 모드에서만 customWidth 무시
-          if (spaceInfo.surroundType === 'no-surround') {
+          if (latestSpaceInfo.surroundType === 'no-surround') {
             customWidth = undefined;
             
             console.log('🔧 [노서라운드] customWidth 설정 안함:', {
