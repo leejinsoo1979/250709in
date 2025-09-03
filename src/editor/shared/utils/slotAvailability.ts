@@ -33,6 +33,7 @@ export const isSlotAvailable = (
       id: m.id,
       moduleId: m.moduleId,
       slotIndex: m.slotIndex,
+      zone: m.zone,
       position: m.position
     })),
     excludeModuleId,
@@ -102,33 +103,39 @@ export const isSlotAvailable = (
     // placedModule.zone이 없는 경우를 위해 슬롯 인덱스로 zone 추정
     let placedModuleZone = placedModule.zone;
     
-    if (!placedModuleZone && targetZone && spaceInfo.droppedCeiling?.enabled && placedModule.slotIndex !== undefined) {
-      // zone 정보가 없는 경우 슬롯 인덱스로 추정
-      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-      
-      if (spaceInfo.droppedCeiling.position === 'left') {
-        // 왼쪽 단내림: 첫 부분이 dropped zone
-        placedModuleZone = placedModule.slotIndex < zoneInfo.dropped.columnCount ? 'dropped' : 'normal';
-      } else {
-        // 오른쪽 단내림: 뒷 부분이 dropped zone
-        placedModuleZone = placedModule.slotIndex < zoneInfo.normal.columnCount ? 'normal' : 'dropped';
+    // 단내림이 있고 target zone이 지정된 경우에만 zone 체크
+    if (targetZone && spaceInfo.droppedCeiling?.enabled) {
+      if (!placedModuleZone && placedModule.slotIndex !== undefined) {
+        // zone 정보가 없는 경우 슬롯 인덱스로 추정
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        if (spaceInfo.droppedCeiling.position === 'left') {
+          // 왼쪽 단내림: 첫 부분이 dropped zone
+          placedModuleZone = placedModule.slotIndex < zoneInfo.dropped.columnCount ? 'dropped' : 'normal';
+        } else {
+          // 오른쪽 단내림: 뒷 부분이 dropped zone
+          placedModuleZone = placedModule.slotIndex < zoneInfo.normal.columnCount ? 'normal' : 'dropped';
+        }
+        
+        console.log('📍 Zone 추정:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          estimatedZone: placedModuleZone,
+          droppedPosition: spaceInfo.droppedCeiling.position,
+          droppedColumnCount: zoneInfo.dropped.columnCount,
+          normalColumnCount: zoneInfo.normal.columnCount
+        });
       }
       
-      console.log('📍 Zone 추정:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        estimatedZone: placedModuleZone,
-        droppedPosition: spaceInfo.droppedCeiling.position
-      });
-    }
-    
-    if (targetZone && placedModuleZone && placedModuleZone !== targetZone) {
-      console.log('🔄 다른 zone이므로 건너뛰기:', {
-        targetZone,
-        placedModuleZone,
-        moduleId: placedModule.moduleId
-      });
-      continue;
+      // zone이 다르면 충돌 체크 건너뛰기
+      if (placedModuleZone && placedModuleZone !== targetZone) {
+        console.log('🔄 다른 zone이므로 건너뛰기:', {
+          targetZone,
+          placedModuleZone,
+          moduleId: placedModule.moduleId
+        });
+        continue;
+      }
     }
     
     const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
