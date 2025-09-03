@@ -2034,15 +2034,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
     // 노서라운드 모드에서는 엔드패널을 고려
     // 서라운드 모드: 항상 -3mm
-    // 노서라운드 모드: originalSlotWidth가 있으면 전체 너비 (커버도어), 없으면 -3mm
+    // 노서라운드 모드: 엔드패널이 있어도 항상 -3mm
     let doorWidth;
-    if (spaceInfo.surroundType === 'surround') {
-      // 서라운드 모드: 항상 3mm 갭
-      doorWidth = actualDoorWidth - 3;
-    } else {
-      // 노서라운드 모드: 커버도어는 전체 너비, 일반도어는 -3mm
-      doorWidth = originalSlotWidth ? actualDoorWidth : actualDoorWidth - 3;
-    }
+    // 모든 경우에 3mm 갭 적용
+    doorWidth = actualDoorWidth - 3;
     
     console.log('🚪 싱글 도어 너비 최종 계산:', {
       originalSlotWidth,
@@ -2052,7 +2047,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       surroundType: spaceInfo.surroundType,
       installType: spaceInfo.installType,
       slotIndex,
-      설명: originalSlotWidth ? '커버도어 - 전체 너비 사용' : '일반 도어 - 3mm 갭'
+      설명: '모든 도어 - 3mm 갭 적용'
     });
     
     // 노서라운드 모드에서 엔드패널 처리
