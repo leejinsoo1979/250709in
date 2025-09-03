@@ -145,12 +145,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
   // handleSlotDrop 함수를 위한 ref
-  const handleSlotDropRef = useRef<(dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => boolean>();
+  const handleSlotDropRef = useRef<(dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => boolean>();
   
   // 드롭 처리 함수
-  const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
+  const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped'): boolean => {
     console.log('🚀🚀🚀 [handleSlotDrop] 함수 시작:', {
       dragEvent: !!dragEvent,
+      activeZone,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
       dragEventType: dragEvent?.type,
       canvasElement: !!canvasElement,
       canvasTagName: canvasElement?.tagName,
@@ -2791,10 +2793,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         dragEventType: dragEvent?.type,
         canvasElement: !!canvasElement,
         activeZone,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
         dataTransfer: dragEvent?.dataTransfer?.getData('application/json')
       });
+      
+      // 단내림이 있을 때 activeZone이 없으면 문제가 발생할 수 있음
+      if (spaceInfo.droppedCeiling?.enabled && !activeZone) {
+        console.log('⚠️ 단내림이 있는데 activeZone이 없음 - 기본값 설정 필요');
+      }
+      
       if (handleSlotDropRef.current) {
-        const result = handleSlotDropRef.current(dragEvent, canvasElement);
+        const result = handleSlotDropRef.current(dragEvent, canvasElement, activeZone);
         console.log('🎯🎯🎯 window.handleSlotDrop result:', result);
         return result;
       } else {
