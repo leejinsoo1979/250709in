@@ -227,9 +227,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D' && renderMode === 'solid') {
-          mat.transparent = false;
-          mat.opacity = 1.0;
-          mat.depthWrite = true;
+          mat.transparent = true;
+          mat.opacity = 0.0;  // 2D 솔리드에서 도어 완전 투명
+          mat.depthWrite = false;
         } else if (renderMode === 'wireframe') {
           // 와이어프레임 모드에서는 도어를 투명하게 처리 (와이어프레임 X자 방지)
           mat.wireframe = false;  // 와이어프레임 비활성화
