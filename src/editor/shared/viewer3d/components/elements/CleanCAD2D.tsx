@@ -869,10 +869,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={2}
                 />
                 
-                {/* 좌측 치수 텍스트 - 가구 치수와 같은 높이 */}
+                {/* 좌측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 {showDimensionsText && (
                   <Text
-                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(120) - mmToThreeUnits(30), 0.01]}
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"
@@ -993,9 +993,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={2}
                 />
                 
-                {/* 우측 치수 텍스트 - 가구 치수와 같은 높이 */}
+                {/* 우측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 <Text
-                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(120) - mmToThreeUnits(30), 0.01]}
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
                   anchorX="center"
