@@ -365,11 +365,22 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
     
-    // 2D에서 베이스프레임은 투명하게 표시
-    const frameColor = materialConfig?.doorColor || defaultColor;
+    // 2D 다크모드 + 노서라운드에서 엔드패널과 하부프레임은 초록색으로 표시
+    let frameColor = materialConfig?.doorColor || defaultColor;
+    if (viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround') {
+      if (frameType === 'left' || frameType === 'right' || frameType === 'base') {
+        // 엔드패널(좌우)과 하부프레임은 초록색
+        frameColor = '#00FF00';  // 밝은 초록색
+      }
+    }
+    
+    // 2D에서 베이스프레임은 투명하게 표시 (단, 다크모드 + 노서라운드는 제외)
     let baseFrameTransparent = false;
     if (viewMode === '2D' && frameType === 'base') {
-      baseFrameTransparent = true;
+      // 다크모드 + 노서라운드일 때는 초록색으로 표시하므로 투명하지 않음
+      if (!(view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround')) {
+        baseFrameTransparent = true;
+      }
     }
     
     const isHighlighted = frameType && highlightedFrame === frameType;
