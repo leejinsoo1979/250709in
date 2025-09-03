@@ -366,13 +366,12 @@ const Room: React.FC<RoomProps> = ({
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
     
     // 2D 다크모드 + 노서라운드에서 엔드패널과 하부프레임은 초록색으로 표시
-    let frameColor = materialConfig?.doorColor || defaultColor;
-    if (viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround') {
-      if (frameType === 'left' || frameType === 'right' || frameType === 'base') {
-        // 엔드패널(좌우)과 하부프레임은 초록색
-        frameColor = '#00FF00';  // 밝은 초록색
-      }
-    }
+    // 초록색이 최우선 순위를 가지도록 설정
+    const isGreenFrame = viewMode === '2D' && view2DTheme === 'dark' && 
+                        spaceInfo.surroundType === 'no-surround' &&
+                        (frameType === 'left' || frameType === 'right' || frameType === 'base');
+    
+    const frameColor = isGreenFrame ? '#00FF00' : (materialConfig?.doorColor || defaultColor);
     
     // 2D에서 베이스프레임은 투명하게 표시 (단, 다크모드 + 노서라운드는 제외)
     let baseFrameTransparent = false;
@@ -388,14 +387,14 @@ const Room: React.FC<RoomProps> = ({
     console.log(`🎨 Creating frame material for ${frameType}:`, {
       frameType,
       frameColor,
+      isGreenFrame,
       doorTexture: materialConfig?.doorTexture,
       isHighlighted,
       viewMode,
       view2DTheme,
       surroundType: spaceInfo.surroundType,
       isNoSurroundDarkMode: viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround',
-      shouldBeGreen: (viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround') && 
-                     (frameType === 'left' || frameType === 'right' || frameType === 'base'),
+      shouldBeGreen: isGreenFrame,
       baseFrameTransparent
     });
     
@@ -415,8 +414,8 @@ const Room: React.FC<RoomProps> = ({
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서는 완전 투명
     });
 
-    // 프레임 텍스처 적용 (강조되지 않은 경우에만)
-    if (!isHighlighted && materialConfig?.doorTexture) {
+    // 프레임 텍스처 적용 (강조되지 않은 경우와 초록색 프레임이 아닌 경우에만)
+    if (!isHighlighted && !isGreenFrame && materialConfig?.doorTexture) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(materialConfig.doorTexture)) {
         console.log('🔧 프레임 Cabinet Texture1 즉시 어둡게 적용 중...');

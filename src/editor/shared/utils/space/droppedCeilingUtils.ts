@@ -39,8 +39,8 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
       }
       
       droppedStartX = -(spaceInfo.width / 2) + leftOffset;
-      // 단내림 영역은 경계까지만 (경계 너머는 일반 영역)
-      actualDroppedWidth = droppedWidth - leftOffset;
+      // 단내림 영역 너비는 원래 너비 유지 (왼쪽 오프셋부터 시작)
+      actualDroppedWidth = droppedWidth;
     } else {
       // 오른쪽 단내림: 단내림 영역은 오른쪽에 위치
       // 단내림 영역의 오른쪽 오프셋 계산
@@ -57,10 +57,10 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
         rightOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
       }
       
-      // 단내림 영역의 시작점은 일반영역 끝부터
+      // 단내림 영역의 시작점은 일반영역 끝부터 (일반영역의 왼쪽 오프셋 고려)
       droppedStartX = -(spaceInfo.width / 2) + (spaceInfo.width - droppedWidth);
-      // 단내림 영역은 오른쪽 오프셋 전까지
-      actualDroppedWidth = droppedWidth - rightOffset;
+      // 단내림 영역 너비는 오른쪽 오프셋까지
+      actualDroppedWidth = droppedWidth;
     }
   } else {
     // 서라운드 모드: 기존 로직 유지
@@ -186,7 +186,21 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
     
     if (isLeftDropped) {
       // 왼쪽 단내림: 일반 영역은 오른쪽에 위치
-      // 일반 영역의 시작점은 단내림 경계부터
+      // 단내림 영역의 왼쪽 오프셋 계산 (일반 영역 시작점 결정용)
+      let leftOffset = 0;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        if (wallConfig?.left) {
+          leftOffset = spaceInfo.gapConfig?.left || 0;  // 왼쪽 벽: 이격거리
+        } else {
+          leftOffset = END_PANEL_THICKNESS;  // 왼쪽 벽 없음: 엔드패널
+        }
+      } else {
+        leftOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
+      }
+      
+      // 일반 영역의 시작점은 단내림 영역의 끝 (이격거리/엔드패널 고려)
       normalStartX = -(spaceInfo.width / 2) + droppedWidth;
       
       // 일반 영역의 오른쪽 오프셋 계산
