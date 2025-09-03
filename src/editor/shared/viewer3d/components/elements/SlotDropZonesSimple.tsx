@@ -266,7 +266,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
           if (!camera) {
             console.warn('Camera not available for raycasting');
-            return null;
+            return false;
           }
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
@@ -307,9 +307,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           console.error('⚠️ Zone info is null or incomplete:', { 
             zoneInfo,
             spaceInfo: {
-              surroundType: spaceInfo.surroundType,
-              installType: spaceInfo.installType,
-              droppedCeiling: spaceInfo.droppedCeiling
+              surroundType: latestSpaceInfo.surroundType,
+              installType: latestSpaceInfo.installType,
+              droppedCeiling: latestSpaceInfo.droppedCeiling
             }
           });
           zoneToUse = 'normal';
@@ -369,7 +369,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     console.log('🚨🚨🚨 단내림 영역별 처리 시작:', {
       droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,
       zoneToUse,
-      조건충족: !!(latestSpaceInfo.droppedCeiling?.enabled && zoneToUse)
+      zoneToUseType: typeof zoneToUse,
+      조건충족: !!(latestSpaceInfo.droppedCeiling?.enabled && zoneToUse),
+      dragData: {
+        moduleId: dragData?.moduleId,
+        moduleData: dragData?.moduleData
+      }
     });
     
     if (latestSpaceInfo.droppedCeiling?.enabled && zoneToUse) {
@@ -595,7 +600,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneToUse,
         colliderZone,
         zoneMismatch: colliderZone && zoneToUse !== colliderZone,
-        droppedInfo: spaceInfo.droppedCeiling,
+        droppedInfo: latestSpaceInfo.droppedCeiling,
         zoneInfo: {
           normal: {
             columnCount: zoneInfo.normal?.columnCount,
