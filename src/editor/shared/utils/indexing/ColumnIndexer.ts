@@ -977,23 +977,34 @@ export class ColumnIndexer {
         
         // 일반 영역: 오른쪽에 위치
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
-        // 일반 영역 시작: 단내림 영역 다음
+        // 일반 영역 시작: 단내림 영역의 외부 너비 위치에서 시작
+        // 단내림 영역이 이미 leftReduction을 적용했으므로, 일반 영역은 단내림의 외부 너비 후에 시작
         normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth;
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
-          '단내림 시작': droppedStartX,
-          '단내림 끝': droppedStartX + droppedAreaInternalWidth,
-          '일반 시작': normalStartX,
-          '일반 끝': normalStartX + normalAreaInternalWidth,
-          '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
-          'leftReduction': leftReduction,
-          'rightReduction': rightReduction,
-          'droppedAreaOuterWidth': droppedAreaOuterWidth,
-          'normalAreaOuterWidth': normalAreaOuterWidth,
-          'droppedAreaInternalWidth': droppedAreaInternalWidth,
-          'normalAreaInternalWidth': normalAreaInternalWidth,
-          'wallConfig': spaceInfo.wallConfig,
-          'gapConfig': spaceInfo.gapConfig
+          '단내림 영역': {
+            '외부너비': droppedAreaOuterWidth,
+            '내부너비': droppedAreaInternalWidth,
+            'reduction': leftReduction,
+            '시작X': droppedStartX,
+            '끝X': droppedStartX + droppedAreaInternalWidth,
+            '벽 위치': -(totalWidth / 2),
+            '벽에서 슬롯까지': leftReduction
+          },
+          '일반 영역': {
+            '외부너비': normalAreaOuterWidth,
+            '내부너비': normalAreaInternalWidth,
+            'reduction': rightReduction,
+            '시작X': normalStartX,
+            '끝X': normalStartX + normalAreaInternalWidth,
+            '영역간 갭': normalStartX - (droppedStartX + droppedAreaInternalWidth)
+          },
+          '전체': {
+            'totalWidth': totalWidth,
+            'wallConfig': spaceInfo.wallConfig,
+            'gapConfig': spaceInfo.gapConfig,
+            'installType': spaceInfo.installType
+          }
         });
       }
     } else {
