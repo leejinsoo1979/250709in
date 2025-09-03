@@ -3039,27 +3039,48 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     };
     
 
-    // 커스텀 이벤트 리스너로 Canvas 드래그 이벤트 수신
-    const handleCanvasDragOver = (e: CustomEvent) => {
-      console.log('📨 SlotDropZonesSimple - 커스텀 dragover 이벤트 수신:', e.detail);
-      if (currentDragData) {
-        const fakeEvent = {
-          clientX: e.detail.clientX,
-          clientY: e.detail.clientY,
-          preventDefault: () => {},
-          stopPropagation: () => {}
-        };
-        handleDragOver(fakeEvent as any);
+    // Canvas 요소 찾아서 직접 이벤트 리스너 추가
+    let cleanupFunctions: (() => void)[] = [];
+    
+    const setupCanvasListeners = () => {
+      const canvas = document.querySelector('canvas');
+      if (!canvas) {
+        console.log('❌ Canvas를 찾을 수 없음, 재시도...');
+        setTimeout(setupCanvasListeners, 100);
+        return;
       }
+      
+      if (!currentDragData) {
+        console.log('📦 현재 드래그 데이터 없음');
+        return;
+      }
+      
+      console.log('✅ Canvas 발견! 드래그 이벤트 리스너 추가');
+      
+      const canvasHandleDragOver = (e: DragEvent) => {
+        e.preventDefault();
+        console.log('🎯 Canvas dragover 이벤트!', { clientX: e.clientX, clientY: e.clientY });
+        handleDragOver(e as any);
+      };
+      
+      const canvasHandleDragLeave = (e: DragEvent) => {
+        console.log('👋 Canvas dragleave 이벤트!');
+        handleDragLeave();
+      };
+      
+      canvas.addEventListener('dragover', canvasHandleDragOver);
+      canvas.addEventListener('dragleave', canvasHandleDragLeave);
+      
+      cleanupFunctions.push(() => {
+        canvas.removeEventListener('dragover', canvasHandleDragOver);
+        canvas.removeEventListener('dragleave', canvasHandleDragLeave);
+      });
     };
     
-    if (currentDragData) {
-      console.log('🎨 SlotDropZonesSimple - 커스텀 이벤트 리스너 추가');
-      window.addEventListener('canvas-dragover', handleCanvasDragOver as any);
-    }
-
+    setupCanvasListeners();
+    
     return () => {
-      window.removeEventListener('canvas-dragover', handleCanvasDragOver as any);
+      cleanupFunctions.forEach(fn => fn());
     };
   }, [currentDragData, camera, scene, spaceInfo, placedModules]);
   
