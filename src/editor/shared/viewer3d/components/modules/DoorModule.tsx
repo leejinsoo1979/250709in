@@ -2054,6 +2054,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const END_PANEL_THICKNESS = 18;
       const hasEndPanelIncluded = originalSlotWidth > (moduleWidth || 0) + 10; // 10mm 이상 차이나면 엔드패널 포함
       
+      console.log('🔍🔍🔍 엔드패널 포함 여부 판단:', {
+        originalSlotWidth,
+        moduleWidth,
+        difference: originalSlotWidth - (moduleWidth || 0),
+        hasEndPanelIncluded,
+        slotIndex,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType
+      });
+      
       if (hasEndPanelIncluded) {
         // 엔드패널이 포함된 경우, 도어 위치를 조정해야 함
         // 슬롯 인덱스로 엔드패널 위치 판단
@@ -2204,8 +2214,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
+    // 최종 도어 위치 디버깅
+    const finalDoorX = doorGroupX + doorAdjustment + hingeAxisOffset;
+    console.log('🎯🎯🎯 싱글 도어 최종 위치 계산:', {
+      doorGroupX,
+      doorAdjustment,
+      hingeAxisOffset,
+      finalDoorX,
+      originalSlotWidth,
+      moduleWidth,
+      slotIndex,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      zone: (spaceInfo as any).zone
+    });
+
     return (
-      <group position={[doorGroupX + doorAdjustment + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+      <group position={[finalDoorX, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
