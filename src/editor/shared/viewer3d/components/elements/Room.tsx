@@ -2715,56 +2715,57 @@ const Room: React.FC<RoomProps> = ({
             const columns = spaceInfo.columns || [];
             
             // 하부프레임은 슬롯가이드와 동일한 x축 위치를 사용
-            // calculateZoneSlotInfo에서 사용하는 것과 동일한 로직 적용
+            // ColumnIndexer.ts의 calculateZoneSlotInfo 로직과 완전히 일치
             let frameWidth = baseFrame.width;
             let frameX = 0;
+            let frameStartX = 0;
             
             // 서라운드 모드
             if (spaceInfo.surroundType === 'surround') {
-              // 서라운드는 프레임 내부 시작 (왼쪽 프레임 두께만큼 오른쪽으로)
+              // 서라운드는 프레임 내부 시작
               frameWidth = baseFrame.width;
-              frameX = 0; // 중심이 0이 되도록
+              frameStartX = xOffset + frameThickness.left;
+              frameX = frameStartX + frameWidth/2;
             }
             // 노서라운드 모드
             else if (spaceInfo.surroundType === 'no-surround') {
-              // calculateZoneSlotInfo의 노서라운드 로직과 동일
-              const leftGap = spaceInfo.gapConfig?.left || 2; // 기본 2mm
-              const rightGap = spaceInfo.gapConfig?.right || 2; // 기본 2mm
+              const wallConfig = spaceInfo.wallConfig;
               
-              if (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') {
-                // 프리스탠딩: 엔드패널 안쪽 계산
-                const leftEndPanelWidth = 18;
-                const rightEndPanelWidth = 18;
-                frameWidth = mmToThreeUnits(spaceInfo.width - leftEndPanelWidth - rightEndPanelWidth);
-                // 시작점: 왼쪽 엔드패널 + 이격거리
-                const frameStartX = mmToThreeUnits(-spaceInfo.width/2 + leftEndPanelWidth);
-                frameX = frameStartX + frameWidth/2; // 중심점 계산
-              }
-              else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-                const wallConfig = spaceInfo.wallConfig;
-                let frameStartX = 0;
-                
-                if (!wallConfig?.left) {
-                  // 왼쪽 엔드패널
-                  const leftEndPanelWidth = 18;
-                  frameWidth = mmToThreeUnits(spaceInfo.width - leftEndPanelWidth - rightGap);
-                  frameStartX = mmToThreeUnits(-spaceInfo.width/2 + leftEndPanelWidth);
-                } else if (!wallConfig?.right) {
-                  // 오른쪽 엔드패널
-                  const rightEndPanelWidth = 18;
-                  frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - rightEndPanelWidth);
-                  frameStartX = mmToThreeUnits(-spaceInfo.width/2 + leftGap);
-                } else {
-                  // 양쪽 벽
-                  frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - rightGap);
-                  frameStartX = mmToThreeUnits(-spaceInfo.width/2 + leftGap);
-                }
+              if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+                // 빌트인: 이격거리 적용
+                const leftGap = spaceInfo.gapConfig?.left || 2;
+                const rightGap = spaceInfo.gapConfig?.right || 2;
+                frameStartX = xOffset + mmToThreeUnits(leftGap);
+                frameWidth = width - mmToThreeUnits(leftGap + rightGap);
                 frameX = frameStartX + frameWidth/2;
               }
-              else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-                // 빌트인: 이격거리만 고려
-                frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - rightGap);
-                const frameStartX = mmToThreeUnits(-spaceInfo.width/2 + leftGap);
+              else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                // 세미스탠딩: 벽 유무에 따라 처리
+                if (wallConfig?.left && !wallConfig?.right) {
+                  // 왼쪽 벽만 있는 경우: 왼쪽 벽에 붙이고, 오른쪽은 엔드패널
+                  frameStartX = xOffset; // 벽에 바로 붙음
+                  frameWidth = width - mmToThreeUnits(18); // 오른쪽 엔드패널 18mm
+                  frameX = frameStartX + frameWidth/2;
+                }
+                else if (!wallConfig?.left && wallConfig?.right) {
+                  // 오른쪽 벽만 있는 경우: 왼쪽 엔드패널, 오른쪽 벽에 붙임
+                  frameStartX = xOffset + mmToThreeUnits(18); // 왼쪽 엔드패널 18mm
+                  frameWidth = width - mmToThreeUnits(18); // 왼쪽 엔드패널 두께 제외
+                  frameX = frameStartX + frameWidth/2;
+                }
+                else {
+                  // 양쪽 벽이 있거나 없는 경우 (fallback)
+                  const leftGap = spaceInfo.gapConfig?.left || 2;
+                  const rightGap = spaceInfo.gapConfig?.right || 2;
+                  frameStartX = xOffset + mmToThreeUnits(leftGap);
+                  frameWidth = width - mmToThreeUnits(leftGap + rightGap);
+                  frameX = frameStartX + frameWidth/2;
+                }
+              }
+              else {
+                // 프리스탠딩: 양쪽 엔드패널
+                frameStartX = xOffset + mmToThreeUnits(18);
+                frameWidth = width - mmToThreeUnits(36); // 양쪽 엔드패널 18mm씩
                 frameX = frameStartX + frameWidth/2;
               }
             }
