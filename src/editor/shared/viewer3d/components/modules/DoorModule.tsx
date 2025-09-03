@@ -2036,6 +2036,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // originalSlotWidth가 있으면 커버도어이므로 전체 너비 사용
     let doorWidth = originalSlotWidth ? actualDoorWidth : actualDoorWidth - 3; // 커버도어는 전체 너비, 일반도어는 -3mm
     
+    console.log('🚪 싱글 도어 너비 최종 계산:', {
+      originalSlotWidth,
+      actualDoorWidth,
+      doorWidth,
+      indexingColumnWidth: indexing.columnWidth,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      slotIndex,
+      설명: originalSlotWidth ? '커버도어 - 전체 너비 사용' : '일반 도어 - 3mm 갭'
+    });
+    
     // 노서라운드 모드에서 첫번째/마지막 슬롯 처리
     if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
       // 실제 슬롯 너비로 엔드패널 여부 판단
