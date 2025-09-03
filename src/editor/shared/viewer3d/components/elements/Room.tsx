@@ -533,11 +533,11 @@ const Room: React.FC<RoomProps> = ({
     : 0;
   
   // 좌우 프레임 높이 계산
-  // 단내림이 있을 때는 좌우 프레임이 천장까지 닿아야 함
-  // 단내림이 없을 때만 서라운드 모드에서 상부 프레임 두께를 제외
-  const adjustedPanelHeight = spaceInfo.surroundType === 'surround' && !spaceInfo.droppedCeiling?.enabled
-    ? height - floatHeight - topBottomFrameHeight  // 서라운드(단내림 없음): 상부 프레임 두께만큼 줄어듦
-    : height - floatHeight;  // 노서라운드 또는 단내림 있음: 전체 높이 사용
+  // 단내림이 있을 때는 좌우 프레임이 천장까지 닿아야 함 (상부 프레임 높이 제외 안함)
+  // 단내림이 없을 때는 모든 모드에서 상부 프레임 두께를 제외
+  const adjustedPanelHeight = spaceInfo.droppedCeiling?.enabled
+    ? height - floatHeight  // 단내림 있음: 천장까지 닿음 (상부 프레임 높이 제외 안함)
+    : height - floatHeight - topBottomFrameHeight;  // 단내림 없음: 상부 프레임 두께만큼 줄어듦
   
   // 상단 요소들의 Y 위치 - 천장에 붙임
   // 모든 모드에서 천장 위치에 배치
