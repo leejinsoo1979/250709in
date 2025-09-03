@@ -2718,6 +2718,42 @@ const Room: React.FC<RoomProps> = ({
             let frameWidth = baseFrame.width;
             let frameX = 0;
             
+            // 노서라운드 + 프리스탠딩인 경우 왼쪽 엔드패널 안쪽부터 시작
+            if (spaceInfo.surroundType === 'no-surround' && 
+                (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')) {
+              // 왼쪽 엔드패널 두께(18mm) 만큼 오른쪽으로 이동
+              frameX = mmToThreeUnits(18);
+              // 너비도 양쪽 엔드패널 두께를 빼야 함
+              frameWidth = mmToThreeUnits(spaceInfo.width - 36);
+            }
+            // 노서라운드 + 세미스탠딩인 경우
+            else if (spaceInfo.surroundType === 'no-surround' && 
+                     (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+              const wallConfig = spaceInfo.wallConfig;
+              // 왼쪽 벽이 없으면 왼쪽 엔드패널 고려
+              if (!wallConfig?.left) {
+                frameX = mmToThreeUnits(18);
+                frameWidth = mmToThreeUnits(spaceInfo.width - 18 - (spaceInfo.gapConfig?.right || 0));
+              }
+              // 오른쪽 벽이 없으면 오른쪽 엔드패널 고려
+              else if (!wallConfig?.right) {
+                frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
+                frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - 18);
+              }
+              // 양쪽 벽이 있으면 이격거리만 고려
+              else {
+                frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
+                frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - (spaceInfo.gapConfig?.right || 0));
+              }
+            }
+            // 노서라운드 + 빌트인인 경우
+            else if (spaceInfo.surroundType === 'no-surround' && 
+                     (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+              // 이격거리 고려
+              frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
+              frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - (spaceInfo.gapConfig?.right || 0));
+            }
+            
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
             
