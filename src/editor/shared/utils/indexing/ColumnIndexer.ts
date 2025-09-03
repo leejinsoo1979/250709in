@@ -1314,25 +1314,38 @@ export class ColumnIndexer {
       }
     };
     
+    // 실제 적용된 reduction 값 계산
+    const actualLeftReduction = droppedPosition === 'left' ? leftReduction : leftReduction;
+    const actualRightReduction = droppedPosition === 'left' ? rightReduction : rightReduction;
+    
     console.log('🚨🚨🚨 슬롯 계산 최종 결과 (세미스탠딩 체크):', {
       installType: spaceInfo.installType,
       wallConfig: spaceInfo.wallConfig,
       gapConfig: spaceInfo.gapConfig,
-      '왼쪽 단내림': {
-        'leftReduction (단내림 왼쪽)': droppedPosition === 'left' ? 
-          (spaceInfo.wallConfig?.left ? spaceInfo.gapConfig?.left || 0 : END_PANEL_THICKNESS) : 0,
-        'rightReduction (일반 오른쪽)': droppedPosition === 'left' ? 
-          (spaceInfo.wallConfig?.right ? spaceInfo.gapConfig?.right || 0 : END_PANEL_THICKNESS) : 0,
-        '단내림 시작': droppedStartX,
-        '단내림 너비': droppedAreaInternalWidth,
-        '일반 시작': normalStartX,
-        '일반 너비': normalAreaInternalWidth
+      droppedPosition: droppedPosition,
+      '계산된 Reduction 값': {
+        leftReduction: leftReduction,
+        rightReduction: rightReduction,
+        '설명': droppedPosition === 'left' ? 
+          '왼쪽 단내림: 단내림은 leftReduction, 일반은 rightReduction 적용' :
+          '오른쪽 단내림: 일반은 leftReduction, 단내림은 rightReduction 적용'
       },
-      '실제 슬롯 위치': {
-        '단내림 슬롯 시작': droppedStartX,
-        '단내림 슬롯 끝': droppedStartX + droppedAreaInternalWidth,
-        '일반 슬롯 시작': normalStartX,
-        '일반 슬롯 끝': normalStartX + normalAreaInternalWidth
+      '단내림 영역': {
+        '시작 X': droppedStartX,
+        '너비': droppedAreaInternalWidth,
+        '끝 X': droppedStartX + droppedAreaInternalWidth,
+        '적용된 reduction': droppedPosition === 'left' ? leftReduction : rightReduction
+      },
+      '일반 영역': {
+        '시작 X': normalStartX,
+        '너비': normalAreaInternalWidth,
+        '끝 X': normalStartX + normalAreaInternalWidth,
+        '적용된 reduction': droppedPosition === 'left' ? rightReduction : leftReduction
+      },
+      '전체 공간': {
+        '총 너비': totalWidth,
+        '왼쪽 끝': -(totalWidth / 2),
+        '오른쪽 끝': totalWidth / 2
       }
     });
     
