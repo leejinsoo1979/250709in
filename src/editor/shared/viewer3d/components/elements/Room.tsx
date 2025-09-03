@@ -468,27 +468,27 @@ const Room: React.FC<RoomProps> = ({
     const mat = createFrameMaterial('base');
     setBaseFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('left');
     setLeftFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('left');
     setLeftSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('right');
     setRightFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('right');
     setRightSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('top');
     setTopFrameMaterial(mat);

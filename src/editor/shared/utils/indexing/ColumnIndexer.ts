@@ -1314,6 +1314,28 @@ export class ColumnIndexer {
       }
     };
     
+    console.log('🚨🚨🚨 슬롯 계산 최종 결과 (세미스탠딩 체크):', {
+      installType: spaceInfo.installType,
+      wallConfig: spaceInfo.wallConfig,
+      gapConfig: spaceInfo.gapConfig,
+      '왼쪽 단내림': {
+        'leftReduction (단내림 왼쪽)': droppedPosition === 'left' ? 
+          (spaceInfo.wallConfig?.left ? spaceInfo.gapConfig?.left || 0 : END_PANEL_THICKNESS) : 0,
+        'rightReduction (일반 오른쪽)': droppedPosition === 'left' ? 
+          (spaceInfo.wallConfig?.right ? spaceInfo.gapConfig?.right || 0 : END_PANEL_THICKNESS) : 0,
+        '단내림 시작': droppedStartX,
+        '단내림 너비': droppedAreaInternalWidth,
+        '일반 시작': normalStartX,
+        '일반 너비': normalAreaInternalWidth
+      },
+      '실제 슬롯 위치': {
+        '단내림 슬롯 시작': droppedStartX,
+        '단내림 슬롯 끝': droppedStartX + droppedAreaInternalWidth,
+        '일반 슬롯 시작': normalStartX,
+        '일반 슬롯 끝': normalStartX + normalAreaInternalWidth
+      }
+    });
+    
     console.log('🔍🔍 [calculateZoneSlotInfo] 최종 반환값:', {
       hasNormal: !!result.normal,
       hasDropped: !!result.dropped,
