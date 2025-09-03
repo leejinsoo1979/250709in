@@ -451,7 +451,7 @@ const Room: React.FC<RoomProps> = ({
     }
     
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, spaceInfo.droppedCeiling]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
