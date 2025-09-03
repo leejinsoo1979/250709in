@@ -365,11 +365,11 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
     
-    // 2D 다크모드 + 노서라운드에서 엔드패널과 하부프레임은 초록색으로 표시
+    // 2D 다크모드 + 노서라운드에서 모든 프레임(상부, 엔드패널, 하부)을 초록색으로 표시
     // 초록색이 최우선 순위를 가지도록 설정
     const isGreenFrame = viewMode === '2D' && view2DTheme === 'dark' && 
                         spaceInfo.surroundType === 'no-surround' &&
-                        (frameType === 'left' || frameType === 'right' || frameType === 'base');
+                        (frameType === 'left' || frameType === 'right' || frameType === 'base' || frameType === 'top');
     
     const frameColor = isGreenFrame ? '#00FF00' : (materialConfig?.doorColor || defaultColor);
     
