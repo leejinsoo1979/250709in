@@ -2721,10 +2721,10 @@ const Room: React.FC<RoomProps> = ({
             // 노서라운드 + 프리스탠딩인 경우 왼쪽 엔드패널 안쪽부터 시작
             if (spaceInfo.surroundType === 'no-surround' && 
                 (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')) {
-              // 왼쪽 엔드패널 두께(18mm) 만큼 오른쪽으로 이동
-              frameX = mmToThreeUnits(18);
-              // 너비도 양쪽 엔드패널 두께를 빼야 함
+              // 너비: 전체 너비 - 양쪽 엔드패널 두께 (36mm)
               frameWidth = mmToThreeUnits(spaceInfo.width - 36);
+              // X 위치: 중심점은 왼쪽 엔드패널(18mm) + 프레임 너비의 절반
+              frameX = mmToThreeUnits(18) + frameWidth / 2;
             }
             // 노서라운드 + 세미스탠딩인 경우
             else if (spaceInfo.surroundType === 'no-surround' && 
@@ -2732,26 +2732,31 @@ const Room: React.FC<RoomProps> = ({
               const wallConfig = spaceInfo.wallConfig;
               // 왼쪽 벽이 없으면 왼쪽 엔드패널 고려
               if (!wallConfig?.left) {
-                frameX = mmToThreeUnits(18);
                 frameWidth = mmToThreeUnits(spaceInfo.width - 18 - (spaceInfo.gapConfig?.right || 0));
+                frameX = mmToThreeUnits(18) + frameWidth / 2;
               }
               // 오른쪽 벽이 없으면 오른쪽 엔드패널 고려
               else if (!wallConfig?.right) {
-                frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
-                frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - 18);
+                const leftGap = spaceInfo.gapConfig?.left || 0;
+                frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - 18);
+                frameX = mmToThreeUnits(leftGap) + frameWidth / 2;
               }
               // 양쪽 벽이 있으면 이격거리만 고려
               else {
-                frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
-                frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - (spaceInfo.gapConfig?.right || 0));
+                const leftGap = spaceInfo.gapConfig?.left || 0;
+                const rightGap = spaceInfo.gapConfig?.right || 0;
+                frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - rightGap);
+                frameX = mmToThreeUnits(leftGap) + frameWidth / 2;
               }
             }
             // 노서라운드 + 빌트인인 경우
             else if (spaceInfo.surroundType === 'no-surround' && 
                      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
               // 이격거리 고려
-              frameX = mmToThreeUnits(spaceInfo.gapConfig?.left || 0);
-              frameWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - (spaceInfo.gapConfig?.right || 0));
+              const leftGap = spaceInfo.gapConfig?.left || 0;
+              const rightGap = spaceInfo.gapConfig?.right || 0;
+              frameWidth = mmToThreeUnits(spaceInfo.width - leftGap - rightGap);
+              frameX = mmToThreeUnits(leftGap) + frameWidth / 2;
             }
             
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
@@ -2956,12 +2961,12 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <BoxWithEdges
                     args={[
-                      finalPanelWidth, 
+                      frameWidth,  // frameWidth 사용 (finalPanelWidth 대신)
                       actualBaseFrameHeight, 
                       mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                     ]}
                     position={[
-                      topBottomPanelX, // 중앙 정렬
+                      frameX,  // frameX 사용 (topBottomPanelX 대신)
                       panelStartY + actualBaseFrameHeight/2, 
                       // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
