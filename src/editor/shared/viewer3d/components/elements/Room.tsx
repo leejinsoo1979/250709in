@@ -391,7 +391,12 @@ const Room: React.FC<RoomProps> = ({
       doorTexture: materialConfig?.doorTexture,
       isHighlighted,
       viewMode,
-      view2DTheme
+      view2DTheme,
+      surroundType: spaceInfo.surroundType,
+      isNoSurroundDarkMode: viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround',
+      shouldBeGreen: (viewMode === '2D' && view2DTheme === 'dark' && spaceInfo.surroundType === 'no-surround') && 
+                     (frameType === 'left' || frameType === 'right' || frameType === 'base'),
+      baseFrameTransparent
     });
     
     // 와이어프레임 모드에서 강조 효과를 더 명확하게
@@ -1909,11 +1914,22 @@ const Room: React.FC<RoomProps> = ({
               const normalStartX = mmToThreeUnits(normalBounds.startX);
               const droppedStartX = mmToThreeUnits(droppedBounds.startX);
               
-              // 프레임 중심 위치 계산
-              // 분절된 상부프레임도 하부프레임과 동일한 x축 위치 사용
-              // 단내림이 있어도 x축 위치는 하부프레임과 동일 (높이만 다름)
-              let droppedX = frameX;  
-              let normalX = frameX;
+              // 슬롯가이드와 동일한 위치/너비 사용
+              const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              
+              // 슬롯가이드와 정확히 같은 위치 계산
+              const droppedSlotStartX = mmToThreeUnits(zoneSlotInfo.dropped.startX);
+              const droppedSlotWidth = mmToThreeUnits(zoneSlotInfo.dropped.width);
+              const normalSlotStartX = mmToThreeUnits(zoneSlotInfo.normal.startX);
+              const normalSlotWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
+              
+              // 프레임 중심 위치 (슬롯가이드와 동일)
+              let droppedX = droppedSlotStartX + droppedSlotWidth / 2;
+              let normalX = normalSlotStartX + normalSlotWidth / 2;
+              
+              // 프레임 너비를 슬롯가이드와 동일하게 설정
+              droppedFrameWidth = droppedSlotWidth;
+              normalFrameWidth = normalSlotWidth;
               
               console.log('🔥 상부 프레임 너비 상세 계산:', {
                 전체너비mm: width / 0.01,
@@ -1945,40 +1961,44 @@ const Room: React.FC<RoomProps> = ({
               });
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 */}
-                  <BoxWithEdges
-                    args={[
-                      droppedFrameWidth,
-                      topBottomFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      droppedX,
-                      // 단내림 구간의 상부 프레임 Y 위치
-                      // 전체 높이에서 dropHeight를 뺀 위치에 프레임 설치
-                      topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight),
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
-                    ]}
-                    material={topFrameMaterial}
-                    renderMode={renderMode}
-                  />
-                  {/* 일반 영역 상부 프레임 */}
-                  <BoxWithEdges
-                    args={[
-                      normalFrameWidth,
-                      topBottomFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      normalX,
-                      topElementsY,
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
-                    ]}
-                    material={topFrameMaterial}
-                    renderMode={renderMode}
-                  />
+                  {/* 단내림 영역 상부 프레임 (슬롯가이드와 동일한 위치/너비) */}
+                  {droppedSlotWidth > 0 && (
+                    <BoxWithEdges
+                      args={[
+                        droppedSlotWidth,  // 슬롯가이드와 동일한 너비
+                        topBottomFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        droppedX,  // 슬롯가이드와 동일한 x축 위치
+                        // 단내림 구간의 상부 프레임 Y 위치
+                        // 전체 높이에서 dropHeight를 뺀 위치에 프레임 설치
+                        topElementsY - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight),
+                        furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      ]}
+                      material={topFrameMaterial}
+                      renderMode={renderMode}
+                    />
+                  )}
+                  {/* 일반 영역 상부 프레임 (슬롯가이드와 동일한 위치/너비) */}
+                  {normalSlotWidth > 0 && (
+                    <BoxWithEdges
+                      args={[
+                        normalSlotWidth,  // 슬롯가이드와 동일한 너비
+                        topBottomFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        normalX,  // 슬롯가이드와 동일한 x축 위치
+                        topElementsY,
+                        furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      ]}
+                      material={topFrameMaterial}
+                      renderMode={renderMode}
+                    />
+                  )}
                 </>
               );
             }
@@ -2073,15 +2093,22 @@ const Room: React.FC<RoomProps> = ({
                 'materialType': topFrameMaterial?.type,
                 'materialColor': topFrameMaterial && 'color' in topFrameMaterial ? (topFrameMaterial as any).color?.getHexString() : 'none'
               });
+              
+              // 슬롯가이드와 동일한 위치/너비 사용 (단내림이 없는 경우)
+              const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+              const slotStartX = mmToThreeUnits(zoneSlotInfo.normal.startX);
+              const slotWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
+              const slotCenterX = slotStartX + slotWidth / 2;
+              
               return (
                 <BoxWithEdges
                   args={[
-                    frameWidth, // 노서라운드 모드에서는 전체 너비 사용
+                    slotWidth, // 슬롯가이드와 동일한 너비
                     topBottomFrameHeight, 
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[
-                    frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
+                    slotCenterX, // 슬롯가이드와 동일한 x축 위치
                     topElementsY, 
                     // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
