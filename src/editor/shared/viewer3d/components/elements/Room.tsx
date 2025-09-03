@@ -408,8 +408,8 @@ const Room: React.FC<RoomProps> = ({
       metalness: 0.0,        // 완전 비금속 (도어와 동일)
       roughness: 0.6,        // 도어와 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
-      emissive: new THREE.Color(isHighlighted ? highlightEmissive : 0x000000),  // 강조 시 자체발광 추가
-      emissiveIntensity: isHighlighted ? 1.0 : 0.0, // 강조 시 발광 강도
+      emissive: new THREE.Color(isHighlighted ? highlightEmissive : (isGreenFrame ? 0x00FF00 : 0x000000)),  // 초록색 프레임은 자체발광 추가
+      emissiveIntensity: isHighlighted ? 1.0 : (isGreenFrame ? 0.3 : 0.0), // 초록색 프레임도 약간 발광
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted || baseFrameTransparent,  // 강조 시에도 투명하게
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서는 완전 투명
     });
