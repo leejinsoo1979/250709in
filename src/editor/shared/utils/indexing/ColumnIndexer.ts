@@ -883,8 +883,9 @@ export class ColumnIndexer {
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-          leftReduction = 0;
+          // 왼쪽 벽이 있으면: 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          leftReduction = leftGap;
         } else {
           // 왼쪽 벽이 없으면: 엔드패널 두께만
           leftReduction = END_PANEL_THICKNESS;
