@@ -1871,31 +1871,27 @@ const Room: React.FC<RoomProps> = ({
               const droppedAreaWidth = mmToThreeUnits(droppedBounds.width);
               const normalAreaWidth = mmToThreeUnits(normalBounds.width);
               
-              // 서라운드 모드에서 일반 구간 프레임은 좌우 프레임 안쪽에 위치
+              // 프레임 너비 계산 - 서라운드와 노서라운드 모두 프레임/엔드패널 안쪽에 위치
               if (isLeftDropped) {
                 // 왼쪽 단내림: 
-                // - 단내림 구간은 왼쪽 프레임 안쪽부터 경계까지
-                // - 일반 구간은 경계부터 오른쪽 프레임 안쪽까지
+                // - 단내림 구간은 왼쪽 프레임/엔드패널 안쪽부터 경계까지
+                // - 일반 구간은 경계부터 오른쪽 프레임/엔드패널 안쪽까지
                 droppedFrameWidth = droppedAreaWidth;
                 normalFrameWidth = normalAreaWidth;
                 
-                // 서라운드 모드에서는 프레임 안쪽에 위치하도록 조정
-                if (spaceInfo.surroundType === 'surround') {
-                  droppedFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임 안쪽
-                  normalFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임 안쪽
-                }
+                // 프레임/엔드패널 안쪽에 위치하도록 조정 (서라운드와 노서라운드 모두)
+                droppedFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임/엔드패널 안쪽
+                normalFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임/엔드패널 안쪽
               } else {
                 // 오른쪽 단내림: 
-                // - 일반 구간은 왼쪽 프레임 안쪽부터 경계까지
-                // - 단내림 구간은 경계부터 오른쪽 프레임 안쪽까지
+                // - 일반 구간은 왼쪽 프레임/엔드패널 안쪽부터 경계까지
+                // - 단내림 구간은 경계부터 오른쪽 프레임/엔드패널 안쪽까지
                 normalFrameWidth = normalAreaWidth;
                 droppedFrameWidth = droppedAreaWidth;
                 
-                // 서라운드 모드에서는 프레임 안쪽에 위치하도록 조정
-                if (spaceInfo.surroundType === 'surround') {
-                  normalFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임 안쪽
-                  droppedFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임 안쪽
-                }
+                // 프레임/엔드패널 안쪽에 위치하도록 조정 (서라운드와 노서라운드 모두)
+                normalFrameWidth -= mmToThreeUnits(leftReduction);  // 왼쪽 프레임/엔드패널 안쪽
+                droppedFrameWidth -= mmToThreeUnits(rightReduction);  // 오른쪽 프레임/엔드패널 안쪽
               }
               
               // Three.js 단위로 변환된 시작점

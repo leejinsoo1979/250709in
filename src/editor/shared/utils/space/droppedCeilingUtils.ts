@@ -15,15 +15,47 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
   const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
   
-  // 전체 공간 기준 시작점
-  const totalStartX = -(spaceInfo.width / 2);
+  // 노서라운드일 때 엔드패널 고려
+  const END_PANEL_THICKNESS = 18;
+  let leftOffset = 0;
+  let rightOffset = 0;
+  
+  if (spaceInfo.surroundType === 'no-surround') {
+    const { wallConfig } = spaceInfo;
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 양쪽 벽에 이격거리만
+      leftOffset = spaceInfo.gapConfig?.left || 0;
+      rightOffset = spaceInfo.gapConfig?.right || 0;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽 있는 쪽 이격거리, 벽 없는 쪽 엔드패널
+      if (wallConfig?.left && !wallConfig?.right) {
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+        rightOffset = END_PANEL_THICKNESS;
+      } else if (!wallConfig?.left && wallConfig?.right) {
+        leftOffset = END_PANEL_THICKNESS;
+        rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else {
+        // fallback
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+        rightOffset = END_PANEL_THICKNESS;
+      }
+    } else {
+      // 프리스탠딩: 양쪽 엔드패널
+      leftOffset = END_PANEL_THICKNESS;
+      rightOffset = END_PANEL_THICKNESS;
+    }
+  }
+  
+  // 전체 공간 기준 시작점 (엔드패널/이격거리 고려)
+  const totalStartX = -(spaceInfo.width / 2) + leftOffset;
+  const availableWidth = spaceInfo.width - leftOffset - rightOffset;
   
   // 위치에 따른 시작점 계산
   let droppedStartX;
   if (position === 'left') {
     droppedStartX = totalStartX;
   } else {
-    droppedStartX = totalStartX + (spaceInfo.width - droppedWidth);
+    droppedStartX = totalStartX + (availableWidth - droppedWidth);
   }
   
   return {
@@ -83,14 +115,46 @@ export const getDroppedZoneThreeBounds = (spaceInfo: SpaceInfo) => {
  * 일반 영역의 경계 정보를 계산 (전체 공간 기준)
  */
 export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
-  // 전체 공간 기준 시작점
-  const totalStartX = -(spaceInfo.width / 2);
+  // 노서라운드일 때 엔드패널 고려
+  const END_PANEL_THICKNESS = 18;
+  let leftOffset = 0;
+  let rightOffset = 0;
+  
+  if (spaceInfo.surroundType === 'no-surround') {
+    const { wallConfig } = spaceInfo;
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 양쪽 벽에 이격거리만
+      leftOffset = spaceInfo.gapConfig?.left || 0;
+      rightOffset = spaceInfo.gapConfig?.right || 0;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽 있는 쪽 이격거리, 벽 없는 쪽 엔드패널
+      if (wallConfig?.left && !wallConfig?.right) {
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+        rightOffset = END_PANEL_THICKNESS;
+      } else if (!wallConfig?.left && wallConfig?.right) {
+        leftOffset = END_PANEL_THICKNESS;
+        rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else {
+        // fallback
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+        rightOffset = END_PANEL_THICKNESS;
+      }
+    } else {
+      // 프리스탠딩: 양쪽 엔드패널
+      leftOffset = END_PANEL_THICKNESS;
+      rightOffset = END_PANEL_THICKNESS;
+    }
+  }
+  
+  // 전체 공간 기준 시작점 (엔드패널/이격거리 고려)
+  const totalStartX = -(spaceInfo.width / 2) + leftOffset;
+  const availableWidth = spaceInfo.width - leftOffset - rightOffset;
   
   if (!spaceInfo.droppedCeiling?.enabled) {
     return {
       startX: totalStartX,
-      endX: totalStartX + spaceInfo.width,
-      width: spaceInfo.width,
+      endX: totalStartX + availableWidth,
+      width: availableWidth,
       height: spaceInfo.height
     };
   }
@@ -98,7 +162,7 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
   const { position } = spaceInfo.droppedCeiling;
   // 기본값 처리
   const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
-  const normalWidth = spaceInfo.width - droppedWidth;
+  const normalWidth = availableWidth - droppedWidth;
   
   // 위치에 따른 시작점 계산
   let normalStartX;
