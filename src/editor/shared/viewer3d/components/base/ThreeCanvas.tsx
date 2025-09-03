@@ -183,6 +183,17 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       setMounted(false);
       cleanupWebGL();
+      
+      // 드래그 이벤트 핸들러 정리
+      if ((window as any).__canvasDragHandlers) {
+        const { canvas, dragOver, drop } = (window as any).__canvasDragHandlers;
+        if (canvas && dragOver && drop) {
+          console.log('🧹 Removing canvas drag event handlers');
+          canvas.removeEventListener('dragover', dragOver);
+          canvas.removeEventListener('drop', drop);
+          delete (window as any).__canvasDragHandlers;
+        }
+      }
     };
   }, [cleanupWebGL]);
 
@@ -624,6 +635,78 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             // renderer 참조 저장
             canvasRef.current = gl.domElement;
             rendererRef.current = gl;
+            
+            // Canvas 요소에 드래그 이벤트 리스너 추가
+            const canvas = gl.domElement;
+            
+            // 드래그 오버 이벤트 처리
+            const handleCanvasDragOver = (e: DragEvent) => {
+              e.preventDefault(); // 드롭을 허용
+              e.stopPropagation(); // 이벤트 버블링 중지
+              console.log('🎨 Canvas dragOver 이벤트 감지:', {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                dataTransfer: e.dataTransfer?.types
+              });
+              
+              // 부모 컨테이너로 이벤트 전달
+              const parentContainer = canvas.closest('[data-viewer-container="true"]');
+              if (parentContainer) {
+                console.log('📤 부모 컨테이너로 dragover 이벤트 전달');
+                const syntheticEvent = new DragEvent('dragover', {
+                  bubbles: true,
+                  cancelable: true,
+                  dataTransfer: e.dataTransfer,
+                  clientX: e.clientX,
+                  clientY: e.clientY,
+                  screenX: e.screenX,
+                  screenY: e.screenY
+                });
+                parentContainer.dispatchEvent(syntheticEvent);
+              } else {
+                console.log('❌ 부모 컨테이너를 찾을 수 없음');
+              }
+            };
+            
+            // 드롭 이벤트 처리
+            const handleCanvasDrop = (e: DragEvent) => {
+              e.preventDefault();
+              e.stopPropagation(); // 이벤트 버블링 중지
+              console.log('🎨 Canvas drop 이벤트 감지:', {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                dataTransfer: e.dataTransfer?.types
+              });
+              
+              // 부모 컨테이너로 이벤트 전달
+              const parentContainer = canvas.closest('[data-viewer-container="true"]');
+              if (parentContainer) {
+                console.log('📤 부모 컨테이너로 drop 이벤트 전달');
+                const syntheticEvent = new DragEvent('drop', {
+                  bubbles: true,
+                  cancelable: true,
+                  dataTransfer: e.dataTransfer,
+                  clientX: e.clientX,
+                  clientY: e.clientY,
+                  screenX: e.screenX,
+                  screenY: e.screenY
+                });
+                parentContainer.dispatchEvent(syntheticEvent);
+              } else {
+                console.log('❌ 부모 컨테이너를 찾을 수 없음');
+              }
+            };
+            
+            // 이벤트 리스너 추가
+            canvas.addEventListener('dragover', handleCanvasDragOver);
+            canvas.addEventListener('drop', handleCanvasDrop);
+            
+            // 전역 변수에 클린업 함수 저장 (나중에 정리를 위해)
+            (window as any).__canvasDragHandlers = {
+              canvas,
+              dragOver: handleCanvasDragOver,
+              drop: handleCanvasDrop
+            };
             
             // 기본 렌더링 설정
             gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
