@@ -2205,7 +2205,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + doorAdjustment + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
