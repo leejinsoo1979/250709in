@@ -2047,78 +2047,112 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: originalSlotWidth ? '커버도어 - 전체 너비 사용' : '일반 도어 - 3mm 갭'
     });
     
-    // 노서라운드 모드에서 첫번째/마지막 슬롯 처리
-    if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
-      // 실제 슬롯 너비로 엔드패널 여부 판단
-      const hasEndPanel = actualDoorWidth < indexing.columnWidth;
+    // 노서라운드 모드에서 엔드패널 처리
+    if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
+      // originalSlotWidth가 있다는 것은 FurnitureItem에서 이미 엔드패널을 고려했다는 의미
+      // 엔드패널이 있는지 확인 (originalSlotWidth > moduleWidth인 경우)
+      const END_PANEL_THICKNESS = 18;
+      const hasEndPanelIncluded = originalSlotWidth > (moduleWidth || 0) + 10; // 10mm 이상 차이나면 엔드패널 포함
       
-      // 노서라운드 모드에서 엔드패널 위치 판단
-      let isLeftEndPanel = false;
-      let isRightEndPanel = false;
-      
-      if (spaceInfo.installType === 'freestanding') {
-        // 벽없음: 양쪽 끝에 엔드패널
-        isLeftEndPanel = slotIndex === 0 && hasEndPanel;
-        isRightEndPanel = slotIndex === indexing.columnCount - 1 && hasEndPanel;
-      } else if (spaceInfo.installType === 'semistanding') {
-        // 한쪽벽: 벽 반대쪽에만 엔드패널
-        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-          // 왼쪽벽: 오른쪽 끝에만 엔드패널
-          isRightEndPanel = slotIndex === indexing.columnCount - 1 && hasEndPanel;
-        } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
-          // 오른쪽벽: 왼쪽 끝에만 엔드패널
-          isLeftEndPanel = slotIndex === 0 && hasEndPanel;
-        }
-      }
-      // 양쪽벽(standing) 모드는 엔드패널 없음
-      
-      console.log('🔍 싱글 도어 엔드패널 판단:', {
-        slotIndex,
-        columnCount: indexing.columnCount,
-        hasEndPanel,
-        isLeftEndPanel,
-        isRightEndPanel,
-        installType: spaceInfo.installType,
-        wallConfig: spaceInfo.wallConfig,
-        actualDoorWidth,
-        columnWidth: indexing.columnWidth
-      });
-      
-      // 엔드패널이 있는 경우 도어 크기 복원 및 위치 조정
-      // 단, 단내림이 활성화된 경우 이미 actualDoorWidth에 엔드패널이 포함되어 있으므로 추가하지 않음
-      if (isLeftEndPanel || isRightEndPanel) {
-        if (spaceInfo.droppedCeiling?.enabled) {
-          // 단내림이 활성화된 경우: actualDoorWidth에 이미 엔드패널 두께가 포함됨
-          doorWidth = actualDoorWidth - 3; // 그대로 사용
-          console.log('단내림 + 노서라운드 엔드패널: 도어 크기 그대로 사용', { 
-            actualDoorWidth, 
-            doorWidth,
-            설명: 'zone별 slotWidth에 이미 엔드패널이 고려됨' 
-          });
-        } else {
-          // 단내림이 없는 경우: 엔드패널을 덮는 원래 슬롯 크기로 복원
-          doorWidth = actualDoorWidth + endPanelThickness - 3; // 582 + 18 - 3 = 597mm
-        }
+      if (hasEndPanelIncluded) {
+        // 엔드패널이 포함된 경우, 도어 위치를 조정해야 함
+        // 슬롯 인덱스로 엔드패널 위치 판단
+        let isLeftEndPanel = false;
+        let isRightEndPanel = false;
         
-        // 도어 위치 보정 (단내림이 없는 경우에만)
-        if (!spaceInfo.droppedCeiling?.enabled) {
-          if (isLeftEndPanel) {
-            doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
-            console.log('왼쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
-          } else if (isRightEndPanel) {
-            doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
-            console.log('오른쪽 엔드패널: 도어 크기 복원 및 위치 조정', { doorWidth, doorAdjustment });
+        if (slotIndex !== undefined) {
+          // 단내림 구간 고려
+          let effectiveColumnCount = indexing.columnCount;
+          let effectiveSlotIndex = slotIndex;
+          
+          // 단내림이 있는 경우 zone별 처리
+          if (spaceInfo.droppedCeiling?.enabled) {
+            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+            
+            // zone 정보가 spaceInfo에 있는지 확인
+            const currentZone = (spaceInfo as any).zone;
+            
+            if (currentZone === 'dropped' && zoneInfo.dropped) {
+              effectiveColumnCount = zoneInfo.dropped.columnCount;
+              // dropped zone 내에서의 로컬 인덱스 계산
+              if (droppedPosition === 'right' && zoneInfo.normal) {
+                effectiveSlotIndex = slotIndex - zoneInfo.normal.columnCount;
+              } else {
+                effectiveSlotIndex = slotIndex;
+              }
+              
+              // dropped zone에서 엔드패널 위치
+              if (spaceInfo.installType === 'freestanding') {
+                if (droppedPosition === 'right') {
+                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
+                } else {
+                  isLeftEndPanel = (effectiveSlotIndex === 0);
+                }
+              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                if (!spaceInfo.wallConfig?.right && droppedPosition === 'right') {
+                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
+                } else if (!spaceInfo.wallConfig?.left && droppedPosition === 'left') {
+                  isLeftEndPanel = (effectiveSlotIndex === 0);
+                }
+              }
+            } else if (currentZone === 'normal' || !currentZone) {
+              // normal zone에서의 처리
+              if (droppedPosition === 'left' && zoneInfo.dropped) {
+                effectiveSlotIndex = slotIndex - zoneInfo.dropped.columnCount;
+              }
+              
+              if (spaceInfo.installType === 'freestanding') {
+                if (droppedPosition === 'right') {
+                  isLeftEndPanel = (effectiveSlotIndex === 0);
+                } else {
+                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
+                }
+              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                if (!spaceInfo.wallConfig?.left && droppedPosition === 'right') {
+                  isLeftEndPanel = (effectiveSlotIndex === 0);
+                } else if (!spaceInfo.wallConfig?.right && droppedPosition === 'left') {
+                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
+                }
+              }
+            }
+          } else {
+            // 단내림이 없는 경우
+            if (spaceInfo.installType === 'freestanding') {
+              isLeftEndPanel = (slotIndex === 0);
+              isRightEndPanel = (slotIndex === effectiveColumnCount - 1);
+            } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+              if (!spaceInfo.wallConfig?.left) {
+                isLeftEndPanel = (slotIndex === 0);
+              }
+              if (!spaceInfo.wallConfig?.right) {
+                isRightEndPanel = (slotIndex === effectiveColumnCount - 1);
+              }
+            }
           }
         }
-      } else {
-        // 중간 슬롯 또는 엔드패널 없는 경우
-        doorWidth = actualDoorWidth - 3; // 일반 슬롯 크기 - 3mm
-        console.log('중간 슬롯 또는 엔드패널 없음');
+        
+        // 도어 위치 조정
+        if (isLeftEndPanel) {
+          doorAdjustment = -END_PANEL_THICKNESS / 2; // 왼쪽으로 9mm
+          console.log('🎯 커버도어 왼쪽 엔드패널 위치 조정:', {
+            slotIndex,
+            doorAdjustment,
+            originalSlotWidth,
+            moduleWidth,
+            설명: '도어를 왼쪽으로 9mm 이동하여 엔드패널 포함'
+          });
+        } else if (isRightEndPanel) {
+          doorAdjustment = END_PANEL_THICKNESS / 2; // 오른쪽으로 9mm
+          console.log('🎯 커버도어 오른쪽 엔드패널 위치 조정:', {
+            slotIndex,
+            doorAdjustment,
+            originalSlotWidth,
+            moduleWidth,
+            설명: '도어를 오른쪽으로 9mm 이동하여 엔드패널 포함'
+          });
+        }
       }
-    } else if (spaceInfo.surroundType === 'no-surround') {
-      // slotIndex가 undefined인 경우
-      doorWidth = actualDoorWidth - 3;
-      console.log('슬롯 인덱스 없음');
     }
     
     const doorWidthUnits = mmToThreeUnits(doorWidth);
