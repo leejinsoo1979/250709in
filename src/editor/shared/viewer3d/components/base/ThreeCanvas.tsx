@@ -648,6 +648,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 clientY: e.clientY,
                 dataTransfer: e.dataTransfer?.types
               });
+              
+              // 커스텀 이벤트 발생시켜서 다른 컴포넌트에 알림
+              const customEvent = new CustomEvent('canvas-dragover', {
+                detail: { clientX: e.clientX, clientY: e.clientY, originalEvent: e }
+              });
+              window.dispatchEvent(customEvent);
             };
             
             // 드롭 이벤트 처리

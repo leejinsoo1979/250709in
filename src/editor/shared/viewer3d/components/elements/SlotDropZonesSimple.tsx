@@ -3039,21 +3039,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     };
     
 
-    const canvas = document.querySelector('canvas');
+    // 커스텀 이벤트 리스너로 Canvas 드래그 이벤트 수신
+    const handleCanvasDragOver = (e: CustomEvent) => {
+      console.log('📨 SlotDropZonesSimple - 커스텀 dragover 이벤트 수신:', e.detail);
+      if (currentDragData) {
+        const fakeEvent = {
+          clientX: e.detail.clientX,
+          clientY: e.detail.clientY,
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        };
+        handleDragOver(fakeEvent as any);
+      }
+    };
     
-    // Canvas 요소 자체에 직접 이벤트 리스너 추가
-    if (canvas && currentDragData) {
-      console.log('🎨 SlotDropZonesSimple - Canvas에 드래그 이벤트 리스너 추가');
-      // 드래그 이벤트를 Canvas에 직접 연결
-      canvas.addEventListener('dragover', handleDragOver);
-      canvas.addEventListener('dragleave', handleDragLeave);
+    if (currentDragData) {
+      console.log('🎨 SlotDropZonesSimple - 커스텀 이벤트 리스너 추가');
+      window.addEventListener('canvas-dragover', handleCanvasDragOver as any);
     }
 
     return () => {
-      if (canvas) {
-        canvas.removeEventListener('dragover', handleDragOver);
-        canvas.removeEventListener('dragleave', handleDragLeave);
-      }
+      window.removeEventListener('canvas-dragover', handleCanvasDragOver as any);
     };
   }, [currentDragData, camera, scene, spaceInfo, placedModules]);
   
