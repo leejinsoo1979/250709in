@@ -1061,11 +1061,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             originalSlotWidthMm += END_PANEL_THICKNESS;
           }
         }
+      }
+    } else {
+      // 슬롯 너비가 없으면 모듈 기본 너비 사용
+      originalSlotWidthMm = actualModuleData?.dimensions.width || 600;
     }
-  } else {
-    // 슬롯 너비가 없으면 모듈 기본 너비 사용
-    originalSlotWidthMm = actualModuleData?.dimensions.width || 600;
-  }
   
   console.log('📏 원래 슬롯 너비 계산:', {
     moduleId: placedModule.moduleId,
