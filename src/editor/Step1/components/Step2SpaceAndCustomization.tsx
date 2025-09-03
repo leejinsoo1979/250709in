@@ -90,7 +90,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
     // 기본값 설정이 필요한 경우
     if (!spaceInfo.surroundType) {
       updates.surroundType = 'no-surround';
-      updates.frameSize = { left: 0, right: 0, top: 0 };
+      updates.frameSize = { left: 0, right: 0, top: 10 };
       updates.gapConfig = {
         left: spaceInfo.installType === 'builtin' ? 2 : 
               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
@@ -570,7 +570,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                     className={`${styles.toggleButton} ${spaceInfo.surroundType === 'no-surround' ? styles.active : ''}`}
                     onClick={() => handleUpdate({ 
                       surroundType: 'no-surround',
-                      frameSize: { left: 0, right: 0, top: 0 },
+                      frameSize: { left: 0, right: 0, top: 10 },
                       gapConfig: {
                         left: spaceInfo.installType === 'builtin' ? 2 : 
                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,

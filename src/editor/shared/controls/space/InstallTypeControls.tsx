@@ -68,9 +68,9 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         };
       }
     }
-    // 노서라운드 모드일 때는 frameSize를 기본값으로 설정
+    // 노서라운드 모드일 때는 좌우 frameSize를 0으로, 상부는 10mm로 설정
     else if (spaceInfo.surroundType === 'no-surround') {
-      updates.frameSize = { left: 0, right: 0, top: 0 };
+      updates.frameSize = { left: 0, right: 0, top: 10 };
       
       // gapConfig도 업데이트
       const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
@@ -111,8 +111,8 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
           right: 0
         };
       }
-      // frameSize도 업데이트하여 자동 계산이 작동하도록 함
-      updates.frameSize = { left: 0, right: 0, top: 0 };
+      // frameSize도 업데이트하여 자동 계산이 작동하도록 함 (상부는 10mm 유지)
+      updates.frameSize = { left: 0, right: 0, top: 10 };
     }
     
     console.log('🏢 InstallTypeControls - wallConfig 변경:', { 

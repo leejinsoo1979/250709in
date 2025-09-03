@@ -43,7 +43,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         surroundType: spaceInfo.surroundType
       });
       onUpdate({
-        frameSize: { left: 0, right: 0, top: 0 }
+        frameSize: { left: 0, right: 0, top: 10 }
       });
     }
   }, [isNoSurround]);
@@ -53,7 +53,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     // 노서라운드 모드에서는 frameSize를 0으로 설정
     if (!spaceInfo.frameSize) {
       if (isNoSurround) {
-        return { left: '0', right: '0', top: '0' };
+        return { left: '0', right: '0', top: '10' };
       } else {
         return { left: '50', right: '50', top: '10' };
       }
@@ -209,9 +209,9 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 노서라운드(타이트) 설정
       const gapSizeValue = 2; // 기본 이격거리
       
-      // 노서라운드에서는 프레임 크기를 기본값으로 설정
+      // 노서라운드에서는 좌우 프레임 크기를 0으로, 상부는 10mm로 설정
       // (Firebase는 undefined를 허용하지 않음)
-      updates.frameSize = { left: 0, right: 0, top: 0 };
+      updates.frameSize = { left: 0, right: 0, top: 10 };
       
       updates.gapConfig = {
         left: hasLeftWall ? gapSizeValue : 0,

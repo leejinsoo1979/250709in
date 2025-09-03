@@ -368,13 +368,13 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   resetSpaceInfo: () =>
     set((state) => {
       let resetInfo = initialState.spaceInfo;
-      // 노서라운드 모드일 경우 frameSize를 0으로 설정
+      // 노서라운드 모드일 경우 좌우 frameSize를 0으로, 상부는 10mm로 설정
       if (resetInfo.surroundType === 'no-surround') {
         resetInfo = {
           ...resetInfo,
-          frameSize: { left: 0, right: 0, top: 0 }
+          frameSize: { left: 0, right: 0, top: 10 }
         };
-        console.log('🔴🔴🔴 [CRITICAL] resetSpaceInfo - 노서라운드 모드 frameSize 강제 0 설정');
+        console.log('🔴🔴🔴 [CRITICAL] resetSpaceInfo - 노서라운드 모드 frameSize 설정 (상부는 10mm 유지)');
       }
       return {
         spaceInfo: resetInfo,
