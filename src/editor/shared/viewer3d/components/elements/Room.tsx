@@ -493,12 +493,12 @@ const Room: React.FC<RoomProps> = ({
     const mat = createFrameMaterial('top');
     setTopFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   useEffect(() => {
     const mat = createFrameMaterial('top');
     setTopSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling]);
+  }, [createFrameMaterial, columnsDeps, viewMode, view2DTheme, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame, spaceInfo.droppedCeiling, spaceInfo.surroundType]);
   // 하단 서브프레임 제거됨
   // useEffect(() => {
   //   const mat = createFrameMaterial('base');
