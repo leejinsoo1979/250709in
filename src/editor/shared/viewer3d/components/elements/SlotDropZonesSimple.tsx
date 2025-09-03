@@ -264,6 +264,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
           
           // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
+          if (!camera) {
+            console.warn('Camera not available for raycasting');
+            return null;
+          }
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
           
@@ -521,7 +525,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 콜라이더에서 zone 정보 가져오기
       let colliderZone: 'normal' | 'dropped' | undefined;
-      if (slotIndex !== null && latestSpaceInfo.droppedCeiling?.enabled) {
+      if (slotIndex !== null && latestSpaceInfo.droppedCeiling?.enabled && scene) {
         const allColliders = [];
         scene.traverse((child) => {
           if (child.userData?.isSlotCollider) {
@@ -550,6 +554,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 마우스 X 위치 계산
           const rect = canvasElement.getBoundingClientRect();
           const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
+          if (!camera) {
+            console.warn('Camera not available for raycasting in drag handler');
+            return false;
+          }
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, 0), camera);
           
@@ -630,6 +638,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
           
           // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
+          if (!camera) {
+            console.warn('Camera not available for raycasting in handle drop');
+            return false;
+          }
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, 0), camera);
           
@@ -712,11 +724,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 콜라이더를 다시 찾아서 확인
         const allColliders = [];
-        scene.traverse((child) => {
-          if (child.userData?.isSlotCollider) {
-            allColliders.push(child);
-          }
-        });
+        if (scene) {
+          scene.traverse((child) => {
+            if (child.userData?.isSlotCollider) {
+              allColliders.push(child);
+            }
+          });
+        }
         
         console.log('🔍 Re-checking colliders for debugging:', {
           totalColliders: allColliders.length,
@@ -1655,27 +1669,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             actualSlotWidth
           });
         } else {
-          // 단내림이 있는 경우: 기존 로직대로
-          if (spaceInfo.surroundType === 'surround') {
-            if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-              customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
-            } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-              // 싱글 가구의 경우 실제 슬롯 너비 사용
-              customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
-            } else {
-              customWidth = actualSlotWidth;
-            }
-            
-            console.log('🔧 [서라운드] customWidth 계산:', {
-              surroundType: spaceInfo.surroundType,
-              isDual,
-              zoneSlotIndex,
-              slotWidths: zoneIndexing.slotWidths,
-              customWidth,
-              actualSlotWidth
-            });
+          // 단내림이 있는 경우: 모든 경우에 슬롯 너비 사용
+          if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+            // 듀얼 가구: 두 슬롯의 너비 합
+            const slot1Width = zoneIndexing.slotWidths[zoneSlotIndex];
+            const slot2Width = zoneIndexing.slotWidths[zoneSlotIndex + 1] || slot1Width;
+            customWidth = slot1Width + slot2Width;
+          } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+            // 싱글 가구: 해당 슬롯 너비
+            customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
           } else {
-            // 노서라운드 모드: customWidth 설정하지 않음
+            // fallback: actualSlotWidth 사용
+            customWidth = actualSlotWidth;
+          }
+          
+          console.log('🔧 [단내림] customWidth 계산:', {
+            zone: zoneToUse,
+            surroundType: spaceInfo.surroundType,
+            isDual,
+            zoneSlotIndex,
+            slotWidths: zoneIndexing.slotWidths,
+            customWidth,
+            actualSlotWidth
+          });
+          
+          // 노서라운드 모드에서만 customWidth 무시
+          if (spaceInfo.surroundType === 'no-surround') {
             customWidth = undefined;
             
             console.log('🔧 [노서라운드] customWidth 설정 안함:', {
@@ -1993,6 +2012,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneToUse = 'normal';
         
         // 레이캐스트로 실제 위치에서 zone 판단 시도
+        if (!camera) {
+          console.warn('Camera not available for raycasting in handle drag');
+          return;
+        }
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
         
@@ -2051,9 +2074,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 여전히 zone을 결정할 수 없는 경우 기존 로직 계속
         // 클릭한 위치의 슬롯 인덱스를 기반으로 영역 결정
-        const allColliders = scene.children
+        const allColliders = scene ? scene.children
           .filter(obj => obj.userData?.isSlotCollider && obj.visible)
-          .sort((a, b) => (a.userData?.slotIndex || 0) - (b.userData?.slotIndex || 0));
+          .sort((a, b) => (a.userData?.slotIndex || 0) - (b.userData?.slotIndex || 0)) : [];
         
         const colliderUserData = allColliders
           .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
@@ -2873,6 +2896,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         
         // 레이캐스터 생성
+        if (!camera) {
+          console.warn('Camera not available for raycasting in window.handleSlotDrop');
+          return false;
+        }
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
         

@@ -239,6 +239,14 @@ export class ColumnIndexer {
           const slotWidth = zones.dropped.slotWidths?.[i] || zones.dropped.columnWidth;
           const slotCenterX = currentX + (slotWidth / 2);
           zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
+          
+          console.log(`🎯 Dropped Zone Slot ${i}:`, {
+            startX: currentX,
+            width: slotWidth,
+            centerX: slotCenterX,
+            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX)
+          });
+          
           currentX += slotWidth;
         }
         
@@ -1087,8 +1095,13 @@ export class ColumnIndexer {
       
       // 단내림 영역 슬롯 너비 계산
       // 내부 너비 계산 시 이미 엔드패널을 뺐으므로, 슬롯 너비에서 추가로 빼면 안됨!
+      // remainder를 균등하게 분배하여 슬롯 간 차이 최소화
       for (let i = 0; i < droppedColumnCount; i++) {
-        let slotWidth = i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth;
+        let slotWidth = droppedBaseWidth;
+        // remainder를 앞쪽 슬롯부터 1씩 추가
+        if (i < droppedRemainder) {
+          slotWidth += 1;
+        }
         droppedSlotWidths.push(slotWidth);
       }
       
