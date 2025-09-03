@@ -1910,34 +1910,10 @@ const Room: React.FC<RoomProps> = ({
               const droppedStartX = mmToThreeUnits(droppedBounds.startX);
               
               // 프레임 중심 위치 계산
-              let droppedX, normalX;
-              
-              if (spaceInfo.surroundType === 'surround') {
-                if (isLeftDropped) {
-                  // 왼쪽 단내림: 단내림 프레임은 왼쪽 프레임 안쪽에서 시작
-                  droppedX = droppedStartX + mmToThreeUnits(leftReduction) + droppedFrameWidth/2;
-                  // 일반 프레임은 경계에서 시작
-                  normalX = normalStartX + normalFrameWidth/2;
-                } else {
-                  // 오른쪽 단내림: 일반 프레임은 왼쪽 프레임 안쪽에서 시작
-                  normalX = normalStartX + mmToThreeUnits(leftReduction) + normalFrameWidth/2;
-                  // 단내림 프레임은 경계에서 시작
-                  droppedX = droppedStartX + droppedFrameWidth/2;
-                }
-              } else {
-                // 노서라운드 모드: 엔드패널 고려
-                if (isLeftDropped) {
-                  // 왼쪽 단내림: 단내림 프레임은 왼쪽 엔드패널 안쪽에서 시작 (leftReduction 적용)
-                  droppedX = droppedStartX + droppedFrameWidth/2;
-                  // 일반 프레임은 오른쪽 엔드패널 안쪽까지 (rightReduction 적용)
-                  normalX = normalStartX + normalFrameWidth/2;
-                } else {
-                  // 오른쪽 단내림: 일반 프레임은 왼쪽 엔드패널 안쪽에서 시작 (leftReduction 적용)
-                  normalX = normalStartX + normalFrameWidth/2;
-                  // 단내림 프레임은 오른쪽 엔드패널 안쪽까지 (rightReduction 적용)
-                  droppedX = droppedStartX + droppedFrameWidth/2;
-                }
-              }
+              // 분절된 상부프레임도 하부프레임과 동일한 x축 위치 사용
+              // 단내림이 있어도 x축 위치는 하부프레임과 동일 (높이만 다름)
+              let droppedX = frameX;  
+              let normalX = frameX;
               
               console.log('🔥 상부 프레임 너비 상세 계산:', {
                 전체너비mm: width / 0.01,
