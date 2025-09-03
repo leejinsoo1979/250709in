@@ -421,8 +421,9 @@ export class ColumnIndexer {
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-          leftReduction = 0;
+          // 왼쪽 벽이 있으면: 이격거리 적용
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          leftReduction = leftGap;
         } else {
           // 왼쪽 벽이 없으면: 엔드패널 두께만
           leftReduction = END_PANEL_THICKNESS;
@@ -737,8 +738,9 @@ export class ColumnIndexer {
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-            leftReduction = 0;
+            // 왼쪽 벽이 있으면: 이격거리 적용
+            const leftGap = spaceInfo.gapConfig?.left || 0;
+            leftReduction = leftGap;
           } else {
             // 왼쪽 벽이 없으면: 엔드패널 두께만
             leftReduction = END_PANEL_THICKNESS;
@@ -945,16 +947,18 @@ export class ColumnIndexer {
           leftReduction = leftGap;  // 단내림구간 벽쪽 이격거리
           rightReduction = rightGap;  // 일반구간 벽쪽 이격거리
         } else {
-          // 왼쪽 처리 (이격거리 무시)
+          // 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = 0;  // 벽이 있으면 이격거리 무시
+            const leftGap = spaceInfo.gapConfig?.left || 0;
+            leftReduction = leftGap;  // 벽이 있으면 이격거리 적용
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
           
-          // 오른쪽 처리 (이격거리 무시)
+          // 오른쪽 처리
           if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;  // 벽이 있으면 이격거리 무시
+            const rightGap = spaceInfo.gapConfig?.right || 0;
+            rightReduction = rightGap;  // 벽이 있으면 이격거리 적용
           } else {
             rightReduction = END_PANEL_THICKNESS;
           }
@@ -1008,14 +1012,16 @@ export class ColumnIndexer {
         } else {
           // 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = 0;  // 벽이 있으면 이격거리 무시, 벽에 바로 붙음
+            const leftGap = spaceInfo.gapConfig?.left || 0;
+            leftReduction = leftGap;  // 벽이 있으면 이격거리 적용
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
           
           // 오른쪽 처리
           if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+            const rightGap = spaceInfo.gapConfig?.right || 0;
+            rightReduction = rightGap;  // 벽이 있으면 이격거리 적용
           } else {
             rightReduction = END_PANEL_THICKNESS;
           }
