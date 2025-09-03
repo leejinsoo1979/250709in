@@ -981,11 +981,19 @@ export class ColumnIndexer {
         normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth;
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
+          '단내림 시작': droppedStartX,
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
-          '메인 시작': normalStartX,
+          '일반 시작': normalStartX,
+          '일반 끝': normalStartX + normalAreaInternalWidth,
           '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
-          '프레임 두께': frameThickness,
-          'SURROUND_FRAME_THICKNESS 제거됨': true
+          'leftReduction': leftReduction,
+          'rightReduction': rightReduction,
+          'droppedAreaOuterWidth': droppedAreaOuterWidth,
+          'normalAreaOuterWidth': normalAreaOuterWidth,
+          'droppedAreaInternalWidth': droppedAreaInternalWidth,
+          'normalAreaInternalWidth': normalAreaInternalWidth,
+          'wallConfig': spaceInfo.wallConfig,
+          'gapConfig': spaceInfo.gapConfig
         });
       }
     } else {
