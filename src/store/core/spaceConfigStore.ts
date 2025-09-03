@@ -245,18 +245,18 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.installType = 'builtin';
       }
       
-      // 노서라운드 모드일 때 frameSize를 0으로 자동 설정
+      // 노서라운드 모드일 때 좌우 frameSize를 0으로, 상부는 10mm로 자동 설정
       if (processedInfo.surroundType === 'no-surround') {
-        processedInfo.frameSize = { left: 0, right: 0, top: 0 };
-        console.log('🔴🔴🔴 [CRITICAL] SpaceConfigStore - 노서라운드 모드 frameSize 강제 0 설정');
+        processedInfo.frameSize = { left: 0, right: 0, top: 10 };
+        console.log('🔴🔴🔴 [CRITICAL] SpaceConfigStore - 노서라운드 모드 frameSize 설정 (상부는 10mm 유지)');
       }
       
       // 기존 상태도 확인하여 노서라운드인 경우 frameSize 수정
       const currentSurroundType = processedInfo.surroundType || state.spaceInfo.surroundType;
       if (currentSurroundType === 'no-surround' && state.spaceInfo.frameSize && 
           (state.spaceInfo.frameSize.left > 0 || state.spaceInfo.frameSize.right > 0)) {
-        processedInfo.frameSize = { left: 0, right: 0, top: 0 };
-        console.log('🔴🔴🔴 [CRITICAL] 기존 상태도 노서라운드인데 frameSize가 잘못됨! 강제 수정');
+        processedInfo.frameSize = { left: 0, right: 0, top: 10 };
+        console.log('🔴🔴🔴 [CRITICAL] 기존 상태도 노서라운드인데 frameSize가 잘못됨! 강제 수정 (상부는 10mm 유지)');
       }
       
       // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
