@@ -11,57 +11,71 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo.droppedCeiling?.enabled) return null;
   
   const { position } = spaceInfo.droppedCeiling;
-  // 기본값 처리
   const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
   const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+  const isLeftDropped = position === 'left';
   
-  // 노서라운드일 때 엔드패널 고려
   const END_PANEL_THICKNESS = 18;
-  let leftOffset = 0;
-  let rightOffset = 0;
+  let droppedStartX;
+  let actualDroppedWidth = droppedWidth;
   
   if (spaceInfo.surroundType === 'no-surround') {
     const { wallConfig } = spaceInfo;
-    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 양쪽 벽에 이격거리만
-      leftOffset = spaceInfo.gapConfig?.left || 0;
-      rightOffset = spaceInfo.gapConfig?.right || 0;
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽 있는 쪽 이격거리, 벽 없는 쪽 엔드패널
-      if (wallConfig?.left && !wallConfig?.right) {
+    
+    if (isLeftDropped) {
+      // 왼쪽 단내림: 단내림 영역은 왼쪽에 위치
+      // 단내림 영역의 왼쪽 오프셋 계산
+      let leftOffset = 0;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
         leftOffset = spaceInfo.gapConfig?.left || 0;
-        rightOffset = END_PANEL_THICKNESS;
-      } else if (!wallConfig?.left && wallConfig?.right) {
-        leftOffset = END_PANEL_THICKNESS;
-        rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        if (wallConfig?.left) {
+          leftOffset = spaceInfo.gapConfig?.left || 0;  // 왼쪽 벽: 이격거리
+        } else {
+          leftOffset = END_PANEL_THICKNESS;  // 왼쪽 벽 없음: 엔드패널
+        }
       } else {
-        // fallback
-        leftOffset = spaceInfo.gapConfig?.left || 0;
-        rightOffset = END_PANEL_THICKNESS;
+        leftOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
       }
+      
+      droppedStartX = -(spaceInfo.width / 2) + leftOffset;
+      // 단내림 영역은 경계까지만 (경계 너머는 일반 영역)
+      actualDroppedWidth = droppedWidth - leftOffset;
     } else {
-      // 프리스탠딩: 양쪽 엔드패널
-      leftOffset = END_PANEL_THICKNESS;
-      rightOffset = END_PANEL_THICKNESS;
+      // 오른쪽 단내림: 단내림 영역은 오른쪽에 위치
+      // 단내림 영역의 오른쪽 오프셋 계산
+      let rightOffset = 0;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        if (wallConfig?.right) {
+          rightOffset = spaceInfo.gapConfig?.right || 0;  // 오른쪽 벽: 이격거리
+        } else {
+          rightOffset = END_PANEL_THICKNESS;  // 오른쪽 벽 없음: 엔드패널
+        }
+      } else {
+        rightOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
+      }
+      
+      // 단내림 영역의 시작점은 일반영역 끝부터
+      droppedStartX = -(spaceInfo.width / 2) + (spaceInfo.width - droppedWidth);
+      // 단내림 영역은 오른쪽 오프셋 전까지
+      actualDroppedWidth = droppedWidth - rightOffset;
     }
-  }
-  
-  // 전체 공간 기준 시작점 (엔드패널/이격거리 고려)
-  const totalStartX = -(spaceInfo.width / 2) + leftOffset;
-  const availableWidth = spaceInfo.width - leftOffset - rightOffset;
-  
-  // 위치에 따른 시작점 계산
-  let droppedStartX;
-  if (position === 'left') {
-    droppedStartX = totalStartX;
   } else {
-    droppedStartX = totalStartX + (availableWidth - droppedWidth);
+    // 서라운드 모드: 기존 로직 유지
+    if (isLeftDropped) {
+      droppedStartX = -(spaceInfo.width / 2);
+    } else {
+      droppedStartX = -(spaceInfo.width / 2) + (spaceInfo.width - droppedWidth);
+    }
+    actualDroppedWidth = droppedWidth;
   }
   
   return {
     startX: droppedStartX,                    // 시작 X 좌표 (mm, 중앙 기준)
-    endX: droppedStartX + droppedWidth,      // 종료 X 좌표 (mm, 중앙 기준)  
-    width: droppedWidth,                      // 영역 폭 (mm)
+    endX: droppedStartX + actualDroppedWidth, // 종료 X 좌표 (mm, 중앙 기준)  
+    width: actualDroppedWidth,                // 영역 폭 (mm)
     height: spaceInfo.height - dropHeight     // 단내림 높이 (mm)
   };
 };
@@ -115,42 +129,42 @@ export const getDroppedZoneThreeBounds = (spaceInfo: SpaceInfo) => {
  * 일반 영역의 경계 정보를 계산 (전체 공간 기준)
  */
 export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
-  // 노서라운드일 때 엔드패널 고려
   const END_PANEL_THICKNESS = 18;
-  let leftOffset = 0;
-  let rightOffset = 0;
   
-  if (spaceInfo.surroundType === 'no-surround') {
-    const { wallConfig } = spaceInfo;
-    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 양쪽 벽에 이격거리만
-      leftOffset = spaceInfo.gapConfig?.left || 0;
-      rightOffset = spaceInfo.gapConfig?.right || 0;
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽 있는 쪽 이격거리, 벽 없는 쪽 엔드패널
-      if (wallConfig?.left && !wallConfig?.right) {
+  // 단내림이 없는 경우 전체 영역에 대한 오프셋 계산
+  if (!spaceInfo.droppedCeiling?.enabled) {
+    let leftOffset = 0;
+    let rightOffset = 0;
+    
+    if (spaceInfo.surroundType === 'no-surround') {
+      const { wallConfig } = spaceInfo;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 빌트인: 양쪽 벽에 이격거리만
         leftOffset = spaceInfo.gapConfig?.left || 0;
-        rightOffset = END_PANEL_THICKNESS;
-      } else if (!wallConfig?.left && wallConfig?.right) {
-        leftOffset = END_PANEL_THICKNESS;
         rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 벽 있는 쪽 이격거리, 벽 없는 쪽 엔드패널
+        if (wallConfig?.left && !wallConfig?.right) {
+          leftOffset = spaceInfo.gapConfig?.left || 0;
+          rightOffset = END_PANEL_THICKNESS;
+        } else if (!wallConfig?.left && wallConfig?.right) {
+          leftOffset = END_PANEL_THICKNESS;
+          rightOffset = spaceInfo.gapConfig?.right || 0;
+        } else {
+          // fallback
+          leftOffset = spaceInfo.gapConfig?.left || 0;
+          rightOffset = END_PANEL_THICKNESS;
+        }
       } else {
-        // fallback
-        leftOffset = spaceInfo.gapConfig?.left || 0;
+        // 프리스탠딩: 양쪽 엔드패널
+        leftOffset = END_PANEL_THICKNESS;
         rightOffset = END_PANEL_THICKNESS;
       }
-    } else {
-      // 프리스탠딩: 양쪽 엔드패널
-      leftOffset = END_PANEL_THICKNESS;
-      rightOffset = END_PANEL_THICKNESS;
     }
-  }
-  
-  // 전체 공간 기준 시작점 (엔드패널/이격거리 고려)
-  const totalStartX = -(spaceInfo.width / 2) + leftOffset;
-  const availableWidth = spaceInfo.width - leftOffset - rightOffset;
-  
-  if (!spaceInfo.droppedCeiling?.enabled) {
+    
+    const totalStartX = -(spaceInfo.width / 2) + leftOffset;
+    const availableWidth = spaceInfo.width - leftOffset - rightOffset;
+    
     return {
       startX: totalStartX,
       endX: totalStartX + availableWidth,
@@ -159,17 +173,65 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
     };
   }
   
+  // 단내림이 있는 경우 일반 영역에 대한 개별 오프셋 계산
   const { position } = spaceInfo.droppedCeiling;
-  // 기본값 처리
   const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
-  const normalWidth = availableWidth - droppedWidth;
+  const isLeftDropped = position === 'left';
   
-  // 위치에 따른 시작점 계산
   let normalStartX;
-  if (position === 'left') {
-    normalStartX = totalStartX + droppedWidth;
+  let normalWidth;
+  
+  if (spaceInfo.surroundType === 'no-surround') {
+    const { wallConfig } = spaceInfo;
+    
+    if (isLeftDropped) {
+      // 왼쪽 단내림: 일반 영역은 오른쪽에 위치
+      // 일반 영역의 시작점은 단내림 경계부터
+      normalStartX = -(spaceInfo.width / 2) + droppedWidth;
+      
+      // 일반 영역의 오른쪽 오프셋 계산
+      let rightOffset = 0;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        rightOffset = spaceInfo.gapConfig?.right || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        if (wallConfig?.right) {
+          rightOffset = spaceInfo.gapConfig?.right || 0;  // 오른쪽 벽: 이격거리
+        } else {
+          rightOffset = END_PANEL_THICKNESS;  // 오른쪽 벽 없음: 엔드패널
+        }
+      } else {
+        rightOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
+      }
+      
+      normalWidth = spaceInfo.width - droppedWidth - rightOffset;
+    } else {
+      // 오른쪽 단내림: 일반 영역은 왼쪽에 위치
+      // 일반 영역의 왼쪽 오프셋 계산
+      let leftOffset = 0;
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        leftOffset = spaceInfo.gapConfig?.left || 0;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        if (wallConfig?.left) {
+          leftOffset = spaceInfo.gapConfig?.left || 0;  // 왼쪽 벽: 이격거리
+        } else {
+          leftOffset = END_PANEL_THICKNESS;  // 왼쪽 벽 없음: 엔드패널
+        }
+      } else {
+        leftOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
+      }
+      
+      normalStartX = -(spaceInfo.width / 2) + leftOffset;
+      normalWidth = spaceInfo.width - droppedWidth - leftOffset;
+    }
   } else {
-    normalStartX = totalStartX;
+    // 서라운드 모드: 기존 로직 유지
+    if (isLeftDropped) {
+      normalStartX = -(spaceInfo.width / 2) + droppedWidth;
+      normalWidth = spaceInfo.width - droppedWidth;
+    } else {
+      normalStartX = -(spaceInfo.width / 2);
+      normalWidth = spaceInfo.width - droppedWidth;
+    }
   }
   
   return {
