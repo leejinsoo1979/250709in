@@ -1918,9 +1918,18 @@ const Room: React.FC<RoomProps> = ({
                   droppedX = droppedStartX + droppedFrameWidth/2;
                 }
               } else {
-                // 노서라운드 모드는 기존 로직 유지
-                droppedX = droppedStartX + droppedFrameWidth/2;
-                normalX = normalStartX + normalFrameWidth/2;
+                // 노서라운드 모드: 엔드패널 고려
+                if (isLeftDropped) {
+                  // 왼쪽 단내림: 단내림 프레임은 왼쪽 엔드패널 안쪽에서 시작 (leftReduction 적용)
+                  droppedX = droppedStartX + droppedFrameWidth/2;
+                  // 일반 프레임은 오른쪽 엔드패널 안쪽까지 (rightReduction 적용)
+                  normalX = normalStartX + normalFrameWidth/2;
+                } else {
+                  // 오른쪽 단내림: 일반 프레임은 왼쪽 엔드패널 안쪽에서 시작 (leftReduction 적용)
+                  normalX = normalStartX + normalFrameWidth/2;
+                  // 단내림 프레임은 오른쪽 엔드패널 안쪽까지 (rightReduction 적용)
+                  droppedX = droppedStartX + droppedFrameWidth/2;
+                }
               }
               
               console.log('🔥 상부 프레임 너비 상세 계산:', {
