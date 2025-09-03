@@ -967,13 +967,13 @@ export class ColumnIndexer {
           }
         }
         
-        // 단내림 영역: 왼쪽 reduction만 적용
+        // 단내림 영역: 왼쪽에 위치, 자체 왼쪽 오프셋 적용
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
-        droppedStartX = internalStartX; // 수정된 internalStartX 사용 (이미 이격거리/엔드패널 반영됨)
+        droppedStartX = -(totalWidth / 2) + leftReduction; // 단내림 영역의 왼쪽 오프셋 적용
         
-        // 일반 영역: 오른쪽 reduction만 적용
+        // 일반 영역: 오른쪽에 위치, 단내림 영역 후 시작 (오른쪽 오프셋은 너비에서 차감)
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 영역 다음부터 시작
+        normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth; // 단내림 영역 너비만큼 이동
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
@@ -1036,13 +1036,13 @@ export class ColumnIndexer {
           }
         }
         
-        // 일반 영역: 왼쪽 reduction만 적용
+        // 일반 영역: 왼쪽에 위치, 자체 왼쪽 오프셋 적용
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
-        normalStartX = internalStartX; // 수정된 internalStartX 사용 (이미 이격거리/엔드패널 반영됨)
+        normalStartX = -(totalWidth / 2) + leftReduction; // 일반 영역의 왼쪽 오프셋 적용
         
-        // 단내림 영역: 오른쪽 reduction만 적용
+        // 단내림 영역: 오른쪽에 위치, 일반 영역 후 시작 (오른쪽 오프셋은 너비에서 차감)
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 일반 영역 다음부터 시작
+        droppedStartX = -(totalWidth / 2) + normalAreaOuterWidth; // 일반 영역 너비만큼 이동
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,

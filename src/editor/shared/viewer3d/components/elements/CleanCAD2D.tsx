@@ -696,15 +696,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           rightReduction = 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -746,19 +746,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -1816,15 +1816,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           rightReduction = 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -1867,19 +1867,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -2397,15 +2397,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           rightReduction = 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -2455,15 +2455,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           rightReduction = 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -3341,15 +3341,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           rightReduction = 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
@@ -3390,19 +3390,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
-                            rightReduction = 20;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                           } else {
-                            leftReduction = 20;
-                            rightReduction = 2;
+                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
+                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
                         }
                       }
                       
