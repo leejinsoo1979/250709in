@@ -365,6 +365,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     
+    // 단내림이 활성화되어 있는데 zoneToUse가 설정되지 않은 경우 기본값 설정
+    if (latestSpaceInfo.droppedCeiling?.enabled && !zoneToUse) {
+      console.warn('⚠️ 단내림이 활성화되어 있지만 zoneToUse가 설정되지 않음. 기본값 "normal" 설정');
+      zoneToUse = 'normal';
+    }
+    
     // 단내림이 활성화된 경우 영역별 처리
     console.log('🚨🚨🚨 단내림 영역별 처리 시작:', {
       droppedCeilingEnabled: latestSpaceInfo.droppedCeiling?.enabled,

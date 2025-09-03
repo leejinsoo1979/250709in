@@ -1086,22 +1086,73 @@ export class ColumnIndexer {
         (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
          spaceInfo.installType === 'freestanding')) {
       
-      // 메인 영역 슬롯 너비 계산
-      // 내부 너비 계산 시 이미 엔드패널을 뺐으므로, 슬롯 너비에서 추가로 빼면 안됨!
+      // 메인 영역 슬롯 너비 계산 - 전체 외부 너비를 기준으로 분배
+      const normalBaseSlotWidth = Math.floor(normalAreaOuterWidth / normalColumnCount);
+      const normalOuterRemainder = normalAreaOuterWidth % normalColumnCount;
+      
       for (let i = 0; i < normalColumnCount; i++) {
-        let slotWidth = i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth;
+        let slotWidth = i < normalOuterRemainder ? normalBaseSlotWidth + 1 : normalBaseSlotWidth;
+        
+        // 메인 영역에서 엔드패널이 있는 슬롯에서 18mm 빼기
+        if (droppedPosition === 'right') {
+          // 단내림이 오른쪽: 메인 영역 왼쪽에만 엔드패널
+          if (spaceInfo.installType === 'freestanding') {
+            if (i === 0) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            if (!spaceInfo.wallConfig?.left && i === 0) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          }
+        } else {
+          // 단내림이 왼쪽: 메인 영역 오른쪽에만 엔드패널
+          if (spaceInfo.installType === 'freestanding') {
+            if (i === normalColumnCount - 1) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            if (!spaceInfo.wallConfig?.right && i === normalColumnCount - 1) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          }
+        }
+        
         normalSlotWidths.push(slotWidth);
       }
       
-      // 단내림 영역 슬롯 너비 계산
-      // 내부 너비 계산 시 이미 엔드패널을 뺐으므로, 슬롯 너비에서 추가로 빼면 안됨!
-      // remainder를 균등하게 분배하여 슬롯 간 차이 최소화
+      // 단내림 영역 슬롯 너비 계산 - 전체 외부 너비를 기준으로 분배
+      const droppedBaseSlotWidth = Math.floor(droppedAreaOuterWidth / droppedColumnCount);
+      const droppedOuterRemainder = droppedAreaOuterWidth % droppedColumnCount;
+      
       for (let i = 0; i < droppedColumnCount; i++) {
-        let slotWidth = droppedBaseWidth;
-        // remainder를 앞쪽 슬롯부터 1씩 추가
-        if (i < droppedRemainder) {
-          slotWidth += 1;
+        let slotWidth = i < droppedOuterRemainder ? droppedBaseSlotWidth + 1 : droppedBaseSlotWidth;
+        
+        // 단내림 영역에서 엔드패널이 있는 슬롯에서 18mm 빼기
+        if (droppedPosition === 'right') {
+          // 단내림이 오른쪽: 단내림 영역 오른쪽에만 엔드패널
+          if (spaceInfo.installType === 'freestanding') {
+            if (i === droppedColumnCount - 1) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            if (!spaceInfo.wallConfig?.right && i === droppedColumnCount - 1) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          }
+        } else {
+          // 단내림이 왼쪽: 단내림 영역 왼쪽에만 엔드패널
+          if (spaceInfo.installType === 'freestanding') {
+            if (i === 0) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            if (!spaceInfo.wallConfig?.left && i === 0) {
+              slotWidth -= END_PANEL_THICKNESS;
+            }
+          }
         }
+        
         droppedSlotWidths.push(slotWidth);
       }
       
