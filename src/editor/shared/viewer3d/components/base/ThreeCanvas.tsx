@@ -642,58 +642,29 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             // 드래그 오버 이벤트 처리
             const handleCanvasDragOver = (e: DragEvent) => {
               e.preventDefault(); // 드롭을 허용
-              e.stopPropagation(); // 이벤트 버블링 중지
+              // stopPropagation 제거 - 이벤트가 자연스럽게 버블링되도록 허용
               console.log('🎨 Canvas dragOver 이벤트 감지:', {
                 clientX: e.clientX,
                 clientY: e.clientY,
                 dataTransfer: e.dataTransfer?.types
               });
-              
-              // 부모 컨테이너로 이벤트 전달
-              const parentContainer = canvas.closest('[data-viewer-container="true"]');
-              if (parentContainer) {
-                console.log('📤 부모 컨테이너로 dragover 이벤트 전달');
-                const syntheticEvent = new DragEvent('dragover', {
-                  bubbles: true,
-                  cancelable: true,
-                  dataTransfer: e.dataTransfer,
-                  clientX: e.clientX,
-                  clientY: e.clientY,
-                  screenX: e.screenX,
-                  screenY: e.screenY
-                });
-                parentContainer.dispatchEvent(syntheticEvent);
-              } else {
-                console.log('❌ 부모 컨테이너를 찾을 수 없음');
-              }
             };
             
             // 드롭 이벤트 처리
             const handleCanvasDrop = (e: DragEvent) => {
               e.preventDefault();
-              e.stopPropagation(); // 이벤트 버블링 중지
+              // stopPropagation 제거 - 이벤트가 자연스럽게 버블링되도록 허용
               console.log('🎨 Canvas drop 이벤트 감지:', {
                 clientX: e.clientX,
                 clientY: e.clientY,
                 dataTransfer: e.dataTransfer?.types
               });
               
-              // 부모 컨테이너로 이벤트 전달
-              const parentContainer = canvas.closest('[data-viewer-container="true"]');
-              if (parentContainer) {
-                console.log('📤 부모 컨테이너로 drop 이벤트 전달');
-                const syntheticEvent = new DragEvent('drop', {
-                  bubbles: true,
-                  cancelable: true,
-                  dataTransfer: e.dataTransfer,
-                  clientX: e.clientX,
-                  clientY: e.clientY,
-                  screenX: e.screenX,
-                  screenY: e.screenY
-                });
-                parentContainer.dispatchEvent(syntheticEvent);
-              } else {
-                console.log('❌ 부모 컨테이너를 찾을 수 없음');
+              // window.handleSlotDrop이 있으면 직접 호출
+              if (typeof (window as any).handleSlotDrop === 'function') {
+                console.log('🎯 Canvas에서 직접 handleSlotDrop 호출');
+                const result = (window as any).handleSlotDrop(e, canvas);
+                console.log('🎯 handleSlotDrop 결과:', result);
               }
             };
             

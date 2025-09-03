@@ -3032,18 +3032,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
 
     const canvas = document.querySelector('canvas');
-    const canvasContainer = canvas?.parentElement;
     
-    if (canvasContainer && currentDragData) {
-      // 드래그 이벤트
-      canvasContainer.addEventListener('dragover', handleDragOver);
-      canvasContainer.addEventListener('dragleave', handleDragLeave);
+    // Canvas 요소 자체에 직접 이벤트 리스너 추가
+    if (canvas && currentDragData) {
+      console.log('🎨 SlotDropZonesSimple - Canvas에 드래그 이벤트 리스너 추가');
+      // 드래그 이벤트를 Canvas에 직접 연결
+      canvas.addEventListener('dragover', handleDragOver);
+      canvas.addEventListener('dragleave', handleDragLeave);
     }
 
     return () => {
-      if (canvasContainer) {
-        canvasContainer.removeEventListener('dragover', handleDragOver);
-        canvasContainer.removeEventListener('dragleave', handleDragLeave);
+      if (canvas) {
+        canvas.removeEventListener('dragover', handleDragOver);
+        canvas.removeEventListener('dragleave', handleDragLeave);
       }
     };
   }, [currentDragData, camera, scene, spaceInfo, placedModules]);
