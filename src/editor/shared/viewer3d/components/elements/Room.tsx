@@ -403,15 +403,18 @@ const Room: React.FC<RoomProps> = ({
     const highlightEmissive = renderMode === 'wireframe' ? 0x444400 : 0x220000; // 와이어프레임에서는 노란 자체발광
     const highlightOpacity = renderMode === 'wireframe' ? 0.6 : 0.6; // 와이어프레임에서 더 불투명하게
     
+    // 와이어프레임 모드에서 초록색 프레임은 색상 덮어쓰기
+    const finalFrameColor = (renderMode === 'wireframe' && isGreenFrame) ? '#00FF00' : frameColor;
+    
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(isHighlighted ? highlightColor : frameColor), // 강조 시 색상 변경
+      color: new THREE.Color(isHighlighted ? highlightColor : finalFrameColor), // 강조 시 색상 변경
       metalness: 0.0,        // 완전 비금속 (도어와 동일)
       roughness: 0.6,        // 도어와 동일한 거칠기
       envMapIntensity: 0.0,  // 환경맵 완전 제거
       emissive: new THREE.Color(isHighlighted ? highlightEmissive : (isGreenFrame ? 0x00FF00 : 0x000000)),  // 초록색 프레임은 자체발광 추가
       emissiveIntensity: isHighlighted ? 1.0 : (isGreenFrame ? 0.3 : 0.0), // 초록색 프레임도 약간 발광
       transparent: renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isHighlighted || baseFrameTransparent,  // 강조 시에도 투명하게
-      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서는 완전 투명
+      opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : (isGreenFrame ? 0.8 : 0)) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 와이어프레임에서 초록색 프레임은 보이게
     });
 
     // 프레임 텍스처 적용 (강조되지 않은 경우와 초록색 프레임이 아닌 경우에만)
