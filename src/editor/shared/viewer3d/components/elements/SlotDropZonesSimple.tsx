@@ -476,8 +476,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 단내림이 있으면 먼저 zone을 판단하고, 해당 zone의 콜라이더만 검사
       let detectedZone: 'normal' | 'dropped' | undefined;
       if (latestSpaceInfo.droppedCeiling?.enabled) {
-        // zone 자동 판단 로직
-        detectedZone = zoneToUse;
+        // zone 자동 판단 로직 - 일단 전체에서 검색하도록 undefined로 설정
+        detectedZone = undefined;  // 모든 콜라이더에서 검색
       }
       
       let slotIndex = getSlotIndexFromRaycast(
@@ -487,7 +487,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         camera,
         scene,
         latestSpaceInfo,  // 최신 spaceInfo 사용
-        detectedZone  // zone 정보 전달
+        detectedZone  // zone 정보 전달 (undefined로 모든 콜라이더 검사)
       );
       
       console.log('🎯 첫 번째 시도 결과:', {
@@ -524,14 +524,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       if (slotIndex !== null && latestSpaceInfo.droppedCeiling?.enabled) {
         const allColliders = [];
         scene.traverse((child) => {
-          if (child.userData?.isSlotCollider && child.userData?.slotIndex === slotIndex) {
+          if (child.userData?.isSlotCollider) {
             allColliders.push(child);
           }
         });
         
         // 해당 slotIndex를 가진 콜라이더 찾기
         const matchingColliders = allColliders.filter(c => c.userData.slotIndex === slotIndex);
-        console.log('🔍 Colliders with matching slotIndex:', {
+        console.log('🔍 All colliders and matching ones:', {
+          totalColliders: allColliders.length,
+          allCollidersInfo: allColliders.map(c => ({
+            slotIndex: c.userData.slotIndex,
+            zone: c.userData.zone,
+            position: c.position.x
+          })),
           slotIndex,
           matchingColliders: matchingColliders.map(c => ({
             zone: c.userData.zone,
