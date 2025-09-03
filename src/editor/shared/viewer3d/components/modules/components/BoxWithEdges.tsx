@@ -68,6 +68,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리
+    if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
+      const transparentMaterial = baseMaterial.clone();
+      transparentMaterial.transparent = true;
+      transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
+      transparentMaterial.depthWrite = false;
+      transparentMaterial.needsUpdate = true;
+      return transparentMaterial;
+    }
+    
     if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
@@ -91,7 +101,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     // 편집 모드에서는 원래 재질 그대로 사용
     return baseMaterial;
-  }, [baseMaterial, isDragging, isEditMode]);
+  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
