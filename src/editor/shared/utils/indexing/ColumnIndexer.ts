@@ -1325,40 +1325,30 @@ export class ColumnIndexer {
       }
     };
     
-    // 실제 적용된 reduction 값 계산
-    const actualLeftReduction = droppedPosition === 'left' ? leftReduction : leftReduction;
-    const actualRightReduction = droppedPosition === 'left' ? rightReduction : rightReduction;
-    
-    console.log('🚨🚨🚨 슬롯 계산 최종 결과 (세미스탠딩 체크):', {
-      installType: spaceInfo.installType,
-      wallConfig: spaceInfo.wallConfig,
-      gapConfig: spaceInfo.gapConfig,
-      droppedPosition: droppedPosition,
-      '계산된 Reduction 값': {
-        leftReduction: leftReduction,
-        rightReduction: rightReduction,
-        '설명': droppedPosition === 'left' ? 
-          '왼쪽 단내림: 단내림은 leftReduction, 일반은 rightReduction 적용' :
-          '오른쪽 단내림: 일반은 leftReduction, 단내림은 rightReduction 적용'
-      },
-      '단내림 영역': {
-        '시작 X': droppedStartX,
-        '너비': droppedAreaInternalWidth,
-        '끝 X': droppedStartX + droppedAreaInternalWidth,
-        '적용된 reduction': droppedPosition === 'left' ? leftReduction : rightReduction
-      },
-      '일반 영역': {
-        '시작 X': normalStartX,
-        '너비': normalAreaInternalWidth,
-        '끝 X': normalStartX + normalAreaInternalWidth,
-        '적용된 reduction': droppedPosition === 'left' ? rightReduction : leftReduction
-      },
-      '전체 공간': {
-        '총 너비': totalWidth,
-        '왼쪽 끝': -(totalWidth / 2),
-        '오른쪽 끝': totalWidth / 2
-      }
-    });
+    // 노서라운드 모드일 때만 reduction 값 디버깅
+    if (spaceInfo.surroundType === 'no-surround') {
+      console.log('🚨🚨🚨 슬롯 계산 최종 결과 (노서라운드 체크):', {
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig,
+        gapConfig: spaceInfo.gapConfig,
+        droppedPosition: droppedPosition,
+        '단내림 영역': {
+          '시작 X': droppedStartX,
+          '너비': droppedAreaInternalWidth,
+          '끝 X': droppedStartX + droppedAreaInternalWidth
+        },
+        '일반 영역': {
+          '시작 X': normalStartX,
+          '너비': normalAreaInternalWidth,
+          '끝 X': normalStartX + normalAreaInternalWidth
+        },
+        '전체 공간': {
+          '총 너비': totalWidth,
+          '왼쪽 끝': -(totalWidth / 2),
+          '오른쪽 끝': totalWidth / 2
+        }
+      });
+    }
     
     console.log('🔍🔍 [calculateZoneSlotInfo] 최종 반환값:', {
       hasNormal: !!result.normal,
