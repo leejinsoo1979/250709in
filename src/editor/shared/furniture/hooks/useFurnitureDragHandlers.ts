@@ -47,11 +47,21 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     
+    console.log('🎯🎯 handleDrop 시작:', {
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+      droppedCeilingWidth: spaceInfo.droppedCeiling?.width
+    });
+    
     try {
       const dragDataString = e.dataTransfer.getData('application/json');
-      if (!dragDataString) return;
+      if (!dragDataString) {
+        console.log('❌ dragDataString이 없음');
+        return;
+      }
       
       const currentDragData = JSON.parse(dragDataString);
+      console.log('📦 드래그 데이터:', currentDragData);
       
       if (currentDragData && currentDragData.type === 'furniture') {
         // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
@@ -69,7 +79,11 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         // 드롭 위치 계산
         const dropPosition = calculateDropPosition(e, currentDragData);
-        if (!dropPosition) return;
+        console.log('📍 계산된 dropPosition:', dropPosition);
+        if (!dropPosition) {
+          console.log('❌ dropPosition이 null');
+          return;
+        }
         
         // 듀얼 가구 여부를 모듈 ID로 정확히 판단하고 dropPosition에도 반영
         const isDualFurniture = currentDragData.moduleData.id.includes('dual-');
@@ -154,6 +168,13 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           undefined, // excludeModuleId
           dropPosition.zone // zone 정보 전달
         );
+        
+        console.log('🔥🔥 isSlotAvailable 결과:', {
+          isAvailable,
+          targetSlot: dropPosition.column,
+          zone: dropPosition.zone,
+          moduleId: currentDragData.moduleData.id
+        });
         
         // 상하부장 디버깅
         const isUpperCabinet = currentDragData.moduleData.id.includes('upper-cabinet');
