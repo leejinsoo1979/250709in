@@ -726,31 +726,32 @@ export class ColumnIndexer {
       }
       
       // 프레임을 고려한 내부 시작점 (노서라운드의 경우 엔드패널과 gapConfig 고려)
-      // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
+      // 슬롯 가이드용 시작점 계산
       let internalStartX: number;
       let leftReduction = 0; // 변수를 if 블록 밖에 선언
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 이격거리 적용
-          const leftGap = spaceInfo.gapConfig?.left || 0;
-          leftReduction = leftGap;
+          // 빌트인: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
+          leftReduction = spaceInfo.gapConfig?.left || 0;
+          internalStartX = -(spaceInfo.width / 2); // 슬롯은 벽에서 시작
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 있으면: 이격거리 적용
+            // 왼쪽 벽이 있으면: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
             const leftGap = spaceInfo.gapConfig?.left || 0;
             leftReduction = leftGap;
+            internalStartX = -(spaceInfo.width / 2); // 슬롯은 벽에서 시작
           } else {
-            // 왼쪽 벽이 없으면: 엔드패널 두께만
+            // 왼쪽 벽이 없으면: 슬롯은 엔드패널 뒤에서 시작
             leftReduction = END_PANEL_THICKNESS;
+            internalStartX = -(spaceInfo.width / 2) + END_PANEL_THICKNESS;
           }
         } else {
-          // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
+          // 프리스탠딩: 양쪽 벽이 없으므로 슬롯은 엔드패널 뒤에서 시작
           leftReduction = END_PANEL_THICKNESS;
+          internalStartX = -(spaceInfo.width / 2) + END_PANEL_THICKNESS;
         }
-        
-        internalStartX = -(spaceInfo.width / 2) + leftReduction;
       } else {
         internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
       }
@@ -875,31 +876,33 @@ export class ColumnIndexer {
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
     
     // 시작 위치 계산 (노서라운드의 경우 엔드패널과 gapConfig 고려)
-    // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
+    // 슬롯 가이드용 시작점 계산
     let internalStartX: number;
     if (spaceInfo.surroundType === 'no-surround') {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격거리 적용
+        // 빌트인: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
         const leftGap = spaceInfo.gapConfig?.left || 0;
         leftReduction = leftGap;
+        internalStartX = -(totalWidth / 2); // 슬롯은 벽에서 시작
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 이격거리 적용
+          // 왼쪽 벽이 있으면: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
           const leftGap = spaceInfo.gapConfig?.left || 0;
           leftReduction = leftGap;
+          internalStartX = -(totalWidth / 2); // 슬롯은 벽에서 시작
         } else {
-          // 왼쪽 벽이 없으면: 엔드패널 두께만
+          // 왼쪽 벽이 없으면: 슬롯은 엔드패널 뒤에서 시작
           leftReduction = END_PANEL_THICKNESS;
+          internalStartX = -(totalWidth / 2) + END_PANEL_THICKNESS;
         }
       } else {
-        // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
+        // 프리스탠딩: 양쪽 벽이 없으므로 슬롯은 엔드패널 뒤에서 시작
         leftReduction = END_PANEL_THICKNESS;
+        internalStartX = -(totalWidth / 2) + END_PANEL_THICKNESS;
       }
-      
-      internalStartX = -(totalWidth / 2) + leftReduction;
     } else {
       internalStartX = -(totalWidth / 2) + frameThickness.left;
     }
@@ -967,13 +970,15 @@ export class ColumnIndexer {
           }
         }
         
-        // 단내림 영역: 왼쪽에 위치, 자체 왼쪽 오프셋 적용
+        // 단내림 영역: 왼쪽에 위치
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
-        droppedStartX = -(totalWidth / 2) + leftReduction; // 단내림 영역의 왼쪽 오프셋 적용
+        // 슬롯 시작 위치: 벽이 있으면 벽에서(0), 없으면 엔드패널 뒤에서
+        droppedStartX = -(totalWidth / 2) + (spaceInfo.wallConfig?.left ? 0 : END_PANEL_THICKNESS);
         
-        // 일반 영역: 오른쪽에 위치, 단내림 영역 후 시작 (오른쪽 오프셋은 너비에서 차감)
+        // 일반 영역: 오른쪽에 위치
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
-        normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth; // 단내림 영역 너비만큼 이동
+        // 일반 영역 시작: 단내림 영역 다음
+        normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth;
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
@@ -1036,13 +1041,15 @@ export class ColumnIndexer {
           }
         }
         
-        // 일반 영역: 왼쪽에 위치, 자체 왼쪽 오프셋 적용
+        // 일반 영역: 왼쪽에 위치
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
-        normalStartX = -(totalWidth / 2) + leftReduction; // 일반 영역의 왼쪽 오프셋 적용
+        // 슬롯 시작 위치: 벽이 있으면 벽에서(0), 없으면 엔드패널 뒤에서
+        normalStartX = -(totalWidth / 2) + (spaceInfo.wallConfig?.left ? 0 : END_PANEL_THICKNESS);
         
-        // 단내림 영역: 오른쪽에 위치, 일반 영역 후 시작 (오른쪽 오프셋은 너비에서 차감)
+        // 단내림 영역: 오른쪽에 위치
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        droppedStartX = -(totalWidth / 2) + normalAreaOuterWidth; // 일반 영역 너비만큼 이동
+        // 단내림 영역 시작: 일반 영역 다음
+        droppedStartX = -(totalWidth / 2) + normalAreaOuterWidth;
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,
