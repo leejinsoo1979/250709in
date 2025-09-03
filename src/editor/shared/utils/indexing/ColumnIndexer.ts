@@ -1016,27 +1016,33 @@ export class ColumnIndexer {
           leftReduction = leftGap;  // 일반구간 벽쪽 이격거리
           rightReduction = rightGap;  // 단내림구간 벽쪽 이격거리
         } else {
-          // 왼쪽 처리
+          // 세미스탠딩 또는 프리스탠딩
+          // 오른쪽 단내림: 일반 영역은 왼쪽, 단내림 영역은 오른쪽
+          
+          // 일반 영역의 왼쪽 처리
           if (spaceInfo.wallConfig?.left) {
             const leftGap = spaceInfo.gapConfig?.left || 0;
-            leftReduction = leftGap;  // 벽이 있으면 이격거리 적용
+            leftReduction = leftGap;  // 일반 영역 왼쪽 벽: 이격거리 적용
           } else {
-            leftReduction = END_PANEL_THICKNESS;
+            leftReduction = END_PANEL_THICKNESS;  // 일반 영역 왼쪽: 엔드패널
           }
           
-          // 오른쪽 처리
+          // 단내림 영역의 오른쪽 처리
           if (spaceInfo.wallConfig?.right) {
             const rightGap = spaceInfo.gapConfig?.right || 0;
-            rightReduction = rightGap;  // 벽이 있으면 이격거리 적용
+            rightReduction = rightGap;  // 단내림 영역 오른쪽 벽: 이격거리 적용
           } else {
-            rightReduction = END_PANEL_THICKNESS;
+            rightReduction = END_PANEL_THICKNESS;  // 단내림 영역 오른쪽: 엔드패널
           }
         }
         
+        // 일반 영역: 왼쪽 reduction만 적용
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
-        normalStartX = internalStartX; // 수정된 internalStartX 사용
+        normalStartX = internalStartX; // 수정된 internalStartX 사용 (이미 이격거리/엔드패널 반영됨)
+        
+        // 단내림 영역: 오른쪽 reduction만 적용
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
+        droppedStartX = normalStartX + normalAreaInternalWidth; // 일반 영역 다음부터 시작
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,
