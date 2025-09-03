@@ -1520,11 +1520,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                        slotWidths[1] < indexing.columnWidth && 
                                        slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
         
-        // 듀얼 도어 위치 보정
+        // 듀얼 도어 위치 보정 - 가구가 9mm 치우쳐 있으므로 도어도 같은 방향으로
         if (isFirstSlotWithEndPanel) {
-          doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+          doorAdjustment = 9; // 오른쪽으로 9mm (가구가 오른쪽으로 치우침)
         } else if (isLastSlotWithEndPanel) {
-          doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+          doorAdjustment = -9; // 왼쪽으로 9mm (가구가 왼쪽으로 치우침)
         }
       } else if (spaceInfo.installType === 'semistanding') {
         // 한쪽벽 모드: 벽이 없는 쪽에만 엔드패널
@@ -1536,7 +1536,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                    slotWidths[1] < indexing.columnWidth;
           
           if (isLastSlotWithEndPanel) {
-            doorAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
+            doorAdjustment = -9; // 왼쪽으로 9mm (가구가 왼쪽으로 치우침)
           }
         } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
           // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
@@ -1544,7 +1544,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           isLastSlotWithEndPanel = false;
           
           if (isFirstSlotWithEndPanel) {
-            doorAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
+            doorAdjustment = 9; // 오른쪽으로 9mm (가구가 오른쪽으로 치우침)
           }
         } else {
           // 예외 케이스
@@ -2147,30 +2147,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         
         // 도어 위치 조정 - 도어가 (가구 + 엔드패널) 전체의 중앙에 오도록
         // 가구는 슬롯 중심에서 엔드패널 방향으로 9mm 치우쳐 있음
-        // 도어는 전체 유닛의 중심에 있어야 하므로 조정 불필요
+        // 도어는 전체 유닛의 중심에 위치해야 함
+        // 가구는 엔드패널 때문에 9mm 치우쳐 있으므로 도어도 같은 방향으로 이동
         if (isLeftEndPanel) {
-          // 도어 중심을 조정하지 않음 (slotCenterX가 이미 슬롯 중심)
-          // 가구는 슬롯 중심에서 오른쪽으로 9mm 치우쳐 있음
-          // 도어는 슬롯 중심(전체 유닛의 중심)에 그대로 둠
-          doorAdjustment = 0;
-          console.log('🎯 커버도어 왼쪽 엔드패널 - 위치 조정 없음:', {
+          // 왼쪽 엔드패널: 가구는 오른쪽으로 9mm 치우침
+          // 도어도 오른쪽으로 9mm 이동
+          doorAdjustment = 9;
+          console.log('🎯 커버도어 왼쪽 엔드패널 - 9mm 오른쪽 이동:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '도어는 슬롯 중심(가구+엔드패널 중심)에 위치'
+            설명: '가구가 오른쪽으로 9mm 치우쳐 있으므로 도어도 동일하게 이동'
           });
         } else if (isRightEndPanel) {
-          // 도어 중심을 조정하지 않음 (slotCenterX가 이미 슬롯 중심)
-          // 가구는 슬롯 중심에서 왼쪽으로 9mm 치우쳐 있음  
-          // 도어는 슬롯 중심(전체 유닛의 중심)에 그대로 둠
-          doorAdjustment = 0;
-          console.log('🎯 커버도어 오른쪽 엔드패널 - 위치 조정 없음:', {
+          // 오른쪽 엔드패널: 가구는 왼쪽으로 9mm 치우침
+          // 도어도 왼쪽으로 9mm 이동
+          doorAdjustment = -9;
+          console.log('🎯 커버도어 오른쪽 엔드패널 - 9mm 왼쪽 이동:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '도어는 슬롯 중심(가구+엔드패널 중심)에 위치'
+            설명: '가구가 왼쪽으로 9mm 치우쳐 있으므로 도어도 동일하게 이동'
           });
         }
       }
@@ -2226,10 +2225,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     // 최종 도어 위치 디버깅
-    const finalDoorX = doorGroupX + doorAdjustment + hingeAxisOffset;
+    // doorAdjustment를 doorGroupX에 더해서 최종 위치 계산
+    const finalDoorX = doorGroupX + mmToThreeUnits(doorAdjustment);
     console.log('🎯🎯🎯 싱글 도어 최종 위치 계산:', {
       doorGroupX,
       doorAdjustment,
+      doorAdjustment_units: mmToThreeUnits(doorAdjustment),
       hingeAxisOffset,
       finalDoorX,
       originalSlotWidth,
@@ -2242,7 +2243,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
 
     return (
-      <group position={[finalDoorX, doorYPosition, doorDepth / 2]}>
+      <group position={[finalDoorX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
