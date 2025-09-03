@@ -2033,7 +2033,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
     // 노서라운드 모드에서는 엔드패널을 고려
-    let doorWidth = actualDoorWidth - 3; // 기본: 슬롯사이즈 - 3mm
+    // originalSlotWidth가 있으면 커버도어이므로 전체 너비 사용
+    let doorWidth = originalSlotWidth ? actualDoorWidth : actualDoorWidth - 3; // 커버도어는 전체 너비, 일반도어는 -3mm
     
     // 노서라운드 모드에서 첫번째/마지막 슬롯 처리
     if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
