@@ -732,16 +732,16 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
+          // 빌트인: 슬롯은 이격거리 후 시작
           leftReduction = spaceInfo.gapConfig?.left || 0;
-          internalStartX = -(spaceInfo.width / 2); // 슬롯은 벽에서 시작
+          internalStartX = -(spaceInfo.width / 2) + leftReduction;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: 한쪽 벽만 있음
           if (spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 있으면: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
+            // 왼쪽 벽이 있으면: 슬롯은 이격거리 후 시작
             const leftGap = spaceInfo.gapConfig?.left || 0;
             leftReduction = leftGap;
-            internalStartX = -(spaceInfo.width / 2); // 슬롯은 벽에서 시작
+            internalStartX = -(spaceInfo.width / 2) + leftGap;
           } else {
             // 왼쪽 벽이 없으면: 슬롯은 엔드패널 뒤에서 시작
             leftReduction = END_PANEL_THICKNESS;
@@ -882,17 +882,17 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
+        // 빌트인: 슬롯은 이격거리 후 시작
         const leftGap = spaceInfo.gapConfig?.left || 0;
         leftReduction = leftGap;
-        internalStartX = -(totalWidth / 2); // 슬롯은 벽에서 시작
+        internalStartX = -(totalWidth / 2) + leftGap;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 한쪽 벽만 있음
         if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 슬롯은 벽에서 시작 (이격거리는 너비에서만 차감)
+          // 왼쪽 벽이 있으면: 슬롯은 이격거리 후 시작
           const leftGap = spaceInfo.gapConfig?.left || 0;
           leftReduction = leftGap;
-          internalStartX = -(totalWidth / 2); // 슬롯은 벽에서 시작
+          internalStartX = -(totalWidth / 2) + leftGap;
         } else {
           // 왼쪽 벽이 없으면: 슬롯은 엔드패널 뒤에서 시작
           leftReduction = END_PANEL_THICKNESS;
@@ -972,8 +972,8 @@ export class ColumnIndexer {
         
         // 단내림 영역: 왼쪽에 위치
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
-        // 슬롯 시작 위치: 벽이 있으면 벽에서(0), 없으면 엔드패널 뒤에서
-        droppedStartX = -(totalWidth / 2) + (spaceInfo.wallConfig?.left ? 0 : END_PANEL_THICKNESS);
+        // 슬롯 시작 위치: 벽이 있으면 이격거리 후, 없으면 엔드패널 뒤에서
+        droppedStartX = -(totalWidth / 2) + leftReduction;
         
         // 일반 영역: 오른쪽에 위치
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
@@ -1043,8 +1043,8 @@ export class ColumnIndexer {
         
         // 일반 영역: 왼쪽에 위치
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
-        // 슬롯 시작 위치: 벽이 있으면 벽에서(0), 없으면 엔드패널 뒤에서
-        normalStartX = -(totalWidth / 2) + (spaceInfo.wallConfig?.left ? 0 : END_PANEL_THICKNESS);
+        // 슬롯 시작 위치: 벽이 있으면 이격거리 후, 없으면 엔드패널 뒤에서
+        normalStartX = -(totalWidth / 2) + leftReduction;
         
         // 단내림 영역: 오른쪽에 위치
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
