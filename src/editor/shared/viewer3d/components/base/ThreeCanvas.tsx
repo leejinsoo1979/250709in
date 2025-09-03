@@ -657,14 +657,69 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               console.log('🎨 Canvas drop 이벤트 감지:', {
                 clientX: e.clientX,
                 clientY: e.clientY,
-                dataTransfer: e.dataTransfer?.types
+                dataTransfer: e.dataTransfer?.types,
+                getData: e.dataTransfer?.getData('application/json')
               });
+              
+              // activeZone 결정 로직
+              // Three.js 좌표계로 변환하여 zone 판단
+              const rect = canvas.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+              
+              // spaceInfo에서 단내림 정보 확인
+              const spaceInfo = (window as any).__currentSpaceInfo;
+              let activeZone: 'normal' | 'dropped' | undefined = undefined;
+              
+              if (spaceInfo?.droppedCeiling?.enabled) {
+                const totalWidth = spaceInfo.width;
+                const droppedWidth = spaceInfo.droppedCeiling.width || 800;
+                const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+                
+                // Three.js 좌표계에서 실제 X 위치 계산 (중심이 0)
+                const worldX = x * (totalWidth / 2);
+                
+                if (droppedPosition === 'left') {
+                  // 왼쪽 단내림: 왼쪽 부분이 dropped zone
+                  activeZone = worldX < -totalWidth/2 + droppedWidth ? 'dropped' : 'normal';
+                } else {
+                  // 오른쪽 단내림: 오른쪽 부분이 dropped zone  
+                  activeZone = worldX > totalWidth/2 - droppedWidth ? 'dropped' : 'normal';
+                }
+                
+                console.log('🎯 ActiveZone 결정:', {
+                  droppedPosition,
+                  worldX,
+                  totalWidth,
+                  droppedWidth,
+                  activeZone
+                });
+              }
               
               // window.handleSlotDrop이 있으면 직접 호출
               if (typeof (window as any).handleSlotDrop === 'function') {
-                console.log('🎯 Canvas에서 직접 handleSlotDrop 호출');
-                const result = (window as any).handleSlotDrop(e, canvas);
+                console.log('🎯 Canvas에서 직접 handleSlotDrop 호출 with activeZone:', activeZone);
+                const result = (window as any).handleSlotDrop(e, canvas, activeZone);
                 console.log('🎯 handleSlotDrop 결과:', result);
+                
+                // 결과가 false면 부모 컨테이너로 이벤트 전파
+                if (!result) {
+                  console.log('📤 handleSlotDrop이 false 반환, 부모로 이벤트 전파 시도');
+                  const parentContainer = canvas.closest('[data-viewer-container="true"]');
+                  if (parentContainer) {
+                    const syntheticEvent = new DragEvent('drop', {
+                      bubbles: true,
+                      cancelable: true,
+                      dataTransfer: e.dataTransfer,
+                      clientX: e.clientX,
+                      clientY: e.clientY,
+                      screenX: e.screenX,
+                      screenY: e.screenY
+                    });
+                    parentContainer.dispatchEvent(syntheticEvent);
+                  }
+                }
+              } else {
+                console.error('❌ window.handleSlotDrop이 정의되지 않음!');
               }
             };
             

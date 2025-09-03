@@ -71,6 +71,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
   const [hoveredZone, setHoveredZone] = useState<'normal' | 'dropped' | null>(null);
   
+  // spaceInfo를 전역 변수에 저장 (Canvas에서 activeZone 결정용)
+  useEffect(() => {
+    (window as any).__currentSpaceInfo = spaceInfo;
+    return () => {
+      delete (window as any).__currentSpaceInfo;
+    };
+  }, [spaceInfo]);
+  
   // spaceInfo가 없으면 null 반환
   if (!spaceInfo) {
     console.error('❌ No spaceInfo provided to SlotDropZonesSimple');
