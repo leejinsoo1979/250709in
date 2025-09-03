@@ -2150,24 +2150,32 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           }
         }
         
-        // 도어 위치 조정
+        // 도어 위치 조정 - 도어가 (가구 + 엔드패널) 전체의 중앙에 오도록
+        // 가구는 슬롯 중심에서 엔드패널 방향으로 9mm 치우쳐 있음
+        // 도어는 전체 유닛의 중심에 있어야 하므로 조정 불필요
         if (isLeftEndPanel) {
-          doorAdjustment = -END_PANEL_THICKNESS / 2; // 왼쪽으로 9mm
-          console.log('🎯 커버도어 왼쪽 엔드패널 위치 조정:', {
+          // 도어 중심을 조정하지 않음 (slotCenterX가 이미 슬롯 중심)
+          // 가구는 슬롯 중심에서 오른쪽으로 9mm 치우쳐 있음
+          // 도어는 슬롯 중심(전체 유닛의 중심)에 그대로 둠
+          doorAdjustment = 0;
+          console.log('🎯 커버도어 왼쪽 엔드패널 - 위치 조정 없음:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '도어를 왼쪽으로 9mm 이동하여 엔드패널 포함'
+            설명: '도어는 슬롯 중심(가구+엔드패널 중심)에 위치'
           });
         } else if (isRightEndPanel) {
-          doorAdjustment = END_PANEL_THICKNESS / 2; // 오른쪽으로 9mm
-          console.log('🎯 커버도어 오른쪽 엔드패널 위치 조정:', {
+          // 도어 중심을 조정하지 않음 (slotCenterX가 이미 슬롯 중심)
+          // 가구는 슬롯 중심에서 왼쪽으로 9mm 치우쳐 있음  
+          // 도어는 슬롯 중심(전체 유닛의 중심)에 그대로 둠
+          doorAdjustment = 0;
+          console.log('🎯 커버도어 오른쪽 엔드패널 - 위치 조정 없음:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '도어를 오른쪽으로 9mm 이동하여 엔드패널 포함'
+            설명: '도어는 슬롯 중심(가구+엔드패널 중심)에 위치'
           });
         }
       }
