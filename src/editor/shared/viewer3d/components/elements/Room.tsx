@@ -1413,22 +1413,20 @@ const Room: React.FC<RoomProps> = ({
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
         
-        // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
+        // 왼쪽이 단내림 영역인 경우 전체 높이로 렌더링 (상부 프레임 포함)
         if (hasDroppedCeiling && isLeftDropped) {
-          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
-          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
-          const upperPartHeight = mmToThreeUnits(dropHeight);
-          const upperPartCenterY = panelStartY + floatHeight + droppedHeight + upperPartHeight/2;
+          // 전체 높이 사용 (상부 프레임 두께 포함)
+          const fullHeight = adjustedPanelHeight;
+          const fullCenterY = panelStartY + floatHeight + fullHeight/2;
           
           return (
             <>
-              {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
+              {/* 왼쪽 프레임/엔드패널 - 전체 높이로 렌더링 */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.left, 
-                  droppedHeight, // 단내림 구간 높이
+                  fullHeight, // 전체 높이 (상부 프레임 포함)
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left 
@@ -1441,7 +1439,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 position={[
                   xOffset + frameThickness.left/2, 
-                  droppedCenterY, // 단내림 구간 중심
+                  fullCenterY, // 전체 높이 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left 
@@ -1529,20 +1527,18 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 바닥 마감재와 띄움 높이를 반영한 높이 계산
-          const droppedHeight = adjustedPanelHeight - mmToThreeUnits(dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
-          const upperPartHeight = mmToThreeUnits(dropHeight);
-          const upperPartCenterY = panelStartY + floatHeight + droppedHeight + upperPartHeight/2;
+          // 전체 높이 사용 (상부 프레임 두께 포함)  
+          const fullHeight = adjustedPanelHeight;
+          const fullCenterY = panelStartY + floatHeight + fullHeight/2;
           
           return (
             <>
-              {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
+              {/* 오른쪽 프레임/엔드패널 - 전체 높이로 렌더링 */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right, 
-                  droppedHeight, // 단내림 구간 높이
+                  fullHeight, // 전체 높이 (상부 프레임 포함)
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right 
@@ -1555,7 +1551,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 position={[
                   xOffset + width - frameThickness.right/2, 
-                  droppedCenterY, // 단내림 구간 중심
+                  fullCenterY, // 전체 높이 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right 
