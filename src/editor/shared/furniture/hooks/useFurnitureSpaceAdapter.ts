@@ -728,7 +728,28 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       // 모든 가구를 순회하며 업데이트
       currentModules.forEach((module) => {
         // 슬롯 인덱스를 그대로 유지
-        let slotIndex = module.slotIndex || 0;
+        let slotIndex = module.slotIndex;
+        
+        // slotIndex가 undefined인 경우 위치에서 계산
+        if (slotIndex === undefined || slotIndex === null) {
+          console.error(`❌ [${module.moduleId}] slotIndex가 없음! 위치에서 계산 시도`);
+          // 현재 위치에서 가장 가까운 슬롯 찾기
+          const moduleX = module.position.x;
+          let closestSlot = 0;
+          let minDistance = Infinity;
+          
+          for (let i = 0; i < oldIndexing.threeUnitPositions.length; i++) {
+            const slotX = oldIndexing.threeUnitPositions[i];
+            const distance = Math.abs(slotX - moduleX);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestSlot = i;
+            }
+          }
+          
+          slotIndex = closestSlot;
+          console.log(`📍 [${module.moduleId}] 위치 ${moduleX.toFixed(3)}에서 슬롯 ${slotIndex} 계산됨`);
+        }
         
         // 슬롯 범위 체크
         if (slotIndex >= newIndexing.columnCount) {
