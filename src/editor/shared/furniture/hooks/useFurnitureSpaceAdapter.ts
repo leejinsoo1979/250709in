@@ -19,15 +19,16 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
 
   // 새로운 공간에 맞게 가구 업데이트 함수 (간단한 버전)
   const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
-    console.log('🚨 [SPACE ADAPTER] updateFurnitureForNewSpace 호출됨:', {
+    console.log('🚨🚨🚨 [SPACE ADAPTER] updateFurnitureForNewSpace 호출됨 - 설치타입 변경:', {
+      oldInstallType: oldSpaceInfo.installType,
+      newInstallType: newSpaceInfo.installType,
+      oldSurroundType: oldSpaceInfo.surroundType,
+      newSurroundType: newSpaceInfo.surroundType,
       oldWidth: oldSpaceInfo.width,
       newWidth: newSpaceInfo.width,
-      oldHeight: oldSpaceInfo.height,
-      newHeight: newSpaceInfo.height,
-      oldDepth: oldSpaceInfo.depth,
-      newDepth: newSpaceInfo.depth,
       oldColumnCount: oldSpaceInfo.customColumnCount,
-      newColumnCount: newSpaceInfo.customColumnCount
+      newColumnCount: newSpaceInfo.customColumnCount,
+      '중요': '컬럼수가 동일해도 설치타입 변경시 내부 공간이 달라짐'
     });
     console.trace('🚨 [TRACE] updateFurnitureForNewSpace 호출 스택');
     setPlacedModules(currentModules => {
@@ -37,7 +38,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           id: m.id,
           moduleId: m.moduleId,
           slotIndex: m.slotIndex,
-          position: m.position
+          position: m.position,
+          isValidInCurrentSpace: m.isValidInCurrentSpace
         }))
       });
       
@@ -67,6 +69,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       }
       
       const updatedModules: PlacedModule[] = [];
+      
+      // 중요: 설치타입이 변경되어도 가구를 모두 보존해야 함!
+      console.log('🔴🔴🔴 가구 업데이트 전 상태:', {
+        '설치타입변경': `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`,
+        '전체가구수': currentModules.length,
+        '각가구정보': currentModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          position: m.position?.x,
+          isValid: m.isValidInCurrentSpace
+        }))
+      });
       
       // 우측 가구를 먼저 처리하기 위해 슬롯 인덱스 기준으로 내림차순 정렬
       const sortedModules = [...currentModules].sort((a, b) => {

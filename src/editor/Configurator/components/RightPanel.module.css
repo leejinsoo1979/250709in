@@ -426,12 +426,16 @@
 .toggleButton.active {
   background: var(--theme-primary) !important;
   color: #ffffff !important;
+  color: white !important;
   font-weight: 600;
 }
 
-/* 다크테마에서도 확실히 흰색 텍스트 */
-[data-theme="dark"] .toggleButton.active {
+/* 다크테마에서도 확실히 흰색 텍스트 - 모든 가능한 셀렉터 */
+:global([data-theme="dark"]) .toggleButton.active,
+:global(.dark) .toggleButton.active,
+.toggleButton.active {
   color: #ffffff !important;
+  color: white !important;
 }
 
 .toggleButton:hover:not(.active) {
