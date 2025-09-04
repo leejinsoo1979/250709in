@@ -219,40 +219,76 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         
         // 새 공간에서 슬롯이 유효한지 확인
         if (slotIndex >= newIndexing.columnCount) {
-          // 슬롯 범위 초과 시 마지막 유효한 슬롯으로 이동
-          const maxSlot = newIndexing.columnCount - (isDualModule ? 2 : 1);
-          if (maxSlot >= 0) {
-            slotIndex = maxSlot;
-            console.log('⚠️ 슬롯 범위 초과 - 마지막 슬롯으로 이동:', {
+          console.log('⚠️ 슬롯 범위 초과 감지:', {
+            moduleId: module.moduleId,
+            originalSlot: slotIndex,
+            maxSlot: newIndexing.columnCount - 1,
+            isDualModule
+          });
+          
+          // 슬롯 범위 초과 시 왼쪽으로 빈 슬롯 찾기
+          let foundSlot = null;
+          
+          // 먼저 가까운 위치에서 빈 슬롯 찾기 (오른쪽에서 왼쪽으로)
+          for (let i = newIndexing.columnCount - (isDualModule ? 2 : 1); i >= 0; i--) {
+            if (isSlotAvailable(i, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+              foundSlot = i;
+              break;
+            }
+          }
+          
+          if (foundSlot !== null) {
+            slotIndex = foundSlot;
+            console.log('✅ 빈 슬롯 찾음:', {
               moduleId: module.moduleId,
-              originalSlot: module.slotIndex,
-              newSlot: slotIndex,
-              newColumnCount: newIndexing.columnCount,
-              isDualModule
+              newSlot: foundSlot
             });
-          } else {
-            // 듀얼 가구인데 배치할 공간이 없으면 싱글로 변환 시도
-            if (isDualModule && newIndexing.columnCount > 0) {
-              isDualModule = false;
-              newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
-              slotIndex = Math.min(module.slotIndex || 0, newIndexing.columnCount - 1);
-              console.log('⚠️ 듀얼 가구를 싱글로 변환하여 배치:', {
+          } else if (isDualModule && newIndexing.columnCount > 0) {
+            // 듀얼 가구인데 배치할 곳이 없으면 싱글로 변환 시도
+            isDualModule = false;
+            newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
+            
+            // 싱글로 변환 후 다시 빈 슬롯 찾기
+            for (let i = newIndexing.columnCount - 1; i >= 0; i--) {
+              if (isSlotAvailable(i, false, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+                foundSlot = i;
+                break;
+              }
+            }
+            
+            if (foundSlot !== null) {
+              slotIndex = foundSlot;
+              console.log('✅ 듀얼→싱글 변환 후 배치:', {
                 originalModuleId: module.moduleId,
                 newModuleId,
-                slotIndex
+                newSlot: foundSlot
               });
             } else {
-              // 정말로 배치할 공간이 없는 경우에만 isValidInCurrentSpace: false
-              console.log('❌ 배치할 공간 없음 - 가구 비활성화:', {
-                moduleId: module.moduleId,
-                newColumnCount: newIndexing.columnCount
+              // 그래도 배치할 곳이 없으면 가장 오른쪽 슬롯에 강제 배치
+              slotIndex = newIndexing.columnCount - 1;
+              console.log('⚠️ 강제 배치 (마지막 슬롯):', {
+                moduleId: newModuleId,
+                slotIndex
               });
-              updatedModules.push({
-                ...module,
-                isValidInCurrentSpace: false
-              });
-              return;
             }
+          } else if (newIndexing.columnCount > 0) {
+            // 싱글 가구인 경우 빈 슬롯이 없으면 가장 오른쪽에 강제 배치
+            slotIndex = newIndexing.columnCount - 1;
+            console.log('⚠️ 싱글 가구 강제 배치 (마지막 슬롯):', {
+              moduleId: module.moduleId,
+              slotIndex
+            });
+          } else {
+            // 정말로 배치할 공간이 없는 경우에만 isValidInCurrentSpace: false
+            console.log('❌ 배치할 공간 없음 - 가구 비활성화:', {
+              moduleId: module.moduleId,
+              newColumnCount: newIndexing.columnCount
+            });
+            updatedModules.push({
+              ...module,
+              isValidInCurrentSpace: false
+            });
+            return;
           }
         }
         

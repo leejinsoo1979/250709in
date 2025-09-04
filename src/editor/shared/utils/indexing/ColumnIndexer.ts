@@ -911,20 +911,34 @@ export class ColumnIndexer {
     const normalAreaOuterWidth = totalWidth - droppedWidth;
     const droppedAreaOuterWidth = droppedWidth;
     
-    // 각 구간의 내부 너비 계산
-    let normalAreaInternalWidth: number;
-    let droppedAreaInternalWidth: number;
+    // 각 구간의 내부 너비 계산 - 새로운 영역별 내경 계산 함수 사용
+    // SpaceCalculator의 영역별 내경 계산 함수 사용
+    const droppedZoneInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
+    const normalZoneInternalWidth = SpaceCalculator.calculateNormalZoneInternalWidth(spaceInfo);
+    
+    // 실제 사용할 내부 너비
+    let normalAreaInternalWidth: number = normalZoneInternalWidth;
+    let droppedAreaInternalWidth: number = droppedZoneInternalWidth || 0;
     let normalStartX: number;
     let droppedStartX: number;
+    
+    console.log('🎯 [calculateZoneSlotInfo] SpaceCalculator 영역별 내경 계산:', {
+      '단내림 영역 내경': droppedAreaInternalWidth,
+      '일반 영역 내경': normalAreaInternalWidth,
+      'spaceInfo': {
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig,
+        gapConfig: spaceInfo.gapConfig
+      }
+    });
     
     if (droppedPosition === 'left') {
       // 왼쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 구간 사이에 프레임 없음, 바로 연결
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
-        droppedStartX = internalStartX; // 수정된 internalStartX 사용
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
+        // 서라운드: 시작 위치 계산
+        droppedStartX = internalStartX;
+        normalStartX = droppedStartX + (droppedAreaOuterWidth - frameThickness.left); // 단내림 영역 끝에서 시작
         
         console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
@@ -936,49 +950,26 @@ export class ColumnIndexer {
           'spaceInfo.installType': spaceInfo.installType
         });
       } else {
-        // 노서라운드: 엔드패널 고려
+        // 노서라운드: 시작 위치 계산
         let leftReduction = 0;
-        let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽에 이격거리 적용
+        // 왼쪽 오프셋 계산 (단내림 영역용)
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인은 양쪽 벽이 있으므로 이격거리 적용
-          const leftGap = spaceInfo.gapConfig?.left || 0;
-          const rightGap = spaceInfo.gapConfig?.right || 0;
-          
-          // 왼쪽 단내림이므로: 왼쪽은 단내림구간 벽, 오른쪽은 일반구간 벽
-          leftReduction = leftGap;  // 단내림구간 벽쪽 이격거리
-          rightReduction = rightGap;  // 일반구간 벽쪽 이격거리
-        } else {
-          // 세미스탠딩 또는 프리스탠딩
-          // 왼쪽 단내림: 단내림 영역은 왼쪽, 일반 영역은 오른쪽
-          
-          // 단내림 영역의 왼쪽 처리
+          leftReduction = spaceInfo.gapConfig?.left || 0;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           if (spaceInfo.wallConfig?.left) {
-            const leftGap = spaceInfo.gapConfig?.left || 0;
-            leftReduction = leftGap;  // 단내림 영역 왼쪽 벽: 이격거리 적용
+            leftReduction = spaceInfo.gapConfig?.left || 0;
           } else {
-            leftReduction = END_PANEL_THICKNESS;  // 단내림 영역 왼쪽: 엔드패널
+            leftReduction = END_PANEL_THICKNESS;
           }
-          
-          // 일반 영역의 오른쪽 처리
-          if (spaceInfo.wallConfig?.right) {
-            const rightGap = spaceInfo.gapConfig?.right || 0;
-            rightReduction = rightGap;  // 일반 영역 오른쪽 벽: 이격거리 적용
-          } else {
-            rightReduction = END_PANEL_THICKNESS;  // 일반 영역 오른쪽: 엔드패널
-          }
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
         }
         
         // 단내림 영역: 왼쪽에 위치
-        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
-        // 슬롯 시작 위치: 벽이 있으면 이격거리 후, 없으면 엔드패널 뒤에서
         droppedStartX = -(totalWidth / 2) + leftReduction;
         
-        // 일반 영역: 오른쪽에 위치
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
-        // 일반 영역 시작: 단내림 영역의 외부 너비 위치에서 시작
-        // 단내림 영역이 이미 leftReduction을 적용했으므로, 일반 영역은 단내림의 외부 너비 후에 시작
+        // 일반 영역: 오른쪽에 위치 (단내림 영역의 설정 너비 후)
         normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth;
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -994,7 +985,6 @@ export class ColumnIndexer {
           '일반 영역': {
             '외부너비': normalAreaOuterWidth,
             '내부너비': normalAreaInternalWidth,
-            'reduction': rightReduction,
             '시작X': normalStartX,
             '끝X': normalStartX + normalAreaInternalWidth,
             '영역간 갭': normalStartX - (droppedStartX + droppedAreaInternalWidth)
@@ -1010,11 +1000,9 @@ export class ColumnIndexer {
     } else {
       // 오른쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 구간 사이에 프레임 없음, 바로 연결
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
-        normalStartX = internalStartX; // 수정된 internalStartX 사용
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
+        // 서라운드: 시작 위치 계산
+        normalStartX = internalStartX;
+        droppedStartX = normalStartX + (normalAreaOuterWidth - frameThickness.left); // 일반 영역 끝에서 시작
         
         console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,
@@ -1028,54 +1016,47 @@ export class ColumnIndexer {
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
         let leftReduction = 0;
-        let rightReduction = 0;
         
-        // 빌트인인 경우: 양쪽 벽에 이격거리 적용
+        // 일반 영역의 왼쪽 오프셋 계산
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인은 양쪽 벽이 있으므로 이격거리 적용
-          const leftGap = spaceInfo.gapConfig?.left || 0;
-          const rightGap = spaceInfo.gapConfig?.right || 0;
-          
-          // 오른쪽 단내림이므로: 왼쪽은 일반구간 벽, 오른쪽은 단내림구간 벽
-          leftReduction = leftGap;  // 일반구간 벽쪽 이격거리
-          rightReduction = rightGap;  // 단내림구간 벽쪽 이격거리
-        } else {
-          // 세미스탠딩 또는 프리스탠딩
-          // 오른쪽 단내림: 일반 영역은 왼쪽, 단내림 영역은 오른쪽
-          
-          // 일반 영역의 왼쪽 처리
+          leftReduction = spaceInfo.gapConfig?.left || 0;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           if (spaceInfo.wallConfig?.left) {
-            const leftGap = spaceInfo.gapConfig?.left || 0;
-            leftReduction = leftGap;  // 일반 영역 왼쪽 벽: 이격거리 적용
+            leftReduction = spaceInfo.gapConfig?.left || 0;
           } else {
-            leftReduction = END_PANEL_THICKNESS;  // 일반 영역 왼쪽: 엔드패널
+            leftReduction = END_PANEL_THICKNESS;
           }
-          
-          // 단내림 영역의 오른쪽 처리
-          if (spaceInfo.wallConfig?.right) {
-            const rightGap = spaceInfo.gapConfig?.right || 0;
-            rightReduction = rightGap;  // 단내림 영역 오른쪽 벽: 이격거리 적용
-          } else {
-            rightReduction = END_PANEL_THICKNESS;  // 단내림 영역 오른쪽: 엔드패널
-          }
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
         }
         
         // 일반 영역: 왼쪽에 위치
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
-        // 슬롯 시작 위치: 벽이 있으면 이격거리 후, 없으면 엔드패널 뒤에서
         normalStartX = -(totalWidth / 2) + leftReduction;
         
-        // 단내림 영역: 오른쪽에 위치
-        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        // 단내림 영역 시작: 일반 영역 다음
+        // 단내림 영역: 오른쪽에 위치 (일반 영역의 설정 너비 후)
         droppedStartX = -(totalWidth / 2) + normalAreaOuterWidth;
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
-          '메인 끝': normalStartX + normalAreaInternalWidth,
-          '단내림 시작': droppedStartX,
-          '갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
-          '프레임 두께': frameThickness,
-          'SURROUND_FRAME_THICKNESS 제거됨': true
+          '일반 영역': {
+            '외부너비': normalAreaOuterWidth,
+            '내부너비': normalAreaInternalWidth,
+            'reduction': leftReduction,
+            '시작X': normalStartX,
+            '끝X': normalStartX + normalAreaInternalWidth
+          },
+          '단내림 영역': {
+            '외부너비': droppedAreaOuterWidth,
+            '내부너비': droppedAreaInternalWidth,
+            '시작X': droppedStartX,
+            '끝X': droppedStartX + droppedAreaInternalWidth,
+            '영역간 갭': droppedStartX - (normalStartX + normalAreaInternalWidth)
+          },
+          '전체': {
+            'totalWidth': totalWidth,
+            'wallConfig': spaceInfo.wallConfig,
+            'gapConfig': spaceInfo.gapConfig,
+            'installType': spaceInfo.installType
+          }
         });
       }
     }
