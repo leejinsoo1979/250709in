@@ -352,7 +352,7 @@
   border: none;
   font-size: 12px;
   font-weight: 500;
-  color: var(--theme-text, #374151);
+  color: var(--theme-primary) !important;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
