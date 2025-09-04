@@ -205,10 +205,10 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               moduleId: module.moduleId,
               zone: module.zone
             });
-            // 가구 보존을 위해 그대로 추가
+            // 가구 보존을 위해 그대로 추가 - isValidInCurrentSpace를 true로 설정하여 가구 유지
             updatedModules.push({
               ...module,
-              isValidInCurrentSpace: false
+              isValidInCurrentSpace: true  // false -> true로 변경하여 가구가 사라지지 않도록
             });
             // return 제거 - 다음 코드 실행 방지를 위해 조건문 사용
           } else {
@@ -725,123 +725,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
   }, [setPlacedModules]);
 
   // 새로운 간단한 버전 - 슬롯 인덱스만 유지하고 위치 업데이트
-  const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
-    console.log('🔥🔥🔥 새로운 updateFurnitureForNewSpace 시작 🔥🔥🔥');
-    
-    return setPlacedModules((currentModules) => {
-      console.log('📌 setPlacedModules 콜백 시작:', {
-        현재가구수: currentModules.length,
-        현재가구: currentModules.map(m => ({
-          id: m.id,
-          moduleId: m.moduleId,
-          slotIndex: m.slotIndex
-        }))
-      });
-      
-      if (currentModules.length === 0) {
-        console.log('⚠️ 현재 가구가 없음 - 리턴');
-        return currentModules;
-      }
-      
-      const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
-      const newIndexing = calculateSpaceIndexing(newSpaceInfo);
-      
-      console.log('📊 공간 변경 정보:', {
-        '설치타입': `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`,
-        '서라운드': `${oldSpaceInfo.surroundType} → ${newSpaceInfo.surroundType}`, 
-        '이전슬롯수': oldIndexing.columnCount,
-        '새슬롯수': newIndexing.columnCount,
-        '가구수': currentModules.length
-      });
-      
-      const updatedModules: PlacedModule[] = [];
-      
-      // 모든 가구를 순회하며 업데이트
-      currentModules.forEach((module) => {
-        // 슬롯 인덱스를 그대로 유지
-        let slotIndex = module.slotIndex;
-        
-        // slotIndex가 undefined인 경우 위치에서 계산
-        if (slotIndex === undefined || slotIndex === null) {
-          console.error(`❌ [${module.moduleId}] slotIndex가 없음! 위치에서 계산 시도`);
-          // 현재 위치에서 가장 가까운 슬롯 찾기
-          const moduleX = module.position.x;
-          let closestSlot = 0;
-          let minDistance = Infinity;
-          
-          for (let i = 0; i < oldIndexing.threeUnitPositions.length; i++) {
-            const slotX = oldIndexing.threeUnitPositions[i];
-            const distance = Math.abs(slotX - moduleX);
-            if (distance < minDistance) {
-              minDistance = distance;
-              closestSlot = i;
-            }
-          }
-          
-          slotIndex = closestSlot;
-          console.log(`📍 [${module.moduleId}] 위치 ${moduleX.toFixed(3)}에서 슬롯 ${slotIndex} 계산됨`);
-        }
-        
-        // 슬롯 범위 체크
-        if (slotIndex >= newIndexing.columnCount) {
-          slotIndex = newIndexing.columnCount - 1;
-          console.log(`⚠️ [${module.moduleId}] 슬롯 범위 초과 → 마지막 슬롯으로:`, slotIndex);
-        }
-        
-        // 듀얼 가구 여부 확인
-        const isDual = module.moduleId.includes('dual-');
-        
-        // 새로운 X 위치 계산
-        let newX: number;
-        if (isDual && newIndexing.threeUnitDualPositions && slotIndex < newIndexing.threeUnitDualPositions.length) {
-          newX = newIndexing.threeUnitDualPositions[slotIndex];
-        } else if (newIndexing.threeUnitPositions && slotIndex < newIndexing.threeUnitPositions.length) {
-          newX = newIndexing.threeUnitPositions[slotIndex];
-        } else {
-          // 위치를 찾을 수 없으면 마지막 위치 사용
-          newX = newIndexing.threeUnitPositions?.[newIndexing.threeUnitPositions.length - 1] || 0;
-          console.log(`⚠️ [${module.moduleId}] 위치 없음 → 마지막 위치 사용:`, newX);
-        }
-        
-        // 새로운 moduleId 생성 (너비 업데이트)
-        let newModuleId = module.moduleId;
-        if (isDual) {
-          newModuleId = module.moduleId.replace(/-\d+$/, `-${newIndexing.columnWidth * 2}`);
-        } else {
-          newModuleId = module.moduleId.replace(/-\d+$/, `-${newIndexing.columnWidth}`);
-        }
-        
-        console.log(`✅ [${module.moduleId}] 업데이트:`, {
-          '슬롯': slotIndex,
-          '이전X': module.position.x.toFixed(3),
-          '새X': newX.toFixed(3),
-          '새ID': newModuleId
-        });
-        
-        // 가구 업데이트
-        updatedModules.push({
-          ...module,
-          moduleId: newModuleId,
-          position: { ...module.position, x: newX },
-          slotIndex: slotIndex,
-          isDualSlot: isDual,
-          isValidInCurrentSpace: true
-        });
-      });
-      
-      console.log('🎯 업데이트 완료:', {
-        '원래가구수': currentModules.length,
-        '업데이트된가구수': updatedModules.length,
-        '손실': currentModules.length - updatedModules.length
-      });
-      
-      if (currentModules.length !== updatedModules.length) {
-        console.error('❌❌❌ 가구 손실 발생!!!');
-      }
-      
-      return updatedModules;
-    });
-  }, [setPlacedModules]);
+  // 현재 사용하는 것으로 복원 - 기존 OLD 함수를 사용
+  const updateFurnitureForNewSpace = updateFurnitureForNewSpace_OLD;
 
   return {
     spaceChangeMode,

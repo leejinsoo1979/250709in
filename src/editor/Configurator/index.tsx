@@ -2155,7 +2155,7 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     // 단내림 비활성화
-                    clearAllModules(); // 가구 제거
+                    // clearAllModules(); // 가구 제거 - 주석처리하여 가구 유지
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
                         ...spaceInfo.droppedCeiling,
@@ -2173,7 +2173,7 @@ const Configurator: React.FC = () => {
                   onClick={() => {
                     if (!spaceInfo.droppedCeiling?.enabled) {
                       // 단내림 활성화
-                      clearAllModules(); // 가구 제거
+                      // clearAllModules(); // 가구 제거 - 주석처리하여 가구 유지
                       
                       const totalWidth = spaceInfo.width || 4800;
                       const droppedWidth = 900; // 단내림 기본 폭
