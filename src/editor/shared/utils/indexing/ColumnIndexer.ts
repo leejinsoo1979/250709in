@@ -206,6 +206,18 @@ export class ColumnIndexer {
         zones.normal.threeUnitPositions = [];
         zones.normal.threeUnitDualPositions = [];
         
+        console.log('🚨🚨🚨 Normal Zone 슬롯 위치 계산 시작:', {
+          startX: zones.normal.startX,
+          width: zones.normal.width,
+          columnCount: zones.normal.columnCount,
+          slotWidths: zones.normal.slotWidths,
+          spaceInfo: {
+            installType: spaceInfo.installType,
+            wallConfig: spaceInfo.wallConfig,
+            gapConfig: spaceInfo.gapConfig
+          }
+        });
+        
         let currentX = zones.normal.startX;
         for (let i = 0; i < zones.normal.columnCount; i++) {
           const slotWidth = zones.normal.slotWidths?.[i] || zones.normal.columnWidth;
