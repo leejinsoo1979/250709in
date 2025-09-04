@@ -796,29 +796,20 @@ export class ColumnIndexer {
       const slotWidths: number[] = [];
       
       if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
-        // 노서라운드 벽없음: 커버도어 방식 - 전체너비를 균등 분할 후, 양쪽 끝 슬롯에서 18mm씩 빼기
-        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
-        const remainder = spaceInfo.width % columnCount;
+        // 노서라운드 벽없음: 내경 너비를 균등 분할
+        const baseSlotWidth = Math.floor(actualInternalWidth / columnCount);
+        const remainder = actualInternalWidth % columnCount;
         
         for (let i = 0; i < columnCount; i++) {
           let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
           
-          // 첫 번째 슬롯은 왼쪽 엔드패널 두께를 뺌
-          if (i === 0) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 마지막 슬롯은 오른쪽 엔드패널 두께를 뺌
-          else if (i === columnCount - 1) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 중간 슬롯들은 그대로
-          
+          // 이미 actualInternalWidth가 양쪽 엔드패널을 반영했으므로 추가 감소 불필요
           slotWidths.push(slotWidth);
         }
       } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-        // 노서라운드 한쪽벽: 커버도어 방식 - 전체너비를 균등 분할 후, 엔드패널 쪽 슬롯만 18mm 빼기
-        const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
-        const remainder = spaceInfo.width % columnCount;
+        // 노서라운드 한쪽벽: 내경 너비를 균등 분할
+        const baseSlotWidth = Math.floor(actualInternalWidth / columnCount);
+        const remainder = actualInternalWidth % columnCount;
         
         for (let i = 0; i < columnCount; i++) {
           let slotWidth = baseSlotWidth;
@@ -828,15 +819,7 @@ export class ColumnIndexer {
             slotWidth += 1;
           }
           
-          // 엔드패널이 있는 쪽 슬롯에서만 18mm 빼기 (커버도어는 엔드패널이 슬롯 밖에 있음)
-          if (!spaceInfo.wallConfig?.left && i === 0) {
-            // 왼쪽 벽이 없으면 첫 번째 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          } else if (!spaceInfo.wallConfig?.right && i === columnCount - 1) {
-            // 오른쪽 벽이 없으면 마지막 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          }
-          
+          // 이미 actualInternalWidth가 이격거리와 엔드패널을 반영했으므로 추가 감소 불필요
           slotWidths.push(slotWidth);
         }
       } else {
