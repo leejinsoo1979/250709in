@@ -494,38 +494,74 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         // 단내림 활성화 시 영역 확인
         if (newSpaceInfo.droppedCeiling?.enabled && newIndexing.zones) {
           // 현재 슬롯의 영역 확인
-          const moduleX = newIndexing.threeUnitPositions[slotIndex] * 1000; // Three.js units to mm
-          const zoneInfo = ColumnIndexer.findZoneAndSlotFromPosition(
-            { x: moduleX },
-            newSpaceInfo,
-            newIndexing
-          );
-          
-          if (zoneInfo) {
-            zone = zoneInfo.zone;
-            const zoneSlots = zone === 'dropped' && newIndexing.zones.dropped
-              ? newIndexing.zones.dropped
-              : newIndexing.zones.normal;
+          // 슬롯 인덱스가 유효한지 먼저 확인
+          if (newIndexing.threeUnitPositions && slotIndex < newIndexing.threeUnitPositions.length) {
+            const moduleX = newIndexing.threeUnitPositions[slotIndex] * 1000; // Three.js units to mm
+            const zoneInfo = ColumnIndexer.findZoneAndSlotFromPosition(
+              { x: moduleX },
+              newSpaceInfo,
+              newIndexing
+            );
             
-            // 영역별 위치 계산
-            const slotCenterX = zoneSlots.startX + (zoneInfo.slotIndex * zoneSlots.columnWidth) + (zoneSlots.columnWidth / 2);
-            newX = slotCenterX * 0.001; // mm to Three.js units
-            
-            // 단내림 영역의 경우 커스텀 너비 설정
-            if (zone === 'dropped') {
-              customWidth = zoneSlots.columnWidth;
+            if (zoneInfo) {
+              zone = zoneInfo.zone;
+              const zoneSlots = zone === 'dropped' && newIndexing.zones.dropped
+                ? newIndexing.zones.dropped
+                : newIndexing.zones.normal;
+              
+              // 영역별 위치 계산
+              const slotCenterX = zoneSlots.startX + (zoneInfo.slotIndex * zoneSlots.columnWidth) + (zoneSlots.columnWidth / 2);
+              newX = slotCenterX * 0.001; // mm to Three.js units
+              
+              // 단내림 영역의 경우 커스텀 너비 설정
+              if (zone === 'dropped') {
+                customWidth = zoneSlots.columnWidth;
+              }
+            } else {
+              // 영역을 찾을 수 없는 경우 기본값 사용
+              if (isDualModule && newIndexing.threeUnitDualPositions) {
+                if (slotIndex < newIndexing.threeUnitDualPositions.length) {
+                  newX = newIndexing.threeUnitDualPositions[slotIndex];
+                } else {
+                  newX = newIndexing.threeUnitDualPositions[newIndexing.threeUnitDualPositions.length - 1] || 0;
+                }
+              } else if (newIndexing.threeUnitPositions) {
+                newX = newIndexing.threeUnitPositions[slotIndex] || newIndexing.threeUnitPositions[newIndexing.threeUnitPositions.length - 1] || 0;
+              } else {
+                newX = 0;
+              }
             }
           } else {
-            // 영역을 찾을 수 없는 경우 기본값 사용
-            newX = isDualModule && newIndexing.threeUnitDualPositions
-              ? newIndexing.threeUnitDualPositions[slotIndex]
-              : newIndexing.threeUnitPositions[slotIndex];
+            // 슬롯 인덱스가 범위를 벗어난 경우
+            console.warn('⚠️ 단내림 영역에서 슬롯 인덱스 범위 초과:', {
+              slotIndex,
+              availableSlots: newIndexing.threeUnitPositions?.length || 0
+            });
+            
+            if (isDualModule && newIndexing.threeUnitDualPositions && newIndexing.threeUnitDualPositions.length > 0) {
+              newX = newIndexing.threeUnitDualPositions[newIndexing.threeUnitDualPositions.length - 1];
+            } else if (newIndexing.threeUnitPositions && newIndexing.threeUnitPositions.length > 0) {
+              newX = newIndexing.threeUnitPositions[newIndexing.threeUnitPositions.length - 1];
+            } else {
+              newX = 0;
+            }
           }
         } else {
           // 단내림 비활성화 시 기존 로직
           if (isDualModule && newIndexing.threeUnitDualPositions) {
             // 듀얼 가구: 듀얼 위치 배열 사용
-            newX = newIndexing.threeUnitDualPositions[slotIndex];
+            // 슬롯 인덱스가 유효한 범위인지 확인
+            if (slotIndex < newIndexing.threeUnitDualPositions.length) {
+              newX = newIndexing.threeUnitDualPositions[slotIndex];
+            } else {
+              // 마지막 유효한 듀얼 위치 사용
+              console.warn('⚠️ 듀얼 가구 슬롯 인덱스 범위 초과:', {
+                slotIndex,
+                availableDualSlots: newIndexing.threeUnitDualPositions.length,
+                using: 'last dual position'
+              });
+              newX = newIndexing.threeUnitDualPositions[newIndexing.threeUnitDualPositions.length - 1] || 0;
+            }
             
             // 노서라운드 모드에서 엔드패널 슬롯의 듀얼 가구는 위치 조정이 필요함
             // FurnitureItem에서도 동일한 조정을 적용하므로 여기서 미리 적용
@@ -555,9 +591,27 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               wallConfig: newSpaceInfo.wallConfig,
               설명: '기본 경계 위치 사용 (FurnitureItem에서 엔드패널 조정 적용)'
             });
-          } else {
+          } else if (newIndexing.threeUnitPositions) {
             // 싱글 가구: 일반 위치 배열 사용
-            newX = newIndexing.threeUnitPositions[slotIndex];
+            // 슬롯 인덱스가 유효한 범위인지 확인
+            if (slotIndex < newIndexing.threeUnitPositions.length) {
+              newX = newIndexing.threeUnitPositions[slotIndex];
+            } else {
+              // 마지막 유효한 위치 사용
+              console.warn('⚠️ 싱글 가구 슬롯 인덱스 범위 초과:', {
+                slotIndex,
+                availableSlots: newIndexing.threeUnitPositions.length,
+                using: 'last position'
+              });
+              newX = newIndexing.threeUnitPositions[newIndexing.threeUnitPositions.length - 1] || 0;
+            }
+          } else {
+            console.error('❌ 위치 배열이 없음:', {
+              slotIndex,
+              hasThreeUnitPositions: !!newIndexing.threeUnitPositions,
+              hasThreeUnitDualPositions: !!newIndexing.threeUnitDualPositions
+            });
+            newX = 0; // 기본값
           }
         }
         
@@ -582,6 +636,24 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         // 노서라운드 모드에서는 customWidth를 undefined로 설정
         
+        // 위치 변화 상세 분석
+        const positionDiff = Math.abs(newX - module.position.x);
+        const positionDiffMm = positionDiff * 1000; // Three.js units to mm
+        
+        if (positionDiffMm > 1) { // 1mm 이상 차이나는 경우
+          console.log(`🔄 [${module.moduleId}] 위치 변경 감지:`, {
+            슬롯: slotIndex,
+            '이전 위치 (Three.js)': module.position.x.toFixed(4),
+            '새 위치 (Three.js)': newX.toFixed(4),
+            '차이 (mm)': positionDiffMm.toFixed(1),
+            '설치타입': `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`,
+            '서라운드': `${oldSpaceInfo.surroundType} → ${newSpaceInfo.surroundType}`,
+            isDualModule,
+            '슬롯너비': newIndexing.slotWidths?.[slotIndex],
+            '커스텀너비': newCustomWidth
+          });
+        }
+        
         updatedModules.push({
           ...module,
           moduleId: newModuleId,
@@ -598,7 +670,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           moduleId: module.id,
           원래슬롯: module.slotIndex,
           새슬롯: slotIndex,
-          새위치: newX,
+          새위치X: newX.toFixed(4),
           업데이트된가구수: updatedModules.length
         });
       });
