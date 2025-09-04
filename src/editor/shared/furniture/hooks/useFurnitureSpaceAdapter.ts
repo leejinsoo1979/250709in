@@ -213,13 +213,36 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const maxSlot = newIndexing.columnCount - (isDualModule ? 2 : 1);
           if (maxSlot >= 0) {
             slotIndex = maxSlot;
-          } else {
-            // 배치할 공간이 아예 없는 경우 원래 위치 유지
-            updatedModules.push({
-              ...module,
-              isValidInCurrentSpace: false
+            console.log('⚠️ 슬롯 범위 초과 - 마지막 슬롯으로 이동:', {
+              moduleId: module.moduleId,
+              originalSlot: module.slotIndex,
+              newSlot: slotIndex,
+              newColumnCount: newIndexing.columnCount,
+              isDualModule
             });
-            return;
+          } else {
+            // 듀얼 가구인데 배치할 공간이 없으면 싱글로 변환 시도
+            if (isDualModule && newIndexing.columnCount > 0) {
+              isDualModule = false;
+              newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
+              slotIndex = Math.min(module.slotIndex || 0, newIndexing.columnCount - 1);
+              console.log('⚠️ 듀얼 가구를 싱글로 변환하여 배치:', {
+                originalModuleId: module.moduleId,
+                newModuleId,
+                slotIndex
+              });
+            } else {
+              // 정말로 배치할 공간이 없는 경우에만 isValidInCurrentSpace: false
+              console.log('❌ 배치할 공간 없음 - 가구 비활성화:', {
+                moduleId: module.moduleId,
+                newColumnCount: newIndexing.columnCount
+              });
+              updatedModules.push({
+                ...module,
+                isValidInCurrentSpace: false
+              });
+              return;
+            }
           }
         }
         
@@ -253,13 +276,52 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           if (newSlot !== null) {
             slotIndex = newSlot;
-          } else {
-            // 사용 가능한 슬롯 없음 - 원래 위치 유지
-            updatedModules.push({
-              ...module,
-              isValidInCurrentSpace: false
+            console.log('⚠️ 충돌 회피 - 새 슬롯으로 이동:', {
+              moduleId: module.moduleId,
+              originalSlot: module.slotIndex,
+              newSlot: slotIndex
             });
-            return;
+          } else {
+            // 듀얼 가구인데 배치할 곳이 없으면 싱글로 변환 시도
+            if (isDualModule) {
+              isDualModule = false;
+              newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
+              
+              // 싱글로 변환 후 다시 빈 슬롯 찾기
+              newSlot = findNextAvailableSlot(slotIndex, 'right', false, updatedModules, newSpaceInfo, module.moduleId, module.id);
+              if (newSlot === null) {
+                newSlot = findNextAvailableSlot(slotIndex, 'left', false, updatedModules, newSpaceInfo, module.moduleId, module.id);
+              }
+              
+              if (newSlot !== null) {
+                slotIndex = newSlot;
+                console.log('⚠️ 듀얼→싱글 변환 후 배치:', {
+                  originalModuleId: module.moduleId,
+                  newModuleId,
+                  slotIndex
+                });
+              } else {
+                // 정말로 배치할 곳이 없는 경우에만 비활성화
+                console.log('❌ 충돌 회피 실패 - 가구 비활성화:', {
+                  moduleId: module.moduleId
+                });
+                updatedModules.push({
+                  ...module,
+                  isValidInCurrentSpace: false
+                });
+                return;
+              }
+            } else {
+              // 싱글 가구인데 배치할 곳이 없는 경우
+              console.log('❌ 충돌 회피 실패 - 가구 비활성화:', {
+                moduleId: module.moduleId
+              });
+              updatedModules.push({
+                ...module,
+                isValidInCurrentSpace: false
+              });
+              return;
+            }
           }
         }
 

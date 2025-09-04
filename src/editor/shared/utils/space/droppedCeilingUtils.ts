@@ -39,8 +39,8 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
       }
       
       droppedStartX = -(spaceInfo.width / 2) + leftOffset;
-      // 단내림 영역 너비는 왼쪽 오프셋을 뺀 실제 사용 가능 너비
-      actualDroppedWidth = droppedWidth - leftOffset;
+      // 단내림 영역 너비는 원래 설정값 유지 (단내림 영역 내부에서 벽/엔드패널 처리)
+      actualDroppedWidth = droppedWidth;
     } else {
       // 오른쪽 단내림: 단내림 영역은 오른쪽에 위치
       // 단내림 영역의 오른쪽 오프셋 계산
