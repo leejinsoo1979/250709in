@@ -425,13 +425,13 @@
 
 .toggleButton.active {
   background: var(--theme-primary) !important;
-  color: #ffffff !important;
+  color: rgba(255, 255, 255, 1) !important;
   font-weight: 600;
 }
 
 .toggleButton.active:hover {
   background: var(--theme-primary) !important;
-  color: #ffffff !important;
+  color: rgba(255, 255, 255, 1) !important;
 }
 
 .toggleButton:hover:not(.active) {
