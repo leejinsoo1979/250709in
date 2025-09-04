@@ -105,6 +105,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       });
       
       sortedModules.forEach(module => {
+        // 설치타입 변경시 상대 위치 보존을 위한 계산
+        // 오른쪽 끝에서부터의 상대 위치를 유지하도록 처리
+        const previousSlotCount = oldIndexing.threeUnitPositions.length;
+        const newSlotCount = newIndexing.threeUnitPositions.length;
+        
+        console.log('🎯 가구 처리 시작:', {
+          moduleId: module.id,
+          이전슬롯인덱스: module.slotIndex,
+          이전슬롯수: previousSlotCount,
+          새슬롯수: newSlotCount,
+          설치타입변경: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`
+        });
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
           console.log('🔍 Zone 가구 처리 시작:', {
@@ -211,6 +223,29 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           slotIndex = 0;
           // return 제거 - 계속 처리
         }
+        
+        // 상대 위치 기반 슬롯 재계산 (오른쪽 끝에서부터의 위치 유지)
+        // 예: 4개 슬롯에서 3번 슬롯(오른쪽 끝)은 오른쪽에서 0번째
+        // 설치타입 변경 후 5개 슬롯이 되면 4번 슬롯(오른쪽 끝)이 되어야 함
+        const relativeIndexFromRight = previousSlotCount - 1 - slotIndex;
+        let newSlotIndex = newSlotCount - 1 - relativeIndexFromRight;
+        
+        // 새 슬롯 인덱스가 유효한지 확인
+        if (newSlotIndex < 0) {
+          newSlotIndex = 0; // 최소값
+        } else if (newSlotIndex >= newSlotCount) {
+          newSlotIndex = newSlotCount - 1; // 최대값
+        }
+        
+        console.log('📍 상대 위치 기반 슬롯 재계산:', {
+          이전슬롯: slotIndex,
+          오른쪽에서위치: relativeIndexFromRight,
+          새슬롯: newSlotIndex,
+          이전슬롯수: previousSlotCount,
+          새슬롯수: newSlotCount
+        });
+        
+        slotIndex = newSlotIndex;
         
         // 새로운 moduleId 계산 (동적 모듈의 경우 숫자 부분을 새로운 컬럼 폭으로 교체)
         let newModuleId = module.moduleId;
@@ -368,8 +403,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         
         // 충돌 검사 및 슬롯 재배치
+        // 상대 위치를 이미 적용했으므로 충돌 검사는 최소화
         if (!isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
-          // 오른쪽으로 빈 슬롯 찾기
+          // 오른쪽 우선으로 빈 슬롯 찾기 (우측 가구 우선 보존)
           let newSlot = findNextAvailableSlot(slotIndex, 'right', isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id);
           
           // 오른쪽에 없으면 왼쪽으로 찾기
