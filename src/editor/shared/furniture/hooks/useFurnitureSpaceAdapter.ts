@@ -262,28 +262,36 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // return 제거 - 계속 처리
         }
         
-        // 상대 위치 기반 슬롯 재계산 (오른쪽 끝에서부터의 위치 유지)
-        // 예: 4개 슬롯에서 3번 슬롯(오른쪽 끝)은 오른쪽에서 0번째
-        // 설치타입 변경 후 5개 슬롯이 되면 4번 슬롯(오른쪽 끝)이 되어야 함
-        const relativeIndexFromRight = previousSlotCount - 1 - slotIndex;
-        let newSlotIndex = newSlotCount - 1 - relativeIndexFromRight;
+        // 우측 가구를 보존하기 위한 핵심 로직
+        // 슬롯 수가 동일해도 설치타입 변경 시 슬롯 위치가 이동함
+        // 가구의 원래 X 위치를 기준으로 가장 가까운 슬롯 찾기
         
-        // 새 슬롯 인덱스가 유효한지 확인
-        if (newSlotIndex < 0) {
-          newSlotIndex = 0; // 최소값
-        } else if (newSlotIndex >= newSlotCount) {
-          newSlotIndex = newSlotCount - 1; // 최대값
+        // 먼저 가구의 원래 X 위치 가져오기
+        const originalX = module.position.x;
+        
+        // 새로운 슬롯 위치 배열에서 가장 가까운 슬롯 찾기
+        let closestSlot = 0;
+        let minDistance = Infinity;
+        
+        for (let i = 0; i < newIndexing.threeUnitPositions.length; i++) {
+          const slotX = newIndexing.threeUnitPositions[i];
+          const distance = Math.abs(slotX - originalX);
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestSlot = i;
+          }
         }
         
-        console.log('📍 상대 위치 기반 슬롯 재계산:', {
-          이전슬롯: slotIndex,
-          오른쪽에서위치: relativeIndexFromRight,
-          새슬롯: newSlotIndex,
-          이전슬롯수: previousSlotCount,
-          새슬롯수: newSlotCount
+        console.log('🎯 가장 가까운 슬롯 찾기:', {
+          원래X위치: originalX,
+          원래슬롯: slotIndex,
+          가장가까운슬롯: closestSlot,
+          거리: minDistance,
+          새슬롯위치: newIndexing.threeUnitPositions[closestSlot]
         });
         
-        slotIndex = newSlotIndex;
+        slotIndex = closestSlot;
         
         // 새로운 moduleId 계산 (동적 모듈의 경우 숫자 부분을 새로운 컬럼 폭으로 교체)
         let newModuleId = module.moduleId;

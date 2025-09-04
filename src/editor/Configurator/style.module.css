@@ -339,7 +339,7 @@
 .moduleCategoryTabs {
   display: flex;
   margin-bottom: 16px;
-  border: 1px solid var(--theme-border, var(--theme-border));
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
   background: var(--theme-surface, #ffffff);
@@ -386,7 +386,7 @@
 .upperLowerTabs {
   display: flex;
   margin-bottom: 16px;
-  border: 1px solid var(--theme-border, var(--theme-border));
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
   background: var(--theme-surface, #ffffff);
@@ -1559,7 +1559,7 @@
 /* 토글 버튼 그룹 스타일 */
 .toggleButtonGroup {
   display: flex;
-  border: 1px solid var(--theme-border);
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
   background: var(--theme-surface);

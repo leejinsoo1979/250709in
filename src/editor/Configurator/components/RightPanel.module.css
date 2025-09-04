@@ -329,7 +329,7 @@
   display: flex;
   align-items: center;
   gap: 1px;
-  border: 1px solid var(--theme-border, #e5e7eb);
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -402,7 +402,7 @@
 .toggleGroup {
   display: flex;
   gap: 1px;
-  border: 1px solid var(--theme-border, #e5e7eb);
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   overflow: hidden;
 }
