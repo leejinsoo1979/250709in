@@ -163,40 +163,26 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             return;
           }
           
-          // zone 가구도 가장 가까운 슬롯을 찾아서 배치
+          // zone 가구는 슬롯 인덱스를 유지
           let slotIndex = module.slotIndex || 0;
           
-          // 현재 가구의 X 위치로 가장 가까운 슬롯 찾기
-          const currentX = module.position.x;
-          let closestSlot = 0;
-          let minDistance = Infinity;
-          
-          // targetZone의 슬롯 위치 계산 (mm 단위)
-          const zoneSlotPositions: number[] = [];
-          for (let i = 0; i < targetZone.columnCount; i++) {
-            const slotCenterX = targetZone.startX + (i * targetZone.columnWidth) + (targetZone.columnWidth / 2);
-            zoneSlotPositions.push(slotCenterX * 0.01); // mm to Three.js units
+          // 슬롯 범위 검사
+          if (slotIndex >= targetZone.columnCount) {
+            console.log('⚠️ Zone 가구 슬롯 범위 초과:', {
+              moduleId: module.moduleId,
+              zone: module.zone,
+              원래슬롯: slotIndex,
+              최대슬롯: targetZone.columnCount - 1
+            });
+            slotIndex = targetZone.columnCount - 1; // 마지막 슬롯으로
           }
           
-          // 가장 가까운 슬롯 찾기
-          for (let i = 0; i < zoneSlotPositions.length; i++) {
-            const distance = Math.abs(zoneSlotPositions[i] - currentX);
-            if (distance < minDistance) {
-              minDistance = distance;
-              closestSlot = i;
-            }
-          }
-          
-          console.log('🎯 Zone 가구 가장 가까운 슬롯 찾기:', {
+          console.log('🎯 Zone 가구 슬롯 유지:', {
             moduleId: module.moduleId,
             zone: module.zone,
-            원래위치X: currentX,
             원래슬롯: module.slotIndex,
-            새슬롯: closestSlot,
-            거리: minDistance
+            새슬롯: slotIndex
           });
-          
-          slotIndex = closestSlot;
           
           const isDual = module.moduleId.startsWith('dual-');
           const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
@@ -257,36 +243,26 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // return 제거 - 계속 처리
         }
         
-        // 우측 가구를 보존하기 위한 핵심 로직
-        // 슬롯 수가 동일해도 설치타입 변경 시 슬롯 위치가 이동함
-        // 가구의 원래 X 위치를 기준으로 가장 가까운 슬롯 찾기
+        // 가구는 슬롯 인덱스를 그대로 유지
+        // 슬롯 개수가 동일하면 위치만 업데이트
+        let newSlotIndex = slotIndex;
         
-        // 먼저 가구의 원래 X 위치 가져오기
-        const originalX = module.position.x;
-        
-        // 새로운 슬롯 위치 배열에서 가장 가까운 슬롯 찾기
-        let closestSlot = 0;
-        let minDistance = Infinity;
-        
-        for (let i = 0; i < newIndexing.threeUnitPositions.length; i++) {
-          const slotX = newIndexing.threeUnitPositions[i];
-          const distance = Math.abs(slotX - originalX);
-          
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestSlot = i;
-          }
+        // 슬롯 범위 검사
+        if (newSlotIndex >= newSlotCount) {
+          console.log('⚠️ 슬롯 범위 초과 - 마지막 슬롯으로:', {
+            원래슬롯: slotIndex,
+            새슬롯수: newSlotCount
+          });
+          newSlotIndex = newSlotCount - 1;
         }
         
-        console.log('🎯 가장 가까운 슬롯 찾기:', {
-          원래X위치: originalX,
+        console.log('🎯 슬롯 유지:', {
           원래슬롯: slotIndex,
-          가장가까운슬롯: closestSlot,
-          거리: minDistance,
-          새슬롯위치: newIndexing.threeUnitPositions[closestSlot]
+          새슬롯: newSlotIndex,
+          슬롯수변경: `${previousSlotCount} → ${newSlotCount}`
         });
         
-        slotIndex = closestSlot;
+        slotIndex = newSlotIndex;
         
         // 새로운 moduleId 계산 (동적 모듈의 경우 숫자 부분을 새로운 컬럼 폭으로 교체)
         let newModuleId = module.moduleId;
