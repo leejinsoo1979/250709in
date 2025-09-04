@@ -1002,11 +1002,11 @@ export class ColumnIndexer {
           '단내림 영역': {
             '외부너비': droppedAreaOuterWidth,
             '내부너비': droppedAreaInternalWidth,
-            'reduction': leftReduction,
+            'reduction': droppedLeftReduction,
             '시작X': droppedStartX,
             '끝X': droppedStartX + droppedAreaInternalWidth,
             '벽 위치': -(totalWidth / 2),
-            '벽에서 슬롯까지': leftReduction
+            '벽에서 슬롯까지': droppedLeftReduction
           },
           '일반 영역': {
             '외부너비': normalAreaOuterWidth,
