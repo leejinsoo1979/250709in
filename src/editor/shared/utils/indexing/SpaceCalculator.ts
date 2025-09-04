@@ -157,6 +157,15 @@ export class SpaceCalculator {
     const droppedWidth = spaceInfo.droppedCeiling.width || 900; // 기본값 900mm
     const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
     
+    console.log('🔥🔥🔥 calculateDroppedZoneInternalWidth 호출됨:', {
+      droppedWidth,
+      isLeftDropped,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      wallConfig: spaceInfo.wallConfig,
+      gapConfig: spaceInfo.gapConfig
+    });
+    
     if (spaceInfo.surroundType === 'no-surround') {
       let leftReduction = 0;
       let rightReduction = 0;

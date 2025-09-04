@@ -324,16 +324,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               slotIndex
             });
           } else {
-            // 정말로 배치할 공간이 없는 경우에만 isValidInCurrentSpace: false
-            console.log('❌ 배치할 공간 없음 - 가구 비활성화:', {
+            // 정말로 배치할 공간이 없어도 가구는 보존 (마지막 슬롯에 강제 배치)
+            console.log('⚠️ 배치할 공간 없음 - 마지막 슬롯에 강제 배치:', {
               moduleId: module.moduleId,
               newColumnCount: newIndexing.columnCount
             });
-            updatedModules.push({
-              ...module,
-              isValidInCurrentSpace: false
-            });
-            return;
+            if (newIndexing.columnCount > 0) {
+              slotIndex = newIndexing.columnCount - 1;
+            } else {
+              slotIndex = 0; // 최소한 0번 슬롯
+            }
+            // return 제거 - 계속 처리하여 가구 보존
           }
         }
         
@@ -392,26 +393,20 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
                   slotIndex
                 });
               } else {
-                // 정말로 배치할 곳이 없는 경우에만 비활성화
-                console.log('❌ 충돌 회피 실패 - 가구 비활성화:', {
-                  moduleId: module.moduleId
+                // 충돌 회피 실패해도 가구 보존 (현재 슬롯 유지)
+                console.log('⚠️ 충돌 회피 실패 - 현재 슬롯 유지:', {
+                  moduleId: module.moduleId,
+                  slotIndex
                 });
-                updatedModules.push({
-                  ...module,
-                  isValidInCurrentSpace: false
-                });
-                return;
+                // return 제거 - 계속 처리하여 가구 보존
               }
             } else {
-              // 싱글 가구인데 배치할 곳이 없는 경우
-              console.log('❌ 충돌 회피 실패 - 가구 비활성화:', {
-                moduleId: module.moduleId
+              // 싱글 가구인데 배치할 곳이 없어도 보존
+              console.log('⚠️ 싱글 가구 충돌 회피 실패 - 현재 슬롯 유지:', {
+                moduleId: module.moduleId,
+                slotIndex
               });
-              updatedModules.push({
-                ...module,
-                isValidInCurrentSpace: false
-              });
-              return;
+              // return 제거 - 계속 처리하여 가구 보존
             }
           }
         }

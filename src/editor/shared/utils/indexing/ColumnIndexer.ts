@@ -248,6 +248,19 @@ export class ColumnIndexer {
         zones.dropped.threeUnitPositions = [];
         zones.dropped.threeUnitDualPositions = [];
         
+        console.log('🚨🚨🚨 Dropped Zone 슬롯 위치 계산 시작:', {
+          startX: zones.dropped.startX,
+          width: zones.dropped.width,
+          columnCount: zones.dropped.columnCount,
+          slotWidths: zones.dropped.slotWidths,
+          spaceInfo: {
+            installType: spaceInfo.installType,
+            wallConfig: spaceInfo.wallConfig,
+            gapConfig: spaceInfo.gapConfig,
+            droppedCeilingPosition: spaceInfo.droppedCeiling?.position
+          }
+        });
+        
         let currentX = zones.dropped.startX;
         for (let i = 0; i < zones.dropped.columnCount; i++) {
           const slotWidth = zones.dropped.slotWidths?.[i] || zones.dropped.columnWidth;
