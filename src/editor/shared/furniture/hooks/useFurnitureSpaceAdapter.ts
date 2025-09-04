@@ -104,7 +104,16 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         설명: '우측 가구부터 처리하여 공간 축소시 좌측으로 압축'
       });
       
-      sortedModules.forEach(module => {
+      sortedModules.forEach((module, moduleIndex) => {
+        console.log(`\n🔴🔴🔴 [가구 ${moduleIndex + 1}/${sortedModules.length}] 처리 시작 🔴🔴🔴`, {
+          id: module.id,
+          moduleId: module.moduleId,
+          현재슬롯: module.slotIndex,
+          현재위치X: module.position?.x,
+          zone: module.zone,
+          isDualSlot: module.isDualSlot,
+          설치타입: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`
+        });
         // 설치타입 변경시 상대 위치 보존을 위한 계산
         // 오른쪽 끝에서부터의 상대 위치를 유지하도록 처리
         const previousSlotCount = oldIndexing.threeUnitPositions.length;
@@ -151,6 +160,10 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // 영역별 모듈 데이터 가져오기
           const moduleData = getModuleById(module.moduleId, zoneInternalSpace, zoneSpaceInfo);
           if (!moduleData) {
+            console.error('❌❌❌ ZONE 가구: moduleData 없음 - return으로 스킵!', {
+              moduleId: module.moduleId,
+              zone: module.zone
+            });
             updatedModules.push({
               ...module,
               isValidInCurrentSpace: false
@@ -221,6 +234,11 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             adjustedWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
             customWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
             isDualSlot: isDual
+          });
+          console.log('✅ ZONE 가구 처리 완료 - return으로 다음 가구로', {
+            moduleId: module.id,
+            새슬롯: slotIndex,
+            새위치: newX * 0.01
           });
           return;
         }
@@ -400,6 +418,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               moduleId: module.moduleId,
               newColumnCount: newIndexing.columnCount
             });
+            console.error('❌❌❌ return으로 가구 스킵 - 가구 손실!');
             return; // 공간이 없으면 가구 제거가 맞음
           }
         }
@@ -585,10 +604,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           customWidth: newCustomWidth,
           adjustedWidth: undefined // adjustedWidth는 FurnitureItem에서 다시 계산됨
         });
+        
+        console.log('✅ 일반 가구 처리 완료', {
+          moduleId: module.id,
+          원래슬롯: module.slotIndex,
+          새슬롯: slotIndex,
+          새위치: newX,
+          업데이트된가구수: updatedModules.length
+        });
       });
       
       // 전체적인 안전장치: 모든 가구 보존
-      console.log('🔴🔴🔴 [SPACE ADAPTER] 업데이트 완료 - 가구 보존 확인:', {
+      console.log('\n🔥🔥🔥🔥🔥 [SPACE ADAPTER] 업데이트 완료 - 가구 보존 확인 🔥🔥🔥🔥🔥', {
         '원래가구수': currentModules.length,
         '업데이트된가구수': updatedModules.length,
         '가구손실': currentModules.length - updatedModules.length,
