@@ -8,7 +8,7 @@
 .tabMenu {
   display: flex;
   margin-bottom: 16px;
-  border: 1px solid var(--theme-border, #e5e7eb);
+  border: 1px solid var(--theme-primary);
   border-radius: 8px;
   overflow: hidden;
   background: var(--theme-surface, #ffffff);
@@ -41,7 +41,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--theme-text, #374151);
+  color: var(--theme-primary);
   font-size: 12px;
   font-weight: 500;
   gap: 0;
@@ -51,7 +51,7 @@
 }
 
 .tab:not(:last-child) {
-  border-right: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-primary);
 }
 
 .tab:hover {
