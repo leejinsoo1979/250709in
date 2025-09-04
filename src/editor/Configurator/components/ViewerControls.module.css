@@ -207,11 +207,12 @@
 
 .renderModeButton.active {
   background: var(--theme-primary);
-  color: var(--theme-surface);
+  color: #ffffff !important;
 }
 
 .renderModeButton.active:hover {
   background: var(--theme-primary-hover);
+  color: #ffffff !important;
 }
 
 /* 3D/2D 모드 토글 */
