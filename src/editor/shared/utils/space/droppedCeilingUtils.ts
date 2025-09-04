@@ -24,43 +24,16 @@ export const getDroppedZoneBounds = (spaceInfo: SpaceInfo) => {
     
     if (isLeftDropped) {
       // 왼쪽 단내림: 단내림 영역은 왼쪽에 위치
-      // 단내림 영역의 왼쪽 오프셋 계산
-      let leftOffset = 0;
-      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        leftOffset = spaceInfo.gapConfig?.left || 0;
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        if (wallConfig?.left) {
-          leftOffset = spaceInfo.gapConfig?.left || 0;  // 왼쪽 벽: 이격거리
-        } else {
-          leftOffset = END_PANEL_THICKNESS;  // 왼쪽 벽 없음: 엔드패널
-        }
-      } else {
-        leftOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
-      }
-      
-      droppedStartX = -(spaceInfo.width / 2) + leftOffset;
-      // 단내림 영역 너비는 원래 설정값 유지 (단내림 영역 내부에서 벽/엔드패널 처리)
+      // 단내림 영역은 전체 공간의 왼쪽 끝에서 시작
+      droppedStartX = -(spaceInfo.width / 2);
+      // 단내림 영역 너비는 원래 설정값 유지
       actualDroppedWidth = droppedWidth;
     } else {
       // 오른쪽 단내림: 단내림 영역은 오른쪽에 위치
-      // 단내림 영역의 오른쪽 오프셋 계산
-      let rightOffset = 0;
-      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        rightOffset = spaceInfo.gapConfig?.right || 0;
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        if (wallConfig?.right) {
-          rightOffset = spaceInfo.gapConfig?.right || 0;  // 오른쪽 벽: 이격거리
-        } else {
-          rightOffset = END_PANEL_THICKNESS;  // 오른쪽 벽 없음: 엔드패널
-        }
-      } else {
-        rightOffset = END_PANEL_THICKNESS;  // 프리스탠딩: 엔드패널
-      }
-      
-      // 단내림 영역의 시작점은 일반영역 끝부터
+      // 단내림 영역은 전체 폭에서 단내림 폭을 뺀 위치에서 시작
       droppedStartX = -(spaceInfo.width / 2) + (spaceInfo.width - droppedWidth);
-      // 단내림 영역 너비는 오른쪽 오프셋을 뺀 실제 사용 가능 너비
-      actualDroppedWidth = droppedWidth - rightOffset;
+      // 단내림 영역 너비는 원래 설정값 유지 (단내림 영역 내부에서 벽/엔드패널 처리)
+      actualDroppedWidth = droppedWidth;
     }
   } else {
     // 서라운드 모드: 기존 로직 유지
@@ -186,7 +159,7 @@ export const getNormalZoneBounds = (spaceInfo: SpaceInfo) => {
     
     if (isLeftDropped) {
       // 왼쪽 단내림: 일반 영역은 오른쪽에 위치
-      // 일반 영역의 시작점은 단내림 영역의 끝
+      // 일반 영역의 시작점은 단내림 영역의 설정 너비 이후
       normalStartX = -(spaceInfo.width / 2) + droppedWidth;
       
       // 일반 영역의 오른쪽 오프셋 계산

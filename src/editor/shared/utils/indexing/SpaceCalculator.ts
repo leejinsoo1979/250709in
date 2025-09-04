@@ -148,6 +148,128 @@ export class SpaceCalculator {
   }
 
   /**
+   * 단내림 영역의 내경 계산 (단내림이 있는 경우)
+   * 단내림 영역에서 벽/엔드패널을 고려한 실제 사용 가능 폭
+   */
+  static calculateDroppedZoneInternalWidth(spaceInfo: SpaceInfo): number | null {
+    if (!spaceInfo.droppedCeiling?.enabled) return null;
+    
+    const droppedWidth = spaceInfo.droppedCeiling.width || 900; // 기본값 900mm
+    const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
+    
+    if (spaceInfo.surroundType === 'no-surround') {
+      let leftReduction = 0;
+      let rightReduction = 0;
+      const { wallConfig, gapConfig, installType } = spaceInfo;
+      
+      if (isLeftDropped) {
+        // 왼쪽 단내림: 왼쪽 끝과 단내림 경계 사이
+        if (installType === 'builtin' || installType === 'built-in') {
+          leftReduction = gapConfig?.left || 0;
+        } else if (installType === 'semistanding' || installType === 'semi-standing') {
+          if (wallConfig?.left) {
+            leftReduction = gapConfig?.left || 0;
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
+        }
+        // 오른쪽은 단내림 경계이므로 reduction 없음
+        rightReduction = 0;
+      } else {
+        // 오른쪽 단내림: 일반 영역 끝과 오른쪽 끝 사이
+        // 왼쪽은 일반 영역 경계이므로 reduction 없음
+        leftReduction = 0;
+        if (installType === 'builtin' || installType === 'built-in') {
+          rightReduction = gapConfig?.right || 0;
+        } else if (installType === 'semistanding' || installType === 'semi-standing') {
+          if (wallConfig?.right) {
+            rightReduction = gapConfig?.right || 0;
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
+        } else {
+          rightReduction = END_PANEL_THICKNESS;
+        }
+      }
+      
+      return droppedWidth - leftReduction - rightReduction;
+    } else {
+      // 서라운드 모드: 프레임 두께 고려
+      const frameThickness = calculateFrameThickness(spaceInfo);
+      if (isLeftDropped) {
+        return droppedWidth - frameThickness.left;
+      } else {
+        return droppedWidth - frameThickness.right;
+      }
+    }
+  }
+
+  /**
+   * 일반 영역의 내경 계산 (단내림이 있는 경우)
+   * 일반 영역에서 벽/엔드패널을 고려한 실제 사용 가능 폭
+   */
+  static calculateNormalZoneInternalWidth(spaceInfo: SpaceInfo): number {
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      // 단내림이 없으면 전체 내경 반환
+      return SpaceCalculator.calculateInternalWidth(spaceInfo);
+    }
+    
+    const droppedWidth = spaceInfo.droppedCeiling.width || 900;
+    const normalWidth = spaceInfo.width - droppedWidth;
+    const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
+    
+    if (spaceInfo.surroundType === 'no-surround') {
+      let leftReduction = 0;
+      let rightReduction = 0;
+      const { wallConfig, gapConfig, installType } = spaceInfo;
+      
+      if (isLeftDropped) {
+        // 왼쪽 단내림: 일반 영역은 오른쪽에 위치
+        // 왼쪽은 단내림 경계이므로 reduction 없음
+        leftReduction = 0;
+        if (installType === 'builtin' || installType === 'built-in') {
+          rightReduction = gapConfig?.right || 0;
+        } else if (installType === 'semistanding' || installType === 'semi-standing') {
+          if (wallConfig?.right) {
+            rightReduction = gapConfig?.right || 0;
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
+        } else {
+          rightReduction = END_PANEL_THICKNESS;
+        }
+      } else {
+        // 오른쪽 단내림: 일반 영역은 왼쪽에 위치
+        if (installType === 'builtin' || installType === 'built-in') {
+          leftReduction = gapConfig?.left || 0;
+        } else if (installType === 'semistanding' || installType === 'semi-standing') {
+          if (wallConfig?.left) {
+            leftReduction = gapConfig?.left || 0;
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+        } else {
+          leftReduction = END_PANEL_THICKNESS;
+        }
+        // 오른쪽은 단내림 경계이므로 reduction 없음
+        rightReduction = 0;
+      }
+      
+      return normalWidth - leftReduction - rightReduction;
+    } else {
+      // 서라운드 모드: 프레임 두께 고려
+      const frameThickness = calculateFrameThickness(spaceInfo);
+      if (isLeftDropped) {
+        return normalWidth - frameThickness.right;
+      } else {
+        return normalWidth - frameThickness.left;
+      }
+    }
+  }
+
+  /**
    * Three.js 단위를 mm로 변환
    */
   static threeUnitsToMm(threeUnits: number): number {
