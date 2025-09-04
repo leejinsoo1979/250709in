@@ -124,21 +124,52 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const newSlotCount = newIndexing.threeUnitPositions.length;
       
       sortedModules.forEach((module, moduleIndex) => {
+        // 기존 가구에 zone이 없으면 위치 기반으로 zone 결정
+        let moduleZone = module.zone;
+        if (!moduleZone && module.position && module.position.x !== undefined) {
+          // 위치 기반으로 zone 판단
+          const positionMm = module.position.x * 1000; // Three.js to mm
+          if (oldSpaceInfo.droppedCeiling?.enabled && oldIndexing.zones) {
+            const zoneInfo = ColumnIndexer.findZoneAndSlotFromPosition(
+              { x: positionMm },
+              oldSpaceInfo,
+              oldIndexing
+            );
+            if (zoneInfo) {
+              moduleZone = zoneInfo.zone;
+              console.log('🔍 기존 가구 zone 추론:', {
+                moduleId: module.moduleId,
+                position: module.position.x,
+                추론된zone: moduleZone
+              });
+            }
+          }
+          // zone이 없으면 기본값으로 'normal' 설정
+          if (!moduleZone) {
+            moduleZone = 'normal';
+          }
+        }
+        
         console.log(`\n🔴🔴🔴 [가구 ${moduleIndex + 1}/${sortedModules.length}] 처리 시작 🔴🔴🔴`, {
           id: module.id,
           moduleId: module.moduleId,
           현재슬롯: module.slotIndex,
           현재위치X: module.position?.x,
-          zone: module.zone,
+          zone: moduleZone,
+          originalZone: module.zone,
           hasZone: !!module.zone,
           droppedCeilingEnabled: newSpaceInfo.droppedCeiling?.enabled,
-          willProcessAsZone: !!(module.zone && newSpaceInfo.droppedCeiling?.enabled),
+          willProcessAsZone: !!(moduleZone && newSpaceInfo.droppedCeiling?.enabled),
           isDualSlot: module.isDualSlot,
           설치타입: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`
         });
+        
+        // moduleZone을 module.zone에 설정
+        module.zone = moduleZone;
+        
         // 가구가 이미 zone 정보를 가지고 있는 경우 처리
         // 단내림이 활성화된 경우에만 zone 처리를 수행
-        if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
+        if (module.zone && module.zone !== 'normal' && newSpaceInfo.droppedCeiling?.enabled) {
           console.log('🔍 Zone 가구 처리 시작:', {
             moduleId: module.moduleId,
             zone: module.zone,

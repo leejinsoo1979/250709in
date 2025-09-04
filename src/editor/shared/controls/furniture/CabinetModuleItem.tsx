@@ -199,7 +199,17 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
           {module.name}
         </div>
         <div className={styles.moduleDimensions}>
-          {module.dimensions.width} × {module.dimensions.height} × {module.defaultDepth || module.dimensions.depth}mm
+          {module.slotWidths && module.slotWidths.length === 2 ? (
+            // 듀얼 가구인 경우 개별 슬롯 너비 표시
+            <>
+              {module.slotWidths[0]}mm × 2슬롯 (총 {module.dimensions.width}mm) × {module.dimensions.height} × {module.defaultDepth || module.dimensions.depth}mm
+            </>
+          ) : (
+            // 싱글 가구인 경우 기존 표시
+            <>
+              {module.dimensions.width} × {module.dimensions.height} × {module.defaultDepth || module.dimensions.depth}mm
+            </>
+          )}
         </div>
         {module.description && (
           <div className={styles.moduleDescription}>{module.description}</div>
