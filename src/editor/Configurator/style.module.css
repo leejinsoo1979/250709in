@@ -373,12 +373,13 @@
 
 .moduleCategoryTab.active {
   background: var(--theme-primary, var(--theme-primary));
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 600;
 }
 
 .moduleCategoryTab.active:hover {
   background: var(--theme-primary-hover, var(--theme-primary-hover));
+  color: #ffffff !important;
 }
 
 /* 상부장/하부장 탭 - 메인 카테고리 탭과 동일한 스타일 */
@@ -419,12 +420,13 @@
 
 .upperLowerTab.active {
   background: var(--theme-primary, var(--theme-primary));
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 600;
 }
 
 .upperLowerTab.active:hover {
   background: var(--theme-primary-hover, var(--theme-primary-hover));
+  color: #ffffff !important;
 }
 
 .moduleSection {
