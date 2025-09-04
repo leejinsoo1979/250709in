@@ -158,7 +158,11 @@ const ToggleGroup: React.FC<ToggleGroupProps> = ({ options, selected, onChange }
         <button
           key={option.id}
           className={`${styles.toggleButton} ${selected === option.id ? styles.active : ''}`}
-          style={selected === option.id ? { color: '#ffffff' } : undefined}
+          style={selected === option.id ? { 
+            color: '#ffffff',
+            backgroundColor: 'var(--theme-primary)',
+            fontWeight: 600 
+          } : undefined}
           onClick={() => onChange(option.id)}
         >
           {option.label}
