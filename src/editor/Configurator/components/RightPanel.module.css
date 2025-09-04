@@ -423,15 +423,15 @@
   border-right: 1px solid var(--theme-border, #e5e7eb);
 }
 
-.toggleGroup .toggleButton.active {
+.toggleButton.active {
   background: var(--theme-primary) !important;
-  color: #ffffff !important;
+  color: white !important;
   font-weight: 600;
 }
 
-.toggleGroup .toggleButton.active:hover {
+.toggleButton.active:hover {
   background: var(--theme-primary) !important;
-  color: #ffffff !important;
+  color: white !important;
 }
 
 .toggleButton:hover:not(.active) {
