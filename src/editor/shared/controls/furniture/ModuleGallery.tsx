@@ -1147,10 +1147,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   if (spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped') {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     if (zoneInfo.dropped) {
-      // 단내림 구간용 spaceInfo 생성
+      // 단내림 구간용 spaceInfo 생성 - 내경을 외경으로 변환
+      // dropped.width는 외경이므로 그대로 사용
+      // 하지만 이격거리/엔드패널이 이미 반영된 columnWidth를 기반으로 역산
+      const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
+      const frameReduction = (spaceInfo.droppedCeiling?.width || 900) - (droppedInternalWidth || 850);
+      
       zoneSpaceInfo = {
         ...spaceInfo,
-        width: zoneInfo.dropped.width,
+        width: spaceInfo.droppedCeiling?.width || 900, // 외경 사용
         customColumnCount: zoneInfo.dropped.columnCount,
         columnMode: 'custom' as const,
         zone: 'dropped' as const
