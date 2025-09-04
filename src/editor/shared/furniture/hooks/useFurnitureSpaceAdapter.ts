@@ -225,7 +225,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           return;
         }
         
-        // zone 정보가 없는 기존 가구들을 위한 폴백 로직
+        // zone 정보가 없거나 단내림이 비활성화된 가구들 처리
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
         
