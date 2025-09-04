@@ -1141,6 +1141,14 @@ export class ColumnIndexer {
       const droppedBaseSlotWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
       const droppedOuterRemainder = droppedAreaInternalWidth % droppedColumnCount;
       
+      console.log('🚨🚨🚨 단내림 영역 슬롯 너비 계산:', {
+        droppedAreaInternalWidth,
+        droppedColumnCount,
+        droppedBaseSlotWidth,
+        droppedOuterRemainder,
+        계산식: `floor(${droppedAreaInternalWidth} / ${droppedColumnCount}) = ${droppedBaseSlotWidth}, remainder = ${droppedOuterRemainder}`
+      });
+      
       for (let i = 0; i < droppedColumnCount; i++) {
         let slotWidth = i < droppedOuterRemainder ? droppedBaseSlotWidth + 1 : droppedBaseSlotWidth;
         

@@ -1184,11 +1184,13 @@ export const generateShelvingModules = (
         zoneSlotInfo: {
           dropped: zoneSlotInfo.dropped ? {
             columnWidth: zoneSlotInfo.dropped.columnWidth,
-            columnCount: zoneSlotInfo.dropped.columnCount
+            columnCount: zoneSlotInfo.dropped.columnCount,
+            slotWidths: zoneSlotInfo.dropped.slotWidths
           } : null,
           normal: zoneSlotInfo.normal ? {
             columnWidth: zoneSlotInfo.normal.columnWidth,
-            columnCount: zoneSlotInfo.normal.columnCount
+            columnCount: zoneSlotInfo.normal.columnCount,
+            slotWidths: zoneSlotInfo.normal.slotWidths
           } : null
         }
       });
