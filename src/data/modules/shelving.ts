@@ -55,6 +55,7 @@ export interface ModuleData {
   widthOptions?: number[];
   type?: 'basic' | 'box' | 'shelf';
   defaultDepth?: number; // 가구 타입별 기본 깊이 (mm)
+  slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비 (mm)
   modelConfig?: {
     basicThickness?: number;
     hasOpenFront?: boolean;
@@ -349,7 +350,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
 /**
  * 듀얼 타입1: 2단 서랍장 + 옷장 생성
  */
-const createDualType1 = (dualColumnWidth: number, maxHeight: number): ModuleData => {
+const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT;
   const hangingHeight = maxHeight - drawerHeight;
   
@@ -387,6 +388,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number): ModuleData
   
   return {
     ...base,
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 저장
     modelConfig: {
       ...base.modelConfig,
       sections
@@ -397,7 +399,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number): ModuleData
 /**
  * 듀얼 타입2: 2단 옷장 생성
  */
-const createDualType2 = (dualColumnWidth: number, maxHeight: number): ModuleData => {
+const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.TYPE2_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
   
@@ -433,6 +435,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number): ModuleData
   
   return {
     ...base,
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 저장
     modelConfig: {
       ...base.modelConfig,
       sections
@@ -443,7 +446,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number): ModuleData
 /**
  * 듀얼 타입4: 4단서랍+옷장 복합형 생성
  */
-const createDualType4 = (dualColumnWidth: number, maxHeight: number): ModuleData => {
+const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const drawerHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT;
   const hangingHeight = maxHeight - drawerHeight;
   
@@ -480,6 +483,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number): ModuleData
   
   return {
     ...base,
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 저장
     modelConfig: {
       ...base.modelConfig,
       sections
@@ -490,7 +494,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number): ModuleData
 /**
  * 듀얼 타입5: 서랍+옷장 & 스타일러장 복합형 생성 (좌우 비대칭)
  */
-const createDualType5 = (dualColumnWidth: number, maxHeight: number): ModuleData => {
+const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const leftDrawerWithFinishHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT; // 좌측 서랍장 + 마감 패널
   const leftHangingHeight = maxHeight - leftDrawerWithFinishHeight; // 좌측 옷장 높이
   
@@ -541,6 +545,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number): ModuleData
   
   return {
     ...base,
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 저장
     modelConfig: {
       ...base.modelConfig,
       rightAbsoluteWidth: FURNITURE_SPECS.STYLER_WIDTH, // 우측 절대폭 지정
@@ -557,7 +562,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number): ModuleData
 /**
  * 듀얼 타입6: 4단서랍+바지걸이+옷장 복합형 생성 (좌우 비대칭, 통합 선반)
  */
-const createDualType6 = (dualColumnWidth: number, maxHeight: number): ModuleData => {
+const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomSectionHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT; // 하단부 총 높이
   const topHangingHeight = maxHeight - bottomSectionHeight; // 상단 옷장 높이
   
@@ -575,6 +580,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number): ModuleData
   
   return {
     ...base,
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 저장
     modelConfig: {
       ...base.modelConfig,
       rightAbsoluteWidth: FURNITURE_SPECS.PANTSHANGER_WIDTH, // 우측 바지걸이 고정폭
@@ -1256,7 +1262,9 @@ export const generateShelvingModules = (
     slotWidths,
     zoneSlotInfo,
     droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
-    internalSpaceWidth: internalSpace.width
+    internalSpaceWidth: internalSpace.width,
+    '슬롯별 너비': slotWidths ? slotWidths : '없음',
+    '슬롯 너비 합계': slotWidths ? slotWidths.reduce((sum, w) => sum + w, 0) : 0
   });
   
   // 700mm 컬럼이 계산되면 에러 발생
@@ -1292,15 +1300,19 @@ export const generateShelvingModules = (
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
   let dualWidth: number;
   if (slotWidths && slotWidths.length >= 2) {
-    // 실제 슬롯 너비들의 합계 사용 (예: 441 + 442 = 883)
+    // 실제 슬롯 너비들의 합계 사용 (예: 449 + 449 = 898)
     dualWidth = slotWidths[0] + slotWidths[1];
   } else {
     // 기본값: 평균 너비의 2배
     dualWidth = columnWidth * 2;
   }
   
-  console.log('🎯 듀얼 가구 생성 체크:', {
+  console.log('🎯🔥 듀얼 가구 생성 체크:', {
     dualWidth,
+    '슬롯 너비 배열': slotWidths,
+    '첫번째 슬롯': slotWidths ? slotWidths[0] : null,
+    '두번째 슬롯': slotWidths ? slotWidths[1] : null,
+    '듀얼 너비 계산': slotWidths && slotWidths.length >= 2 ? `${slotWidths[0]} + ${slotWidths[1]} = ${dualWidth}` : `${columnWidth} × 2 = ${dualWidth}`,
     internalSpaceWidth: internalSpace.width,
     willCreateDual: dualWidth <= internalSpace.width,
     zone: (indexingSpaceInfo as any).zone
@@ -1311,11 +1323,24 @@ export const generateShelvingModules = (
   const isDroppedZone = (indexingSpaceInfo as any).zone === 'dropped';
   
   if (dualWidth <= internalSpace.width || isDroppedZone) {
-    modules.push(createDualType1(dualWidth, maxHeight));
-    modules.push(createDualType2(dualWidth, maxHeight));
-    modules.push(createDualType4(dualWidth, maxHeight));
-    modules.push(createDualType5(dualWidth, maxHeight));
-    modules.push(createDualType6(dualWidth, maxHeight));
+    // 듀얼 가구 생성 시 개별 슬롯 너비 전달
+    const dualSlotWidths = slotWidths && slotWidths.length >= 2 ? 
+      [slotWidths[0], slotWidths[1]] : 
+      [Math.floor(dualWidth / 2), Math.ceil(dualWidth / 2)];
+    
+    console.log('🔥🔥🔥 듀얼 가구 슬롯 너비 정보:', {
+      dualWidth,
+      dualSlotWidths,
+      '첫번째 슬롯': dualSlotWidths[0],
+      '두번째 슬롯': dualSlotWidths[1],
+      '합계': dualSlotWidths[0] + dualSlotWidths[1]
+    });
+    
+    modules.push(createDualType1(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualType2(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualType4(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     
     // === 듀얼 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
