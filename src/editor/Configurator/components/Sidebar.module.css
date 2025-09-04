@@ -4,7 +4,7 @@
   top: 56px; /* 헤더 높이 */
   bottom: 0;
   background: var(--theme-surface);
-  border-right: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-primary);
   width: 64px;
   display: flex;
   flex-direction: column;
@@ -121,7 +121,7 @@
 
 .userSection {
   padding: 16px;
-  border-top: 1px solid var(--theme-border);
+  border-top: 1px solid var(--theme-primary);
 }
 
 .userAvatar {
