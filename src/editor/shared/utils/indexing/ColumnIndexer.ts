@@ -1118,9 +1118,10 @@ export class ColumnIndexer {
     const normalSlotWidths: number[] = [];
     const droppedSlotWidths: number[] = [];
     
-    // 노서라운드인 경우 특별 처리 (세미스탠딩, 프리스탠딩 모두)
+    // 노서라운드인 경우 특별 처리 (빌트인, 세미스탠딩, 프리스탠딩 모두)
     if (spaceInfo.surroundType === 'no-surround' && 
-        (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
+        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+         spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
          spaceInfo.installType === 'freestanding')) {
       
       // 메인 영역 슬롯 너비 계산 - 내부 너비를 기준으로 분배
