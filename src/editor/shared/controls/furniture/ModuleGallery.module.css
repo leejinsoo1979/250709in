@@ -41,7 +41,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--theme-primary);
+  color: var(--theme-primary) !important;
   font-size: 12px;
   font-weight: 500;
   gap: 0;
