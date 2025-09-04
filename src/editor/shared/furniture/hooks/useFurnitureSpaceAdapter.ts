@@ -167,15 +167,16 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // 영역별 모듈 데이터 가져오기
           const moduleData = getModuleById(module.moduleId, zoneInternalSpace, zoneSpaceInfo);
           if (!moduleData) {
-            console.error('❌❌❌ ZONE 가구: moduleData 없음 - return으로 스킵!', {
+            console.error('❌ ZONE 가구: moduleData 없음 - 가구 보존', {
               moduleId: module.moduleId,
               zone: module.zone
             });
+            // return 제거 - 가구 보존을 위해 계속 처리
             updatedModules.push({
               ...module,
               isValidInCurrentSpace: false
             });
-            return;
+            return; // forEach의 continue 효과
           }
           
           // zone 가구는 슬롯 인덱스를 유지
@@ -417,13 +418,13 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               slotIndex
             });
           } else {
-            // 정말로 배치할 공간이 없는 경우만 제거
-            console.log('❌ 배치할 공간 없음 - 가구 제거:', {
+            // 정말로 배치할 공간이 없는 경우도 가구 보존
+            console.log('⚠️ 배치할 공간 없음 - 가구 보존 (0번 슬롯):', {
               moduleId: module.moduleId,
               newColumnCount: newIndexing.columnCount
             });
-            console.error('❌❌❌ return으로 가구 스킵 - 가구 손실!');
-            return; // 공간이 없으면 가구 제거가 맞음
+            // return 제거 - 가구를 보존하기 위해 0번 슬롯에 배치
+            slotIndex = 0;
           }
         }
         
@@ -445,60 +446,20 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           isDualModule = false;
         }
         
-        // 충돌 검사 및 슬롯 재배치
-        // 상대 위치를 이미 적용했으므로 충돌 검사는 최소화
-        if (!isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
-          // 오른쪽 우선으로 빈 슬롯 찾기 (우측 가구 우선 보존)
-          let newSlot = findNextAvailableSlot(slotIndex, 'right', isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id);
-          
-          // 오른쪽에 없으면 왼쪽으로 찾기
-          if (newSlot === null) {
-            newSlot = findNextAvailableSlot(slotIndex, 'left', isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id);
-          }
-          
-          if (newSlot !== null) {
-            slotIndex = newSlot;
-            console.log('⚠️ 충돌 회피 - 새 슬롯으로 이동:', {
-              moduleId: module.moduleId,
-              originalSlot: module.slotIndex,
-              newSlot: slotIndex
-            });
-          } else {
-            // 듀얼 가구인데 배치할 곳이 없으면 싱글로 변환 시도
-            if (isDualModule) {
-              isDualModule = false;
-              newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
-              
-              // 싱글로 변환 후 다시 빈 슬롯 찾기
-              newSlot = findNextAvailableSlot(slotIndex, 'right', false, updatedModules, newSpaceInfo, module.moduleId, module.id);
-              if (newSlot === null) {
-                newSlot = findNextAvailableSlot(slotIndex, 'left', false, updatedModules, newSpaceInfo, module.moduleId, module.id);
-              }
-              
-              if (newSlot !== null) {
-                slotIndex = newSlot;
-                console.log('⚠️ 듀얼→싱글 변환 후 배치:', {
-                  originalModuleId: module.moduleId,
-                  newModuleId,
-                  slotIndex
-                });
-              } else {
-                // 충돌 회피 실패해도 가구 보존 (현재 슬롯 유지)
-                console.log('⚠️ 충돌 회피 실패 - 현재 슬롯 유지:', {
-                  moduleId: module.moduleId,
-                  slotIndex
-                });
-                // return 제거 - 계속 처리하여 가구 보존
-              }
-            } else {
-              // 싱글 가구인데 배치할 곳이 없어도 보존
-              console.log('⚠️ 싱글 가구 충돌 회피 실패 - 현재 슬롯 유지:', {
-                moduleId: module.moduleId,
-                slotIndex
-              });
-              // return 제거 - 계속 처리하여 가구 보존
-            }
-          }
+        // 충돌 검사 비활성화 - 슬롯 인덱스를 그대로 유지하기 위해
+        // 설치타입/프레임 변경 시 슬롯 개수가 동일하면 충돌 검사 없이 위치만 업데이트
+        const skipCollisionCheck = true; // 충돌 검사 완전 비활성화
+        
+        if (!skipCollisionCheck && !isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+          // 충돌 검사 로직 (현재는 비활성화됨)
+          console.log('⚠️ 충돌 검사 수행 (현재 비활성화)');
+        } else {
+          // 충돌 검사 없이 슬롯 유지
+          console.log('✅ 충돌 검사 스킵 - 슬롯 인덱스 유지:', {
+            moduleId: module.moduleId,
+            slotIndex,
+            isDualModule
+          });
         }
 
         // 새로운 위치 계산
