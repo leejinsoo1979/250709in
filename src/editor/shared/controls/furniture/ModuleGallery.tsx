@@ -1147,20 +1147,20 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   if (spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped') {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     if (zoneInfo.dropped) {
-      // 단내림 구간용 spaceInfo 생성 - 내경을 외경으로 변환
-      // dropped.width는 외경이므로 그대로 사용
-      // 하지만 이격거리/엔드패널이 이미 반영된 columnWidth를 기반으로 역산
-      const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
-      const frameReduction = (spaceInfo.droppedCeiling?.width || 900) - (droppedInternalWidth || 850);
-      
+      // 단내림 구간용 spaceInfo 생성
+      // 중요: generateShelvingModules는 원본 spaceInfo를 사용해야 함
+      // zone 정보만 추가하고 나머지는 그대로 유지
       zoneSpaceInfo = {
         ...spaceInfo,
-        width: spaceInfo.droppedCeiling?.width || 900, // 외경 사용
-        customColumnCount: zoneInfo.dropped.columnCount,
-        columnMode: 'custom' as const,
-        zone: 'dropped' as const
+        zone: 'dropped' as const // zone 정보만 추가
       } as SpaceInfo;
-      zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+      // internalSpace는 zone의 실제 내경 사용
+      const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
+      zoneInternalSpace = {
+        width: droppedInternalWidth || 850,
+        height: spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0),
+        depth: calculateInternalSpace(spaceInfo).depth
+      };
     }
   }
   
