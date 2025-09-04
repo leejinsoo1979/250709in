@@ -130,6 +130,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           현재슬롯: module.slotIndex,
           현재위치X: module.position?.x,
           zone: module.zone,
+          hasZone: !!module.zone,
+          droppedCeilingEnabled: newSpaceInfo.droppedCeiling?.enabled,
+          willProcessAsZone: !!(module.zone && newSpaceInfo.droppedCeiling?.enabled),
           isDualSlot: module.isDualSlot,
           설치타입: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`
         });
@@ -171,76 +174,79 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               moduleId: module.moduleId,
               zone: module.zone
             });
-            // return 제거 - 가구 보존을 위해 계속 처리
+            // 가구 보존을 위해 그대로 추가
             updatedModules.push({
               ...module,
               isValidInCurrentSpace: false
             });
-            return; // forEach의 continue 효과
-          }
-          
-          // zone 가구는 슬롯 인덱스를 유지
-          let slotIndex = module.slotIndex || 0;
-          
-          // 슬롯 범위 검사
-          if (slotIndex >= targetZone.columnCount) {
-            console.log('⚠️ Zone 가구 슬롯 범위 초과:', {
+            // return 제거 - 다음 코드 실행 방지를 위해 조건문 사용
+          } else {
+            // zone 가구는 슬롯 인덱스를 유지
+            let slotIndex = module.slotIndex || 0;
+            
+            // 슬롯 범위 검사
+            if (slotIndex >= targetZone.columnCount) {
+              console.log('⚠️ Zone 가구 슬롯 범위 초과:', {
+                moduleId: module.moduleId,
+                zone: module.zone,
+                원래슬롯: slotIndex,
+                최대슬롯: targetZone.columnCount - 1
+              });
+              slotIndex = targetZone.columnCount - 1; // 마지막 슬롯으로
+            }
+            
+            console.log('🎯 Zone 가구 슬롯 유지:', {
               moduleId: module.moduleId,
               zone: module.zone,
-              원래슬롯: slotIndex,
-              최대슬롯: targetZone.columnCount - 1
+              원래슬롯: module.slotIndex,
+              새슬롯: slotIndex
             });
-            slotIndex = targetZone.columnCount - 1; // 마지막 슬롯으로
+            
+            const isDual = module.moduleId.startsWith('dual-');
+            const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
+                        (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
+            
+            // 영역에 맞는 새로운 moduleId 생성
+            // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
+            const baseType = module.moduleId.replace(/-\d+$/, '');
+            const newModuleId = `${baseType}-${targetZone.columnWidth * (isDual ? 2 : 1)}`;
+            
+            console.log('🔄 Zone 가구 업데이트:', {
+              originalModuleId: module.moduleId,
+              baseType,
+              isDual,
+              zone: module.zone,
+              targetZone: targetZone,
+              slotIndex,
+              newX: newX * 0.01,
+              newModuleId,
+              oldWidth: module.customWidth || module.adjustedWidth,
+              newWidth: targetZone.columnWidth * (isDual ? 2 : 1),
+              targetZoneSlotWidths: targetZone.slotWidths
+            });
+            
+            updatedModules.push({
+              ...module,
+              moduleId: newModuleId,
+              position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
+              isValidInCurrentSpace: true,
+              adjustedWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
+              customWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
+              isDualSlot: isDual
+            });
+            console.log('✅ ZONE 가구 처리 완료', {
+              moduleId: module.id,
+              새슬롯: slotIndex,
+              새위치: newX * 0.01
+            });
           }
-          
-          console.log('🎯 Zone 가구 슬롯 유지:', {
+          // zone 가구 처리 완료 - 일반 가구 처리 건너뛰기
+        } else {
+          // zone 정보가 없거나 단내림이 비활성화된 일반 가구들 처리
+          console.log('📦 일반 가구 처리 시작:', {
             moduleId: module.moduleId,
-            zone: module.zone,
-            원래슬롯: module.slotIndex,
-            새슬롯: slotIndex
+            slotIndex: module.slotIndex
           });
-          
-          const isDual = module.moduleId.startsWith('dual-');
-          const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
-                      (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
-          
-          // 영역에 맞는 새로운 moduleId 생성
-          // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
-          const baseType = module.moduleId.replace(/-\d+$/, '');
-          const newModuleId = `${baseType}-${targetZone.columnWidth * (isDual ? 2 : 1)}`;
-          
-          console.log('🔄 Zone 가구 업데이트:', {
-            originalModuleId: module.moduleId,
-            baseType,
-            isDual,
-            zone: module.zone,
-            targetZone: targetZone,
-            slotIndex,
-            newX: newX * 0.01,
-            newModuleId,
-            oldWidth: module.customWidth || module.adjustedWidth,
-            newWidth: targetZone.columnWidth * (isDual ? 2 : 1),
-            targetZoneSlotWidths: targetZone.slotWidths
-          });
-          
-          updatedModules.push({
-            ...module,
-            moduleId: newModuleId,
-            position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
-            isValidInCurrentSpace: true,
-            adjustedWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
-            customWidth: undefined, // 공간 변경 시 초기화 - indexing.slotWidths 사용하도록
-            isDualSlot: isDual
-          });
-          console.log('✅ ZONE 가구 처리 완료 - return으로 다음 가구로', {
-            moduleId: module.id,
-            새슬롯: slotIndex,
-            새위치: newX * 0.01
-          });
-          return;
-        }
-        
-        // zone 정보가 없거나 단내림이 비활성화된 가구들 처리
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
         
@@ -649,6 +655,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           새위치X: newX.toFixed(4),
           업데이트된가구수: updatedModules.length
         });
+        } // else 블록 종료 (일반 가구 처리)
       });
       
       // 전체적인 안전장치: 모든 가구 보존
