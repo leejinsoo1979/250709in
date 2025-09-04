@@ -1121,14 +1121,20 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       <span className={styles.zoneLabel}>{t('space.height')}:</span>
                       <span className={styles.zoneValue}>{height - spaceInfo.droppedCeiling.dropHeight} mm</span>
                     </div>
-                    {spaceInfo.droppedCeilingDoorCount && (
-                      <div className={styles.zoneInfoItem}>
-                        <span className={styles.zoneLabel}>{t('space.width')}:</span>
-                        <span className={styles.zoneValue}>
-                          {Math.floor((spaceInfo.droppedCeiling.width - 100) / spaceInfo.droppedCeilingDoorCount)} mm
-                        </span>
-                      </div>
-                    )}
+                    {spaceInfo.droppedCeilingDoorCount && (() => {
+                      // 단내림 영역의 실제 내경 계산
+                      const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
+                      const slotWidth = droppedInternalWidth ? Math.floor(droppedInternalWidth / spaceInfo.droppedCeilingDoorCount) : 0;
+                      
+                      return (
+                        <div className={styles.zoneInfoItem}>
+                          <span className={styles.zoneLabel}>{t('space.slotWidth')}:</span>
+                          <span className={styles.zoneValue}>
+                            {slotWidth} mm
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </FormControl>
               </div>
