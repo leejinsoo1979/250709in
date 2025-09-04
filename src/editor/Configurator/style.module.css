@@ -363,7 +363,7 @@
 }
 
 .moduleCategoryTab:not(:last-child) {
-  border-right: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-primary);
 }
 
 .moduleCategoryTab:hover {
@@ -410,7 +410,7 @@
 }
 
 .upperLowerTab:not(:last-child) {
-  border-right: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-primary);
 }
 
 .upperLowerTab:hover {
@@ -1583,7 +1583,7 @@
 }
 
 .toggleButton:not(:last-child) {
-  border-right: 1px solid var(--theme-border);
+  border-right: 1px solid var(--theme-primary);
 }
 
 .toggleButton:hover {

@@ -346,7 +346,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           isDualModule
         });
         
-        if (slotIndex >= newIndexing.columnCount) {
+        // 가장 가까운 슬롯을 찾았으므로 범위 검증 불필요
+        // 하지만 혹시 모르니 안전장치로 확인
+        if (slotIndex >= newIndexing.columnCount && newIndexing.columnCount > 0) {
+          console.error('⚠️ 버그: 가장 가까운 슬롯이 범위를 벗어남!', {
+            slotIndex,
+            maxIndex: newIndexing.columnCount - 1
+          });
+          slotIndex = newIndexing.columnCount - 1; // 마지막 슬롯으로 강제 설정
+        }
+        
+        if (false) { // 이 블록은 실행되지 않도록 처리
           console.log('⚠️ 슬롯 범위 초과 감지:', {
             moduleId: module.moduleId,
             originalSlot: slotIndex,

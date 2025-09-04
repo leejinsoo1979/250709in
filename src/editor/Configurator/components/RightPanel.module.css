@@ -420,7 +420,7 @@
 }
 
 .toggleButton:not(:last-child) {
-  border-right: 1px solid var(--theme-border, #e5e7eb);
+  border-right: 1px solid var(--theme-primary);
 }
 
 .toggleButton.active,
