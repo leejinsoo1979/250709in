@@ -1855,11 +1855,12 @@
 
 .toggleButtonActive {
   background: var(--theme-primary);
-  color: var(--theme-surface);
+  color: #ffffff !important;
 }
 
 .toggleButtonActive:hover {
   background: var(--theme-primary-hover);
+  color: #ffffff !important;
 }
 
 .stepDownSettings {

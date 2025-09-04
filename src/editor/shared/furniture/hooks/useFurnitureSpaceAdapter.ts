@@ -117,7 +117,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           새슬롯수: newSlotCount,
           설치타입변경: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`
         });
-        // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
+        // 가구가 이미 zone 정보를 가지고 있는 경우 처리
+        // 단내림이 활성화된 경우에만 zone 처리를 수행
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
           console.log('🔍 Zone 가구 처리 시작:', {
             moduleId: module.moduleId,
@@ -157,18 +158,37 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             return;
           }
           
-          // 영역 내에서 위치 재계산
+          // 영역 내에서 상대 위치 기반 재계산
           let slotIndex = module.slotIndex || 0;
-          if (slotIndex >= targetZone.columnCount) {
-            // 슬롯 범위 초과시 마지막 슬롯으로 이동
-            console.log('⚠️ Zone 슬롯 범위 초과 - 마지막 슬롯으로 이동:', {
-              moduleId: module.moduleId,
-              원래슬롯: slotIndex,
-              최대슬롯: targetZone.columnCount - 1
-            });
-            slotIndex = targetZone.columnCount - 1;
-            // return 제거 - 계속 처리
+          
+          // 이전 zone의 슬롯 수 계산
+          const oldZoneInfo = ColumnIndexer.calculateZoneSlotInfo(oldSpaceInfo, oldSpaceInfo.customColumnCount);
+          const oldTargetZone = module.zone === 'dropped' && oldZoneInfo.dropped ? oldZoneInfo.dropped : oldZoneInfo.normal;
+          const oldZoneSlotCount = oldTargetZone.columnCount;
+          const newZoneSlotCount = targetZone.columnCount;
+          
+          // 상대 위치 기반으로 새 슬롯 인덱스 계산
+          const relativeFromRight = oldZoneSlotCount - 1 - slotIndex;
+          let newSlotIndex = newZoneSlotCount - 1 - relativeFromRight;
+          
+          // 유효성 검사
+          if (newSlotIndex < 0) {
+            newSlotIndex = 0;
+          } else if (newSlotIndex >= targetZone.columnCount) {
+            newSlotIndex = targetZone.columnCount - 1;
           }
+          
+          console.log('🎯 Zone 가구 상대 위치 재계산:', {
+            moduleId: module.moduleId,
+            zone: module.zone,
+            이전슬롯: slotIndex,
+            이전슬롯수: oldZoneSlotCount,
+            새슬롯수: newZoneSlotCount,
+            오른쪽에서위치: relativeFromRight,
+            새슬롯: newSlotIndex
+          });
+          
+          slotIndex = newSlotIndex;
           
           const isDual = module.moduleId.startsWith('dual-');
           const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
