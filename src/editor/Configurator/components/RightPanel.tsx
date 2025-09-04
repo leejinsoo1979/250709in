@@ -1138,6 +1138,52 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     })()}
                   </div>
                 </FormControl>
+                
+                {/* 일반 구간 정보 추가 */}
+                <FormControl
+                  label={t('space.normalColumnCount')}
+                  expanded={expandedSections.has('normalLayout')}
+                  onToggle={() => toggleSection('normalLayout')}
+                  style={{ marginTop: '16px' }}
+                >
+                  <DoorSlider
+                    value={spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3}
+                    onChange={(newValue) => {
+                      console.log('🎯 일반 구간 도어 개수 변경:', newValue);
+                      const updates: any = {
+                        mainDoorCount: newValue
+                      };
+                      updateSpaceInfo(updates);
+                    }}
+                    width={spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)}
+                  />
+                  
+                  <div className={styles.zoneInfo} style={{ marginTop: '12px' }}>
+                    <div className={styles.zoneInfoItem}>
+                      <span className={styles.zoneLabel}>{t('space.width')}:</span>
+                      <span className={styles.zoneValue}>{spaceInfo.width - (spaceInfo.droppedCeiling?.width || 0)} mm</span>
+                    </div>
+                    <div className={styles.zoneInfoItem}>
+                      <span className={styles.zoneLabel}>{t('space.height')}:</span>
+                      <span className={styles.zoneValue}>{height} mm</span>
+                    </div>
+                    {(() => {
+                      // 일반 영역의 실제 내경 계산
+                      const normalInternalWidth = SpaceCalculator.calculateNormalZoneInternalWidth(spaceInfo);
+                      const doorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3;
+                      const slotWidth = normalInternalWidth ? Math.floor(normalInternalWidth / doorCount) : 0;
+                      
+                      return (
+                        <div className={styles.zoneInfoItem}>
+                          <span className={styles.zoneLabel}>{t('space.slotWidth')}:</span>
+                          <span className={styles.zoneValue}>
+                            {slotWidth} mm
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </FormControl>
               </div>
             )}
             <ModuleContent />
