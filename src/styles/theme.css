@@ -57,6 +57,11 @@
   --popup-shadow: 0 10px 40px rgba(16, 185, 129, 0.2), 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
+/* 토글 버튼 활성 상태 강제 흰색 텍스트 */
+.toggleButton.active {
+  color: #ffffff !important;
+}
+
 /* 라이트 테마 변수 (data-theme="light" 범위 내 강제 적용) */
 /* ThemeContext에서 동적으로 설정되는 CSS 변수를 사용 */
 [data-theme="light"] {

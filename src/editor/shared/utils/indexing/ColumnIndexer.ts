@@ -1066,7 +1066,7 @@ export class ColumnIndexer {
           '일반 영역': {
             '외부너비': normalAreaOuterWidth,
             '내부너비': normalAreaInternalWidth,
-            'reduction': leftReduction,
+            'reduction': normalLeftReduction,
             '시작X': normalStartX,
             '끝X': normalStartX + normalAreaInternalWidth
           },
