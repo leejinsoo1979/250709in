@@ -976,25 +976,26 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 시작 위치 계산
-        let leftReduction = 0;
+        let droppedLeftReduction = 0;
+        let normalLeftReduction = 0;
         
-        // 왼쪽 오프셋 계산 (단내림 영역용)
+        // 단내림 영역 (왼쪽) 시작 위치
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = spaceInfo.gapConfig?.left || 0;
+          droppedLeftReduction = spaceInfo.gapConfig?.left || 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 0;
+            droppedLeftReduction = spaceInfo.gapConfig?.left || 0;
           } else {
-            leftReduction = END_PANEL_THICKNESS;
+            droppedLeftReduction = END_PANEL_THICKNESS;
           }
         } else {
-          leftReduction = END_PANEL_THICKNESS;
+          droppedLeftReduction = END_PANEL_THICKNESS;
         }
         
         // 단내림 영역: 왼쪽에 위치
-        droppedStartX = -(totalWidth / 2) + leftReduction;
+        droppedStartX = -(totalWidth / 2) + droppedLeftReduction;
         
-        // 일반 영역: 오른쪽에 위치 (단내림 영역의 설정 너비 후)
+        // 일반 영역: 오른쪽에 위치 (단내림 경계부터 시작, reduction 없음)
         normalStartX = -(totalWidth / 2) + droppedAreaOuterWidth;
         
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -1040,25 +1041,25 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
-        let leftReduction = 0;
+        let normalLeftReduction = 0;
         
-        // 일반 영역의 왼쪽 오프셋 계산
+        // 일반 영역 (왼쪽) 시작 위치
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          leftReduction = spaceInfo.gapConfig?.left || 0;
+          normalLeftReduction = spaceInfo.gapConfig?.left || 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 0;
+            normalLeftReduction = spaceInfo.gapConfig?.left || 0;
           } else {
-            leftReduction = END_PANEL_THICKNESS;
+            normalLeftReduction = END_PANEL_THICKNESS;
           }
         } else {
-          leftReduction = END_PANEL_THICKNESS;
+          normalLeftReduction = END_PANEL_THICKNESS;
         }
         
         // 일반 영역: 왼쪽에 위치
-        normalStartX = -(totalWidth / 2) + leftReduction;
+        normalStartX = -(totalWidth / 2) + normalLeftReduction;
         
-        // 단내림 영역: 오른쪽에 위치 (일반 영역의 설정 너비 후)
+        // 단내림 영역: 오른쪽에 위치 (일반 영역 경계부터 시작, reduction 없음)
         droppedStartX = -(totalWidth / 2) + normalAreaOuterWidth;
         
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
