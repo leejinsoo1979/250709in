@@ -31,6 +31,16 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
     });
     console.trace('🚨 [TRACE] updateFurnitureForNewSpace 호출 스택');
     setPlacedModules(currentModules => {
+      console.log('🚨🚨🚨 [SPACE ADAPTER] setPlacedModules 시작:', {
+        currentModulesCount: currentModules.length,
+        currentModules: currentModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          position: m.position
+        }))
+      });
+      
       if (currentModules.length === 0) return currentModules;
       
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
@@ -435,6 +445,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       });
       
       // 전체적인 안전장치: 모든 가구 보존
+      console.log('🚨🚨🚨 [SPACE ADAPTER] 업데이트 완료:', {
+        originalCount: currentModules.length,
+        updatedCount: updatedModules.length,
+        updatedModules: updatedModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          position: m.position,
+          isValidInCurrentSpace: m.isValidInCurrentSpace
+        }))
+      });
       
       return updatedModules;
     });

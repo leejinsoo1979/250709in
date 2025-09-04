@@ -1824,15 +1824,15 @@ const Configurator: React.FC = () => {
       }, 0);
     }
     
-    // installType 변경 시 가구 너비 재계산
-    if (isInstallTypeChanged && placedModules.length > 0) {
-      console.log('🔧 InstallType 변경 - 가구 너비 재계산');
-      // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
-      setTimeout(() => {
-        const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
-        updateFurnitureForNewSpace(spaceInfo, newSpaceInfo);
-      }, 100);
-    }
+    // installType 변경 시 가구 너비 재계산 - useEffect에서 처리하므로 여기서는 제거
+    // if (isInstallTypeChanged && placedModules.length > 0) {
+    //   console.log('🔧 InstallType 변경 - 가구 너비 재계산');
+    //   // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
+    //   setTimeout(() => {
+    //     const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
+    //     updateFurnitureForNewSpace(spaceInfo, newSpaceInfo);
+    //   }, 100);
+    // }
   };
 
   // 도어 설치/제거 핸들러
