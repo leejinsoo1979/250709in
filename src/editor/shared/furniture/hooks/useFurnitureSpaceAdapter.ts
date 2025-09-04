@@ -48,6 +48,21 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
       const newIndexing = calculateSpaceIndexing(newSpaceInfo);
       
+      // 슬롯 위치 변경 디버깅
+      console.log('🔍 슬롯 위치 재계산 (공간 설정 변경):', {
+        '설치타입': `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`,
+        '서라운드': `${oldSpaceInfo.surroundType} → ${newSpaceInfo.surroundType}`,
+        '슬롯개수': `${oldIndexing.columnCount} → ${newIndexing.columnCount}`,
+        '내경너비': `${oldIndexing.internalWidth}mm → ${newIndexing.internalWidth}mm`,
+        '슬롯너비': `${oldIndexing.columnWidth}mm → ${newIndexing.columnWidth}mm`,
+        '첫슬롯위치': oldIndexing.threeUnitPositions?.[0] && newIndexing.threeUnitPositions?.[0] 
+          ? `${oldIndexing.threeUnitPositions[0].toFixed(3)} → ${newIndexing.threeUnitPositions[0].toFixed(3)} (차이: ${((newIndexing.threeUnitPositions[0] - oldIndexing.threeUnitPositions[0]) * 1000).toFixed(1)}mm)` 
+          : 'N/A',
+        '마지막슬롯위치': oldIndexing.threeUnitPositions && newIndexing.threeUnitPositions 
+          ? `${oldIndexing.threeUnitPositions[oldIndexing.threeUnitPositions.length-1]?.toFixed(3)} → ${newIndexing.threeUnitPositions[newIndexing.threeUnitPositions.length-1]?.toFixed(3)} (차이: ${((newIndexing.threeUnitPositions[newIndexing.threeUnitPositions.length-1] - oldIndexing.threeUnitPositions[oldIndexing.threeUnitPositions.length-1]) * 1000).toFixed(1)}mm)`
+          : 'N/A'
+      });
+      
       // 세미스탠딩에서 벽 위치만 변경된 경우 감지
       const isOnlyWallPositionChange = 
         oldSpaceInfo.installType === 'semistanding' && 
