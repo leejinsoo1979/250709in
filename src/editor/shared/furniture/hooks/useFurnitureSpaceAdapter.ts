@@ -698,7 +698,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
     console.log('🔥🔥🔥 새로운 updateFurnitureForNewSpace 시작 🔥🔥🔥');
     
     return setPlacedModules((currentModules) => {
-      if (currentModules.length === 0) return currentModules;
+      console.log('📌 setPlacedModules 콜백 시작:', {
+        현재가구수: currentModules.length,
+        현재가구: currentModules.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex
+        }))
+      });
+      
+      if (currentModules.length === 0) {
+        console.log('⚠️ 현재 가구가 없음 - 리턴');
+        return currentModules;
+      }
       
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
       const newIndexing = calculateSpaceIndexing(newSpaceInfo);
