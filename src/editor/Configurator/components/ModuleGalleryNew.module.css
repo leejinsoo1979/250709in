@@ -25,7 +25,7 @@
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: var(--theme-primary);
+  color: var(--theme-primary) !important;
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 20px;
@@ -41,7 +41,7 @@
 
 .filterButton.active {
   background: var(--theme-primary);
-  color: var(--theme-surface);
+  color: #ffffff !important;
 }
 
 .filterButton:hover:not(.active) {
