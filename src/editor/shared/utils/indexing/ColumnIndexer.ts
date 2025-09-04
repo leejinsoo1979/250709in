@@ -1159,30 +1159,8 @@ export class ColumnIndexer {
       for (let i = 0; i < droppedColumnCount; i++) {
         let slotWidth = i < droppedOuterRemainder ? droppedBaseSlotWidth + 1 : droppedBaseSlotWidth;
         
-        // 단내림 영역에서 엔드패널이 있는 슬롯에서 18mm 빼기
-        if (droppedPosition === 'right') {
-          // 단내림이 오른쪽: 단내림 영역 오른쪽에만 엔드패널
-          if (spaceInfo.installType === 'freestanding') {
-            if (i === droppedColumnCount - 1) {
-              slotWidth -= END_PANEL_THICKNESS;
-            }
-          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-            if (!spaceInfo.wallConfig?.right && i === droppedColumnCount - 1) {
-              slotWidth -= END_PANEL_THICKNESS;
-            }
-          }
-        } else {
-          // 단내림이 왼쪽: 단내림 영역 왼쪽에만 엔드패널
-          if (spaceInfo.installType === 'freestanding') {
-            if (i === 0) {
-              slotWidth -= END_PANEL_THICKNESS;
-            }
-          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-            if (!spaceInfo.wallConfig?.left && i === 0) {
-              slotWidth -= END_PANEL_THICKNESS;
-            }
-          }
-        }
+        // 내부 너비를 기준으로 계산하므로 엔드패널 두께를 추가로 빼지 않음
+        // (내부 너비 계산 시 이미 엔드패널과 이격거리가 고려됨)
         
         droppedSlotWidths.push(slotWidth);
       }
