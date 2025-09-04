@@ -203,7 +203,15 @@ export class SpaceCalculator {
         }
       }
       
-      return droppedWidth - leftReduction - rightReduction;
+      const result = droppedWidth - leftReduction - rightReduction;
+      console.log('🔥🔥🔥 Dropped Zone 내경 계산 결과:', {
+        droppedWidth,
+        leftReduction,
+        rightReduction,
+        result,
+        계산식: `${droppedWidth} - ${leftReduction} - ${rightReduction} = ${result}`
+      });
+      return result;
     } else {
       // 서라운드 모드: 프레임 두께 고려
       const frameThickness = calculateFrameThickness(spaceInfo);
@@ -228,6 +236,15 @@ export class SpaceCalculator {
     const droppedWidth = spaceInfo.droppedCeiling.width || 900;
     const normalWidth = spaceInfo.width - droppedWidth;
     const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
+    
+    console.log('🔥🔥🔥 calculateNormalZoneInternalWidth 호출됨:', {
+      normalWidth,
+      isLeftDropped,
+      surroundType: spaceInfo.surroundType,
+      installType: spaceInfo.installType,
+      wallConfig: spaceInfo.wallConfig,
+      gapConfig: spaceInfo.gapConfig
+    });
     
     if (spaceInfo.surroundType === 'no-surround') {
       let leftReduction = 0;
@@ -266,7 +283,15 @@ export class SpaceCalculator {
         rightReduction = 0;
       }
       
-      return normalWidth - leftReduction - rightReduction;
+      const result = normalWidth - leftReduction - rightReduction;
+      console.log('🔥🔥🔥 Normal Zone 내경 계산 결과:', {
+        normalWidth,
+        leftReduction,
+        rightReduction,
+        result,
+        계산식: `${normalWidth} - ${leftReduction} - ${rightReduction} = ${result}`
+      });
+      return result;
     } else {
       // 서라운드 모드: 프레임 두께 고려
       const frameThickness = calculateFrameThickness(spaceInfo);
