@@ -64,9 +64,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       }
       
       // 컬럼 변경이 있을 때만 로그 출력
-      if (oldIndexing.columnCount !== newIndexing.columnCount || oldIndexing.columnWidth !== newIndexing.columnWidth) {
-        console.log(`🔄 컬럼 변경: ${oldIndexing.columnCount}개(${oldIndexing.columnWidth}mm) → ${newIndexing.columnCount}개(${newIndexing.columnWidth}mm)`);
-      }
+      // 컬럼 수와 너비 변화 상세 확인
+      console.log('🔍 인덱싱 변화 상세:', {
+        oldColumnCount: oldIndexing.columnCount,
+        newColumnCount: newIndexing.columnCount,
+        컬럼수동일: oldIndexing.columnCount === newIndexing.columnCount,
+        oldColumnWidth: oldIndexing.columnWidth,
+        newColumnWidth: newIndexing.columnWidth,
+        컬럼너비동일: oldIndexing.columnWidth === newIndexing.columnWidth,
+        설치타입변경: `${oldSpaceInfo.installType} → ${newSpaceInfo.installType}`,
+        중요: '컬럼수가 동일해도 내부 위치는 변경될 수 있음'
+      });
       
       const updatedModules: PlacedModule[] = [];
       
@@ -249,6 +257,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         
         // 새 공간에서 슬롯이 유효한지 확인
+        console.log('📍 슬롯 검증:', {
+          moduleId: module.moduleId,
+          slotIndex,
+          newColumnCount: newIndexing.columnCount,
+          유효함: slotIndex < newIndexing.columnCount,
+          isDualModule
+        });
+        
         if (slotIndex >= newIndexing.columnCount) {
           console.log('⚠️ 슬롯 범위 초과 감지:', {
             moduleId: module.moduleId,
@@ -324,17 +340,12 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               slotIndex
             });
           } else {
-            // 정말로 배치할 공간이 없어도 가구는 보존 (마지막 슬롯에 강제 배치)
-            console.log('⚠️ 배치할 공간 없음 - 마지막 슬롯에 강제 배치:', {
+            // 정말로 배치할 공간이 없는 경우만 제거
+            console.log('❌ 배치할 공간 없음 - 가구 제거:', {
               moduleId: module.moduleId,
               newColumnCount: newIndexing.columnCount
             });
-            if (newIndexing.columnCount > 0) {
-              slotIndex = newIndexing.columnCount - 1;
-            } else {
-              slotIndex = 0; // 최소한 0번 슬롯
-            }
-            // return 제거 - 계속 처리하여 가구 보존
+            return; // 공간이 없으면 가구 제거가 맞음
           }
         }
         
