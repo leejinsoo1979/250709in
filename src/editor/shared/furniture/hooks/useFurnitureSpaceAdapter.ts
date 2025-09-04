@@ -68,7 +68,20 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       
       const updatedModules: PlacedModule[] = [];
       
-      currentModules.forEach(module => {
+      // 우측 가구를 먼저 처리하기 위해 슬롯 인덱스 기준으로 내림차순 정렬
+      const sortedModules = [...currentModules].sort((a, b) => {
+        const aSlot = a.slotIndex ?? 0;
+        const bSlot = b.slotIndex ?? 0;
+        return bSlot - aSlot; // 내림차순 (큰 슬롯 인덱스부터)
+      });
+      
+      console.log('🔄 가구 정렬 완료:', {
+        originalOrder: currentModules.map(m => ({ id: m.id, slot: m.slotIndex })),
+        sortedOrder: sortedModules.map(m => ({ id: m.id, slot: m.slotIndex })),
+        설명: '우측 가구부터 처리하여 공간 축소시 좌측으로 압축'
+      });
+      
+      sortedModules.forEach(module => {
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
           console.log('🔍 Zone 가구 처리 시작:', {
@@ -223,25 +236,39 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             moduleId: module.moduleId,
             originalSlot: slotIndex,
             maxSlot: newIndexing.columnCount - 1,
-            isDualModule
+            isDualModule,
+            설명: '공간 축소로 인한 슬롯 범위 초과'
           });
           
-          // 슬롯 범위 초과 시 왼쪽으로 빈 슬롯 찾기
+          // 슬롯 범위 초과 시 가능한 한 오른쪽에 유지
           let foundSlot = null;
           
-          // 먼저 가까운 위치에서 빈 슬롯 찾기 (오른쪽에서 왼쪽으로)
-          for (let i = newIndexing.columnCount - (isDualModule ? 2 : 1); i >= 0; i--) {
-            if (isSlotAvailable(i, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
-              foundSlot = i;
-              break;
+          // 1. 먼저 가능한 가장 오른쪽 슬롯 시도
+          const maxPossibleSlot = newIndexing.columnCount - (isDualModule ? 2 : 1);
+          if (maxPossibleSlot >= 0) {
+            // 가장 오른쪽 슬롯이 비어있는지 확인
+            if (isSlotAvailable(maxPossibleSlot, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+              foundSlot = maxPossibleSlot;
+              console.log('✅ 가장 오른쪽 슬롯 사용:', foundSlot);
+            } else {
+              // 오른쪽에서 왼쪽으로 빈 슬롯 찾기
+              for (let i = maxPossibleSlot - 1; i >= 0; i--) {
+                if (isSlotAvailable(i, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+                  foundSlot = i;
+                  console.log('✅ 빈 슬롯 찾음 (우->좌 탐색):', foundSlot);
+                  break;
+                }
+              }
             }
           }
           
           if (foundSlot !== null) {
             slotIndex = foundSlot;
-            console.log('✅ 빈 슬롯 찾음:', {
+            console.log('✅ 슬롯 재배치 성공:', {
               moduleId: module.moduleId,
-              newSlot: foundSlot
+              originalSlot: module.slotIndex,
+              newSlot: foundSlot,
+              설명: '범위 초과 가구를 유효한 슬롯으로 이동'
             });
           } else if (isDualModule && newIndexing.columnCount > 0) {
             // 듀얼 가구인데 배치할 곳이 없으면 싱글로 변환 시도
