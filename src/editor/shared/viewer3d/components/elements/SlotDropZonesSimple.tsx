@@ -1878,13 +1878,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const adjustedDepth = defaultDepth;
       
       // 상부장/하부장/키큰장 체크 및 Y 위치 계산
-      const isUpperCabinetZone = moduleData?.category === 'upper';
-      const isLowerCabinetZone = moduleData?.category === 'lower';
-      const isFullCabinetZone = moduleData?.category === 'full';
+      // 원본 드래그 데이터의 카테고리도 확인 (moduleData가 없을 경우 대비)
+      const dragCategory = dragData.moduleData?.category;
+      const isUpperCabinetZone = moduleData?.category === 'upper' || dragCategory === 'upper';
+      const isLowerCabinetZone = moduleData?.category === 'lower' || dragCategory === 'lower';
+      const isFullCabinetZone = moduleData?.category === 'full' || dragCategory === 'full';
       
       console.log('🔴🔴🔴 [Y Position Calculation] Category Check:', {
         moduleId: moduleData?.id,
         category: moduleData?.category,
+        dragCategory,
         isUpperCabinetZone,
         isLowerCabinetZone,
         isFullCabinetZone,
@@ -2017,7 +2020,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         frameSize: spaceInfo.frameSize,
         zoneStartX: zoneToUse === 'dropped' ? zoneInfo.dropped?.startX : zoneInfo.normal?.startX,
         moduleCategory: moduleData?.category,
-        isUpperCabinet: moduleData?.category === 'upper'
+        dragCategory: dragData.moduleData?.category,
+        isUpperCabinet: moduleData?.category === 'upper' || dragData.moduleData?.category === 'upper',
+        willBeAddedToStore: true
       });
       
       const newModule: any = {
@@ -2133,7 +2138,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         dimensions: newModule.dimensions
       });
       
-      addModule(newModule);
+      console.log('🚀 [BEFORE addModule] 상부장 추가 직전:', {
+        moduleId: newModule.moduleId,
+        category: moduleData?.category,
+        dragCategory: dragData.moduleData?.category,
+        position: newModule.position,
+        slotIndex: newModule.slotIndex,
+        zone: newModule.zone
+      });
+      
+      const addSuccess = addModule(newModule);
+      
+      console.log('✅ [AFTER addModule] 가구 배치 결과:', {
+        success: addSuccess,
+        moduleId: newModule.moduleId,
+        position: newModule.position,
+        wasUpperCabinet: moduleData?.category === 'upper' || dragData.moduleData?.category === 'upper'
+      });
+      
       // 드래그 모드인 경우에만 currentDragData 초기화
       if (currentDragData) {
         setCurrentDragData(null);
