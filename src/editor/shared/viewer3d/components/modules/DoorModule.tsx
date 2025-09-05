@@ -1308,8 +1308,65 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorGroupX = slotCenterX !== undefined ? slotCenterX : 0; // 도어 X축 오프셋 (Three.js 단위)
   let doorAdjustment = 0; // 도어 위치 보정값 (듀얼 가구에서 사용)
   
+  // 노서라운드 + 단내림 영역에서 423mm 슬롯의 경우 엔드패널 쪽으로 9mm 이동
+  if (spaceInfo.surroundType === 'no-surround') {
+    const isInDroppedZone = spaceInfo.droppedCeiling?.enabled && (
+      (spaceInfo.droppedCeiling.position === 'left' && slotCenterX && slotCenterX < 0) ||
+      (spaceInfo.droppedCeiling.position === 'right' && slotCenterX && slotCenterX > 0)
+    );
+    
+    if (isInDroppedZone && indexing.zones?.dropped) {
+      const droppedZone = indexing.zones.dropped;
+      const normalZone = indexing.zones.normal;
+      
+      // 단내림 영역 내 슬롯 인덱스
+      let droppedSlotIndex = slotIndex || 0;
+      if (spaceInfo.droppedCeiling.position === 'right' && normalZone) {
+        droppedSlotIndex = droppedSlotIndex - normalZone.columnCount;
+      }
+      
+      // 해당 슬롯 너비 확인 
+      const slotWidth = droppedZone.slotWidths?.[droppedSlotIndex];
+      
+      // 423mm 슬롯 감지 (2개 슬롯 중 작은 슬롯)
+      if (slotWidth && droppedZone.slotWidths && droppedZone.slotWidths.length === 2) {
+        const maxSlotWidth = Math.max(...droppedZone.slotWidths);
+        const minSlotWidth = Math.min(...droppedZone.slotWidths);
+        
+        // 423mm 슬롯: 엔드패널 쪽으로 9mm 이동
+        if (slotWidth === minSlotWidth && maxSlotWidth - minSlotWidth >= 15) {
+          // 단내림 위치에 따라 이동 방향 결정
+          if (spaceInfo.droppedCeiling.position === 'left') {
+            // 왼쪽 단내림: 왼쪽 엔드패널 쪽으로 (음수 방향)
+            if (droppedSlotIndex === 1) { // 두 번째 슬롯(423mm)
+              doorAdjustment = -mmToThreeUnits(9);
+            }
+          } else {
+            // 오른쪽 단내림: 오른쪽 엔드패널 쪽으로 (양수 방향)
+            if (droppedSlotIndex === 1) { // 두 번째 슬롯(423mm)
+              doorAdjustment = mmToThreeUnits(9);
+            }
+          }
+          
+          console.log('🚪🎯 단내림 423mm 슬롯 도어 X위치 보정:', {
+            droppedSlotIndex,
+            slotWidth,
+            droppedPosition: spaceInfo.droppedCeiling.position,
+            doorAdjustment_units: doorAdjustment,
+            doorAdjustment_mm: doorAdjustment / 0.01,
+            설명: '423mm 슬롯 도어를 엔드패널 쪽으로 9mm 이동'
+          });
+        }
+      }
+    }
+  }
+  
+  // 보정값 적용
+  doorGroupX = doorGroupX + doorAdjustment;
+  
   console.log('🚪 도어 초기 위치:', {
     slotCenterX,
+    doorAdjustment,
     doorGroupX,
     isDualFurniture,
     slotIndex,
