@@ -2469,10 +2469,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zone: duplicateModule.zone
       });
       
-      const addSuccess = addModule(duplicateModule);
+      const duplicateAddSuccess = addModule(duplicateModule);
       
       console.log('✅ [AFTER addModule] 가구 배치 결과:', {
-        success: addSuccess,
+        success: duplicateAddSuccess,
         moduleId: duplicateModule.moduleId,
         position: duplicateModule.position,
         wasUpperCabinet: moduleData?.category === 'upper' || dragData.moduleData?.category === 'upper'
@@ -2572,7 +2572,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       console.log('✅ 메인 영역에 가구 배치:', newModule);
       
-      const addSuccess = addModule(newModule);
+      const normalAddSuccess = addModule(newModule);
       
       if (currentDragData) {
         setCurrentDragData(null);
