@@ -752,11 +752,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         }
         
         // 위치만 업데이트, moduleId는 유지
+        // customWidth와 adjustedWidth는 undefined로 설정하여 새로운 슬롯 너비를 사용하도록 함
         return {
           ...module,
           position: { ...module.position, x: newX },
           slotIndex: slotIndex,
-          isValidInCurrentSpace: true
+          isValidInCurrentSpace: true,
+          customWidth: undefined, // 컬럼 수 변경 시 초기화 - CADDimensions2D가 indexing.slotWidths 사용하도록
+          adjustedWidth: undefined // 컬럼 수 변경 시 초기화
         };
       });
     });
