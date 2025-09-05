@@ -1171,25 +1171,81 @@ export class ColumnIndexer {
         normalSlotWidths.push(slotWidth);
       }
       
-      // 단내림 영역 슬롯 너비 계산 - 내부 너비를 기준으로 분배
-      const droppedBaseSlotWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
-      const droppedOuterRemainder = droppedAreaInternalWidth % droppedColumnCount;
+      // 단내림 영역 슬롯 너비 계산 - 특별 처리
+      // 노서라운드 + 벽 없는 경우: 첫 슬롯은 엔드패널 공간 포함, 마지막 슬롯은 제외
+      // 예: 882mm → 441 / 423(+18 엔드패널)
       
-      console.log('🚨🚨🚨 단내림 영역 슬롯 너비 계산:', {
+      // 엔드패널 존재 여부 확인
+      let hasLeftEndPanel = false;
+      let hasRightEndPanel = false;
+      
+      if (droppedPosition === 'left') {
+        // 왼쪽 단내림
+        if (spaceInfo.installType === 'freestanding') {
+          hasLeftEndPanel = true;  // 왼쪽 끝에 엔드패널
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          if (!spaceInfo.wallConfig?.left) {
+            hasLeftEndPanel = true;  // 왼쪽 벽이 없으면 엔드패널
+          }
+        }
+        // 오른쪽은 단내림 경계이므로 엔드패널 없음
+      } else {
+        // 오른쪽 단내림
+        // 왼쪽은 단내림 경계이므로 엔드패널 없음
+        if (spaceInfo.installType === 'freestanding') {
+          hasRightEndPanel = true;  // 오른쪽 끝에 엔드패널
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          if (!spaceInfo.wallConfig?.right) {
+            hasRightEndPanel = true;  // 오른쪽 벽이 없으면 엔드패널
+          }
+        }
+      }
+      
+      console.log('🚨🚨🚨 단내림 영역 슬롯 너비 계산 (수정된 로직):', {
         droppedAreaInternalWidth,
+        droppedAreaOuterWidth: droppedWidth,
         droppedColumnCount,
-        droppedBaseSlotWidth,
-        droppedOuterRemainder,
-        계산식: `floor(${droppedAreaInternalWidth} / ${droppedColumnCount}) = ${droppedBaseSlotWidth}, remainder = ${droppedOuterRemainder}`
+        hasLeftEndPanel,
+        hasRightEndPanel,
+        droppedPosition,
+        installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig
       });
       
-      for (let i = 0; i < droppedColumnCount; i++) {
-        let slotWidth = i < droppedOuterRemainder ? droppedBaseSlotWidth + 1 : droppedBaseSlotWidth;
+      if ((hasLeftEndPanel || hasRightEndPanel) && droppedColumnCount === 2) {
+        // 2개 슬롯이고 엔드패널이 있는 경우: 특별 처리
+        // 882mm 예시: 첫 슬롯 441mm, 두 번째 슬롯 423mm (+18mm 엔드패널)
+        const totalAvailableWidth = droppedAreaInternalWidth + END_PANEL_THICKNESS;
+        const baseSlotWidth = Math.floor(totalAvailableWidth / droppedColumnCount);
+        const remainder = totalAvailableWidth % droppedColumnCount;
         
-        // 내부 너비를 기준으로 계산하므로 엔드패널 두께를 추가로 빼지 않음
-        // (내부 너비 계산 시 이미 엔드패널과 이격거리가 고려됨)
+        // 첫 번째 슬롯에 엔드패널 공간 포함
+        if (hasLeftEndPanel) {
+          // 왼쪽 엔드패널: 첫 슬롯이 더 큼
+          droppedSlotWidths.push(baseSlotWidth + remainder);  // 441
+          droppedSlotWidths.push(baseSlotWidth - END_PANEL_THICKNESS);  // 423
+        } else if (hasRightEndPanel) {
+          // 오른쪽 엔드패널: 마지막 슬롯이 더 작음
+          droppedSlotWidths.push(baseSlotWidth + remainder);  // 441
+          droppedSlotWidths.push(baseSlotWidth - END_PANEL_THICKNESS);  // 423
+        }
         
-        droppedSlotWidths.push(slotWidth);
+        console.log('🔥 2개 슬롯 특별 처리 결과:', {
+          totalAvailableWidth,
+          baseSlotWidth,
+          remainder,
+          droppedSlotWidths,
+          '예시': '882mm → 441 / 423 (+18 엔드패널)'
+        });
+      } else {
+        // 일반적인 균등 분할
+        const droppedBaseSlotWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
+        const droppedOuterRemainder = droppedAreaInternalWidth % droppedColumnCount;
+        
+        for (let i = 0; i < droppedColumnCount; i++) {
+          let slotWidth = i < droppedOuterRemainder ? droppedBaseSlotWidth + 1 : droppedBaseSlotWidth;
+          droppedSlotWidths.push(slotWidth);
+        }
       }
       
       console.log('🔧 노서라운드 슬롯 너비 (엔드패널 중복 차감 제거):', {

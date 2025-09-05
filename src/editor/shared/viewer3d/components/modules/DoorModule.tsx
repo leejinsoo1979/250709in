@@ -387,57 +387,62 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
   
-  // 단내림 + 노서라운드 모드에서 엔드패널이 있는 경우 처리
+  // 노서라운드 모드에서 엔드패널이 있는 슬롯의 도어 크기 보정
   if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
-    // 엔드패널 위치 확인
     const endPanelThickness = 18;
-    const isDroppedZone = (spaceInfo as any).zone === 'dropped';
-    const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
     
-    if (isDroppedZone && spaceInfo.droppedCeiling?.enabled) {
-      // 단내림 구간에서 엔드패널이 있는지 확인
-      let hasEndPanel = false;
+    // 단내림 영역인지 확인
+    const isInDroppedZone = spaceInfo.droppedCeiling?.enabled && (
+      (spaceInfo.droppedCeiling.position === 'left' && 
+       slotCenterX && slotCenterX < 0) ||
+      (spaceInfo.droppedCeiling.position === 'right' && 
+       slotCenterX && slotCenterX > 0)
+    );
+    
+    if (isInDroppedZone && indexing.zones?.dropped) {
+      // 단내림 영역의 경우: 423mm 슬롯을 감지
+      const droppedZone = indexing.zones.dropped;
+      const normalZone = indexing.zones.normal;
       
-      if (spaceInfo.installType === 'freestanding') {
-        // 벽없음: 단내림 구간 끝에 엔드패널
-        if (droppedPosition === 'right') {
-          // 오른쪽 단내림: 오른쪽 끝
-          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-          if (zoneInfo.dropped && slotIndex === zoneInfo.dropped.columnCount - 1) {
-            hasEndPanel = true;
-          }
-        } else {
-          // 왼쪽 단내림: 왼쪽 끝
-          if (slotIndex === 0) {
-            hasEndPanel = true;
-          }
-        }
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 한쪽벽: 벽이 없는 쪽에만 엔드패널
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        if (!spaceInfo.wallConfig?.right && droppedPosition === 'right') {
-          // 오른쪽 벽 없음 + 오른쪽 단내림
-          if (zoneInfo.dropped && slotIndex === zoneInfo.dropped.columnCount - 1) {
-            hasEndPanel = true;
-          }
-        } else if (!spaceInfo.wallConfig?.left && droppedPosition === 'left') {
-          // 왼쪽 벽 없음 + 왼쪽 단내림
-          if (slotIndex === 0) {
-            hasEndPanel = true;
-          }
-        }
+      // 슬롯 인덱스 계산 (단내림 영역 내에서)
+      let droppedSlotIndex = slotIndex || 0;
+      if (spaceInfo.droppedCeiling.position === 'right' && normalZone) {
+        droppedSlotIndex = droppedSlotIndex - normalZone.columnCount;
       }
       
-      // 엔드패널이 있으면 도어 크기를 18mm 늘려서 엔드패널을 덮도록 함
-      if (hasEndPanel) {
+      // 해당 슬롯의 실제 너비 확인
+      const slotWidth = droppedZone.slotWidths?.[droppedSlotIndex];
+      
+      // 423mm 같은 작은 슬롯 감지 (엔드패널이 제거된 슬롯)
+      // 2개 슬롯 중 작은 슬롯이 423mm (큰 슬롯이 441mm)
+      if (slotWidth && droppedZone.slotWidths && droppedZone.slotWidths.length === 2) {
+        const maxSlotWidth = Math.max(...droppedZone.slotWidths);
+        const minSlotWidth = Math.min(...droppedZone.slotWidths);
+        
+        // 작은 슬롯(423mm)에 도어를 배치할 때 엔드패널 18mm 추가
+        if (slotWidth === minSlotWidth && maxSlotWidth - minSlotWidth >= 15) {
+          actualDoorWidth = slotWidth + endPanelThickness;
+          console.log('🚪🔥 단내림 영역 423mm 슬롯 도어 보정:', {
+            droppedSlotIndex,
+            slotWidth,
+            maxSlotWidth,
+            minSlotWidth,
+            difference: maxSlotWidth - minSlotWidth,
+            보정전: slotWidth,
+            보정후: actualDoorWidth,
+            설명: '423mm 슬롯에 18mm 엔드패널 추가하여 441mm로 맞춤'
+          });
+        }
+      }
+    } else {
+      // 일반 영역의 엔드패널 감지 (기존 로직)
+      if (originalSlotWidth < indexing.columnWidth - 10) {
         actualDoorWidth = originalSlotWidth + endPanelThickness;
-        console.log('🚪📏 단내림 엔드패널 도어 너비 보정:', {
+        console.log('🚪📏 일반 영역 엔드패널 도어 보정:', {
           originalSlotWidth,
-          endPanelThickness,
+          columnWidth: indexing.columnWidth,
           actualDoorWidth,
           slotIndex,
-          droppedPosition,
-          installType: spaceInfo.installType,
           설명: '엔드패널을 덮기 위해 18mm 추가'
         });
       }
