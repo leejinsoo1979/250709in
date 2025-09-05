@@ -386,6 +386,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
+  let doorAdjustment = 0; // 도어 X 위치 보정값 (mm 단위가 아닌 Three.js 단위)
   
   // 노서라운드 모드에서 엔드패널이 있는 슬롯의 도어 크기 보정
   if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
@@ -1317,7 +1318,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 위치 계산: slotCenterX는 실제로 오프셋 값임
   // 도어는 기본적으로 가구 중심(0,0,0)에 위치하고, slotCenterX 오프셋만큼 이동
   let doorGroupX = slotCenterX !== undefined ? slotCenterX : 0; // 도어 X축 오프셋 (Three.js 단위)
-  let doorAdjustment = 0; // 도어 위치 보정값 (듀얼 가구에서 사용)
+  
+  // doorAdjustment가 이미 설정되었는지 확인 (상단 코드에서 설정된 값 유지)
+  console.log('🚪🔍 doorAdjustment 상단에서 설정된 값:', {
+    doorAdjustment_from_above: doorAdjustment,
+    doorAdjustment_mm: doorAdjustment / 0.01,
+    설명: '400줄대에서 이미 설정된 값'
+  });
   
   // 노서라운드 + 단내림 영역에서 엔드패널이 있는 경우 도어 위치 조정
   console.log('🚪🚨 도어 X 위치 조정 시작:', {
