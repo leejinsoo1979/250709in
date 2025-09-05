@@ -628,69 +628,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         />
       </group>
 
-      {/* 내부 슬롯 폭 치수선 - 엔드패널/구간 치수와 같은 라인 */}
-      {!isStep2 && (
-        <group>
-          {(() => {
-            const frameThickness = calculateFrameThickness(spaceInfo);
-            const internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
-            const internalStartX = leftOffset + mmToThreeUnits(frameThickness.left);
-            const internalEndX = leftOffset + mmToThreeUnits(frameThickness.left + internalWidth);
-            const internalDimY = topDimensionY - mmToThreeUnits(120); // 엔드패널/구간 치수와 같은 라인
-            
-            return (
-              <>
-                {/* 내부 슬롯 폭 치수선 */}
-                <NativeLine
-                  points={[[internalStartX, internalDimY, 0.002], [internalEndX, internalDimY, 0.002]]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                
-                {/* 좌측 화살표 */}
-                <NativeLine
-                  points={createArrowHead([internalStartX, internalDimY, 0.002], [internalStartX + 0.05, internalDimY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                
-                {/* 우측 화살표 */}
-                <NativeLine
-                  points={createArrowHead([internalEndX, internalDimY, 0.002], [internalEndX - 0.05, internalDimY, 0.002])}
-                  color={dimensionColor}
-                  lineWidth={1}
-                />
-                
-                {/* 내부 슬롯 폭 텍스트 */}
-                {(showDimensionsText || isStep2) && (
-                  <Text
-                    position={[(internalStartX + internalEndX) / 2, internalDimY - mmToThreeUnits(5), 0.01]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                  >
-                    {Math.round(internalWidth)}
-                  </Text>
-                )}
-                
-                {/* 연장선 */}
-                <NativeLine
-                  points={[[internalStartX, spaceHeight, 0.001], [internalStartX, internalDimY - mmToThreeUnits(20), 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <NativeLine
-                  points={[[internalEndX, spaceHeight, 0.001], [internalEndX, internalDimY - mmToThreeUnits(20), 0.001]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-              </>
-            );
-          })()}
-        </group>
-      )}
-      
       {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 */}
       {spaceInfo.droppedCeiling?.enabled && (
         <group>
@@ -968,7 +905,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 좌측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 {showDimensionsText && (
                   <Text
-                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, dimensionYPos - mmToThreeUnits(5), 0.01]}
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, dimensionYPos - mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"
@@ -1094,7 +1031,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 <Text
-                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, dimensionYPos - mmToThreeUnits(5), 0.01]}
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, dimensionYPos - mmToThreeUnits(30), 0.01]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
                   anchorX="center"
@@ -1744,7 +1681,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수 텍스트 - Text 사용 */}
             <Text
-              position={[actualPositionX, dimY - mmToThreeUnits(5), 0.01]}
+              position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
               anchorX="center"
