@@ -634,9 +634,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
             const droppedBounds = getDroppedZoneBounds(spaceInfo);
-            // 탑뷰일 때는 더 아래로, 다른 뷰일 때는 기존 위치
+            // 탑뷰일 때는 전체 치수 위로, 다른 뷰일 때는 기존 위치
             const subDimensionY = currentViewDirection === 'top' 
-              ? topDimensionY + mmToThreeUnits(120)  // 탑뷰: 전체 치수 아래로
+              ? topDimensionY - mmToThreeUnits(120)  // 탑뷰: 전체 치수 위로 (각 구간 치수)
               : topDimensionY - mmToThreeUnits(120); // 다른 뷰: 전체 치수 위로
             
             // 프레임 두께 계산
@@ -702,7 +702,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     position={[
                       (mainStartX + mainEndX) / 2, 
                       currentViewDirection === 'top' 
-                        ? subDimensionY - mmToThreeUnits(30)  // 탑뷰: 치수선 아래
+                        ? subDimensionY + mmToThreeUnits(30)  // 탑뷰: 치수선 위
                         : subDimensionY + mmToThreeUnits(30), // 다른 뷰: 치수선 위
                       0.01
                     ]}
@@ -762,7 +762,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     position={[
                       (droppedStartX + droppedEndX) / 2,
                       currentViewDirection === 'top'
-                        ? subDimensionY - mmToThreeUnits(30)  // 탑뷰: 치수선 아래
+                        ? subDimensionY + mmToThreeUnits(30)  // 탑뷰: 치수선 위
                         : subDimensionY + mmToThreeUnits(30), // 다른 뷰: 치수선 위
                       0.01
                     ]}

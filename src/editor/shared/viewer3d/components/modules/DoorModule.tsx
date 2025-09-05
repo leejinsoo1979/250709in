@@ -1333,18 +1333,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const maxSlotWidth = Math.max(...droppedZone.slotWidths);
         const minSlotWidth = Math.min(...droppedZone.slotWidths);
         
-        // 423mm 슬롯: 엔드패널 쪽으로 9mm 이동
+        // 423mm 슬롯: 엔드패널 쪽으로 18mm 이동 (기존 9mm에서 추가 9mm)
         if (slotWidth === minSlotWidth && maxSlotWidth - minSlotWidth >= 15) {
           // 단내림 위치에 따라 이동 방향 결정
           if (spaceInfo.droppedCeiling.position === 'left') {
             // 왼쪽 단내림: 왼쪽 엔드패널 쪽으로 (음수 방향)
             if (droppedSlotIndex === 1) { // 두 번째 슬롯(423mm)
-              doorAdjustment = -mmToThreeUnits(9);
+              doorAdjustment = -mmToThreeUnits(18); // 9mm -> 18mm로 증가
             }
           } else {
             // 오른쪽 단내림: 오른쪽 엔드패널 쪽으로 (양수 방향)
             if (droppedSlotIndex === 1) { // 두 번째 슬롯(423mm)
-              doorAdjustment = mmToThreeUnits(9);
+              doorAdjustment = mmToThreeUnits(18); // 9mm -> 18mm로 증가
             }
           }
           
@@ -1354,7 +1354,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             droppedPosition: spaceInfo.droppedCeiling.position,
             doorAdjustment_units: doorAdjustment,
             doorAdjustment_mm: doorAdjustment / 0.01,
-            설명: '423mm 슬롯 도어를 엔드패널 쪽으로 9mm 이동'
+            설명: '423mm 슬롯 도어를 엔드패널 쪽으로 18mm 이동'
           });
         }
       }
