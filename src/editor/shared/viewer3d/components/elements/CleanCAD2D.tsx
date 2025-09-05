@@ -939,10 +939,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               leftText = `${leftValue}`;
             }
             
-            // 단내림이 있을 때는 구간 치수와 같은 라인에, 없을 때는 기존 위치
-            const dimensionYPos = spaceInfo.droppedCeiling?.enabled 
-              ? topDimensionY - mmToThreeUnits(120)  // 단내림 있을 때: 구간 치수와 같은 라인
-              : topDimensionY - mmToThreeUnits(80);   // 단내림 없을 때: 기존 위치
+            // 가구 내경 치수와 같은 Y축 위치로 통일
+            const dimensionYPos = topDimensionY - mmToThreeUnits(120);  // 가구 치수와 같은 라인
             
             return (
       <group>
@@ -1068,10 +1066,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               rightText = `${rightValue}`;
             }
             
-            // 단내림이 있을 때는 구간 치수와 같은 라인에, 없을 때는 기존 위치
-            const dimensionYPos = spaceInfo.droppedCeiling?.enabled 
-              ? topDimensionY - mmToThreeUnits(120)  // 단내림 있을 때: 구간 치수와 같은 라인
-              : topDimensionY - mmToThreeUnits(80);   // 단내림 없을 때: 기존 위치
+            // 가구 내경 치수와 같은 Y축 위치로 통일
+            const dimensionYPos = topDimensionY - mmToThreeUnits(120);  // 가구 치수와 같은 라인
             
             return (
       <group>
