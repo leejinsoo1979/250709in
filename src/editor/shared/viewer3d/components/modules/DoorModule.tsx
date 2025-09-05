@@ -1357,27 +1357,45 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
       
       // 단내림 구간이 2개 슬롯인 경우
+      console.log('🚪📊 단내림 슬롯 상세 정보:', {
+        droppedSlotWidths: droppedZone.slotWidths,
+        droppedSlotCount: droppedZone.slotWidths?.length,
+        droppedSlotIndex,
+        originalSlotIndex: slotIndex,
+        normalZoneCount: normalZone?.columnCount
+      });
+      
       if (droppedZone.slotWidths && droppedZone.slotWidths.length === 2) {
-        // 엔드패널은 단내림 위치의 반대쪽에 있음
-        // 왼쪽 단내림 -> 엔드패널은 왼쪽 -> 두 번째 슬롯이 엔드패널에서 더 멀어짐
-        // 오른쪽 단내림 -> 엔드패널은 오른쪽 -> 첫 번째 슬롯이 엔드패널에서 더 멀어짐
+        // 엔드패널은 단내림 위치와 같은 쪽에 있음
+        // 왼쪽 단내림 -> 엔드패널은 왼쪽 -> 오른쪽 슬롯(인덱스 1)이 더 작음
+        // 오른쪽 단내림 -> 엔드패널은 오른쪽 -> 왼쪽 슬롯(인덱스 0)이 더 작음
         
         let needsAdjustment = false;
         let adjustmentDirection = 0;
         
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          // 왼쪽 단내림: 엔드패널은 왼쪽에 있음
-          // 두 번째 슬롯(인덱스 1)이 엔드패널에서 더 멀어서 작은 너비를 가짐
-          if (droppedSlotIndex === 1) {
+        // 슬롯 너비 확인
+        const slot0Width = droppedZone.slotWidths[0];
+        const slot1Width = droppedZone.slotWidths[1];
+        const smallerSlotIndex = slot0Width < slot1Width ? 0 : 1;
+        
+        console.log('🚪📏 슬롯 너비 비교:', {
+          slot0Width,
+          slot1Width,
+          smallerSlotIndex,
+          currentSlotIndex: droppedSlotIndex,
+          설명: `작은 슬롯은 인덱스 ${smallerSlotIndex}`
+        });
+        
+        // 현재 슬롯이 작은 슬롯인 경우에만 조정
+        if (droppedSlotIndex === smallerSlotIndex) {
+          if (spaceInfo.droppedCeiling.position === 'left') {
+            // 왼쪽 단내림: 엔드패널은 왼쪽, 도어를 왼쪽으로
             needsAdjustment = true;
-            adjustmentDirection = -1; // 왼쪽으로 (엔드패널 쪽으로)
-          }
-        } else {
-          // 오른쪽 단내림: 엔드패널은 오른쪽에 있음
-          // 첫 번째 슬롯(인덱스 0)이 엔드패널에서 더 멀어서 작은 너비를 가짐
-          if (droppedSlotIndex === 0) {
+            adjustmentDirection = -1;
+          } else {
+            // 오른쪽 단내림: 엔드패널은 오른쪽, 도어를 오른쪽으로
             needsAdjustment = true;
-            adjustmentDirection = 1; // 오른쪽으로 (엔드패널 쪽으로)
+            adjustmentDirection = 1;
           }
         }
         
