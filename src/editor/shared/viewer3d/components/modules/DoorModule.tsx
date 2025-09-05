@@ -1428,16 +1428,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         }
         
         if (needsAdjustment) {
-          doorAdjustment = mmToThreeUnits(27 * adjustmentDirection); // 18mm -> 27mm로 증가
+          doorAdjustment = mmToThreeUnits(9 * adjustmentDirection); // 9mm 이동
           
           console.log('🚪🎯 단내림 엔드패널 도어 X위치 보정 적용!!!!:', {
             droppedSlotIndex,
             droppedPosition: spaceInfo.droppedCeiling.position,
             slotWidths: droppedZone.slotWidths,
             adjustmentDirection: adjustmentDirection > 0 ? '오른쪽' : '왼쪽',
-            doorAdjustment_mm: 27 * adjustmentDirection,
+            doorAdjustment_mm: 9 * adjustmentDirection,
             doorAdjustment_units: doorAdjustment,
-            설명: '엔드패널에서 먼 슬롯의 도어를 엔드패널 쪽으로 27mm 이동'
+            설명: '엔드패널에서 먼 슬롯의 도어를 엔드패널 쪽으로 9mm 이동'
           });
         } else {
           console.log('🚪❌ 조정 불필요:', {
