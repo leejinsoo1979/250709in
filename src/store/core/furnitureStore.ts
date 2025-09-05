@@ -134,6 +134,71 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
     }
     
+    // 실제 슬롯 너비 계산 및 customWidth 설정
+    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    
+    // 단내림 영역과 일반 영역 구분
+    let slotWidth = indexing.columnWidth; // 기본값
+    if (indexing.zones) {
+      if (moduleZone === 'dropped' && indexing.zones.dropped) {
+        // 단내림 영역의 슬롯 너비
+        if (indexing.zones.dropped.slotWidths && calculatedSlotIndex !== undefined) {
+          slotWidth = indexing.zones.dropped.slotWidths[calculatedSlotIndex] || indexing.zones.dropped.columnWidth;
+        } else {
+          slotWidth = indexing.zones.dropped.columnWidth;
+        }
+        
+        // 듀얼 가구인 경우 두 슬롯 너비 합산
+        if (isDualSlot && indexing.zones.dropped.slotWidths) {
+          const nextSlotWidth = indexing.zones.dropped.slotWidths[calculatedSlotIndex + 1] || indexing.zones.dropped.columnWidth;
+          slotWidth += nextSlotWidth;
+        }
+      } else if (moduleZone === 'normal' && indexing.zones.normal) {
+        // 일반 영역의 슬롯 너비
+        if (indexing.zones.normal.slotWidths && calculatedSlotIndex !== undefined) {
+          slotWidth = indexing.zones.normal.slotWidths[calculatedSlotIndex] || indexing.zones.normal.columnWidth;
+        } else {
+          slotWidth = indexing.zones.normal.columnWidth;
+        }
+        
+        // 듀얼 가구인 경우 두 슬롯 너비 합산
+        if (isDualSlot && indexing.zones.normal.slotWidths) {
+          const nextSlotWidth = indexing.zones.normal.slotWidths[calculatedSlotIndex + 1] || indexing.zones.normal.columnWidth;
+          slotWidth += nextSlotWidth;
+        }
+      }
+    } else {
+      // 단내림이 없는 경우
+      if (indexing.slotWidths && calculatedSlotIndex !== undefined) {
+        slotWidth = indexing.slotWidths[calculatedSlotIndex] || indexing.columnWidth;
+        
+        // 듀얼 가구인 경우 두 슬롯 너비 합산
+        if (isDualSlot && indexing.slotWidths[calculatedSlotIndex + 1]) {
+          slotWidth += indexing.slotWidths[calculatedSlotIndex + 1];
+        } else if (isDualSlot) {
+          slotWidth += indexing.columnWidth;
+        }
+      } else if (isDualSlot) {
+        // 듀얼 가구 기본값
+        slotWidth = indexing.columnWidth * 2;
+      }
+    }
+    
+    // customWidth 설정
+    if (!module.customWidth) {
+      module.customWidth = Math.round(slotWidth);
+    }
+    
+    console.log('📏 [Store] 슬롯 너비 계산:', {
+      moduleId: module.moduleId,
+      zone: moduleZone,
+      slotIndex: calculatedSlotIndex,
+      isDualSlot,
+      calculatedWidth: Math.round(slotWidth),
+      customWidth: module.customWidth
+    });
+    
     // 충돌 검사
     console.log('🔍 [Store] 충돌 검사 시작:', {
       새가구: {
@@ -754,10 +819,39 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           return module; // 일단 그대로 반환 (나중에 필터링)
         }
         
+        // 실제 슬롯 너비로 customWidth 업데이트
+        let newCustomWidth = indexing.columnWidth; // 기본값
+        if (module.zone && indexing.zones) {
+          const targetZone = module.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+          if (targetZone && targetZone.slotWidths && module.slotIndex !== undefined) {
+            newCustomWidth = targetZone.slotWidths[module.slotIndex] || targetZone.columnWidth;
+            
+            // 듀얼 가구인 경우 두 슬롯 너비 합산
+            if (isDualFurniture && targetZone.slotWidths[module.slotIndex + 1]) {
+              newCustomWidth += targetZone.slotWidths[module.slotIndex + 1];
+            } else if (isDualFurniture) {
+              newCustomWidth += targetZone.columnWidth;
+            }
+          } else if (targetZone) {
+            newCustomWidth = isDualFurniture ? targetZone.columnWidth * 2 : targetZone.columnWidth;
+          }
+        } else if (indexing.slotWidths && module.slotIndex !== undefined) {
+          newCustomWidth = indexing.slotWidths[module.slotIndex] || indexing.columnWidth;
+          
+          // 듀얼 가구인 경우 두 슬롯 너비 합산
+          if (isDualFurniture && indexing.slotWidths[module.slotIndex + 1]) {
+            newCustomWidth += indexing.slotWidths[module.slotIndex + 1];
+          } else if (isDualFurniture) {
+            newCustomWidth += indexing.columnWidth;
+          }
+        } else if (isDualFurniture) {
+          newCustomWidth = indexing.columnWidth * 2;
+        }
+        
         // 싱글 가구의 기둥 침범 처리
         if (!isDualFurniture && slotInfo?.hasColumn) {
           const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
-          console.log(`✅ 가구 ${module.id} adjustedWidth 설정: ${newAdjustedWidth}mm`);
+          console.log(`✅ 가구 ${module.id} adjustedWidth 설정: ${newAdjustedWidth}mm, customWidth: ${Math.round(newCustomWidth)}mm`);
           
           // 가구 위치 계산
           const indexing = calculateSpaceIndexing(spaceInfo);
@@ -796,6 +890,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           return {
             ...module,
             adjustedWidth: newAdjustedWidth,
+            customWidth: Math.round(newCustomWidth),
             position: {
               ...module.position,
               x: adjustedX
@@ -804,7 +899,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         } else {
           // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
           if (module.adjustedWidth !== undefined) {
-            console.log(`❌ 가구 ${module.id} adjustedWidth 제거 및 위치 복원`);
+            console.log(`❌ 가구 ${module.id} adjustedWidth 제거 및 위치 복원, customWidth: ${Math.round(newCustomWidth)}mm`);
             
             // 원래 슬롯 중심 위치로 복원
             const indexing = calculateSpaceIndexing(spaceInfo);
@@ -833,6 +928,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             return {
               ...module,
               adjustedWidth: undefined,
+              customWidth: Math.round(newCustomWidth),
               position: {
                 ...module.position,
                 x: originalX
@@ -841,7 +937,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           }
           return {
             ...module,
-            adjustedWidth: undefined
+            adjustedWidth: undefined,
+            customWidth: Math.round(newCustomWidth)
           };
         }
       });
