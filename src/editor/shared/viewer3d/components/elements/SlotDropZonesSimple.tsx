@@ -1870,6 +1870,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const isLowerCabinetZone = moduleData?.category === 'lower';
       const isFullCabinetZone = moduleData?.category === 'full';
       
+      console.log('🔴🔴🔴 [Y Position Calculation] Category Check:', {
+        moduleId: moduleData?.id,
+        category: moduleData?.category,
+        isUpperCabinetZone,
+        isLowerCabinetZone,
+        isFullCabinetZone,
+        moduleHeight: moduleData?.dimensions?.height
+      });
+      
       let furnitureYZone = 0; // 기본값
       
       if (isFullCabinetZone) {
@@ -1973,11 +1982,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         moduleId: zoneTargetModuleId,
         furnitureX,
         furnitureX_mm: furnitureX * 100,
+        furnitureYZone,
+        furnitureYZone_mm: furnitureYZone * 100,
         zone: zoneToUse,
         slotIndex: zoneSlotIndex,
         surroundType: spaceInfo.surroundType,
         frameSize: spaceInfo.frameSize,
-        zoneStartX: zoneToUse === 'dropped' ? zoneInfo.dropped?.startX : zoneInfo.normal?.startX
+        zoneStartX: zoneToUse === 'dropped' ? zoneInfo.dropped?.startX : zoneInfo.normal?.startX,
+        moduleCategory: moduleData?.category,
+        isUpperCabinet: moduleData?.category === 'upper'
       });
       
       const newModule: any = {
