@@ -1529,11 +1529,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                        slotWidths[1] < indexing.columnWidth && 
                                        slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
         
-        // 듀얼 도어 위치 보정 - 가구가 9mm 치우쳐 있으므로 도어도 같은 방향으로
+        // 듀얼 도어 위치 보정 - 엔드패널 위치와 반대 방향으로 보정
         if (isFirstSlotWithEndPanel) {
-          doorAdjustment = 9; // 오른쪽으로 9mm (가구가 오른쪽으로 치우침)
+          // 첫 번째 슬롯(왼쪽 엔드패널): 도어를 왼쪽으로 9mm 이동
+          doorAdjustment = -9; 
         } else if (isLastSlotWithEndPanel) {
-          doorAdjustment = -9; // 왼쪽으로 9mm (가구가 왼쪽으로 치우침)
+          // 마지막 슬롯(오른쪽 엔드패널): 도어를 오른쪽으로 9mm 이동
+          doorAdjustment = 9;
         }
       } else if (spaceInfo.installType === 'semistanding') {
         // 한쪽벽 모드: 벽이 없는 쪽에만 엔드패널
@@ -1545,7 +1547,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                    slotWidths[1] < indexing.columnWidth;
           
           if (isLastSlotWithEndPanel) {
-            doorAdjustment = -9; // 왼쪽으로 9mm (가구가 왼쪽으로 치우침)
+            // 오른쪽 끝 엔드패널: 도어를 오른쪽으로 9mm 이동
+            doorAdjustment = 9;
           }
         } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
           // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
@@ -1553,7 +1556,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           isLastSlotWithEndPanel = false;
           
           if (isFirstSlotWithEndPanel) {
-            doorAdjustment = 9; // 오른쪽으로 9mm (가구가 오른쪽으로 치우침)
+            // 왼쪽 끝 엔드패널: 도어를 왼쪽으로 9mm 이동
+            doorAdjustment = -9;
           }
         } else {
           // 예외 케이스
@@ -2186,26 +2190,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 도어는 전체 유닛의 중심에 위치해야 함
         // 가구는 엔드패널 때문에 9mm 치우쳐 있으므로 도어도 같은 방향으로 이동
         if (isLeftEndPanel) {
-          // 왼쪽 엔드패널: 가구는 오른쪽으로 9mm 치우침
-          // 도어도 오른쪽으로 9mm 이동
-          doorAdjustment = 9;
-          console.log('🎯 커버도어 왼쪽 엔드패널 - 9mm 오른쪽 이동:', {
+          // 왼쪽 엔드패널: 도어를 왼쪽으로 9mm 이동하여 보정
+          doorAdjustment = -9;
+          console.log('🎯 커버도어 왼쪽 엔드패널 - 9mm 왼쪽 이동:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '가구가 오른쪽으로 9mm 치우쳐 있으므로 도어도 동일하게 이동'
+            설명: '왼쪽 엔드패널로 인한 오프셋을 보정'
           });
         } else if (isRightEndPanel) {
-          // 오른쪽 엔드패널: 가구는 왼쪽으로 9mm 치우침
-          // 도어도 왼쪽으로 9mm 이동
-          doorAdjustment = -9;
-          console.log('🎯 커버도어 오른쪽 엔드패널 - 9mm 왼쪽 이동:', {
+          // 오른쪽 엔드패널: 도어를 오른쪽으로 9mm 이동하여 보정
+          doorAdjustment = 9;
+          console.log('🎯 커버도어 오른쪽 엔드패널 - 9mm 오른쪽 이동:', {
             slotIndex,
             doorAdjustment,
             originalSlotWidth,
             moduleWidth,
-            설명: '가구가 왼쪽으로 9mm 치우쳐 있으므로 도어도 동일하게 이동'
+            설명: '오른쪽 엔드패널로 인한 오프셋을 보정'
           });
         }
       }
