@@ -1785,7 +1785,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const spaceXOffset = -spaceWidth / 2;
             const spaceZOffset = -spaceDepth / 2;
             
-            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 350 : 300); // 각 구간 치수선 위치 (전체 치수 아래)
+            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 280 : 230); // 각 구간 치수선 위치 (전체 치수 위)
             
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo);
