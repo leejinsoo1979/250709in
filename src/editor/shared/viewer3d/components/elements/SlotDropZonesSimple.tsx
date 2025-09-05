@@ -1529,18 +1529,87 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         fullIndexingZones: fullIndexing?.zones ? Object.keys(fullIndexing.zones) : null
       });
       
-      // 단내림 모드에서 zone이 없는 경우 대체 로직
-      if (latestSpaceInfo.droppedCeiling?.enabled && (!fullIndexing.zones || 
-          (zoneToUse === 'dropped' && !fullIndexing.zones?.dropped) ||
-          (zoneToUse === 'normal' && !fullIndexing.zones?.normal))) {
-        console.error('🚨 단내림 모드에서 zone 정보 누락!', {
-          zoneToUse,
-          hasZones: !!fullIndexing.zones,
-          hasNormal: !!fullIndexing.zones?.normal,
-          hasDropped: !!fullIndexing.zones?.dropped
-        });
-        
-        // fallback: 전체 영역 위치 사용
+      // 단내림이 활성화된 경우 처리
+      if (latestSpaceInfo.droppedCeiling?.enabled) {
+        // zones가 없거나 해당 zone 정보가 없는 경우 fallback
+        if (!fullIndexing.zones || 
+            (zoneToUse === 'dropped' && !fullIndexing.zones?.dropped) ||
+            (zoneToUse === 'normal' && !fullIndexing.zones?.normal)) {
+          console.error('🚨 단내림 모드에서 zone 정보 누락! Fallback 사용', {
+            zoneToUse,
+            hasZones: !!fullIndexing.zones,
+            hasNormal: !!fullIndexing.zones?.normal,
+            hasDropped: !!fullIndexing.zones?.dropped
+          });
+          
+          // fallback: 전체 영역 위치 사용
+          if (isDual && zoneSlotIndex < fullIndexing.threeUnitPositions.length - 1) {
+            const leftSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex];
+            const rightSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex + 1];
+            finalX = (leftSlotX + rightSlotX) / 2;
+          } else {
+            finalX = fullIndexing.threeUnitPositions[zoneSlotIndex] || 0;
+          }
+        } else if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
+          // 단내림 영역 처리
+          const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
+          
+          if (!droppedPositions || droppedPositions.length === 0) {
+            // 직접 계산
+            console.log('⚠️ zones.dropped.threeUnitPositions가 없습니다. 직접 계산합니다.');
+            const startX = zoneInfo.dropped.startX;
+            const positions = [];
+            let currentX = startX;
+            
+            for (let i = 0; i < zoneInfo.dropped.columnCount; i++) {
+              const slotWidth = zoneInfo.dropped.slotWidths?.[i] || zoneInfo.dropped.columnWidth;
+              const slotCenterX = currentX + (slotWidth / 2);
+              positions.push(mmToThreeUnits(slotCenterX));
+              currentX += slotWidth;
+            }
+            
+            if (isDual && zoneSlotIndex < positions.length - 1) {
+              const leftSlotX = positions[zoneSlotIndex];
+              const rightSlotX = positions[zoneSlotIndex + 1];
+              finalX = (leftSlotX + rightSlotX) / 2;
+            } else {
+              finalX = positions[zoneSlotIndex] || 0;
+            }
+          } else {
+            // 기존 위치 사용
+            if (isDual && zoneSlotIndex < droppedPositions.length - 1) {
+              if (fullIndexing.zones.dropped.threeUnitDualPositions && 
+                  fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
+                finalX = fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex];
+              } else {
+                const leftSlotX = droppedPositions[zoneSlotIndex];
+                const rightSlotX = droppedPositions[zoneSlotIndex + 1];
+                finalX = (leftSlotX + rightSlotX) / 2;
+              }
+            } else {
+              finalX = droppedPositions[zoneSlotIndex] || 0;
+            }
+          }
+        } else if (zoneToUse === 'normal' && fullIndexing.zones?.normal) {
+          // 일반 영역 처리
+          const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
+          
+          if (!normalPositions || normalPositions.length === 0) {
+            console.log('⚠️ zones.normal.threeUnitPositions가 없습니다.');
+            // fallback 사용
+            finalX = fullIndexing.threeUnitPositions[zoneSlotIndex] || 0;
+          } else {
+            if (isDual && zoneSlotIndex < normalPositions.length - 1) {
+              const pos1 = normalPositions[zoneSlotIndex];
+              const pos2 = normalPositions[zoneSlotIndex + 1];
+              finalX = (pos1 + pos2) / 2;
+            } else {
+              finalX = normalPositions[zoneSlotIndex] || 0;
+            }
+          }
+        }
+      } else {
+        // 단내림이 비활성화된 경우 - 기존 로직 사용
         if (isDual && zoneSlotIndex < fullIndexing.threeUnitPositions.length - 1) {
           const leftSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex];
           const rightSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex + 1];
@@ -1548,13 +1617,104 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         } else {
           finalX = fullIndexing.threeUnitPositions[zoneSlotIndex] || 0;
         }
+      }
+      
+      // 이제 finalX가 설정되었으므로 가구 배치 진행
+      if (finalX === undefined || finalX === null) {
+        console.error('❌ finalX를 결정할 수 없습니다!');
+        return false;
+      }
+      
+      console.log('✅ 최종 X 위치 결정:', {
+        finalX,
+        zoneToUse,
+        zoneSlotIndex,
+        isDual
+      });
+      
+      // Y 위치 계산
+      let furnitureY = 0;
+      const moduleCategory = moduleData?.category || dragData.moduleData?.category;
+      const isUpperCabinet = moduleCategory === 'upper';
+      const isLowerCabinet = moduleCategory === 'lower';
+      const isFullCabinet = moduleCategory === 'full';
+      
+      // 단내림 구간인 경우 재계산된 내경 사용
+      const effectiveInternalSpace = (zoneToUse === 'dropped' && recalculatedZoneInternalSpace) 
+        ? recalculatedZoneInternalSpace 
+        : internalSpace;
+      
+      if (isUpperCabinet) {
+        // 상부장 Y 위치 계산
+        const SURROUND_FRAME_THICKNESS = 10;
+        const FRAME_TO_FURNITURE_GAP = 10;
+        let totalHeightMm = effectiveInternalSpace.height;
         
-        console.log('🔧 Fallback 위치 사용:', {
-          finalX,
-          zoneSlotIndex,
-          isDual
-        });
-      } else if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
+        if (latestSpaceInfo.surroundType !== 'no-surround') {
+          totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+        } else {
+          totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
+        }
+        
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100;
+      } else if (isLowerCabinet) {
+        // 하부장 Y 위치 계산
+        const baseHeightMm = latestSpaceInfo.baseConfig?.height || 0;
+        const floorFinishHeightMm = latestSpaceInfo.hasFloorFinish && latestSpaceInfo.floorFinish ? latestSpaceInfo.floorFinish.height : 0;
+        const baseTotalHeightMm = baseHeightMm + floorFinishHeightMm;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        furnitureY = (baseTotalHeightMm + furnitureHeightMm / 2) / 100;
+      } else if (isFullCabinet) {
+        // 키큰장
+        furnitureY = mmToThreeUnits(effectiveInternalSpace.height / 2);
+      }
+      
+      const furnitureZ = 0;
+      
+      // 가구 모듈 생성 및 추가
+      const newModule = {
+        id: `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        moduleId: zoneTargetModuleId || targetModuleId,
+        position: { x: finalX, y: furnitureY, z: furnitureZ },
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 },
+        slotIndex: zoneSlotIndex,
+        isDualSlot: isDual,
+        zone: zoneToUse || 'normal',
+        category: moduleCategory,
+        dimensions: moduleData?.dimensions
+      };
+      
+      console.log('✅ 가구 배치 정보:', {
+        module: newModule,
+        zone: zoneToUse,
+        position: { x: finalX, y: furnitureY, z: furnitureZ }
+      });
+      
+      const addSuccess = addModule(newModule);
+      
+      if (addSuccess) {
+        console.log('✅ 가구 배치 성공!');
+        if (currentDragData) {
+          setCurrentDragData(null);
+        }
+        
+        // 전체 슬롯 점유 상태 디버깅
+        setTimeout(() => {
+          debugSlotOccupancy(latestPlacedModules, latestSpaceInfo);
+        }, 100);
+        
+        // 가구 배치 완료 이벤트 발생
+        window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+        return true;
+      } else {
+        console.error('❌ 가구 배치 실패');
+        return false;
+      }
+      
+      // 아래는 기존의 중복 코드들 - 제거
+      if (false) { // 기존 조건문들 비활성화
         // 단내림 영역: 계산된 위치 사용
         const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
         
