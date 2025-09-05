@@ -3002,10 +3002,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             // 전체 가로 치수선을 캐비넷 외부(앞쪽)로 이동
-            // 단내림이 있으면 각 구간 치수선보다 위에 표시
+            // 단내림이 있으면 각 구간 치수선보다 아래에 표시
             const mainDimZ = spaceZOffset - mmToThreeUnits(
               spaceInfo.droppedCeiling?.enabled 
-                ? (hasPlacedModules ? 280 : 230)  // 단내림 있을 때: 각 구간 치수선보다 위
+                ? (hasPlacedModules ? 350 : 300)  // 단내림 있을 때: 각 구간 치수선보다 아래
                 : (hasPlacedModules ? 200 : 150)  // 단내림 없을 때: 기본 위치
             );
             
