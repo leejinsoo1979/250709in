@@ -1753,7 +1753,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const spaceXOffset = -spaceWidth / 2;
             const spaceZOffset = -spaceDepth / 2;
             
-            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 200 : 150); // 각 구간 치수선 위치 (더 아래로)
+            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 350 : 300); // 각 구간 치수선 위치 (더 아래로)
             
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo);
@@ -2982,7 +2982,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 단내림이 있으면 각 구간 치수선보다 위에 표시
             const mainDimZ = spaceZOffset - mmToThreeUnits(
               spaceInfo.droppedCeiling?.enabled 
-                ? (hasPlacedModules ? 270 : 220)  // 단내림 있을 때: 각 구간 치수선보다 위
+                ? (hasPlacedModules ? 280 : 230)  // 단내림 있을 때: 각 구간 치수선보다 위
                 : (hasPlacedModules ? 200 : 150)  // 단내림 없을 때: 기본 위치
             );
             
