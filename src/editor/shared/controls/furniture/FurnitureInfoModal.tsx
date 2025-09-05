@@ -2,20 +2,9 @@ import React from 'react';
 import { Module, PlacedModule } from '@/types/module';
 import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
+import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import styles from './FurnitureInfoModal.module.css';
 
-interface PanelInfo {
-  name: string;
-  width?: number;
-  height?: number;
-  depth?: number;
-  thickness?: number;
-  material?: string;
-  quantity?: number;
-  description?: string;
-  isInfo?: boolean;
-  diameter?: number;
-}
 
 interface FurnitureInfoModalProps {
   isOpen: boolean;
@@ -34,8 +23,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   
   if (!isOpen || !moduleData || !placedModule) return null;
 
-  // 패널 정보 계산 함수 - PlacedModulePropertiesPanel과 동일한 로직
-  const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
+  // Remove local calculatePanelDetails - now using shared utility
+  /* const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
     const panels = {
       common: [],    // 공통 패널 (좌우측판, 뒷판)
       upper: [],     // 상부장 패널

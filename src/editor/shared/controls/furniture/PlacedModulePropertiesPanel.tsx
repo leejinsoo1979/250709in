@@ -7,6 +7,7 @@ import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
+import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -37,8 +38,8 @@ const getFurnitureImagePath = (moduleId: string) => {
   return imagePath;
 };
 
-// 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
-const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
+// Remove local calculatePanelDetails - now using shared utility
+/* const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
   const panels = {
     common: [],    // 공통 패널 (좌우측판, 뒷판)
     upper: [],     // 상부장 패널
@@ -432,6 +433,7 @@ const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, cust
   
   return result;
 };
+*/
 
 const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();

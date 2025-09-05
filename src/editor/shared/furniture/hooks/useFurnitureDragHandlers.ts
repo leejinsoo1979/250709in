@@ -88,6 +88,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         // 듀얼 가구 여부를 모듈 ID로 정확히 판단하고 dropPosition에도 반영
         const isDualFurniture = currentDragData.moduleData.id.includes('dual-');
         dropPosition.isDualFurniture = isDualFurniture; // dropPosition 업데이트
+        dropPosition.targetSlotIndex = dropPosition.column; // targetSlotIndex 추가
         
         // 노서라운드 엔드패널 슬롯에 듀얼 가구 배치 체크
         if (spaceInfo.surroundType === 'no-surround') {

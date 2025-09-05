@@ -105,36 +105,24 @@ export const isSlotAvailable = (
     
     // 단내림이 있고 target zone이 지정된 경우에만 zone 체크
     if (targetZone && spaceInfo.droppedCeiling?.enabled) {
-      if (!placedModuleZone && placedModule.slotIndex !== undefined) {
-        // zone 정보가 없는 경우 슬롯 인덱스로 추정
-        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        
-        if (spaceInfo.droppedCeiling.position === 'left') {
-          // 왼쪽 단내림: 첫 부분이 dropped zone
-          placedModuleZone = placedModule.slotIndex < zoneInfo.dropped.columnCount ? 'dropped' : 'normal';
-        } else {
-          // 오른쪽 단내림: 뒷 부분이 dropped zone
-          placedModuleZone = placedModule.slotIndex < zoneInfo.normal.columnCount ? 'normal' : 'dropped';
-        }
-        
-        console.log('📍 Zone 추정:', {
+      // zone 정보가 없는 가구는 zone 체크 건너뛰기
+      // (기존 가구들이 zone 정보가 없을 수 있음)
+      if (!placedModule.zone) {
+        console.log('⚠️ Zone 정보 없음, 체크 건너뛰기:', {
           moduleId: placedModule.moduleId,
-          slotIndex: placedModule.slotIndex,
-          estimatedZone: placedModuleZone,
-          droppedPosition: spaceInfo.droppedCeiling.position,
-          droppedColumnCount: zoneInfo.dropped.columnCount,
-          normalColumnCount: zoneInfo.normal.columnCount
+          slotIndex: placedModule.slotIndex
         });
-      }
-      
-      // zone이 다르면 충돌 체크 건너뛰기
-      if (placedModuleZone && placedModuleZone !== targetZone) {
-        console.log('🔄 다른 zone이므로 건너뛰기:', {
-          targetZone,
-          placedModuleZone,
-          moduleId: placedModule.moduleId
-        });
-        continue;
+        // zone 정보가 없으면 충돌 체크는 계속 진행
+      } else {
+        // zone이 다르면 충돌 체크 건너뛰기
+        if (placedModule.zone !== targetZone) {
+          console.log('🔄 다른 zone이므로 건너뛰기:', {
+            targetZone,
+            placedModuleZone: placedModule.zone,
+            moduleId: placedModule.moduleId
+          });
+          continue;
+        }
       }
     }
     
