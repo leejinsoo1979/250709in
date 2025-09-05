@@ -862,31 +862,47 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }))
       });
       
+      // 🔴🔴🔴 CRITICAL FIX: 드래그 데이터의 모듈 ID는 드래그 시작 시점의 것이므로
+      // 타입 정보만 추출하고, 실제 모듈은 최신 spaceInfo로 재생성해야 함
+      console.log('🔴🔴🔴 [CRITICAL] 드래그 데이터 문제 확인:', {
+        '문제': '드래그 시작 시점의 moduleData는 옛날 공간 설정 기준',
+        '드래그데이터의_모듈ID': latestDragData?.moduleData?.id,
+        '드래그데이터의_너비': latestDragData?.moduleData?.dimensions?.width,
+        '현재공간설정': {
+          surroundType: latestSpaceInfo.surroundType,
+          installType: latestSpaceInfo.installType,
+          customColumnCount: latestSpaceInfo.customColumnCount,
+          mainDoorCount: latestSpaceInfo.mainDoorCount,
+          columnWidth: latestIndexing.columnWidth
+        }
+      });
+
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
       // 원본 ID에서 타입 부분만 추출 (마지막 -숫자 부분만 제거)
       // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf
       // 예: lower-cabinet-basic-1000 -> lower-cabinet-basic
-      const lastDashIndex = dragData.moduleData.id.lastIndexOf('-');
-      const lastPart = dragData.moduleData.id.substring(lastDashIndex + 1);
+      const originalModuleId = latestDragData?.moduleData?.id || dragData.moduleData.id;
+      const lastDashIndex = originalModuleId.lastIndexOf('-');
+      const lastPart = originalModuleId.substring(lastDashIndex + 1);
       let moduleBaseType: string;
       
       // 마지막 부분이 숫자인 경우에만 제거
       if (/^\d+$/.test(lastPart)) {
-        moduleBaseType = dragData.moduleData.id.substring(0, lastDashIndex);
+        moduleBaseType = originalModuleId.substring(0, lastDashIndex);
       } else {
         // 숫자가 아니면 원본 ID 그대로 사용
-        moduleBaseType = dragData.moduleData.id;
+        moduleBaseType = originalModuleId;
       }
       
       console.log('🔧 모듈 타입 추출:', {
-        원본ID: dragData.moduleData.id,
+        원본ID: originalModuleId,
         마지막부분: lastPart,
         숫자여부: /^\d+$/.test(lastPart),
         추출된타입: moduleBaseType
       });
       
       // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
-      let isDual = dragData.moduleData.id.startsWith('dual-');
+      let isDual = originalModuleId.startsWith('dual-');
       
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
@@ -990,14 +1006,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
       }
       
-      // 그래도 없으면 원본 드래그 모듈로 대체하고 customWidth로 폭을 맞춤
+      // 🔴🔴🔴 CRITICAL FIX: 절대로 dragData.moduleData를 사용하면 안됨!
+      // 대신 기본 타입으로 모듈을 생성해야 함
       if (!moduleData) {
-        console.warn('⚠️ 전역 기준에도 모듈 미존재. 드래그 원본 모듈로 대체 후 customWidth 사용:', { 
+        console.error('🔴🔴🔴 [CRITICAL] 모듈을 찾을 수 없음. 기본 타입으로 생성 시도:', { 
           targetModuleId,
-          dragModuleId: dragData.moduleData.id,
-          dragModuleCategory: dragData.moduleData.category
+          moduleBaseType,
+          '원래_드래그모듈': originalModuleId,
+          '문제': '드래그 데이터는 옛날 공간 설정 기준이므로 사용 금지'
         });
-        moduleData = dragData.moduleData;
+        
+        // 기본 타입으로 단순 모듈 생성 시도
+        const fallbackModuleId = isDual ? 
+          `dual-open-${targetWidth}` : 
+          `single-open-${targetWidth}`;
+          
+        moduleData = getModuleById(fallbackModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
+        
+        if (!moduleData) {
+          console.error('❌ 기본 타입 모듈도 생성 실패. 배치 취소');
+          return false;
+        }
       }
       
       console.log('📦 최종 모듈 데이터:', {
@@ -1040,9 +1069,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         console.log('🔁 듀얼 → 싱글 자동 전환 (경계)');
         const singleTargetWidth = zoneIndexing.slotWidths?.[zoneSlotIndex] || zoneIndexing.columnWidth;
         const singleTargetModuleId = `${moduleBaseType}-${singleTargetWidth}`;
-        moduleData = getModuleById(singleTargetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo)
-          || getModuleById(singleTargetModuleId, internalSpace, spaceInfo)
-          || dragData.moduleData;
+        const singleModule = getModuleById(singleTargetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo)
+          || getModuleById(singleTargetModuleId, internalSpace, spaceInfo);
+        
+        if (!singleModule) {
+          console.error('❌ 싱글 전환도 실패. 배치 취소');
+          return false;
+        }
+        moduleData = singleModule;
         isDual = false;
       }
       
