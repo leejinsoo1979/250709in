@@ -1,1 +1,0 @@
-import{c as r,e as s}from"./three-fiber-gElx9mfP.js";const u=t=>t;function a(t,e=u){const n=s.useSyncExternalStore(t.subscribe,()=>e(t.getState()),()=>e(t.getInitialState()));return s.useDebugValue(n),n}const c=t=>{const e=r(t),n=o=>a(e,o);return Object.assign(n,e),n},S=t=>t?c(t):c;export{S as c};
