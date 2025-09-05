@@ -1987,6 +1987,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
         const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
         furnitureYZone = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      } else {
+        // 기본 가구: 바닥에서 시작
+        console.log('⚠️ 기본 가구 Y 위치 계산 (카테고리 없음):', {
+          moduleCategory: moduleData?.category,
+          moduleId: moduleData?.id
+        });
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        let startHeightMm = floorFinishHeightMm;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm += spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+        }
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        furnitureYZone = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
       }
       
       // 새 모듈 배치
