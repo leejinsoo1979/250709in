@@ -155,6 +155,51 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // handleSlotDrop 함수를 위한 ref
   const handleSlotDropRef = useRef<(dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped') => boolean>();
   
+  // 레이캐스트로 슬롯 인덱스 찾기 함수
+  const getSlotIndexFromRaycast = (
+    clientX: number,
+    clientY: number,
+    canvasElement: HTMLElement,
+    camera: THREE.Camera | null,
+    scene: THREE.Scene | null,
+    spaceInfo: any,
+    zone?: 'normal' | 'dropped'
+  ): number | null => {
+    if (!camera || !scene) return null;
+
+    const rect = canvasElement.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+
+    // 슬롯 콜라이더만 찾기
+    const colliders: THREE.Object3D[] = [];
+    scene.traverse((child) => {
+      if (child.userData?.isSlotCollider) {
+        // zone이 지정된 경우 해당 zone만 검사
+        if (!zone || child.userData.zone === zone) {
+          colliders.push(child);
+        }
+      }
+    });
+
+    const intersects = raycaster.intersectObjects(colliders, false);
+    
+    if (intersects.length > 0) {
+      const slotIndex = intersects[0].object.userData.slotIndex;
+      console.log('🎯 Raycast hit slot collider:', {
+        slotIndex,
+        zone: intersects[0].object.userData.zone,
+        totalIntersects: intersects.length
+      });
+      return slotIndex;
+    }
+
+    return null;
+  };
+
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement, activeZone?: 'normal' | 'dropped'): boolean => {
     console.log('🚀🚀🚀 [handleSlotDrop] 함수 시작:', {
