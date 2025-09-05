@@ -422,15 +422,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 작은 슬롯(423mm)에 도어를 배치할 때 엔드패널 18mm 추가
         if (slotWidth === minSlotWidth && maxSlotWidth - minSlotWidth >= 15) {
           actualDoorWidth = slotWidth + endPanelThickness;
+          
+          // 도어 X 위치도 조정 - 엔드패널 쪽으로 27mm 이동
+          if (spaceInfo.droppedCeiling.position === 'left') {
+            // 왼쪽 단내림: 엔드패널이 왼쪽에 있음
+            doorAdjustment = -mmToThreeUnits(27); // 왼쪽으로 27mm
+          } else {
+            // 오른쪽 단내림: 엔드패널이 오른쪽에 있음  
+            doorAdjustment = mmToThreeUnits(27); // 오른쪽으로 27mm
+          }
+          
           console.log('🚪🔥 단내림 영역 423mm 슬롯 도어 보정:', {
             droppedSlotIndex,
             slotWidth,
             maxSlotWidth,
             minSlotWidth,
             difference: maxSlotWidth - minSlotWidth,
-            보정전: slotWidth,
-            보정후: actualDoorWidth,
-            설명: '423mm 슬롯에 18mm 엔드패널 추가하여 441mm로 맞춤'
+            보정전너비: slotWidth,
+            보정후너비: actualDoorWidth,
+            X위치보정: doorAdjustment / 0.01,
+            설명: '423mm 슬롯 도어 너비 18mm 추가, X위치 27mm 이동'
           });
         }
       }
