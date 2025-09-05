@@ -1498,6 +1498,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       });
       
+      // 단내림이 활성화되어 있지만 zones가 없는 경우 처리
+      if (latestSpaceInfo.droppedCeiling?.enabled && !fullIndexing.zones) {
+        console.error('🚨 단내림이 활성화되어 있지만 zones 정보가 없습니다!');
+        return false;
+      }
+      
       // zoneToUse가 정의되어 있는지 확인하고, 없으면 자동 결정
       if (!zoneToUse) {
         if (latestSpaceInfo.droppedCeiling?.enabled) {
@@ -1523,7 +1529,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         fullIndexingZones: fullIndexing?.zones ? Object.keys(fullIndexing.zones) : null
       });
       
-      if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
+      // 단내림 모드에서 zone이 없는 경우 대체 로직
+      if (latestSpaceInfo.droppedCeiling?.enabled && (!fullIndexing.zones || 
+          (zoneToUse === 'dropped' && !fullIndexing.zones?.dropped) ||
+          (zoneToUse === 'normal' && !fullIndexing.zones?.normal))) {
+        console.error('🚨 단내림 모드에서 zone 정보 누락!', {
+          zoneToUse,
+          hasZones: !!fullIndexing.zones,
+          hasNormal: !!fullIndexing.zones?.normal,
+          hasDropped: !!fullIndexing.zones?.dropped
+        });
+        
+        // fallback: 전체 영역 위치 사용
+        if (isDual && zoneSlotIndex < fullIndexing.threeUnitPositions.length - 1) {
+          const leftSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex];
+          const rightSlotX = fullIndexing.threeUnitPositions[zoneSlotIndex + 1];
+          finalX = (leftSlotX + rightSlotX) / 2;
+        } else {
+          finalX = fullIndexing.threeUnitPositions[zoneSlotIndex] || 0;
+        }
+        
+        console.log('🔧 Fallback 위치 사용:', {
+          finalX,
+          zoneSlotIndex,
+          isDual
+        });
+      } else if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
         // 단내림 영역: 계산된 위치 사용
         const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
         
