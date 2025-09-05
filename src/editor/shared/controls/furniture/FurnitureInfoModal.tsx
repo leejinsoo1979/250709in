@@ -1,14 +1,20 @@
 import React from 'react';
 import { Module, PlacedModule } from '@/types/module';
+import { ModuleData } from '@/data/modules';
+import { useTranslation } from '@/i18n/useTranslation';
 import styles from './FurnitureInfoModal.module.css';
 
 interface PanelInfo {
   name: string;
-  width: number;
-  height: number;
-  thickness: number;
-  material: string;
-  quantity: number;
+  width?: number;
+  height?: number;
+  depth?: number;
+  thickness?: number;
+  material?: string;
+  quantity?: number;
+  description?: string;
+  isInfo?: boolean;
+  diameter?: number;
 }
 
 interface FurnitureInfoModalProps {
@@ -24,110 +30,323 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   moduleData,
   placedModule
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen || !moduleData || !placedModule) return null;
 
-  // 패널 정보 생성
-  const getPanelList = (): PanelInfo[] => {
-    const panels: PanelInfo[] = [];
-    const width = placedModule.customWidth || moduleData.dimensions.width;
+  // 패널 정보 계산 함수 - PlacedModulePropertiesPanel과 동일한 로직
+  const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
+    const panels = {
+      common: [],    // 공통 패널 (좌우측판, 뒷판)
+      upper: [],     // 상부장 패널
+      lower: [],     // 하부장 패널
+      door: []       // 도어 패널
+    };
+    
+    // 실제 3D 렌더링과 동일한 두께 값들
+    const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+    const backPanelThickness = 9;
+    const drawerHandleThickness = 18;
+    const drawerSideThickness = 15;
+    const drawerBottomThickness = 5;
+    
     const height = moduleData.dimensions.height;
-    const depth = placedModule.customDepth || moduleData.dimensions.depth;
-
-    // 기본 패널들
-    panels.push({
-      name: '상판',
-      width: width,
-      height: depth,
-      thickness: 18,
-      material: 'PB',
-      quantity: 1
-    });
-
-    panels.push({
-      name: '하판',
-      width: width,
-      height: depth,
-      thickness: 18,
-      material: 'PB',
-      quantity: 1
-    });
-
-    panels.push({
-      name: '좌측판',
-      width: depth,
-      height: height,
-      thickness: 18,
-      material: 'PB',
-      quantity: 1
-    });
-
-    panels.push({
-      name: '우측판',
-      width: depth,
-      height: height,
-      thickness: 18,
-      material: 'PB',
-      quantity: 1
-    });
-
-    panels.push({
-      name: '뒷판',
-      width: width,
-      height: height,
-      thickness: 5,
-      material: 'HDF',
-      quantity: 1
-    });
-
-    // 서랍이 있는 경우
-    if (moduleData.id.includes('drawer')) {
-      const drawerCount = moduleData.id.includes('2drawer') ? 2 : 4;
+    const innerWidth = customWidth - (basicThickness * 2);
+    const innerHeight = height - (basicThickness * 2);
+    
+    // 섹션 정보 가져오기
+    let sections;
+    if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
+      sections = moduleData.modelConfig?.leftSections || [];
+    } else {
+      sections = moduleData.modelConfig?.sections || [];
+    }
+    
+    const availableHeightMm = height;
+    
+    // 섹션별 패널 계산
+    if (sections && sections.length > 0) {
+      const actualAvailableHeight = height - (basicThickness * 2);
       
-      panels.push({
-        name: '서랍 전판',
-        width: width - 36,
-        height: (height - 40) / drawerCount,
-        thickness: 18,
-        material: 'PB',
-        quantity: drawerCount
-      });
-
-      panels.push({
-        name: '서랍 측판',
-        width: depth - 50,
-        height: 120,
-        thickness: 12,
-        material: 'PB',
-        quantity: drawerCount * 2
-      });
-
-      panels.push({
-        name: '서랍 바닥',
-        width: width - 60,
-        height: depth - 50,
-        thickness: 5,
-        material: 'HDF',
-        quantity: drawerCount
+      const calculateSectionHeight = (section, availableHeightMm) => {
+        const heightType = section.heightType || 'percentage';
+        if (heightType === 'absolute') {
+          return Math.min(section.height || 0, availableHeightMm);
+        } else {
+          return availableHeightMm * ((section.height || section.heightRatio || 100) / 100);
+        }
+      };
+      
+      const fixedSections = sections.filter(s => s.heightType === 'absolute');
+      const totalFixedHeight = fixedSections.reduce((sum, section) => {
+        return sum + calculateSectionHeight(section, actualAvailableHeight);
+      }, 0);
+      
+      const dividerCount = sections.length > 1 ? (sections.length - 1) : 0;
+      const dividerThickness = dividerCount * basicThickness;
+      const remainingHeight = actualAvailableHeight - totalFixedHeight - dividerThickness;
+      
+      // 섹션 사이 구분판
+      if (sections.length > 1 && moduleData.id.includes('2hanging')) {
+        panels.common.push({
+          name: '안전선반 (칸막이)',
+          width: innerWidth,
+          depth: customDepth - backPanelThickness - 17,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      } else if (sections.length > 1) {
+        panels.common.push({
+          name: '중간 칸막이',
+          width: innerWidth,
+          depth: customDepth - backPanelThickness - 17,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      }
+      
+      // 각 섹션별 내부 구조 처리
+      sections.forEach((section, sectionIndex) => {
+        let sectionName = '';
+        let targetPanel = null;
+        
+        // 2단 옷장: 첫 번째 섹션이 하부장, 두 번째가 상부장
+        if (moduleData.id.includes('2hanging')) {
+          if (sectionIndex === 0) {
+            sectionName = '하부장';
+            targetPanel = panels.lower;
+          } else {
+            sectionName = '상부장';
+            targetPanel = panels.upper;
+          }
+        }
+        // 듀얼 타입5,6
+        else if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
+          if (section.type === 'drawer') {
+            sectionName = '하부장';
+            targetPanel = panels.lower;
+          } else {
+            sectionName = '상부장';
+            targetPanel = panels.upper;
+          }
+        }
+        // 일반 서랍장
+        else if (section.type === 'drawer') {
+          targetPanel = panels.lower;
+          sectionName = '';
+        }
+        // 기타
+        else {
+          targetPanel = panels.upper;
+          sectionName = '';
+        }
+        
+        const variableSections = sections.filter(s => s.heightType !== 'absolute');
+        const totalPercentage = variableSections.reduce((sum, s) => sum + (s.height || s.heightRatio || 100), 0);
+        
+        let sectionHeightMm;
+        if (section.heightType === 'absolute') {
+          sectionHeightMm = calculateSectionHeight(section, actualAvailableHeight);
+        } else {
+          const percentage = (section.height || section.heightRatio || 100) / totalPercentage;
+          sectionHeightMm = remainingHeight * percentage;
+        }
+        
+        // 서랍 섹션 처리
+        if (section.type === 'drawer' && section.count) {
+          const drawerHeights = section.drawerHeights;
+          
+          for (let i = 0; i < section.count; i++) {
+            const drawerNum = i + 1;
+            
+            let individualDrawerHeight;
+            if (drawerHeights && drawerHeights[i]) {
+              individualDrawerHeight = drawerHeights[i];
+            } else {
+              individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
+            }
+            
+            // 서랍 손잡이판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
+              width: customWidth,
+              height: individualDrawerHeight,
+              thickness: drawerHandleThickness,
+              material: 'PET'
+            });
+            
+            // 서랍 본체 크기 계산
+            const drawerBodyWidth = customWidth - 76;
+            const drawerBodyHeight = individualDrawerHeight - 30;
+            const drawerBodyDepth = customDepth - 47 - drawerHandleThickness;
+            
+            // 서랍 앞판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
+              width: drawerBodyWidth,
+              height: drawerBodyHeight,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+            
+            // 서랍 뒷판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
+              width: drawerBodyWidth,
+              height: drawerBodyHeight,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+            
+            // 서랍 좌측판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.leftPanel')}`,
+              depth: drawerBodyDepth - basicThickness * 2,
+              height: drawerBodyHeight,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+            
+            // 서랍 우측판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.rightPanel')}`,
+              depth: drawerBodyDepth - basicThickness * 2,
+              height: drawerBodyHeight,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+            
+            // 서랍 바닥판
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
+              width: drawerBodyWidth - 26,
+              depth: drawerBodyDepth - 26,
+              thickness: drawerBottomThickness,
+              material: 'MDF'
+            });
+          }
+          
+          // 서랍 칸막이
+          for (let i = 1; i < section.count; i++) {
+            targetPanel.push({
+              name: `${sectionName} ${t('furniture.drawerDivider')} ${i}`,
+              width: innerWidth,
+              depth: customDepth - backPanelThickness - 17,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+          }
+        } else if (section.type === 'hanging') {
+          // 옷장 섹션
+          if (section.shelfPositions && section.shelfPositions.length > 0) {
+            section.shelfPositions.forEach((pos, i) => {
+              targetPanel.push({
+                name: `${sectionName} 선반 ${i + 1}`,
+                width: innerWidth,
+                depth: customDepth - 8,
+                thickness: basicThickness,
+                material: 'PB'
+              });
+            });
+          } else {
+            const hangingInternalHeight = Math.round(sectionHeightMm);
+            targetPanel.push({
+              name: `${sectionName} 옷걸이 공간`,
+              description: '내부 높이',
+              height: hangingInternalHeight,
+              isInfo: true
+            });
+          }
+        } else if (section.type === 'shelf' && section.count) {
+          // 선반 구역
+          for (let i = 1; i <= section.count; i++) {
+            targetPanel.push({
+              name: `${sectionName} 선반 ${i}`,
+              width: innerWidth,
+              depth: customDepth - 8,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+          }
+        } else if (section.type === 'open') {
+          // 오픈 섹션
+          const openInternalHeight = Math.round(sectionHeightMm);
+          targetPanel.push({
+            name: `${sectionName} 오픈 공간`,
+            description: '내부 높이',
+            height: openInternalHeight,
+            isInfo: true
+          });
+        }
       });
     }
-
-    // 중간 선반이 있는 경우
-    if (moduleData.id.includes('hanging')) {
-      panels.push({
-        name: '중간 선반',
-        width: width - 36,
-        height: depth - 20,
-        thickness: 18,
-        material: 'PB',
-        quantity: 1
-      });
+    
+    // 도어 패널
+    if (hasDoor) {
+      const doorGap = 2;
+      
+      if (moduleData.id.includes('dual')) {
+        const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
+        panels.door.push({
+          name: '좌측 도어',
+          width: doorWidth,
+          height: height - doorGap * 2,
+          thickness: basicThickness,
+          material: 'PET'
+        });
+        panels.door.push({
+          name: '우측 도어',
+          width: doorWidth,
+          height: height - doorGap * 2,
+          thickness: basicThickness,
+          material: 'PET'
+        });
+      } else {
+        panels.door.push({
+          name: '도어',
+          width: customWidth - doorGap * 2,
+          height: height - doorGap * 2,
+          thickness: basicThickness,
+          material: 'PET'
+        });
+      }
     }
-
-    return panels;
+    
+    // 플랫 배열로 변환하여 반환
+    const result = [];
+    
+    // 상부장 패널
+    if (panels.upper.length > 0) {
+      result.push({ name: `=== ${t('furniture.upperSection')} ===` });
+      result.push(...panels.upper);
+    }
+    
+    // 공통 패널
+    if (panels.common.length > 0) {
+      result.push(...panels.common);
+    }
+    
+    // 하부장 패널
+    if (panels.lower.length > 0) {
+      result.push({ name: `=== ${t('furniture.lowerSection')} ===` });
+      result.push(...panels.lower);
+    }
+    
+    // 도어 패널
+    if (panels.door.length > 0 && hasDoor) {
+      result.push({ name: `=== ${t('furniture.door')} ===` });
+      result.push(...panels.door);
+    }
+    
+    return result;
   };
 
-  const panels = getPanelList();
-  const totalPanels = panels.reduce((sum, panel) => sum + panel.quantity, 0);
+  const customWidth = placedModule.customWidth || moduleData.dimensions.width;
+  const customDepth = placedModule.customDepth || moduleData.dimensions.depth;
+  const hasDoor = placedModule.doorConfig?.enabled || false;
+  
+  const panels = calculatePanelDetails(moduleData as ModuleData, customWidth, customDepth, hasDoor, t);
+  const totalPanels = panels.filter(p => !p.name?.startsWith('===')).length;
 
   return (
     <>
@@ -172,23 +391,61 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>패널 목록 (총 {totalPanels}개)</h3>
+            <h3 className={styles.sectionTitle}>{t('furniture.panelDetails')} (총 {totalPanels}개)</h3>
             <div className={styles.panelTable}>
               <div className={styles.tableHeader}>
                 <div className={styles.headerCell}>패널</div>
-                <div className={styles.headerCell}>W×H×T</div>
+                <div className={styles.headerCell}>크기</div>
                 <div className={styles.headerCell}>재질</div>
-                <div className={styles.headerCell}>수량</div>
               </div>
               <div className={styles.tableBody}>
-                {panels.map((panel, index) => (
-                  <div key={index} className={styles.tableRow}>
-                    <div className={styles.cell}>{panel.name}</div>
-                    <div className={styles.cell}>{panel.width}×{panel.height}×{panel.thickness}</div>
-                    <div className={styles.cell}>{panel.material}</div>
-                    <div className={styles.cell}>{panel.quantity}</div>
-                  </div>
-                ))}
+                {panels.map((panel, index) => {
+                  // 섹션 구분자인 경우
+                  if (panel.name && panel.name.startsWith('===')) {
+                    return (
+                      <div key={index} className={styles.sectionHeader}>
+                        <strong>{panel.name.replace(/=/g, '').trim()}</strong>
+                      </div>
+                    );
+                  }
+                  
+                  // 정보성 항목인 경우 (오픈 공간 등)
+                  if (panel.isInfo) {
+                    return (
+                      <div key={index} className={styles.tableRow}>
+                        <div className={styles.cell}>{panel.name}</div>
+                        <div className={styles.cell}>
+                          {panel.description && panel.height ? `${panel.description} ${panel.height}mm` : panel.description || ''}
+                        </div>
+                        <div className={styles.cell}>-</div>
+                      </div>
+                    );
+                  }
+                  
+                  // 일반 패널
+                  return (
+                    <div key={index} className={styles.tableRow}>
+                      <div className={styles.cell}>{panel.name}</div>
+                      <div className={styles.cell}>
+                        {panel.diameter ? (
+                          `Φ${panel.diameter}mm × L${panel.width}mm`
+                        ) : panel.width && panel.height ? (
+                          `${panel.width} × ${panel.height}mm`
+                        ) : panel.width && panel.depth ? (
+                          `${panel.width} × ${panel.depth}mm`
+                        ) : panel.height && panel.depth ? (
+                          `${panel.height} × ${panel.depth}mm`
+                        ) : panel.description ? (
+                          panel.description
+                        ) : (
+                          `${panel.width || panel.height || panel.depth}mm`
+                        )}
+                        {panel.thickness && !panel.diameter && ` (T:${panel.thickness})`}
+                      </div>
+                      <div className={styles.cell}>{panel.material || '-'}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

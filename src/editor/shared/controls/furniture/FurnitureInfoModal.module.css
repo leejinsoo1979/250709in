@@ -130,9 +130,19 @@
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr;
+  grid-template-columns: 2fr 3fr 1fr;
   background: var(--theme-background-secondary);
   border-bottom: 1px solid var(--theme-border);
+}
+
+.sectionHeader {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  background: var(--theme-background-tertiary, var(--theme-background-secondary));
+  border-bottom: 1px solid var(--theme-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text);
 }
 
 .headerCell {
@@ -154,7 +164,7 @@
 
 .tableRow {
   display: grid;
-  grid-template-columns: 2fr 3fr 1fr 1fr;
+  grid-template-columns: 2fr 3fr 1fr;
   border-bottom: 1px solid var(--theme-border);
   transition: background-color 0.15s;
 }
