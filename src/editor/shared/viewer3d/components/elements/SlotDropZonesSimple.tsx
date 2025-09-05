@@ -2260,11 +2260,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 분할창인 경우 spaceInfo 조정 - mainDoorCount 정보도 포함
     let adjustedSpaceInfo = spaceInfo;
     if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
-      const defaultColumnCount = Math.max(1, Math.floor(internalSpace.width / 600));
+      // 현재 설정된 컬럼 수를 사용 (defaultColumnCount 계산 제거)
       adjustedSpaceInfo = {
         ...spaceInfo,
         mainDoorCount: spaceInfo.mainDoorCount,  // mainDoorCount 유지
-        customColumnCount: spaceInfo.mainDoorCount,
+        customColumnCount: spaceInfo.mainDoorCount,  // 현재 mainDoorCount를 그대로 사용
         columnMode: 'custom' as const,
         // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
         frameSize: spaceInfo.surroundType === 'no-surround' 
@@ -2273,7 +2273,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       };
       console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
         mainDoorCount: spaceInfo.mainDoorCount,
-        defaultColumnCount,
+        customColumnCount: spaceInfo.mainDoorCount,  // 현재 설정된 값 사용
         internalWidth: internalSpace.width,
         adjustedSpaceInfo
       });
