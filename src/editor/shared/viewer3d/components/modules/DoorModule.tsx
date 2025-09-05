@@ -387,6 +387,63 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
   
+  // 단내림 + 노서라운드 모드에서 엔드패널이 있는 경우 처리
+  if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
+    // 엔드패널 위치 확인
+    const endPanelThickness = 18;
+    const isDroppedZone = (spaceInfo as any).zone === 'dropped';
+    const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+    
+    if (isDroppedZone && spaceInfo.droppedCeiling?.enabled) {
+      // 단내림 구간에서 엔드패널이 있는지 확인
+      let hasEndPanel = false;
+      
+      if (spaceInfo.installType === 'freestanding') {
+        // 벽없음: 단내림 구간 끝에 엔드패널
+        if (droppedPosition === 'right') {
+          // 오른쪽 단내림: 오른쪽 끝
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          if (zoneInfo.dropped && slotIndex === zoneInfo.dropped.columnCount - 1) {
+            hasEndPanel = true;
+          }
+        } else {
+          // 왼쪽 단내림: 왼쪽 끝
+          if (slotIndex === 0) {
+            hasEndPanel = true;
+          }
+        }
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 한쪽벽: 벽이 없는 쪽에만 엔드패널
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        if (!spaceInfo.wallConfig?.right && droppedPosition === 'right') {
+          // 오른쪽 벽 없음 + 오른쪽 단내림
+          if (zoneInfo.dropped && slotIndex === zoneInfo.dropped.columnCount - 1) {
+            hasEndPanel = true;
+          }
+        } else if (!spaceInfo.wallConfig?.left && droppedPosition === 'left') {
+          // 왼쪽 벽 없음 + 왼쪽 단내림
+          if (slotIndex === 0) {
+            hasEndPanel = true;
+          }
+        }
+      }
+      
+      // 엔드패널이 있으면 도어 크기를 18mm 늘려서 엔드패널을 덮도록 함
+      if (hasEndPanel) {
+        actualDoorWidth = originalSlotWidth + endPanelThickness;
+        console.log('🚪📏 단내림 엔드패널 도어 너비 보정:', {
+          originalSlotWidth,
+          endPanelThickness,
+          actualDoorWidth,
+          slotIndex,
+          droppedPosition,
+          installType: spaceInfo.installType,
+          설명: '엔드패널을 덮기 위해 18mm 추가'
+        });
+      }
+    }
+  }
+  
   console.log('🚪📏 도어 너비 계산:', {
     originalSlotWidth,
     moduleWidth,
