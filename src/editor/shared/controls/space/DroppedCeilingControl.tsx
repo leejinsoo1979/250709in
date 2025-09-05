@@ -76,6 +76,16 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
       // SpaceCalculator를 사용하여 폭에 따른 최소 도어 개수 계산
       const droppedLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
       
+      // 단내림 활성화 시에도 모든 가구 제거 (호환되지 않는 가구들이 있을 수 있음)
+      console.log('🗑️ [DroppedCeilingControl] Removing ALL furniture when enabling dropped ceiling:', {
+        totalModules: placedModules.length
+      });
+      
+      // 모든 가구들 제거
+      placedModules.forEach(module => {
+        removeModule(module.id);
+      });
+      
       setSpaceInfo({
         droppedCeiling: {
           enabled: true,

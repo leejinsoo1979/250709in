@@ -165,7 +165,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     spaceInfo: any,
     zone?: 'normal' | 'dropped'
   ): number | null => {
-    if (!camera || !scene) return null;
+    console.log('🔍 getSlotIndexFromRaycast called:', {
+      hasCamera: !!camera,
+      hasScene: !!scene,
+      zone,
+      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled
+    });
+    
+    if (!camera || !scene) {
+      console.warn('⚠️ Camera or scene not available');
+      return null;
+    }
 
     const rect = canvasElement.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -185,18 +195,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     });
 
+    console.log('🎯 Found slot colliders:', {
+      totalColliders: colliders.length,
+      collidersInfo: colliders.map(c => ({
+        slotIndex: c.userData.slotIndex,
+        zone: c.userData.zone,
+        visible: c.visible,
+        position: { x: c.position.x, y: c.position.y, z: c.position.z }
+      }))
+    });
+
     const intersects = raycaster.intersectObjects(colliders, false);
     
     if (intersects.length > 0) {
       const slotIndex = intersects[0].object.userData.slotIndex;
-      console.log('🎯 Raycast hit slot collider:', {
+      console.log('✅ Raycast hit slot collider:', {
         slotIndex,
         zone: intersects[0].object.userData.zone,
-        totalIntersects: intersects.length
+        totalIntersects: intersects.length,
+        distance: intersects[0].distance
       });
       return slotIndex;
     }
 
+    console.log('❌ No slot collider hit');
     return null;
   };
 
