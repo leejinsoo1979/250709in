@@ -2294,11 +2294,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 분할창인 경우 spaceInfo 조정 - mainDoorCount 정보도 포함
     let adjustedSpaceInfo = spaceInfo;
     if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
-      // 현재 설정된 컬럼 수를 사용 (defaultColumnCount 계산 제거)
+      // 현재 설정된 컬럼 수를 사용 - customColumnCount는 변경하지 않음!
       adjustedSpaceInfo = {
         ...spaceInfo,
         mainDoorCount: spaceInfo.mainDoorCount,  // mainDoorCount 유지
-        customColumnCount: spaceInfo.mainDoorCount,  // 현재 mainDoorCount를 그대로 사용
+        // customColumnCount는 이미 spaceInfo에 있는 값 그대로 사용 (덮어쓰지 않음)
         columnMode: 'custom' as const,
         // 노서라운드 모드에서는 frameSize를 강제로 0으로 설정
         frameSize: spaceInfo.surroundType === 'no-surround' 
@@ -2307,7 +2307,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       };
       console.log('🎯 [SlotDropZones] 분할창 모듈 생성:', {
         mainDoorCount: spaceInfo.mainDoorCount,
-        customColumnCount: spaceInfo.mainDoorCount,  // 현재 설정된 값 사용
+        customColumnCount: spaceInfo.customColumnCount,  // 원래 customColumnCount 사용
         internalWidth: internalSpace.width,
         adjustedSpaceInfo
       });
@@ -2373,6 +2373,31 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     if (finalX === null) {
       return false;
     }
+    
+    // 가구 배치 위치 상세 디버깅
+    console.log('🚨🚨🚨 가구 배치 위치 계산 결과:', {
+      가구타입: isDual ? '듀얼' : '싱글',
+      슬롯인덱스: slotIndex,
+      계산된위치_X: finalX,
+      spaceInfo: {
+        width: spaceInfo.width,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        customColumnCount: spaceInfo.customColumnCount,
+        mainDoorCount: spaceInfo.mainDoorCount,
+        frameSize: spaceInfo.frameSize,
+        gapConfig: spaceInfo.gapConfig
+      },
+      indexing: {
+        columnCount: indexing.columnCount,
+        columnWidth: indexing.columnWidth,
+        slotWidths: indexing.slotWidths,
+        threeUnitPositions: indexing.threeUnitPositions,
+        threeUnitDualPositions: indexing.threeUnitDualPositions
+      },
+      targetModuleId,
+      내경너비: internalSpace.width
+    });
     
     // 듀얼 가구 위치 디버깅
     if (isDual) {
