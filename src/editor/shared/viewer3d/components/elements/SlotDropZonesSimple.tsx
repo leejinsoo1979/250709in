@@ -1037,6 +1037,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let moduleData;
       const isUpperOrLower = dragData.moduleData.category === 'upper' || dragData.moduleData.category === 'lower';
       
+      console.log('🔍 모듈 검색 시작:', {
+        targetModuleId,
+        originalModuleId: dragData.moduleData.id,
+        originalCategory: dragData.moduleData.category,
+        moduleBaseType,
+        zone: zoneToUse,
+        isUpperOrLower
+      });
+      
       if (isUpperOrLower && zoneToUse === 'dropped') {
         // 단내림 영역의 상하부장은 전체 내경 높이 기준으로 생성
         console.log('📦 단내림 영역 상하부장 모듈 생성 - 전체 내경 기준:', {
@@ -1093,8 +1102,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         moduleHeight: moduleData?.dimensions?.height,
         isDragDataUsed: moduleData === dragData.moduleData,
         dragDataCategory: dragData.moduleData?.category,
+        originalDragModuleId: dragData.moduleData?.id,
         isUpperCabinet: moduleData?.category === 'upper',
-        isLowerCabinet: moduleData?.category === 'lower'
+        isLowerCabinet: moduleData?.category === 'lower',
+        targetModuleId: zoneTargetModuleId,
+        moduleBaseType
       });
       
       // 상하부장 확인
