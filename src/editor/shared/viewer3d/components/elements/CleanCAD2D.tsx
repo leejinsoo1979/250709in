@@ -742,7 +742,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
-                    position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    position={[
+                      (droppedStartX + droppedEndX) / 2,
+                      currentViewDirection === 'top'
+                        ? subDimensionY - mmToThreeUnits(30)  // 탑뷰: 치수선 아래
+                        : subDimensionY + mmToThreeUnits(30), // 다른 뷰: 치수선 위
+                      0.01
+                    ]}
                     fontSize={smallFontSize}
                     color={textColor}
                     anchorX="center"
@@ -792,16 +798,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 메인 구간 연장선 (치수선에서 벽면까지) */}
                 <NativeLine
                   points={[
-                    [mainStartX, subDimensionY - mmToThreeUnits(40), 0.001],
-                    [mainStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                    [mainStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <NativeLine
                   points={[
-                    [mainEndX, subDimensionY - mmToThreeUnits(40), 0.001],
-                    [mainEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                    [mainEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
@@ -810,16 +816,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 구간 연장선 (치수선에서 벽면까지) */}
                 <NativeLine
                   points={[
-                    [droppedStartX, subDimensionY - mmToThreeUnits(40), 0.001],
-                    [droppedStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <NativeLine
                   points={[
-                    [droppedEndX, subDimensionY - mmToThreeUnits(40), 0.001],
-                    [droppedEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
