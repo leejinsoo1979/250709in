@@ -815,16 +815,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 메인 구간 연장선 (치수선에서 벽면까지) */}
                 <NativeLine
                   points={[
-                    [mainStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
-                    [mainStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
+                    [mainStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <NativeLine
                   points={[
-                    [mainEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
-                    [mainEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
+                    [mainEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [mainEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
@@ -833,16 +833,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 단내림 구간 연장선 (치수선에서 벽면까지) */}
                 <NativeLine
                   points={[
-                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
-                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
+                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedStartX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
                 />
                 <NativeLine
                   points={[
-                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
-                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
+                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY - mmToThreeUnits(10) : subDimensionY - mmToThreeUnits(40), 0.001],
+                    [droppedEndX, currentViewDirection === 'top' ? subDimensionY + mmToThreeUnits(40) : subDimensionY + mmToThreeUnits(10), 0.001]
                   ]}
                   color={subGuideColor}
                   lineWidth={1}
