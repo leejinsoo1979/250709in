@@ -1309,16 +1309,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorAdjustment = 0; // 도어 위치 보정값 (듀얼 가구에서 사용)
   
   // 노서라운드 + 단내림 영역에서 엔드패널이 있는 경우 도어 위치 조정
+  console.log('🚪🚨 도어 X 위치 조정 시작:', {
+    surroundType: spaceInfo.surroundType,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    installType: spaceInfo.installType,
+    wallConfig: spaceInfo.wallConfig,
+    slotCenterX,
+    slotIndex,
+    moduleId: moduleData?.id
+  });
+  
   if (spaceInfo.surroundType === 'no-surround' && spaceInfo.droppedCeiling?.enabled) {
-    // 벽 설정 확인 - 벽이 없어야 엔드패널이 생김
+    // 벽 설정 확인 - freestanding이면 벽이 없음
+    const isFreestanding = spaceInfo.installType === 'freestanding';
     const hasLeftWall = spaceInfo.wallConfig?.left;
     const hasRightWall = spaceInfo.wallConfig?.right;
-    const hasNoWalls = !hasLeftWall && !hasRightWall;
+    const hasNoWalls = isFreestanding || (!hasLeftWall && !hasRightWall);
     
-    // 단내림 구간인지 확인
+    // 단내림 구간인지 확인 - slotCenterX 조건 완화
     const isInDroppedZone = (
-      (spaceInfo.droppedCeiling.position === 'left' && slotCenterX && slotCenterX < 0) ||
-      (spaceInfo.droppedCeiling.position === 'right' && slotCenterX && slotCenterX > 0)
+      (spaceInfo.droppedCeiling.position === 'left' && (slotCenterX === undefined || slotCenterX < 0)) ||
+      (spaceInfo.droppedCeiling.position === 'right' && (slotCenterX === undefined || slotCenterX > 0))
     );
     
     console.log('🚪🔍 노서라운드 단내림 엔드패널 체크:', {
@@ -1373,13 +1384,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         if (needsAdjustment) {
           doorAdjustment = mmToThreeUnits(18 * adjustmentDirection);
           
-          console.log('🚪🎯 단내림 엔드패널 도어 X위치 보정:', {
+          console.log('🚪🎯 단내림 엔드패널 도어 X위치 보정 적용!!!!:', {
             droppedSlotIndex,
             droppedPosition: spaceInfo.droppedCeiling.position,
             slotWidths: droppedZone.slotWidths,
             adjustmentDirection: adjustmentDirection > 0 ? '오른쪽' : '왼쪽',
             doorAdjustment_mm: 18 * adjustmentDirection,
+            doorAdjustment_units: doorAdjustment,
             설명: '엔드패널에서 먼 슬롯의 도어를 엔드패널 쪽으로 18mm 이동'
+          });
+        } else {
+          console.log('🚪❌ 조정 불필요:', {
+            droppedSlotIndex,
+            droppedPosition: spaceInfo.droppedCeiling.position,
+            needsAdjustment,
+            설명: '이 슬롯은 도어 위치 조정이 필요없음'
           });
         }
       }

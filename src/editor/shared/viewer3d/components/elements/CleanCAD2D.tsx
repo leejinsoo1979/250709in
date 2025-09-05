@@ -734,9 +734,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
                       
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                      // 일반 구간 치수 - 패널 두께 제외하지 않음
+                      return spaceInfo.width - spaceInfo.droppedCeiling.width
                     })()}
                   </Text>
                 )}
@@ -794,9 +793,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
                       
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                      // 단내림 구간 치수 - 패널 두께 제외하지 않음
+                      return spaceInfo.droppedCeiling.width
                     })()}
                   </Text>
                 )}
@@ -1837,33 +1835,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
-                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                          } else {
-                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                        }
-                      }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
-                    })()}
+                    {/* 일반 구간 치수 - 패널 두께 제외하지 않음 */}
+                    {spaceInfo.width - spaceInfo.droppedCeiling.width}
                   </Text>
                 )}
                 
@@ -1892,33 +1865,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorY="middle"
                     rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    {(() => {
-                      // 노서라운드일 때 실제 축소값 계산
-                      let leftReduction = frameThickness.left;
-                      let rightReduction = frameThickness.right;
-                      
-                      if (spaceInfo.surroundType === 'no-surround') {
-                        if (spaceInfo.installType === 'builtin') {
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
-                        } else if (spaceInfo.installType === 'semistanding') {
-                          if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
-                            rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                          } else {
-                            leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
-                          }
-                        } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                          rightReduction = END_PANEL_THICKNESS;  // 18mm 엔드패널
-                        }
-                      }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
-                    })()}
+                    {/* 단내림 구간 치수 - 패널 두께 제외하지 않음 */}
+                    {spaceInfo.droppedCeiling.width}
                   </Text>
                 )}
                 
@@ -3381,9 +3329,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
                       
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                      // 일반 구간 치수 - 패널 두께 제외하지 않음
+                      return spaceInfo.width - spaceInfo.droppedCeiling.width
                     })()}
                   </Text>
                   
@@ -3434,9 +3381,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
                       
-                      return spaceInfo.droppedCeiling.position === 'left' 
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                      // 단내림 구간 치수 - 패널 두께 제외하지 않음
+                      return spaceInfo.droppedCeiling.width
                     })()}
                   </Text>
                   
