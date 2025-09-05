@@ -189,11 +189,10 @@ export class ColumnIndexer {
           for (let j = 0; j <= i; j++) {
             slotBoundaryX += slotWidths[j];
           }
-          // internalStartX를 더해줘야 절대 좌표가 됨
-          dualCenterPosition = internalStartX + slotBoundaryX;
+          dualCenterPosition = slotBoundaryX;
         } else {
-          // 기본 계산: 슬롯 경계 위치 (이미 절대 좌표)
-          dualCenterPosition = columnBoundaries[i + 1];  // i+1로 수정 (다음 경계가 듀얼의 중심)
+          // 기본 계산: 슬롯 경계 위치
+          dualCenterPosition = columnBoundaries[i];
         }
         
         dualColumnPositions.push(dualCenterPosition);
@@ -524,8 +523,6 @@ export class ColumnIndexer {
         columnPositions,
         columnBoundaries,
         threeUnitPositions,
-        threeUnitDualPositions,
-        dualColumnPositions,
         '첫번째 슬롯': {
           index: 0,
           mmCenter: columnPositions[0],
@@ -537,15 +534,6 @@ export class ColumnIndexer {
           mmCenter: columnPositions[columnCount - 1],
           threeUnitsCenter: threeUnitPositions[columnCount - 1],
           width: slotWidths[columnCount - 1]
-        },
-        '듀얼 가구 위치': {
-          '첫번째듀얼': {
-            index: 0,
-            mmCenter: dualColumnPositions[0],
-            threeUnitsCenter: threeUnitDualPositions[0],
-            '정상위치': internalStartX + slotWidths[0],
-            '위치일치': dualColumnPositions[0] === (internalStartX + slotWidths[0])
-          }
         },
         '전체 폭': totalWidth,
         '내경': internalWidth
