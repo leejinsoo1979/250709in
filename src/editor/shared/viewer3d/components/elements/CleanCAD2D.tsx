@@ -905,7 +905,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 좌측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 {showDimensionsText && (
                   <Text
-                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, dimensionYPos - mmToThreeUnits(30), 0.01]}
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, dimensionYPos - mmToThreeUnits(50), 0.01]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"
@@ -955,7 +955,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 좌측 프레임 치수 텍스트 */}
             <Text
-              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
+              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(170), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
@@ -1031,7 +1031,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 치수 텍스트 - 프레임 치수와 같은 높이로 정렬 */}
                 <Text
-                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, dimensionYPos - mmToThreeUnits(30), 0.01]}
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, dimensionYPos - mmToThreeUnits(50), 0.01]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
                   anchorX="center"
@@ -1081,7 +1081,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 우측 프레임 치수 텍스트 */}
             <Text
-              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
+              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(170), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
@@ -1681,7 +1681,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수 텍스트 - Text 사용 */}
             <Text
-              position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
+              position={[actualPositionX, dimY - mmToThreeUnits(50), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
               anchorX="center"

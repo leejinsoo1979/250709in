@@ -395,10 +395,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 단내림 영역인지 확인
     const isInDroppedZone = spaceInfo.droppedCeiling?.enabled && (
       (spaceInfo.droppedCeiling.position === 'left' && 
-       slotCenterX && slotCenterX < 0) ||
+       slotCenterX !== undefined && slotCenterX <= 0) ||
       (spaceInfo.droppedCeiling.position === 'right' && 
-       slotCenterX && slotCenterX > 0)
+       slotCenterX !== undefined && slotCenterX >= 0)
     );
+    
+    console.log('🔍 단내림 영역 체크:', {
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+      slotCenterX,
+      isInDroppedZone,
+      hasDroppedZone: !!indexing.zones?.dropped,
+      surroundType: spaceInfo.surroundType,
+      originalSlotWidth
+    });
     
     if (isInDroppedZone && indexing.zones?.dropped) {
       // 단내림 영역의 경우: 423mm 슬롯을 감지
