@@ -869,6 +869,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         // 실제 렌더링될 가구 폭과 위치 계산 (FurnitureItem.tsx와 동일한 로직)
         let furnitureWidthMm = moduleData.dimensions.width;
         
+        console.log('📐 [CADDimensions2D] 가구 치수 계산 시작:', {
+          moduleId: module.moduleId,
+          slotIndex: module.slotIndex,
+          customWidth: module.customWidth,
+          adjustedWidth: module.adjustedWidth,
+          moduleDefaultWidth: moduleData.dimensions.width,
+          columnCount: indexing.columnCount,
+          slotWidths: indexing.slotWidths
+        });
+        
         // 듀얼 가구인지 확인 (FurnitureItem.tsx와 동일한 로직)
         const isDualFurniture = module.isDualSlot !== undefined 
           ? module.isDualSlot 
@@ -895,13 +905,33 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         else if (indexing.slotWidths && module.slotIndex !== undefined) {
           if (isDualFurniture && module.slotIndex < indexing.slotWidths.length - 1) {
             furnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
+            console.log('📐 [CADDimensions2D] 듀얼 가구 슬롯 너비 사용:', {
+              moduleId: module.moduleId,
+              slotIndex: module.slotIndex,
+              slot1Width: indexing.slotWidths[module.slotIndex],
+              slot2Width: indexing.slotWidths[module.slotIndex + 1],
+              totalWidth: furnitureWidthMm,
+              columnCount: indexing.columnCount
+            });
           } else if (indexing.slotWidths[module.slotIndex] !== undefined) {
             furnitureWidthMm = indexing.slotWidths[module.slotIndex];
+            console.log('📐 [CADDimensions2D] 싱글 가구 슬롯 너비 사용:', {
+              moduleId: module.moduleId,
+              slotIndex: module.slotIndex,
+              slotWidth: furnitureWidthMm,
+              columnCount: indexing.columnCount,
+              allSlotWidths: indexing.slotWidths
+            });
           }
         }
         // 우선순위 4: 기본값 (모듈 원래 크기)
         else {
           furnitureWidthMm = moduleData.dimensions.width;
+          console.log('📐 [CADDimensions2D] 기본 모듈 너비 사용:', {
+            moduleId: module.moduleId,
+            defaultWidth: furnitureWidthMm,
+            reason: 'No customWidth, adjustedWidth, or slotWidth available'
+          });
         }
         
         // 기둥 침범 시 가구 크기와 위치 재계산
@@ -1225,7 +1255,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         );
       });
-      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig]}
+      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.width]}
       
       
       {/* 컬럼 치수 표시 */}
