@@ -1721,6 +1721,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       totalWidth = slot1Width + slot2Width;
       
       // 엔드패널 위치 판단
+      // doorAdjustment가 이미 설정되어 있으면 (단내림 구간에서 설정) 보존
+      const preserveExistingAdjustment = doorAdjustment !== 0;
+      
       if (spaceInfo.installType === 'freestanding') {
         // 벽없음 모드: 양쪽 끝에 엔드패널
         isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
@@ -1729,12 +1732,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                        slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
         
         // 듀얼 도어 위치 보정 - 엔드패널 위치와 반대 방향으로 보정
-        if (isFirstSlotWithEndPanel) {
-          // 첫 번째 슬롯(왼쪽 엔드패널): 도어를 왼쪽으로 9mm 이동
-          doorAdjustment = -9; 
-        } else if (isLastSlotWithEndPanel) {
-          // 마지막 슬롯(오른쪽 엔드패널): 도어를 오른쪽으로 9mm 이동
-          doorAdjustment = 9;
+        // 단내림 구간에서 이미 설정된 값이 있으면 보존
+        if (!preserveExistingAdjustment) {
+          if (isFirstSlotWithEndPanel) {
+            // 첫 번째 슬롯(왼쪽 엔드패널): 도어를 왼쪽으로 9mm 이동
+            doorAdjustment = -9; 
+          } else if (isLastSlotWithEndPanel) {
+            // 마지막 슬롯(오른쪽 엔드패널): 도어를 오른쪽으로 9mm 이동
+            doorAdjustment = 9;
+          }
         }
       } else if (spaceInfo.installType === 'semistanding') {
         // 한쪽벽 모드: 벽이 없는 쪽에만 엔드패널
@@ -1745,7 +1751,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                                    slotWidths && slotWidths.length >= 2 && 
                                    slotWidths[1] < indexing.columnWidth;
           
-          if (isLastSlotWithEndPanel) {
+          if (!preserveExistingAdjustment && isLastSlotWithEndPanel) {
             // 오른쪽 끝 엔드패널: 도어를 오른쪽으로 9mm 이동
             doorAdjustment = 9;
           }
@@ -1754,7 +1760,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
           isLastSlotWithEndPanel = false;
           
-          if (isFirstSlotWithEndPanel) {
+          if (!preserveExistingAdjustment && isFirstSlotWithEndPanel) {
             // 왼쪽 끝 엔드패널: 도어를 왼쪽으로 9mm 이동
             doorAdjustment = -9;
           }
@@ -1762,20 +1768,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           // 예외 케이스
           isFirstSlotWithEndPanel = false;
           isLastSlotWithEndPanel = false;
-          doorAdjustment = 0;
+          if (!preserveExistingAdjustment) {
+            doorAdjustment = 0;
+          }
         }
       } else {
         // 양쪽벽 모드: 엔드패널 없음
         isFirstSlotWithEndPanel = false;
         isLastSlotWithEndPanel = false;
-        doorAdjustment = 0;
+        if (!preserveExistingAdjustment) {
+          doorAdjustment = 0;
+        }
       }
       
       console.log('🚪 듀얼 엔드패널 상태:', {
         isFirstSlotWithEndPanel,
         isLastSlotWithEndPanel,
         doorAdjustment,
-        note: '엔드패널 위치로 보정'
+        doorAdjustment_mm: doorAdjustment / 0.01,
+        preserveExistingAdjustment,
+        note: preserveExistingAdjustment ? '단내림 구간 보정값 보존' : '엔드패널 위치로 보정'
       });
       
       // 노서라운드 도어 크기 계산
