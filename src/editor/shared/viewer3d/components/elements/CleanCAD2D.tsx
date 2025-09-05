@@ -646,21 +646,38 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
             const droppedWidth = spaceInfo.droppedCeiling.width;
             
-            // 메인 구간 치수선
-            const mainStartX = spaceInfo.droppedCeiling.position === 'left' 
-              ? leftOffset + mmToThreeUnits(droppedWidth)
-              : leftOffset;
-            const mainEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? leftOffset + mmToThreeUnits(spaceInfo.width)
-              : leftOffset + mmToThreeUnits(mainWidth);
+            // 노서라운드일 때 실제 bounds 사용
+            let mainStartX, mainEndX, droppedStartX, droppedEndX;
             
-            // 단내림 구간 치수선
-            const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
-              ? leftOffset
-              : leftOffset + mmToThreeUnits(mainWidth);
-            const droppedEndX = spaceInfo.droppedCeiling.position === 'left'
-              ? leftOffset + mmToThreeUnits(droppedWidth)
-              : leftOffset + mmToThreeUnits(spaceInfo.width);
+            if (spaceInfo.surroundType === 'no-surround') {
+              // 노서라운드: 실제 bounds 기준으로 정확한 위치 계산
+              if (spaceInfo.droppedCeiling.position === 'left') {
+                // 왼쪽 단내림
+                droppedStartX = mmToThreeUnits(droppedBounds.startX);
+                droppedEndX = mmToThreeUnits(droppedBounds.endX);
+                mainStartX = mmToThreeUnits(normalBounds.startX);
+                mainEndX = mmToThreeUnits(normalBounds.endX);
+              } else {
+                // 오른쪽 단내림
+                mainStartX = mmToThreeUnits(normalBounds.startX);
+                mainEndX = mmToThreeUnits(normalBounds.endX);
+                droppedStartX = mmToThreeUnits(droppedBounds.startX);
+                droppedEndX = mmToThreeUnits(droppedBounds.endX);
+              }
+            } else {
+              // 서라운드: 기존 로직
+              if (spaceInfo.droppedCeiling.position === 'left') {
+                droppedStartX = leftOffset;
+                droppedEndX = leftOffset + mmToThreeUnits(droppedWidth);
+                mainStartX = leftOffset + mmToThreeUnits(droppedWidth);
+                mainEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
+              } else {
+                mainStartX = leftOffset;
+                mainEndX = leftOffset + mmToThreeUnits(mainWidth);
+                droppedStartX = leftOffset + mmToThreeUnits(mainWidth);
+                droppedEndX = leftOffset + mmToThreeUnits(spaceInfo.width);
+              }
+            }
             
             return (
               <>
