@@ -506,8 +506,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [customDepth, setCustomDepth] = useState<number>(580); // 임시 기본값
   const [depthInputValue, setDepthInputValue] = useState<string>('580');
   const [depthError, setDepthError] = useState<string>('');
-  const [customWidth, setCustomWidth] = useState<number>(583); // 임시 기본값
-  const [widthInputValue, setWidthInputValue] = useState<string>('583');
+  const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
+  const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
