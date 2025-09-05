@@ -143,7 +143,11 @@ export class ColumnIndexer {
       
       // 전체 영역의 컬럼 수 (호환성을 위해 유지)
       let columnCount;
-      if (spaceInfo.customColumnCount) {
+      // 단내림이 활성화되었고 mainDoorCount가 설정된 경우 우선 사용
+      if (spaceInfo.droppedCeiling?.enabled && spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+        columnCount = spaceInfo.mainDoorCount;
+        console.log('🎯 단내림 활성화 상태에서 mainDoorCount 사용:', columnCount);
+      } else if (spaceInfo.customColumnCount) {
         columnCount = spaceInfo.customColumnCount;
       } else {
         columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
