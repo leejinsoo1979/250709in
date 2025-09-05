@@ -388,6 +388,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
   let doorAdjustment = 0; // 도어 X 위치 보정값 (mm 단위가 아닌 Three.js 단위)
   
+  console.log('🔍🔍 노서라운드 도어 보정 조건 체크:', {
+    surroundType: spaceInfo.surroundType,
+    originalSlotWidth,
+    isNoSurround: spaceInfo.surroundType === 'no-surround',
+    hasOriginalSlotWidth: !!originalSlotWidth,
+    willEnterBlock: spaceInfo.surroundType === 'no-surround' && originalSlotWidth
+  });
+  
   // 노서라운드 모드에서 엔드패널이 있는 슬롯의 도어 크기 보정
   if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
     const endPanelThickness = 18;
