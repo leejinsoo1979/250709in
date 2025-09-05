@@ -2346,7 +2346,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         willBeAddedToStore: true
       });
       
-      const newModule: any = {
+      // newModule 선언 중복 제거 - 위에서 이미 선언됨
+      const duplicateModule: any = {
         id: placedId,
         moduleId: zoneTargetModuleId, // 정확한 너비를 포함한 모듈 ID 사용
         position: { x: furnitureX, y: furnitureYZone, z: 0 }, // 기둥 침범 시 조정된 위치 사용
@@ -2366,7 +2367,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 기둥 정보가 있으면 추가
       if (slotInfo && slotInfo.hasColumn) {
-        newModule.columnSlotInfo = {
+        duplicateModule.columnSlotInfo = {
           hasColumn: true,
           columnId: slotInfo.column?.id,
           columnPosition: slotInfo.columnPosition,
@@ -2378,10 +2379,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 기둥 침범 시 실제 조정된 너비 재확인
         console.log('🔧 기둥 침범 가구 최종 설정:', {
-          moduleId: newModule.moduleId,
-          adjustedWidth: newModule.adjustedWidth,
-          customWidth: newModule.customWidth,
-          columnSlotInfo: newModule.columnSlotInfo
+          moduleId: duplicateModule.moduleId,
+          adjustedWidth: duplicateModule.adjustedWidth,
+          customWidth: duplicateModule.customWidth,
+          columnSlotInfo: duplicateModule.columnSlotInfo
         });
       }
       
@@ -2433,47 +2434,47 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         customWidth: customWidth,
         zoneInfo: zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal,
         newModule: {
-          id: newModule.id,
-          moduleId: newModule.moduleId,
-          isDualSlot: newModule.isDualSlot,
-          slotIndex: newModule.slotIndex,
-          position: newModule.position,
-          zone: newModule.zone
+          id: duplicateModule.id,
+          moduleId: duplicateModule.moduleId,
+          isDualSlot: duplicateModule.isDualSlot,
+          slotIndex: duplicateModule.slotIndex,
+          position: duplicateModule.position,
+          zone: duplicateModule.zone
         }
       });
       
       console.log('🚨🚨 최종 newModule 상세:', {
         ...newModule,
         position_mm: {
-          x: newModule.position.x * 100,
-          y: newModule.position.y * 100,
-          z: newModule.position.z * 100
+          x: duplicateModule.position.x * 100,
+          y: duplicateModule.position.y * 100,
+          z: duplicateModule.position.z * 100
         }
       });
       
       console.log('🔴🔴🔴 상부장 추가 직전:', {
-        isUpperCabinet: newModule.category === 'upper',
-        moduleCategory: newModule.category,
-        moduleId: newModule.moduleId,
-        position: newModule.position,
-        dimensions: newModule.dimensions
+        isUpperCabinet: duplicateModule.category === 'upper',
+        moduleCategory: duplicateModule.category,
+        moduleId: duplicateModule.moduleId,
+        position: duplicateModule.position,
+        dimensions: duplicateModule.dimensions
       });
       
       console.log('🚀 [BEFORE addModule] 상부장 추가 직전:', {
-        moduleId: newModule.moduleId,
+        moduleId: duplicateModule.moduleId,
         category: moduleData?.category,
         dragCategory: dragData.moduleData?.category,
-        position: newModule.position,
-        slotIndex: newModule.slotIndex,
-        zone: newModule.zone
+        position: duplicateModule.position,
+        slotIndex: duplicateModule.slotIndex,
+        zone: duplicateModule.zone
       });
       
-      const addSuccess = addModule(newModule);
+      const addSuccess = addModule(duplicateModule);
       
       console.log('✅ [AFTER addModule] 가구 배치 결과:', {
         success: addSuccess,
-        moduleId: newModule.moduleId,
-        position: newModule.position,
+        moduleId: duplicateModule.moduleId,
+        position: duplicateModule.position,
         wasUpperCabinet: moduleData?.category === 'upper' || dragData.moduleData?.category === 'upper'
       });
       
