@@ -1451,6 +1451,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       slot1Width = slotWidths?.[0] || indexing.columnWidth;
       slot2Width = slotWidths?.[1] || indexing.columnWidth;
       
+      console.log('🔴 노서라운드 듀얼 도어 초기 너비:', {
+        slotWidths,
+        slot1Width,
+        slot2Width,
+        indexingColumnWidth: indexing.columnWidth,
+        slotIndex,
+        columnCount: indexing.columnCount
+      });
+      
       if (slotWidths && slotWidths.length >= 2) {
         // 벽없음(freestanding) 모드: 양쪽 끝에 엔드패널
         if (spaceInfo.installType === 'freestanding') {
@@ -1566,11 +1575,38 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         note: '엔드패널 위치로 보정'
       });
       
-      // 노서라운드 도어 크기: 1200mm 기준 균등분할
+      // 노서라운드 도어 크기 계산
       const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
       const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
-      leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;  // 597mm
-      rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2; // 597mm
+      
+      // slotWidths가 있고 유효한 경우 실제 슬롯 너비 기반 계산
+      if (slotWidths && slotWidths.length >= 2 && slot1Width > 0 && slot2Width > 0) {
+        // 각 슬롯의 실제 너비에 맞춰 도어 너비 계산
+        // 에지 갭과 중간 갭을 고려
+        leftDoorWidth = slot1Width - noSurroundEdgeGap - (noSurroundDoorGap / 2);
+        rightDoorWidth = slot2Width - noSurroundEdgeGap - (noSurroundDoorGap / 2);
+        
+        console.log('🔴 노서라운드 듀얼 도어 개별 너비 계산:', {
+          slot1Width,
+          slot2Width,
+          leftDoorWidth,
+          rightDoorWidth,
+          noSurroundDoorGap,
+          noSurroundEdgeGap,
+          method: 'slotWidths 기반'
+        });
+      } else {
+        // slotWidths가 없으면 전체 너비를 균등 분할
+        leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;  
+        rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
+        
+        console.log('🔴 노서라운드 듀얼 도어 균등 분할:', {
+          totalWidth,
+          leftDoorWidth,
+          rightDoorWidth,
+          method: '균등 분할'
+        });
+      }
     } else {
       // 서라운드 모드: 일반 도어
       // slotWidths가 있으면 사용, 없으면 totalWidth 사용
