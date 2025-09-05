@@ -59,6 +59,8 @@ export class ColumnIndexer {
       frameSize: spaceInfo?.frameSize,
       'frameSize.left': spaceInfo?.frameSize?.left,
       'frameSize.right': spaceInfo?.frameSize?.right,
+      customColumnCount: spaceInfo?.customColumnCount,
+      mainDoorCount: spaceInfo?.mainDoorCount,
       width: spaceInfo?.width,
       timestamp: new Date().toISOString()
     });
@@ -509,6 +511,34 @@ export class ColumnIndexer {
     // Three.js 단위로 변환된 값들도 함께 제공
     const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
     const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
+    
+    // 컬럼 수가 7일 때 특별 로깅
+    if (columnCount === 7) {
+      console.log('🚨🚨🚨 컬럼 수 7 - 슬롯 위치 계산 상세:', {
+        columnCount,
+        internalWidth,
+        internalStartX,
+        columnWidth,
+        slotWidths,
+        columnPositions,
+        columnBoundaries,
+        threeUnitPositions,
+        '첫번째 슬롯': {
+          index: 0,
+          mmCenter: columnPositions[0],
+          threeUnitsCenter: threeUnitPositions[0],
+          width: slotWidths[0]
+        },
+        '마지막 슬롯': {
+          index: columnCount - 1,
+          mmCenter: columnPositions[columnCount - 1],
+          threeUnitsCenter: threeUnitPositions[columnCount - 1],
+          width: slotWidths[columnCount - 1]
+        },
+        '전체 폭': totalWidth,
+        '내경': internalWidth
+      });
+    }
     
     // 노서라운드 모드에서 디버깅 로그
     if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {

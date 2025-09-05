@@ -307,8 +307,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     const zoneColor = viewMode === '2D' && view2DTheme === 'dark' 
       ? '#FFFFFF' // 2D 다크모드에서는 항상 흰색
       : guideColor; // 모든 영역 동일한 색상
-    const zoneLineWidth = lineWidth; // 더 얇은 선 유지
-    const zoneOpacity = 1; // 모든 영역 완전 불투명
+    const zoneLineWidth = lineWidth * 1.5; // 조금 더 굵게
+    const zoneOpacity = 0.5; // 적당한 투명도로 조정
     
     // 각 슬롯 경계 계산
     const boundaries = [];
@@ -451,7 +451,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.10}
+                opacity={viewMode === '2D' ? 0.15 : 0.25}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}
@@ -507,7 +507,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={0.10}
+                opacity={0.25}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}
@@ -545,7 +545,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               <meshBasicMaterial 
                 color={guideColor}
                 transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.10}
+                opacity={viewMode === '2D' ? 0.15 : 0.25}
                 side={THREE.DoubleSide}
                 depthWrite={false}
                 depthTest={true}
@@ -579,7 +579,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
             dashed
             dashSize={0.2}
             gapSize={0.1}
-            opacity={zoneOpacity}
+            opacity={0.5}
             transparent
           />
         );
@@ -598,7 +598,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
             dashed
             dashSize={0.2}
             gapSize={0.1}
-            opacity={zoneOpacity}
+            opacity={0.5}
             transparent
           />
         );
@@ -618,7 +618,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               dashed
               dashSize={0.2}
               gapSize={0.1}
-              opacity={zoneOpacity}
+              opacity={0.5}
               transparent
             />
           );
@@ -636,7 +636,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
               dashed
               dashSize={0.2}
               gapSize={0.1}
-              opacity={zoneOpacity}
+              opacity={0.5}
               transparent
             />
           );
