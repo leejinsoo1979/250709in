@@ -328,7 +328,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     }
     
     return result;
-  };
+  }; */
 
   const customWidth = placedModule.customWidth || moduleData.dimensions.width;
   const customDepth = placedModule.customDepth || moduleData.dimensions.depth;
