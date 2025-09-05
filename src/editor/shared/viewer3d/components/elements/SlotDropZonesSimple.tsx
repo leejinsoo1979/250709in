@@ -365,10 +365,67 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
     
     
-    // 단내림이 활성화되어 있는데 zoneToUse가 설정되지 않은 경우 기본값 설정
+    // 단내림이 활성화되어 있는데 zoneToUse가 설정되지 않은 경우 레이캐스트로 zone 감지
     if (latestSpaceInfo.droppedCeiling?.enabled && !zoneToUse) {
-      console.warn('⚠️ 단내림이 활성화되어 있지만 zoneToUse가 설정되지 않음. 기본값 "normal" 설정');
-      zoneToUse = 'normal';
+      console.warn('⚠️ 단내림이 활성화되어 있지만 zoneToUse가 설정되지 않음. 레이캐스트로 zone 감지 시도');
+      
+      // 레이캐스트로 zone 감지
+      const rect = canvasElement.getBoundingClientRect();
+      const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
+      const mouseY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      if (camera && scene) {
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // 모든 콜라이더 가져오기
+        const allColliders = scene.children
+          .flatMap(child => child.children || [child])
+          .filter(obj => obj.userData?.isSlotCollider);
+        
+        // 레이캐스트 교차점 확인
+        const intersects = raycaster.intersectObjects(allColliders, true);
+        
+        if (intersects.length > 0) {
+          // 가장 가까운 콜라이더의 zone 정보 사용
+          const closestCollider = intersects[0].object as any;
+          const colliderUserData = closestCollider?.userData;
+          zoneToUse = colliderUserData?.zone || 'normal';
+          console.log('✅ Zone 감지 성공 (레이캐스트):', {
+            detectedZone: zoneToUse,
+            colliderData: colliderUserData,
+            distance: intersects[0].distance
+          });
+        } else {
+          // 레이캐스트 실패 시 마우스 X 위치로 zone 판단
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(latestSpaceInfo, latestSpaceInfo.customColumnCount);
+          if (zoneInfo.dropped && zoneInfo.normal) {
+            const droppedPosition = latestSpaceInfo.droppedCeiling?.position || 'right';
+            
+            if (droppedPosition === 'left') {
+              // 왼쪽 단내림
+              const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+              zoneToUse = mouseX < droppedEndX ? 'dropped' : 'normal';
+            } else {
+              // 오른쪽 단내림
+              const normalEndX = mmToThreeUnits(zoneInfo.normal.startX + zoneInfo.normal.width);
+              zoneToUse = mouseX < normalEndX ? 'normal' : 'dropped';
+            }
+            
+            console.log('✅ Zone 감지 성공 (마우스 X 위치):', {
+              detectedZone: zoneToUse,
+              mouseX,
+              droppedPosition
+            });
+          } else {
+            console.log('⚠️ Zone 감지 실패, 기본값 "normal" 설정');
+            zoneToUse = 'normal';
+          }
+        }
+      } else {
+        console.log('⚠️ Camera 또는 Scene 없음, 기본값 "normal" 설정');
+        zoneToUse = 'normal';
+      }
     }
     
     // 단내림이 활성화된 경우 영역별 처리
@@ -2108,14 +2165,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
         
-        // 이제 zone이 결정되었으므로 위의 if 블록 로직을 재실행해야 함
-        // 재귀적으로 handleSlotDrop을 다시 호출하는 대신, 여기서 직접 처리
-        if (zoneToUse) {
-          console.log('🔄 Zone 결정 후 재처리 시작');
-          // 여기서 위의 if 블록 로직을 복사하거나 함수로 분리해서 호출
-          // 일단은 return을 통해 다시 시도하도록 유도
-          return window.handleSlotDrop(dragEvent, canvasElement, zoneToUse);
+        // zone이 결정되었으므로 해당 zone 사용
+        if (!zoneToUse) {
+          // zone을 결정할 수 없으면 기본값 사용
+          console.log('⚠️ Zone을 결정할 수 없음, 기본값 normal 사용');
+          zoneToUse = 'normal';
         }
+        
+        console.log('✅ 최종 zone 결정:', zoneToUse);
         
         // 여전히 zone을 결정할 수 없는 경우 기존 로직 계속
         // 클릭한 위치의 슬롯 인덱스를 기반으로 영역 결정
