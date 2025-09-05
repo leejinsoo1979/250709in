@@ -725,8 +725,42 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
   }, [setPlacedModules]);
 
   // 새로운 간단한 버전 - 슬롯 인덱스만 유지하고 위치 업데이트
-  // 현재 사용하는 것으로 복원 - 기존 OLD 함수를 사용
-  const updateFurnitureForNewSpace = updateFurnitureForNewSpace_OLD;
+  // 간단한 버전 - 위치만 업데이트하고 moduleId는 유지
+  const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
+    console.log('🔄 updateFurnitureForNewSpace 호출 - 위치만 업데이트');
+    
+    return setPlacedModules((currentModules) => {
+      if (currentModules.length === 0) return currentModules;
+      
+      const newIndexing = calculateSpaceIndexing(newSpaceInfo);
+      
+      return currentModules.map(module => {
+        // slotIndex가 없으면 그대로 반환
+        if (module.slotIndex === undefined) return module;
+        
+        // 슬롯이 범위를 벗어나면 마지막 슬롯으로
+        let slotIndex = module.slotIndex;
+        if (slotIndex >= newIndexing.columnCount) {
+          slotIndex = Math.max(0, newIndexing.columnCount - 1);
+        }
+        
+        // 새 위치 계산 - Three.js 단위로 된 위치 사용
+        let newX = module.position.x; // 기본값: 현재 위치 유지
+        
+        if (newIndexing.threeUnitPositions && slotIndex < newIndexing.threeUnitPositions.length) {
+          newX = newIndexing.threeUnitPositions[slotIndex];
+        }
+        
+        // 위치만 업데이트, moduleId는 유지
+        return {
+          ...module,
+          position: { ...module.position, x: newX },
+          slotIndex: slotIndex,
+          isValidInCurrentSpace: true
+        };
+      });
+    });
+  }, [setPlacedModules]);
 
   return {
     spaceChangeMode,

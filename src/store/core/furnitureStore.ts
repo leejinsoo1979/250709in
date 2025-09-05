@@ -648,14 +648,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 기둥 변경 시 가구 adjustedWidth 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => {
     set((state) => {
-      console.log('🔧 updateFurnitureForColumns 호출:', {
-        surroundType: spaceInfo.surroundType,
-        columnCount: spaceInfo.columns?.length || 0,
-        columns: spaceInfo.columns?.map(c => ({ id: c.id, position: c.position, depth: c.depth })),
-        customColumnCount: spaceInfo.customColumnCount,
-        mainDoorCount: spaceInfo.mainDoorCount,
-        droppedCeilingDoorCount: spaceInfo.droppedCeilingDoorCount
-      });
+      console.log('🔧 updateFurnitureForColumns 호출 - 기둥 관련 업데이트만 수행');
       
       // 현재 컬럼 수 계산
       let totalColumnCount = 0;
@@ -669,63 +662,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         totalColumnCount = spaceInfo.customColumnCount || 3;
       }
       
-      console.log('📐 현재 총 컬럼 수:', totalColumnCount);
-      
       const columnSlots = analyzeColumnSlots(spaceInfo);
-      console.log('🔧 analyzeColumnSlots 결과:', columnSlots);
-      
-      // 상부장/하부장의 moduleId 업데이트 (공간 설정 변경 시 ID가 바뀌므로)
       const indexing = calculateSpaceIndexing(spaceInfo);
-      const newColumnWidth = indexing.columnWidth;
       
       // 제거할 가구 ID 수집 (듀얼 가구 + 컬럼 수 초과 가구)
       const modulesToRemove: string[] = [];
       
       const updatedModules = state.placedModules.map(module => {
-        // baseModuleType이 있으면 사용, 없으면 moduleId에서 추출
-        const baseType = module.baseModuleType || module.moduleId?.replace(/-\d+$/, '');
-        
-        // 모든 동적 가구의 moduleId 업데이트 (상부장/하부장 뿐만 아니라 모든 가구)
-        if (baseType && module.moduleId) {
-          // zone별로 다른 컬럼 너비 계산
-          let targetColumnWidth = newColumnWidth;
-          
-          if (module.zone && spaceInfo.droppedCeiling?.enabled) {
-            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            if (module.zone === 'dropped' && zoneInfo.dropped) {
-              targetColumnWidth = zoneInfo.dropped.columnWidth;
-            } else if (module.zone === 'normal' && zoneInfo.normal) {
-              targetColumnWidth = zoneInfo.normal.columnWidth;
-            }
-          }
-          
-          // 듀얼 가구인지 확인
-          const isDualFurniture = baseType.includes('dual-');
-          
-          // 새로운 너비로 ID 재생성
-          const newModuleId = isDualFurniture 
-            ? `${baseType}-${Math.round(targetColumnWidth * 2)}`  // 듀얼은 2배 너비
-            : `${baseType}-${Math.round(targetColumnWidth)}`;
-          
-          // moduleId가 변경되는 경우에만 로그
-          if (newModuleId !== module.moduleId) {
-            console.log('📦 가구 moduleId 업데이트:', {
-              baseType,
-              oldId: module.moduleId,
-              newId: newModuleId,
-              zone: module.zone,
-              targetColumnWidth,
-              isDualFurniture
-            });
-          }
-          
-          // moduleId와 moduleWidth 업데이트
-          module = {
-            ...module,
-            moduleId: newModuleId,
-            moduleWidth: isDualFurniture ? targetColumnWidth * 2 : targetColumnWidth  // 듀얼은 2배 너비
-          };
-        }
+        // 기둥 영향 처리만 - moduleId는 변경하지 않음!
         
         if (module.slotIndex === undefined) return module;
         
