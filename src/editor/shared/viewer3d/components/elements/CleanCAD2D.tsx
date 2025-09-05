@@ -628,13 +628,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         />
       </group>
 
-      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== 'top' && (
+      {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 */}
+      {spaceInfo.droppedCeiling?.enabled && (
         <group>
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
             const droppedBounds = getDroppedZoneBounds(spaceInfo);
-            const subDimensionY = topDimensionY - mmToThreeUnits(120); // 전체 폭 치수선 아래 (간격 증가)
+            // 탑뷰일 때는 더 아래로, 다른 뷰일 때는 기존 위치
+            const subDimensionY = currentViewDirection === 'top' 
+              ? topDimensionY + mmToThreeUnits(120)  // 탑뷰: 전체 치수 아래로
+              : topDimensionY - mmToThreeUnits(120); // 다른 뷰: 전체 치수 위로
             
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo);
@@ -679,7 +682,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
-                    position={[(mainStartX + mainEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
+                    position={[
+                      (mainStartX + mainEndX) / 2, 
+                      currentViewDirection === 'top' 
+                        ? subDimensionY - mmToThreeUnits(30)  // 탑뷰: 치수선 아래
+                        : subDimensionY + mmToThreeUnits(30), // 다른 뷰: 치수선 위
+                      0.01
+                    ]}
                     fontSize={smallFontSize}
                     color={textColor}
                     anchorX="center"
@@ -1753,7 +1762,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const spaceXOffset = -spaceWidth / 2;
             const spaceZOffset = -spaceDepth / 2;
             
-            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 350 : 300); // 각 구간 치수선 위치 (더 아래로)
+            const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 350 : 300); // 각 구간 치수선 위치 (전체 치수 아래)
             
             // 프레임 두께 계산
             const frameThickness = calculateFrameThickness(spaceInfo);
@@ -1890,16 +1899,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
                 
-                {/* 구간 분리 가이드라인 */}
-                <NativeLine
-                  points={[
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, spaceZOffset], 
-                    [spaceInfo.droppedCeiling.position === 'left' ? droppedEndX : mainEndX, spaceHeight, subDimensionZ - mmToThreeUnits(20)]
-                  ]}
-                  color={subGuideColor}
-                  lineWidth={0.5}
-                  dashed
-                />
+                {/* 구간 분리 가이드라인 - 제거 */}
                 
                 {/* 연장선 - 메인 영역 */}
                 <NativeLine
