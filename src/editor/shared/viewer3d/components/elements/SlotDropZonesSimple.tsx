@@ -298,16 +298,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zone: 'dropped' as const  // zone 정보 추가
         };
         // calculateInternalSpace를 사용하여 정확한 내경 계산
+        // calculateInternalSpace가 이미 zone을 감지하여 dropHeight를 뺀으므로 중복 빼기 방지
         zoneInternalSpace = calculateInternalSpace(droppedSpaceInfo);
-        // 단내림 구간은 높이가 낮음 - dropHeight만큼 차감
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        zoneInternalSpace.height = Math.max(zoneInternalSpace.height - dropHeight, 100); // 최소 100mm 보장
         
         console.log('🔧 [SlotDropZonesSimple] 단내림 영역 내경 계산:', {
-          originalHeight: zoneInternalSpace.height + dropHeight,
-          dropHeight,
-          adjustedHeight: zoneInternalSpace.height,
-          zone: 'dropped'
+          height: zoneInternalSpace.height,
+          startY: zoneInternalSpace.startY,
+          zone: 'dropped',
+          droppedCeilingEnabled: droppedSpaceInfo.droppedCeiling?.enabled,
+          설명: 'calculateInternalSpace가 이미 dropHeight 처리함'
         });
         
         // zoneInfo에서 직접 columnWidth 사용
@@ -641,12 +640,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       // 영역별 내경 공간 재계산
+      // calculateInternalSpace가 이미 zone을 감지하여 dropHeight를 뺀으므로 중복 빼기 방지
       const recalculatedZoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-      if (zoneToUse === 'dropped') {
-        // 단내림 영역은 높이 조정
-        const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-        recalculatedZoneInternalSpace.height = Math.max(recalculatedZoneInternalSpace.height - dropHeight, 100);
-      }
       
       console.log('🔧 [SlotDropZonesSimple] 영역별 내경 공간 재계산:', {
         zone: zoneToUse,
