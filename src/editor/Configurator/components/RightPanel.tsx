@@ -1087,6 +1087,33 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 onChange={(value) => onFrameTypeChange(value as 'surround' | 'no-surround')}
               />
             </FormControl>
+            
+            {/* 노서라운드 모드에서 상부프레임 설정 표시 */}
+            {frameType === 'no-surround' && (
+              <FormControl
+                label={t('space.topFrame')}
+                expanded={expandedSections.has('topFrame')}
+                onToggle={() => toggleSection('topFrame')}
+              >
+                <NumberInput
+                  label={t('space.frameHeight')}
+                  value={spaceInfo.frameSize?.top || 10}
+                  onChange={(value) => {
+                    const updates = {
+                      frameSize: {
+                        ...spaceInfo.frameSize,
+                        top: value
+                      }
+                    };
+                    updateSpaceInfo(updates);
+                  }}
+                  min={10}
+                  max={200}
+                  step={1}
+                  unit="mm"
+                />
+              </FormControl>
+            )}
           </div>
         )}
 
