@@ -7,8 +7,7 @@ import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
-import { Text } from '@react-three/drei';
-import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
+import { Text, Line } from '@react-three/drei';
 
 
 /**
@@ -31,12 +30,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths,
-  showFurniture = true,
-  adjacentCabinets,
-  adjustedWidth, // 조정된 너비 추가
+  slotWidths
 }) => {
-  try {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -44,9 +39,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth, // 조정된 너비 전달
-    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjacentCabinets,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const {
@@ -68,36 +61,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
 
-  const { viewMode, view2DDirection, showDimensions, indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  const { viewMode, view2DDirection, showDimensions } = useUIStore();
   const { theme } = useTheme();
-  
-  // 띄워서 배치 여부 확인
-  const placementType = spaceInfo?.baseConfig?.placementType;
-  const isFloating = placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  
-  // 간접조명 표시 조건 (3D 모드에서만)
-  const is2DMode = viewMode === '2D' || viewMode !== '3D';
-  const showIndirectLight = false;
-  
-  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
-  const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
-  // 가구 바닥에서 약간 아래에 위치
-  const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
-  
-  console.log('🔥 DualType6 간접조명 계산:', {
-    moduleId: moduleData.id,
-    hasSpaceInfo: !!spaceInfo,
-    baseConfig: spaceInfo?.baseConfig,
-    placementType,
-    isFloating,
-    floatHeight,
-    isDragging,
-    indirectLightEnabled,
-    is2DMode,
-    showIndirectLight,
-    lightY
-  });
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -130,22 +95,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     leftXOffset = -innerWidth / 4;
     rightXOffset = innerWidth / 4;
   }
-  
-  console.log('🔍 DualType6 좌우 분할 계산:', {
-    moduleId: moduleData.id,
-    width,
-    innerWidth,
-    leftWidth,
-    rightWidth,
-    leftXOffset,
-    rightXOffset,
-    modelConfig: {
-      rightAbsoluteWidth: modelConfig.rightAbsoluteWidth,
-      hasSharedMiddlePanel: modelConfig.hasSharedMiddlePanel,
-      leftSections: modelConfig.leftSections,
-      rightSections: modelConfig.rightSections
-    }
-  });
 
   // 통합 중단선반 및 안전선반 관련 계산
   const hasSharedMiddlePanel = modelConfig.hasSharedMiddlePanel || false;
@@ -270,7 +219,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 서랍 섹션 높이 수직선 - 중간 가로선반 하단까지 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -311,7 +260,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                         </Text>
                         
-                        <NativeLine
+                        <Line
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -346,7 +295,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2))))}
                         </Text>
                         
-                        <NativeLine
+                        <Line
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -383,7 +332,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                         </Text>
                         
-                        <NativeLine
+                        <Line
                           points={[
                             [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                             [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -426,7 +375,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 하부 프레임 두께 수직선 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -554,7 +503,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 중단선반 두께 수직선 */}
-                <NativeLine
+                <Line
                   points={[
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -610,7 +559,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 안전선반 두께 수직선 */}
-                <NativeLine
+                <Line
                   points={[
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                     [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -654,7 +603,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             </Text>
             
             {/* 상단 프레임 두께 수직선 */}
-            <NativeLine
+            <Line
               points={[
                 [-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
                 [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
@@ -677,45 +626,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     );
   };
 
-  console.log('🚨 DualType6 렌더링 시작:', {
-    moduleId: moduleData.id,
-    showFurniture,
-    isDragging,
-    baseFurniture: {
-      width: baseFurniture.width,
-      height: baseFurniture.height,
-      depth: baseFurniture.depth,
-      material: baseFurniture.material
-    }
-  });
-
   return (
-    <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth * 1.5}
-          depth={baseFurniture.depth * 1.5}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, lightY, 0]}
-        />
-      )}
-      
-      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (
-        <group>
-          {console.log('🔍 DualType6 기본 구조 렌더링:', {
-            width,
-            height,
-            depth,
-            innerWidth,
-            innerHeight,
-            basicThickness,
-            leftPanelPosition: -width/2 + basicThickness/2,
-            rightPanelPosition: width/2 - basicThickness/2
-          })}
-          {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
-          <BoxWithEdges
+    <group>
+      {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
+      <BoxWithEdges
         args={[basicThickness, height, depth]}
         position={[-width/2 + basicThickness/2, 0, 0]}
         material={material}
@@ -768,7 +682,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {showDimensions && hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <group>
             {/* 가로 내경 수평선 - 중간 칸막이 우측면부터 우측 측판 내측면까지 */}
-            <NativeLine
+            <Line
               points={[
                 [(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset],
                 [width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]
@@ -820,10 +734,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       
       {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
       {!isDragging && renderAsymmetricSections()}
-        </group>
-      )}
       
-      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
+      {/* 도어 렌더링 */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -833,33 +745,15 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           color={baseFurniture.doorColor}
           moduleData={moduleData} // 실제 듀얼캐빔넷 분할 정보
           originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX} // FurnitureItem에서 계산한 오프셋 사용
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
         slotIndex={slotIndex}
         />
       )}
-    </>
+    </group>
   );
-  } catch (error) {
-    console.error('🚨 DualType6 렌더링 에러:', error);
-    console.error('스택 트레이스:', error.stack);
-    console.error('모듈 데이터:', moduleData);
-    console.error('Props:', {
-      color,
-      internalHeight,
-      hasDoor,
-      customDepth,
-      isDragging,
-      isEditMode,
-      showFurniture,
-      slotWidths
-    });
-    
-    // 에러가 발생해도 빈 group을 반환하여 전체 씬이 충돌하지 않도록 함
-    return <group />;
-  }
 };
 
 export default DualType6; 

@@ -29,10 +29,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths,
-  showFurniture = true,
-  adjacentCabinets,
-  adjustedWidth, // 조정된 너비 추가
+  slotWidths
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -41,9 +38,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth, // 조정된 너비 전달
-    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjacentCabinets,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const {
@@ -63,31 +58,13 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
-  const { viewMode, view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  const { viewMode, view2DDirection } = useUIStore();
   const { theme } = useTheme();
-  
-  // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = false;
 
   return (
-    <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth * 1.5}
-          depth={baseFurniture.depth * 1.5}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, -baseFurniture.height/2 - 0.02, 0]}
-        />
-      )}
-      
-      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (
-        <group>
-          {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
-          {isMultiSectionFurniture() ? (
+    <group>
+      {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
+      {isMultiSectionFurniture() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {getSectionHeights().map((sectionHeight: number, index: number) => {
@@ -208,10 +185,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
         />
       )}
-        </group>
-      )}
       
-      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
+      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -221,14 +196,14 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           color={baseFurniture.doorColor}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX} // FurnitureItem에서 계산한 오프셋 사용
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
         slotIndex={slotIndex}
         />
       )}
-    </>
+    </group>
   );
 };
 

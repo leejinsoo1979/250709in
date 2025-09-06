@@ -83,24 +83,14 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   if (spaceInfo.surroundType === 'no-surround') {
     // 노서라운드: 설치 유형에 따라 다르게 계산
-    const leftGap = spaceInfo.gapConfig?.left || 0;
-    const rightGap = spaceInfo.gapConfig?.right || 0;
-    
     if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 양쪽 벽 이격거리 고려
+      // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      const rightGap = spaceInfo.gapConfig?.right || 2;
       internalWidth = spaceInfo.width - leftGap - rightGap;
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽 있는 쪽 이격거리 + 벽 없는 쪽 엔드패널
-      if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-        // 왼쪽 벽, 오른쪽 엔드패널
-        internalWidth = spaceInfo.width - leftGap - 18;
-      } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
-        // 오른쪽 벽, 왼쪽 엔드패널
-        internalWidth = spaceInfo.width - 18 - rightGap;
-      } else {
-        // fallback (일반적으로 오른쪽 엔드패널)
-        internalWidth = spaceInfo.width - leftGap - 18;
-      }
+      // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
+      internalWidth = spaceInfo.width - 18; // 엔드패널 두께 18mm
     } else {
       // 프리스탠딩: 양쪽 엔드패널
       internalWidth = spaceInfo.width - 36; // 양쪽 엔드패널 18mm * 2
@@ -112,18 +102,9 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   // 내경 높이 = 전체 높이 - 바닥재 - 상단 프레임 - 받침대
   let internalHeight = spaceInfo.height;
-  
-  // 띄워서 배치가 아닌 경우에만 바닥마감재 높이를 뺌
-  // 띄워서 배치인 경우 바닥마감재가 있어도 내경 높이에 영향 없음
-  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  if (spaceInfo.hasFloorFinish && !isFloating) {
+  if (spaceInfo.hasFloorFinish) {
     internalHeight -= floorFinishHeight;
   }
-  
-  // 띄워서 배치여도 내경 높이는 변하지 않음 (가구 배치 공간은 동일)
-  // 단지 시작 Y 위치만 올라감
-  
-  // 상부 프레임 높이 차감 (모든 모드에서 상부프레임 있음)
   internalHeight -= topFrameHeight;
   internalHeight -= baseFrameHeight;
   
@@ -139,15 +120,9 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   
   // 시작 위치 계산 (X 좌표)
   let startX;
-  if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: 빌트인은 0, 그 외는 이격거리/엔드패널 고려
-    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      startX = 0; // 빌트인: 벽에 바로 붙음
-    } else if (spaceInfo.gapConfig) {
-      startX = spaceInfo.gapConfig.left;
-    } else {
-      startX = 0;
-    }
+  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
+    // 노서라운드: 시작 위치 = 좌측 이격거리
+    startX = spaceInfo.gapConfig.left;
   } else {
     // 서라운드: 시작 위치 = 좌측 프레임 두께
     startX = frameThickness.left;
@@ -158,23 +133,13 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   //   console.log(`📐 [내경계산] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 내경너비=${internalWidth}, 시작위치X=${startX}`);
   // }
   
-  // 배치 시작 Y 위치 계산
-  let startY;
-  if (isFloating) {
-    // 띄워서 배치인 경우: 띄움 높이부터 시작 (바닥마감재 무관)
-    startY = spaceInfo.baseConfig?.floatHeight || 0;
-  } else {
-    // 일반 배치: 받침대 높이 + 바닥마감재 높이
-    startY = baseFrameHeight + floorFinishHeight;
-  }
-  
   return {
     width: internalWidth,
     height: internalHeight,
     depth: internalDepth,
     // 배치 시작 위치
     startX: startX,
-    startY: startY,
+    startY: baseFrameHeight + floorFinishHeight,
     startZ: 0
   };
 };
@@ -267,24 +232,13 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
     
     // frameSize가 명시적으로 설정되고 0이 아닌 경우 사용 (프레임 크기 조정 시)
     // 노서라운드 모드에서는 frameSize가 0이므로 무시하고 자동 계산
-    console.log('🔍🔍🔍 노서라운드 frameSize 체크 (IMPORTANT):', {
+    console.log('🔍 노서라운드 frameSize 체크:', {
       frameSize,
       'frameSize?.left': frameSize?.left,
       'frameSize?.right': frameSize?.right,
-      'frameSize가 50인가?': frameSize?.left === 50 || frameSize?.right === 50,
       installType,
-      wallConfig,
-      '문제': 'frameSize가 50이면 잘못된 값임!'
+      wallConfig
     });
-    
-    // 노서라운드에서 frameSize가 잘못 설정된 경우 경고
-    if (frameSize && (frameSize.left > 0 || frameSize.right > 0)) {
-      console.error('🚨🚨🚨 [calculateFrameThickness] 노서라운드인데 frameSize가 0이 아님! 무시하고 0으로 처리합니다.', {
-        frameSize,
-        surroundType,
-        installType
-      });
-    }
     
     // 노서라운드 모드에서는 frameSize를 무시하고 설치 타입과 벽 구성에 따라 자동 계산
     {
@@ -345,11 +299,11 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       break;
     case 'semistanding':
     case 'semi-standing':
-      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 18mm 엔드패널
-      if (wallConfig?.left && !wallConfig?.right) {
+      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 20mm 엔드패널
+      if (wallConfig.left && !wallConfig.right) {
         leftThickness = leftFrameSize;
         rightThickness = END_PANEL_THICKNESS;
-      } else if (!wallConfig?.left && wallConfig?.right) {
+      } else if (!wallConfig.left && wallConfig.right) {
         leftThickness = END_PANEL_THICKNESS;
         rightThickness = rightFrameSize;
       } else {
@@ -360,7 +314,7 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
       break;
     case 'freestanding':
     case 'free-standing':
-      // 프리스탠딩: 양쪽 모두 벽이 없으므로 18mm 엔드패널
+      // 프리스탠딩: 양쪽 모두 벽이 없으므로 20mm 엔드패널
       leftThickness = END_PANEL_THICKNESS;
       rightThickness = END_PANEL_THICKNESS;
       break;
@@ -387,35 +341,9 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
   
   let baseWidthMm;
   
-  if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: 설치 타입에 따라 다르게 처리
-    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      baseWidthMm = spaceInfo.width; // 빌트인: 벽에 바로 붙음
-    } else if (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing') {
-      // 프리스탠딩: 양쪽 엔드패널 두께(18mm씩)를 제외한 너비
-      baseWidthMm = spaceInfo.width - 36; // 36 = 18mm + 18mm
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽이 있는 쪽은 이격거리, 없는 쪽은 엔드패널 두께 고려
-      const wallConfig = spaceInfo.wallConfig;
-      if (!wallConfig?.left && !wallConfig?.right) {
-        // 양쪽 모두 벽이 없으면 프리스탠딩과 동일
-        baseWidthMm = spaceInfo.width - 36;
-      } else if (!wallConfig?.left) {
-        // 왼쪽만 벽이 없으면 왼쪽 엔드패널 + 오른쪽 이격거리
-        baseWidthMm = spaceInfo.width - 18 - (spaceInfo.gapConfig?.right || 0);
-      } else if (!wallConfig?.right) {
-        // 오른쪽만 벽이 없으면 왼쪽 이격거리 + 오른쪽 엔드패널
-        baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - 18;
-      } else {
-        // 양쪽 모두 벽이 있으면 이격거리 고려
-        baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig?.left || 0) - (spaceInfo.gapConfig?.right || 0);
-      }
-    } else if (spaceInfo.gapConfig) {
-      // 기타 경우 이격거리 고려
-      baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
-    } else {
-      baseWidthMm = spaceInfo.width;
-    }
+  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
+    // 노서라운드: 이격거리를 고려한 너비 계산
+    baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
     
     // 디버깅 로그 추가 (개발 모드에서만 출력)
     // if (import.meta.env.DEV) {
@@ -436,60 +364,23 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
 /**
  * 받침대 높이 계산 (mm 단위)
  * 기본값은 65mm이고, baseConfig.height 설정이 있으면 그 값을 사용
- * 바닥마감재가 있으면 받침대 높이에서 바닥마감재 두께를 뺌
- * 띄워서 배치(float)일 때만 하부 프레임이 없음
  */
 export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
-  console.log('📐 calculateBaseFrameHeight 호출:', {
-    spaceInfo_exists: !!spaceInfo,
-    baseConfig_type: spaceInfo?.baseConfig?.type,
-    baseConfig_placementType: spaceInfo?.baseConfig?.placementType,
-    baseConfig_height: spaceInfo?.baseConfig?.height,
-    hasFloorFinish: spaceInfo?.hasFloorFinish,
-    floorFinish: spaceInfo?.floorFinish
-  });
-  
   if (!spaceInfo) {
     return 0;
   }
   
-  // 띄워서 배치인 경우 하부 프레임 없음
-  if (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
-    console.log('📐 calculateBaseFrameHeight - 띄워서 배치: 하부 프레임 없음');
-    return 0;
-  }
-  
-  // 바닥 배치인 경우 하부 프레임 있음
+  // 받침대가 있는 경우에만 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
-    const baseHeight = spaceInfo.baseConfig.height || 65;
-    
-    // 바닥마감재가 있으면 받침대 높이에서 바닥마감재 두께를 뺌
-    // 이렇게 하면 가구의 전체 높이는 변하지 않음
-    if (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) {
-      const floorFinishHeight = spaceInfo.floorFinish.height || 0;
-      const adjustedHeight = Math.max(0, baseHeight - floorFinishHeight);
-      
-      console.log('📐 calculateBaseFrameHeight - 바닥마감재 적용:', {
-        baseHeight,
-        floorFinishHeight,
-        adjustedHeight,
-        '계산식': `${baseHeight} - ${floorFinishHeight} = ${adjustedHeight}`
-      });
-      
-      return adjustedHeight;
-    }
-    
-    console.log('📐 calculateBaseFrameHeight - 바닥마감재 없음, 원래 높이 반환:', baseHeight);
-    return baseHeight;
+    const height = spaceInfo.baseConfig.height || 65;
+    return height;
   }
-  
   return 0;
 };
 
 /**
  * 상단/하단 프레임 높이 계산 (mm 단위)
  * 기본값은 10mm이고, frameSize 설정이 있으면 그 값을 사용
- * 모든 모드에서 상부프레임은 항상 존재함
  */
 export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
@@ -497,6 +388,5 @@ export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
   }
   
   // frameSize.top이 설정되어 있으면 그 값을 사용, 없으면 기본값 10mm
-  // 모든 모드(서라운드, 노서라운드)에서 상부프레임은 항상 존재
   return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
 }; 

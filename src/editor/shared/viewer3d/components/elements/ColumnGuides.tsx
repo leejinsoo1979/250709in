@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
-import NativeLine from './NativeLine';
+import { Line, Text } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
@@ -12,21 +10,18 @@ import ColumnDropTarget from './ColumnDropTarget';
 
 interface ColumnGuidesProps {
   viewMode?: '2D' | '3D';
-  view2DDirection?: 'front' | 'left' | 'right' | 'top';
 }
 
 /**
  * 컬럼 인덱스 가이드 라인 컴포넌트
  * step0 이후로는 모든 step에서 configurator로 통일 처리
  */
-const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, view2DDirection: view2DDirectionProp }) => {
+const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection: contextView2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
-  const { placedModules } = useFurnitureStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
   
-  // prop으로 받은 값을 우선 사용, 없으면 context의 값 사용
+  // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
-  const view2DDirection = view2DDirectionProp || contextView2DDirection;
   const { theme } = useViewerTheme();
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
@@ -193,12 +188,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
   // 테마 기반 가이드 라인 색상 - 2D/3D 모두 동일한 색상 사용
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
-  const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 선
+  const lineWidth = viewMode === '2D' ? 0.5 : 1; // 2D 모드: 더 얇은 선
+  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
-  // 바닥과 천장 높이 (Three.js 단위) - internalSpace.startY가 이미 띄움 높이를 포함
-  const floorY = mmToThreeUnits(internalSpace.startY);
-  // 천장은 전체 높이에서 상단 프레임을 뺀 위치 (띄워서 배치와 무관)
-  const ceilingY = mmToThreeUnits(spaceInfo.height - topFrameHeight);
+  // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
+  const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+  const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
   
   // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상부프레임 높이
   // 이것이 상부프레임의 하단 위치입니다
@@ -232,41 +227,21 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
   }
   
   // Room.tsx와 동일한 계산 사용하여 바닥 슬롯 메쉬와 일치시킴
+  const backZ = -mmToThreeUnits(internalSpace.depth / 2); // 내경의 뒤쪽 좌표
+  
+  // 가구 깊이 및 위치 계산 (Room.tsx와 동일)
   const panelDepthMm = spaceInfo.depth || 1500;
   const furnitureDepthMm = 600; // 가구 깊이 고정값
-  
-  // Room.tsx와 동일한 계산 사용
   const zOffset = -mmToThreeUnits(panelDepthMm) / 2;
   const furnitureZOffset = zOffset + (mmToThreeUnits(panelDepthMm) - mmToThreeUnits(furnitureDepthMm)) / 2;
   const frameEndZ = furnitureZOffset + mmToThreeUnits(furnitureDepthMm) / 2;
   
-  // 내부 공간 깊이의 절반 (Room.tsx와 동일)
-  const backZ = -mmToThreeUnits(internalSpace.depth / 2);
-  // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표 - 앞쪽에서 18mm 줄임
-  const frontZ = frameEndZ - mmToThreeUnits(18);
+  // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
+  const frontZ = frameEndZ;
   
   // 프레임 두께 계산
   const frameThickness = calculateFrameThickness(spaceInfo);
   
-  // 특정 슬롯 인덱스에 가구가 배치되었는지 확인하는 함수
-  const isSlotOccupied = (slotIndex: number, zoneType: string) => {
-    return placedModules.some(module => {
-      // 단내림 영역 체크
-      if (zoneType === 'dropped' && module.isDroppedZone) {
-        return module.columnIndex === slotIndex;
-      }
-      // 메인 영역 체크
-      if (zoneType === 'normal' && !module.isDroppedZone) {
-        return module.columnIndex === slotIndex;
-      }
-      // 전체 영역일 경우
-      if (zoneType === 'full') {
-        return module.columnIndex === slotIndex;
-      }
-      return false;
-    });
-  };
-
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (
     startX: number,
@@ -307,8 +282,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     const zoneColor = viewMode === '2D' && view2DTheme === 'dark' 
       ? '#FFFFFF' // 2D 다크모드에서는 항상 흰색
       : guideColor; // 모든 영역 동일한 색상
-    const zoneLineWidth = lineWidth; // 더 얇은 선 유지
-    const zoneOpacity = 0.7; // 색상을 더 진하게 보이도록 투명도 조정
+    const zoneLineWidth = lineWidth * 2; // 모든 영역 동일한 굵기
+    const zoneOpacity = 1; // 모든 영역 완전 불투명
     
     // 각 슬롯 경계 계산
     const boundaries = [];
@@ -401,13 +376,18 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         프레임정보: spaceInfo.frameSize
       });
       
-      // 2D 정면 뷰에서는 전체 너비 사용
-      const startBoundaryX = zoneStartX;
-      const endBoundaryX = zoneEndX;
+      // 2D 정면 뷰에서도 단내림이 있는 경우 각 영역의 실제 경계 사용
+      // 단내림이 없는 경우에만 내경 범위로 클리핑
+      const startBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
+        ? Math.max(zoneStartX, internalStartX) 
+        : zoneStartX;
+      const endBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
+        ? Math.min(zoneEndX, internalEndX) 
+        : zoneEndX;
       
-      // 바닥 가이드 라인
+      // 바닥 가이드
       guides.push(
-        <NativeLine
+        <Line
           key={`${zoneType}-floor-horizontal`}
           points={[
             new THREE.Vector3(startBoundaryX, floorY, backZ),
@@ -416,54 +396,16 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           color={zoneColor}
           lineWidth={zoneLineWidth}
           dashed
-          dashSize={0.15}
-          gapSize={0.15}
+          dashSize={0.2}
+          gapSize={0.1}
           opacity={zoneOpacity}
           transparent
         />
       );
       
-      // 바닥 슬롯 메쉬 (3D 모드와 2D 탑뷰에서만 표시) - 슬롯별로 렌더링
-      if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) {
-        const meshDepth = frontZ - backZ;
-        const meshZ = (frontZ + backZ) / 2;
-        
-        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
-        for (let i = 0; i < columnCount; i++) {
-          // 가구가 배치된 슬롯은 건너뛰기
-          if (isSlotOccupied(i, zoneType)) {
-            continue;
-          }
-          
-          const slotStartX = boundaries[i];
-          const slotEndX = boundaries[i + 1];
-          const slotWidth = slotEndX - slotStartX;
-          const slotCenterX = (slotStartX + slotEndX) / 2;
-          
-          guides.push(
-            <mesh
-              key={`${zoneType}-floor-mesh-${i}`}
-              position={[slotCenterX, floorY + 0.001, meshZ]}
-              renderOrder={-1}
-              frustumCulled={false}
-            >
-              <boxGeometry args={[slotWidth, 0.002, meshDepth]} />
-              <meshBasicMaterial 
-                color={guideColor}
-                transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.10}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-                depthTest={true}
-              />
-            </mesh>
-          );
-        }
-      }
-      
       // 천장 가이드
       guides.push(
-        <NativeLine
+        <Line
           key={`${zoneType}-ceiling-horizontal`}
           points={[
             new THREE.Vector3(startBoundaryX, ceilingY, backZ),
@@ -472,88 +414,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           color={zoneColor}
           lineWidth={zoneLineWidth}
           dashed
-          dashSize={0.15}
-          gapSize={0.15}
+          dashSize={0.2}
+          gapSize={0.1}
           opacity={zoneOpacity}
           transparent
         />
       );
-      
-      // 천장 슬롯 메쉬 (3D 모드에서만 표시, 2D 뷰에서는 숨김) - 슬롯별로 렌더링
-      if (viewMode === '3D') {
-        const meshDepth = frontZ - backZ;
-        const meshZ = (frontZ + backZ) / 2;
-        
-        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
-        for (let i = 0; i < columnCount; i++) {
-          // 가구가 배치된 슬롯은 건너뛰기
-          if (isSlotOccupied(i, zoneType)) {
-            continue;
-          }
-          
-          const slotStartX = boundaries[i];
-          const slotEndX = boundaries[i + 1];
-          const slotWidth = slotEndX - slotStartX;
-          const slotCenterX = (slotStartX + slotEndX) / 2;
-          
-          guides.push(
-            <mesh
-              key={`${zoneType}-ceiling-mesh-${i}`}
-              position={[slotCenterX, ceilingY - 0.001, meshZ]}
-              renderOrder={-1}
-              frustumCulled={false}
-            >
-              <boxGeometry args={[slotWidth, 0.002, meshDepth]} />
-              <meshBasicMaterial 
-                color={guideColor}
-                transparent
-                opacity={0.10}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-                depthTest={true}
-              />
-            </mesh>
-          );
-        }
-      }
-      
-      // 정면(뒷벽) 슬롯 메쉬 (3D 모드와 2D 정면뷰에서만 표시) - 슬롯별로 렌더링
-      if (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) {
-        const height = ceilingY - floorY;
-        const centerY = (floorY + ceilingY) / 2;
-        
-        // 각 슬롯별로 투명 메쉬 렌더링 (가구가 없는 슬롯만)
-        for (let i = 0; i < columnCount; i++) {
-          // 가구가 배치된 슬롯은 건너뛰기
-          if (isSlotOccupied(i, zoneType)) {
-            continue;
-          }
-          
-          const slotStartX = boundaries[i];
-          const slotEndX = boundaries[i + 1];
-          const slotWidth = slotEndX - slotStartX;
-          const slotCenterX = (slotStartX + slotEndX) / 2;
-          
-          guides.push(
-            <mesh
-              key={`${zoneType}-back-wall-mesh-${i}`}
-              position={[slotCenterX, centerY, backZ + 0.001]}
-              renderOrder={-1}
-              frustumCulled={false}
-            >
-              <boxGeometry args={[slotWidth, height, 0.002]} />
-              <meshBasicMaterial 
-                color={guideColor}
-                transparent
-                opacity={viewMode === '2D' ? 0.05 : 0.10}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-                depthTest={true}
-              />
-            </mesh>
-          );
-        }
-      }
     }
     
     // 각 슬롯 경계의 수직 가이드
@@ -562,17 +428,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
       
       // 2D 상부뷰에서는 수평선으로 표시
       if (viewMode === '2D' && view2DDirection === 'top') {
-        // 단내림 구간과 메인 구간의 Y 위치를 다르게 계산
-        const guideY = zoneType === 'dropped' 
-          ? (floorY + ceilingY) / 2  // 단내림 구간: 낮은 천장 고려
-          : floorY + mmToThreeUnits(internalSpace.height/2);  // 메인 구간: 전체 높이의 중간
-        
         guides.push(
-          <NativeLine
+          <Line
             key={`${zoneType}-horizontal-guide-top-${index}`}
             points={[
-              new THREE.Vector3(xPos, guideY, backZ),
-              new THREE.Vector3(xPos, guideY, frontZ)
+              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), backZ),
+              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), frontZ)
             ]}
             color={zoneColor}
             lineWidth={zoneLineWidth}
@@ -587,7 +448,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         // 3D 및 2D 정면뷰
         // 수직 가이드
         guides.push(
-          <NativeLine
+          <Line
             key={`${zoneType}-vertical-guide-${index}`}
             points={[
               new THREE.Vector3(xPos, floorY, backZ),
@@ -607,7 +468,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
         if (viewMode === '3D') {
           // 바닥 Z축 가이드
           guides.push(
-            <NativeLine
+            <Line
               key={`${zoneType}-z-guide-floor-${index}`}
               points={[
                 new THREE.Vector3(xPos, floorY, backZ),
@@ -625,7 +486,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
           
           // 천장 Z축 가이드
           guides.push(
-            <NativeLine
+            <Line
               key={`${zoneType}-z-guide-ceiling-${index}`}
               points={[
                 new THREE.Vector3(xPos, ceilingY, backZ),
@@ -744,7 +605,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     }
     
     console.log(`📐 ${zoneType} 영역 가이드 개수:`, guides.length);
-    console.log('🔴 guides 배열 내용:', guides.map(g => g.key));
     return guides;
   };
 
@@ -760,8 +620,84 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp, vie
     'columnCount': columnCount
   });
 
-  // 투명 메쉬 렌더링 함수 - 제거됨 (정면과 천장 메쉬 사용 안함)
-  const renderTransparentMeshes = () => null;
+  // 투명 메쉬 렌더링 함수
+  const renderTransparentMeshes = (
+    startX: number,
+    width: number,
+    floorY: number,
+    ceilingY: number,
+    isActive: boolean,
+    meshType: 'back' | 'top',
+    zoneType: string
+  ) => {
+    const centerX = mmToThreeUnits(startX + width / 2);
+    const meshWidth = mmToThreeUnits(width);
+    
+    // 모든 영역 동일한 투명도
+    const opacity = 0.2;
+    
+    if (meshType === 'back') {
+      // 뒷면 메쉬 - 가이드 점선과 정확히 일치
+      const height = ceilingY - floorY;
+      const centerY = floorY + height / 2;
+      
+      return (
+        <mesh
+          key={`${zoneType}-back-mesh`}
+          position={[centerX, centerY, backZ]}
+          rotation={[0, 0, 0]}
+        >
+          <planeGeometry args={[meshWidth, height]} />
+          <meshBasicMaterial 
+            color={primaryColor} 
+            transparent 
+            opacity={opacity}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      );
+    } else {
+      // 상부 메쉬 (2D 탑뷰에서는 바닥 메쉬로 표시)
+      const depth = frontZ - backZ;
+      const centerZ = (frontZ + backZ) / 2;
+      
+      // 2D 탑뷰에서는 바닥에 표시
+      if (viewMode === '2D' && view2DDirection === 'top') {
+        return (
+          <mesh
+            key={`${zoneType}-floor-mesh`}
+            position={[centerX, floorY, centerZ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[meshWidth, depth]} />
+            <meshBasicMaterial 
+              color={primaryColor} 
+              transparent 
+              opacity={opacity}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      }
+      
+      // 3D 모드에서는 천장에 표시
+      return (
+        <mesh
+          key={`${zoneType}-top-mesh`}
+          position={[centerX, ceilingY, centerZ]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[meshWidth, depth]} />
+          <meshBasicMaterial 
+            color={primaryColor} 
+            transparent 
+            opacity={opacity}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      );
+    }
+  };
 
   return (
     <group>

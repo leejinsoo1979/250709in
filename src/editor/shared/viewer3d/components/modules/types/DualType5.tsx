@@ -8,8 +8,7 @@ import DrawerRenderer from '../DrawerRenderer';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
-import { Text } from '@react-three/drei';
-import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
+import { Text, Line } from '@react-three/drei';
 // import { SectionConfig } from '@/data/modules/shelving'; // 사용되지 않음
 
 
@@ -33,10 +32,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths,
-  showFurniture = true,
-  adjacentCabinets,
-  adjustedWidth, // 조정된 너비 추가
+  slotWidths
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -45,9 +41,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth, // 조정된 너비 전달
-    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjacentCabinets,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const {
@@ -63,37 +57,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     modelConfig
   } = baseFurniture;
 
-  const { viewMode, view2DDirection, showDimensions, indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  const { viewMode, view2DDirection, showDimensions } = useUIStore();
   const { theme } = useTheme();
   const { renderMode } = useSpace3DView();
-  
-  // 띄워서 배치 여부 확인
-  const placementType = spaceInfo?.baseConfig?.placementType;
-  const isFloating = placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  
-  // 간접조명 표시 조건 (3D 모드에서만)
-  const is2DMode = viewMode === '2D' || viewMode !== '3D';
-  const showIndirectLight = false;
-  
-  // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
-  const furnitureBottomY = -baseFurniture.height/2;  // 가구 하단 (가구 중심이 0일 때)
-  // 가구 바닥에서 약간 아래에 위치
-  const lightY = furnitureBottomY - 0.5;  // 가구 바닥에서 50cm 아래
-  
-  console.log('🔥 DualType5 간접조명 계산:', {
-    moduleId: moduleData.id,
-    hasSpaceInfo: !!spaceInfo,
-    baseConfig: spaceInfo?.baseConfig,
-    placementType,
-    isFloating,
-    floatHeight,
-    isDragging,
-    indirectLightEnabled,
-    is2DMode,
-    showIndirectLight,
-    lightY
-  });
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -358,7 +324,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 구분 패널 두께 수직선 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -416,7 +382,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 서랍 섹션 높이 수직선 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -474,7 +440,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </Text>
                     
                     {/* 하부 프레임 두께 수직선 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5],
                         [-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : basicThickness/2 + leftShelfZOffset + 0.5]
@@ -629,7 +595,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 </Text>
                 
                 {/* 하부 프레임 두께 수직선 */}
-                <NativeLine
+                <Line
                   points={[
                     [-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5],
                     [-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? 3.01 : basicThickness/2 + rightShelfZOffset + 0.5]
@@ -651,7 +617,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === 0 && (
                   <>
                     {/* 가로 내경 수평선 */}
-                    <NativeLine
+                    <Line
                       points={[
                         [-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 - 0.5 : rightShelfZOffset - 0.5],
                         [rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightAdjustedDepthForShelves/2 - 0.5 : rightShelfZOffset - 0.5]
@@ -712,16 +678,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth * 1.5}
-          depth={baseFurniture.depth * 1.5}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, lightY, 0]}
-        />
-      )}
-      
         {/* 좌측 섹션 그룹 */}
         <group position={[leftXOffset, 0, 0]}>
           {renderLeftSections()}
@@ -765,21 +721,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   return (
     <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <IndirectLight
-          width={baseFurniture.innerWidth * 1.5}
-          depth={baseFurniture.depth * 1.5}
-          intensity={indirectLightIntensity || 0.8}
-          position={[0, lightY, 0]}
-        />
-      )}
-      
-      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (
-        <>
-          {/* 좌측 측면 판재 - 섹션별로 분할 */}
-          {calculateLeftSectionHeights().map((sectionHeight, index) => {
+      {/* 좌측 측면 판재 - 섹션별로 분할 */}
+      {calculateLeftSectionHeights().map((sectionHeight, index) => {
         let currentYPosition = -height/2 + basicThickness;
         
         // 현재 섹션까지의 Y 위치 계산
@@ -887,10 +830,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       
       {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
       {!isDragging && renderAsymmetricSections()}
-        </>
-      )}
       
-      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
+      {/* 도어 렌더링 */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width} // 커버도어용 너비 우선 사용
@@ -900,7 +841,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           color={baseFurniture.doorColor}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX} // FurnitureItem에서 계산한 오프셋 사용
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}

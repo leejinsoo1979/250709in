@@ -21,8 +21,6 @@ interface BaseFurnitureOptions {
   isEditMode?: boolean; // 편집 모드 여부
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
-  isHighlighted?: boolean; // 가구 강조 여부
-  adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
 }
 
 // 가구 기본 설정 반환 타입
@@ -73,8 +71,7 @@ export const useBaseFurniture = (
     isDragging = false,
     isEditMode = false,
     adjustedWidth,
-    slotWidths,
-    isHighlighted = false
+    slotWidths
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -99,38 +96,24 @@ export const useBaseFurniture = (
   const backPanelThickness = mmToThreeUnits(BACK_PANEL_THICKNESS);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
-  // adjustedWidth가 있으면 최우선 사용 (엔드패널 조정 등)
+  // 듀얼 가구의 경우 slotWidths 합산, adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
   let actualWidthMm: number;
   
   // 듀얼 가구 판별
   const isDualFurniture = moduleData.id.includes('dual');
   
-  if (adjustedWidth !== undefined && adjustedWidth > 0) {
-    // adjustedWidth가 제공된 경우 최우선 사용 (엔드패널, 기둥 조정 등)
-    actualWidthMm = adjustedWidth;
-    console.log('🔧🔧🔧 useBaseFurniture - 조정된 너비 사용:', {
-      moduleId: moduleData.id,
-      isDualFurniture,
-      '원래너비': moduleData.dimensions.width,
-      '받은adjustedWidth': adjustedWidth,
-      '사용할actualWidthMm': actualWidthMm,
-      '차이': moduleData.dimensions.width - actualWidthMm,
-      description: '엔드패널 또는 기둥 조정된 너비',
-      '⚠️': '이 값이 실제 렌더링에 사용됨'
-    });
-  } else if (isDualFurniture && slotWidths && slotWidths.length >= 2 && adjustedWidth === undefined) {
-    // 듀얼 가구이고 slotWidths가 제공되었으며 adjustedWidth가 없는 경우: 두 슬롯 너비 합산
+  if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
+    // 듀얼 가구이고 slotWidths가 제공된 경우: 두 슬롯 너비 합산
     actualWidthMm = slotWidths[0] + slotWidths[1];
     console.log('🔧 듀얼 가구 너비 계산 (slotWidths 합산):', {
       slot1: slotWidths[0],
       slot2: slotWidths[1],
       total: actualWidthMm,
-      note: 'adjustedWidth가 없으므로 slotWidths 사용'
+      adjustedWidth: adjustedWidth ? `${adjustedWidth}mm (무시됨)` : 'undefined'
     });
-  } else if (!isDualFurniture && slotWidths && slotWidths.length > 0 && adjustedWidth === undefined) {
-    // 싱글 가구이고 slotWidths가 제공되었으며 adjustedWidth가 없는 경우
-    actualWidthMm = slotWidths[0];
-    console.log('🔧 싱글 가구 너비 (slotWidth 사용):', actualWidthMm);
+  } else if (adjustedWidth !== undefined) {
+    // adjustedWidth가 제공된 경우 사용
+    actualWidthMm = adjustedWidth;
   } else {
     // 기본값: 원래 모듈 너비 사용
     actualWidthMm = moduleData.dimensions.width;
@@ -140,19 +123,6 @@ export const useBaseFurniture = (
   const height = mmToThreeUnits(internalHeight || moduleData.dimensions.height);
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
-  
-  // 테마 색상 가져오기 함수를 먼저 정의
-  const getThemeColor = () => {
-    if (typeof window !== 'undefined') {
-      const computedStyle = getComputedStyle(document.documentElement);
-      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
-      if (primaryColor) {
-        return primaryColor;
-      }
-    }
-    return '#10b981'; // 기본값 (green)
-  };
-  
   
   console.log('🔧 useBaseFurniture 폭 결정:', {
     moduleId: moduleData.id,
@@ -183,23 +153,24 @@ export const useBaseFurniture = (
   const { renderMode, viewMode } = useSpace3DView();
   const { theme } = useTheme();
   
-  // 색상 결정: 드래그 중일 때만 테마 색상 사용, 편집 모드는 기본 색상 유지
-  const furnitureColor = isDragging ? getThemeColor() : (
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
+  
+  // 색상 결정: 드래그 중이거나 편집 모드면 테마 색상 사용, 아니면 기본 색상
+  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
     color || (materialConfig.interiorColor === materialConfig.doorColor 
       ? materialConfig.doorColor
       : materialConfig.interiorColor)
   );
-  
-  // 강조 상태 디버깅
-  if (isHighlighted) {
-    console.log('🌟 useBaseFurniture - 가구 강조 상태:', {
-      moduleId: moduleData.id,
-      isHighlighted,
-      isDragging,
-      색상: furnitureColor
-    });
-  }
-  
   
   // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
@@ -219,36 +190,42 @@ export const useBaseFurniture = (
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
     if (material) {
-      // 드래그 중일 때만 테마 색상 사용
-      if (isDragging) {
+      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용
+      if (isDragging || (isEditMode && viewMode !== '2D')) { // 2D 모드에서는 편집 모드 효과 제거
         material.color.set(getThemeColor());
-        material.map = null; // 드래그 중에는 텍스처 제거
-        material.emissive.set(new THREE.Color(getThemeColor())); // 드래그 중 발광 효과
+        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
+        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
         material.emissiveIntensity = 0.2; // 약간의 발광
-      } else if (isHighlighted) {
-        // 강조 상태일 때 고스트 효과 (반투명)
-        material.emissive.set(new THREE.Color(0x000000)); // 발광 없음
-        material.emissiveIntensity = 0;
-        if (!material.map) {
-          material.color.set(furnitureColor);
-        }
       } else {
         material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
         material.emissiveIntensity = 0;
         if (!material.map) {
-          // 드래그 중이 아닐 때는 기본 색상 사용
+          // 드래그 중이 아니고 편집 모드가 아니고 텍스처가 없을 때만 기본 색상 사용
           material.color.set(furnitureColor);
         }
       }
       
-      // 투명도 설정 - 편집 모드는 투명도 적용하지 않음
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isHighlighted;
+      // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
       material.opacity = renderMode === 'wireframe' ? 0.3 : 
                         (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 : (isHighlighted ? 0.5 : 1.0)); // 강조 시 0.5 투명도 (고스트 효과)
+                        (isDragging ? 0.6 : 
+                        (isEditMode ? 0.3 : 1.0));
       material.needsUpdate = true;
+      
+      console.log('🎨 재질 속성 업데이트:', {
+        furnitureColor: (isDragging || isEditMode) ? getThemeColor() : furnitureColor,
+        actualColor: material.color.getHexString(),
+        transparent: material.transparent,
+        opacity: material.opacity,
+        hasMap: !!material.map,
+        isDragging,
+        isEditMode,
+        emissive: material.emissive.getHexString(),
+        emissiveIntensity: material.emissiveIntensity
+      });
     }
-  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode, isHighlighted]);
+  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
@@ -357,7 +334,6 @@ export const useBaseFurniture = (
   
   // 도어 색상 설정 - 고스트 상태일 때 전달받은 색상 사용
   const doorColor = color || materialConfig.doorColor;
-  
   
   // 높이 계산 헬퍼 함수
   const calculateSectionHeight = (section: SectionConfig, availableHeight: number) => {

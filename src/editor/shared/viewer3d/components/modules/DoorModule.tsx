@@ -4,15 +4,14 @@ import * as THREE from 'three';
 import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
-import { calculateSpaceIndexing, ColumnIndexer } from '../../../utils/indexing';
+import { calculateSpaceIndexing } from '../../../utils/indexing';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
+import { Line } from '@react-three/drei';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -61,30 +60,45 @@ const BoxWithEdges: React.FC<{
   
   return (
     <group position={position}>
-      {/* 면 렌더링 */}
-      <mesh 
-        geometry={geometry} 
-        material={processedMaterial}
-        receiveShadow={viewMode === '3D' && renderMode === 'solid' && !isEditMode} 
-        castShadow={viewMode === '3D' && renderMode === 'solid' && !isEditMode}
-        renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
-        onClick={onClick}
-        onPointerOver={onPointerOver}
-        onPointerOut={onPointerOut}
-      />
-      {/* 윤곽선 렌더링 */}
-      <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 900}>
-        <lineBasicMaterial 
-          color={
-            viewMode === '2D'
-              ? "#00FF00"  // 2D는 항상 초록색
-              : renderMode === 'wireframe'
-                ? "#808080"  // 3D 와이어프레임: 회색
-                : "#505050"  // 3D solid: 진한 회색
-          }
-          linewidth={viewMode === '2D' ? 3 : 1}
+      {/* Solid 모드일 때만 면 렌더링 */}
+      {renderMode === 'solid' && (
+        <mesh 
+          geometry={geometry} 
+          material={processedMaterial}
+          receiveShadow={viewMode === '3D' && !isEditMode} 
+          castShadow={viewMode === '3D' && !isEditMode}
+          renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
+          onClick={onClick}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
         />
-      </lineSegments>
+      )}
+      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
+      {viewMode === '3D' ? (
+        <lineSegments geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 0}>
+          <lineBasicMaterial 
+            color={isEditMode ? getThemeColor() : "#505050"}
+            transparent={true}
+            opacity={isEditMode ? 0.3 : 0.9}
+            depthTest={true}
+            depthWrite={false}
+            polygonOffset={true}
+            polygonOffsetFactor={-10}
+            polygonOffsetUnits={-10}
+          />
+        </lineSegments>
+      ) : (
+        ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
+          <lineSegments geometry={edgesGeometry} renderOrder={1001}>
+            <lineBasicMaterial 
+              color={viewMode === '2D' ? "#00FF00" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))} 
+              linewidth={viewMode === '2D' ? 3 : 0.5}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </lineSegments>
+        )
+      )}
     </group>
   );
 };
@@ -123,7 +137,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen, view2DDirection } = useUIStore();
-  const { columnCount } = useDerivedSpaceStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   
@@ -227,16 +240,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
         } else if (viewMode === '2D' && renderMode === 'solid') {
-          mat.transparent = true;
-          mat.opacity = 0.0;  // 2D 솔리드에서 도어 완전 투명
-          mat.depthWrite = false;
+          mat.transparent = false;
+          mat.opacity = 1.0;
+          mat.depthWrite = true;
         } else if (renderMode === 'wireframe') {
-          // 와이어프레임 모드에서는 도어를 투명하게 처리 (와이어프레임 X자 방지)
-          mat.wireframe = false;  // 와이어프레임 비활성화
           mat.transparent = true;
-          mat.opacity = 0;  // 완전히 투명하게
-          mat.depthWrite = false;
-          mat.side = THREE.DoubleSide;
+          mat.opacity = 0.3;
+          mat.depthWrite = true;
         } else if (isSelected) {
           mat.transparent = true;
           mat.opacity = 0.5;
@@ -329,8 +339,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       materialConfig
     });
     
-    // 드래그 중이거나 편집 모드, 와이어프레임 모드가 아닐 때만 텍스처 적용 (성능 최적화)
-    if (!isDragging && !isEditMode && renderMode !== 'wireframe') {
+    // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용 (성능 최적화)
+    if (!isDragging && !isEditMode) {
       // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
       if (doorMaterial) {
         applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
@@ -344,140 +354,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
     
     // Three.js가 자동으로 업데이트하도록 함
-  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode, renderMode]); // 필요한 의존성 추가
+  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // 필요한 의존성 추가
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
-  // zone별 인덱싱 정보 계산
-  const zone = (spaceInfo as any).zone;
-  const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
-  
-  console.log('🚨🚨🚨 DoorModule 받은 spaceInfo:', {
-    moduleId: moduleData?.id,
-    zone,
-    isDroppedZone,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-    baseConfig: spaceInfo.baseConfig,
-    placementType: spaceInfo.baseConfig?.placementType,
-    floatHeight: spaceInfo.baseConfig?.floatHeight,
-    spaceHeight: spaceInfo.height
-  });
-  
-  let indexing = calculateSpaceIndexing(spaceInfo);
-  
-  // 단내림 구간에서는 zone별 columnWidth 사용
-  if (isDroppedZone && spaceInfo.droppedCeiling?.enabled) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    if (zoneInfo && zoneInfo.dropped) {
-      // 단내림 구간의 columnWidth로 indexing 수정
-      indexing = {
-        ...indexing,
-        columnWidth: zoneInfo.dropped.columnWidth || indexing.columnWidth,
-        columnCount: zoneInfo.dropped.columnCount || indexing.columnCount
-      };
-      console.log('🚨 단내림 구간 indexing 수정:', {
-        zone,
-        originalColumnWidth: calculateSpaceIndexing(spaceInfo).columnWidth,
-        droppedColumnWidth: zoneInfo.dropped.columnWidth,
-        droppedColumnCount: zoneInfo.dropped.columnCount
-      });
-    }
-  }
+  // 인덱싱 정보 계산
+  const indexing = calculateSpaceIndexing(spaceInfo);
   
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
   let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
-  let doorAdjustment = 0; // 도어 X 위치 보정값 (mm 단위가 아닌 Three.js 단위)
-  
-  console.log('🔍🔍 노서라운드 도어 보정 조건 체크:', {
-    surroundType: spaceInfo.surroundType,
-    originalSlotWidth,
-    isNoSurround: spaceInfo.surroundType === 'no-surround',
-    hasOriginalSlotWidth: !!originalSlotWidth,
-    willEnterBlock: spaceInfo.surroundType === 'no-surround' && originalSlotWidth
-  });
-  
-  // 노서라운드 모드에서 엔드패널이 있는 슬롯의 도어 크기 보정
-  if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
-    const endPanelThickness = 18;
-    
-    // 단내림 영역인지 확인
-    const isInDroppedZone = spaceInfo.droppedCeiling?.enabled && (
-      (spaceInfo.droppedCeiling.position === 'left' && 
-       slotCenterX !== undefined && slotCenterX <= 0) ||
-      (spaceInfo.droppedCeiling.position === 'right' && 
-       slotCenterX !== undefined && slotCenterX >= 0)
-    );
-    
-    console.log('🔍 단내림 영역 체크:', {
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
-      slotCenterX,
-      isInDroppedZone,
-      hasDroppedZone: !!indexing.zones?.dropped,
-      surroundType: spaceInfo.surroundType,
-      originalSlotWidth
-    });
-    
-    if (isInDroppedZone && indexing.zones?.dropped) {
-      // 단내림 영역의 경우: 423mm 슬롯을 감지
-      const droppedZone = indexing.zones.dropped;
-      const normalZone = indexing.zones.normal;
-      
-      // 슬롯 인덱스 계산 (단내림 영역 내에서)
-      let droppedSlotIndex = slotIndex || 0;
-      if (spaceInfo.droppedCeiling.position === 'right' && normalZone) {
-        droppedSlotIndex = droppedSlotIndex - normalZone.columnCount;
-      }
-      
-      // 해당 슬롯의 실제 너비 확인
-      const slotWidth = droppedZone.slotWidths?.[droppedSlotIndex];
-      
-      // 423mm 같은 작은 슬롯 감지 (엔드패널이 제거된 슬롯)
-      // 2개 슬롯 중 작은 슬롯이 423mm (큰 슬롯이 441mm)
-      if (slotWidth && droppedZone.slotWidths && droppedZone.slotWidths.length === 2) {
-        const maxSlotWidth = Math.max(...droppedZone.slotWidths);
-        const minSlotWidth = Math.min(...droppedZone.slotWidths);
-        
-        // 작은 슬롯(423mm)에 도어를 배치할 때 엔드패널 18mm 추가
-        if (slotWidth === minSlotWidth && maxSlotWidth - minSlotWidth >= 15) {
-          actualDoorWidth = slotWidth + endPanelThickness;
-          
-          // 도어 X 위치도 조정 - 엔드패널 쪽으로 9mm 이동
-          if (spaceInfo.droppedCeiling.position === 'left') {
-            // 왼쪽 단내림: 엔드패널이 왼쪽에 있음
-            doorAdjustment = -mmToThreeUnits(9); // 왼쪽으로 9mm
-          } else {
-            // 오른쪽 단내림: 엔드패널이 오른쪽에 있음  
-            doorAdjustment = mmToThreeUnits(9); // 오른쪽으로 9mm
-          }
-          
-          console.log('🚪🔥 단내림 영역 423mm 슬롯 도어 보정:', {
-            droppedSlotIndex,
-            slotWidth,
-            maxSlotWidth,
-            minSlotWidth,
-            difference: maxSlotWidth - minSlotWidth,
-            보정전너비: slotWidth,
-            보정후너비: actualDoorWidth,
-            X위치보정: doorAdjustment / 0.01,
-            설명: '423mm 슬롯 도어 너비 18mm 추가, X위치 9mm 이동'
-          });
-        }
-      }
-    } else {
-      // 일반 영역의 엔드패널 감지 (기존 로직)
-      if (originalSlotWidth < indexing.columnWidth - 10) {
-        actualDoorWidth = originalSlotWidth + endPanelThickness;
-        console.log('🚪📏 일반 영역 엔드패널 도어 보정:', {
-          originalSlotWidth,
-          columnWidth: indexing.columnWidth,
-          actualDoorWidth,
-          slotIndex,
-          설명: '엔드패널을 덮기 위해 18mm 추가'
-        });
-      }
-    }
-  }
   
   console.log('🚪📏 도어 너비 계산:', {
     originalSlotWidth,
@@ -490,18 +375,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 노서라운드 모드에서 도어 크기 처리
   if (spaceInfo.surroundType === 'no-surround') {
     // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
-    // originalSlotWidth가 없으면 indexing의 columnWidth 사용
+    // originalSlotWidth가 없으면 fallback으로 계산
     if (!originalSlotWidth) {
-      // 단내림 구간에서는 zone별 columnWidth 사용 (이미 위에서 수정됨)
-      // indexing.columnWidth가 이미 엔드패널을 고려해서 계산됨
-      actualDoorWidth = indexing.columnWidth;
-      console.log(`🚪 노서라운드 도어 너비 계산 (fallback):`, {
+      // 전체 너비에서 엔드패널/프레임을 제외한 실제 가구 공간을 슬롯 수로 나눔
+      let availableWidth = spaceInfo.width;
+      
+      // installType에 따라 엔드패널/이격거리 처리
+      if (spaceInfo.installType === 'freestanding') {
+        // 벽없음: 양쪽 엔드패널 18mm씩
+        availableWidth -= 36; // 18mm * 2
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 한쪽벽: 벽이 없는 쪽에만 엔드패널
+        if (!spaceInfo.wallConfig?.left) {
+          availableWidth -= 18; // 왼쪽 엔드패널
+        } else if (!spaceInfo.wallConfig?.right) {
+          availableWidth -= 18; // 오른쪽 엔드패널
+        }
+      } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 양쪽벽: 엔드패널 없음 (이격거리는 별도 처리)
+        // availableWidth 그대로 사용
+      }
+      
+      actualDoorWidth = Math.floor(availableWidth / indexing.columnCount);
+      console.log(`🚪 노서라운드 도어 너비 계산:`, {
         전체너비: spaceInfo.width,
-        columnCount: indexing.columnCount,
-        columnWidth: indexing.columnWidth,
-        actualDoorWidth,
-        zone: (spaceInfo as any).zone,
-        isDroppedZone
+        좌측제외: spaceInfo.wallConfig?.left ? 2 : 18,
+        우측제외: spaceInfo.wallConfig?.right ? 2 : 18,
+        가용너비: availableWidth,
+        슬롯수: indexing.columnCount,
+        도어너비: actualDoorWidth
       });
     }
   }
@@ -521,10 +423,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     moduleDataId: moduleData?.id,
     isDynamic: moduleData?.isDynamic,
     spaceInfoZone: (spaceInfo as any).zone,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-    baseConfig: spaceInfo.baseConfig,
-    placementType: spaceInfo.baseConfig?.placementType,
-    floatHeight: spaceInfo.baseConfig?.floatHeight
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
   });
   
   // mm를 Three.js 단위로 변환
@@ -535,611 +434,48 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 문 높이 계산 ===
-  // 상부장/하부장은 가구 자체 높이에 맞춤, 일반 가구는 전체 공간 높이 사용
-  // 주의: spaceInfo.height는 외부 공간 높이, 실제 내부 공간은 상단 프레임 10mm를 뺀 값
+  // 문 높이 = 전체 공간 높이 - 바닥재 높이 (내경 공간 높이)
   let fullSpaceHeight = spaceInfo.height;
-  let floatHeight = 0;
-  let actualDoorHeight: number;
-  let doorHeightAdjusted: number;
   
-  // 상단 프레임 두께 (10mm) - geometry.ts의 SURROUND_FRAME_THICKNESS와 동일
-  const topFrameThickness = 10;
-  
-  // 띄워서 배치인 경우 floatHeight 먼저 가져오기 (모든 가구 타입에 적용)
-  // 듀얼 하부장도 포함하여 체크
-  if (spaceInfo.baseConfig?.placementType === 'float') {
-    floatHeight = spaceInfo.baseConfig.floatHeight || 0;
-    console.log('🔴🔴🔴 floatHeight 설정:', {
-      baseConfig_type: spaceInfo.baseConfig?.type,
-      placementType: spaceInfo.baseConfig?.placementType,
-      floatHeight,
-      moduleId: moduleData?.id,
-      isDualLowerCabinet: moduleData?.id?.includes('dual-lower-cabinet')
+  // 단내림 구간인 경우 높이 조정
+  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+    const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+    fullSpaceHeight = spaceInfo.height - dropHeight;
+    console.log('🚪📏 단내림 도어 높이 조정:', {
+      originalHeight: spaceInfo.height,
+      dropHeight,
+      adjustedHeight: fullSpaceHeight,
+      zone: (spaceInfo as any).zone
     });
   }
   
-  // 상부장/하부장 체크
-  const isUpperCabinet = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
-  const isLowerCabinet = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet');
+  const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+  const actualDoorHeight = fullSpaceHeight - floorHeight;
+  const doorHeight = mmToThreeUnits(actualDoorHeight - 30); // 30mm 줄임 (기존 20mm에서 10mm 추가)
   
-  // 키큰장 여부 확인 (전역 스코프에서 미리 정의)
-  // dual-tall, dual-pantry, 2drawer-hanging 등도 포함
-  const isTallCabinet = moduleData?.id?.includes('tall') || 
-                        moduleData?.id?.includes('pantry') || 
-                        moduleData?.id?.includes('wardrobe') ||
-                        moduleData?.id?.includes('2drawer-hanging') || // 2단서랍+옷장 추가
-                        moduleData?.category === 'tall' ||
-                        (moduleData?.category === 'full' && moduleData?.dimensions?.height >= 2000); // 2000mm 이상 full 가구도 키큰장으로 처리
-  
-  // 2단서랍+옷장 특별 체크
-  const is2DrawerHanging = moduleData?.id?.includes('2drawer-hanging');
-  
-  console.log('🔍 키큰장 체크:', {
-    moduleId: moduleData?.id,
-    category: moduleData?.category,
-    height: moduleData?.dimensions?.height,
-    isTallCabinet,
-    is2DrawerHanging,
-    includes_tall: moduleData?.id?.includes('tall'),
-    includes_pantry: moduleData?.id?.includes('pantry'),
-    includes_wardrobe: moduleData?.id?.includes('wardrobe'),
-    category_tall: moduleData?.category === 'tall',
-    is_full_and_tall: moduleData?.category === 'full' && moduleData?.dimensions?.height >= 2000
-  });
-  
-  if (is2DrawerHanging) {
-    console.log('🚨🚨🚨 2단서랍+옷장 감지!!!', {
-      moduleId: moduleData?.id,
-      category: moduleData?.category,
-      dimensions: moduleData?.dimensions,
-      isTallCabinet,
-      floatHeight,
-      spaceInfo: {
-        height: spaceInfo.height,
-        baseConfig: spaceInfo.baseConfig
-      },
-      doorHeightAdjusted,
-      actualDoorHeight,
-      furnitureHeight: moduleData?.dimensions?.height
-    });
-  }
-  
-  if (isUpperCabinet || isLowerCabinet) {
-    // 상부장/하부장은 가구 높이에 맞춤
-    actualDoorHeight = moduleData?.dimensions?.height || (isUpperCabinet ? 600 : 1000);
-    
-    // 상부장이고 단내림 구간인 경우 - 높이 조정 불필요
-    // 가구 자체의 높이는 변하지 않음, Y 위치만 낮아짐
-    if (isUpperCabinet && (spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      // 단내림 구간에서도 상부장 자체의 높이는 변하지 않음
-      // actualDoorHeight는 그대로 유지
-      console.log('🚪📏 단내림 상부장 도어 높이:', {
-        originalHeight: moduleData?.dimensions?.height || 600,
-        actualDoorHeight,
-        zone: (spaceInfo as any).zone,
-        설명: '단내림 구간에서도 상부장 자체 높이는 동일, Y 위치만 낮아짐'
-      });
-    }
-    
-    doorHeightAdjusted = actualDoorHeight;
-    console.log('🚪📏 상하부장 도어 높이:', {
-      category: moduleData?.category,
-      furnitureHeight: actualDoorHeight,
-      doorHeight: actualDoorHeight,
-      type: isUpperCabinet ? '상부장' : '하부장'
-    });
-  } else {
-    // 일반 가구(키큰장 등)는 전체 공간 높이 사용
-    // floatHeight는 이미 위에서 설정됨
-    
-    // 단내림 + 서라운드 구간인 경우 키큰장도 단내림 천장 높이 적용
-    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && spaceInfo.surround?.use) {
-      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-      fullSpaceHeight = spaceInfo.height - dropHeight;
-      console.log('🚪📏 단내림+서라운드 키큰장 도어 높이 조정:', {
-        originalHeight: spaceInfo.height,
-        dropHeight,
-        adjustedHeight: fullSpaceHeight,
-        zone: (spaceInfo as any).zone,
-        isTallCabinet,
-        surroundUse: spaceInfo.surround?.use
-      });
-    }
-    // 단내림만 있는 경우 (서라운드 없음)
-    else if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && !spaceInfo.surround?.use) {
-      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-      fullSpaceHeight = spaceInfo.height - dropHeight;
-      console.log('🚪📏 단내림 도어 높이 조정:', {
-        originalHeight: spaceInfo.height,
-        dropHeight,
-        adjustedHeight: fullSpaceHeight,
-        zone: (spaceInfo as any).zone
-      });
-    }
-    
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    actualDoorHeight = fullSpaceHeight - floorHeight;
-    
-    // 띄워서 배치해도 도어 높이는 변하지 않음 (공간 전체 높이 유지)
-    // 단지 Y 위치만 올라감
-    doorHeightAdjusted = actualDoorHeight;
-  }
-  
-  // === 문 Y 위치 계산 (높이 계산 전에 위치 먼저 계산) ===
+  // === 문 Y 위치 계산 (기존 작동하던 로직으로 복원) ===
+  // 
+  // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
+  // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
+  // 
+  // 조정 로직:
+  // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
+  // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
+  // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
+  //
   let doorYPosition: number;
-  let finalDoorHeight = doorHeightAdjusted; // 최종 도어 높이 변수
   
-  if (isTallCabinet) {
-    // 키큰장 가구 높이는 항상 모듈 자체 높이 유지
-    // 단내림 구간에서도 가구 자체 높이는 변하지 않음
-    const furnitureHeight = moduleData?.dimensions?.height || 2400;
-    
-    // 단내림 구간인지 확인
-    const zone = (spaceInfo as any).zone;
-    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
-    const dropHeight = isDroppedZone ? (spaceInfo.droppedCeiling?.dropHeight || 200) : 0;
-    
-    console.log('🔴🔴🔴 키큰장 도어 계산 시작:', {
-      moduleId: moduleData?.id,
-      zone,
-      isDroppedZone,
-      dropHeight,
-      floatHeight,
-      furnitureHeight,
-      spaceHeight: spaceInfo.height
-    });
-    
-    console.log('✅ 키큰장 블록 진입!', {
-      moduleId: moduleData?.id,
-      floatHeight,
-      actualDoorHeight,
-      doorHeightAdjusted,
-      moduleHeight: moduleData?.dimensions?.height,
-      spaceHeight: spaceInfo.height,
-      hasTopFrame: topFrameThickness,
-      zone,
-      isDroppedZone,
-      dropHeight,
-      surroundUse: spaceInfo.surround?.use
-    });
-    
-    // 단내림+서라운드에서는 키큰장이 상부프레임 하단에 맞닿음 (프레임 두께만큼 갭)
-    // 일반 구간에서는 천장-5mm 갭 유지
-    const isDroppedWithSurround = isDroppedZone && spaceInfo.surround?.use;
-    const upperGap = isDroppedWithSurround ? topFrameThickness : 5;  // 단내림+서라운드: 10mm(프레임 두께), 일반: 5mm
-    const lowerGap = 0;      // 바닥까지 (갭 없음)
-    
-    const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-    
-    console.log('🔴 키큰장 가구 높이 확인:', {
-      moduleDataHeight: moduleData?.dimensions?.height,
-      furnitureHeight,
-      actualDoorHeight,
-      spaceInfoHeight: spaceInfo.height,
-      zone,
-      isDroppedZone,
-      dropHeight,
-      설명: '키큰장은 단내림 구간에서도 높이 동일'
-    });
-    
-    // 단내림 구간에서 키큰장 도어 처리
-    if (isDroppedZone) {
-      // 단내림 구간: 가구는 dropHeight만큼 내려와 있음
-      // 도어 높이는 단내림 천장 높이에 맞춤
-      const droppedCeilingHeight = spaceInfo.height - dropHeight;
-      
-      if (floatHeight > 0) {
-        // 띄워서 배치 + 단내림
-        // 가구는 원래 높이 그대로, 위치만 변경
-        
-        // 가구 절대 위치 (단내림 구간 + 띄움 배치)
-        // 가구 상단은 단내림 천장에서 upperGap만큼 떨어짐
-        const furnitureTopAbsolute = droppedCeilingHeight - upperGap;  // 단내림 천장 - 5mm
-        const furnitureBottomAbsolute = furnitureTopAbsolute - furnitureHeight;  // 가구 하단
-        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-        
-        // 단내림 구간 + 띄움 배치 도어 높이 계산
-        // 띄워서 배치 시 도어 높이를 200mm 줄임
-        // 도어 상단: 가구 상단 + 5mm (가구보다 5mm 위로 확장)
-        // 도어 하단: 가구 하단 + 185mm (200mm 줄이되 상하 확장 고려)
-        const doorTopAbsolute = furnitureTopAbsolute + 5;  // 가구 상단 + 5mm
-        const doorBottomAbsolute = furnitureBottomAbsolute + 185;  // 가구 하단 + 185mm (200mm 줄임)
-        
-        // 도어 높이 = 가구 높이 - 200mm + 확장 (15mm)
-        finalDoorHeight = furnitureHeight - 200 + 15;  // 가구 높이 - 200mm + 상하 확장
-        
-        // 도어 중심 절대 위치 (10mm 아래로 확장되어 중심도 5mm 아래로 이동)
-        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-        
-        // 가구 중심 기준 상대 좌표로 변환
-        doorYPosition = mmToThreeUnits(doorCenterAbsolute - furnitureCenterAbsolute);
-        
-        console.log('🔍 단내림 + 띄움 배치 키큰장 도어 계산:', {
-          zone: 'dropped',
-          dropHeight,
-          droppedCeilingHeight,
-          띄움높이: floatHeight,
-          가구높이: furnitureHeight,
-          공간높이: spaceInfo.height,
-          도어높이: finalDoorHeight,
-          높이계산: `가구높이(${furnitureHeight}) - 200mm + 확장(15) = ${finalDoorHeight}`,
-          furnitureTopAbsolute,
-          furnitureBottomAbsolute,
-          furnitureCenterAbsolute,
-          doorTopAbsolute,
-          doorBottomAbsolute,
-          doorCenterAbsolute,
-          doorYPosition_units: doorYPosition,
-          doorYPosition_mm: doorYPosition / 0.01,
-          설명: '도어 상단: 가구상단-5mm, 도어 하단: 바닥+floatHeight+25mm'
-        });
-      } else {
-        // 받침대 배치 + 단내림
-        // 가구 절대 위치 (단내림 구간)
-        // 키큰장은 단내림 구간에서도 바닥부터 단내림 천장까지
-        const furnitureTopAbsolute = droppedCeilingHeight - 10;     // 단내림 천장 - 10mm (상부 갭)
-        const furnitureBottomAbsolute = baseHeight;                 // 바닥 + 받침대 높이
-        const actualFurnitureHeight = furnitureTopAbsolute - furnitureBottomAbsolute;  // 실제 가구 높이
-        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-        
-        // 도어 절대 위치
-        // 도어 상단: 가구 상단과 동일 (위로 5mm 확장)
-        // 도어 하단: 바닥에서 20mm (아래로 5mm 확장)
-        const doorTopAbsolute = furnitureTopAbsolute;  // 가구 상단과 동일 (위로 5mm 확장)
-        const doorBottomAbsolute = 20;                  // 바닥에서 20mm (아래로 5mm 확장)
-        
-        // 도어 높이 (10mm 더 길어짐)
-        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
-        
-        // 도어 중심 절대 위치
-        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-        
-        // 가구 중심 기준 상대 좌표로 변환
-        // 도어를 아래로 이동 (upperGap 사용하여 상대적 조정)
-        const doorYOffset = -upperGap;  // upperGap(5mm)만큼 아래로
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute + doorYOffset) * 0.01; // mm to Three.js units
-        
-        console.log('🔍 단내림 + 받침대 배치 키큰장 도어 계산:', {
-          zone: 'dropped',
-          dropHeight,
-          droppedCeilingHeight,
-          받침대높이: baseHeight,
-          원래가구높이: furnitureHeight,
-          실제가구높이: actualFurnitureHeight,
-          도어높이: finalDoorHeight,
-          doorTopAbsolute,
-          doorBottomAbsolute,
-          furnitureTopAbsolute,
-          furnitureBottomAbsolute,
-          furnitureCenterAbsolute,
-          doorCenterAbsolute,
-          doorYPosition_units: doorYPosition,
-          doorYPosition_mm: doorYPosition / 0.01,
-          설명: '단내림 구간: 도어 높이는 단내림 천장 높이에 맞춤'
-        });
-      }
-    } else {
-      // 일반 구간 (기존 로직)
-      if (floatHeight > 0) {
-        console.log('✅ 키큰장 + 띄움 배치 모드!', { floatHeight, furnitureHeight });
-        
-        // 일반구간에서도 띄움 배치 시 도어 높이 줄이기
-        // 도어 절대 위치
-        const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-        const doorBottomAbsolute = floatHeight;               // 띄움높이만큼 (25mm 제외)
-        
-        // 도어 높이 (띄움높이만큼 줄어듦)
-        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
-        
-        // 가구 절대 위치  
-        const furnitureTopAbsolute = actualDoorHeight;  // 가구 상단은 천장 위치
-        const furnitureBottomAbsolute = floatHeight;    // 바닥+띄움높이
-        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-        
-        // 도어 중심 절대 위치
-        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-        
-        // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
-        // 5mm 더 내림 (2단서랍+옷장도 동일하게 적용)
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
-        
-        console.log('🔍 띄움 배치 키큰장 도어 계산:', {
-          띄움높이: floatHeight,
-          가구높이: furnitureHeight,
-          actualDoorHeight,
-          도어높이: finalDoorHeight,
-          doorYPosition_units: doorYPosition,
-          doorYPosition_mm: doorYPosition / 0.01,
-          is2DrawerHanging,
-          설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
-        });
-        
-        if (is2DrawerHanging) {
-          console.log('🚨🚨🚨 2단서랍+옷장 도어 계산 상세:', {
-            doorTopAbsolute,
-            doorBottomAbsolute,
-            finalDoorHeight,
-            furnitureCenterAbsolute,
-            doorCenterAbsolute,
-            doorYPosition,
-            doorYPosition_mm: doorYPosition / 0.01,
-            계산과정: {
-              '도어중심-가구중심': doorCenterAbsolute - furnitureCenterAbsolute,
-              '5mm조정': -5,
-              '최종': (doorCenterAbsolute - furnitureCenterAbsolute - 5)
-            }
-          });
-        }
-      } else {
-        // 받침대 배치: 도어는 천장-5mm부터 바닥+25mm까지
-        const baseHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-        
-        // 도어 절대 위치
-        const doorTopAbsolute = actualDoorHeight - upperGap;  // 상부프레임 하단 또는 천장-5mm
-        const doorBottomAbsolute = 25;                        // 바닥+25mm (바닥에서 25mm 띄움)
-        
-        // 도어 높이
-        finalDoorHeight = doorTopAbsolute - doorBottomAbsolute;
-        
-        // 가구 절대 위치
-        const furnitureTopAbsolute = actualDoorHeight;    // 가구 상단은 천장 위치
-        const furnitureBottomAbsolute = baseHeight;       // 바닥+받침대높이
-        const furnitureCenterAbsolute = (furnitureTopAbsolute + furnitureBottomAbsolute) / 2;
-        
-        // 도어 중심 절대 위치
-        const doorCenterAbsolute = (doorTopAbsolute + doorBottomAbsolute) / 2;
-        
-        // 가구 중심 기준 상대 좌표로 변환 (Three.js Y=0이 가구 중심)
-        // 5mm 더 내림
-        doorYPosition = (doorCenterAbsolute - furnitureCenterAbsolute - 5) * 0.01; // mm to Three.js units
-        
-        console.log('🔍 받침대 배치 키큰장 도어 계산:', {
-          받침대높이: baseHeight,
-          가구높이: furnitureHeight,
-          actualDoorHeight,
-          도어높이: finalDoorHeight,
-          doorYPosition_units: doorYPosition,
-          설명: '가구는 천장-10mm, 도어는 천장-5mm 위치해야 함'
-        });
-      }
-    }
-    
-    console.log('🚪📏 키큰장 도어 최종 계산:', {
-      type: '키큰장',
-      zone,
-      isDroppedZone,
-      dropHeight,
-      가구높이_mm: furnitureHeight,
-      전체공간높이_mm: actualDoorHeight,
-      띄움높이_mm: floatHeight,
-      최종도어높이_mm: finalDoorHeight,
-      doorYPosition_units: doorYPosition,
-      doorYPosition_mm: doorYPosition / 0.01,
-      설명: isDroppedZone ? '단내림: 도어 높이는 단내림 천장에 맞춤' : '일반: 전체 높이 사용',
-      note: floatHeight > 0 ? '띄움 배치: 가구 기준 상대 위치' : '일반 배치: 가구 기준 상대 위치'
-    });
-  } else if (isUpperCabinet) {
-    // 상부장 도어: 가구 상단에서 위로 5mm, 하단에서 아래로 18mm 확장
-    const upperExtension = 5;   // 가구 상단에서 위로 5mm
-    const lowerExtension = 18;  // 가구 하단에서 아래로 18mm (하단 마감재 덮기)
-    // 상부장은 항상 원래 높이 유지 (단내림에서도 가구 높이는 변하지 않음)
-    const furnitureHeight = moduleData?.dimensions?.height || 600;
-    
-    // 도어 높이 = 가구 높이 + 위 확장 + 아래 확장
-    finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
-    
-    // 상부장 도어 Y 위치 계산
-    // 단내림 구간인지 확인
-    const zone = (spaceInfo as any).zone; // zone 정보 가져오기
-    const isDroppedZone = zone === 'dropped' && spaceInfo.droppedCeiling?.enabled;
-    
-    // 띄워서 배치인 경우
-    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-    const floatHeightForUpper = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    
-    if (isDroppedZone && floatHeightForUpper > 0) {
-      // 단내림 구간 + 띄워서 배치: 상부장이 단내림 천장에서 floatHeight만큼 떨어진 위치
-      // 도어는 가구 기준 상대 위치 사용
-      
-      // 기본 오프셋 계산 (일반 구간과 동일)
-      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
-      const additionalOffset = -10;  // 10mm 더 아래로
-      
-      // Three.js 단위로 변환
-      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
-      
-      console.log('🚪📍 단내림 + 띄워서 배치 상부장 도어 위치:', {
-        type: '단내림 + 띄워서 배치 상부장',
-        zone,
-        floatHeight: floatHeightForUpper,
-        가구높이: furnitureHeight,
-        도어높이: finalDoorHeight,
-        기본오프셋: baseOffset,
-        추가오프셋: additionalOffset,
-        총오프셋: baseOffset + additionalOffset,
-        doorYPosition_units: doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        설명: '도어는 가구 기준 상대 위치 사용 (가구 Y 위치는 FurnitureItem에서 처리)'
-      });
-    } else if (isDroppedZone) {
-      // 단내림 구간 (띄워서 배치 아님): 가구가 이미 dropHeight만큼 내려왔으므로
-      // 도어는 가구 기준 상대 위치만 사용 (추가 이동 불필요)
-      
-      // 기본 오프셋 계산 (일반 구간과 동일)
-      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
-      const additionalOffset = -10;  // 10mm 더 아래로
-      
-      // Three.js 단위로 변환
-      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
-      
-      console.log('🚪📍 단내림 상부장 도어 위치 계산:', {
-        type: '단내림 상부장',
-        zone,
-        가구높이: furnitureHeight,
-        도어높이: finalDoorHeight,
-        기본오프셋: baseOffset,
-        추가오프셋: additionalOffset,
-        총오프셋: baseOffset + additionalOffset,
-        doorYPosition_units: doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        설명: '도어는 가구 기준 상대 위치 사용 (가구가 이미 내려왔으므로 추가 이동 불필요)'
-      });
-    } else {
-      // 일반 구간: 기존 로직 유지
-      // 도어 크기는 그대로 유지 (위 5mm, 아래 18mm 확장)
-      // 기본 도어 중심 위치 = (5 - 18) / 2 = -6.5mm
-      // 추가로 10mm 더 아래로 이동
-      const baseOffset = (upperExtension - lowerExtension) / 2;  // -6.5mm
-      const additionalOffset = -10;  // 10mm 더 아래로
-      
-      // Three.js 단위로 변환
-      doorYPosition = mmToThreeUnits(baseOffset + additionalOffset);
-      
-      console.log('🚪📍 상부장 도어 위치 계산:', {
-        type: '상부장',
-        가구높이: furnitureHeight,
-        위확장: upperExtension,
-        아래확장: lowerExtension,
-        도어높이: finalDoorHeight,
-        가구상단_mm: furnitureHeight/2,
-        가구하단_mm: -furnitureHeight/2,
-        기본오프셋_mm: baseOffset,
-        추가오프셋_mm: additionalOffset,
-        최종오프셋_mm: baseOffset + additionalOffset,
-        doorYPosition_units: doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        계산식: `${baseOffset} + ${additionalOffset} = ${baseOffset + additionalOffset}`,
-        note: `도어 중심이 가구 중심보다 ${-(baseOffset + additionalOffset)}mm 아래로 이동`
-      });
-    }
-  } else if (isLowerCabinet) {
-    console.log('🔴🔴🔴 하부장 조건 진입!!!', {
-      floatHeight,
-      isLowerCabinet,
-      moduleId: moduleData?.id,
-      isDualLowerCabinet: moduleData?.id?.includes('dual-lower-cabinet'),
-      moduleCategory: moduleData?.category,
-      baseConfig: spaceInfo.baseConfig,
-      placementType: spaceInfo.baseConfig?.placementType,
-      baseConfigType: spaceInfo.baseConfig?.type,
-      slotWidths
-    });
-    
-    const furnitureHeight = moduleData?.dimensions?.height || 1000;
-    const upperExtension = 18;  // 위로 18mm
-    let lowerExtension = 0;  // 아래 확장값 (else 블록에서 설정)
-    
-    console.log('🔴🔴🔴 floatHeight 체크:', {
-      floatHeight,
-      floatHeight_greaterThanZero: floatHeight > 0,
-      typeOfFloatHeight: typeof floatHeight,
-      baseConfig: spaceInfo.baseConfig,
-      moduleId: moduleData?.id
-    });
-    
-    if (floatHeight > 0) {
-      console.log('🔴🔴🔴 IF 블록 진입 - 띄움 배치 (듀얼 하부장 포함)');
-      // 띄워서 배치: 도어 높이는 변경하지 않음
-      
-      // 도어 높이: 가구 원래 높이 유지 + 위 확장(18mm)
-      finalDoorHeight = furnitureHeight + upperExtension;
-      
-      // 도어 Y 위치: FurnitureItem에서 처리하므로 0
-      doorYPosition = 0;
-      
-      console.log('🔴🔴🔴 하부장 띄움 배치:', {
-        floatHeight,
-        furnitureHeight,
-        finalDoorHeight,
-        doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        위확장: upperExtension,
-        도어높이계산: `${furnitureHeight} + ${upperExtension} = ${finalDoorHeight}`,
-        가구상단: furnitureHeight / 2,
-        가구하단: -furnitureHeight / 2,
-        도어상단: (doorYPosition / 0.01) + finalDoorHeight / 2,
-        도어하단: (doorYPosition / 0.01) - finalDoorHeight / 2,
-        도어하단_vs_가구하단: ((doorYPosition / 0.01) - finalDoorHeight / 2) - (-furnitureHeight / 2),
-        설명: '띄움 배치시 도어 위 18mm만 확장, 하단은 가구와 일치해야 함'
-      });
-    } else {
-      console.log('🔴🔴🔴 ELSE 블록 진입 - 일반 배치');
-      // 일반 배치: 위 18mm, 아래 40mm 확장
-      lowerExtension = 40;
-      finalDoorHeight = furnitureHeight + upperExtension + lowerExtension;
-      doorYPosition = mmToThreeUnits((lowerExtension - upperExtension) / 2 - 32);
-      console.log('🔴🔴🔴 일반 배치 doorYPosition 계산:', {
-        lowerExtension,
-        upperExtension,
-        계산: (lowerExtension - upperExtension) / 2 - 32,
-        doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01
-      });
-    }
-    
-    console.log('🚪📍 하부장 도어 위치:', {
-      type: '하부장',
-      floatHeight,
-      띄움배치여부: floatHeight > 0,
-      가구높이: furnitureHeight,
-      위확장: upperExtension,
-      아래확장: lowerExtension,
-      도어높이: finalDoorHeight,
-      doorYPosition,
-      doorYPosition_mm: doorYPosition / 0.01,
-      가구하단_mm: -furnitureHeight / 2,
-      도어하단_mm: (doorYPosition / 0.01) - finalDoorHeight / 2,
-      차이: ((doorYPosition / 0.01) - finalDoorHeight / 2) - (-furnitureHeight / 2),
-      note: floatHeight > 0 ? '띄워서 배치: 위 18mm만 확장' : '일반 배치: 위 18mm, 아래 40mm 확장'
-    });
-    
-    console.log('🚪📍 하부장 도어 최종:', {
-      type: '하부장',
-      doorYPosition,
-      doorYPosition_mm: doorYPosition / 0.01,
-      adjustedHeight: doorHeightAdjusted,
-      받침대: spaceInfo.baseConfig?.type === 'floor',
-      note: '키큰장 도어와 동일한 Y 위치 사용'
-    });
+  if (spaceInfo.baseConfig?.type === 'floor') {
+    // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
+    const topFrameHeight = spaceInfo.frameSize?.top || 50;
+    const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+    doorYPosition = floorHeight > 0 
+      ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
+      : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
   } else {
-    // 일반 가구는 기존 로직 사용
-    // 
-    // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
-    // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
-    // 
-    // 조정 로직:
-    // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
-    // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
-    // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
-    //
-    // 하부장, 상부장, 키큰장은 이미 위에서 처리했으므로 제외
-    if (!isLowerCabinet && !isUpperCabinet && !isTallCabinet) {
-      if (spaceInfo.baseConfig?.type === 'floor') {
-        // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
-        const topFrameHeight = spaceInfo.frameSize?.top || 50;
-        const baseFrameHeight = spaceInfo.baseConfig.height || 65;
-        const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-        doorYPosition = floorHeight > 0 
-          ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
-          : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
-      } else {
-        // 받침대 없음: 상단 프레임 높이 조정 없음 (0으로 설정)
-        const topFrameHeight = spaceInfo.frameSize?.top || 50;
-        doorYPosition = 0;
-        
-        // 띄워서 배치인 경우 Y 위치를 아래로 조정 (15mm 아래로 확장)
-        if (floatHeight > 0) {
-          // 도어를 7.5mm 아래로 이동 (15mm 확장의 절반)
-          doorYPosition = mmToThreeUnits(-7.5);
-          console.log('🚪📍 띄워서 배치 도어 위치 조정:', {
-            floatHeight,
-            doorYPosition,
-            doorYPosition_mm: -7.5,
-            note: '도어 아래로 15mm 확장을 위해 7.5mm 아래로 이동'
-          });
-        }
-      }
-    }
+    // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
+    const topFrameHeight = spaceInfo.frameSize?.top || 50;
+    doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
   }
   
   // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)
@@ -1160,45 +496,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
   // 추가로 2mm 더 띄워서 캐비닛과 분리
-  // 도어 높이 최종 계산 - 상부장은 여백 없이, 하부장은 확장된 높이, 키큰장은 위에서 계산됨, 일반 가구는 30mm 줄임
-  const doorHeight = isUpperCabinet 
-    ? mmToThreeUnits(finalDoorHeight) // 상부장은 가구 크기 그대로
-    : isLowerCabinet
-    ? mmToThreeUnits(finalDoorHeight) // 하부장은 확장된 높이 (위에서 계산됨)
-    : isTallCabinet
-    ? mmToThreeUnits(finalDoorHeight) // 키큰장은 위 5mm, 아래 40mm 확장 (위에서 계산됨)
-    : mmToThreeUnits(finalDoorHeight - 30); // 일반 가구는 30mm 줄임 (원래 로직)
-  
-  console.log('🚪📐 도어 높이 최종 적용:', {
-    moduleId: moduleData?.id,
-    category: moduleData?.category,
-    isUpperCabinet,
-    isLowerCabinet,
-    isTallCabinet,
-    is2DrawerHanging,
-    floatHeight_mm: floatHeight,
-    finalDoorHeight_mm: finalDoorHeight,
-    doorHeight_mm: isLowerCabinet || isTallCabinet ? finalDoorHeight : (finalDoorHeight - 30),
-    doorHeight_three_units: doorHeight,
-    doorHeight_three_to_mm: doorHeight / 0.01,
-    doorYPosition_units: doorYPosition,
-    doorYPosition_mm: doorYPosition / 0.01,
-    적용타입: isTallCabinet ? '키큰장' : isUpperCabinet ? '상부장' : isLowerCabinet ? '하부장' : '일반'
-  });
-  
-  if (is2DrawerHanging) {
-    console.log('🚨🚨🚨 2단서랍+옷장 최종 도어 값:', {
-      moduleId: moduleData?.id,
-      doorHeight_mm: doorHeight / 0.01,
-      doorYPosition_mm: doorYPosition / 0.01,
-      floatHeight,
-      finalDoorHeight,
-      도어상단_절대위치_mm: (doorYPosition / 0.01) + (doorHeight / 0.01 / 2),
-      도어하단_절대위치_mm: (doorYPosition / 0.01) - (doorHeight / 0.01 / 2),
-      설명: '이 값들이 다른 키큰장과 동일해야 함'
-    });
-  }
-
   // 노서라운드와 서라운드 모드에서 동일한 Z축 위치 유지
   const baseDepthOffset = mmToThreeUnits(20) + mmToThreeUnits(2);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset; // 서라운드와 노서라운드 동일하게 처리
@@ -1333,158 +630,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     },
   });
 
-  // 도어 위치 계산: slotCenterX는 실제로 오프셋 값임
-  // 도어는 기본적으로 가구 중심(0,0,0)에 위치하고, slotCenterX 오프셋만큼 이동
-  let doorGroupX = slotCenterX !== undefined ? slotCenterX : 0; // 도어 X축 오프셋 (Three.js 단위)
-  
-  // doorAdjustment가 이미 설정되었는지 확인 (상단 코드에서 설정된 값 유지)
-  console.log('🚪🔍 doorAdjustment 상단에서 설정된 값:', {
-    doorAdjustment_from_above: doorAdjustment,
-    doorAdjustment_mm: doorAdjustment / 0.01,
-    설명: '400줄대에서 이미 설정된 값'
-  });
-  
-  // 노서라운드 + 단내림 영역에서 엔드패널이 있는 경우 도어 위치 조정
-  console.log('🚪🚨 도어 X 위치 조정 시작:', {
-    surroundType: spaceInfo.surroundType,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-    installType: spaceInfo.installType,
-    wallConfig: spaceInfo.wallConfig,
-    slotCenterX,
-    slotIndex,
-    moduleId: moduleData?.id
-  });
-  
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.droppedCeiling?.enabled) {
-    // 벽 설정 확인 - freestanding이면 벽이 없음
-    const isFreestanding = spaceInfo.installType === 'freestanding';
-    const hasLeftWall = spaceInfo.wallConfig?.left;
-    const hasRightWall = spaceInfo.wallConfig?.right;
-    const hasNoWalls = isFreestanding || (!hasLeftWall && !hasRightWall);
-    
-    // 단내림 구간인지 확인 - slotCenterX 조건 완화
-    const isInDroppedZone = (
-      (spaceInfo.droppedCeiling.position === 'left' && (slotCenterX === undefined || slotCenterX < 0)) ||
-      (spaceInfo.droppedCeiling.position === 'right' && (slotCenterX === undefined || slotCenterX > 0))
-    );
-    
-    console.log('🚪🔍 노서라운드 단내림 엔드패널 체크:', {
-      surroundType: spaceInfo.surroundType,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      droppedPosition: spaceInfo.droppedCeiling?.position,
-      hasNoWalls,
-      hasLeftWall,
-      hasRightWall,
-      slotCenterX,
-      isInDroppedZone,
-      slotIndex,
-      moduleId: moduleData?.id
-    });
-    
-    // 벽이 없고 단내림 구간인 경우에만 처리
-    if (hasNoWalls && isInDroppedZone && indexing.zones?.dropped) {
-      const droppedZone = indexing.zones.dropped;
-      const normalZone = indexing.zones.normal;
-      
-      // 단내림 영역 내 슬롯 인덱스 계산
-      let droppedSlotIndex = slotIndex || 0;
-      if (spaceInfo.droppedCeiling.position === 'right' && normalZone) {
-        droppedSlotIndex = droppedSlotIndex - normalZone.columnCount;
-      }
-      
-      // 단내림 구간이 2개 슬롯인 경우
-      console.log('🚪📊 단내림 슬롯 상세 정보:', {
-        droppedSlotWidths: droppedZone.slotWidths,
-        droppedSlotCount: droppedZone.slotWidths?.length,
-        droppedSlotIndex,
-        originalSlotIndex: slotIndex,
-        normalZoneCount: normalZone?.columnCount
-      });
-      
-      if (droppedZone.slotWidths && droppedZone.slotWidths.length === 2) {
-        // 엔드패널은 단내림 위치와 같은 쪽에 있음
-        // 왼쪽 단내림 -> 엔드패널은 왼쪽 -> 오른쪽 슬롯(인덱스 1)이 더 작음
-        // 오른쪽 단내림 -> 엔드패널은 오른쪽 -> 왼쪽 슬롯(인덱스 0)이 더 작음
-        
-        let needsAdjustment = false;
-        let adjustmentDirection = 0;
-        
-        // 슬롯 너비 확인
-        const slot0Width = droppedZone.slotWidths[0];
-        const slot1Width = droppedZone.slotWidths[1];
-        const smallerSlotIndex = slot0Width < slot1Width ? 0 : 1;
-        
-        console.log('🚪📏 슬롯 너비 비교:', {
-          slot0Width,
-          slot1Width,
-          smallerSlotIndex,
-          currentSlotIndex: droppedSlotIndex,
-          설명: `작은 슬롯은 인덱스 ${smallerSlotIndex}`
-        });
-        
-        // 현재 슬롯이 작은 슬롯인 경우에만 조정
-        if (droppedSlotIndex === smallerSlotIndex) {
-          if (spaceInfo.droppedCeiling.position === 'left') {
-            // 왼쪽 단내림: 엔드패널은 왼쪽, 도어를 왼쪽으로
-            needsAdjustment = true;
-            adjustmentDirection = -1;
-          } else {
-            // 오른쪽 단내림: 엔드패널은 오른쪽, 도어를 오른쪽으로
-            needsAdjustment = true;
-            adjustmentDirection = 1;
-          }
-        }
-        
-        if (needsAdjustment) {
-          doorAdjustment = mmToThreeUnits(9 * adjustmentDirection); // 9mm 이동
-          
-          console.log('🚪🎯 단내림 엔드패널 도어 X위치 보정 적용!!!!:', {
-            droppedSlotIndex,
-            droppedPosition: spaceInfo.droppedCeiling.position,
-            slotWidths: droppedZone.slotWidths,
-            adjustmentDirection: adjustmentDirection > 0 ? '오른쪽' : '왼쪽',
-            doorAdjustment_mm: 9 * adjustmentDirection,
-            doorAdjustment_units: doorAdjustment,
-            설명: '엔드패널에서 먼 슬롯의 도어를 엔드패널 쪽으로 9mm 이동'
-          });
-        } else {
-          console.log('🚪❌ 조정 불필요:', {
-            droppedSlotIndex,
-            droppedPosition: spaceInfo.droppedCeiling.position,
-            needsAdjustment,
-            설명: '이 슬롯은 도어 위치 조정이 필요없음'
-          });
-        }
-      }
-    }
-  }
-  
-  // 보정값 적용
-  doorGroupX = doorGroupX + doorAdjustment;
-  
-  console.log('🚪 도어 초기 위치:', {
-    slotCenterX,
-    doorAdjustment,
-    doorGroupX,
-    isDualFurniture,
-    slotIndex,
-    columnCount,
-    surroundType: spaceInfo.surroundType,
-    moduleId: moduleData?.id
-  });
+  // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
+  let doorGroupX = slotCenterX || 0; // 원래 슬롯 중심 X 좌표 (Three.js 단위)
   
   // slotCenterX가 제공되었는지 확인
-  if (slotCenterX !== undefined && slotCenterX !== null && slotCenterX !== 0) {
-    // slotCenterX는 오프셋 값으로 처리
-    console.log(`🚪 도어 오프셋 적용:`, {
+  if (slotCenterX !== undefined && slotCenterX !== null) {
+    // slotCenterX가 제공된 경우 그대로 사용
+    console.log(`🚪 도어 위치 사용 (제공된 slotCenterX):`, {
       slotIndex,
-      slotCenterX_오프셋: slotCenterX,
-      doorGroupX,
-      설명: '도어를 가구 중심에서 오프셋만큼 이동'
+      slotCenterX,
+      doorGroupX
     });
   } else {
-    // slotCenterX가 제공되지 않은 경우 기본값 0 사용 (가구 중심)
-    console.log(`🚪 도어 위치 기본값 사용 (가구 중심):`, {
+    // slotCenterX가 제공되지 않은 경우 기본값 0 사용
+    console.log(`🚪 도어 위치 기본값 사용:`, {
       slotIndex,
       doorGroupX: 0
     });
@@ -1498,22 +657,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       return { isNearColumn: false, columnSide: null };
     }
     
-    // 노서라운드 모드에서 엔드패널 보정값 계산
-    let positionAdjustment = 0;
-    if (spaceInfo.surroundType === 'no-surround' && slotIndex !== undefined) {
-      const endPanelThickness = 18;
-      const hasLeftEndPanel = slotIndex === 0 && actualDoorWidth < indexing.columnWidth;
-      const hasRightEndPanel = slotIndex === (columnCount - 1) && actualDoorWidth < indexing.columnWidth;
-      
-      if (hasLeftEndPanel) {
-        positionAdjustment = -endPanelThickness / 2; // 왼쪽으로 9mm
-      } else if (hasRightEndPanel) {
-        positionAdjustment = endPanelThickness / 2; // 오른쪽으로 9mm
-      }
-    }
-    
-    // 도어의 실제 위치 계산 (Three.js 좌표) - 노서라운드 보정값 포함
-    const doorCenterX = (slotCenterX || 0) + mmToThreeUnits(positionAdjustment);
+    // 도어의 실제 위치 계산 (Three.js 좌표)
+    const doorCenterX = slotCenterX || 0;
     const doorLeftEdge = doorCenterX - mmToThreeUnits(actualDoorWidth / 2);
     const doorRightEdge = doorCenterX + mmToThreeUnits(actualDoorWidth / 2);
     
@@ -1522,10 +667,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorLeftEdge,
       doorRightEdge,
       actualDoorWidth,
-      slotCenterX,
-      positionAdjustment,
-      surroundType: spaceInfo.surroundType,
-      note: positionAdjustment !== 0 ? '노서라운드 보정 적용됨' : '보정 없음'
+      slotCenterX
     });
     
     // 각 기둥과의 거리 체크
@@ -1580,22 +722,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                        moduleData?.moduleId?.toLowerCase().includes('door');
   
   if (columnCheck.isNearColumn && isDoorModule) {
-    // 커버도어의 경우 기둥 반대쪽에 힌지를 둬야 기둥 반대 방향으로 열림
     // 기둥이 왼쪽에 있으면 오른쪽 힌지 (도어가 왼쪽으로 열림 - 기둥 반대 방향)
     // 기둥이 오른쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림 - 기둥 반대 방향)
-    
-    // 단내림 + 노서라운드 조합에서는 힌지 로직을 반대로 적용
-    const isDroppedNoSurround = (spaceInfo as any).zone === 'dropped' && 
-                                spaceInfo.droppedCeiling?.enabled && 
-                                spaceInfo.surroundType === 'no-surround';
-    
-    if (isDroppedNoSurround) {
-      // 단내림 + 노서라운드: 기둥과 같은 쪽에 힌지
-      adjustedHingePosition = columnCheck.columnSide === 'left' ? 'left' : 'right';
-    } else {
-      // 일반 경우: 기둥 반대쪽에 힌지
-      adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
-    }
+    adjustedHingePosition = columnCheck.columnSide === 'left' ? 'right' : 'left';
     
     console.log('🚪 기둥 인접 도어 힌지 자동 조정:', {
       originalHinge: hingePosition,
@@ -1604,12 +733,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorCenterX: slotCenterX,
       moduleData,
       isDoorModule,
-      isDroppedNoSurround,
-      zone: (spaceInfo as any).zone,
-      surroundType: spaceInfo.surroundType,
-      note: isDroppedNoSurround ? 
-        '단내림+노서라운드: 힌지는 기둥 쪽에 위치' : 
-        '일반: 힌지는 기둥 반대쪽에 위치'
+      note: '힌지는 기둥 반대쪽에 위치'
     });
   } else {
     console.log('🚪 힌지 조정 안함:', {
@@ -1621,325 +745,51 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   if (isDualFurniture) {
-    // 듀얼 가구 도어 처리
-    let totalWidth = actualDoorWidth; // 기본값
-    let leftDoorWidth, rightDoorWidth;
-    // 엔드패널 위치 플래그 (console.log에서 사용하기 위해 외부 스코프에 선언)
-    let isFirstSlotWithEndPanel = false;
-    let isLastSlotWithEndPanel = false;
-    // 슬롯 너비 변수들 (console.log에서 사용하기 위해 외부 스코프에 선언)
-    let slot1Width = 0;
-    let slot2Width = 0;
+    // 듀얼 가구: 개별 슬롯 너비에서 각각 3mm씩 빼기
+    const totalWidth = actualDoorWidth; // 원래 슬롯 크기 사용
     
-    // 단내림 구간에서 슬롯 너비가 없는 경우 처리 (zone 변수는 이미 위에서 선언됨)
+    let leftDoorWidth: number;
+    let rightDoorWidth: number;
     
-    if (isDroppedZone && (!slotWidths || slotWidths.length < 2)) {
-      console.log('🚨 단내림 구간 듀얼장 도어 너비 계산 - slotWidths 없음, 기본값 사용', {
-        zone,
-        slotWidths,
-        indexingColumnWidth: indexing.columnWidth,
-        actualDoorWidth,
-        moduleWidth
-      });
-      // 단내림 구간에서 slotWidths가 없으면 columnWidth 사용
-      slot1Width = indexing.columnWidth;
-      slot2Width = indexing.columnWidth;
-      totalWidth = slot1Width + slot2Width;
-      
-      // 서라운드 모드인 경우
-      if (spaceInfo.surroundType !== 'no-surround') {
-        const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
-        leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
-        rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
-      } else {
-        // 노서라운드 모드
-        const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
-        const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
-        leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
-        rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
-      }
+    if (slotWidths && slotWidths.length >= 2) {
+      // 개별 슬롯 너비가 제공된 경우
+      leftDoorWidth = slotWidths[0] - 3;
+      rightDoorWidth = slotWidths[1] - 3;
     } else {
-    
-    // 노서라운드 모드: 커버도어 (엔드패널을 가림)
-    if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드에서는 도어가 엔드패널을 덮으므로, 
-      // 엔드패널이 제거된 슬롯 너비를 복원해야 함
-      // slotWidths가 없으면 indexing.columnWidth 사용
-      slot1Width = slotWidths?.[0] || indexing.columnWidth;
-      slot2Width = slotWidths?.[1] || indexing.columnWidth;
-      
-      console.log('🔴 노서라운드 듀얼 도어 초기 너비:', {
-        slotWidths,
-        slot1Width,
-        slot2Width,
-        indexingColumnWidth: indexing.columnWidth,
-        slotIndex,
-        columnCount: indexing.columnCount
-      });
-      
-      if (slotWidths && slotWidths.length >= 2) {
-        // 벽없음(freestanding) 모드: 양쪽 끝에 엔드패널
-        if (spaceInfo.installType === 'freestanding') {
-          // 첫 번째 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-          if (slotIndex === 0) {
-            slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
-            slot2Width = slotWidths[1];
-          }
-          // 마지막 슬롯인 경우: 엔드패널 두께를 더해서 원래 슬롯 크기 복원
-          // 듀얼 가구는 2개 슬롯을 차지하므로 slotIndex + 2가 columnCount 이상일 때
-          else if (slotIndex + 2 >= indexing.columnCount) {
-            slot1Width = slotWidths[0];
-            slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
-          }
-          // 중간 슬롯인 경우: 실제 값 사용
-          else {
-            slot1Width = slotWidths[0];
-            slot2Width = slotWidths[1];
-          }
-        } 
-        // 한쪽벽(semistanding) 모드: 벽이 없는 쪽에만 엔드패널
-        else if (spaceInfo.installType === 'semistanding') {
-          // 왼쪽벽 모드: 오른쪽 끝에만 엔드패널
-          if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-            if (slotIndex + 2 >= indexing.columnCount) {
-              // 마지막 슬롯: 오른쪽에 엔드패널
-              slot1Width = slotWidths[0];
-              slot2Width = slotWidths[1] + endPanelThickness; // 582 + 18 = 600
-            } else {
-              // 나머지: 실제 슬롯 너비 사용
-              slot1Width = slotWidths[0];
-              slot2Width = slotWidths[1];
-            }
-          }
-          // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
-          else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
-            if (slotIndex === 0) {
-              // 첫 번째 슬롯: 왼쪽에 엔드패널
-              slot1Width = slotWidths[0] + endPanelThickness; // 582 + 18 = 600
-              slot2Width = slotWidths[1];
-            } else {
-              // 나머지: 실제 슬롯 너비 사용
-              slot1Width = slotWidths[0];
-              slot2Width = slotWidths[1];
-            }
-          } else {
-            // 예외 케이스: 실제 슬롯 너비 사용
-            slot1Width = slotWidths[0];
-            slot2Width = slotWidths[1];
-          }
-        }
-        // 양쪽벽(standing) 모드: 엔드패널 없음
-        else {
-          slot1Width = slotWidths[0];
-          slot2Width = slotWidths[1];
-        }
-      }
-      
-      // 도어 전체 너비 계산
-      totalWidth = slot1Width + slot2Width;
-      
-      // 엔드패널 위치 판단
-      // doorAdjustment가 이미 설정되어 있으면 (단내림 구간에서 설정) 보존
-      const preserveExistingAdjustment = doorAdjustment !== 0;
-      
-      if (spaceInfo.installType === 'freestanding') {
-        // 벽없음 모드: 양쪽 끝에 엔드패널
-        isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
-        isLastSlotWithEndPanel = slotWidths && slotWidths.length >= 2 && 
-                                       slotWidths[1] < indexing.columnWidth && 
-                                       slotIndex + 2 >= indexing.columnCount; // 듀얼이 2슬롯 차지
-        
-        // 듀얼 도어 위치 보정 - 엔드패널 위치와 반대 방향으로 보정
-        // 단내림 구간에서 이미 설정된 값이 있으면 보존
-        if (!preserveExistingAdjustment) {
-          if (isFirstSlotWithEndPanel) {
-            // 첫 번째 슬롯(왼쪽 엔드패널): 도어를 왼쪽으로 9mm 이동
-            doorAdjustment = -9; 
-          } else if (isLastSlotWithEndPanel) {
-            // 마지막 슬롯(오른쪽 엔드패널): 도어를 오른쪽으로 9mm 이동
-            doorAdjustment = 9;
-          }
-        }
-      } else if (spaceInfo.installType === 'semistanding') {
-        // 한쪽벽 모드: 벽이 없는 쪽에만 엔드패널
-        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-          // 왼쪽벽 모드: 오른쪽 끝에만 엔드패널
-          isFirstSlotWithEndPanel = false;
-          isLastSlotWithEndPanel = slotIndex + 2 >= indexing.columnCount && 
-                                   slotWidths && slotWidths.length >= 2 && 
-                                   slotWidths[1] < indexing.columnWidth;
-          
-          if (!preserveExistingAdjustment && isLastSlotWithEndPanel) {
-            // 오른쪽 끝 엔드패널: 도어를 오른쪽으로 9mm 이동
-            doorAdjustment = 9;
-          }
-        } else if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
-          // 오른쪽벽 모드: 왼쪽 끝에만 엔드패널
-          isFirstSlotWithEndPanel = slotIndex === 0 && slotWidths?.[0] < indexing.columnWidth;
-          isLastSlotWithEndPanel = false;
-          
-          if (!preserveExistingAdjustment && isFirstSlotWithEndPanel) {
-            // 왼쪽 끝 엔드패널: 도어를 왼쪽으로 9mm 이동
-            doorAdjustment = -9;
-          }
-        } else {
-          // 예외 케이스
-          isFirstSlotWithEndPanel = false;
-          isLastSlotWithEndPanel = false;
-          if (!preserveExistingAdjustment) {
-            doorAdjustment = 0;
-          }
-        }
-      } else {
-        // 양쪽벽 모드: 엔드패널 없음
-        isFirstSlotWithEndPanel = false;
-        isLastSlotWithEndPanel = false;
-        if (!preserveExistingAdjustment) {
-          doorAdjustment = 0;
-        }
-      }
-      
-      console.log('🚪 듀얼 엔드패널 상태:', {
-        isFirstSlotWithEndPanel,
-        isLastSlotWithEndPanel,
-        doorAdjustment,
-        doorAdjustment_mm: doorAdjustment / 0.01,
-        preserveExistingAdjustment,
-        note: preserveExistingAdjustment ? '단내림 구간 보정값 보존' : '엔드패널 위치로 보정'
-      });
-      
-      // 노서라운드 도어 크기 계산
-      const noSurroundDoorGap = 3; // 노서라운드 도어 사이 간격
-      const noSurroundEdgeGap = 1.5; // 노서라운드 양쪽 끝 간격
-      
-      // slotWidths가 있고 유효한 경우 실제 슬롯 너비 기반 계산
-      if (slotWidths && slotWidths.length >= 2 && slot1Width > 0 && slot2Width > 0) {
-        // 각 슬롯의 실제 너비에 맞춰 도어 너비 계산
-        // 에지 갭과 중간 갭을 고려
-        leftDoorWidth = slot1Width - noSurroundEdgeGap - (noSurroundDoorGap / 2);
-        rightDoorWidth = slot2Width - noSurroundEdgeGap - (noSurroundDoorGap / 2);
-        
-        console.log('🔴 노서라운드 듀얼 도어 개별 너비 계산:', {
-          slot1Width,
-          slot2Width,
-          leftDoorWidth,
-          rightDoorWidth,
-          noSurroundDoorGap,
-          noSurroundEdgeGap,
-          method: 'slotWidths 기반'
-        });
-      } else {
-        // slotWidths가 없으면 전체 너비를 균등 분할
-        leftDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;  
-        rightDoorWidth = (totalWidth - noSurroundDoorGap - 2 * noSurroundEdgeGap) / 2;
-        
-        console.log('🔴 노서라운드 듀얼 도어 균등 분할:', {
-          totalWidth,
-          leftDoorWidth,
-          rightDoorWidth,
-          method: '균등 분할'
-        });
-      }
-    } else {
-      // 서라운드 모드: 일반 도어
-      // slotWidths가 있으면 사용, 없으면 totalWidth 사용
-      if (slotWidths && slotWidths.length >= 2) {
-        slot1Width = slotWidths[0];
-        slot2Width = slotWidths[1];
-        totalWidth = slot1Width + slot2Width;
-      }
-      const surroundDoorGap = 6; // 서라운드 도어 사이 간격 (각 3mm씩)
-      leftDoorWidth = (totalWidth - surroundDoorGap) / 2;
-      rightDoorWidth = (totalWidth - surroundDoorGap) / 2;
+      // fallback: 균등분할
+      const doorWidth = (totalWidth - 6) / 2;
+      leftDoorWidth = doorWidth;
+      rightDoorWidth = doorWidth;
     }
-    }
-    
-    // 모드별 갭 값 설정
-    const doorGap = spaceInfo.surroundType === 'no-surround' ? 3 : 6;
-    const edgeGap = spaceInfo.surroundType === 'no-surround' ? 1.5 : 1.5; // 서라운드에서도 1.5mm 갭 적용
-    
-    console.log('🚪 듀얼 도어:', {
-      totalWidth,
-      leftDoorWidth,
-      rightDoorWidth,
-      doorGap,
-      edgeGap,
-      doorAdjustment,
-      slotIndex,
-      columnCount,
-      isFirstSlotWithEndPanel,
-      isLastSlotWithEndPanel,
-      slotWidths,
-      slot1Width,
-      slot2Width,
-      surroundType: spaceInfo.surroundType
-    });
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
-    // 도어 위치 계산
-    let leftDoorCenter, rightDoorCenter;
+    // 도어 위치 계산 (개별 슬롯 너비 기반)
+    const leftSlotWidth = slotWidths?.[0] || totalWidth / 2;
+    const rightSlotWidth = slotWidths?.[1] || totalWidth / 2;
     
-    // 도어 위치는 전체 너비 기준으로 계산
-    // 왼쪽 도어: 왼쪽 끝에서 edgeGap 떨어진 위치
-    leftDoorCenter = -totalWidth / 2 + edgeGap + leftDoorWidth / 2;
-    // 오른쪽 도어: 오른쪽 끝에서 edgeGap 떨어진 위치
-    rightDoorCenter = totalWidth / 2 - edgeGap - rightDoorWidth / 2;
+    const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
+    const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
     
-    // 노서라운드에서 엔드패널 위치 보정 (개별 도어 위치는 그대로 유지)
-    
-    const leftXOffset = mmToThreeUnits(leftDoorCenter);
-    const rightXOffset = mmToThreeUnits(rightDoorCenter);
+    const leftXOffset = mmToThreeUnits(leftSlotCenter);
+    const rightXOffset = mmToThreeUnits(rightSlotCenter);
     
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
 
-    // 노서라운드 모드에서 도어 위치 보정
-    // slotCenterX가 이미 보정된 값이 아닌 경우에만 적용
-    if (spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
-      // slotCenterX가 0이 아닌 값이면 이미 FurnitureItem에서 보정됨
-      const needsAdjustment = slotCenterX === 0 || slotCenterX === undefined;
-      if (needsAdjustment) {
-        doorGroupX += mmToThreeUnits(doorAdjustment);
-        console.log('🚪 듀얼 도어 위치 보정 적용:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          doorGroupX,
-          isFirstSlot: slotIndex === 0,
-          isLastSlot: slotIndex + 2 >= indexing.columnCount,
-          note: 'DoorModule에서 보정'
-        });
-      } else {
-        console.log('🚪 듀얼 도어 위치 보정 건너뜀:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          isFirstSlot: slotIndex === 0,
-          isLastSlot: slotIndex + 2 >= indexing.columnCount,
-          note: 'FurnitureItem에서 이미 보정됨'
-        });
-      }
-    }
-
     console.log('🚪 듀얼 도어 위치:', {
       totalWidth,
       slotWidths,
-      slotIndex,
-      columnCount,
-      isLastSlot: slotIndex + 2 >= columnCount,
       leftDoorWidth,
       rightDoorWidth,
-      doorAdjustment,
-      doorGroupX,
-      doorGroupX_mm: doorGroupX / 0.01,
       mode: slotWidths ? '개별 슬롯 너비' : '균등분할 (fallback)',
       leftXOffset: leftXOffset.toFixed(3),
       rightXOffset: rightXOffset.toFixed(3),
       leftHingeX: leftHingeX.toFixed(3),
-      rightHingeX: rightHingeX.toFixed(3)
+      rightHingeX: rightHingeX.toFixed(3),
+      doorGroupX: doorGroupX
     });
 
     return (
@@ -1997,18 +847,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <NativeLine
+                          <Line
                             key={`seg1-long-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -2023,18 +871,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <NativeLine
+                          <Line
                             key={`seg1-short-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -2067,18 +913,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <NativeLine
+                          <Line
                             key={`seg2-long-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -2093,18 +937,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <NativeLine
+                          <Line
                             key={`seg2-short-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -2174,18 +1016,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <NativeLine
+                          <Line
                             key={`seg1-long-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -2200,18 +1040,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength1;
                         const t2 = (currentPos + dashLength) / totalLength1;
                         segments1.push(
-                          <NativeLine
+                          <Line
                             key={`seg1-short-${currentPos}`}
                             points={[
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -2244,18 +1082,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <NativeLine
+                          <Line
                             key={`seg2-long-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -2270,18 +1106,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         const t1 = currentPos / totalLength2;
                         const t2 = (currentPos + dashLength) / totalLength2;
                         segments2.push(
-                          <NativeLine
+                          <Line
                             key={`seg2-short-${currentPos}`}
                             points={[
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#00FF00"
+                            color="#FF5500"
                             lineWidth={0.5}
                             transparent={true}
                             opacity={0.6}
-                            renderOrder={1002}
-                            depthTest={false}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -2301,184 +1135,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
-    // 노서라운드 모드에서는 엔드패널을 고려
-    // 서라운드 모드: 항상 -3mm
-    // 노서라운드 모드: 엔드패널이 있어도 항상 -3mm
-    let doorWidth;
-    // 모든 경우에 3mm 갭 적용
-    doorWidth = actualDoorWidth - 3;
-    
-    console.log('🚪 싱글 도어 너비 최종 계산:', {
-      originalSlotWidth,
-      actualDoorWidth,
-      doorWidth,
-      indexingColumnWidth: indexing.columnWidth,
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      slotIndex,
-      설명: '모든 도어 - 3mm 갭 적용'
-    });
-    
-    // 노서라운드 모드에서 엔드패널 처리
-    if (spaceInfo.surroundType === 'no-surround' && originalSlotWidth) {
-      // originalSlotWidth가 있다는 것은 FurnitureItem에서 이미 엔드패널을 고려했다는 의미
-      // 엔드패널이 있는지 확인 (originalSlotWidth > moduleWidth인 경우)
-      const END_PANEL_THICKNESS = 18;
-      const hasEndPanelIncluded = originalSlotWidth > (moduleWidth || 0) + 10; // 10mm 이상 차이나면 엔드패널 포함
-      
-      console.log('🔍🔍🔍 엔드패널 포함 여부 판단:', {
-        originalSlotWidth,
-        moduleWidth,
-        difference: originalSlotWidth - (moduleWidth || 0),
-        hasEndPanelIncluded,
-        slotIndex,
-        surroundType: spaceInfo.surroundType,
-        installType: spaceInfo.installType
-      });
-      
-      if (hasEndPanelIncluded) {
-        // 엔드패널이 포함된 경우, 도어 위치를 조정해야 함
-        // 슬롯 인덱스로 엔드패널 위치 판단
-        let isLeftEndPanel = false;
-        let isRightEndPanel = false;
-        
-        if (slotIndex !== undefined) {
-          // 단내림 구간 고려
-          let effectiveColumnCount = indexing.columnCount;
-          let effectiveSlotIndex = slotIndex;
-          
-          // 단내림이 있는 경우 zone별 처리
-          if (spaceInfo.droppedCeiling?.enabled) {
-            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
-            
-            // zone 정보가 spaceInfo에 있는지 확인
-            const currentZone = (spaceInfo as any).zone;
-            
-            if (currentZone === 'dropped' && zoneInfo.dropped) {
-              effectiveColumnCount = zoneInfo.dropped.columnCount;
-              // dropped zone 내에서의 로컬 인덱스 계산
-              if (droppedPosition === 'right' && zoneInfo.normal) {
-                effectiveSlotIndex = slotIndex - zoneInfo.normal.columnCount;
-              } else {
-                effectiveSlotIndex = slotIndex;
-              }
-              
-              // dropped zone에서 엔드패널 위치
-              if (spaceInfo.installType === 'freestanding') {
-                if (droppedPosition === 'right') {
-                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
-                } else {
-                  isLeftEndPanel = (effectiveSlotIndex === 0);
-                }
-              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-                if (!spaceInfo.wallConfig?.right && droppedPosition === 'right') {
-                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
-                } else if (!spaceInfo.wallConfig?.left && droppedPosition === 'left') {
-                  isLeftEndPanel = (effectiveSlotIndex === 0);
-                }
-              }
-            } else if (currentZone === 'normal' || !currentZone) {
-              // normal zone에서의 처리
-              if (droppedPosition === 'left' && zoneInfo.dropped) {
-                effectiveSlotIndex = slotIndex - zoneInfo.dropped.columnCount;
-              }
-              
-              if (spaceInfo.installType === 'freestanding') {
-                if (droppedPosition === 'right') {
-                  isLeftEndPanel = (effectiveSlotIndex === 0);
-                } else {
-                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
-                }
-              } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-                if (!spaceInfo.wallConfig?.left && droppedPosition === 'right') {
-                  isLeftEndPanel = (effectiveSlotIndex === 0);
-                } else if (!spaceInfo.wallConfig?.right && droppedPosition === 'left') {
-                  isRightEndPanel = (effectiveSlotIndex === effectiveColumnCount - 1);
-                }
-              }
-            }
-          } else {
-            // 단내림이 없는 경우
-            if (spaceInfo.installType === 'freestanding') {
-              isLeftEndPanel = (slotIndex === 0);
-              isRightEndPanel = (slotIndex === effectiveColumnCount - 1);
-            } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-              if (!spaceInfo.wallConfig?.left) {
-                isLeftEndPanel = (slotIndex === 0);
-              }
-              if (!spaceInfo.wallConfig?.right) {
-                isRightEndPanel = (slotIndex === effectiveColumnCount - 1);
-              }
-            }
-          }
-        }
-        
-        // 도어 위치 조정 - 도어가 (가구 + 엔드패널) 전체의 중앙에 오도록
-        // 가구는 슬롯 중심에서 엔드패널 방향으로 9mm 치우쳐 있음
-        // 도어는 전체 유닛의 중심에 위치해야 함
-        // 가구는 엔드패널 때문에 9mm 치우쳐 있으므로 도어도 같은 방향으로 이동
-        if (isLeftEndPanel) {
-          // 왼쪽 엔드패널: 도어를 왼쪽으로 9mm 이동하여 보정
-          doorAdjustment = -9;
-          console.log('🎯 커버도어 왼쪽 엔드패널 - 9mm 왼쪽 이동:', {
-            slotIndex,
-            doorAdjustment,
-            originalSlotWidth,
-            moduleWidth,
-            설명: '왼쪽 엔드패널로 인한 오프셋을 보정'
-          });
-        } else if (isRightEndPanel) {
-          // 오른쪽 엔드패널: 도어를 오른쪽으로 9mm 이동하여 보정
-          doorAdjustment = 9;
-          console.log('🎯 커버도어 오른쪽 엔드패널 - 9mm 오른쪽 이동:', {
-            slotIndex,
-            doorAdjustment,
-            originalSlotWidth,
-            moduleWidth,
-            설명: '오른쪽 엔드패널로 인한 오프셋을 보정'
-          });
-        }
-      }
-    }
-    
+    // 문의 폭 = 원래 슬롯 전체 폭 - 3mm (갭)
+    const doorWidth = actualDoorWidth - 3; // 슬롯사이즈 - 3mm
     const doorWidthUnits = mmToThreeUnits(doorWidth);
-    
-    // 노서라운드 모드에서 도어 위치 보정
-    // slotCenterX가 이미 보정된 값이 아닌 경우에만 적용
-    if (spaceInfo.surroundType === 'no-surround' && doorAdjustment !== 0) {
-      // slotCenterX가 0이 아닌 값이면 이미 FurnitureItem에서 보정됨
-      const needsAdjustment = slotCenterX === 0 || slotCenterX === undefined;
-      if (needsAdjustment) {
-        doorGroupX += mmToThreeUnits(doorAdjustment);
-        console.log('🚪 싱글 도어 위치 보정 적용:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          doorGroupX,
-          note: 'DoorModule에서 보정'
-        });
-      } else {
-        console.log('🚪 싱글 도어 위치 보정 건너뜀:', {
-          slotIndex,
-          slotCenterX,
-          doorAdjustment,
-          note: 'FurnitureItem에서 이미 보정됨'
-        });
-      }
-    }
     
     console.log('🚪 싱글 도어 크기:', {
       actualDoorWidth,
       doorWidth,
       originalSlotWidth,
-      slotIndex,
-      columnCount,
-      isFirstSlot: slotIndex === 0,
-      isLastSlot: slotIndex === columnCount - 1,
-      doorAdjustment,
-      doorGroupX,
-      surroundType: spaceInfo.surroundType,
       fallbackColumnWidth: indexing.columnWidth,
       moduleDataId: moduleData?.id
     });
@@ -2491,26 +1155,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
-    // 최종 도어 위치 디버깅
-    // doorAdjustment를 doorGroupX에 더해서 최종 위치 계산
-    const finalDoorX = doorGroupX + mmToThreeUnits(doorAdjustment);
-    console.log('🎯🎯🎯 싱글 도어 최종 위치 계산:', {
-      doorGroupX,
-      doorAdjustment,
-      doorAdjustment_units: mmToThreeUnits(doorAdjustment),
-      hingeAxisOffset,
-      finalDoorX,
-      originalSlotWidth,
-      moduleWidth,
-      slotIndex,
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      zone: (spaceInfo as any).zone
-    });
-
     return (
-      <group position={[finalDoorX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -2525,7 +1171,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               onPointerOver={handleDoorPointerOver}
               onPointerOut={handleDoorPointerOut}
             />
-            {/* 윤곽선 - 제거 (BoxWithEdges에서 이미 처리됨) */}
+            {/* 윤곽선 */}
+            <lineSegments>
+              <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
+              <lineBasicMaterial 
+                color={
+                  viewMode === '2D' && renderMode === 'wireframe'
+                    ? getThemeColor()
+                    : (viewMode === '3D' ? "#505050" : "#666666")
+                } 
+                transparent={viewMode === '3D'}
+                opacity={viewMode === '3D' ? 0.9 : 1}
+              />
+            </lineSegments>
             
             {/* 도어 열리는 방향 표시 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (
@@ -2563,18 +1221,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength1;
                       const t2 = (currentPos + dashLength) / totalLength1;
                       segments1.push(
-                        <NativeLine
+                        <Line
                           key={`seg1-long-${currentPos}`}
                           points={[
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color="#00FF00"
+                          color="#FF5500"
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
-                          renderOrder={1002}
-                          depthTest={false}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -2589,18 +1245,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength1;
                       const t2 = (currentPos + dashLength) / totalLength1;
                       segments1.push(
-                        <NativeLine
+                        <Line
                           key={`seg1-short-${currentPos}`}
                           points={[
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color="#00FF00"
+                          color="#FF5500"
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
-                          renderOrder={1002}
-                          depthTest={false}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -2633,18 +1287,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength2;
                       const t2 = (currentPos + dashLength) / totalLength2;
                       segments2.push(
-                        <NativeLine
+                        <Line
                           key={`seg2-long-${currentPos}`}
                           points={[
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color="#00FF00"
+                          color="#FF5500"
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
-                          renderOrder={1002}
-                          depthTest={false}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;
@@ -2659,18 +1311,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const t1 = currentPos / totalLength2;
                       const t2 = (currentPos + dashLength) / totalLength2;
                       segments2.push(
-                        <NativeLine
+                        <Line
                           key={`seg2-short-${currentPos}`}
                           points={[
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color="#00FF00"
+                          color="#FF5500"
                           lineWidth={0.5}
                           transparent={true}
                           opacity={0.6}
-                          renderOrder={1002}
-                          depthTest={false}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;

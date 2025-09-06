@@ -1,7 +1,6 @@
 import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 
 /**
@@ -26,14 +25,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths,
-  showFurniture = true,
-  adjacentCabinets,
-  adjustedWidth, // 조정된 너비 추가
+  slotWidths
 }) => {
-  // 간접조명 관련 상태
-  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
-  
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -41,76 +34,31 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth, // 조정된 너비 전달
-    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjacentCabinets,
+    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
   });
 
   const { renderMode } = useSpace3DView();
-  
-  // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
-  const showIndirectLight = false;
-  
-  console.log('🔥 DualType1 간접조명 체크:', {
-    moduleId: moduleData.id,
-    isFloating,
-    floatHeight,
-    isDragging,
-    indirectLightEnabled,
-    showIndirectLight
-  });
 
   return (
-    <>
-      {/* 띄워서 배치 시 간접조명 효과 */}
-      {showIndirectLight && (
-        <>
-          {console.log('🌟 DualType1 간접조명 렌더링:', {
-            showIndirectLight,
-            width: baseFurniture.innerWidth * 1.5,
-            depth: baseFurniture.depth * 1.5,
-            intensity: indirectLightIntensity || 0.8,
-            position: [0, -baseFurniture.height/2 - 0.02, 0]
-          })}
-          <IndirectLight
-            width={baseFurniture.innerWidth * 1.5}
-            depth={baseFurniture.depth * 1.5}
-            intensity={indirectLightIntensity || 0.8}
-            position={[0, -baseFurniture.height/2 - 0.02, 0]}
-          />
-        </>
+    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+      {!isDragging && (
+        <SectionsRenderer
+          modelConfig={baseFurniture.modelConfig}
+          height={baseFurniture.height}
+          innerWidth={baseFurniture.innerWidth}
+          depth={baseFurniture.depth}
+          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+          basicThickness={baseFurniture.basicThickness}
+          shelfZOffset={baseFurniture.shelfZOffset}
+          material={baseFurniture.material}
+          calculateSectionHeight={baseFurniture.calculateSectionHeight}
+          renderMode={renderMode}
+          furnitureId={moduleData.id}
+        />
       )}
       
-      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (
-        <BaseFurnitureShell 
-          {...baseFurniture} 
-          isDragging={isDragging} 
-          isEditMode={isEditMode}
-          leftEndPanelMaterial={baseFurniture.leftEndPanelMaterial}
-          rightEndPanelMaterial={baseFurniture.rightEndPanelMaterial}>
-          {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-          {!isDragging && (
-            <SectionsRenderer
-              modelConfig={baseFurniture.modelConfig}
-              height={baseFurniture.height}
-              innerWidth={baseFurniture.innerWidth}
-              depth={baseFurniture.depth}
-              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-              basicThickness={baseFurniture.basicThickness}
-              shelfZOffset={baseFurniture.shelfZOffset}
-              material={baseFurniture.material}
-              calculateSectionHeight={baseFurniture.calculateSectionHeight}
-              renderMode={renderMode}
-              furnitureId={moduleData.id}
-            />
-          )}
-        </BaseFurnitureShell>
-      )}
-      
-      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
+      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -118,16 +66,17 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           hingePosition={hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
+          doorXOffset={0} // 도어 위치 고정 (커버 방식)
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
           originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX} // FurnitureItem에서 계산한 오프셋 사용
+          slotCenterX={0} // 이미 FurnitureItem에서 절대 좌표로 배치했으므로 0
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
         slotIndex={slotIndex}
         />
       )}
-    </>
+    </BaseFurnitureShell>
   );
 };
 
