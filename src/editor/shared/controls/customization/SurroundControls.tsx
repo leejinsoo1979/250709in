@@ -6,9 +6,6 @@ import { useSurroundCalculations } from './hooks/useSurroundCalculations';
 import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
 import FrameSizeControls from './components/FrameSizeControls';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useAlert } from '@/contexts/AlertContext';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 interface SurroundControlsProps {
   spaceInfo: SpaceInfo;
@@ -20,11 +17,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   // 파생 상태 스토어 사용
   const derivedStore = useDerivedSpaceStore();
   
-  // 가구 스토어와 Alert 훅 추가
-  const placedModules = useFurnitureStore(state => state.placedModules);
-  const removeModule = useFurnitureStore(state => state.removeModule);
-  const { showAlert } = useAlert();
-  
   // 이전 spaceInfo 값을 추적하여 불필요한 재계산 방지
   const prevSpaceInfoRef = useRef(spaceInfo);
   
@@ -33,48 +25,16 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
   const hasLeftWall = spaceInfo.wallConfig.left;
   const hasRightWall = spaceInfo.wallConfig.right;
-  
-  // 초기화 시 노서라운드 모드에서 frameSize가 잘못 설정된 경우 수정
-  React.useEffect(() => {
-    if (isNoSurround && spaceInfo.frameSize && 
-        (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
-      console.warn('⚠️ [SurroundControls] 노서라운드 모드인데 frameSize가 0이 아님. 수정합니다.', {
-        현재값: spaceInfo.frameSize,
-        surroundType: spaceInfo.surroundType
-      });
-      onUpdate({
-        frameSize: { left: 0, right: 0, top: 10 }
-      });
-    }
-  }, [isNoSurround]);
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
-  const [frameSize, setFrameSize] = useState<FrameSize | any>(() => {
-    // 노서라운드 모드에서는 frameSize를 0으로 설정
-    if (!spaceInfo.frameSize) {
-      if (isNoSurround) {
-        return { left: '0', right: '0', top: '10' };
-      } else {
-        return { left: '50', right: '50', top: '10' };
-      }
-    }
+  const [frameSize, setFrameSize] = useState<FrameSize>(() => {
+    if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 50 };
     return {
-      left: String(!hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left),
-      right: String(!hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right),
-      top: String(spaceInfo.frameSize.top),
+      left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
+      right: !hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right,
+      top: spaceInfo.frameSize.top,
     };
   });
-
-  // 서라운드 타입이 변경될 때만 frameSize 업데이트
-  useEffect(() => {
-    if (spaceInfo.frameSize) {
-      setFrameSize({
-        left: String(!hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left),
-        right: String(!hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right),
-        top: String(spaceInfo.frameSize.top),
-      });
-    }
-  }, [spaceInfo.surroundType]);
 
 
   // 계산 로직을 커스텀 훅으로 분리
@@ -127,48 +87,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   // 서라운드 타입 변경 처리
   const handleSurroundTypeChange = (type: SurroundType) => {
     console.log('🔧 SurroundControls - handleSurroundTypeChange called:', type);
-    
-    // 노서라운드로 변경 시 엔드패널 슬롯의 듀얼 가구 체크
-    if (type === 'no-surround') {
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      const dualFurnituresInEndSlots: any[] = [];
-      
-      placedModules.forEach(module => {
-        // 듀얼 가구인지 확인
-        if (module.isDualSlot || module.moduleId.includes('dual-')) {
-          const isFirstSlot = module.slotIndex === 0;
-          const isLastSlot = module.slotIndex >= indexing.columnCount - 2; // 듀얼은 2슬롯 차지
-          
-          // 엔드패널이 있는 슬롯인지 확인
-          const hasLeftEndPanel = isFirstSlot && (spaceInfo.installType === 'freestanding' || 
-                                 (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right));
-          const hasRightEndPanel = isLastSlot && (spaceInfo.installType === 'freestanding' || 
-                                  (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left));
-          
-          if (hasLeftEndPanel || hasRightEndPanel) {
-            dualFurnituresInEndSlots.push(module);
-          }
-        }
-      });
-      
-      if (dualFurnituresInEndSlots.length > 0) {
-        console.log('🚫 엔드패널 슬롯에 듀얼 가구 발견:', dualFurnituresInEndSlots);
-        
-        showAlert(
-          `노서라운드 모드에서 듀얼 캐비닛은 커버 도어 적용이 불가합니다.\n해당 위치의 듀얼 캐비닛을 자동으로 제거합니다.`,
-          { 
-            title: '듀얼 캐비닛 제거 안내',
-            onConfirm: () => {
-              // 엔드패널 슬롯의 듀얼 가구들 제거
-              dualFurnituresInEndSlots.forEach(module => {
-                removeModule(module.id);
-              });
-            }
-          }
-        );
-      }
-    }
-    
     const updates: Partial<SpaceInfo> = {
       surroundType: type,
     };
@@ -209,9 +127,9 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 노서라운드(타이트) 설정
       const gapSizeValue = 2; // 기본 이격거리
       
-      // 노서라운드에서는 좌우 프레임 크기를 0으로, 상부는 10mm로 설정
+      // 노서라운드에서는 프레임 크기를 기본값으로 설정
       // (Firebase는 undefined를 허용하지 않음)
-      updates.frameSize = { left: 0, right: 0, top: 10 };
+      updates.frameSize = { left: 0, right: 0, top: 0 };
       
       updates.gapConfig = {
         left: hasLeftWall ? gapSizeValue : 0,
@@ -224,40 +142,55 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 프레임 크기 변경 핸들러
   const handleFrameSizeChange = (dimension: 'left' | 'right' | 'top', value: string) => {
-    // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능 (18mm 고정)
-    if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
+    // 벽이 없는 쪽은 수정 불가능
+    if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
       return;
     }
     
-    // 빈 문자열이면 그대로 허용 (삭제 가능하도록)
-    if (value === '') {
-      setFrameSize(prev => ({ ...prev, [dimension]: '' }));
-      return;
+    // 빈 문자열이거나 숫자인 경우에만 업데이트
+    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
+      const numValue = value === '' ? 0 : parseInt(value);
+      const newFrameSize = { ...frameSize, [dimension]: numValue };
+      setFrameSize(newFrameSize);
+      
+      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
+      if (value && !isNaN(Number(value)) && spaceInfo.frameSize) {
+        let validatedValue = numValue;
+        
+        // 범위 검증
+        if (dimension === 'left' || dimension === 'right') {
+          if (validatedValue < 40) validatedValue = 40;
+          if (validatedValue > 100) validatedValue = 100;
+        } else {
+          if (validatedValue < 10) validatedValue = 10;
+          if (validatedValue > 200) validatedValue = 200;
+        }
+        
+        // 즉시 store 업데이트
+        onUpdate({
+          frameSize: {
+            ...spaceInfo.frameSize,
+            [dimension]: validatedValue,
+          },
+        });
+      }
     }
-    
-    // 숫자만 허용
-    const numericValue = value.replace(/[^0-9]/g, '');
-    
-    // 로컬 상태 즉시 업데이트 (입력 필드 반영)
-    setFrameSize(prev => ({ ...prev, [dimension]: numericValue }));
   };
 
   // 프레임 크기 업데이트 (blur 또는 Enter 시)
   const handleFrameSizeBlur = (dimension: 'left' | 'right' | 'top') => {
     if (!spaceInfo.frameSize) return;
     
-    // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능
-    if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
+    // 벽이 없는 쪽은 수정 불가능
+    if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
       return;
     }
     
     let value = frameSize[dimension];
     
-    // 빈 문자열이면 기본값 설정
-    if (value === '' || value === undefined || value === null) {
-      value = dimension === 'top' ? 10 : 50;
-    } else if (typeof value === 'string') {
-      value = parseInt(value);
+    // 숫자로 변환
+    if (typeof value === 'string') {
+      value = value === '' ? 10 : parseInt(value);
     }
     
     // 유효하지 않은 숫자라면 기본값 사용
@@ -277,13 +210,16 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     // 로컬 상태 업데이트
     setFrameSize(prev => ({ ...prev, [dimension]: value }));
 
-    // store 업데이트
-    onUpdate({
-      frameSize: {
-        ...spaceInfo.frameSize,
-        [dimension]: value,
-      },
-    });
+    // 값에 변화가 있을 때만 업데이트
+    const currentValue = spaceInfo.frameSize[dimension as keyof typeof spaceInfo.frameSize];
+    if (value !== currentValue) {
+      onUpdate({
+        frameSize: {
+          ...spaceInfo.frameSize,
+          [dimension]: value,
+        },
+      });
+    }
   };
 
   // Enter 키 및 화살표 키 처리
@@ -293,13 +229,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
       
-      // 서라운드 모드에서 벽이 없는 쪽은 수정 불가능
-      if (isSurround && ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall))) {
+      // 벽이 없는 쪽은 수정 불가능
+      if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
         return;
       }
       
       const currentValue = typeof frameSize[dimension] === 'string' 
-        ? (frameSize[dimension] === '' ? 0 : parseInt(frameSize[dimension] as string) || 0)
+        ? parseInt(frameSize[dimension] as string) || 0 
         : frameSize[dimension];
       
       let minValue, maxValue;

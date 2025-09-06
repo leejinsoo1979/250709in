@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { useTranslation } from '@/i18n/useTranslation';
 import styles from './GapControls.module.css';
 
 interface GapControlsProps {
@@ -9,7 +8,6 @@ interface GapControlsProps {
 }
 
 const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
-  const { t } = useTranslation();
   // spaceInfo가 undefined인 경우 기본값 처리
   const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left || 2);
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right || 2);
@@ -81,7 +79,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
     <div className={styles.configSection}>
       <div className={styles.sectionHeader}>
         <span className={styles.sectionDot}></span>
-        <h3 className={styles.sectionTitle}>{t('placement.wallOffset')}</h3>
+        <h3 className={styles.sectionTitle}>이격거리 설정</h3>
       </div>
       
       <div className={styles.content}>
@@ -89,8 +87,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
           {/* 좌측 이격거리 */}
           <div className={styles.gapItem}>
             <label className={styles.gapLabel}>
-              {t('placement.leftGap')}
-              {!hasLeftWall && ` (${t('placement.noWall')})`}
+              좌측
+              {!hasLeftWall && ' (벽 없음)'}
             </label>
             <div className={`${styles.gapControl} ${!hasLeftWall ? styles.disabled : ''}`}>
               <button 
@@ -135,8 +133,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
           {/* 우측 이격거리 */}
           <div className={styles.gapItem}>
             <label className={styles.gapLabel}>
-              {t('placement.rightGap')}
-              {!hasRightWall && ` (${t('placement.noWall')})`}
+              우측
+              {!hasRightWall && ' (벽 없음)'}
             </label>
             <div className={`${styles.gapControl} ${!hasRightWall ? styles.disabled : ''}`}>
               <button 

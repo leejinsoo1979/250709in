@@ -4,7 +4,7 @@ import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
-import ColumnAssetWrapper from './components/elements/space/ColumnAssetWrapper';
+import ColumnAsset from './components/elements/space/ColumnAsset';
 import WallAsset from './components/elements/space/WallAsset';
 import ColumnDistanceLabels from './components/elements/space/ColumnDistanceLabels';
 import ColumnGhostPreview from './components/elements/space/ColumnGhostPreview';
@@ -20,23 +20,20 @@ import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
-import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 
 
 import { useLocation } from 'react-router-dom';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { getThemeHex } from '@/theme';
+import { Environment } from '@react-three/drei';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import { useThrottle } from '@/editor/shared/hooks/useThrottle';
-import ViewerToolbar from './components/ViewerToolbar';
 
 /**
  * Space3DView 컴포넌트
@@ -44,7 +41,7 @@ import ViewerToolbar from './components/ViewerToolbar';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFurniture = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'wireframe', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -135,52 +132,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
   // 드롭 이벤트 핸들러
   const handleDrop = (e: React.DragEvent) => {
-    console.log('🔴🔴🔴 [CRITICAL] Space3DView handleDrop 호출됨!', {
-      windowHandleSlotDrop: typeof window.handleSlotDrop,
-      currentTarget: e.currentTarget.tagName,
-      dataTransfer: e.dataTransfer.getData('application/json'),
-      clientX: e.clientX,
-      clientY: e.clientY,
-      eventType: e.type
-    });
+    console.log('🎯 [Space3DView] handleDrop 호출됨!');
     e.preventDefault();
     e.stopPropagation();
     
     // Canvas 요소 찾기
     const canvas = e.currentTarget.querySelector('canvas');
-    console.log('🔍 [Space3DView] Canvas 검색:', {
-      currentTarget: e.currentTarget,
-      tagName: e.currentTarget.tagName,
-      className: e.currentTarget.className,
-      children: e.currentTarget.children.length,
-      canvas: !!canvas,
-      allCanvases: document.querySelectorAll('canvas').length
-    });
-    
     if (!canvas) {
-      console.log('❌ [Space3DView] Canvas 요소를 찾을 수 없음 - 대체 방법 시도');
-      // 전체 문서에서 canvas 찾기
-      const allCanvases = document.querySelectorAll('canvas');
-      if (allCanvases.length > 0) {
-        const firstCanvas = allCanvases[0] as HTMLCanvasElement;
-        console.log('✅ [Space3DView] 대체 Canvas 발견:', firstCanvas);
-        // 대체 canvas로 계속 진행
-        const dragData = e.dataTransfer.getData('application/json');
-        if (dragData) {
-          try {
-            const parsedData = JSON.parse(dragData);
-            if (parsedData.type !== 'column' && parsedData.type !== 'wall' && parsedData.type !== 'panelB') {
-              const handleSlotDrop = window.handleSlotDrop;
-              if (typeof handleSlotDrop === 'function') {
-                console.log('🎯 대체 Canvas로 handleSlotDrop 호출');
-                handleSlotDrop(e.nativeEvent, firstCanvas, activeZone);
-              }
-            }
-          } catch (err) {
-            console.error('대체 처리 중 에러:', err);
-          }
-        }
-      }
+      console.log('❌ [Space3DView] Canvas 요소를 찾을 수 없음');
       return;
     }
 
@@ -219,9 +178,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       console.log('🎯 Space3DView - window.handleSlotDrop 확인:', {
         hasHandleSlotDrop: !!handleSlotDrop,
         typeofHandleSlotDrop: typeof handleSlotDrop,
-        activeZone,
-        windowKeys: Object.keys(window).filter(k => k.includes('handle')),
-        furnitureStoreState: useFurnitureStore.getState().currentDragData
+        activeZone
       });
       
       if (typeof handleSlotDrop === 'function') {
@@ -251,18 +208,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         // 첫 번째 빈 슬롯에 배치
         const placedModules = useFurnitureStore.getState().placedModules;
         const addModule = useFurnitureStore.getState().addModule;
-        let spaceInfo = useSpaceConfigStore.getState().spaceInfo;
-        
-        // 🔴🔴🔴 CRITICAL: 노서라운드 모드에서 frameSize 강제 수정
-        if (spaceInfo.surroundType === 'no-surround' && spaceInfo.frameSize && 
-            (spaceInfo.frameSize.left > 0 || spaceInfo.frameSize.right > 0)) {
-          console.error('🔴🔴🔴 [CRITICAL] Space3DView 폴백 - 노서라운드인데 frameSize가 잘못됨! 강제 수정!');
-          spaceInfo = {
-            ...spaceInfo,
-            frameSize: { left: 0, right: 0, top: 0 }
-          };
-        }
-        
+        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
         const indexing = calculateSpaceIndexing(spaceInfo);
         
         // 첫 번째 빈 슬롯 찾기
@@ -412,11 +358,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   };
   
   const handleDragOver = (e: React.DragEvent) => {
-    console.log('🎯 [DRAG] Space3DView handleDragOver 호출됨!', {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      eventType: e.type
-    });
     e.preventDefault(); // 드롭 허용
   };
   
@@ -682,7 +623,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'front' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
+              border: activeQuadrant === 'front' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -702,9 +643,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showFurniture={showFurniture}
-                viewMode="2D"
-                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -766,7 +704,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'top' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
+              border: activeQuadrant === 'top' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -786,9 +724,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showFurniture={showFurniture}
-                viewMode="2D"
-                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -850,7 +785,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'left' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
+              border: activeQuadrant === 'left' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -870,9 +805,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showFurniture={showFurniture}
-                viewMode="2D"
-                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -934,7 +866,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               position: 'relative', 
               overflow: 'hidden', 
               backgroundColor: '#121212',
-              border: activeQuadrant === 'right' ? `3px solid ${getThemeHex()}` : '1px solid transparent',
+              border: activeQuadrant === 'right' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
               cursor: 'pointer'
@@ -954,9 +886,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showFurniture={showFurniture}
-                viewMode="2D"
-                renderMode={renderMode}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
                 showGuides={showGuides}
@@ -1030,9 +959,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         onDragOver={handleDragOver}
         data-viewer-container="true"
       >
-        {/* 뷰어 툴바 - 3D 모드에서만 표시 */}
-        <ViewerToolbar viewMode={viewMode} />
-        
         <ThreeCanvas 
           cameraPosition={cameraPosition}
           cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
@@ -1090,7 +1016,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               materialConfig={materialConfig} 
               showAll={showAll} 
-              showFurniture={showFurniture}
               showFrame={showFrame}
               showDimensions={showDimensions}
               showGuides={showGuides}
@@ -1107,7 +1032,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
               if (spaceInfo.droppedCeiling?.enabled) {
                 const totalWidth = spaceInfo.width;
-                const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+                const droppedWidth = spaceInfo.droppedCeiling.width || 900;
                 const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
                 const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
                 
@@ -1135,7 +1060,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               
               return (
                 <React.Fragment key={column.id}>
-                  <ColumnAssetWrapper
+                  <ColumnAsset
                     id={column.id}
                     position={column.position}
                     width={column.width} // mm 단위 그대로 전달
@@ -1176,7 +1101,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               let wallHeight = wall.height;
               if (spaceInfo.droppedCeiling?.enabled) {
                 const totalWidth = spaceInfo.width;
-                const droppedWidth = spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+                const droppedWidth = spaceInfo.droppedCeiling.width || 900;
                 const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
                 const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
                 
@@ -1273,7 +1198,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <CleanCAD2D 
               viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
               showDimensions={showDimensions}
-              showFurniture={showFurniture}
               isStep2={isStep2}
             />
             
@@ -1349,12 +1273,9 @@ const QuadrantContent: React.FC<{
   showDimensions: boolean;
   showGuides: boolean;
   showAxis: boolean;
-  showFurniture?: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
-  viewMode?: '2D' | '3D';
-  renderMode?: 'solid' | 'wireframe';
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, showFurniture = true, isStep2, throttledUpdateColumn, activeZone, viewMode = '2D', renderMode = 'wireframe' }) => {
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1388,7 +1309,7 @@ const QuadrantContent: React.FC<{
       {/* 기둥 에셋 렌더링 */}
       {(spaceInfo?.columns || []).map((column) => (
         <React.Fragment key={column.id}>
-          <ColumnAssetWrapper
+          <ColumnAsset
             id={column.id}
             position={column.position}
             width={column.width}
@@ -1422,13 +1343,12 @@ const QuadrantContent: React.FC<{
       ))}
       
       {/* 컬럼 가이드 표시 */}
-      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} view2DDirection={viewDirection} />}
+      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
       <CleanCAD2D 
         viewDirection={viewDirection} 
         showDimensions={showDimensions}
-        showFurniture={showFurniture}
         isStep2={isStep2}
       />
       
@@ -1449,10 +1369,9 @@ const QuadrantContent: React.FC<{
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}
-        renderMode={renderMode}
+        renderMode="solid"
         showDimensions={showDimensions}
         showAll={showAll}
-        showFurniture={showFurniture}
         isStep2={isStep2}
         showFrame={showFrame}
         materialConfig={materialConfig}

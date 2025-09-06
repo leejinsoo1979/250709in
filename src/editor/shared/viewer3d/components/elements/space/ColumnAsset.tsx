@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ThreeEvent } from '@react-three/fiber';
+import { ThreeEvent, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
-import { TextureGenerator } from '../../../utils/materials/TextureGenerator';
-import { ColumnIndexer } from '@/editor/shared/utils/indexing';
 
 
 interface ColumnAssetProps {
@@ -21,12 +21,6 @@ interface ColumnAssetProps {
   onRemove?: (id: string) => void;
   spaceInfo?: any;
   hasBackPanelFinish?: boolean;
-  onZoneCross?: (info: {
-    fromZone: 'normal' | 'dropped';
-    toZone: 'normal' | 'dropped';
-    boundaryPosition: 'left' | 'right';
-    targetPosition: [number, number, number];
-  }) => void;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -40,8 +34,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   onPositionChange,
   onRemove,
   spaceInfo,
-  hasBackPanelFinish = false,
-  onZoneCross
+  hasBackPanelFinish = false
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -59,117 +52,39 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 드래그 중 임시 위치 (리렌더링 최소화)
   const tempPositionRef = useRef<[number, number, number]>(position);
   const lastUpdateTimeRef = useRef<number>(0);
-  
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setIsDraggingColumn, viewMode: uiViewMode } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
   
-  // 기둥 위치나 크기 변경 시 렌더링 업데이트
+  const { invalidate } = useThree();
+  
+  // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
   useEffect(() => {
-    // 드래그 중이 아니거나, position이 변경되었을 때 tempPositionRef 동기화
-    // 이렇게 하면 팝업에서 확인 후 위치가 변경되었을 때도 반영됨
-    tempPositionRef.current = position; // 위치 항상 동기화
-  }, [position, width, height, depth]);
+    if (!isDragging) {
+      invalidate();
+      tempPositionRef.current = position; // 위치 동기화
+    }
+  }, [position, width, height, depth, isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
-  
-  // 구역 판별 함수
-  const getZoneForPosition = (xPosition: number): 'normal' | 'dropped' | null => {
-    if (!spaceConfig.spaceInfo.droppedCeiling?.enabled) {
-      return 'normal';
-    }
-    
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(
-      spaceConfig.spaceInfo,
-      spaceConfig.spaceInfo.customColumnCount
-    );
-    
-    if (!zoneInfo || !zoneInfo.normal || !zoneInfo.dropped) {
-      return null;
-    }
-    
-    // Three.js 좌표를 mm로 변환
-    const xInMm = xPosition * 100;
-    
-    // 단내림 위치에 따라 구역 판별
-    if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
-      // 왼쪽 단내림: dropped가 왼쪽, normal이 오른쪽
-      if (xInMm >= zoneInfo.dropped.startX && xInMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
-        return 'dropped';
-      } else if (xInMm >= zoneInfo.normal.startX && xInMm <= zoneInfo.normal.startX + zoneInfo.normal.width) {
-        return 'normal';
-      }
-    } else {
-      // 오른쪽 단내림: normal이 왼쪽, dropped가 오른쪽
-      if (xInMm >= zoneInfo.normal.startX && xInMm <= zoneInfo.normal.startX + zoneInfo.normal.width) {
-        return 'normal';
-      } else if (xInMm >= zoneInfo.dropped.startX && xInMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
-        return 'dropped';
-      }
-    }
-    
-    return null;
-  };
-  
-  // 구역 경계 위치 계산
-  const getZoneBoundaryX = (targetZone: 'normal' | 'dropped', side: 'left' | 'right'): number => {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(
-      spaceConfig.spaceInfo,
-      spaceConfig.spaceInfo.customColumnCount
-    );
-    
-    if (!zoneInfo || !zoneInfo[targetZone]) {
-      return 0;
-    }
-    
-    const zone = zoneInfo[targetZone];
-    const columnHalfWidthMm = width / 2;
-    const innerWallThickness = 10; // 단내림 내벽 두께 10mm
-    
-    // 단내림 구간의 경우 내벽 두께를 고려하여 더 안쪽으로 배치
-    if (targetZone === 'dropped') {
-      // 단내림 구간은 내벽 두께만큼 더 안쪽으로
-      if (side === 'left') {
-        // 단내림 왼쪽 경계: 내벽 두께 + 기둥 반폭
-        return (zone.startX + innerWallThickness + columnHalfWidthMm) * 0.01;
-      } else {
-        // 단내림 오른쪽 경계: 내벽 두께 + 기둥 반폭만큼 안쪽
-        return (zone.startX + zone.width - innerWallThickness - columnHalfWidthMm) * 0.01;
-      }
-    } else {
-      // 일반 구간은 기존대로
-      if (side === 'left') {
-        return (zone.startX + columnHalfWidthMm) * 0.01;
-      } else {
-        return (zone.startX + zone.width - columnHalfWidthMm) * 0.01;
-      }
-    }
-  };
 
-  // 기둥 재질 생성 - 그라데이션 텍스처 적용
+  // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
   const material = React.useMemo(() => {
-    // 벽과 똑같은 그라데이션 텍스처 사용
-    const gradientTexture = TextureGenerator.createWallGradientTexture();
-    
-    // 텍스처가 세로로 한 번만 적용되도록 설정
-    gradientTexture.wrapS = THREE.ClampToEdgeWrapping;
-    gradientTexture.wrapT = THREE.ClampToEdgeWrapping;
-    
-    // 선택된 기둥은 연두색 틴트 적용
-    const displayColor = isSelected ? '#4CAF50' : new THREE.Color(1, 1, 1);
-    
+    // 선택된 기둥은 연두색으로 표시
+    const displayColor = isSelected ? '#4CAF50' : color;
     return new THREE.MeshStandardMaterial({
-      map: gradientTexture,
-      color: displayColor,
+      color: new THREE.Color(displayColor),
       metalness: 0.1,
       roughness: 0.7,
+      transparent: true,
+      opacity: 1.0,
     });
-  }, [isSelected]);
+  }, [color, isSelected]); // isDragging 제거
 
   // 와이어프레임용 윤곽선 재질
   const wireframeMaterial = React.useMemo(() => {
@@ -249,12 +164,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
-    // passive 이벤트 리스너 경고 방지 - preventDefault 제거
+    event.nativeEvent.preventDefault();
     
-    // 현재 실제 위치 확인 (tempPositionRef가 있으면 그것을 사용, 없으면 props position 사용)
-    const currentActualPosition = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
-    const currentZone = getZoneForPosition(currentActualPosition);
-    console.log('🎯 기둥 포인터 다운:', id, '현재 구역:', currentZone, '위치:', currentActualPosition, 'props position:', position[0], 'temp position:', tempPositionRef.current?.[0]);
+    // console.log('🎯 기둥 포인터 다운:', id);
     
     setPointerDownTime(Date.now());
     setHasMoved(false);
@@ -262,7 +174,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // 화면 좌표 저장
     const startScreenX = event.nativeEvent.clientX;
-    const moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
+    let moveThreshold = 5; // 5px 이상 움직여야 드래그로 간주
     const updateInterval = 16; // 약 60fps로 제한
     
     // 드래그 시작 시 필요한 값들 미리 계산
@@ -283,14 +195,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const moveDistance = Math.abs(currentScreenX - startScreenX);
       
       if (moveDistance > moveThreshold && !isDraggingRef.current) {
-        // 드래그 시작 시점의 실제 위치 사용
-        const startActualPosition = tempPositionRef.current ? tempPositionRef.current[0] : position[0];
-        const zone = getZoneForPosition(startActualPosition);
-        console.log('🚀 기둥 드래그 시작:', id, '구역:', zone, '시작 위치:', startActualPosition);
         setHasMoved(true);
         setIsDragging(true);
         isDraggingRef.current = true;
-        setIsDraggingColumn(true); // 기둥 드래그 시작 시 화면 회전 비활성화
+        setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
         
         // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋 이벤트 발생
         if (uiViewMode === '3D') {
@@ -323,104 +231,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const normalizedX = (x / rect.width) * 2 - 1;
       const worldX = normalizedX * spaceWidthHalf;
       
-      // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정  
-      let newX = Math.max(minX, Math.min(maxX, worldX));
-      
-      const debugZone = getZoneForPosition(newX);
-      console.log('📍 드래그 중 위치:', newX, '구역:', debugZone);
-      
-      // 다른 기둥에 밀착되도록 스냅 (뛰어넘기 방지)
-      const columns = spaceConfig.spaceInfo.columns || [];
-      const columnWidthInThreeUnits = width * 0.01; // mm to three units
-      const snapThreshold = columnWidthInThreeUnits * 0.3; // 30% 이내에서 스냅
-      const epsilon = 0.001; // 부동소수점 오차 허용치
-      
-      for (const column of columns) {
-        if (column.id === id || !column.position) continue; // 자기 자신은 제외
-        
-        const otherX = column.position[0];
-        const otherLeft = otherX - columnWidthInThreeUnits / 2;
-        const otherRight = otherX + columnWidthInThreeUnits / 2;
-        
-        // 현재 기둥의 왼쪽과 오른쪽 경계
-        const currentLeft = newX - columnWidthInThreeUnits / 2;
-        const currentRight = newX + columnWidthInThreeUnits / 2;
-        
-        // 겹침 감지 및 스냅
-        if (currentLeft < otherRight + epsilon && currentRight > otherLeft - epsilon) {
-          // 겹치려고 하는 경우
-          if (newX > otherX) {
-            // 오른쪽으로 밀착
-            newX = otherX + columnWidthInThreeUnits;
-          } else {
-            // 왼쪽으로 밀착
-            newX = otherX - columnWidthInThreeUnits;
-          }
-        } else {
-          // 겹치지 않는 경우 가까우면 스냅
-          const distToLeft = Math.abs(newX - (otherX - columnWidthInThreeUnits));
-          const distToRight = Math.abs(newX - (otherX + columnWidthInThreeUnits));
-          
-          if (distToLeft < snapThreshold) {
-            newX = otherX - columnWidthInThreeUnits;
-          } else if (distToRight < snapThreshold) {
-            newX = otherX + columnWidthInThreeUnits;
-          }
-        }
-      }
-      
-      // 공간 범위 내로 제한
-      newX = Math.max(minX, Math.min(maxX, newX));
-      
-      // 구역 교차 검사 (단내림이 활성화된 경우에만)
-      if (spaceConfig.spaceInfo.droppedCeiling?.enabled) {
-        // 현재 위치를 실시간으로 체크 (tempPositionRef를 항상 사용)
-        const currentPosX = tempPositionRef.current[0];
-        const currentZone = getZoneForPosition(currentPosX);
-        const newZone = getZoneForPosition(newX);
-        
-        if (currentZone && newZone && currentZone !== newZone) {
-          // 구역을 넘으려고 함 - 드래그 중단하고 팝업 표시
-          
-          // 어느 쪽 경계에 배치할지 결정
-          let boundaryPosition: 'left' | 'right';
-          if (newZone === 'dropped') {
-            // 단내림 구간으로 이동
-            if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
-              // 왼쪽 단내림: 일반 구간에서 왼쪽으로 이동 -> 단내림 오른쪽 경계
-              boundaryPosition = 'right';
-            } else {
-              // 오른쪽 단내림: 일반 구간에서 오른쪽으로 이동 -> 단내림 왼쪽 경계
-              boundaryPosition = 'left';
-            }
-          } else {
-            // 일반 구간으로 이동
-            if (spaceConfig.spaceInfo.droppedCeiling.position === 'left') {
-              // 왼쪽 단내림: 단내림에서 오른쪽으로 이동 -> 일반 왼쪽 경계
-              boundaryPosition = 'left';
-            } else {
-              // 오른쪽 단내림: 단내림에서 왼쪽으로 이동 -> 일반 오른쪽 경계
-              boundaryPosition = 'right';
-            }
-          }
-          
-          const targetX = getZoneBoundaryX(newZone, boundaryPosition);
-          
-          // onZoneCross 콜백 호출
-          if (onZoneCross) {
-            onZoneCross({
-              fromZone: currentZone,
-              toZone: newZone,
-              boundaryPosition,
-              targetPosition: [targetX, position[1], position[2]]
-            });
-          }
-          
-          // 드래그 중단
-          handleGlobalPointerUp();
-          return;
-        }
-      }
+      // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정
+      const newX = Math.max(minX, Math.min(maxX, worldX));
       
       // 임시 위치 업데이트
       tempPositionRef.current = [newX, position[1], position[2]];
@@ -441,7 +253,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     const handleGlobalPointerUp = () => {
       // 드래그 중이었다면 화면 회전 다시 활성화
       if (isDraggingRef.current) {
-        setIsDraggingColumn(false);
+        setFurnitureDragging(false);
         
         // 기둥 드래그 종료 이벤트 발생
         window.dispatchEvent(new CustomEvent('column-drag-end'));
@@ -483,13 +295,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     }
   };
 
-
   // 드래그 중일 때는 프레임마다 업데이트하지 않음 (성능 최적화)
   // React Three Fiber가 자동으로 처리하도록 함
 
   return (
-    <>
-      <group position={position}>
+    <group position={position}>
       {viewMode === '2D' ? (
         // 2D 모드: 옅은 회색 면에 빗살무늬 표시
         <group position={[0, (height * 0.01) / 2, 0]}>
@@ -549,20 +359,15 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endX = -widthM/2 + (endY - y1);
                     
                     lines.push(
-                      <line key={`front-diag-${i}`}>
-                        <bufferGeometry>
-                          <bufferAttribute
-                            attach="attributes-position"
-                            count={2}
-                            array={new Float32Array([
-                              Math.max(-widthM/2, Math.min(widthM/2, startX)), startY, depthM/2 + 0.001,
-                              Math.max(-widthM/2, Math.min(widthM/2, endX)), endY, depthM/2 + 0.001
-                            ])}
-                            itemSize={3}
-                          />
-                        </bufferGeometry>
-                        <lineBasicMaterial color={color} />
-                      </line>
+                      <Line
+                        key={`front-diag-${i}`}
+                        points={[
+                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), startY, depthM/2 + 0.001],
+                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), endY, depthM/2 + 0.001]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
                     );
                   }
                 }
@@ -582,20 +387,15 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endX = -widthM/2 + (endZ - z1);
                     
                     lines.push(
-                      <line key={`top-diag-${i}`}>
-                        <bufferGeometry>
-                          <bufferAttribute
-                            attach="attributes-position"
-                            count={2}
-                            array={new Float32Array([
-                              Math.max(-widthM/2, Math.min(widthM/2, startX)), 0.001, startZ,
-                              Math.max(-widthM/2, Math.min(widthM/2, endX)), 0.001, endZ
-                            ])}
-                            itemSize={3}
-                          />
-                        </bufferGeometry>
-                        <lineBasicMaterial color={color} />
-                      </line>
+                      <Line
+                        key={`top-diag-${i}`}
+                        points={[
+                          [Math.max(-widthM/2, Math.min(widthM/2, startX)), 0.001, startZ],
+                          [Math.max(-widthM/2, Math.min(widthM/2, endX)), 0.001, endZ]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
                     );
                   }
                 }
@@ -616,20 +416,15 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const endY = -heightM/2 + (endZ - z1);
                     
                     lines.push(
-                      <line key={`side-diag-${i}`}>
-                        <bufferGeometry>
-                          <bufferAttribute
-                            attach="attributes-position"
-                            count={2}
-                            array={new Float32Array([
-                              0.001, Math.max(-heightM/2, Math.min(heightM/2, startY)), startZ,
-                              0.001, Math.max(-heightM/2, Math.min(heightM/2, endY)), endZ
-                            ])}
-                            itemSize={3}
-                          />
-                        </bufferGeometry>
-                        <lineBasicMaterial color={color} />
-                      </line>
+                      <Line
+                        key={`side-diag-${i}`}
+                        points={[
+                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, startY)), startZ],
+                          [0.001, Math.max(-heightM/2, Math.min(heightM/2, endY)), endZ]
+                        ]}
+                        color={color}
+                        lineWidth={1}
+                      />
                     );
                   }
                 }
@@ -663,98 +458,69 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           </lineSegments>
           
           {/* X자 대각선 */}
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([
-                  -(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,
-                  (width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2
-                ])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
-          </line>
-          <line>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([
-                  (width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2,
-                  -(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2
-                ])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"} />
-          </line>
+          <Line
+            points={[
+              [-(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
+              [(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
+            ]}
+            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
+            lineWidth={1}
+          />
+          <Line
+            points={[
+              [(width * 0.01) / 2, -(height * 0.01) / 2, (depth * 0.01) / 2],
+              [-(width * 0.01) / 2, (height * 0.01) / 2, (depth * 0.01) / 2]
+            ]}
+            color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
+            lineWidth={1}
+          />
         </group>
       ) : (
         // 3D 솔리드 모드: 일반 메시
         <>
-          <group position={[0, (height * 0.01) / 2, 0]}>
-            <mesh
-              ref={meshRef}
-              material={material}
-              receiveShadow={viewMode === '3D'}
-              castShadow={viewMode === '3D'}
-              onClick={handleClick}
-              onDoubleClick={handleDoubleClick}
-              onPointerDown={handlePointerDown}
-              onPointerEnter={() => setIsHovered(true)}
-              onPointerLeave={() => setIsHovered(false)}
-              onContextMenu={handleContextMenu}
-              userData={{ isColumn: true, columnId: id }}
-            >
-              <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
-            </mesh>
-            
-            {/* 3D 솔리드 모드에서도 윤곽선 추가 */}
-            <lineSegments>
-              <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, depth * 0.01)]} />
-              <lineBasicMaterial 
-                color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#666666"} 
-                linewidth={1}
-              />
-            </lineSegments>
-          </group>
+          <mesh
+            ref={meshRef}
+            material={material}
+            receiveShadow={viewMode === '3D'}
+            castShadow={viewMode === '3D'}
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            onPointerDown={handlePointerDown}
+            onPointerEnter={() => setIsHovered(true)}
+            onPointerLeave={() => setIsHovered(false)}
+            onContextMenu={handleContextMenu}
+            position={[0, (height * 0.01) / 2, 0]} // 기둥 mesh를 위로 올려서 바닥에 맞춤
+            userData={{ isColumn: true, columnId: id }}
+            scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
+          >
+            <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
+          </mesh>
           
           {/* 뒷면 패널 마감 */}
           {hasBackPanelFinish && (
-            <group position={[0, (height * 0.01) / 2, -(depth * 0.01) / 2 - 0.009]}>
-              <mesh
-                receiveShadow={viewMode === '3D'}
-                castShadow={viewMode === '3D'}
-              >
-                <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
-                <meshStandardMaterial 
-                  color="#F5F5DC" 
-                  roughness={0.6}
-                  metalness={0.0}
-                />
-              </mesh>
-              
-              {/* 뒷면 패널 마감 윤곽선 */}
-              <lineSegments>
-                <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.018)]} />
-                <lineBasicMaterial color="#999999" linewidth={1} />
-              </lineSegments>
-            </group>
+            <mesh
+              position={[0, (height * 0.01) / 2, -(depth * 0.01) / 2 - 0.009]} // 기둥 뒷면에서 18mm(0.018) 뒤에 위치
+              receiveShadow={viewMode === '3D'}
+              castShadow={viewMode === '3D'}
+            >
+              <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
+              <meshStandardMaterial 
+                color="#F5F5DC" 
+                roughness={0.6}
+                metalness={0.0}
+              />
+            </mesh>
           )}
         </>
       )}
     </group>
-      
-    </>
   );
 };
 
 export default React.memo(ColumnAsset, (prevProps, nextProps) => {
   // 커스텀 비교 함수: 위치, 크기, 색상이 같으면 리렌더링 방지
-  return prevProps.position[0] === nextProps.position[0] &&
+  return (
+    prevProps.position[0] === nextProps.position[0] &&
     prevProps.position[1] === nextProps.position[1] &&
     prevProps.position[2] === nextProps.position[2] &&
     prevProps.width === nextProps.width &&
@@ -766,5 +532,6 @@ export default React.memo(ColumnAsset, (prevProps, nextProps) => {
     prevProps.hasBackPanelFinish === nextProps.hasBackPanelFinish &&
     prevProps.spaceInfo?.width === nextProps.spaceInfo?.width &&
     prevProps.spaceInfo?.depth === nextProps.spaceInfo?.depth &&
-    prevProps.spaceInfo?.height === nextProps.spaceInfo?.height;
+    prevProps.spaceInfo?.height === nextProps.spaceInfo?.height
+  );
 });

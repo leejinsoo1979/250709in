@@ -1,14 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  useSpaceConfigStore, 
-  SPACE_LIMITS, 
-  DEFAULT_SPACE_VALUES, 
-  DEFAULT_FRAME_VALUES,
-  DEFAULT_BASE_VALUES,
-  DEFAULT_MATERIAL_VALUES,
-  DEFAULT_DROPPED_CEILING_VALUES 
-} from '@/store/core/spaceConfigStore';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -20,10 +12,6 @@ import { useAuth } from '@/auth/AuthProvider';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { initializeTheme } from '@/theme';
-import { useTranslation } from '@/i18n/useTranslation';
-import { useDXFExport } from '@/editor/shared/hooks/useDXFExport';
-import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -40,7 +28,6 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
-import PlacedModulesList from '@/editor/shared/controls/furniture/PlacedModulesList';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -53,8 +40,7 @@ import {
   HeightControl,
   InstallTypeControls, 
   SurroundControls,
-  BaseControls,
-  FloorFinishControls
+  BaseControls
 } from '@/editor/shared/controls';
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 
@@ -65,8 +51,6 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { t, currentLanguage } = useTranslation();
   // design=new인 경우 로딩을 건너뛰기 위해 초기값 설정
   const isNewDesign = searchParams.get('design') === 'new';
   const [loading, setLoading] = useState(!isNewDesign); // 새 디자인인 경우 로딩 건너뛰기
@@ -75,37 +59,28 @@ const Configurator: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // 데이터 로드 여부 추적
 
   // Store hooks
-  const { setBasicInfo, basicInfo, setProjectId } = useProjectStore();
+  const { setBasicInfo, basicInfo } = useProjectStore();
   const { setSpaceInfo, spaceInfo, updateColumn } = useSpaceConfigStore();
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, renderMode, setRenderMode } = useUIStore();
-
-  // 내보내기 훅들
-  const { exportToDXF, exportToZIP, canExportDXF, getExportStatusMessage: getDXFStatusMessage } = useDXFExport();
-  const { exportToPDF, canExportPDF, getExportStatusMessage: getPDFStatusMessage, VIEW_TYPES } = usePDFExport();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
-  const [activeRightPanelTab, setActiveRightPanelTab] = useState<RightPanelTab>('placement');
+  const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
-  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
-  
-  // Sidebar의 unsaved changes 리셋을 위한 ref
-  const resetUnsavedChangesRef = useRef<(() => void) | null>(null);
+  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upperlower'>('tall'); // 키큰장/상하부장 토글
+  const [upperLowerTab, setUpperLowerTab] = useState<'upper' | 'lower'>('upper'); // 상부장/하부장 탭
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
-  // renderMode도 이제 UIStore에서 가져옴, showFurniture도 UIStore에서 관리
+  const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
-  // URL 파라미터에서 도면 편집기 상태 확인
-  const showDrawingEditor = searchParams.get('editor') === 'drawing';
-  const [showPDFPreview, setShowPDFPreview] = useState(showDrawingEditor); // PDF 미리보기 상태
+  const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -122,11 +97,6 @@ const Configurator: React.FC = () => {
     }
     return initialSpaceInfo;
   });
-
-  // Initialize theme when component mounts
-  useEffect(() => {
-    initializeTheme();
-  }, []);
 
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
@@ -240,11 +210,7 @@ const Configurator: React.FC = () => {
       return; // 우측 엔드패널은 20mm 고정
     }
     
-    // 노서라운드 모드일 때는 frameSize를 0으로 설정
-    const defaultFrameSize = spaceInfo.surroundType === 'no-surround' 
-      ? { left: 0, right: 0, top: 0 } 
-      : { left: 50, right: 50, top: 50 };
-    const currentFrameSize = spaceInfo.frameSize || defaultFrameSize;
+    const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     handleSpaceInfoUpdate({
       frameSize: {
         ...currentFrameSize,
@@ -292,21 +258,20 @@ const Configurator: React.FC = () => {
     
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 활성화된 경우 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH);
+      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || 900);
     }
     
     const range = calculateDoorRange(effectiveWidth);
     
-    // ⭐️ 기본값을 최소값(range.min)으로 설정
-    let count = range.min;
+    let count = range.ideal;
     
     // 단내림이 활성화된 경우 메인구간 도어 개수 사용
     if (spaceInfo.droppedCeiling?.enabled) {
       if (spaceInfo.mainDoorCount) {
         count = spaceInfo.mainDoorCount;
       } else {
-        // mainDoorCount가 없으면 현재 customColumnCount 사용, 없으면 최소값
-        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
+        // mainDoorCount가 없으면 현재 customColumnCount 사용
+        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
       }
     } else {
       // 단내림이 비활성화된 경우 mainDoorCount는 무시하고 customColumnCount 사용
@@ -314,9 +279,6 @@ const Configurator: React.FC = () => {
         count = spaceInfo.customColumnCount;
       } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
         count = derivedSpaceStore.columnCount;
-      } else {
-        // ⭐️ 아무것도 없으면 최소값 사용
-        count = range.min;
       }
     }
     
@@ -472,7 +434,6 @@ const Configurator: React.FC = () => {
         materialConfig: spaceInfo.materialConfig
       });
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
-      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules);
       
       // 썸네일 생성
       let thumbnail;
@@ -525,15 +486,6 @@ const Configurator: React.FC = () => {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
               
-              // 저장 성공 후 unsaved changes 상태 리셋
-              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
-              setTimeout(() => {
-                if (resetUnsavedChangesRef.current) {
-                  console.log('🔄 Calling reset after successful save');
-                  resetUnsavedChangesRef.current();
-                }
-              }, 100);
-              
               // BroadcastChannel로 디자인 파일 업데이트 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
@@ -571,15 +523,6 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
-              
-              // 저장 성공 후 unsaved changes 상태 리셋
-              // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
-              setTimeout(() => {
-                if (resetUnsavedChangesRef.current) {
-                  console.log('🔄 Calling reset after successful create');
-                  resetUnsavedChangesRef.current();
-                }
-              }, 100);
               
               // BroadcastChannel로 디자인 파일 생성 알림
               try {
@@ -647,30 +590,7 @@ const Configurator: React.FC = () => {
     }
     
     try {
-      // 먼저 현재 작업 내용을 저장
-      if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
-        console.log('💾 새 디자인 생성 전 현재 작업 저장 시작');
-        setSaving(true);
-        setSaveStatus('idle');
-        
-        try {
-          await saveProject();
-          console.log('✅ 현재 작업 저장 완료');
-          setSaveStatus('success');
-          setTimeout(() => setSaveStatus('idle'), 2000);
-        } catch (error) {
-          console.error('❌ 현재 작업 저장 실패:', error);
-          const continueWithoutSave = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 새 디자인을 생성하시겠습니까?');
-          if (!continueWithoutSave) {
-            setSaving(false);
-            return;
-          }
-        } finally {
-          setSaving(false);
-        }
-      }
-      
-      const confirmed = confirm('새 디자인을 시작하시겠습니까? (현재 작업은 저장되었습니다)');
+      const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
       console.log('🎨 [DEBUG] 사용자 확인 응답:', confirmed);
       
       if (!confirmed) {
@@ -678,51 +598,35 @@ const Configurator: React.FC = () => {
         return;
       }
 
-      // 기본 설정으로 새 디자인 생성 - DEFAULT 상수값 사용
+      // 기본 설정으로 새 디자인 생성
       const defaultSpaceConfig = {
-        width: DEFAULT_SPACE_VALUES.WIDTH,  // 3600
-        height: DEFAULT_SPACE_VALUES.HEIGHT, // 2400
-        depth: DEFAULT_SPACE_VALUES.DEPTH,   // 1500
+        width: 4000,
+        height: 2400,
+        depth: 3000,
         frameThickness: 20,
         frameColor: '#E5E5DC',
         frameColorName: 'Beige',
         subdivisionMode: 'none' as const,
-        columns: [],
-        rows: [],
+        columns: 0,
+        rows: 0,
         showHorizontalLines: false,
-        surroundType: 'surround' as const,
-        installType: 'builtin' as const,
-        wallConfig: { left: true, right: true },
-        gapConfig: { left: 2, right: 2 },
-        frameSize: { 
-          top: DEFAULT_FRAME_VALUES.TOP,      // 10
-          left: DEFAULT_FRAME_VALUES.LEFT,    // 50
-          right: DEFAULT_FRAME_VALUES.RIGHT   // 50
-        },
-        framePosition: 'top' as const,
-        baseConfig: {
-          type: 'floor' as const,
-          height: DEFAULT_BASE_VALUES.HEIGHT,  // 65
-          placementType: 'ground' as const
-        },
-        hasFloorFinish: false,
-        materialConfig: {
-          interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,  // '#FFFFFF'
-          doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR           // '#E0E0E0'
-        },
-        droppedCeiling: {
-          enabled: false,
-          position: 'right' as const,
-          width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,           // 500
-          dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT // 200
+        enableSnapping: true,
+        snapDistance: 10,
+        gridVisible: true,
+        gridSize: 100,
+        selectedFinish: 'natural-wood' as const,
+        material: {
+          type: 'laminate' as const,
+          finish: 'natural-wood' as const,
+          colorName: 'Natural Wood',
+          colorCode: '#D2B48C'
         }
       };
 
       if (isFirebaseConfigured() && user) {
         // Firebase에 새 디자인파일 생성
-        const newDesignName = '제목 없음';
         const result = await createDesignFile({
-          name: newDesignName,
+          name: `디자인 ${new Date().toLocaleTimeString()}`,
           projectId: currentProjectId,
           spaceConfig: defaultSpaceConfig,
           furniture: { placedModules: [] }
@@ -741,25 +645,17 @@ const Configurator: React.FC = () => {
           setSpaceInfo(defaultSpaceConfig);
           setPlacedModules([]);
           setCurrentDesignFileId(result.id);
-          setCurrentDesignFileName(newDesignName);
-          setBasicInfo({ ...basicInfo, title: newDesignName });
           
           // derivedSpaceStore 재계산
           derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-          
-          // URL 업데이트
-          navigate(`/configurator?projectId=${currentProjectId}&designFileId=${result.id}`, { replace: true });
           
           console.log('✅ 새 디자인파일 생성 완료:', result.id);
           alert('새 디자인이 생성되었습니다!');
         }
       } else {
         // 데모 모드에서는 단순히 상태만 초기화
-        const newDesignName = '제목 없음';
         setSpaceInfo(defaultSpaceConfig);
         setPlacedModules([]);
-        setCurrentDesignFileName(newDesignName);
-        setBasicInfo({ ...basicInfo, title: newDesignName });
         derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
         alert('새 디자인이 생성되었습니다!');
       }
@@ -785,28 +681,17 @@ const Configurator: React.FC = () => {
       console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
       setSaving(true);
       
-      // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거) - DEFAULT 상수값 사용
+      // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거)
       const defaultSpaceConfig = {
-        width: DEFAULT_SPACE_VALUES.WIDTH,    // 3600
-        height: DEFAULT_SPACE_VALUES.HEIGHT,  // 2400
-        depth: DEFAULT_SPACE_VALUES.DEPTH,    // 1500
+        width: 3600,
+        height: 2400,
+        depth: 1500,
         installationType: 'builtin' as const,
         hasFloorFinish: false,
-        surroundType: 'surround' as const,
-        frameSize: { 
-          top: DEFAULT_FRAME_VALUES.TOP,      // 10
-          bottom: 50,  // bottom은 별도 상수 없음
-          left: DEFAULT_FRAME_VALUES.LEFT,    // 50
-          right: DEFAULT_FRAME_VALUES.RIGHT   // 50
-        },
-        baseConfig: { 
-          type: 'floor' as const, 
-          height: DEFAULT_BASE_VALUES.HEIGHT  // 65
-        },
-        materialConfig: { 
-          interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,  // '#FFFFFF'
-          doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR           // '#E0E0E0'
-        },
+        surroundType: 'three-sided' as const,
+        frameSize: { top: 50, bottom: 50, left: 50, right: 50 },
+        baseConfig: { type: 'floor' as const, height: 65 },
+        materialConfig: { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' },
         columns: []
       };
 
@@ -950,15 +835,6 @@ const Configurator: React.FC = () => {
             setBasicInfo({ ...basicInfo, title: newTitle.trim() });
             setSaveStatus('success');
             
-            // 저장 후 변경사항 상태 리셋
-            // 약간의 지연을 두어 store가 업데이트된 후 리셋되도록 함
-            setTimeout(() => {
-              if (resetUnsavedChangesRef.current) {
-                console.log('🔄 Calling reset after successful save as');
-                resetUnsavedChangesRef.current();
-              }
-            }, 100);
-            
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
             
@@ -1078,254 +954,13 @@ const Configurator: React.FC = () => {
 
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
-    // sessionStorage에서 전체 상태 백업 확인
-    const stateBackup = sessionStorage.getItem('configurator_state_backup');
-    if (stateBackup) {
-      try {
-        const savedState = JSON.parse(stateBackup);
-        console.log('🔄 Configurator 상태 복원 시작');
-        
-        // 상태 복원
-        setBasicInfo(savedState.basicInfo);
-        setSpaceInfo(savedState.spaceInfo);
-        setPlacedModules(savedState.placedModules);
-        setCurrentProjectId(savedState.projectId);
-        setCurrentDesignFileId(savedState.designFileId);
-        setProjectId(savedState.projectId);
-        
-        // 백업 데이터 삭제
-        sessionStorage.removeItem('configurator_state_backup');
-        
-        setIsDataLoaded(true);
-        setLoading(false);
-        console.log('✅ Configurator 상태 복원 완료');
-        return; // 다른 로직 실행 방지
-      } catch (error) {
-        console.error('상태 복원 실패:', error);
-        sessionStorage.removeItem('configurator_state_backup');
-      }
-    }
-    
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
-    const designFileId = searchParams.get('designFileId');
-    const designFileName = searchParams.get('designFileName');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
     
-    // Step2에서 넘어온 경우 (designFileId가 있는 경우)
-    if (projectId && designFileId) {
-      console.log('📋 Step2에서 넘어옴 - designFileId:', designFileId);
-      
-      // fromCNC 체크는 이미 상단에서 처리됨
-      
-      // 이미 같은 프로젝트와 디자인이 로드되어 있는 경우
-      if (currentProjectId === projectId && currentDesignFileId === designFileId && isDataLoaded) {
-        console.log('🔄 동일한 프로젝트/디자인 - 재로드 건너뜀');
-        setLoading(false);
-        return;
-      }
-      
-      setCurrentProjectId(projectId);
-      setProjectId(projectId);
-      setCurrentDesignFileId(designFileId);
-      
-      // 디자인 파일 로드
-      const loadDesignFile = async () => {
-        setLoading(true);
-        try {
-          // 디자인 파일 가져오기
-          const { getDesignFileById } = await import('@/firebase/projects');
-          const { designFile, error } = await getDesignFileById(designFileId);
-          
-          if (error) {
-            console.error('디자인 파일 로드 에러:', error);
-            alert('디자인 파일을 불러오는데 실패했습니다: ' + error);
-            navigate('/dashboard');
-            return;
-          }
-          
-          if (designFile) {
-            console.log('✅ 디자인 파일 로드 성공:', designFile.name);
-            
-            // 디자인 데이터 설정
-            setBasicInfo({
-              title: designFile.name || '새 디자인',
-              location: ''
-            });
-            setCurrentDesignFileName(designFile.name);
-            
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
-            if (spaceConfig.installType === 'built-in') {
-              spaceConfig.installType = 'builtin';
-            }
-            // columns와 rows가 숫자인 경우 빈 배열로 변환
-            if (typeof spaceConfig.columns === 'number') {
-              spaceConfig.columns = [];
-            }
-            if (typeof spaceConfig.rows === 'number') {
-              spaceConfig.rows = [];
-            }
-            setSpaceInfo(spaceConfig);
-            
-            // 가구 설정 - CNC 백업이 있으면 우선 사용
-            const backupData = sessionStorage.getItem('cnc_furniture_backup');
-            if (backupData && fromCNC) {
-              try {
-                const restoredModules = JSON.parse(backupData);
-                console.log('✅ CNC 백업 데이터 사용:', restoredModules.length, '개');
-                setPlacedModules(restoredModules);
-                sessionStorage.removeItem('cnc_furniture_backup');
-              } catch (error) {
-                console.error('백업 데이터 복원 실패:', error);
-                // 백업 실패 시 원래 로직 실행
-                if (designFile.furniture?.placedModules) {
-                  setPlacedModules(designFile.furniture.placedModules);
-                } else {
-                  setPlacedModules([]);
-                }
-              }
-            } else {
-              // 백업이 없으면 Firebase 데이터 사용
-              console.log('🪑 디자인 파일 가구 데이터 로드:', {
-                hasFurniture: !!designFile.furniture,
-                hasPlacedModules: !!designFile.furniture?.placedModules,
-                placedModulesCount: designFile.furniture?.placedModules?.length || 0,
-                placedModules: designFile.furniture?.placedModules
-              });
-              
-              if (designFile.furniture?.placedModules) {
-                console.log('🪑 [LOAD] 가구 데이터 설정 중:', designFile.furniture.placedModules);
-                console.trace('🪑 [TRACE] setPlacedModules 호출 스택');
-                setPlacedModules(designFile.furniture.placedModules);
-                console.log('🪑 [LOAD] 가구 데이터 설정 완료');
-              } else {
-                console.log('⚠️ [EMPTY] 가구 데이터가 없어서 빈 배열로 초기화');
-                console.trace('⚠️ [TRACE] setPlacedModules([]) 호출 스택');
-                setPlacedModules([]);
-              }
-            }
-            
-            setIsDataLoaded(true); // 데이터 로드 완료 표시
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error('디자인 파일 로드 중 오류:', error);
-          alert('디자인 파일 로드 중 오류가 발생했습니다.');
-          setLoading(false);
-        }
-      };
-      
-      loadDesignFile();
-      return; // 다른 로직 실행 방지
-    }
-    
-    // designFileName으로 진입한 경우 (대시보드에서 디자인 카드 클릭)
-    if (projectId && designFileName) {
-      console.log('📋 디자인명으로 진입 - designFileName:', designFileName);
-      
-      // fromCNC 체크는 이미 상단에서 처리됨
-      
-      setCurrentProjectId(projectId);
-      setProjectId(projectId);
-      setCurrentDesignFileName(decodeURIComponent(designFileName));
-      
-      // 프로젝트에서 디자인 파일 찾아서 로드
-      const loadDesignByName = async () => {
-        setLoading(true);
-        try {
-          // 프로젝트의 디자인 파일 목록 가져오기
-          const { getDesignFiles } = await import('@/firebase/projects');
-          const { designFiles, error } = await getDesignFiles(projectId);
-          
-          if (error) {
-            console.error('디자인 파일 목록 로드 에러:', error);
-            // 에러가 나도 프로젝트는 로드 시도
-            loadProject(projectId);
-            return;
-          }
-          
-          // 이름으로 디자인 파일 찾기
-          const decodedName = decodeURIComponent(designFileName);
-          const designFile = designFiles.find(df => df.name === decodedName);
-          
-          if (designFile) {
-            console.log('✅ 디자인 파일 찾음:', designFile.id, designFile.name);
-            setCurrentDesignFileId(designFile.id);
-            
-            // 디자인 데이터 설정
-            setBasicInfo({
-              title: designFile.name || '새 디자인',
-              location: ''
-            });
-            
-            // 공간 설정
-            const spaceConfig = { ...designFile.spaceConfig };
-            if (spaceConfig.installType === 'built-in') {
-              spaceConfig.installType = 'builtin';
-            }
-            // columns와 rows가 숫자인 경우 빈 배열로 변환
-            if (typeof spaceConfig.columns === 'number') {
-              spaceConfig.columns = [];
-            }
-            if (typeof spaceConfig.rows === 'number') {
-              spaceConfig.rows = [];
-            }
-            setSpaceInfo(spaceConfig);
-            
-            // 가구 설정 - CNC 백업이 있으면 우선 사용
-            const backupData = sessionStorage.getItem('cnc_furniture_backup');
-            if (backupData && fromCNC) {
-              try {
-                const restoredModules = JSON.parse(backupData);
-                console.log('✅ CNC 백업 데이터 사용 (디자인명 로드):', restoredModules.length, '개');
-                setPlacedModules(restoredModules);
-                sessionStorage.removeItem('cnc_furniture_backup');
-              } catch (error) {
-                console.error('백업 데이터 복원 실패:', error);
-                // 백업 실패 시 원래 로직 실행
-                if (designFile.furniture?.placedModules) {
-                  setPlacedModules(designFile.furniture.placedModules);
-                } else {
-                  setPlacedModules([]);
-                }
-              }
-            } else {
-              // 백업이 없으면 Firebase 데이터 사용
-              console.log('🪑 디자인 파일 가구 데이터 로드:', {
-                hasFurniture: !!designFile.furniture,
-                hasPlacedModules: !!designFile.furniture?.placedModules,
-                placedModulesCount: designFile.furniture?.placedModules?.length || 0
-              });
-              
-              if (designFile.furniture?.placedModules) {
-                setPlacedModules(designFile.furniture.placedModules);
-              } else {
-                setPlacedModules([]);
-              }
-            }
-            
-            setLoading(false);
-          } else {
-            console.log('⚠️ 디자인 파일을 찾을 수 없음, 프로젝트 로드 시도');
-            // 디자인 파일을 찾을 수 없으면 프로젝트 로드
-            loadProject(projectId);
-          }
-        } catch (error) {
-          console.error('디자인 파일 로드 중 오류:', error);
-          // 오류 발생 시 프로젝트 로드 시도
-          loadProject(projectId);
-        }
-      };
-      
-      loadDesignByName();
-      return; // 다른 로직 실행 방지
-    }
-    
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
-      setProjectId(projectId);  // projectStore에도 projectId 설정
       
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
@@ -1333,24 +968,10 @@ const Configurator: React.FC = () => {
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
         
-        // 새 디자인인 경우 프로젝트 정보 가져오기
-        if (isNewDesign) {
-          getProject(projectId).then(({ project, error }) => {
-            if (project && !error) {
-              setBasicInfo({ 
-                title: project.title,
-                location: project.location || ''
-              });
-              console.log('📝 새 디자인 - 프로젝트 정보 설정:', project.title);
-            }
-            setLoading(false);
-          });
-        } else {
-          // 로딩 완료 처리
-          setTimeout(() => {
-            setLoading(false);
-          }, 500); // 로딩 화면이 보이도록 약간의 지연
-        }
+        // 로딩 완료 처리
+        setTimeout(() => {
+          setLoading(false);
+        }, 500); // 로딩 화면이 보이도록 약간의 지연
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
         console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
@@ -1376,7 +997,7 @@ const Configurator: React.FC = () => {
         setLoading(false);
       }, 500);
     }
-  }, [searchParams, location.state]); // location.state 추가하여 CNC에서 돌아올 때 감지
+  }, [searchParams, currentProjectId]);
 
   // 폴더에서 실제 디자인파일명 찾기
   useEffect(() => {
@@ -1754,7 +1375,7 @@ const Configurator: React.FC = () => {
     if (updates.droppedCeiling?.enabled && !spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 새로 활성화된 경우
       const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
-      const droppedWidth = updates.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+      const droppedWidth = updates.droppedCeiling.width || 900;
       const mainZoneWidth = currentWidth - droppedWidth;
       const frameThickness = 50;
       const normalAreaInternalWidth = mainZoneWidth - frameThickness;
@@ -1824,15 +1445,15 @@ const Configurator: React.FC = () => {
       }, 0);
     }
     
-    // installType 변경 시 가구 너비 재계산 - useEffect에서 처리하므로 여기서는 제거
-    // if (isInstallTypeChanged && placedModules.length > 0) {
-    //   console.log('🔧 InstallType 변경 - 가구 너비 재계산');
-    //   // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
-    //   setTimeout(() => {
-    //     const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
-    //     updateFurnitureForNewSpace(spaceInfo, newSpaceInfo);
-    //   }, 100);
-    // }
+    // installType 변경 시 가구 너비 재계산
+    if (isInstallTypeChanged && placedModules.length > 0) {
+      console.log('🔧 InstallType 변경 - 가구 너비 재계산');
+      // 약간의 지연을 두어 SpaceInfo가 먼저 업데이트되도록 함
+      setTimeout(() => {
+        const newSpaceInfo = { ...spaceInfo, ...finalUpdates };
+        updateFurnitureForNewSpace(spaceInfo, newSpaceInfo);
+      }, 100);
+    }
   };
 
   // 도어 설치/제거 핸들러
@@ -1878,31 +1499,8 @@ const Configurator: React.FC = () => {
     window.open('/help', '_blank');
   };
 
-  const handleConvert = async () => {
+  const handleConvert = () => {
     console.log('도면 편집기 열기');
-    
-    // 3D 뷰 캡처
-    try {
-      // 각 뷰 방향에 대한 캡처 (현재는 현재 뷰만 캡처)
-      const thumbnail = await captureProjectThumbnail();
-      if (thumbnail) {
-        setCapturedViews({
-          top: thumbnail,  // 임시로 같은 이미지 사용
-          front: thumbnail,
-          side: thumbnail,
-          iso: thumbnail
-        });
-      }
-    } catch (error) {
-      console.error('뷰 캡처 실패:', error);
-    }
-    
-    // URL에 editor=drawing 파라미터 추가
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.set('editor', 'drawing');
-    window.history.replaceState(null, '', `${window.location.pathname}?${newSearchParams.toString()}`);
-    
-    // 도면 편집기 열기
     setShowPDFPreview(true);
   };
 
@@ -1919,42 +1517,6 @@ const Configurator: React.FC = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
 
-  // DXF 내보내기 핸들러 - ConvertModal 열기 (DXF 탭 선택)
-  const handleExportDXF = () => {
-    console.log('📐 DXF 내보내기 팝업 열기...');
-    
-    if (!spaceInfo) {
-      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
-      return;
-    }
-
-    // ConvertModal 열기 (통합된 내보내기 팝업)
-    setIsConvertPanelOpen(true);
-  };
-
-  // PDF 내보내기 핸들러 - ConvertModal 열기
-  const handleExportPDF = () => {
-    console.log('📄 PDF 내보내기 팝업 열기...');
-    
-    if (!spaceInfo) {
-      alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
-      return;
-    }
-
-    // ConvertModal 열기 (기존 내보내기 팝업)
-    setIsConvertPanelOpen(true);
-  };
-
-  // 개발 및 테스트를 위한 함수들을 window에 노출
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).testExportDXFZIP = handleExportDXF;
-      (window as any).testExportPDF = handleExportPDF;
-      (window as any).getCurrentSpaceInfo = () => spaceInfo;
-      (window as any).getCurrentPlacedModules = () => placedModules;
-    }
-  }, [spaceInfo, placedModules, handleExportDXF, handleExportPDF]);
-
 
 
 
@@ -1968,31 +1530,44 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 키큰장/상부장/하부장 토글 탭 */}
+              {/* 키큰장/상하부장 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button 
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('tall')}
                 >
-                  {t('furniture.tallCabinet')}
+                  키큰장
                 </button>
                 <button 
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('upper')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upperlower' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('upperlower')}
                 >
-                  {t('furniture.upperCabinet')}
-                </button>
-                <button 
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('lower')}
-                >
-                  {t('furniture.lowerCabinet')}
+                  상하부장
                 </button>
               </div>
               
+              {/* 상하부장 선택 시 상부장/하부장 탭 표시 */}
+              {moduleCategory === 'upperlower' && (
+                <div className={styles.upperLowerTabs}>
+                  <button 
+                    className={`${styles.upperLowerTab} ${upperLowerTab === 'upper' ? styles.active : ''}`}
+                    onClick={() => setUpperLowerTab('upper')}
+                  >
+                    상부장
+                  </button>
+                  <button 
+                    className={`${styles.upperLowerTab} ${upperLowerTab === 'lower' ? styles.active : ''}`}
+                    onClick={() => setUpperLowerTab('lower')}
+                  >
+                    하부장
+                  </button>
+                </div>
+              )}
+              
               <div className={styles.moduleSection}>
                 <ModuleGallery 
-                  moduleCategory={moduleCategory}
+                  moduleCategory={moduleCategory} 
+                  upperLowerTab={moduleCategory === 'upperlower' ? upperLowerTab : undefined}
                 />
               </div>
             </div>
@@ -2018,8 +1593,8 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.preparingPanel}>
-              <h3>{t('sidebar.accessories')}</h3>
-              <p>{t('sidebar.preparing')}</p>
+              <h3>악세서리</h3>
+              <p>준비중입니다.</p>
             </div>
           </div>
         );
@@ -2029,94 +1604,14 @@ const Configurator: React.FC = () => {
   };
 
   // 우측 패널 컨텐츠 렌더링
-  // 배치된 가구 목록 렌더링
-  const renderPlacedFurnitureList = () => {
-    if (!placedModules || placedModules.length === 0) {
-      return (
-        <div className={styles.emptyState}>
-          <p>배치된 가구가 없습니다</p>
-        </div>
-      );
-    }
-
-    // 슬롯별로 가구 그룹화
-    const furnitureBySlot = placedModules.reduce((acc, furniture) => {
-      // 듀얼 가구는 두 슬롯을 표시
-      const startSlot = furniture.slotIndex + 1;
-      const slotKey = furniture.isDualSlot 
-        ? `슬롯 ${startSlot}-${startSlot + 1}` 
-        : `슬롯 ${startSlot}`;
-      
-      if (!acc[slotKey]) {
-        acc[slotKey] = [];
-      }
-      acc[slotKey].push(furniture);
-      return acc;
-    }, {} as Record<string, typeof placedModules>);
-
-    return (
-      <div className={styles.furnitureList}>
-        {Object.entries(furnitureBySlot).map(([slotName, furnitureItems]) => (
-          <div key={slotName} className={styles.slotGroup}>
-            <div className={styles.slotHeader}>
-              <span className={styles.slotName}>{slotName}</span>
-              <span className={styles.slotCount}>({furnitureItems.length}개)</span>
-            </div>
-            <div className={styles.furnitureItems}>
-              {furnitureItems.map((furniture) => {
-                const moduleData = furniture.moduleData || {};
-                const name = moduleData.name || moduleData.id || furniture.moduleId || '알 수 없음';
-                const width = moduleData.dimensions?.width || 0;
-                const height = moduleData.dimensions?.height || 0;
-                
-                return (
-                  <div key={furniture.id} className={styles.furnitureItem}>
-                    <div className={styles.furnitureInfo}>
-                      <span className={styles.furnitureName}>
-                        {name}
-                      </span>
-                      <span className={styles.furnitureSize}>
-                        {width} × {height} mm
-                      </span>
-                    </div>
-                  <div className={styles.furnitureActions}>
-                    <button 
-                      className={styles.removeButton}
-                      onClick={() => {
-                        const { removePlacedModule } = useFurnitureStore.getState();
-                        removePlacedModule(furniture.id);
-                      }}
-                      title="제거"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   const renderRightPanelContent = () => {
-    if (activeRightPanelTab === 'module') {
-      return (
-        <div className={styles.moduleContent}>
-          <PlacedModulesList />
-        </div>
-      );
-    }
-    
     return (
       <div className={styles.spaceControls}>
             {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('space.title')}</h3>
+                <h3 className={styles.sectionTitle}>공간 설정</h3>
               </div>
               
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -2147,7 +1642,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('space.droppedCeiling')}</h3>
+                <h3 className={styles.sectionTitle}>단내림</h3>
               </div>
               
               <div className={styles.toggleButtonGroup}>
@@ -2155,7 +1650,7 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     // 단내림 비활성화
-                    // clearAllModules(); // 가구 제거 - 주석처리하여 가구 유지
+                    clearAllModules(); // 가구 제거
                     handleSpaceInfoUpdate({ 
                       droppedCeiling: {
                         ...spaceInfo.droppedCeiling,
@@ -2164,16 +1659,17 @@ const Configurator: React.FC = () => {
                       mainDoorCount: undefined,
                       droppedCeilingDoorCount: undefined
                     });
+                    setActiveRightPanelTab('slotA');
                   }}
                 >
-                  {t('common.none')}
+                  없음
                 </button>
                 <button
                   className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
                     if (!spaceInfo.droppedCeiling?.enabled) {
                       // 단내림 활성화
-                      // clearAllModules(); // 가구 제거 - 주석처리하여 가구 유지
+                      clearAllModules(); // 가구 제거
                       
                       const totalWidth = spaceInfo.width || 4800;
                       const droppedWidth = 900; // 단내림 기본 폭
@@ -2197,17 +1693,18 @@ const Configurator: React.FC = () => {
                         droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
                         mainDoorCount: adjustedMainDoorCount
                       });
+                      setActiveRightPanelTab('slotA');
                     }
                   }}
                 >
-                  {t('common.enabled')}
+                  있음
                 </button>
               </div>
               
               {/* 단내림이 활성화된 경우 위치 선택 */}
               {spaceInfo.droppedCeiling?.enabled && (
                 <div style={{ marginTop: '16px' }}>
-                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>{t('placement.droppedCeilingPosition')}</div>
+                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
                   <div className={styles.toggleButtonGroup}>
                     <button
                       className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
@@ -2221,7 +1718,7 @@ const Configurator: React.FC = () => {
                         });
                       }}
                     >
-                      {t('furniture.left')}
+                      좌측
                     </button>
                     <button
                       className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
@@ -2235,7 +1732,7 @@ const Configurator: React.FC = () => {
                         });
                       }}
                     >
-                      {t('furniture.right')}
+                      우측
                     </button>
                   </div>
                 </div>
@@ -2247,7 +1744,7 @@ const Configurator: React.FC = () => {
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>{t('space.mainSectionSize')}</h3>
+                  <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -2260,8 +1757,8 @@ const Configurator: React.FC = () => {
                           min="100"
                           max={(spaceInfo.width || 4800) - 100}
                           step="10"
-                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH)}
-                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH)}`}
+                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
+                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -2271,7 +1768,7 @@ const Configurator: React.FC = () => {
                           onBlur={(e) => {
                             const inputValue = e.target.value;
                             const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             const currentMainWidth = totalWidth - currentDroppedWidth;
                             
                             // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
@@ -2396,7 +1893,7 @@ const Configurator: React.FC = () => {
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>{t('space.droppedSectionSize')}</h3>
+                  <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -2409,8 +1906,8 @@ const Configurator: React.FC = () => {
                           min="100"
                           max={(spaceInfo.width || 4800) - 100}
                           step="10"
-                          defaultValue={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
-                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}`}
+                          defaultValue={spaceInfo.droppedCeiling?.width || 900}
+                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -2420,7 +1917,7 @@ const Configurator: React.FC = () => {
                           onBlur={(e) => {
                             const inputValue = e.target.value;
                             const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH;
+                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
                             
                             // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
                             if (inputValue === '' || isNaN(parseInt(inputValue))) {
@@ -2544,7 +2041,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
                 <div className={styles.sectionHeader}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>{t('space.columnCount')}</h3>
+                  <h3 className={styles.sectionTitle}>컬럼수</h3>
                 </div>
                 {console.log('🔍 레이아웃 섹션 렌더링:', {
                   activeTab: activeRightPanelTab,
@@ -2585,7 +2082,7 @@ const Configurator: React.FC = () => {
                       onChange={(value) => {
                         handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
                       }}
-                      width={spaceInfo.droppedCeiling?.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH}
+                      width={spaceInfo.droppedCeiling?.width || 900}
                     />
                   </div>
                 </div>
@@ -2597,7 +2094,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('space.installType')}</h3>
+                <h3 className={styles.sectionTitle}>공간 유형</h3>
               </div>
               <InstallTypeControls 
                 spaceInfo={spaceInfo}
@@ -2609,7 +2106,7 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('frame.title')}</h3>
+                <h3 className={styles.sectionTitle}>프레임 설정</h3>
               </div>
               
               {/* 프레임 타입 */}
@@ -2618,29 +2115,29 @@ const Configurator: React.FC = () => {
                   className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
                 >
-                  {t('space.surround')}
+                  서라운드
                 </button>
                 <button
                   className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
                   onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
                 >
-                  {t('space.noSurround')}
+                  노서라운드
                 </button>
               </div>
 
               {/* 서라운드 선택 시 - 프레임 속성 설정 */}
               {(spaceInfo.surroundType || 'surround') === 'surround' && (
                 <div className={styles.subSetting}>
-                  <label className={styles.subLabel}>{t('frame.frameWidth')}</label>
+                  <label className={styles.subLabel}>프레임 폭 설정</label>
                   
                   <div className={styles.frameGrid}>
                     {/* 좌측 */}
                     <div className={styles.frameItem}>
                       <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? t('furniture.left') : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? t('furniture.left') :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? `${t('furniture.left')}(${t('frame.endPanel')})` :
-                         spaceInfo.installType === 'freestanding' ? `${t('furniture.left')}(${t('frame.endPanel')})` : t('furniture.left')}
+                        {spaceInfo.installType === 'builtin' ? '좌측' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
+                         spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
                       </label>
                       <div className={styles.frameItemInput}>
                         <button 
@@ -2694,10 +2191,10 @@ const Configurator: React.FC = () => {
                     {/* 우측 */}
                     <div className={styles.frameItem}>
                       <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? t('furniture.right') : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? t('furniture.right') :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? `${t('furniture.right')}(${t('frame.endPanel')})` :
-                         spaceInfo.installType === 'freestanding' ? `${t('furniture.right')}(${t('frame.endPanel')})` : t('furniture.right')}
+                        {spaceInfo.installType === 'builtin' ? '우측' : 
+                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
+                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
+                         spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
                       </label>
                       <div className={styles.frameItemInput}>
                         <button 
@@ -2750,7 +2247,7 @@ const Configurator: React.FC = () => {
 
                     {/* 상부 */}
                     <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>{t('viewer.top')}</label>
+                      <label className={styles.frameItemLabel}>상부</label>
                       <div className={styles.frameItemInput}>
                         <button 
                           className={styles.frameButton}
@@ -2789,7 +2286,7 @@ const Configurator: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className={styles.frameUnit}>{t('common.unit')}: mm</div>
+                  <div className={styles.frameUnit}>단위: mm</div>
                 </div>
               )}
 
@@ -2802,32 +2299,18 @@ const Configurator: React.FC = () => {
             />
 
 
-            {/* 배치 설정 - 양쪽 탭에서 모두 표시 */}
+            {/* 받침대 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>{t('placement.title')}</h3>
+                <h3 className={styles.sectionTitle}>받침대</h3>
               </div>
               <BaseControls 
                 spaceInfo={spaceInfo}
                 onUpdate={handleSpaceInfoUpdate}
-                disabled={false}
+                disabled={hasSpecialDualFurniture}
               />
             </div>
-
-            {/* 바닥 마감재 - 바닥 배치일 때만 표시 */}
-            {spaceInfo.baseConfig?.placementType !== 'float' && (
-              <div className={styles.configSection}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>{t('material.floorFinish')}</h3>
-                </div>
-                <FloorFinishControls 
-                  spaceInfo={spaceInfo}
-                  onUpdate={handleSpaceInfoUpdate}
-                />
-              </div>
-            )}
 
           </div>
     );
@@ -2837,6 +2320,7 @@ const Configurator: React.FC = () => {
     return (
       <div className={styles.loadingContainer}>
         <LoadingSpinner 
+          message="에디터를 준비하는 중..."
           size="large"
           type="spinner"
         />
@@ -2857,8 +2341,6 @@ const Configurator: React.FC = () => {
         title={currentDesignFileName || basicInfo.title || "새로운 디자인"}
         projectName={basicInfo.title || "새로운 프로젝트"}
         designFileName={currentDesignFileName}
-        projectId={currentProjectId}
-        designFileId={currentDesignFileId}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}
@@ -2871,7 +2353,6 @@ const Configurator: React.FC = () => {
         onNewProject={handleNewDesign}
         onSaveAs={handleSaveAs}
         onProjectNameChange={handleProjectNameChange}
-        onExportPDF={handleExportPDF}
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
       />
@@ -2888,59 +2369,16 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={async (projectId, designFileId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
-                  
-                  // 현재 작업 내용 자동 저장
-                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
-                    console.log('💾 디자인 전환 전 자동 저장 시작');
-                    setSaving(true);
-                    setSaveStatus('idle');
-                    
-                    try {
-                      await saveProject();
-                      console.log('✅ 자동 저장 완료');
-                    } catch (error) {
-                      console.error('❌ 자동 저장 실패:', error);
-                      const confirmSwitch = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 다른 디자인으로 전환하시겠습니까?');
-                      if (!confirmSwitch) {
-                        setSaving(false);
-                        return;
-                      }
-                    }
-                  }
-                  
-                  // 디자인 파일 선택 시 해당 프로젝트 로드 - designFileId 우선 사용
-                  if (designFileId) {
-                    navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
-                  } else {
-                    navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
-                  }
+                onFileSelect={(projectId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
+                  // 디자인 파일 선택 시 해당 프로젝트 로드
+                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
                   setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침 제거 - navigate만으로 충분
+                  // 페이지 새로고침하여 새 디자인 파일 로드
+                  window.location.reload();
                 }}
-                onCreateNew={async () => {
+                onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
-                  
-                  // 현재 작업 내용 자동 저장
-                  if (currentDesignFileId && (spaceInfo || placedModules.length > 0)) {
-                    console.log('💾 새 디자인 생성 전 자동 저장 시작');
-                    setSaving(true);
-                    setSaveStatus('idle');
-                    
-                    try {
-                      await saveProject();
-                      console.log('✅ 자동 저장 완료');
-                    } catch (error) {
-                      console.error('❌ 자동 저장 실패:', error);
-                      const confirmCreate = confirm('현재 작업을 저장하는데 실패했습니다. 그래도 새 디자인을 생성하시겠습니까?');
-                      if (!confirmCreate) {
-                        setSaving(false);
-                        return;
-                      }
-                    }
-                  }
-                  
                   handleNewProject();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
@@ -2965,7 +2403,6 @@ const Configurator: React.FC = () => {
           onTabClick={handleSidebarTabClick}
           isOpen={!!activeSidebarTab}
           onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
-          onResetUnsavedChanges={resetUnsavedChangesRef}
         />
 
         {/* 사이드바 컨텐츠 패널 */}
@@ -3020,8 +2457,6 @@ const Configurator: React.FC = () => {
             onShowGuidesToggle={toggleGuides}
             showAxis={showAxis}
             onShowAxisToggle={toggleAxis}
-            showFurniture={showFurniture}
-            onShowFurnitureToggle={() => setShowFurniture(!showFurniture)}
             doorsOpen={doorsOpen}
             onDoorsToggle={toggleDoors}
             hasDoorsInstalled={hasDoorsInstalled}
@@ -3037,13 +2472,13 @@ const Configurator: React.FC = () => {
                   className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
                   onClick={() => !doorsOpen || toggleDoors()}
                 >
-                  {t('viewer.doorClose')}
+                  Close
                 </button>
                 <button 
                   className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
                   onClick={() => doorsOpen || toggleDoors()}
                 >
-                  {t('viewer.doorOpen')}
+                  Open
                 </button>
               </div>
             )}
@@ -3054,7 +2489,6 @@ const Configurator: React.FC = () => {
               setViewMode={setViewMode}
               renderMode={renderMode}
               showAll={showAll}
-              showFurniture={showFurniture}
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
@@ -3095,16 +2529,9 @@ const Configurator: React.FC = () => {
             <div className={styles.rightPanelTabs}>
               <div className={styles.tabGroup}>
                 <button
-                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'placement' ? styles.active : ''}`}
-                  onClick={() => setActiveRightPanelTab('placement')}
+                  className={`${styles.rightPanelTab} ${styles.active}`}
                 >
-                  배치속성
-                </button>
-                <button
-                  className={`${styles.rightPanelTab} ${activeRightPanelTab === 'module' ? styles.active : ''}`}
-                  onClick={() => setActiveRightPanelTab('module')}
-                >
-                  배치모듈
+                  배치 속성
                 </button>
               </div>
             </div>
@@ -3134,17 +2561,10 @@ const Configurator: React.FC = () => {
         onClose={() => setIsConvertPanelOpen(false)}
       />
       
-      {/* PDF 템플릿 미리보기 - 도면 편집기 */}
+      {/* PDF 템플릿 미리보기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
-        onClose={() => {
-          // URL에서 editor 파라미터 제거
-          const newSearchParams = new URLSearchParams(searchParams.toString());
-          newSearchParams.delete('editor');
-          const queryString = newSearchParams.toString();
-          window.history.replaceState(null, '', `${window.location.pathname}${queryString ? '?' + queryString : ''}`);
-          setShowPDFPreview(false);
-        }}
+        onClose={() => setShowPDFPreview(false)}
         capturedViews={capturedViews}
       />
 

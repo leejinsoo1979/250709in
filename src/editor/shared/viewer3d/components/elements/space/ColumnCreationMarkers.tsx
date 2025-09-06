@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { createPortal } from 'react-dom';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { Column } from '@/types/space';
-import { ColumnIndexer } from '@/editor/shared/utils/indexing';
-import ColumnZoneSelectionModal from './ColumnZoneSelectionModal';
 
 interface ColumnCreationMarkersProps {
   spaceInfo: any;
@@ -17,7 +14,7 @@ interface ColumnCreationMarkersProps {
 
 const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo }) => {
   const { isColumnCreationMode } = useUIStore();
-  const { addColumn, spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
+  const { addColumn } = useSpaceConfigStore();
   const { indexing } = useDerivedSpaceStore();
   const { viewMode } = useSpace3DView();
   const { camera, raycaster, gl } = useThree();
@@ -25,11 +22,6 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   // 고스트 기둥 상태
   const [ghostPosition, setGhostPosition] = useState<[number, number, number] | null>(null);
   const [isHoveringSpace, setIsHoveringSpace] = useState(false);
-  const [isValidPosition, setIsValidPosition] = useState(true);
-  const [isSnapped, setIsSnapped] = useState(false); // 스냅 상태
-  const [showZoneModal, setShowZoneModal] = useState(false);
-  const [pendingColumnPosition, setPendingColumnPosition] = useState<[number, number, number] | null>(null);
-  const [selectedZone, setSelectedZone] = useState<'normal' | 'dropped' | null>(null);
 
   // 디버깅용 로그
   // console.log('🔍 ColumnCreationMarkers 렌더링 상태:', {
@@ -40,233 +32,11 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   //   ghostPosition
   // });
 
-  // 기둥이 겹치는지 확인하는 함수
-  const checkColumnOverlap = (newPosition: [number, number, number]): boolean => {
-    const existingColumns = storeSpaceInfo?.columns || [];
-    const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units (1 unit = 100mm)
-    const epsilon = 0.001; // 부동소수점 오차 허용치
-    const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
-
-    for (const column of existingColumns) {
-      if (!column.position) continue;
-      
-      // X축 거리만 확인 (기둥은 보통 X축으로만 이동)
-      const distance = Math.abs(column.position[0] - newPosition[0]);
-      
-      // 두 기둥 중심 간 거리가 최소 거리보다 작으면 겹침 (아주 약간의 허용치 포함)
-      if (distance < minDistance) {
-        return true; // 겹침
-      }
-    }
-    
-    return false; // 겹치지 않음
-  };
-
-  // 단내림 구간 경계 체크 - 걸치면 무조건 스냅
-  const checkDroppedCeilingBoundary = (xPosition: number): { adjusted: boolean; newX: number; zone?: 'normal' | 'dropped' } => {
-    if (!spaceInfo?.droppedCeiling?.enabled) {
-      return { adjusted: false, newX: xPosition };
-    }
-
-    const columnWidthMm = 300;
-    const columnWidthInThreeUnits = columnWidthMm / 100;
-    const halfColumnWidth = columnWidthInThreeUnits / 2;
-    
-    // 단내림 구간 정보 가져오기
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    if (!zoneInfo || !zoneInfo.dropped || !zoneInfo.normal) {
-      return { adjusted: false, newX: xPosition };
-    }
-
-    // mm를 Three.js 단위로 변환
-    const droppedStartX = (zoneInfo.dropped.startX / 100);
-    const droppedEndX = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
-    const normalStartX = (zoneInfo.normal.startX / 100);
-    const normalEndX = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
-
-    // 기둥의 왼쪽과 오른쪽 경계
-    const columnLeft = xPosition - halfColumnWidth;
-    const columnRight = xPosition + halfColumnWidth;
-
-    // 스냅 거리 설정 (가구처럼 자연스럽게)
-    const snapDistance = 2; // 20cm 이내에서 스냅
-    
-    // 단내림 위치에 따른 경계 체크
-    if (spaceInfo.droppedCeiling.position === 'left') {
-      // 왼쪽 단내림
-      const boundaryX = droppedEndX;
-      
-      // 경계를 걸치면 무조건 스냅
-      if (columnLeft < boundaryX && columnRight > boundaryX) {
-        // 기둥 중심이 어디에 있는지로 결정
-        if (xPosition < boundaryX) {
-          // 단내림 구간으로 스냅
-          const newX = boundaryX - halfColumnWidth;
-          return { adjusted: true, newX, zone: 'dropped' };
-        } else {
-          // 일반 구간으로 스냅
-          const newX = boundaryX + halfColumnWidth;
-          return { adjusted: true, newX, zone: 'normal' };
-        }
-      }
-      
-      // 단내림 구간에 있고 경계에 가까우면 스냅
-      if (columnRight <= boundaryX) {
-        const distanceToBoundary = boundaryX - columnRight;
-        if (distanceToBoundary <= snapDistance) {
-          // 경계에 스냅
-          const newX = boundaryX - halfColumnWidth;
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
-      }
-      
-      // 일반 구간에 있고 경계에 가까우면 스냅
-      if (columnLeft >= boundaryX) {
-        const distanceToBoundary = columnLeft - boundaryX;
-        if (distanceToBoundary <= snapDistance) {
-          // 경계에 스냅
-          const newX = boundaryX + halfColumnWidth;
-          return { adjusted: true, newX, zone: 'normal' };
-        }
-      }
-      
-      return { adjusted: false, newX: xPosition };
-    } else {
-      // 오른쪽 단내림
-      const boundaryX = normalEndX;
-      
-      // 경계를 걸치면 무조건 스냅
-      if (columnLeft < boundaryX && columnRight > boundaryX) {
-        // 기둥 중심이 어디에 있는지로 결정
-        if (xPosition < boundaryX) {
-          // 일반 구간으로 스냅
-          const newX = boundaryX - halfColumnWidth;
-          return { adjusted: true, newX, zone: 'normal' };
-        } else {
-          // 단내림 구간으로 스냅
-          const newX = boundaryX + halfColumnWidth;
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
-      }
-      
-      // 일반 구간에 있고 경계에 가까우면 스냅
-      if (columnRight <= boundaryX) {
-        const distanceToBoundary = boundaryX - columnRight;
-        if (distanceToBoundary <= snapDistance) {
-          // 경계에 스냅
-          const newX = boundaryX - halfColumnWidth;
-          return { adjusted: true, newX, zone: 'normal' };
-        }
-      }
-      
-      // 단내림 구간에 있고 경계에 가까우면 스냅
-      if (columnLeft >= boundaryX) {
-        const distanceToBoundary = columnLeft - boundaryX;
-        if (distanceToBoundary <= snapDistance) {
-          // 경계에 스냅
-          const newX = boundaryX + halfColumnWidth;
-          return { adjusted: true, newX, zone: 'dropped' };
-        }
-      }
-      
-      return { adjusted: false, newX: xPosition };
-    }
-
-    return { adjusted: false, newX: xPosition };
-  };
-
-  // 기둥 위치를 가장 가까운 기둥에 스냅하는 함수 (뛰어넘기 방지)
-  const snapToNearestColumn = (position: [number, number, number]): [number, number, number] => {
-    const existingColumns = storeSpaceInfo?.columns || [];
-    const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-    const snapThreshold = columnWidthInThreeUnits * 0.3; // 스냅 임계값 (30% 이내에서만 스냅)
-    
-    let snappedX = position[0];
-    let shouldSnap = false;
-    
-    // 모든 기둥에 대해 검사
-    for (const column of existingColumns) {
-      if (!column.position) continue;
-      
-      const columnX = column.position[0];
-      const columnLeft = columnX - columnWidthInThreeUnits / 2;
-      const columnRight = columnX + columnWidthInThreeUnits / 2;
-      
-      // 현재 위치가 기둥과 겹치려고 하는지 확인
-      const mouseLeft = position[0] - columnWidthInThreeUnits / 2;
-      const mouseRight = position[0] + columnWidthInThreeUnits / 2;
-      
-      // 겹침 감지
-      if ((mouseLeft < columnRight && mouseRight > columnLeft)) {
-        // 겹치는 경우, 가장 가까운 쪽으로 밀착
-        if (position[0] > columnX) {
-          // 오른쪽으로 밀착
-          const rightEdge = columnX + columnWidthInThreeUnits;
-          if (Math.abs(position[0] - rightEdge) < snapThreshold) {
-            snappedX = rightEdge;
-            shouldSnap = true;
-          }
-        } else {
-          // 왼쪽으로 밀착
-          const leftEdge = columnX - columnWidthInThreeUnits;
-          if (Math.abs(position[0] - leftEdge) < snapThreshold) {
-            snappedX = leftEdge;
-            shouldSnap = true;
-          }
-        }
-      }
-    }
-    
-    // 스냅되지 않았다면 가장 가까운 기둥에 밀착 시도
-    if (!shouldSnap) {
-      let closestDistance = Infinity;
-      
-      for (const column of existingColumns) {
-        if (!column.position) continue;
-        
-        const leftSnapX = column.position[0] - columnWidthInThreeUnits;
-        const rightSnapX = column.position[0] + columnWidthInThreeUnits;
-        
-        const distToLeft = Math.abs(position[0] - leftSnapX);
-        const distToRight = Math.abs(position[0] - rightSnapX);
-        
-        // 왼쪽 스냅 체크 (겹치지 않는 경우만)
-        if (distToLeft < snapThreshold && distToLeft < closestDistance) {
-          // 스냅 위치가 다른 기둥과 겹치는지 확인
-          const willOverlap = checkColumnOverlap([leftSnapX, position[1], position[2]]);
-          if (!willOverlap) {
-            closestDistance = distToLeft;
-            snappedX = leftSnapX;
-          }
-        }
-        
-        // 오른쪽 스냅 체크 (겹치지 않는 경우만)
-        if (distToRight < snapThreshold && distToRight < closestDistance) {
-          // 스냅 위치가 다른 기둥과 겹치는지 확인
-          const willOverlap = checkColumnOverlap([rightSnapX, position[1], position[2]]);
-          if (!willOverlap) {
-            closestDistance = distToRight;
-            snappedX = rightSnapX;
-          }
-        }
-      }
-    }
-    
-    return [snappedX, position[1], position[2]];
-  };
-
   // 마우스 움직임 추적
   useEffect(() => {
     if (!isColumnCreationMode || !gl.domElement) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // 단내림이 있고 구간이 선택되지 않았으면 고스트 표시 안함
-      if (spaceInfo?.droppedCeiling?.enabled && !selectedZone) {
-        setIsHoveringSpace(false);
-        setGhostPosition(null);
-        return;
-      }
-
       const canvas = gl.domElement;
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -289,39 +59,10 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         const columnWidthM = 300 * 0.01; // 기둥 너비
         const zPosition = -(spaceDepthM / 2) + (columnDepthM / 2); // 뒷벽에 맞닿도록
         
-        let boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
+        const boundedX = Math.max(-spaceWidth/2 + columnWidthM/2, Math.min(spaceWidth/2 - columnWidthM/2, intersectPoint.x));
         
-        // 선택된 구간에 따라 위치 제한
-        if (spaceInfo?.droppedCeiling?.enabled && selectedZone) {
-          const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
-          
-          if (selectedZone === 'normal') {
-            // 일반 구간에만 배치 가능
-            const normalStart = (zoneInfo.normal.startX / 100);
-            const normalEnd = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
-            boundedX = Math.max(normalStart + columnWidthM/2, Math.min(normalEnd - columnWidthM/2, boundedX));
-          } else if (selectedZone === 'dropped') {
-            // 단내림 구간에만 배치 가능
-            const droppedStart = (zoneInfo.dropped.startX / 100);
-            const droppedEnd = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
-            boundedX = Math.max(droppedStart + columnWidthM/2, Math.min(droppedEnd - columnWidthM/2, boundedX));
-          }
-        }
-        
-        let newPosition: [number, number, number] = [boundedX, 0, zPosition];
-        
-        // 기존 기둥에 스냅 (구간 제한 없이)
-        const originalX = newPosition[0];
-        newPosition = snapToNearestColumn(newPosition);
-        const snapped = Math.abs(originalX - newPosition[0]) > 0.01;
-        setIsSnapped(snapped);
-        
-        setGhostPosition(newPosition);
+        setGhostPosition([boundedX, 0, zPosition]);
         setIsHoveringSpace(true);
-        
-        // 겹침 검사
-        const isOverlapping = checkColumnOverlap(newPosition);
-        setIsValidPosition(!isOverlapping);
       }
     };
 
@@ -337,16 +78,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [isColumnCreationMode, camera, raycaster, gl, spaceInfo, selectedZone]);
-
-  // 기둥 생성 모드가 변경되면 선택 초기화
-  useEffect(() => {
-    if (!isColumnCreationMode) {
-      setSelectedZone(null);
-      setShowZoneModal(false);
-      setPendingColumnPosition(null);
-    }
-  }, [isColumnCreationMode]);
+  }, [isColumnCreationMode, camera, raycaster, gl, spaceInfo]);
 
   // 기둥 생성 모드가 아니면 아무것도 렌더링하지 않음
   if (!isColumnCreationMode) {
@@ -376,48 +108,11 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     return positions;
   };
 
-  // 구간 선택 후 기둥 생성
-  const handleZoneSelect = (zone: 'normal' | 'dropped') => {
-    setSelectedZone(zone);
-    setShowZoneModal(false);
-    
-    if (pendingColumnPosition) {
-      // 선택된 구간에 맞게 위치 조정
-      let finalPosition = [...pendingColumnPosition] as [number, number, number];
-      const columnWidthM = 300 * 0.01;
-      
-      if (spaceInfo?.droppedCeiling?.enabled) {
-        const zoneInfo = ColumnIndexer.calculateDroppedCeilingZones(spaceInfo);
-        
-        if (zone === 'normal') {
-          // 일반 구간 범위 내로 제한
-          const normalStart = (zoneInfo.normal.startX / 100);
-          const normalEnd = ((zoneInfo.normal.startX + zoneInfo.normal.width) / 100);
-          finalPosition[0] = Math.max(normalStart + columnWidthM/2, Math.min(normalEnd - columnWidthM/2, finalPosition[0]));
-        } else if (zone === 'dropped') {
-          // 단내림 구간 범위 내로 제한
-          const droppedStart = (zoneInfo.dropped.startX / 100);
-          const droppedEnd = ((zoneInfo.dropped.startX + zoneInfo.dropped.width) / 100);
-          finalPosition[0] = Math.max(droppedStart + columnWidthM/2, Math.min(droppedEnd - columnWidthM/2, finalPosition[0]));
-        }
-      }
-      
-      createColumnAtPosition(finalPosition);
-      setPendingColumnPosition(null);
-    }
-    
-    // 다음 기둥을 위해 선택 유지
-    setTimeout(() => {
-      // 구간 선택 상태 유지
-    }, 100);
-  };
-
-  // 실제 기둥 생성
-  const createColumnAtPosition = (finalPosition: [number, number, number]) => {
-    // 겹침 검사
-    if (checkColumnOverlap(finalPosition)) {
-      return; // 겹치면 생성하지 않음
-    }
+  // 기둥 생성 핸들러
+  const handleCreateColumn = (position?: [number, number, number]) => {
+    // 위치가 제공되지 않으면 고스트 위치 사용
+    const finalPosition = position || ghostPosition;
+    if (!finalPosition) return;
     
     // 공간 높이 가져오기
     const spaceHeightMm = spaceInfo?.height || 2400;
@@ -432,30 +127,14 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
     
+    // console.log('🏗️ 새 기둥 생성:', newColumn);
     addColumn(newColumn);
-  };
-
-  // 기둥 생성 핸들러
-  const handleCreateColumn = (position?: [number, number, number]) => {
-    // 위치가 제공되지 않으면 고스트 위치 사용
-    let finalPosition = position || ghostPosition;
-    if (!finalPosition) return;
-    
-    // 단내림이 활성화되어 있으면 팝업 표시
-    if (spaceInfo?.droppedCeiling?.enabled && !selectedZone) {
-      setPendingColumnPosition(finalPosition);
-      setShowZoneModal(true);
-      return;
-    }
-    
-    // 단내림이 없거나 이미 구간이 선택된 경우 바로 생성
-    createColumnAtPosition(finalPosition);
   };
 
   // 클릭 핸들러
   const handleClick = (e: any) => {
     e.stopPropagation();
-    if (ghostPosition && isValidPosition) {
+    if (ghostPosition) {
       handleCreateColumn();
     }
   };
@@ -488,51 +167,25 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           <mesh position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <boxGeometry args={[300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01]} />
             <meshStandardMaterial
-              color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"}
+              color="#10b981"
               transparent
-              opacity={isSnapped ? 0.7 : 0.5}
-              emissive={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"}
-              emissiveIntensity={isSnapped ? 0.4 : 0.2}
+              opacity={0.5}
+              emissive="#10b981"
+              emissiveIntensity={0.2}
             />
           </mesh>
           
           {/* 고스트 기둥 윤곽선 */}
           <lineSegments position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <edgesGeometry args={[new THREE.BoxGeometry(300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01)]} />
-            <lineBasicMaterial color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"} linewidth={isSnapped ? 3 : 2} />
+            <lineBasicMaterial color="#10b981" linewidth={2} />
           </lineSegments>
           
           {/* 바닥 표시 */}
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[isSnapped ? 0.7 : 0.5, 32]} />
-            <meshBasicMaterial color={isValidPosition ? (isSnapped ? "#3b82f6" : "#10b981") : "#ef4444"} transparent opacity={isSnapped ? 1.0 : 0.8} />
+            <circleGeometry args={[0.5, 32]} />
+            <meshBasicMaterial color="#10b981" transparent opacity={0.8} />
           </mesh>
-          
-          {/* 스냅 표시 */}
-          {isSnapped && isValidPosition && (
-            <Text
-              position={[0, (spaceInfo?.height || 2400) * 0.01 + 2, 0]}
-              fontSize={0.4}
-              color="#3b82f6"
-              anchorX="center"
-              anchorY="middle"
-            >
-              경계에 정렬됨
-            </Text>
-          )}
-          
-          {/* 겹침 경고 텍스트 */}
-          {!isValidPosition && (
-            <Text
-              position={[0, (spaceInfo?.height || 2400) * 0.01 + 2, 0]}
-              fontSize={0.5}
-              color="#ef4444"
-              anchorX="center"
-              anchorY="middle"
-            >
-              기둥이 겹칩니다
-            </Text>
-          )}
         </group>
       )}
 
@@ -546,7 +199,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              // console.log('🎯 + 아이콘 클릭됨:', xPosition);
+              console.log('🎯 + 아이콘 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -565,7 +218,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0.1]}
             onClick={(e) => {
               e.stopPropagation();
-              // console.log('🎯 + 배경 클릭됨:', xPosition);
+              console.log('🎯 + 배경 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -588,7 +241,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             anchorY="middle"
             onClick={(e) => {
               e.stopPropagation();
-              // console.log('🎯 + 텍스트 클릭됨:', xPosition);
+              console.log('🎯 + 텍스트 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -602,7 +255,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             rotation={[-Math.PI / 2, 0, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              // console.log('🎯 바닥 원 클릭됨:', xPosition);
+              console.log('🎯 바닥 원 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -621,7 +274,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 0.5, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              // console.log('🎯 가이드 라인 클릭됨:', xPosition);
+              console.log('🎯 가이드 라인 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
             }}
@@ -635,19 +288,6 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
           </mesh>
         </group>
       ))}
-      
-      {/* 구간 선택 모달 */}
-      {showZoneModal && typeof document !== 'undefined' && createPortal(
-        <ColumnZoneSelectionModal
-          isOpen={showZoneModal}
-          onSelect={handleZoneSelect}
-          onCancel={() => {
-            setShowZoneModal(false);
-            setPendingColumnPosition(null);
-          }}
-        />,
-        document.body
-      )}
     </group>
   );
 };

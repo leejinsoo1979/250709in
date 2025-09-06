@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
 import { Column, Wall, PanelB } from '@/types/space';
-import { useFurnitureStore } from './furnitureStore';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -138,19 +137,12 @@ export const DEFAULT_FRAME_VALUES = {
 
 export const DEFAULT_BASE_VALUES = {
   HEIGHT: 65,
-  FLOOR_FINISH_HEIGHT: 9,
+  FLOOR_FINISH_HEIGHT: 50,
 } as const;
 
 export const DEFAULT_MATERIAL_VALUES = {
   INTERIOR_COLOR: '#FFFFFF',
   DOOR_COLOR: '#E0E0E0',  // 기본값을 밝은 회색으로 변경 (흰색 강제 초기화 방지)
-} as const;
-
-// 단내림 기본값 상수
-export const DEFAULT_DROPPED_CEILING_VALUES = {
-  WIDTH: 1300,  // 단내림 구간 기본 너비
-  DROP_HEIGHT: 200,  // 단내림 높이
-  POSITION: 'right' as const,  // 단내림 기본 위치
 } as const;
 
 // 공간 치수 범위 상수들 (controls에서 사용)
@@ -196,19 +188,18 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   // Configurator 초기값 설정
   surroundType: 'surround',  // 기본값을 서라운드로 변경
   frameSize: {
-    left: DEFAULT_FRAME_VALUES.LEFT,  // 서라운드 기본 프레임 크기
-    right: DEFAULT_FRAME_VALUES.RIGHT,
-    top: DEFAULT_FRAME_VALUES.TOP
+    left: 50,  // 서라운드 기본 프레임 크기
+    right: 50,
+    top: 10
   },
   gapConfig: {
     left: 2, // 기본 이격거리 2mm
     right: 2, // 기본 이격거리 2mm
   },
   baseConfig: {
-    type: 'floor',  // 바닥 프레임(받침대) 있음
+    type: 'floor',
     height: DEFAULT_BASE_VALUES.HEIGHT,
-    placementType: 'ground',  // 바닥에 배치 (기본값)
-    floatHeight: 200  // 띄움 높이 (띄워서 배치 선택 시 사용)
+    placementType: 'float'  // 기본값을 띄워서 배치로 변경
   },
   // 재질 설정 초기값
   materialConfig: {
@@ -218,9 +209,9 @@ export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
   // 단내림 기본값 설정
   droppedCeiling: {
     enabled: false,
-    position: DEFAULT_DROPPED_CEILING_VALUES.POSITION,
-    width: DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
-    dropHeight: DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
+    position: 'right',
+    width: 900,
+    dropHeight: 200
   },
   // 도어 개수 기본값 설정
   mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
@@ -245,27 +236,13 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.installType = 'builtin';
       }
       
-      // 노서라운드 모드일 때 좌우 frameSize를 0으로, 상부는 10mm로 자동 설정
-      if (processedInfo.surroundType === 'no-surround') {
-        processedInfo.frameSize = { left: 0, right: 0, top: 10 };
-        console.log('🔴🔴🔴 [CRITICAL] SpaceConfigStore - 노서라운드 모드 frameSize 설정 (상부는 10mm 유지)');
-      }
-      
-      // 기존 상태도 확인하여 노서라운드인 경우 frameSize 수정
-      const currentSurroundType = processedInfo.surroundType || state.spaceInfo.surroundType;
-      if (currentSurroundType === 'no-surround' && state.spaceInfo.frameSize && 
-          (state.spaceInfo.frameSize.left > 0 || state.spaceInfo.frameSize.right > 0)) {
-        processedInfo.frameSize = { left: 0, right: 0, top: 10 };
-        console.log('🔴🔴🔴 [CRITICAL] 기존 상태도 노서라운드인데 frameSize가 잘못됨! 강제 수정 (상부는 10mm 유지)');
-      }
-      
       // droppedCeiling이 활성화되었는데 width나 dropHeight가 없으면 기본값 설정
       if (processedInfo.droppedCeiling?.enabled && 
           (!processedInfo.droppedCeiling.width || !processedInfo.droppedCeiling.dropHeight)) {
         processedInfo.droppedCeiling = {
           ...processedInfo.droppedCeiling,
-          width: processedInfo.droppedCeiling.width || DEFAULT_DROPPED_CEILING_VALUES.WIDTH,
-          dropHeight: processedInfo.droppedCeiling.dropHeight || DEFAULT_DROPPED_CEILING_VALUES.DROP_HEIGHT
+          width: processedInfo.droppedCeiling.width || 900,
+          dropHeight: processedInfo.droppedCeiling.dropHeight || 200
         };
       }
       
@@ -283,103 +260,15 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         });
       }
       
-      // 컬럼 수 변경 감지 (customColumnCount, mainDoorCount, droppedCeilingDoorCount)
-      // 또는 공간 너비, 서라운드 타입, 프레임 크기 변경 시에도 상부장/하부장 ID 업데이트 필요
-      const columnCountChanged = 
-        processedInfo.customColumnCount !== undefined && processedInfo.customColumnCount !== state.spaceInfo.customColumnCount ||
-        processedInfo.mainDoorCount !== undefined && processedInfo.mainDoorCount !== state.spaceInfo.mainDoorCount ||
-        processedInfo.droppedCeilingDoorCount !== undefined && processedInfo.droppedCeilingDoorCount !== state.spaceInfo.droppedCeilingDoorCount ||
-        processedInfo.width !== undefined && processedInfo.width !== state.spaceInfo.width ||
-        processedInfo.surroundType !== undefined && processedInfo.surroundType !== state.spaceInfo.surroundType ||
-        processedInfo.frameSize !== undefined;
-      
-      // 띄워서 배치 설정 변경 감지
-      const placementChanged = 
-        (processedInfo.baseConfig?.placementType !== undefined && 
-         processedInfo.baseConfig?.placementType !== state.spaceInfo.baseConfig?.placementType) ||
-        (processedInfo.baseConfig?.floatHeight !== undefined && 
-         processedInfo.baseConfig?.floatHeight !== state.spaceInfo.baseConfig?.floatHeight);
-      
-      // 단내림 구간 변경 감지
-      const droppedCeilingChanged = 
-        (processedInfo.droppedCeiling?.enabled !== undefined && 
-         processedInfo.droppedCeiling?.enabled !== state.spaceInfo.droppedCeiling?.enabled) ||
-        (processedInfo.droppedCeiling?.width !== undefined && 
-         processedInfo.droppedCeiling?.width !== state.spaceInfo.droppedCeiling?.width) ||
-        (processedInfo.droppedCeiling?.dropHeight !== undefined && 
-         processedInfo.droppedCeiling?.dropHeight !== state.spaceInfo.droppedCeiling?.dropHeight);
-      
-      // baseConfig, frameSize, surroundType, droppedCeiling 등이 변경될 때마다 가구 업데이트
-      const needsFurnitureUpdate = 
-        placementChanged ||
-        droppedCeilingChanged ||
-        (processedInfo.baseConfig !== undefined && 
-         JSON.stringify(processedInfo.baseConfig) !== JSON.stringify(state.spaceInfo.baseConfig)) ||
-        (processedInfo.frameSize !== undefined && 
-         JSON.stringify(processedInfo.frameSize) !== JSON.stringify(state.spaceInfo.frameSize)) ||
-        (processedInfo.surroundType !== undefined && 
-         processedInfo.surroundType !== state.spaceInfo.surroundType) ||
-        (processedInfo.installType !== undefined && 
-         processedInfo.installType !== state.spaceInfo.installType);
-      
-      if (needsFurnitureUpdate) {
-        console.log('🎯 가구 업데이트 필요 - 설정 변경 감지:', {
-          placementChanged,
-          droppedCeilingChanged,
-          baseConfig: processedInfo.baseConfig !== undefined,
-          frameSize: processedInfo.frameSize !== undefined,
-          surroundType: processedInfo.surroundType !== undefined,
-          installType: processedInfo.installType !== undefined
-        });
-        
-        // 가구 Y 위치 업데이트를 위해 furnitureStore의 updateFurnitureYPositions 호출
-        setTimeout(() => {
-          const { updateFurnitureYPositions } = useFurnitureStore.getState();
-          updateFurnitureYPositions(newState.spaceInfo);
-        }, 0);
-      }
-      
-      if (columnCountChanged) {
-        console.log('📐 컬럼 수 변경 감지:', {
-          이전: {
-            customColumnCount: state.spaceInfo.customColumnCount,
-            mainDoorCount: state.spaceInfo.mainDoorCount,
-            droppedCeilingDoorCount: state.spaceInfo.droppedCeilingDoorCount
-          },
-          새로운: {
-            customColumnCount: processedInfo.customColumnCount,
-            mainDoorCount: processedInfo.mainDoorCount,
-            droppedCeilingDoorCount: processedInfo.droppedCeilingDoorCount
-          }
-        });
-        
-        // 가구 재배치를 위해 furnitureStore의 updateFurnitureForColumns 호출
-        setTimeout(() => {
-          const { updateFurnitureForColumns } = useFurnitureStore.getState();
-          updateFurnitureForColumns(newState.spaceInfo);
-        }, 0);
-      }
-      
       return newState;
     });
   },
   
   // 공간 정보 초기화
   resetSpaceInfo: () =>
-    set((state) => {
-      let resetInfo = initialState.spaceInfo;
-      // 노서라운드 모드일 경우 좌우 frameSize를 0으로, 상부는 10mm로 설정
-      if (resetInfo.surroundType === 'no-surround') {
-        resetInfo = {
-          ...resetInfo,
-          frameSize: { left: 0, right: 0, top: 10 }
-        };
-        console.log('🔴🔴🔴 [CRITICAL] resetSpaceInfo - 노서라운드 모드 frameSize 설정 (상부는 10mm 유지)');
-      }
-      return {
-        spaceInfo: resetInfo,
-        isDirty: true,
-      };
+    set({
+      spaceInfo: initialState.spaceInfo,
+      isDirty: true,
     }),
   
   // 재질 설정 초기화
@@ -406,112 +295,33 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     })),
   
   addColumn: (column) =>
-    set((state) => {
-      // 새 기둥이 기존 기둥들과 겹치는지 검사
-      const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-      const epsilon = 0.001; // 부동소수점 오차 허용치
-      const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
-      
-      const existingColumns = state.spaceInfo.columns || [];
-      for (const existingColumn of existingColumns) {
-        if (!existingColumn.position || !column.position) continue;
-        
-        const distance = Math.abs(existingColumn.position[0] - column.position[0]);
-        if (distance < minDistance) {
-          // console.log('❌ 기둥 추가 실패: 기존 기둥과 겹침', {
-          //   newColumn: column.id,
-          //   existingColumn: existingColumn.id,
-          //   newX: column.position[0],
-          //   existingX: existingColumn.position[0],
-          //   distance,
-          //   minDistance
-          // });
-          return state; // 겹침면 추가하지 않음
-        }
-      }
-      
-      // console.log('✅ 기둥 추가 성공:', column.id);
-      
-      const newState = {
-        spaceInfo: {
-          ...state.spaceInfo,
-          columns: [...existingColumns, column]
-        },
-        isDirty: true,
-      };
-      
-      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
-      setTimeout(() => {
-        const { updateFurnitureForColumns } = useFurnitureStore.getState();
-        updateFurnitureForColumns(newState.spaceInfo);
-      }, 0);
-      
-      return newState;
-    }),
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: [...(state.spaceInfo.columns || []), column]
+      },
+      isDirty: true,
+    })),
   
   removeColumn: (id) =>
-    set((state) => {
-      const newState = {
-        spaceInfo: {
-          ...state.spaceInfo,
-          columns: (state.spaceInfo.columns || []).filter(col => col.id !== id)
-        },
-        isDirty: true,
-      };
-      
-      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
-      setTimeout(() => {
-        const { updateFurnitureForColumns } = useFurnitureStore.getState();
-        updateFurnitureForColumns(newState.spaceInfo);
-      }, 0);
-      
-      return newState;
-    }),
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: (state.spaceInfo.columns || []).filter(col => col.id !== id)
+      },
+      isDirty: true,
+    })),
   
   updateColumn: (id, updates) =>
-    set((state) => {
-      // 위치 업데이트인 경우 겹침 검사
-      if (updates.position) {
-        const columnWidthInThreeUnits = 300 / 100; // 300mm = 3 three units
-        const epsilon = 0.001; // 부동소수점 오차 허용치
-        const minDistance = columnWidthInThreeUnits - epsilon; // 아주 약간의 여유를 두어 완전히 붙을 수 있게 함
-        
-        // 다른 기둥들과 겹치는지 확인
-        const otherColumns = (state.spaceInfo.columns || []).filter(col => col.id !== id);
-        for (const column of otherColumns) {
-          if (!column.position) continue;
-          
-          const distance = Math.abs(column.position[0] - updates.position[0]);
-          if (distance < minDistance) {
-            // console.log('❌ 기둥 이동 실패: 다른 기둥과 겹침', {
-            //   targetId: id,
-            //   otherColumnId: column.id,
-            //   distance,
-            //   minDistance
-            // });
-            return state; // 겹치면 업데이트하지 않음
-          }
-        }
-      }
-      
-      const newState = {
-        spaceInfo: {
-          ...state.spaceInfo,
-          columns: (state.spaceInfo.columns || []).map(col => 
-            col.id === id ? { ...col, ...updates } : col
-          )
-        },
-        isDirty: true,
-      };
-      
-      // 가구 업데이트를 위해 furnitureStore의 updateFurnitureForColumns 호출
-      setTimeout(() => {
-        const { updateFurnitureForColumns } = useFurnitureStore.getState();
-        updateFurnitureForColumns(newState.spaceInfo);
-      }, 0);
-      
-      return newState;
-    }),
+    set((state) => ({
+      spaceInfo: {
+        ...state.spaceInfo,
+        columns: (state.spaceInfo.columns || []).map(col => 
+          col.id === id ? { ...col, ...updates } : col
+        )
+      },
+      isDirty: true,
+    })),
   
   // 가벽 설정 액션들
   setWalls: (walls) =>

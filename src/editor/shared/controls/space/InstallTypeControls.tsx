@@ -1,7 +1,6 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { InstallType } from '../types';
+import { INSTALL_TYPES, InstallType } from '../types';
 import styles from '../styles/common.module.css';
 
 interface InstallTypeControlsProps {
@@ -10,7 +9,6 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
-  const { t } = useTranslation();
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
@@ -68,9 +66,9 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         };
       }
     }
-    // 노서라운드 모드일 때는 좌우 frameSize를 0으로, 상부는 10mm로 설정
+    // 노서라운드 모드일 때는 frameSize를 기본값으로 설정
     else if (spaceInfo.surroundType === 'no-surround') {
-      updates.frameSize = { left: 0, right: 0, top: 10 };
+      updates.frameSize = { left: 0, right: 0, top: 0 };
       
       // gapConfig도 업데이트
       const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
@@ -111,8 +109,8 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
           right: 0
         };
       }
-      // frameSize도 업데이트하여 자동 계산이 작동하도록 함 (상부는 10mm 유지)
-      updates.frameSize = { left: 0, right: 0, top: 10 };
+      // frameSize도 업데이트하여 자동 계산이 작동하도록 함
+      updates.frameSize = { left: 0, right: 0, top: 0 };
     }
     
     console.log('🏢 InstallTypeControls - wallConfig 변경:', { 
@@ -128,46 +126,34 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     <div className={styles.container}>
       <div className={styles.section}>
         <div className={styles.toggleButtonGroup}>
-          <button
-            className={`${styles.toggleButton} ${spaceInfo.installType === 'builtin' ? styles.toggleButtonActive : ''}`}
-            onClick={() => handleInstallTypeChange('builtin')}
-            title={t('space.builtinDesc')}
-          >
-            {t('space.builtin')}
-          </button>
-          <button
-            className={`${styles.toggleButton} ${spaceInfo.installType === 'semistanding' ? styles.toggleButtonActive : ''}`}
-            onClick={() => handleInstallTypeChange('semistanding')}
-            title={t('space.semistandingDesc')}
-          >
-            {t('space.semistanding')}
-          </button>
-          <button
-            className={`${styles.toggleButton} ${spaceInfo.installType === 'freestanding' ? styles.toggleButtonActive : ''}`}
-            onClick={() => handleInstallTypeChange('freestanding')}
-            title={t('space.freestandingDesc')}
-          >
-            {t('space.freestanding')}
-          </button>
+          {INSTALL_TYPES.map((type) => (
+            <button
+              key={type.type}
+              className={`${styles.toggleButton} ${spaceInfo.installType === type.type ? styles.toggleButtonActive : ''}`}
+              onClick={() => handleInstallTypeChange(type.type)}
+            >
+              {type.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* 세미스탠딩일 때만 벽 위치 선택 UI 표시 */}
       {spaceInfo.installType === 'semistanding' && (
         <div className={styles.section}>
-          <span className={styles.label}>{t('space.wallPosition')}</span>
+          <span className={styles.label}>벽 위치</span>
           <div className={styles.toggleButtonGroup}>
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.left ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('left')}
             >
-              {t('furniture.left')}
+              좌측
             </button>
             <button
               className={`${styles.toggleButton} ${spaceInfo.wallConfig.right ? styles.toggleButtonActive : ''}`}
               onClick={() => handleWallConfigChange('right')}
             >
-              {t('furniture.right')}
+              우측
             </button>
           </div>
         </div>
