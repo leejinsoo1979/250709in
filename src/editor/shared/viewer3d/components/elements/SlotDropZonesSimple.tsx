@@ -252,6 +252,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     if (spaceInfo.droppedCeiling?.enabled && zoneToUse) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
+      console.log('🎯 배치 시작 - zone 정보:', {
+        zoneToUse,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        droppedCeilingPosition: spaceInfo.droppedCeiling?.position,
+        zoneInfo: {
+          normal: zoneInfo.normal ? {
+            columnCount: zoneInfo.normal.columnCount,
+            startX: zoneInfo.normal.startX,
+            width: zoneInfo.normal.width
+          } : null,
+          dropped: zoneInfo.dropped ? {
+            columnCount: zoneInfo.dropped.columnCount,
+            startX: zoneInfo.dropped.startX,
+            width: zoneInfo.dropped.width
+          } : null
+        }
+      });
+      
       // 활성 영역에 맞는 인덱싱 생성
       let zoneIndexing;
       let zoneInternalSpace;
