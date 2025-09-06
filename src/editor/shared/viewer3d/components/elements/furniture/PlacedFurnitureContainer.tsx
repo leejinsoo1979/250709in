@@ -105,7 +105,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
         return (
           <FurnitureItem
-            key={`${placedModule.id}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}`}
+            key={placedModule.id}
             placedModule={placedModule}
             placedModules={placedModules}
             spaceInfo={spaceInfo}
