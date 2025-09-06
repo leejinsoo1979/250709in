@@ -471,29 +471,43 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   const doorHeight = mmToThreeUnits(actualDoorHeight - 30); // 30mm 줄임 (기존 20mm에서 10mm 추가)
   
-  // === 문 Y 위치 계산 (기존 작동하던 로직으로 복원) ===
-  // 
-  // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
-  // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
-  // 
-  // 조정 로직:
-  // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
-  // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
-  // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
-  //
+  // === 문 Y 위치 계산 ===
   let doorYPosition: number;
   
-  if (spaceInfo.baseConfig?.type === 'floor') {
-    // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
-    const topFrameHeight = spaceInfo.frameSize?.top || 50;
-    const baseFrameHeight = spaceInfo.baseConfig.height || 65;
-    doorYPosition = floorHeight > 0 
-      ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
-      : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+  if (isUpperCabinet || isLowerCabinet) {
+    // 상하부장의 경우 Y 위치는 0 (가구 중심과 동일)
+    doorYPosition = 0;
+    console.log('🚪📍 상하부장 도어 Y 위치:', {
+      moduleId: moduleData?.id,
+      doorYPosition: 0,
+      type: isUpperCabinet ? '상부장' : '하부장',
+      note: '가구 중심과 동일'
+    });
   } else {
-    // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
-    const topFrameHeight = spaceInfo.frameSize?.top || 50;
-    doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+    // 키큰장의 경우 기존 로직 유지
+    // 
+    // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
+    // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
+    // 
+    // 조정 로직:
+    // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
+    // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
+    // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
+    //
+    if (spaceInfo.baseConfig?.type === 'floor') {
+      // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      doorYPosition = floorHeight > 0 
+        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
+        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+    } else {
+      // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+    }
   }
   
   // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)

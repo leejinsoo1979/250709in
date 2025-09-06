@@ -953,21 +953,99 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
       });
       
-      // Y 위치 계산 - 상부장은 상단에 배치
+      // Y 위치 계산 - 카테고리별로 적절한 Y 위치 계산
       let yPosition = 0;
+      
+      // 단내림 구간인 경우 zone에 맞는 spaceInfo 생성
+      let zoneSpaceInfo = fullSpaceInfo;
+      if (targetZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+        const droppedOuterWidth = spaceInfo.droppedCeiling?.width || 900;
+        zoneSpaceInfo = {
+          ...fullSpaceInfo,
+          width: droppedOuterWidth,
+          zone: 'dropped' as const
+        };
+      } else if (targetZone === 'normal' && spaceInfo.droppedCeiling?.enabled) {
+        const normalOuterWidth = spaceInfo.width - (spaceInfo.droppedCeiling?.width || 900);
+        zoneSpaceInfo = {
+          ...fullSpaceInfo,
+          width: normalOuterWidth,
+          zone: 'normal' as const
+        };
+      }
+      
+      const internalSpace = calculateInternalSpace(zoneSpaceInfo);
+      const furnitureHeightMm = module.dimensions.height || 600;
+      const furnitureHeight = furnitureHeightMm * 0.01; // Three.js 단위로 변환
+      
+      // Three.js 단위로 변환하는 함수
+      const mmToThreeUnits = (mm: number) => mm * 0.01;
+      
       if (module.category === 'upper') {
-        // 상부장: 내경 높이에서 상부장 높이를 뺀 위치에 배치 (상단 프레임 하단에 붙음)
-        const internalSpace = calculateInternalSpace(fullSpaceInfo);
-        const upperCabinetHeight = module.dimensions.height || 700; // 상부장 기본 높이 700mm
-        // Three.js 단위로 변환 (mm를 100으로 나눔)
-        yPosition = (internalSpace.height - upperCabinetHeight) / 100;
+        // 상부장: 천장에 붙어있음
+        const floorY = mmToThreeUnits(internalSpace.startY);
+        const ceilingY = floorY + mmToThreeUnits(internalSpace.height);
+        yPosition = ceilingY - furnitureHeight / 2;
         
         console.log('🔍 Upper cabinet Y position calculation:', {
           category: module.category,
-          internalHeight: internalSpace.height,
-          upperCabinetHeight: upperCabinetHeight,
-          yPosition: yPosition,
-          yPosition_mm: yPosition * 100
+          floorY,
+          ceilingY,
+          furnitureHeightMm,
+          furnitureHeight,
+          yPosition,
+          internalSpace: {
+            startY: internalSpace.startY,
+            height: internalSpace.height
+          }
+        });
+      } else if (module.category === 'lower') {
+        // 하부장: 바닥에서 시작
+        const floorY = mmToThreeUnits(internalSpace.startY);
+        yPosition = floorY + furnitureHeight / 2;
+        
+        console.log('🔍 Lower cabinet Y position calculation:', {
+          category: module.category,
+          floorY,
+          furnitureHeightMm,
+          furnitureHeight,
+          yPosition,
+          internalSpace: {
+            startY: internalSpace.startY,
+            height: internalSpace.height
+          }
+        });
+      } else if (module.category === 'full') {
+        // 키큰장: 바닥에서 시작
+        const floorY = mmToThreeUnits(internalSpace.startY);
+        yPosition = floorY + furnitureHeight / 2;
+        
+        console.log('🔍 Full cabinet Y position calculation:', {
+          category: module.category,
+          floorY,
+          furnitureHeightMm,
+          furnitureHeight,
+          yPosition,
+          internalSpace: {
+            startY: internalSpace.startY,
+            height: internalSpace.height
+          }
+        });
+      } else {
+        // 기본 가구: 바닥에서 시작
+        const floorY = mmToThreeUnits(internalSpace.startY);
+        yPosition = floorY + furnitureHeight / 2;
+        
+        console.log('🔍 Default furniture Y position calculation:', {
+          category: module.category || 'default',
+          floorY,
+          furnitureHeightMm,
+          furnitureHeight,
+          yPosition,
+          internalSpace: {
+            startY: internalSpace.startY,
+            height: internalSpace.height
+          }
         });
       }
       
