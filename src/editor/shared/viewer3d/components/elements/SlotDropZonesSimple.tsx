@@ -2291,20 +2291,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // zone 정보가 있는 경우 로컬 인덱스로 비교
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
           
-          // zone이 일치하는지도 체크
-          // hoveredZone이 null이면 zone 체크를 하지 않음 (모든 영역 허용)
-          // hoveredZone이 있으면 해당 zone과 일치하는지 체크
-          const zoneMatches = !hoveredZone || hoveredZone === slotZone;
-          
-          // 단내림이 있고 hoveredZone이 설정되지 않은 경우, 인덱스만으로 비교
-          const shouldIgnoreZone = hasDroppedCeiling && !hoveredZone;
+          // zone이 일치하는지 체크
+          // hoveredZone이 설정되어 있으면 zone이 일치해야 함
+          // hoveredZone이 null이면 zone 체크 하지 않음
+          const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
           
           if (isDual) {
             // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && (shouldIgnoreZone || zoneMatches);
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           } else {
             // 싱글 가구: 현재 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && (shouldIgnoreZone || zoneMatches);
+            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           }
           
           if (slotZone === 'dropped' || hoveredZone === 'dropped') {
@@ -2317,12 +2314,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               compareIndex,
               isZoneData,
               zoneMatches,
-              shouldIgnoreZone,
               shouldRenderGhost,
               hasDroppedCeiling,
               activeModuleData: {
                 id: activeModuleData.moduleData.id,
                 isDual
+              },
+              조건분석: {
+                '인덱스일치': compareIndex === hoveredSlotIndex,
+                'zone일치': zoneMatches,
+                '최종결과': shouldRenderGhost
               }
             });
           }
