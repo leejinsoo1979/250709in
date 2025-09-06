@@ -71,38 +71,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       console.log('🧹 FurnitureItem 언마운트:', {
         id: placedModule.id
       });
-      
-      // Three.js 리소스 명시적 정리
-      if (gl && scene) {
-        // 씬에서 이 컴포넌트의 메시 제거
-        const meshesToRemove: THREE.Object3D[] = [];
-        scene.traverse((child) => {
-          // 이 컴포넌트에서 생성한 메시 찾기
-          if (child.userData && child.userData.furnitureId === placedModule.id) {
-            meshesToRemove.push(child);
-          }
-        });
-        
-        meshesToRemove.forEach(mesh => {
-          scene.remove(mesh);
-          // 메시의 geometry와 material 정리
-          if ((mesh as any).geometry) {
-            (mesh as any).geometry.dispose();
-          }
-          if ((mesh as any).material) {
-            if (Array.isArray((mesh as any).material)) {
-              (mesh as any).material.forEach((mat: any) => mat.dispose());
-            } else {
-              (mesh as any).material.dispose();
-            }
-          }
-        });
-        
-        // 렌더러 강제 업데이트
-        invalidate();
-      }
+      // 무거운 클린업 제거 - React Three Fiber가 자동으로 처리
     };
-  }, [placedModule.id, gl, scene, invalidate]);
+  }, [placedModule.id]);
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
@@ -1367,21 +1338,4 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   );
 };
 
-export default React.memo(FurnitureItem, (prevProps, nextProps) => {
-  // props가 실제로 변경되었을 때만 리렌더링
-  // placedModule의 주요 속성들만 비교
-  return (
-    prevProps.placedModule.id === nextProps.placedModule.id &&
-    prevProps.placedModule.position.x === nextProps.placedModule.position.x &&
-    prevProps.placedModule.position.y === nextProps.placedModule.position.y &&
-    prevProps.placedModule.position.z === nextProps.placedModule.position.z &&
-    prevProps.placedModule.slotIndex === nextProps.placedModule.slotIndex &&
-    prevProps.placedModule.customWidth === nextProps.placedModule.customWidth &&
-    prevProps.placedModule.adjustedWidth === nextProps.placedModule.adjustedWidth &&
-    prevProps.isDragMode === nextProps.isDragMode &&
-    prevProps.isEditMode === nextProps.isEditMode &&
-    prevProps.isDraggingThis === nextProps.isDraggingThis &&
-    prevProps.viewMode === nextProps.viewMode &&
-    prevProps.renderMode === nextProps.renderMode
-  );
-}); 
+export default React.memo(FurnitureItem); 
