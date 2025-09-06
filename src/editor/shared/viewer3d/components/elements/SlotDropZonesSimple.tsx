@@ -164,8 +164,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
         
         // Three.js 단위로 영역 경계 계산
+        const droppedStartX = mmToThreeUnits(zoneInfo.dropped.startX);
         const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
         const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
+        const normalEndX = mmToThreeUnits(zoneInfo.normal.startX + zoneInfo.normal.width);
         
         // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
         const raycaster = new THREE.Raycaster();
@@ -179,19 +181,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
           // 단내림 위치에 따라 영역 판단
           if (spaceInfo.droppedCeiling.position === 'left') {
+            // 단내림이 왼쪽: dropped가 왼쪽, normal이 오른쪽
             zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
           } else {
-            zoneToUse = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
+            // 단내림이 오른쪽: normal이 왼쪽, dropped가 오른쪽
+            // normal zone이 끝나는 지점 이후가 dropped zone
+            zoneToUse = intersectPoint.x < normalEndX ? 'normal' : 'dropped';
           }
           
           console.log('🎯 자동 영역 판단:', {
             mouseX,
             mouseY,
             worldX: intersectPoint.x,
-            droppedEndX,
-            normalStartX,
+            worldX_mm: intersectPoint.x * 100,
+            boundaries: {
+              droppedStartX_mm: droppedStartX * 100,
+              droppedEndX_mm: droppedEndX * 100,
+              normalStartX_mm: normalStartX * 100,
+              normalEndX_mm: normalEndX * 100
+            },
             droppedPosition: spaceInfo.droppedCeiling.position,
             detectedZone: zoneToUse,
+            판단기준: spaceInfo.droppedCeiling.position === 'left' 
+              ? `x < ${droppedEndX * 100}mm ? dropped : normal`
+              : `x < ${normalEndX * 100}mm ? normal : dropped`,
             zoneInfo: {
               normal: { columnCount: zoneInfo.normal?.columnCount, startX: zoneInfo.normal?.startX, width: zoneInfo.normal?.width },
               dropped: { columnCount: zoneInfo.dropped?.columnCount, startX: zoneInfo.dropped?.startX, width: zoneInfo.dropped?.width }
