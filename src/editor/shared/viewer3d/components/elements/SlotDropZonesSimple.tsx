@@ -1140,31 +1140,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const internalHeightMm = effectiveInternalSpace.height;
         const furnitureHeightMm = moduleData?.dimensions?.height || 600;
         
-        // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
-        const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
-        const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
-        
-        // 단내림 구간에서는 단내림된 높이 사용
-        let totalHeightMm;
-        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-          // 단내림 구간: 단내림된 높이 사용
-          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-          totalHeightMm = spaceInfo.height - dropHeight;
-        } else {
-          // 일반 구간: 원래 높이 사용
-          totalHeightMm = spaceInfo.height;
-        }
-        
-        // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
-        if (spaceInfo.surroundType !== 'no-surround') {
-          totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
-        } else {
-          // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
-          totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
-        }
-        
-        // 상부장 Y 위치 계산
-        furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        // 상부장은 내경 공간 최상단에 위치 (키큰장과 같은 높이)
+        // 내경 공간 높이에서 가구 높이의 절반을 뺀 위치
+        furnitureY = (internalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
         
         console.log('🔝 상부장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
@@ -1311,18 +1289,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 상부장 Y 위치 계산
         let furnitureY = 0;
         if (moduleData?.category === 'upper') {
-          // 상부장: 상부 프레임 하단에 배치
+          // 상부장: 내경 공간 최상단에 배치
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-          let totalHeightMm = spaceInfo.height;
+          // 내경 공간 높이 계산
+          const internalHeightMm = internalSpace.height;
           
-          // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
-          if (spaceInfo.surroundType !== 'no-surround') {
-            totalHeightMm = totalHeightMm - 10 - 10; // 프레임 두께 10mm + 간격 10mm
-          } else {
-            totalHeightMm = totalHeightMm - 10; // 노서라운드는 간격만
-          }
-          
-          furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100;
+          // 내경 공간 높이에서 가구 높이의 절반을 뺀 위치
+          furnitureY = (internalHeightMm - furnitureHeightMm / 2) / 100;
         } else if (moduleData?.category === 'lower') {
           // 하부장: 바닥에서 시작
           const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
@@ -1676,34 +1649,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const internalHeightMm = internalSpace.height;
       const furnitureHeightMm = moduleData?.dimensions?.height || 600;
       
-      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
-      const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
-      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
-      let totalHeightMm = spaceInfo.height;
+      // 상부장은 내경 공간 최상단에 위치 (키큰장과 같은 높이)
+      // 내경 공간 높이에서 가구 높이의 절반을 뺀 위치
+      furnitureY = (internalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
       
       console.log('🔴 상부장 Y 위치 계산:', {
         moduleCategory: moduleData?.category,
         moduleId: moduleData?.id,
+        internalHeightMm,
         furnitureHeightMm,
-        totalHeightMm,
-        surroundType: spaceInfo.surroundType
-      });
-      
-      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
-      if (spaceInfo.surroundType !== 'no-surround') {
-        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
-      } else {
-        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
-        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
-      }
-      
-      // 상부장 Y 위치 계산
-      furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
-      
-      console.log('🔴 상부장 최종 Y 위치:', {
-        totalHeightMm,
         furnitureY,
-        furnitureYMm: furnitureY * 100
+        furnitureYMm: furnitureY * 100,
+        설명: '내경 공간 최상단에 배치 (키큰장과 동일)'
       });
     } else if (isLowerCabinet) {
       // 하부장: 바닥에서 시작 (바닥마감재와 띄워서 배치 고려)
