@@ -1137,11 +1137,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 };
 
 interface ModuleGalleryProps {
-  moduleCategory?: 'tall' | 'upper' | 'lower' | 'upperlower';
-  upperLowerTab?: 'upper' | 'lower';
+  moduleCategory?: 'tall' | 'upper' | 'lower';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
   const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
@@ -1204,17 +1203,6 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     categoryModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
     
     console.log('🎯 하부장 모듈 로드:', {
-      count: categoryModules.length,
-      modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
-    });
-  } else if (moduleCategory === 'upperlower') {
-    // 상하부장 탭에서 상부장/하부장 선택에 따라
-    const actualCategory = upperLowerTab === 'upper' ? 'upper' : 'lower';
-    categoryModules = getModulesByCategory(actualCategory, zoneInternalSpace, zoneSpaceInfo);
-    
-    console.log('🎯 상하부장 모듈 로드:', {
-      upperLowerTab,
-      actualCategory,
       count: categoryModules.length,
       modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
     });

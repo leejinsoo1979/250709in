@@ -15,9 +15,162 @@ import { EditIcon } from '@/components/common/Icons';
 import { getEdgeColor } from '../../../utils/edgeColorUtils';
 import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResize';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 
 // 엔드패널 두께 상수
 const END_PANEL_THICKNESS = 18; // mm
+
+// 상부장/하부장과 키큰장(듀얼 포함)의 인접 판단 함수
+const checkAdjacentUpperLowerToFull = (
+  currentModule: PlacedModule,
+  allModules: PlacedModule[],
+  spaceInfo: SpaceInfo
+): { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | 'both' | null } => {
+  // 현재 가구가 키큰장(full) 또는 듀얼 캐비넷인지 확인
+  const currentModuleData = getModuleById(currentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+  if (!currentModuleData) {
+    return { hasAdjacentUpperLower: false, adjacentSide: null };
+  }
+  
+  // 키큰장(full)이 아니고 듀얼 캐비넷도 아니면 처리하지 않음
+  const isDualCabinet = currentModule.moduleId?.includes('dual-');
+  
+  console.log('🔍 checkAdjacentUpperLowerToFull 시작:', {
+    moduleId: currentModule.moduleId,
+    category: currentModuleData.category,
+    isDualCabinet,
+    slotIndex: currentModule.slotIndex
+  });
+  
+  if (currentModuleData.category !== 'full' && !isDualCabinet) {
+    console.log('❌ 키큰장/듀얼이 아니므로 처리 안함');
+    return { hasAdjacentUpperLower: false, adjacentSide: null };
+  }
+
+  // 현재 가구의 슬롯 인덱스
+  const currentSlotIndex = currentModule.slotIndex;
+  if (currentSlotIndex === undefined) {
+    return { hasAdjacentUpperLower: false, adjacentSide: null };
+  }
+
+  // 듀얼 캐비넷의 경우 두 개의 슬롯을 차지
+  const isCurrentDual = isDualCabinet || currentModule.isDualSlot;
+  
+  // 단내림이 활성화된 경우, 현재 모듈의 zone 사용
+  let currentZone: 'normal' | 'dropped' | undefined = currentModule.zone;
+  if (spaceInfo.droppedCeiling?.enabled && currentZone) {
+    console.log('🏗️ Zone 확인:', {
+      currentModule: currentModule.moduleId,
+      currentSlotIndex,
+      currentZone: currentZone,
+      droppedPosition: spaceInfo.droppedCeiling.position || 'right'
+    });
+  }
+  
+  // 인접한 슬롯에 상부장/하부장이 있는지 확인
+  let leftAdjacentModule = allModules.find(m => m.slotIndex === currentSlotIndex - 1);
+  let rightAdjacentModule = isCurrentDual 
+    ? allModules.find(m => m.slotIndex === currentSlotIndex + 2)  // 듀얼은 +2
+    : allModules.find(m => m.slotIndex === currentSlotIndex + 1); // 싱글은 +1
+  
+  // 단내림이 활성화된 경우, 인접 모듈이 같은 zone에 있는지 확인
+  if (currentZone && spaceInfo.droppedCeiling?.enabled) {
+    // 왼쪽 인접 모듈이 다른 zone에 있으면 무시
+    if (leftAdjacentModule) {
+      const leftZone = leftAdjacentModule.zone;
+      if (leftZone !== currentZone) {
+        console.log('🔸 왼쪽 인접 모듈이 다른 zone에 있어 무시:', {
+          leftModule: leftAdjacentModule.moduleId,
+          leftZone,
+          currentZone
+        });
+        leftAdjacentModule = undefined;
+      }
+    }
+    
+    // 오른쪽 인접 모듈이 다른 zone에 있으면 무시
+    if (rightAdjacentModule) {
+      const rightZone = rightAdjacentModule.zone;
+      if (rightZone !== currentZone) {
+        console.log('🔸 오른쪽 인접 모듈이 다른 zone에 있어 무시:', {
+          rightModule: rightAdjacentModule.moduleId,
+          rightZone,
+          currentZone
+        });
+        rightAdjacentModule = undefined;
+      }
+    }
+  }
+  
+  // 왼쪽 인접 모듈이 상부장/하부장인지 확인
+  let hasLeftAdjacent = false;
+  if (leftAdjacentModule) {
+    const leftModuleData = getModuleById(leftAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+    
+    // 듀얼 상하부장인지 확인
+    const isLeftDualUpperLower = leftAdjacentModule.moduleId?.includes('dual-') && 
+                                 (leftModuleData?.category === 'upper' || leftModuleData?.category === 'lower');
+    
+    if (leftModuleData && (leftModuleData.category === 'upper' || leftModuleData.category === 'lower' || isLeftDualUpperLower)) {
+      console.log('✅ 왼쪽에 상하부장 감지:', {
+        leftModule: leftAdjacentModule.moduleId,
+        category: leftModuleData.category,
+        isLeftDualUpperLower
+      });
+      hasLeftAdjacent = true;
+    }
+  }
+  
+  // 오른쪽 인접 모듈이 상부장/하부장인지 확인
+  let hasRightAdjacent = false;
+  if (rightAdjacentModule) {
+    const rightModuleData = getModuleById(rightAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+    
+    // 듀얼 상하부장인지 확인
+    const isRightDualUpperLower = rightAdjacentModule.moduleId?.includes('dual-') && 
+                                  (rightModuleData?.category === 'upper' || rightModuleData?.category === 'lower');
+    
+    if (rightModuleData && (rightModuleData.category === 'upper' || rightModuleData.category === 'lower' || isRightDualUpperLower)) {
+      console.log('✅ 오른쪽에 상하부장 감지:', {
+        rightModule: rightAdjacentModule.moduleId,
+        category: rightModuleData.category,
+        rightCheckSlot: isCurrentDual ? currentSlotIndex + 2 : currentSlotIndex + 1,
+        isRightDualUpperLower
+      });
+      hasRightAdjacent = true;
+    }
+  }
+
+  // 결과 반환
+  const result = (() => {
+    if (hasLeftAdjacent && hasRightAdjacent) {
+      return { hasAdjacentUpperLower: true, adjacentSide: 'both' as const };
+    } else if (hasLeftAdjacent) {
+      return { hasAdjacentUpperLower: true, adjacentSide: 'left' as const };
+    } else if (hasRightAdjacent) {
+      return { hasAdjacentUpperLower: true, adjacentSide: 'right' as const };
+    }
+    return { hasAdjacentUpperLower: false, adjacentSide: null };
+  })();
+
+  // 듀얼 가구일 때만 디버그 로그
+  if (isCurrentDual) {
+    console.log('🎯 듀얼 가구 인접 체크 결과:', {
+      currentModule: currentModule.moduleId,
+      currentSlotIndex,
+      hasLeftAdjacent,
+      hasRightAdjacent,
+      adjacentSide: result.adjacentSide,
+      leftCheckSlot: currentSlotIndex - 1,
+      rightCheckSlot: currentSlotIndex + 2,
+      leftAdjacentModule: leftAdjacentModule?.moduleId,
+      rightAdjacentModule: rightAdjacentModule?.moduleId,
+      allModulesSlots: allModules.map(m => ({id: m.moduleId, slot: m.slotIndex}))
+    });
+  }
+
+  return result;
+};
 
 interface FurnitureItemProps {
   placedModule: PlacedModule;
@@ -264,6 +417,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isDualFurniture = placedModule.isDualSlot !== undefined 
     ? placedModule.isDualSlot 
     : actualModuleData.id.includes('dual-');
+  
+  // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
+  const adjacentCheck = actualModuleData 
+    ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
+    : { hasAdjacentUpperLower: false, adjacentSide: null };
+  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
+  const endPanelSide = adjacentCheck.adjacentSide;
+  
+  // 듀얼 가구 인접 체크 디버깅
+  if (isDualFurniture && actualModuleData) {
+    console.log('🔍 듀얼 가구 인접 체크:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      isDualFurniture,
+      category: actualModuleData.category,
+      adjacentCheck,
+      needsEndPanelAdjustment
+    });
+  }
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
@@ -1037,6 +1209,54 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 return undefined;
               })()}
             />
+            
+            {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
+            {needsEndPanelAdjustment && endPanelSide && (() => {
+              console.log('🎯 엔드패널 렌더링 시작:', {
+                moduleId: placedModule.moduleId,
+                endPanelSide,
+                furnitureHeightMm,
+                furnitureZ,
+                adjustedPosition
+              });
+              
+              // 엔드패널 위치 계산
+              const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
+              const endPanelHeight = height; // 가구와 동일한 높이
+              const endPanelDepth = depth; // 가구와 동일한 깊이
+              
+              // 엔드패널 X 위치 계산
+              const endPanelXPositions = [];
+              if (endPanelSide === 'left' || endPanelSide === 'both') {
+                endPanelXPositions.push({
+                  x: -width/2 - endPanelWidth/2, // 왼쪽 엔드패널
+                  side: 'left'
+                });
+              }
+              if (endPanelSide === 'right' || endPanelSide === 'both') {
+                endPanelXPositions.push({
+                  x: width/2 + endPanelWidth/2, // 오른쪽 엔드패널
+                  side: 'right'
+                });
+              }
+              
+              return (
+                <>
+                  {endPanelXPositions.map((panel, index) => (
+                    <EndPanelWithTexture
+                      key={`endpanel-${placedModule.id}-${panel.side}-${index}`}
+                      width={endPanelWidth}
+                      height={endPanelHeight}
+                      depth={endPanelDepth}
+                      position={[panel.x, 0, 0]} // BoxModule 기준 상대 위치
+                      spaceInfo={zoneSpaceInfo}
+                      renderMode={renderMode}
+                    />
+                  ))}
+                </>
+              );
+            })()}
+            
             {/* 가구 너비 디버깅 */}
             {(() => {
               const slotWidthMm = (() => {
