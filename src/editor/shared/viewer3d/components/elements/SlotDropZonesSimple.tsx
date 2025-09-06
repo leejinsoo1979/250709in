@@ -2785,8 +2785,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
         
         const customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
-        // 단내림 구간의 경우 moduleData가 이미 조정된 높이를 가지고 있어야 함
-        const furnitureHeightMm = moduleData.dimensions.height;
+        
+        // 단내림 구간의 경우 높이 조정 - 실제 배치 로직과 동일하게
+        let furnitureHeightMm = moduleData.dimensions.height;
+        if (effectiveZone === 'dropped' && moduleData?.category === 'full' && spaceInfo.droppedCeiling?.enabled) {
+          // 키큰장인 경우 단내림 구간에서 높이 조정
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          const maxHeight = spaceInfo.height - dropHeight;
+          furnitureHeightMm = Math.min(furnitureHeightMm, maxHeight - 100); // 여유 공간 100mm
+          console.log('👻 [Ghost Preview] 단내림 구간 키큰장 높이 조정:', {
+            원래높이: moduleData.dimensions.height,
+            조정된높이: furnitureHeightMm,
+            dropHeight,
+            maxHeight
+          });
+        }
+        
         const furnitureHeight = furnitureHeightMm * 0.01;
         
         // 상부장/하부장 체크
@@ -2841,6 +2855,67 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const previewDepth = mmToThreeUnits(customDepth);
         const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
         
+        // 단내림 구간에서 커스텀 너비 계산
+        let customWidth = undefined;
+        if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
+          const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
+            ? zoneSlotInfo.dropped
+            : zoneSlotInfo.normal;
+          
+          // 로컬 인덱스 사용
+          const localIdx = slotLocalIndex;
+          
+          if (isDual && localIdx < targetZone.columnCount - 1) {
+            // 듀얼 가구: 두 슬롯의 너비 합
+            const slot1Width = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
+            const slot2Width = targetZone.slotWidths?.[localIdx + 1] || targetZone.columnWidth;
+            customWidth = slot1Width + slot2Width;
+          } else {
+            // 싱글 가구: 해당 슬롯의 너비
+            customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
+          }
+          
+          console.log('👻 [Ghost Preview] 커스텀 너비:', {
+            effectiveZone,
+            localIdx,
+            isDual,
+            customWidth,
+            moduleWidth: moduleData.dimensions.width,
+            targetZone: {
+              columnCount: targetZone.columnCount,
+              columnWidth: targetZone.columnWidth,
+              slotWidths: targetZone.slotWidths
+            }
+          });
+        }
+        
+        // 고스트 높이 조정 (키큰장이 아닌 경우에도 단내림 구간에서 높이 조정)
+        let customHeight = undefined;
+        if (effectiveZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          const maxHeight = spaceInfo.height - dropHeight;
+          
+          if (moduleData?.category === 'upper') {
+            // 상부장은 높이 조정 불필요 (천장 기준)
+            customHeight = undefined;
+          } else if (moduleData?.category === 'full') {
+            // 키큰장: 단내림 구간 높이에 맞춤
+            customHeight = maxHeight - 100; // 여유 공간 100mm
+          } else {
+            // 하부장 및 일반 가구: 높이 유지
+            customHeight = moduleData.dimensions.height;
+          }
+          
+          console.log('👻 [Ghost Preview] 커스텀 높이:', {
+            effectiveZone,
+            category: moduleData?.category,
+            originalHeight: moduleData.dimensions.height,
+            customHeight,
+            dropHeight,
+            maxHeight
+          });
+        }
+        
         return (
           <group key={`furniture-preview-${slotIndex}`} position={[previewX, furnitureY, furnitureZ]}>
             <BoxModule 
@@ -2849,6 +2924,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               isDragging={true}
               hasDoor={false}
               customDepth={customDepth}
+              customWidth={customWidth}
+              customHeight={customHeight}
               spaceInfo={spaceInfo}
             />
           </group>
