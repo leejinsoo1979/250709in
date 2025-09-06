@@ -1260,14 +1260,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isDualSlot: isDual,
         isDualFromModuleId: zoneTargetModuleId.startsWith('dual-'),
         occupiedSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
-        position: { x: furnitureX },
+        position: { 
+          x: furnitureX,
+          y: furnitureY,
+          y_mm: furnitureY * 100
+        },
+        moduleCategory: moduleData?.category,
+        isUpperCabinet: moduleData?.category === 'upper',
         customWidth: customWidth,
         zoneInfo: zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal,
         newModule: {
           id: newModule.id,
           moduleId: newModule.moduleId,
           isDualSlot: newModule.isDualSlot,
-          slotIndex: newModule.slotIndex
+          slotIndex: newModule.slotIndex,
+          position: newModule.position
         }
       });
       
@@ -1973,15 +1980,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 단내림 구간일 경우 영역별 가구 확인
         const isAvailable = (() => {
-          if (spaceInfo.droppedCeiling?.enabled && colliderUserData?.zone) {
+          if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
             // 영역별 컬럼 수 가져오기
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const targetZone = colliderUserData.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+            const targetZone = detectedZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
             
             // 듀얼 가구가 영역 경계를 넘어가는지 체크
             if (isDual && slotIndex + 1 >= targetZone.columnCount) {
               console.log('🚫 Hover: 듀얼 가구가 영역 경계를 넘어감:', {
-                zone: colliderUserData.zone,
+                zone: detectedZone,
                 slotIndex,
                 targetZoneColumnCount: targetZone.columnCount,
                 필요한슬롯: [slotIndex, slotIndex + 1],
@@ -1991,11 +1998,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             }
             
             // 단내림 구간: 동일 영역의 가구만 확인
-            const zoneModules = placedModules.filter(m => m.zone === colliderUserData?.zone);
+            const zoneModules = placedModules.filter(m => m.zone === detectedZone);
             
             // 단내림 구간 슬롯 점유 상태 로깅
             console.log('🏗️ 단내림 구간 슬롯 점유 상태 (hover):', {
-              zone: colliderUserData?.zone,
+              zone: detectedZone,
               currentSlot: slotIndex,
               isDualDragging: isDual,
               targetSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex],
@@ -2539,29 +2546,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           }
           
-          if (slotZone === 'dropped' || hoveredZone === 'dropped') {
-            console.log('🔥 단내림 고스트 렌더링 체크:', {
-              hoveredSlotIndex,
-              hoveredZone,
-              slotIndex,
-              slotLocalIndex,
-              slotZone,
-              compareIndex,
-              isZoneData,
-              zoneMatches,
-              shouldRenderGhost,
-              hasDroppedCeiling,
-              activeModuleData: {
-                id: activeModuleData.moduleData.id,
-                isDual
-              },
-              조건분석: {
-                '인덱스일치': compareIndex === hoveredSlotIndex,
-                'zone일치': zoneMatches,
-                '최종결과': shouldRenderGhost
-              }
-            });
-          }
+          // 항상 디버깅 로그 출력 (모든 zone에서)
+          console.log('🔥 고스트 렌더링 체크:', {
+            hoveredSlotIndex,
+            hoveredZone,
+            slotIndex,
+            slotLocalIndex,
+            slotZone,
+            compareIndex,
+            isZoneData,
+            zoneMatches,
+            shouldRenderGhost,
+            hasDroppedCeiling,
+            activeModuleData: {
+              id: activeModuleData.moduleData.id,
+              isDual
+            },
+            조건분석: {
+              'hoveredSlotIndex !== null': hoveredSlotIndex !== null,
+              'activeModuleData있음': !!activeModuleData,
+              '인덱스일치': compareIndex === hoveredSlotIndex,
+              'zone일치': zoneMatches,
+              '최종결과': shouldRenderGhost
+            }
+          });
         }
         
         if (!shouldRenderGhost || !activeModuleData) return null;
