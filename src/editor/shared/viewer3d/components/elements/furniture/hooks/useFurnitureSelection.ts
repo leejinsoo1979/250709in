@@ -15,12 +15,6 @@ export const useFurnitureSelection = () => {
 
   // 가구 클릭 핸들러 (원클릭 편집모드)
   const handleFurnitureClick = (e: ThreeEvent<MouseEvent>, placedModuleId: string) => {
-    console.log('🖱️ handleFurnitureClick 호출:', {
-      placedModuleId,
-      isDragging: isDragging.current,
-      dragMode
-    });
-    
     // 드래그였다면 클릭 이벤트 무시
     if (isDragging.current) return;
     
@@ -32,7 +26,6 @@ export const useFurnitureSelection = () => {
       setDragMode(false);
     } else {
       // 가구 클릭하면 가구 편집 팝업 열기
-      console.log('🎯 openFurnitureEditPopup 호출 직전:', placedModuleId);
       openFurnitureEditPopup(placedModuleId);
     }
   };

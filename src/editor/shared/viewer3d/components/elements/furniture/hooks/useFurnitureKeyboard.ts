@@ -83,14 +83,6 @@ export const useFurnitureKeyboard = ({
             break;
             
           case 'ArrowLeft': {
-            console.log('⬅️ 왼쪽 키 이동 시도:', {
-              currentSlotIndex,
-              isDualFurniture,
-              moduleId: editingModule.moduleId,
-              excludeModuleId: targetModuleId,
-              zone: editingModule.zone
-            });
-            
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex, 
@@ -98,12 +90,9 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              editingModule.moduleId, // moduleId
-              targetModuleId, // excludeModuleId로 전달
-              editingModule.zone // targetZone 전달
+              editingModule.moduleId,
+              targetModuleId // excludeModuleId로 전달
             );
-            
-            console.log('🔍 다음 슬롯 찾기 결과:', nextSlot);
             
             if (nextSlot !== null) {
               let newX: number;
@@ -118,7 +107,7 @@ export const useFurnitureKeyboard = ({
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;
-              const adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
               let customDepth = editingModule.customDepth;
               
               // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -154,30 +143,26 @@ export const useFurnitureKeyboard = ({
                 });
               }
               
-              // customWidth 계산 - 듀얼 가구만
+              // customWidth 계산
               const customWidth = (() => {
-                if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (nextSlot < indexing.slotWidths.length - 1) {
+                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
                     return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                  } else {
+                    return indexing.slotWidths[nextSlot];
                   }
                 }
-                return undefined;
+                return indexing.columnWidth;
               })();
               
               // 업데이트
-              const updateData: any = {
+              updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
                 adjustedWidth: adjustedWidth,
-                zone: editingModule.zone // zone 유지
-              };
-              
-              if (customWidth !== undefined) {
-                updateData.customWidth = customWidth;
-              }
-              
-              updatePlacedModule(targetModuleId, updateData);
+                customWidth: customWidth
+              });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -185,14 +170,6 @@ export const useFurnitureKeyboard = ({
           }
             
           case 'ArrowRight': {
-            console.log('➡️ 오른쪽 키 이동 시도:', {
-              currentSlotIndex,
-              isDualFurniture,
-              moduleId: editingModule.moduleId,
-              excludeModuleId: targetModuleId,
-              zone: editingModule.zone
-            });
-            
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex, 
@@ -200,12 +177,9 @@ export const useFurnitureKeyboard = ({
               isDualFurniture, 
               placedModules, 
               spaceInfo, 
-              editingModule.moduleId, // moduleId
-              targetModuleId, // excludeModuleId로 전달
-              editingModule.zone // targetZone 전달
+              editingModule.moduleId,
+              targetModuleId // excludeModuleId로 전달
             );
-            
-            console.log('🔍 다음 슬롯 찾기 결과:', nextSlot);
             
             if (nextSlot !== null) {
               let newX: number;
@@ -220,7 +194,7 @@ export const useFurnitureKeyboard = ({
               const targetSlotInfo = columnSlots[nextSlot];
               
               let adjustedWidth: number | undefined = undefined;
-              const adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
+              let adjustedPosition = { x: newX, y: editingModule.position.y, z: editingModule.position.z };
               let customDepth = editingModule.customDepth;
               
               // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -256,30 +230,26 @@ export const useFurnitureKeyboard = ({
                 });
               }
               
-              // customWidth 계산 - 듀얼 가구만
+              // customWidth 계산
               const customWidth = (() => {
-                if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (nextSlot < indexing.slotWidths.length - 1) {
+                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
                     return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                  } else {
+                    return indexing.slotWidths[nextSlot];
                   }
                 }
-                return undefined;
+                return indexing.columnWidth;
               })();
               
               // 업데이트
-              const updateData: any = {
+              updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
                 adjustedWidth: adjustedWidth,
-                zone: editingModule.zone // zone 유지
-              };
-              
-              if (customWidth !== undefined) {
-                updateData.customWidth = customWidth;
-              }
-              
-              updatePlacedModule(targetModuleId, updateData);
+                customWidth: customWidth
+              });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
             e.preventDefault();
@@ -350,8 +320,7 @@ export const useFurnitureKeyboard = ({
                 placedModules, 
                 spaceInfo, 
                 selectedModule.moduleId,
-                selectedPlacedModuleId, // excludeModuleId로 전달
-                selectedModule.zone // targetZone 전달
+                selectedPlacedModuleId // excludeModuleId로 전달
               );
               
               if (nextSlot !== null) {
@@ -367,7 +336,7 @@ export const useFurnitureKeyboard = ({
                 const targetSlotInfo = columnSlots[nextSlot];
                 
                 let adjustedWidth: number | undefined = undefined;
-                const adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
+                let adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
                 let customDepth = selectedModule.customDepth;
                 
                 // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -403,30 +372,26 @@ export const useFurnitureKeyboard = ({
                   });
                 }
                 
-                // customWidth 계산 - 듀얼 가구만
+                // customWidth 계산
                 const customWidth = (() => {
-                  if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                    if (nextSlot < indexing.slotWidths.length - 1) {
+                  if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                    if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
                       return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                    } else {
+                      return indexing.slotWidths[nextSlot];
                     }
                   }
-                  return undefined;
+                  return indexing.columnWidth;
                 })();
                 
                 // 업데이트
-                const updateData: any = {
+                updatePlacedModule(selectedPlacedModuleId, {
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
-                  zone: selectedModule.zone // zone 유지
-                };
-                
-                if (customWidth !== undefined) {
-                  updateData.customWidth = customWidth;
-                }
-                
-                updatePlacedModule(selectedPlacedModuleId, updateData);
+                  customWidth: customWidth
+                });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
               e.preventDefault();
@@ -442,8 +407,7 @@ export const useFurnitureKeyboard = ({
                 placedModules, 
                 spaceInfo, 
                 selectedModule.moduleId,
-                selectedPlacedModuleId, // excludeModuleId로 전달
-                selectedModule.zone // targetZone 전달
+                selectedPlacedModuleId // excludeModuleId로 전달
               );
               
               if (nextSlot !== null) {
@@ -459,7 +423,7 @@ export const useFurnitureKeyboard = ({
                 const targetSlotInfo = columnSlots[nextSlot];
                 
                 let adjustedWidth: number | undefined = undefined;
-                const adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
+                let adjustedPosition = { x: newX, y: selectedModule.position.y, z: selectedModule.position.z };
                 let customDepth = selectedModule.customDepth;
                 
                 // 기둥이 있는 슬롯인 경우 크기와 위치 조정
@@ -495,30 +459,26 @@ export const useFurnitureKeyboard = ({
                   });
                 }
                 
-                // customWidth 계산 - 듀얼 가구만
+                // customWidth 계산
                 const customWidth = (() => {
-                  if (isDualFurniture && indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                    if (nextSlot < indexing.slotWidths.length - 1) {
+                  if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
+                    if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
                       return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                    } else {
+                      return indexing.slotWidths[nextSlot];
                     }
                   }
-                  return undefined;
+                  return indexing.columnWidth;
                 })();
                 
                 // 업데이트
-                const updateData: any = {
+                updatePlacedModule(selectedPlacedModuleId, {
                   position: adjustedPosition,
                   slotIndex: nextSlot,
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
-                  zone: selectedModule.zone // zone 유지
-                };
-                
-                if (customWidth !== undefined) {
-                  updateData.customWidth = customWidth;
-                }
-                
-                updatePlacedModule(selectedPlacedModuleId, updateData);
+                  customWidth: customWidth
+                });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
               e.preventDefault();
