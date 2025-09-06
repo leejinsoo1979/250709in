@@ -1096,11 +1096,129 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
       let adjustedDepth = defaultDepth;
       
+      // 상부장/하부장/키큰장 체크 및 Y 위치 계산
+      const isUpperCabinet = moduleData?.category === 'upper';
+      const isLowerCabinet = moduleData?.category === 'lower';
+      const isFullCabinet = moduleData?.category === 'full';
+      
+      let furnitureY = 0; // 기본값
+      
+      if (isFullCabinet) {
+        // 키큰장: 바닥부터 천장까지 (바닥마감재와 띄워서 배치 고려)
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        let startHeightMm = floorFinishHeightMm;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm += spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+        }
+        
+        // 단내림 구간에서는 키큰장 높이도 조정
+        let furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          // 키큰장의 전체 높이를 단내림만큼 줄임
+          const adjustedTotalHeight = spaceInfo.height - dropHeight;
+          furnitureHeightMm = Math.min(furnitureHeightMm, adjustedTotalHeight - startHeightMm);
+        }
+        
+        furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        
+        console.log('🏢 키큰장 초기 배치 Y 위치 계산:', {
+          zone: zoneToUse,
+          baseFrameHeightMm: startHeightMm,
+          furnitureHeightMm,
+          furnitureY,
+          placementType: spaceInfo.baseConfig?.placementType,
+          isDroppedZone: zoneToUse === 'dropped',
+          설명: zoneToUse === 'dropped' ? '단내림 구간 - 높이 조정됨' : '키큰장은 바닥부터 시작'
+        });
+      } else if (isUpperCabinet) {
+        // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
+        // 단내림 구간에서는 zoneInternalSpace 사용, 일반 구간에서는 internalSpace 사용
+        const effectiveInternalSpace = zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace : internalSpace;
+        const internalHeightMm = effectiveInternalSpace.height;
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        
+        // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
+        const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
+        const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
+        
+        // 단내림 구간에서는 단내림된 높이 사용
+        let totalHeightMm;
+        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+          // 단내림 구간: 단내림된 높이 사용
+          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+          totalHeightMm = spaceInfo.height - dropHeight;
+        } else {
+          // 일반 구간: 원래 높이 사용
+          totalHeightMm = spaceInfo.height;
+        }
+        
+        // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
+        if (spaceInfo.surroundType !== 'no-surround') {
+          totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+        } else {
+          // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
+          totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
+        }
+        
+        // 상부장 Y 위치 계산
+        furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+        
+        console.log('🔝 상부장 초기 배치 Y 위치 계산:', {
+          zone: zoneToUse,
+          isDroppedZone: zoneToUse === 'dropped',
+          droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+          dropHeight: spaceInfo.droppedCeiling?.dropHeight || 0,
+          originalHeight: spaceInfo.height,
+          totalHeightMm,
+          furnitureHeightMm,
+          furnitureY,
+          furnitureY_mm: furnitureY * 100,
+          계산과정: {
+            '1_원래높이': spaceInfo.height,
+            '2_단내림높이차감': zoneToUse === 'dropped' ? spaceInfo.droppedCeiling?.dropHeight || 0 : 0,
+            '3_최종높이': totalHeightMm,
+            '4_가구높이절반': furnitureHeightMm / 2,
+            '5_최종Y위치_mm': totalHeightMm - furnitureHeightMm / 2,
+            '6_최종Y위치_m': furnitureY
+          },
+          설명: zoneToUse === 'dropped' ? '단내림 구간 - 낮아진 천장 기준' : '일반 구간 - 원래 천장 기준'
+        });
+      } else if (isLowerCabinet) {
+        // 하부장: 바닥에서 시작 (띄워서 배치 고려)
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        let startHeightMm = floorFinishHeightMm;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm += spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+        }
+        const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+        furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      } else {
+        // 기본 가구: 바닥에서 시작
+        console.log('⚠️ 기본 가구 Y 위치 계산 (카테고리 없음):', {
+          moduleCategory: moduleData?.category,
+          moduleId: moduleData?.id
+        });
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        let startHeightMm = floorFinishHeightMm;
+        if (spaceInfo.baseConfig?.type === 'floor') {
+          startHeightMm += spaceInfo.baseConfig?.height || 65;
+        } else if (spaceInfo.baseConfig?.placementType === 'float') {
+          startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+        }
+        const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      }
+      
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
         moduleId: zoneTargetModuleId, // 정확한 너비를 포함한 모듈 ID 사용
-        position: { x: furnitureX, y: 0, z: 0 }, // 기둥 침범 시 조정된 위치 사용
+        position: { x: furnitureX, y: furnitureY, z: 0 }, // 상부장/하부장/키큰장에 따른 Y 위치 사용
         rotation: 0,
         hasDoor: false,
         customDepth: adjustedDepth, // 조정된 깊이 사용
@@ -1182,10 +1300,39 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 클릭한 슬롯의 영역 정보 사용
         const targetZone = colliderUserData?.zone || 'normal';
+        
+        // 상부장 Y 위치 계산
+        let furnitureY = 0;
+        if (moduleData?.category === 'upper') {
+          // 상부장: 상부 프레임 하단에 배치
+          const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+          let totalHeightMm = spaceInfo.height;
+          
+          // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
+          if (spaceInfo.surroundType !== 'no-surround') {
+            totalHeightMm = totalHeightMm - 10 - 10; // 프레임 두께 10mm + 간격 10mm
+          } else {
+            totalHeightMm = totalHeightMm - 10; // 노서라운드는 간격만
+          }
+          
+          furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100;
+        } else if (moduleData?.category === 'lower') {
+          // 하부장: 바닥에서 시작
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+          let startHeightMm = floorFinishHeightMm;
+          if (spaceInfo.baseConfig?.type === 'floor') {
+            startHeightMm += spaceInfo.baseConfig?.height || 65;
+          } else if (spaceInfo.baseConfig?.placementType === 'float') {
+            startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+          }
+          const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+          furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100;
+        }
+        
         const newModule = {
           id: placedId,
           moduleId: moduleData.id,
-          position: { x: finalX, y: 0, z: 0 },
+          position: { x: finalX, y: furnitureY, z: 0 },
           rotation: 0,
           slotIndex,
           depth: defaultDepth,
@@ -1488,11 +1635,87 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     }
     
+    // 상부장/하부장/키큰장 체크 및 Y 위치 계산
+    const isUpperCabinet = moduleData?.category === 'upper';
+    const isLowerCabinet = moduleData?.category === 'lower';
+    const isFullCabinet = moduleData?.category === 'full';
+    
+    let furnitureY = 0; // 기본값
+    
+    if (isFullCabinet) {
+      // 키큰장: 바닥부터 천장까지 (바닥마감재와 띄워서 배치 고려)
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      let startHeightMm = floorFinishHeightMm;
+      if (spaceInfo.baseConfig?.type === 'floor') {
+        startHeightMm += spaceInfo.baseConfig?.height || 65;
+      } else if (spaceInfo.baseConfig?.placementType === 'float') {
+        startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+      }
+      const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
+      furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      
+      console.log('🏢 키큰장 드래그 Y 위치 계산:', {
+        category: moduleData.category,
+        startHeightMm,
+        furnitureHeightMm,
+        furnitureY,
+        baseConfig: spaceInfo.baseConfig,
+        placementType: spaceInfo.baseConfig?.placementType,
+        floatHeight: spaceInfo.baseConfig?.floatHeight,
+        설명: '키큰장은 바닥/띄움 높이부터 시작'
+      });
+    } else if (isUpperCabinet) {
+      // 상부장: 내경 공간 상단에 배치 (mm 단위로 계산)
+      const internalHeightMm = internalSpace.height;
+      const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+      
+      // 상부장은 상부 프레임 하단에서 10mm 아래에 위치
+      const SURROUND_FRAME_THICKNESS = 10; // 상부 프레임 두께 10mm
+      const FRAME_TO_FURNITURE_GAP = 10; // 프레임과 가구 사이 간격 10mm
+      let totalHeightMm = spaceInfo.height;
+      
+      console.log('🔴 상부장 Y 위치 계산:', {
+        moduleCategory: moduleData?.category,
+        moduleId: moduleData?.id,
+        furnitureHeightMm,
+        totalHeightMm,
+        surroundType: spaceInfo.surroundType
+      });
+      
+      // 서라운드 모드일 때 상부 프레임 두께와 간격을 뺌
+      if (spaceInfo.surroundType !== 'no-surround') {
+        totalHeightMm = totalHeightMm - SURROUND_FRAME_THICKNESS - FRAME_TO_FURNITURE_GAP;
+      } else {
+        // 노서라운드 모드에서는 프레임이 없으므로 간격만 뺌
+        totalHeightMm = totalHeightMm - FRAME_TO_FURNITURE_GAP;
+      }
+      
+      // 상부장 Y 위치 계산
+      furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
+      
+      console.log('🔴 상부장 최종 Y 위치:', {
+        totalHeightMm,
+        furnitureY,
+        furnitureYMm: furnitureY * 100
+      });
+    } else if (isLowerCabinet) {
+      // 하부장: 바닥에서 시작 (바닥마감재와 띄워서 배치 고려)
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+      let startHeightMm = floorFinishHeightMm;
+      if (spaceInfo.baseConfig?.type === 'floor') {
+        startHeightMm += spaceInfo.baseConfig?.height || 65;
+      } else if (spaceInfo.baseConfig?.placementType === 'float') {
+        startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+      }
+      const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
+      furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
+    }
+    
     // 새 모듈 배치
     const newModule: any = {
       id: placedId,
       moduleId: isDual ? dualTargetModuleId : targetModuleId, // 듀얼의 경우 합계 너비 ID 사용
-      position: { x: adjustedPosition, y: 0, z: 0 },
+      position: { x: adjustedPosition, y: furnitureY, z: 0 },
       rotation: 0,
       hasDoor: false,
       customDepth: defaultDepth,
@@ -2558,8 +2781,34 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const furnitureHeightMm = moduleData.dimensions.height;
         const furnitureHeight = furnitureHeightMm * 0.01;
         
-        // 가구 Y 위치 계산 - 가구는 항상 바닥(slotStartY)에서 시작
-        const furnitureY = slotStartY + furnitureHeight / 2;
+        // 상부장/하부장 체크
+        const isUpperCabinet = moduleData?.category === 'upper';
+        const isLowerCabinet = moduleData?.category === 'lower';
+        
+        // 가구 Y 위치 계산
+        let furnitureY: number;
+        
+        if (isUpperCabinet) {
+          // 상부장: 내경 공간 상단에 배치
+          const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
+          const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+          
+          // 상부장은 천장에 붙어있으므로 내경 높이에서 가구 높이의 절반을 뺌
+          // 받침대 높이는 이미 internalSpace에 반영되어 있음
+          furnitureY = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+          
+          console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
+            slotStartY,
+            internalHeightMm,
+            furnitureHeightMm,
+            furnitureY,
+            category: moduleData.category,
+            설명: '상부장은 천장 고정'
+          });
+        } else {
+          // 하부장 및 일반 가구: 바닥에서 시작
+          furnitureY = slotStartY + furnitureHeight / 2;
+        }
         
         console.log('👻 [Ghost Preview] 가구 높이 계산:', {
           effectiveZone,
