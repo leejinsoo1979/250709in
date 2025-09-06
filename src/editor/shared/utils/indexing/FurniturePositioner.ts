@@ -70,23 +70,14 @@ export class FurniturePositioner {
         : newIndexing.zones.dropped!;
       
       const baseX = zoneData.startX;
-      const slotWidths = zoneData.slotWidths || [];
-      
-      // 실제 슬롯 너비를 사용하여 정확한 위치 계산
-      let currentX = 0;
-      for (let i = 0; i < slotIndex; i++) {
-        currentX += slotWidths[i] || zoneData.columnWidth;
-      }
+      const columnWidth = zoneData.columnWidth;
       
       if (isDualFurniture) {
         // 듀얼 가구: 두 슬롯의 중간 위치
-        const slot1Width = slotWidths[slotIndex] || zoneData.columnWidth;
-        const slot2Width = slotWidths[slotIndex + 1] || zoneData.columnWidth;
-        newX = baseX + currentX + (slot1Width + slot2Width) / 2;
+        newX = baseX + slotIndex * columnWidth + columnWidth;
       } else {
         // 싱글 가구: 슬롯 중앙 위치
-        const slotWidth = slotWidths[slotIndex] || zoneData.columnWidth;
-        newX = baseX + currentX + slotWidth / 2;
+        newX = baseX + slotIndex * columnWidth + columnWidth / 2;
       }
       
       // mm를 Three.js 단위로 변환

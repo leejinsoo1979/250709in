@@ -7,7 +7,6 @@ interface DropPosition {
   x: number;
   column: number;
   isDualFurniture: boolean;
-  zone?: 'normal' | 'dropped'; // zone 정보 추가
 }
 
 interface CurrentDragData {
@@ -60,16 +59,8 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
-      // 노서라운드의 경우 좌표 보정
-      let coordinateOffset = 0;
-      if (spaceInfo.surroundType === 'no-surround') {
-        // 노서라운드에서는 중앙 정렬 대신 실제 위치 사용
-        const totalWidth = spaceInfo.width;
-        coordinateOffset = totalWidth / 2; // 중앙 기준을 왼쪽 끝으로 이동
-      }
-      
       // mm 단위로 변환하여 영역 확인
-      const worldXMm = (worldX * 100) + coordinateOffset; // Three.js to mm with offset
+      const worldXMm = worldX * 100; // Three.js to mm
       
       // 어느 영역에 속하는지 확인
       let zone: 'normal' | 'dropped';
@@ -77,14 +68,9 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       let zoneColumnCount: number;
       let zoneColumnWidth: number;
       
-      // 노서라운드 보정된 좌표로 영역 판단
-      const adjustedWorldXMm = spaceInfo.surroundType === 'no-surround' 
-        ? worldXMm + (spaceInfo.width / 2) // 노서라운드는 중앙 기준으로 변환
-        : worldXMm;
-      
       if (zoneInfo.dropped && 
-          adjustedWorldXMm >= zoneInfo.dropped.startX && 
-          adjustedWorldXMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
+          worldXMm >= zoneInfo.dropped.startX && 
+          worldXMm <= zoneInfo.dropped.startX + zoneInfo.dropped.width) {
         // 단내림 영역
         zone = 'dropped';
         zoneStartX = zoneInfo.dropped.startX;
@@ -99,7 +85,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       }
       
       // 영역 내에서의 상대 위치 계산
-      const relativeX = adjustedWorldXMm - zoneStartX;
+      const relativeX = worldXMm - zoneStartX;
       const columnIndex = Math.floor(relativeX / zoneColumnWidth);
       const clampedColumnIndex = Math.max(0, Math.min(columnIndex, zoneColumnCount - 1));
       
@@ -115,57 +101,28 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
         const leftColumnCenterMm = zoneStartX + (dualPositionIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
         const rightColumnCenterMm = zoneStartX + ((dualPositionIndex + 1) * zoneColumnWidth) + (zoneColumnWidth / 2);
         const dualCenterMm = (leftColumnCenterMm + rightColumnCenterMm) / 2;
-        // 노서라운드의 경우 좌표 보정 제거 (이미 mm 단위에서 계산됨)
         targetPositionX = dualCenterMm * 0.01; // mm to Three.js
         targetColumn = dualPositionIndex;
-        console.log(`🎯 [${zone}] Dual furniture position:`, {
-          dualPositionIndex,
-          targetPositionX,
-          dualCenterMm,
-          zoneStartX,
-          adjustedWorldXMm,
-          surroundType: spaceInfo.surroundType
-        });
+        console.log(`🎯 [${zone}] Dual furniture position:`, dualPositionIndex, targetPositionX);
       } else {
         // 싱글가구: 단일 컬럼 중심에 배치
         const columnCenterMm = zoneStartX + (clampedColumnIndex * zoneColumnWidth) + (zoneColumnWidth / 2);
-        // 노서라운드의 경우 좌표 보정 제거 (이미 mm 단위에서 계산됨)
         targetPositionX = columnCenterMm * 0.01; // mm to Three.js
         targetColumn = clampedColumnIndex;
-        console.log(`🎯 [${zone}] Single furniture position:`, {
-          clampedColumnIndex,
-          targetPositionX,
-          columnCenterMm,
-          zoneStartX,
-          adjustedWorldXMm,
-          surroundType: spaceInfo.surroundType
-        });
+        console.log(`🎯 [${zone}] Single furniture position:`, clampedColumnIndex, targetPositionX);
       }
       
       return {
         x: targetPositionX,
         column: targetColumn,
-        isDualFurniture,
-        zone // zone 정보 추가
+        isDualFurniture
       };
     }
     
     // 단내림이 없는 경우 기존 로직
     const columnCount = indexing.columnCount;
-    
-    // 마우스 위치에서 가장 가까운 슬롯 찾기
-    let closestColumnIndex = 0;
-    let minDistance = Infinity;
-    
-    // 각 슬롯의 실제 위치와 마우스 위치 비교
-    for (let i = 0; i < columnCount; i++) {
-      const slotX = indexing.threeUnitPositions[i];
-      const distance = Math.abs(worldX - slotX);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestColumnIndex = i;
-      }
-    }
+    const columnIndex = Math.floor((normalizedX + 1) * columnCount / 2);
+    const clampedColumnIndex = Math.max(0, Math.min(columnIndex, columnCount - 1));
     
     const columnWidth = indexing.columnWidth;
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
@@ -174,7 +131,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     let targetColumn: number;
     
     if (isDualFurniture) {
-      const dualPositionIndex = Math.max(0, Math.min(closestColumnIndex, columnCount - 2));
+      const dualPositionIndex = Math.max(0, Math.min(clampedColumnIndex, columnCount - 2));
       if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[dualPositionIndex] !== undefined) {
         targetPositionX = indexing.threeUnitDualPositions[dualPositionIndex];
       } else {
@@ -184,16 +141,15 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       targetColumn = dualPositionIndex;
       console.log('🎯 Dual furniture position (슬롯 경계):', dualPositionIndex, targetPositionX);
     } else {
-      targetPositionX = indexing.threeUnitPositions[closestColumnIndex];
-      targetColumn = closestColumnIndex;
-      console.log('🎯 Single furniture position:', closestColumnIndex, targetPositionX);
+      targetPositionX = indexing.threeUnitPositions[clampedColumnIndex];
+      targetColumn = clampedColumnIndex;
+      console.log('🎯 Single furniture position:', clampedColumnIndex, targetPositionX);
     }
     
     return {
       x: targetPositionX,
       column: targetColumn,
-      isDualFurniture,
-      zone: undefined // 단내림이 없는 경우 zone은 undefined
+      isDualFurniture
     };
   };
 

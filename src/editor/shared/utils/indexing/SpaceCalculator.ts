@@ -25,30 +25,24 @@ export class SpaceCalculator {
     
     // 내경 계산: 노서라운드인 경우 엔드패널과 gapConfig 고려, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 이격거리와 엔드패널 고려
+      // 노서라운드: 이격거리는 빌트인에서만 반영
       let leftReduction = 0;
       let rightReduction = 0;
-      const leftGap = spaceInfo.gapConfig?.left || 0;
-      const rightGap = spaceInfo.gapConfig?.right || 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽 이격거리 고려
-        leftReduction = leftGap;
-        rightReduction = rightGap;
+        // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
+        leftReduction = spaceInfo.gapConfig?.left || 2;
+        rightReduction = spaceInfo.gapConfig?.right || 2;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 벽 있는 쪽 이격거리 + 벽 없는 쪽 엔드패널
-        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-          // 왼쪽 벽, 오른쪽 엔드패널
-          leftReduction = leftGap;
-          rightReduction = END_PANEL_THICKNESS;
-        } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
-          // 오른쪽 벽, 왼쪽 엔드패널
-          leftReduction = END_PANEL_THICKNESS;
-          rightReduction = rightGap;
+        // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
+        if (spaceInfo.wallConfig?.left) {
+          // 왼쪽 벽이 있으면 오른쪽에 엔드패널
+          leftReduction = 0;  // 이격거리 무시
+          rightReduction = END_PANEL_THICKNESS;  // 오른쪽은 엔드패널(18mm)만
         } else {
-          // fallback (일반적으로 오른쪽 엔드패널)
-          leftReduction = leftGap;
-          rightReduction = END_PANEL_THICKNESS;
+          // 오른쪽 벽이 있으면 왼쪽에 엔드패널
+          leftReduction = END_PANEL_THICKNESS;    // 왼쪽은 엔드패널(18mm)만
+          rightReduction = 0;  // 이격거리 무시
         }
       } else {
         // 프리스탠딩: 양쪽 벽이 없으므로 양쪽 모두 엔드패널(18mm)만
@@ -56,33 +50,10 @@ export class SpaceCalculator {
         rightReduction = END_PANEL_THICKNESS;
       }
       
-      const internalWidth = totalWidth - (leftReduction + rightReduction);
-      
-      // 디버깅 로그
-      console.log('🔬 [SpaceCalculator] 내경 계산 (no-surround):', {
-        installType: spaceInfo.installType,
-        totalWidth,
-        leftReduction,
-        rightReduction,
-        internalWidth,
-        calculation: `${totalWidth} - ${leftReduction} - ${rightReduction} = ${internalWidth}`
-      });
-      
-      return internalWidth;
+      return totalWidth - (leftReduction + rightReduction);
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임
-      const internalWidth = totalWidth - frameThickness.left - frameThickness.right;
-      
-      // 디버깅 로그
-      console.log('🔬 [SpaceCalculator] 내경 계산 (surround):', {
-        totalWidth,
-        frameLeft: frameThickness.left,
-        frameRight: frameThickness.right,
-        internalWidth,
-        calculation: `${totalWidth} - ${frameThickness.left} - ${frameThickness.right} = ${internalWidth}`
-      });
-      
-      return internalWidth;
+      return totalWidth - frameThickness.left - frameThickness.right;
     }
   }
 
@@ -90,15 +61,15 @@ export class SpaceCalculator {
    * 내경 폭에 따른 최소/최대 컬럼 수 계산
    */
   static getColumnCountLimits(internalWidth: number) {
-    const MIN_COLUMN_WIDTH = 400;    // 컬럼 최소 폭 400mm
-    const MAX_COLUMN_WIDTH = 600;    // 컬럼 최대 폭 600mm
+    const MIN_COLUMN_WIDTH = 300.01; // 300mm 초과 조건
+    const MAX_COLUMN_WIDTH = 600;    // 1개 컬럼 최대 폭
     const SINGLE_MAX_WIDTH = 600;    // 싱글장 제한
     const DUAL_MAX_WIDTH = 1200;     // 듀얼장 제한
     
     // 최소 컬럼 수: 각 컬럼이 600mm를 넘지 않도록 보장
     const minColumns = Math.ceil(internalWidth / MAX_COLUMN_WIDTH);
     
-    // 최대 컬럼 수: 각 컬럼이 400mm 이상이 되도록 보장
+    // 최대 컬럼 수: 각 컬럼이 300mm를 초과하도록 보장
     const maxColumns = Math.floor(internalWidth / MIN_COLUMN_WIDTH);
     
     // 가구 타입별 제한 확인
@@ -124,8 +95,7 @@ export class SpaceCalculator {
     return {
       isValid: columnCount >= limits.minColumns && 
                columnCount <= limits.maxColumns && 
-               columnWidth >= 400 && 
-               columnWidth <= 600,
+               columnWidth > 300,
       columnWidth,
       limits
     };
@@ -144,162 +114,6 @@ export class SpaceCalculator {
     // 그 외의 경우 - 슬롯이 600mm를 초과하지 않도록 올림 처리
     else {
       return Math.ceil(internalWidth / SLOT_MAX_WIDTH);
-    }
-  }
-
-  /**
-   * 단내림 영역의 내경 계산 (단내림이 있는 경우)
-   * 단내림 영역에서 벽/엔드패널을 고려한 실제 사용 가능 폭
-   */
-  static calculateDroppedZoneInternalWidth(spaceInfo: SpaceInfo): number | null {
-    if (!spaceInfo.droppedCeiling?.enabled) return null;
-    
-    const droppedWidth = spaceInfo.droppedCeiling.width || 900; // 기본값 900mm
-    const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
-    
-    console.log('🔥🔥🔥 calculateDroppedZoneInternalWidth 호출됨:', {
-      droppedWidth,
-      isLeftDropped,
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      wallConfig: spaceInfo.wallConfig,
-      gapConfig: spaceInfo.gapConfig
-    });
-    
-    if (spaceInfo.surroundType === 'no-surround') {
-      let leftReduction = 0;
-      let rightReduction = 0;
-      const { wallConfig, gapConfig, installType } = spaceInfo;
-      
-      if (isLeftDropped) {
-        // 왼쪽 단내림: 왼쪽 끝과 단내림 경계 사이
-        if (installType === 'builtin' || installType === 'built-in') {
-          leftReduction = gapConfig?.left || 0;
-        } else if (installType === 'semistanding' || installType === 'semi-standing') {
-          if (wallConfig?.left) {
-            leftReduction = gapConfig?.left || 0;
-          } else {
-            leftReduction = END_PANEL_THICKNESS;
-          }
-        } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        // 오른쪽은 단내림 경계이므로 reduction 없음
-        rightReduction = 0;
-      } else {
-        // 오른쪽 단내림: 일반 영역 끝과 오른쪽 끝 사이
-        // 왼쪽은 일반 영역 경계이므로 reduction 없음
-        leftReduction = 0;
-        if (installType === 'builtin' || installType === 'built-in') {
-          rightReduction = gapConfig?.right || 0;
-        } else if (installType === 'semistanding' || installType === 'semi-standing') {
-          if (wallConfig?.right) {
-            rightReduction = gapConfig?.right || 0;
-          } else {
-            rightReduction = END_PANEL_THICKNESS;
-          }
-        } else {
-          rightReduction = END_PANEL_THICKNESS;
-        }
-      }
-      
-      const result = droppedWidth - leftReduction - rightReduction;
-      console.log('🔥🔥🔥 Dropped Zone 내경 계산 결과:', {
-        droppedWidth,
-        leftReduction,
-        rightReduction,
-        result,
-        계산식: `${droppedWidth} - ${leftReduction} - ${rightReduction} = ${result}`
-      });
-      return result;
-    } else {
-      // 서라운드 모드: 프레임 두께 고려
-      const frameThickness = calculateFrameThickness(spaceInfo);
-      if (isLeftDropped) {
-        return droppedWidth - frameThickness.left;
-      } else {
-        return droppedWidth - frameThickness.right;
-      }
-    }
-  }
-
-  /**
-   * 일반 영역의 내경 계산 (단내림이 있는 경우)
-   * 일반 영역에서 벽/엔드패널을 고려한 실제 사용 가능 폭
-   */
-  static calculateNormalZoneInternalWidth(spaceInfo: SpaceInfo): number {
-    if (!spaceInfo.droppedCeiling?.enabled) {
-      // 단내림이 없으면 전체 내경 반환
-      return SpaceCalculator.calculateInternalWidth(spaceInfo);
-    }
-    
-    const droppedWidth = spaceInfo.droppedCeiling.width || 900;
-    const normalWidth = spaceInfo.width - droppedWidth;
-    const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
-    
-    console.log('🔥🔥🔥 calculateNormalZoneInternalWidth 호출됨:', {
-      normalWidth,
-      isLeftDropped,
-      surroundType: spaceInfo.surroundType,
-      installType: spaceInfo.installType,
-      wallConfig: spaceInfo.wallConfig,
-      gapConfig: spaceInfo.gapConfig
-    });
-    
-    if (spaceInfo.surroundType === 'no-surround') {
-      let leftReduction = 0;
-      let rightReduction = 0;
-      const { wallConfig, gapConfig, installType } = spaceInfo;
-      
-      if (isLeftDropped) {
-        // 왼쪽 단내림: 일반 영역은 오른쪽에 위치
-        // 왼쪽은 단내림 경계이므로 reduction 없음
-        leftReduction = 0;
-        if (installType === 'builtin' || installType === 'built-in') {
-          rightReduction = gapConfig?.right || 0;
-        } else if (installType === 'semistanding' || installType === 'semi-standing') {
-          if (wallConfig?.right) {
-            rightReduction = gapConfig?.right || 0;
-          } else {
-            rightReduction = END_PANEL_THICKNESS;
-          }
-        } else {
-          rightReduction = END_PANEL_THICKNESS;
-        }
-      } else {
-        // 오른쪽 단내림: 일반 영역은 왼쪽에 위치
-        if (installType === 'builtin' || installType === 'built-in') {
-          leftReduction = gapConfig?.left || 0;
-        } else if (installType === 'semistanding' || installType === 'semi-standing') {
-          if (wallConfig?.left) {
-            leftReduction = gapConfig?.left || 0;
-          } else {
-            leftReduction = END_PANEL_THICKNESS;
-          }
-        } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        // 오른쪽은 단내림 경계이므로 reduction 없음
-        rightReduction = 0;
-      }
-      
-      const result = normalWidth - leftReduction - rightReduction;
-      console.log('🔥🔥🔥 Normal Zone 내경 계산 결과:', {
-        normalWidth,
-        leftReduction,
-        rightReduction,
-        result,
-        계산식: `${normalWidth} - ${leftReduction} - ${rightReduction} = ${result}`
-      });
-      return result;
-    } else {
-      // 서라운드 모드: 프레임 두께 고려
-      const frameThickness = calculateFrameThickness(spaceInfo);
-      if (isLeftDropped) {
-        return normalWidth - frameThickness.right;
-      } else {
-        return normalWidth - frameThickness.left;
-      }
     }
   }
 
