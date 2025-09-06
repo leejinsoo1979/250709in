@@ -981,6 +981,18 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // Three.js 단위로 변환하는 함수
       const mmToThreeUnits = (mm: number) => mm * 0.01;
       
+      console.log('🎯 [ModuleGallery] Zone Y position calculation:', {
+        targetZone,
+        zoneSpaceInfo: {
+          width: zoneSpaceInfo.width,
+          zone: zoneSpaceInfo.zone
+        },
+        internalSpace: {
+          startY: internalSpace.startY,
+          height: internalSpace.height
+        }
+      });
+      
       if (module.category === 'upper') {
         // 상부장: 천장에 붙어있음
         const floorY = mmToThreeUnits(internalSpace.startY);
