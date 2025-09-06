@@ -487,9 +487,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
   }
 
-  // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기
+  // 키큰장이 상하부장과 인접했을 때 키큰장 너비를 18mm 줄이기
   let adjustedWidthForEndPanel = furnitureWidthMm;
   let positionAdjustmentForEndPanel = 0; // 위치 조정값
+  
+  // 키큰장/듀얼 캐비넷이 상하부장과 인접했을 때 너비 조정
+  if (needsEndPanelAdjustment && endPanelSide) {
+    const endPanelCount = endPanelSide === 'both' ? 2 : 1;
+    adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * endPanelCount);
+    
+    // 위치 조정: 엔드패널이 한쪽에만 있으면 위치도 조정
+    if (endPanelSide === 'left') {
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 이동
+    } else if (endPanelSide === 'right') {
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 이동
+    }
+    // both인 경우는 중앙 유지 (positionAdjustmentForEndPanel = 0)
+    
+    console.log('🎯 키큰장 엔드패널 조정:', {
+      moduleId: placedModule.moduleId,
+      originalWidth: furnitureWidthMm,
+      adjustedWidth: adjustedWidthForEndPanel,
+      endPanelSide,
+      endPanelCount,
+      positionAdjustment: positionAdjustmentForEndPanel
+    });
+    
+    furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
+  }
   
   console.log('🔍 노서라운드 조정 전 상태:', {
     moduleId: placedModule.moduleId,
@@ -502,6 +527,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     placedModulePosition: placedModule.position
   });
   
+  // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기 (기존 로직 유지)
   if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
@@ -547,7 +573,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     // builtin은 양쪽 벽이 있으므로 조정 불필요
   }
-  furnitureWidthMm = adjustedWidthForEndPanel;
+  
+  // 최종 가구 너비 적용 (키큰장 엔드패널 조정이 있었다면 그것을 우선 적용)
+  if (!needsEndPanelAdjustment) {
+    furnitureWidthMm = adjustedWidthForEndPanel;
+  }
 
   // 디버깅용 로그 추가
   console.log('🎯 가구 너비 결정:', {
@@ -1210,53 +1240,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               })()}
             />
             
-            {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-            {needsEndPanelAdjustment && endPanelSide && (() => {
-              console.log('🎯 엔드패널 렌더링 시작:', {
-                moduleId: placedModule.moduleId,
-                endPanelSide,
-                furnitureHeightMm,
-                furnitureZ,
-                adjustedPosition
-              });
-              
-              // 엔드패널 위치 계산
-              const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
-              const endPanelHeight = height; // 가구와 동일한 높이
-              const endPanelDepth = depth; // 가구와 동일한 깊이
-              
-              // 엔드패널 X 위치 계산
-              const endPanelXPositions = [];
-              if (endPanelSide === 'left' || endPanelSide === 'both') {
-                endPanelXPositions.push({
-                  x: -width/2 - endPanelWidth/2, // 왼쪽 엔드패널
-                  side: 'left'
-                });
-              }
-              if (endPanelSide === 'right' || endPanelSide === 'both') {
-                endPanelXPositions.push({
-                  x: width/2 + endPanelWidth/2, // 오른쪽 엔드패널
-                  side: 'right'
-                });
-              }
-              
-              return (
-                <>
-                  {endPanelXPositions.map((panel, index) => (
-                    <EndPanelWithTexture
-                      key={`endpanel-${placedModule.id}-${panel.side}-${index}`}
-                      width={endPanelWidth}
-                      height={endPanelHeight}
-                      depth={endPanelDepth}
-                      position={[panel.x, 0, 0]} // BoxModule 기준 상대 위치
-                      spaceInfo={zoneSpaceInfo}
-                      renderMode={renderMode}
-                    />
-                  ))}
-                </>
-              );
-            })()}
-            
             {/* 가구 너비 디버깅 */}
             {(() => {
               const slotWidthMm = (() => {
@@ -1498,6 +1481,62 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </group>
       )}
 
+      {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
+      {needsEndPanelAdjustment && endPanelSide && (() => {
+        console.log('🎯 엔드패널 렌더링 시작:', {
+          moduleId: placedModule.moduleId,
+          endPanelSide,
+          furnitureHeightMm,
+          furnitureZ,
+          adjustedPosition,
+          width,
+          height,
+          depth
+        });
+        
+        // 엔드패널 위치 계산
+        const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
+        const endPanelHeight = height; // 가구와 동일한 높이
+        const endPanelDepth = depth; // 가구와 동일한 깊이
+        
+        // 엔드패널 X 위치 계산 (가구의 줄어든 너비 고려)
+        const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
+        const endPanelXPositions = [];
+        
+        if (endPanelSide === 'left' || endPanelSide === 'both') {
+          endPanelXPositions.push({
+            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2 + positionAdjustmentForEndPanel,
+            side: 'left'
+          });
+        }
+        if (endPanelSide === 'right' || endPanelSide === 'both') {
+          endPanelXPositions.push({
+            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2 + positionAdjustmentForEndPanel,
+            side: 'right'
+          });
+        }
+        
+        return (
+          <>
+            {endPanelXPositions.map((panel, index) => (
+              <group
+                key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
+                position={[panel.x, adjustedPosition.y, furnitureZ]}
+              >
+                <EndPanelWithTexture
+                  width={endPanelWidth}
+                  height={endPanelHeight}
+                  depth={endPanelDepth}
+                  position={[0, 0, 0]}
+                  spaceInfo={zoneSpaceInfo}
+                  renderMode={renderMode}
+                />
+              </group>
+            ))}
+          </>
+        );
+      })()}
+      
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
       {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}

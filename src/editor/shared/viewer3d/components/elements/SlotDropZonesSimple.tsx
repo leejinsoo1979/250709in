@@ -2803,50 +2803,77 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         const customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
         
+        // 카테고리 체크
+        const isUpperCabinet = moduleData?.category === 'upper';
+        const isLowerCabinet = moduleData?.category === 'lower';
+        const isFullCabinet = moduleData?.category === 'full';
+        
         // 단내림 구간의 경우 높이 조정 - 실제 배치 로직과 동일하게
-        let furnitureHeightMm = moduleData.dimensions.height;
-        if (effectiveZone === 'dropped' && moduleData?.category === 'full' && spaceInfo.droppedCeiling?.enabled) {
+        let adjustedFurnitureHeightMm = moduleData.dimensions.height;
+        if (effectiveZone === 'dropped' && isFullCabinet && spaceInfo.droppedCeiling?.enabled) {
           // 키큰장인 경우 단내림 구간에서 높이 조정
           const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
           const maxHeight = spaceInfo.height - dropHeight;
-          furnitureHeightMm = Math.min(furnitureHeightMm, maxHeight - 100); // 여유 공간 100mm
+          adjustedFurnitureHeightMm = Math.min(adjustedFurnitureHeightMm, maxHeight - 100); // 여유 공간 100mm
           console.log('👻 [Ghost Preview] 단내림 구간 키큰장 높이 조정:', {
             원래높이: moduleData.dimensions.height,
-            조정된높이: furnitureHeightMm,
+            조정된높이: adjustedFurnitureHeightMm,
             dropHeight,
             maxHeight
           });
         }
         
-        const furnitureHeight = furnitureHeightMm * 0.01;
-        
-        // 상부장/하부장 체크
-        const isUpperCabinet = moduleData?.category === 'upper';
-        const isLowerCabinet = moduleData?.category === 'lower';
-        
-        // 가구 Y 위치 계산
+        // 가구 Y 위치 계산 - 실제 배치 로직과 동일하게
         let furnitureY: number;
         
-        if (isUpperCabinet) {
-          // 상부장: 내경 공간 상단에 배치
-          const internalHeightMm = zoneInternalSpace?.height || internalSpace.height;
-          const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+        if (isFullCabinet) {
+          // 키큰장: 바닥부터 시작
+          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
+          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
           
-          // 상부장은 천장에 붙어있으므로 내경 높이에서 가구 높이의 절반을 뺌
-          // 받침대 높이는 이미 internalSpace에 반영되어 있음
-          furnitureY = mmToThreeUnits(internalHeightMm - furnitureHeightMm / 2);
+          // 키큰장은 바닥에서 시작
+          furnitureY = floorY + furnitureHeight / 2;
           
-          console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
-            slotStartY,
-            internalHeightMm,
-            furnitureHeightMm,
+          console.log('👻 [Ghost Preview] 키큰장 Y 위치:', {
+            floorY,
+            furnitureHeightMm: adjustedFurnitureHeightMm,
+            furnitureHeight,
             furnitureY,
             category: moduleData.category,
-            설명: '상부장은 천장 고정'
+            설명: '키큰장은 바닥부터 시작'
           });
+        } else if (isUpperCabinet) {
+          // 상부장: 천장에 붙어있음
+          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
+          const ceilingY = floorY + mmToThreeUnits(zoneInternalSpace?.height || internalSpace.height);
+          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
+          
+          // 상부장은 천장에서 아래로
+          furnitureY = ceilingY - furnitureHeight / 2;
+          
+          console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
+            floorY,
+            ceilingY,
+            furnitureHeightMm: adjustedFurnitureHeightMm,
+            furnitureHeight,
+            furnitureY,
+            category: moduleData.category,
+            설명: '상부장은 천장에서 아래로'
+          });
+        } else if (isLowerCabinet) {
+          // 하부장: 바닥에서 시작
+          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
+          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
+          
+          // 하부장은 바닥에서 시작
+          furnitureY = floorY + furnitureHeight / 2;
         } else {
-          // 하부장 및 일반 가구: 바닥에서 시작
-          furnitureY = slotStartY + furnitureHeight / 2;
+          // 기본 가구: 바닥에서 시작
+          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
+          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
+          
+          // 기본 가구도 바닥에서 시작
+          furnitureY = floorY + furnitureHeight / 2;
         }
         
         console.log('👻 [Ghost Preview] 가구 높이 계산:', {
