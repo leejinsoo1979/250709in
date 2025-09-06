@@ -1188,6 +1188,17 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
       count: categoryModules.length,
       modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
     });
+  } else if (moduleCategory === 'upperlower') {
+    // 상하부장 탭에서 상부장/하부장 선택에 따라
+    const actualCategory = upperLowerTab === 'upper' ? 'upper' : 'lower';
+    categoryModules = getModulesByCategory(actualCategory, zoneInternalSpace, zoneSpaceInfo);
+    
+    console.log('🎯 상하부장 모듈 로드:', {
+      upperLowerTab,
+      actualCategory,
+      count: categoryModules.length,
+      modules: categoryModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
+    });
   } else {
     // 키큰장(전체형) 모듈
     categoryModules = getModulesByCategory('full', zoneInternalSpace, zoneSpaceInfo);
@@ -1327,19 +1338,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
           className={cn(styles.tab, selectedType === 'all' && styles.activeTab)}
           onClick={() => setSelectedType('all')}
         >
-          {t('furniture.all')} ({moduleCategory === 'upperlower' ? 0 : singleModules.length + dualModules.length})
+          {t('furniture.all')} ({singleModules.length + dualModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'single' && styles.activeTab)}
           onClick={() => setSelectedType('single')}
         >
-          {t('furniture.single')} ({moduleCategory === 'upperlower' ? 0 : singleModules.length})
+          {t('furniture.single')} ({singleModules.length})
         </button>
         <button
           className={cn(styles.tab, selectedType === 'dual' && styles.activeTab)}
           onClick={() => setSelectedType('dual')}
         >
-          {t('furniture.dual')} ({moduleCategory === 'upperlower' ? 0 : dualModules.length})
+          {t('furniture.dual')} ({dualModules.length})
         </button>
       </div>
       
