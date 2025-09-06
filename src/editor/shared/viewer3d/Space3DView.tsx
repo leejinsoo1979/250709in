@@ -1344,7 +1344,7 @@ const QuadrantContent: React.FC<{
       ))}
       
       {/* 컬럼 가이드 표시 */}
-      {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
+      {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
       <CleanCAD2D 
@@ -1357,7 +1357,7 @@ const QuadrantContent: React.FC<{
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🔵 QuadrantContent - Room 렌더링:', {
