@@ -2881,11 +2881,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           moduleDataHeight: moduleData.dimensions.height,
           moduleDataId: moduleData.id,
           zoneInternalSpaceHeight: zoneInternalSpace?.height,
-          furnitureHeightMm,
-          furnitureHeight,
+          adjustedFurnitureHeightMm,
           furnitureY,
           slotStartY,
-          expectedY: slotStartY + furnitureHeight / 2,
+          expectedY: slotStartY + mmToThreeUnits(adjustedFurnitureHeightMm) / 2,
           originalSpaceHeight: spaceInfo.height,
           droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight,
           isDroppedZone: effectiveZone === 'dropped'
