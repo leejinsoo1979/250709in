@@ -953,6 +953,24 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
       });
       
+      // Y 위치 계산 - 상부장은 상단에 배치
+      let yPosition = 0;
+      if (module.category === 'upper') {
+        // 상부장: 내경 높이에서 상부장 높이를 뺀 위치에 배치 (상단 프레임 하단에 붙음)
+        const internalSpace = calculateInternalSpace(zoneSpaceInfo);
+        const upperCabinetHeight = module.dimensions.height || 700; // 상부장 기본 높이 700mm
+        // Three.js 단위로 변환 (mm를 100으로 나눔)
+        yPosition = (internalSpace.height - upperCabinetHeight) / 100;
+        
+        console.log('🔍 Upper cabinet Y position calculation:', {
+          category: module.category,
+          internalHeight: internalSpace.height,
+          upperCabinetHeight: upperCabinetHeight,
+          yPosition: yPosition,
+          yPosition_mm: yPosition * 100
+        });
+      }
+      
       // 새 모듈 생성
       const newModule = {
         id: placedId,
@@ -961,7 +979,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         moduleWidth: module.dimensions.width, // 실제 모듈 너비 저장
         position: {
           x: positionX,
-          y: 0,
+          y: yPosition,
           z: 0
         },
         rotation: 0,
