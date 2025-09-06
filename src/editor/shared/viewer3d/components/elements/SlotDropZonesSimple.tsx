@@ -1646,6 +1646,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const canvas = document.querySelector('canvas');
       if (!canvas) return;
 
+      console.log('🔥 handleDragOver 호출:', {
+        hasCurrentDragData: !!currentDragData,
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+      });
+
       const slotIndex = getSlotIndexFromRaycast(
         e.clientX, 
         e.clientY, 
@@ -1654,6 +1661,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         scene,
         spaceInfo
       );
+      
+      console.log('🎯 getSlotIndexFromRaycast 결과:', {
+        slotIndex,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+      });
       
       if (slotIndex === null) {
         setHoveredSlotIndex(null);

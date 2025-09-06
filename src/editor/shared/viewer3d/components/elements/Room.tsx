@@ -2078,14 +2078,43 @@ const Room: React.FC<RoomProps> = ({
             
             // 슬롯 가이드와 동일한 범위 사용 - 모든 모드에서 calculateZoneSlotInfo 사용
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-            const normalZone = zoneInfo.normal;
             
-            // mm 단위를 Three.js 단위로 변환
-            const frameStartX = mmToThreeUnits(normalZone.startX);
-            const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+            // 단내림이 활성화된 경우 두 영역 모두에 하부프레임 렌더링
+            const renderZones = [];
             
-            const frameWidth = frameEndX - frameStartX;
-            const frameX = (frameStartX + frameEndX) / 2;
+            if (spaceInfo.droppedCeiling?.enabled && zoneInfo.dropped) {
+              // 단내림 구간 추가
+              renderZones.push({
+                zone: 'dropped',
+                startX: zoneInfo.dropped.startX,
+                width: zoneInfo.dropped.width,
+                endX: zoneInfo.dropped.startX + zoneInfo.dropped.width
+              });
+              // 메인 구간 추가
+              renderZones.push({
+                zone: 'normal',
+                startX: zoneInfo.normal.startX,
+                width: zoneInfo.normal.width,
+                endX: zoneInfo.normal.startX + zoneInfo.normal.width
+              });
+            } else {
+              // 단내림이 없는 경우 메인 구간만
+              renderZones.push({
+                zone: 'normal',
+                startX: zoneInfo.normal.startX,
+                width: zoneInfo.normal.width,
+                endX: zoneInfo.normal.startX + zoneInfo.normal.width
+              });
+            }
+            
+            // 각 영역에 대해 하부프레임 렌더링
+            return renderZones.map((renderZone, zoneIndex) => {
+              // mm 단위를 Three.js 단위로 변환
+              const frameStartX = mmToThreeUnits(renderZone.startX);
+              const frameEndX = mmToThreeUnits(renderZone.endX);
+              
+              const frameWidth = frameEndX - frameStartX;
+              const frameX = (frameStartX + frameEndX) / 2;
             
             // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
             const hasDeepColumns = columns.some(column => column.depth >= 730);
