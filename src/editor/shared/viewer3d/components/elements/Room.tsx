@@ -177,6 +177,19 @@ const Room: React.FC<RoomProps> = ({
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
+  
+  // Room 컴포넌트 렌더링 추적
+  React.useEffect(() => {
+    console.log('🏠 Room 컴포넌트 렌더링:', {
+      roomId: roomId.substring(0, 20),
+      viewMode,
+      placedModulesProp: !!placedModules,
+      placedModulesCount: placedModules?.length,
+      activeZone,
+      timestamp: Date.now()
+    });
+  });
+  
   if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number') {
     return null;
   }

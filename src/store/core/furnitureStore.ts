@@ -126,16 +126,30 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       id,
       updates,
       hasPosition: !!updates.position,
-      position: updates.position
+      position: updates.position,
+      현재가구수: get().placedModules.length,
+      현재가구IDs: get().placedModules.map(m => m.id)
     });
     
-    set((state) => ({
-      placedModules: state.placedModules.map(module => 
+    set((state) => {
+      const beforeCount = state.placedModules.length;
+      const newModules = state.placedModules.map(module => 
         module.id === id 
           ? { ...module, ...updates } 
           : module
-      )
-    }));
+      );
+      
+      console.log('📦 updatePlacedModule 완료:', {
+        이전가구수: beforeCount,
+        이후가구수: newModules.length,
+        변경된가구: id,
+        가구목록변경: beforeCount !== newModules.length
+      });
+      
+      return {
+        placedModules: newModules
+      };
+    });
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)

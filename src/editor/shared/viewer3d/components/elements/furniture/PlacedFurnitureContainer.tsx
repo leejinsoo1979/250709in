@@ -108,12 +108,28 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         draggingModuleId: null
       };
 
+  console.log('🔥🔥 PlacedFurnitureContainer 렌더링 시작:', {
+    가구개수: placedModules.length,
+    가구IDs: placedModules.map(m => m.id),
+    가구상세: placedModules.map(m => ({
+      id: m.id,
+      slotIndex: m.slotIndex,
+      position: m.position.x.toFixed(3)
+    }))
+  });
+
   return (
     <group>
-      {placedModules.map((placedModule) => {
+      {placedModules.map((placedModule, index) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
+
+        console.log(`🎯 FurnitureItem ${index} 생성:`, {
+          id: placedModule.id,
+          key: placedModule.id,
+          slotIndex: placedModule.slotIndex
+        });
 
         return (
           <FurnitureItem

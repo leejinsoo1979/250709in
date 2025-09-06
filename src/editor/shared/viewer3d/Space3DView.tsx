@@ -1009,6 +1009,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
             {/* 기본 요소들 */}
+            {console.log('🔴 Space3DView 메인 Room 렌더링')}
             <Room 
               spaceInfo={spaceInfo} 
               viewMode={viewMode} 
@@ -1359,7 +1360,7 @@ const QuadrantContent: React.FC<{
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
-      {console.log('🎯 QuadrantContent - Room 렌더링:', {
+      {console.log('🔵 QuadrantContent - Room 렌더링:', {
         viewDirection,
         spaceInfo: !!spaceInfo,
         showFrame,
