@@ -58,6 +58,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   
+  // 렌더링 추적
+  React.useEffect(() => {
+    console.log('🎨 FurnitureItem 렌더링:', {
+      id: placedModule.id,
+      slotIndex: placedModule.slotIndex,
+      position: placedModule.position.x.toFixed(3),
+      isDragging: isDraggingThis
+    });
+  });
+  
   // 테마 색상 가져오기
   const getThemeColor = () => {
     const computedStyle = getComputedStyle(document.documentElement);

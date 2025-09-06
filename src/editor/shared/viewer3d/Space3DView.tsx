@@ -1375,7 +1375,6 @@ const QuadrantContent: React.FC<{
         isStep2={isStep2}
         showFrame={showFrame}
         materialConfig={materialConfig}
-        placedModules={placedModules}
         activeZone={activeZone}
       />
     </React.Suspense>
