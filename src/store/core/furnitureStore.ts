@@ -88,13 +88,42 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     });
     
     set((state) => {
-      // 중복 체크
+      // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
         console.warn('⚠️ 이미 존재하는 가구 ID:', module.id);
         console.trace('중복 addModule 호출 스택:');
         return state; // 변경 없음
       }
+      
+      // 동일한 슬롯에 이미 가구가 있는지 체크
+      const slotOccupied = state.placedModules.find(m => 
+        m.slotIndex === module.slotIndex && 
+        m.zone === module.zone
+      );
+      
+      if (slotOccupied) {
+        console.warn('⚠️ 슬롯에 이미 가구가 존재:', {
+          슬롯: module.slotIndex,
+          zone: module.zone,
+          기존가구: slotOccupied.id,
+          새가구: module.id
+        });
+        
+        // 기존 가구를 새 가구로 교체
+        return {
+          placedModules: state.placedModules.map(m => 
+            m.id === slotOccupied.id ? module : m
+          )
+        };
+      }
+      
+      console.log('✅ 가구 추가 완료:', {
+        id: module.id,
+        슬롯: module.slotIndex,
+        zone: module.zone,
+        전체가구수: state.placedModules.length + 1
+      });
       
       return {
         placedModules: [...state.placedModules, module]
@@ -127,12 +156,59 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       updates,
       hasPosition: !!updates.position,
       position: updates.position,
+      슬롯변경: updates.slotIndex,
+      zone변경: updates.zone,
       현재가구수: get().placedModules.length,
       현재가구IDs: get().placedModules.map(m => m.id)
     });
     
     set((state) => {
       const beforeCount = state.placedModules.length;
+      
+      // 슬롯 변경이 있을 경우 중복 체크
+      if (updates.slotIndex !== undefined || updates.zone !== undefined) {
+        const targetModule = state.placedModules.find(m => m.id === id);
+        if (targetModule) {
+          const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
+          const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
+          
+          // 다른 가구가 이미 해당 슬롯에 있는지 확인
+          const slotOccupied = state.placedModules.find(m => 
+            m.id !== id && // 자기 자신은 제외
+            m.slotIndex === newSlotIndex && 
+            m.zone === newZone
+          );
+          
+          if (slotOccupied) {
+            console.warn('⚠️ 슬롯 충돌 감지:', {
+              이동하는가구: id,
+              충돌가구: slotOccupied.id,
+              슬롯: newSlotIndex,
+              zone: newZone
+            });
+            
+            // 충돌하는 가구를 제거하고 현재 가구만 업데이트
+            const filteredModules = state.placedModules.filter(m => m.id !== slotOccupied.id);
+            const newModules = filteredModules.map(module => 
+              module.id === id 
+                ? { ...module, ...updates } 
+                : module
+            );
+            
+            console.log('📦 슬롯 충돌 해결 - 기존 가구 제거:', {
+              제거된가구: slotOccupied.id,
+              이전가구수: beforeCount,
+              이후가구수: newModules.length
+            });
+            
+            return {
+              placedModules: newModules
+            };
+          }
+        }
+      }
+      
+      // 충돌이 없으면 일반 업데이트
       const newModules = state.placedModules.map(module => 
         module.id === id 
           ? { ...module, ...updates } 
