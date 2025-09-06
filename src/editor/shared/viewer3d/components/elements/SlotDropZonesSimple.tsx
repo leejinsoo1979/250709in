@@ -1258,6 +1258,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         furnitureY = floorY + furnitureHeight / 2;
       }
       
+      // 영역별 Y 위치 비교
+      console.log(`⚠️ ${zoneToUse === 'dropped' ? '단내림' : '일반'} 구간 최종 Y 위치:`, {
+        zone: zoneToUse,
+        furnitureY,
+        floorY: mmToThreeUnits(zoneInternalSpace.startY),
+        startYmm: zoneInternalSpace.startY,
+        internalHeight: zoneInternalSpace.height,
+        category: moduleData?.category,
+        furnitureHeightMm: moduleData?.dimensions?.height,
+        expectedBottomY: furnitureY - mmToThreeUnits((moduleData?.dimensions?.height || 600) / 2)
+      });
+      
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
