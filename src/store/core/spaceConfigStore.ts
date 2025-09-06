@@ -32,6 +32,13 @@ export interface MaterialConfig {
   doorTexture?: string;      // 도어 재질 텍스처 이미지 경로
 }
 
+// 단내림 기본값 상수
+export const DEFAULT_DROPPED_CEILING_VALUES = {
+  WIDTH: 1200,
+  DROP_HEIGHT: 200,
+  POSITION: 'left' as const
+};
+
 // 공간 정보 타입
 export interface SpaceInfo {
   width: number;
