@@ -483,19 +483,84 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           isDualModule = false;
         }
         
-        // 충돌 검사 비활성화 - 슬롯 인덱스를 그대로 유지하기 위해
-        // 설치타입/프레임 변경 시 슬롯 개수가 동일하면 충돌 검사 없이 위치만 업데이트
-        const skipCollisionCheck = true; // 충돌 검사 완전 비활성화
+        // 컬럼수 변경 시 충돌 검사 활성화 - 가구 겹침 방지
+        const isColumnCountChange = oldSpaceInfo.customColumnCount !== newSpaceInfo.customColumnCount;
+        const skipCollisionCheck = !isColumnCountChange; // 컬럼수가 변경된 경우에만 충돌 검사 수행
         
         if (!skipCollisionCheck && !isSlotAvailable(slotIndex, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
-          // 충돌 검사 로직 (현재는 비활성화됨)
-          console.log('⚠️ 충돌 검사 수행 (현재 비활성화)');
+          // 충돌 발생 시 빈 슬롯 찾기
+          console.log('⚠️ 충돌 감지 - 대안 슬롯 탐색:', {
+            moduleId: module.moduleId,
+            원래슬롯: slotIndex,
+            isDualModule
+          });
+          
+          // 우선 우측에서 빈 슬롯 찾기
+          let foundSlot = null;
+          const maxPossibleSlot = newIndexing.columnCount - (isDualModule ? 2 : 1);
+          
+          for (let i = slotIndex; i <= maxPossibleSlot; i++) {
+            if (isSlotAvailable(i, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+              foundSlot = i;
+              break;
+            }
+          }
+          
+          // 우측에서 찾지 못하면 좌측에서 찾기
+          if (foundSlot === null) {
+            for (let i = slotIndex - 1; i >= 0; i--) {
+              if (isSlotAvailable(i, isDualModule, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+                foundSlot = i;
+                break;
+              }
+            }
+          }
+          
+          // 듀얼 가구를 싱글로 변환 시도
+          if (foundSlot === null && isDualModule) {
+            console.log('🔄 듀얼→싱글 변환 시도:', module.moduleId);
+            newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
+            isDualModule = false;
+            
+            // 싱글로 변환 후 다시 슬롯 찾기
+            for (let i = slotIndex; i < newIndexing.columnCount; i++) {
+              if (isSlotAvailable(i, false, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+                foundSlot = i;
+                break;
+              }
+            }
+            
+            if (foundSlot === null) {
+              for (let i = slotIndex - 1; i >= 0; i--) {
+                if (isSlotAvailable(i, false, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+                  foundSlot = i;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (foundSlot !== null) {
+            slotIndex = foundSlot;
+            console.log('✅ 대안 슬롯으로 이동:', {
+              moduleId: module.moduleId,
+              원래슬롯: module.slotIndex,
+              새슬롯: foundSlot,
+              변환됨: isDualModule !== (module.moduleId.includes('dual-'))
+            });
+          } else {
+            console.log('⚠️ 배치 가능한 슬롯 없음 - 마지막 슬롯에 강제 배치:', {
+              moduleId: module.moduleId,
+              마지막슬롯: Math.max(0, newIndexing.columnCount - 1)
+            });
+            slotIndex = Math.max(0, newIndexing.columnCount - 1);
+          }
         } else {
-          // 충돌 검사 없이 슬롯 유지
-          console.log('✅ 충돌 검사 스킵 - 슬롯 인덱스 유지:', {
+          console.log('✅ 충돌 검사 통과 또는 스킵:', {
             moduleId: module.moduleId,
             slotIndex,
-            isDualModule
+            isDualModule,
+            skipCollisionCheck
           });
         }
 
