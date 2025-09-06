@@ -123,4 +123,167 @@ export class SpaceCalculator {
   static threeUnitsToMm(threeUnits: number): number {
     return threeUnits * 100; // 1 Three.js unit = 100mm
   }
+
+  /**
+   * 정수 슬롯 너비를 위한 프레임/이격거리 자동 조정
+   * @returns 조정된 spaceInfo와 슬롯 너비
+   */
+  static adjustForIntegerSlotWidth(spaceInfo: SpaceInfo): { 
+    adjustedSpaceInfo: SpaceInfo; 
+    slotWidth: number;
+    adjustmentMade: boolean;
+  } {
+    const columnCount = spaceInfo.customColumnCount || SpaceCalculator.getDefaultColumnCount(SpaceCalculator.calculateInternalWidth(spaceInfo));
+    
+    if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드 모드
+      if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+        // 빌트인: 이격거리 2~5mm 범위에서 조정
+        const baseWidth = spaceInfo.width;
+        
+        // 2~5mm 범위에서 정수로 떨어지는 이격거리 찾기
+        for (let gap = 2; gap <= 5; gap++) {
+          const internalWidth = baseWidth - (gap * 2); // 양쪽 이격거리
+          const slotWidth = Math.floor(internalWidth / columnCount);
+          
+          // 정수로 나누어떨어지는지 확인
+          if (internalWidth % columnCount === 0) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: { left: gap, right: gap }
+              },
+              slotWidth,
+              adjustmentMade: true
+            };
+          }
+        }
+        
+        // 정수로 안 떨어지면 가장 가까운 값 선택 (기본 2mm)
+        const gap = 2;
+        const internalWidth = baseWidth - (gap * 2);
+        const slotWidth = Math.floor(internalWidth / columnCount);
+        return {
+          adjustedSpaceInfo: {
+            ...spaceInfo,
+            gapConfig: { left: gap, right: gap }
+          },
+          slotWidth,
+          adjustmentMade: false
+        };
+        
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 벽 있는 쪽만 이격거리 조정 (2~5mm)
+        const hasLeftWall = spaceInfo.wallConfig?.left;
+        const baseWidth = spaceInfo.width - END_PANEL_THICKNESS; // 엔드패널 18mm는 고정
+        
+        for (let gap = 2; gap <= 5; gap++) {
+          const internalWidth = hasLeftWall 
+            ? baseWidth - gap  // 왼쪽 벽: 왼쪽만 이격거리
+            : baseWidth - gap; // 오른쪽 벽: 오른쪽만 이격거리
+          const slotWidth = Math.floor(internalWidth / columnCount);
+          
+          if (internalWidth % columnCount === 0) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: {
+                  left: hasLeftWall ? gap : 0,
+                  right: hasLeftWall ? 0 : gap
+                }
+              },
+              slotWidth,
+              adjustmentMade: true
+            };
+          }
+        }
+        
+        // 기본값 사용
+        const gap = 2;
+        const internalWidth = hasLeftWall 
+          ? baseWidth - gap
+          : baseWidth - gap;
+        const slotWidth = Math.floor(internalWidth / columnCount);
+        return {
+          adjustedSpaceInfo: {
+            ...spaceInfo,
+            gapConfig: {
+              left: hasLeftWall ? gap : 0,
+              right: hasLeftWall ? 0 : gap
+            }
+          },
+          slotWidth,
+          adjustmentMade: false
+        };
+        
+      } else {
+        // 프리스탠딩: 양쪽 엔드패널 18mm 고정, 조정 불가
+        const internalWidth = spaceInfo.width - (END_PANEL_THICKNESS * 2);
+        const slotWidth = Math.floor(internalWidth / columnCount);
+        return {
+          adjustedSpaceInfo: spaceInfo,
+          slotWidth,
+          adjustmentMade: false
+        };
+      }
+      
+    } else {
+      // 서라운드 모드: 프레임 크기 조정 (엔드패널 제외)
+      const hasLeftWall = spaceInfo.wallConfig?.left;
+      const hasRightWall = spaceInfo.wallConfig?.right;
+      const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+      
+      // 엔드패널이 아닌 경우만 조정 가능
+      const canAdjustLeft = hasLeftWall && currentFrameSize.left !== END_PANEL_THICKNESS;
+      const canAdjustRight = hasRightWall && currentFrameSize.right !== END_PANEL_THICKNESS;
+      
+      if (!canAdjustLeft && !canAdjustRight) {
+        // 조정 불가능 (양쪽 모두 엔드패널)
+        const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+        const slotWidth = Math.floor(internalWidth / columnCount);
+        return {
+          adjustedSpaceInfo: spaceInfo,
+          slotWidth,
+          adjustmentMade: false
+        };
+      }
+      
+      // 프레임 크기 조정 시도 (40~60mm 범위)
+      const baseLeft = canAdjustLeft ? currentFrameSize.left : END_PANEL_THICKNESS;
+      const baseRight = canAdjustRight ? currentFrameSize.right : END_PANEL_THICKNESS;
+      
+      // 조정 가능한 범위 내에서 정수 슬롯 너비 찾기
+      for (let adjustment = -10; adjustment <= 10; adjustment++) {
+        const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + adjustment)) : baseLeft;
+        const rightFrame = canAdjustRight ? Math.max(40, Math.min(60, baseRight + adjustment)) : baseRight;
+        
+        const internalWidth = spaceInfo.width - leftFrame - rightFrame;
+        const slotWidth = Math.floor(internalWidth / columnCount);
+        
+        if (internalWidth % columnCount === 0) {
+          return {
+            adjustedSpaceInfo: {
+              ...spaceInfo,
+              frameSize: {
+                ...currentFrameSize,
+                left: leftFrame,
+                right: rightFrame
+              }
+            },
+            slotWidth,
+            adjustmentMade: true
+          };
+        }
+      }
+      
+      // 정수로 안 떨어지면 원래 값 유지
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const slotWidth = Math.floor(internalWidth / columnCount);
+      return {
+        adjustedSpaceInfo: spaceInfo,
+        slotWidth,
+        adjustmentMade: false
+      };
+    }
+  }
 } 

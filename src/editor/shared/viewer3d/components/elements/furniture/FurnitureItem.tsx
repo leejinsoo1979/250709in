@@ -1154,15 +1154,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     console.log('📍 FurnitureItem 위치 변경:', {
       id: placedModule.id,
+      isEditMode,
       placedModulePosition: placedModule.position,
       adjustedPosition: adjustedPosition,
       positionDifference: {
         x: adjustedPosition.x - placedModule.position.x,
         y: adjustedPosition.y - placedModule.position.y,
         z: adjustedPosition.z - placedModule.position.z
-      }
+      },
+      zone: placedModule.zone,
+      category: actualModuleData?.category
     });
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id]);
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id, isEditMode]);
 
   return (
     <group userData={{ furnitureId: placedModule.id }}>

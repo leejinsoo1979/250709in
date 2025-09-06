@@ -13,10 +13,16 @@ export const useFurnitureSelection = () => {
   const [dragMode, setDragMode] = useState(false);
   const isDragging = useRef(false);
 
-  // 가구 클릭 핸들러 (원클릭 편집모드)
+  // 가구 클릭 핸들러 (더블클릭 편집모드)
   const handleFurnitureClick = (e: ThreeEvent<MouseEvent>, placedModuleId: string) => {
     // 드래그였다면 클릭 이벤트 무시
     if (isDragging.current) return;
+    
+    console.log('🖱️ 더블클릭 감지:', {
+      placedModuleId,
+      event: e.type,
+      button: e.button
+    });
     
     e.stopPropagation();
     
