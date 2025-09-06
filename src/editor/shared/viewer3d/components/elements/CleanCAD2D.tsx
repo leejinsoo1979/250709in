@@ -3187,7 +3187,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  position={[spaceXOffset + mmToThreeUnits(leftValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                  position={[spaceXOffset + mmToThreeUnits(leftValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(60)]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"
@@ -3301,7 +3301,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
+                  position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(60)]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"

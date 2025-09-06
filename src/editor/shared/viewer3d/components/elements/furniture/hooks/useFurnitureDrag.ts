@@ -598,6 +598,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         console.log('🏁 드래그 종료');
       }
       
+      // 드래그 종료 시 store 상태 확인
+      const currentModules = useFurnitureStore.getState().placedModules;
+      console.log('🔍 드래그 종료 시 Store 상태:', {
+        가구개수: currentModules.length,
+        가구IDs: currentModules.map(m => m.id),
+        가구상세: currentModules.map(m => ({
+          id: m.id,
+          slotIndex: m.slotIndex,
+          position: m.position.x.toFixed(3)
+        }))
+      });
+      
       isDragging.current = false;
       setDraggingModuleId(null);
       setFurniturePlacementMode(false);
