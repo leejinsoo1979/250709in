@@ -974,7 +974,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         };
       }
       
-      const internalSpace = calculateInternalSpace(zoneSpaceInfo);
+      const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
       const furnitureHeightMm = module.dimensions.height || 600;
       const furnitureHeight = furnitureHeightMm * 0.01; // Three.js 단위로 변환
       
@@ -987,16 +987,16 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           width: zoneSpaceInfo.width,
           zone: zoneSpaceInfo.zone
         },
-        internalSpace: {
-          startY: internalSpace.startY,
-          height: internalSpace.height
+        zoneInternalSpace: {
+          startY: zoneInternalSpace.startY,
+          height: zoneInternalSpace.height
         }
       });
       
       if (module.category === 'upper') {
         // 상부장: 천장에 붙어있음
-        const floorY = mmToThreeUnits(internalSpace.startY);
-        const ceilingY = floorY + mmToThreeUnits(internalSpace.height);
+        const floorY = mmToThreeUnits(zoneInternalSpace.startY);
+        const ceilingY = floorY + mmToThreeUnits(zoneInternalSpace.height);
         yPosition = ceilingY - furnitureHeight / 2;
         
         console.log('🔍 Upper cabinet Y position calculation:', {
@@ -1013,7 +1013,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         });
       } else if (module.category === 'lower') {
         // 하부장: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
+        const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         yPosition = floorY + furnitureHeight / 2;
         
         console.log('🔍 Lower cabinet Y position calculation:', {
@@ -1029,7 +1029,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         });
       } else if (module.category === 'full') {
         // 키큰장: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
+        const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         yPosition = floorY + furnitureHeight / 2;
         
         console.log('🔍 Full cabinet Y position calculation:', {
@@ -1045,7 +1045,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         });
       } else {
         // 기본 가구: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
+        const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         yPosition = floorY + furnitureHeight / 2;
         
         console.log('🔍 Default furniture Y position calculation:', {
