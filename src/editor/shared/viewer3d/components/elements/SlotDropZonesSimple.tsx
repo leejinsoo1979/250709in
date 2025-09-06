@@ -1839,6 +1839,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     const handleDragLeave = () => {
       setHoveredSlotIndex(null);
+      setHoveredZone(null);
     };
     
 
@@ -2306,23 +2307,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             shouldRenderGhost = compareIndex === hoveredSlotIndex && (shouldIgnoreZone || zoneMatches);
           }
           
-          console.log('🎯 고스트 렌더링 체크:', {
-            hoveredSlotIndex,
-            hoveredZone,
-            slotIndex,
-            slotLocalIndex,
-            slotZone,
-            compareIndex,
-            isZoneData,
-            zoneMatches,
-            shouldIgnoreZone,
-            shouldRenderGhost,
-            hasDroppedCeiling,
-            activeModuleData: {
-              id: activeModuleData.moduleData.id,
-              isDual
-            }
-          });
+          if (slotZone === 'dropped' || hoveredZone === 'dropped') {
+            console.log('🔥 단내림 고스트 렌더링 체크:', {
+              hoveredSlotIndex,
+              hoveredZone,
+              slotIndex,
+              slotLocalIndex,
+              slotZone,
+              compareIndex,
+              isZoneData,
+              zoneMatches,
+              shouldIgnoreZone,
+              shouldRenderGhost,
+              hasDroppedCeiling,
+              activeModuleData: {
+                id: activeModuleData.moduleData.id,
+                isDual
+              }
+            });
+          }
         }
         
         if (!shouldRenderGhost || !activeModuleData) return null;
