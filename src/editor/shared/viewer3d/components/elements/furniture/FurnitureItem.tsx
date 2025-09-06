@@ -969,7 +969,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
           adjustedPosition.x + positionAdjustmentForEndPanel,
-          furnitureStartY + height / 2, // 내경 바닥 높이 + 가구 높이의 절반
+          adjustedPosition.y, // placedModule의 Y 위치 사용 (상부장/하부장/키큰장 고려)
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
         rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
@@ -1234,13 +1234,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
             originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
-            furnitureStartY + height / 2, // 가구와 동일한 Y 위치
+            adjustedPosition.y, // 가구와 동일한 Y 위치 (상부장/하부장 고려)
             furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
           {console.log('🚪🚪 커버도어 렌더링 중:', {
-            위치: [originalSlotCenterX, furnitureStartY + height / 2, furnitureZ],
+            위치: [originalSlotCenterX, adjustedPosition.y, furnitureZ],
             너비: originalSlotWidthMm,
             깊이: actualDepthMm,
             가구너비: furnitureWidthMm,
@@ -1285,7 +1285,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <Html
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,
-            furnitureStartY - 1.8, // 원래 위치로 (하부 프레임 아래)
+            adjustedPosition.y - height / 2 - 0.2, // 가구 하단 아래
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
           center

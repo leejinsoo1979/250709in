@@ -28,11 +28,11 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
   const [frameSize, setFrameSize] = useState<FrameSize>(() => {
-    if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 50 };
+    if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 10 };
     return {
       left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
       right: !hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right,
-      top: spaceInfo.frameSize.top,
+      top: spaceInfo.frameSize.top || 10,  // 상부프레임은 항상 유지 (기본값 10mm)
     };
   });
 
@@ -127,9 +127,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 노서라운드(타이트) 설정
       const gapSizeValue = 2; // 기본 이격거리
       
-      // 노서라운드에서는 프레임 크기를 기본값으로 설정
+      // 노서라운드에서도 상부프레임은 필요하므로 기존 값 유지 또는 기본값 설정
       // (Firebase는 undefined를 허용하지 않음)
-      updates.frameSize = { left: 0, right: 0, top: 0 };
+      updates.frameSize = { 
+        left: 0, 
+        right: 0, 
+        top: spaceInfo.frameSize?.top || 10  // 상부프레임은 유지 (기본값 10mm)
+      };
       
       updates.gapConfig = {
         left: hasLeftWall ? gapSizeValue : 0,
