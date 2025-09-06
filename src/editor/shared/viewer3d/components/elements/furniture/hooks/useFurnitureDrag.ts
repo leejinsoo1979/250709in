@@ -23,6 +23,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { setFurnitureDragging, activeDroppedCeilingTab } = useUIStore();
   const [draggingModuleId, setDraggingModuleId] = useState<string | null>(null);
+  const [tempPosition, setTempPosition] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [dragEndData, setDragEndData] = useState<any>(null);
   const [forceRender, setForceRender] = useState(0);
   const isDragging = useRef(false);
   
@@ -523,14 +525,24 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // slotIndex는 이미 zone별 로컬 인덱스이므로 직접 사용
       let finalSlotIndex = slotIndex;
       
-      updatePlacedModule(draggingModuleId, {
+      // 드래그 중에는 위치만 업데이트 (moveModule 사용)
+      moveModule(draggingModuleId, adjustedPosition);
+      
+      // 임시로 드래그 정보 저장 (드래그 끝날 때 전체 업데이트용)
+      setTempPosition({
+        x: adjustedPosition.x,
+        y: adjustedPosition.y,
+        z: adjustedPosition.z
+      });
+      
+      // 나머지 정보는 드래그가 끝날 때 업데이트하기 위해 저장
+      const endData = {
         moduleId: updatedModuleId,
-        position: adjustedPosition,
         customDepth: newCustomDepth,
-        adjustedWidth: newAdjustedWidth, // 기둥이 없는 슬롯으로 이동 시 undefined로 설정되어야 함
+        adjustedWidth: newAdjustedWidth,
         slotIndex: finalSlotIndex,
-        isDualSlot: isDualFurniture, // isDualSlot 속성 유지
-        zone: currentModule.zone, // zone 정보 유지
+        isDualSlot: isDualFurniture,
+        zone: currentModule.zone,
         customWidth: (() => {
           // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
           if (targetSlotInfo && targetSlotInfo.hasColumn) {
@@ -583,7 +595,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           // fallback: 평균 슬롯 너비
           return globalIndexing.columnWidth;
         })()
-      });
+      };
+      
+      // 드래그 끝날 때 사용할 데이터 저장
+      setDragEndData(endData);
+      
       invalidate();
       if (gl && gl.shadowMap) {
         gl.shadowMap.needsUpdate = true;
@@ -593,9 +609,22 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
   // 드래그 종료
   const handlePointerUp = () => {
-    if (isDragging.current) {
+    if (isDragging.current && draggingModuleId) {
       if (import.meta.env.DEV) {
         console.log('🏁 드래그 종료');
+      }
+      
+      // 드래그가 끝날 때 전체 속성 업데이트
+      if (dragEndData && tempPosition) {
+        updatePlacedModule(draggingModuleId, {
+          ...dragEndData,
+          position: tempPosition
+        });
+        console.log('✅ 드래그 종료 - 전체 속성 업데이트:', {
+          moduleId: draggingModuleId,
+          ...dragEndData,
+          position: tempPosition
+        });
       }
       
       // 드래그 종료 시 store 상태 확인
@@ -612,6 +641,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       isDragging.current = false;
       setDraggingModuleId(null);
+      setTempPosition(null);
+      setDragEndData(null);
       setFurniturePlacementMode(false);
       
       // 가구 드래그 종료 이벤트 발생

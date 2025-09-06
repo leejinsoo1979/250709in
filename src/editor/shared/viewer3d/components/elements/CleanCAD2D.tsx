@@ -3147,6 +3147,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={dimensionColor}
                       anchorX="center"
                       anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
                     >
                       {leftText}
                     </Text>
