@@ -506,9 +506,45 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       }
       
-      // 레이캐스트로 받은 슬롯 인덱스는 이미 영역별로 생성된 콜라이더의 로컬 인덱스
-      // 즉, 각 영역에서 0부터 시작하는 인덱스
-      const zoneSlotIndex = slotIndex;
+      // 레이캐스트로 받은 슬롯 인덱스는 콜라이더의 로컬 인덱스
+      // colliderZone이 있으면 이미 올바른 zone의 로컬 인덱스
+      // colliderZone이 없으면 전체 공간 기준 인덱스일 수 있음
+      let zoneSlotIndex = slotIndex;
+      
+      // 콜라이더 zone이 없고 단내림이 활성화된 경우, 인덱스 재계산 필요
+      if (!colliderZone && spaceInfo.droppedCeiling?.enabled && slotIndex !== null) {
+        // zoneToUse에 따라 인덱스 조정
+        if (zoneToUse === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+          // 단내림이 오른쪽: normal zone의 컬럼 수를 빼야 함
+          if (slotIndex >= zoneInfo.normal.columnCount) {
+            zoneSlotIndex = slotIndex - zoneInfo.normal.columnCount;
+            console.log('🔧 Adjusted slot index for right dropped zone:', {
+              originalIndex: slotIndex,
+              normalColumnCount: zoneInfo.normal.columnCount,
+              adjustedIndex: zoneSlotIndex
+            });
+          }
+        } else if (zoneToUse === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+          // 단내림이 왼쪽: dropped zone의 컬럼 수를 빼야 함
+          if (slotIndex >= zoneInfo.dropped.columnCount) {
+            zoneSlotIndex = slotIndex - zoneInfo.dropped.columnCount;
+            console.log('🔧 Adjusted slot index for normal zone (left dropped):', {
+              originalIndex: slotIndex,
+              droppedColumnCount: zoneInfo.dropped.columnCount,
+              adjustedIndex: zoneSlotIndex
+            });
+          }
+        }
+      }
+      
+      console.log('🎯 Zone slot index calculation:', {
+        originalSlotIndex: slotIndex,
+        zoneSlotIndex,
+        zoneToUse,
+        colliderZone,
+        hasColliderZone: !!colliderZone,
+        droppedPosition: spaceInfo.droppedCeiling?.position
+      });
       
       // 영역 검증 - 활성 영역에 맞는 슬롯인지 확인
       if (zoneToUse === 'dropped' && !zoneInfo.dropped) {
