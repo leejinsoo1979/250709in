@@ -313,6 +313,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         placedModules: updatedModules
       };
     });
+  },
+  
+  // Mark as saved
+  markAsSaved: () => {
+    set({ hasUnsavedChanges: false });
   }
 }));
 
