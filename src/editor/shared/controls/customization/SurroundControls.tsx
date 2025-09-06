@@ -44,6 +44,17 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     hasRightWall
   );
 
+  // spaceInfo.frameSize가 변경될 때 frameSize 상태 업데이트
+  useEffect(() => {
+    if (spaceInfo.frameSize) {
+      setFrameSize({
+        left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
+        right: !hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right,
+        top: spaceInfo.frameSize.top || 10,  // 상부프레임은 항상 유지
+      });
+    }
+  }, [spaceInfo.frameSize, hasLeftWall, hasRightWall, isSurround]);
+
   // 파생 상태 스토어 동기화 - spaceInfo 변경 시 재계산
   useEffect(() => {
     const prev = prevSpaceInfoRef.current;
