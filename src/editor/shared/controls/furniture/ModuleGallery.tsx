@@ -1379,8 +1379,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
           })
         ) : (
           <div className={styles.emptyMessage}>
-            {moduleCategory === 'upperlower' 
-              ? `${upperLowerTab === 'lower' ? t('furniture.lowerCabinet') : t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}` 
+            {moduleCategory === 'upper' 
+              ? `${t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}` 
+              : moduleCategory === 'lower'
+              ? `${t('furniture.lowerCabinet')} ${t('furniture.moduleNotReady')}`
               : t('furniture.noModulesAvailable')}
           </div>
         )}
