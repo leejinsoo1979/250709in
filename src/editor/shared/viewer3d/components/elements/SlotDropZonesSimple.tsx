@@ -306,6 +306,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           startY: zoneInternalSpace.startY,
           zone: 'dropped',
           droppedCeilingEnabled: droppedSpaceInfo.droppedCeiling?.enabled,
+          droppedSpaceInfo: {
+            zone: droppedSpaceInfo.zone,
+            droppedCeiling: droppedSpaceInfo.droppedCeiling,
+            height: droppedSpaceInfo.height
+          },
           설명: 'calculateInternalSpace가 이미 dropHeight 처리함'
         });
         
@@ -330,6 +335,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         };
         // calculateInternalSpace를 사용하여 정확한 내경 계산
         zoneInternalSpace = calculateInternalSpace(normalSpaceInfo);
+        
+        console.log('🔧 [SlotDropZonesSimple] 일반 영역 내경 계산:', {
+          height: zoneInternalSpace.height,
+          startY: zoneInternalSpace.startY,
+          zone: 'normal',
+          normalSpaceInfo: {
+            zone: normalSpaceInfo.zone,
+            height: normalSpaceInfo.height
+          }
+        });
+        
         // zoneInfo에서 직접 columnWidth 사용
         zoneIndexing = {
           columnCount: zoneInfo.normal.columnCount,
@@ -1182,9 +1198,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         console.log('🏢 키큰장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
           floorY,
+          floorYmm: zoneInternalSpace.startY,
           furnitureHeightMm,
           furnitureHeight,
           furnitureY,
+          furnitureBottomY: furnitureY - furnitureHeight / 2,
+          expectedFloorY: floorY,
           zoneInternalSpace: {
             startY: zoneInternalSpace.startY,
             height: zoneInternalSpace.height
