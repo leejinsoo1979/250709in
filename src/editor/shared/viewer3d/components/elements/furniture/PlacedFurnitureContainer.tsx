@@ -155,4 +155,13 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   );
 };
 
-export default PlacedFurnitureContainer; 
+export default React.memo(PlacedFurnitureContainer, (prevProps, nextProps) => {
+  // props가 실제로 변경되었을 때만 리렌더링
+  return (
+    prevProps.viewMode === nextProps.viewMode &&
+    prevProps.view2DDirection === nextProps.view2DDirection &&
+    prevProps.renderMode === nextProps.renderMode &&
+    prevProps.activeZone === nextProps.activeZone &&
+    prevProps.placedModules === nextProps.placedModules
+  );
+}); 
