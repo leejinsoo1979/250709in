@@ -957,7 +957,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       let yPosition = 0;
       if (module.category === 'upper') {
         // 상부장: 내경 높이에서 상부장 높이를 뺀 위치에 배치 (상단 프레임 하단에 붙음)
-        const internalSpace = calculateInternalSpace(zoneSpaceInfo);
+        const internalSpace = calculateInternalSpace(fullSpaceInfo);
         const upperCabinetHeight = module.dimensions.height || 700; // 상부장 기본 높이 700mm
         // Three.js 단위로 변환 (mm를 100으로 나눔)
         yPosition = (internalSpace.height - upperCabinetHeight) / 100;
