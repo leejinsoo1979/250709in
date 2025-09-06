@@ -435,16 +435,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       });
       
-      // zone 불일치 검사
+      // zone 불일치 검사 - 콜라이더의 zone을 우선 신뢰
       if (colliderZone && zoneToUse !== colliderZone) {
         console.warn('⚠️ Zone mismatch detected!', {
-          detectedZone: zoneToUse,
-          colliderZone: colliderZone,
-          slotIndex
+          마우스위치기반Zone: zoneToUse,
+          콜라이더Zone: colliderZone,
+          slotIndex,
+          설명: '콜라이더의 zone을 신뢰하여 사용합니다'
         });
-        // 콜라이더의 zone을 신뢰
+        // 콜라이더의 zone을 신뢰 (콜라이더가 정확한 zone 정보를 가지고 있음)
         zoneToUse = colliderZone;
-        console.log('🔧 Corrected zone to match collider:', zoneToUse);
+        console.log('🔧 Zone corrected to match collider:', zoneToUse);
+      } else if (!colliderZone && spaceInfo.droppedCeiling?.enabled) {
+        // 콜라이더 zone이 없는 경우 경고
+        console.warn('⚠️ No collider zone found, using mouse-based detection:', zoneToUse);
       }
       
       if (slotIndex === null) {

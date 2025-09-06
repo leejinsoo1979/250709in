@@ -2125,8 +2125,8 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
 
-              {/* 서라운드 선택 시 - 프레임 속성 설정 */}
-              {(spaceInfo.surroundType || 'surround') === 'surround' && (
+              {/* 프레임 속성 설정 */}
+              {(spaceInfo.surroundType || 'surround') === 'surround' ? (
                 <div className={styles.subSetting}>
                   <label className={styles.subLabel}>프레임 폭 설정</label>
                   
@@ -2288,7 +2288,55 @@ const Configurator: React.FC = () => {
                   
                   <div className={styles.frameUnit}>단위: mm</div>
                 </div>
-              )}
+              ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
+                <div className={styles.subSetting}>
+                  <label className={styles.subLabel}>상부 프레임 설정</label>
+                  
+                  <div className={styles.frameGrid}>
+                    {/* 상부 프레임만 표시 */}
+                    <div className={styles.frameItem}>
+                      <label className={styles.frameItemLabel}>상부</label>
+                      <div className={styles.frameItemInput}>
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 10;
+                            const newTop = Math.max(10, currentTop - 1);
+                            updateFrameSize('top', newTop);
+                          }}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="10"
+                          max="200"
+                          value={spaceInfo.frameSize?.top || 10}
+                          onChange={(e) => {
+                            const value = Math.min(200, Math.max(10, parseInt(e.target.value) || 10));
+                            updateFrameSize('top', value);
+                          }}
+                          onFocus={() => setHighlightedFrame('top')}
+                          onBlur={() => setHighlightedFrame(null)}
+                          className={styles.frameNumberInput}
+                        />
+                        <button 
+                          className={styles.frameButton}
+                          onClick={() => {
+                            const currentTop = spaceInfo.frameSize?.top || 10;
+                            const newTop = Math.min(200, currentTop + 1);
+                            updateFrameSize('top', newTop);
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.frameUnit}>단위: mm</div>
+                </div>
+              ) : null}
 
             </div>
 
