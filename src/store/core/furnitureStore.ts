@@ -86,9 +86,23 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       isSplit: module.isSplit,
       spaceType: module.columnSlotInfo?.spaceType
     });
-    set((state) => ({
-      placedModules: [...state.placedModules, module]
-    }));
+    
+    set((state) => {
+      // 중복 방지: 이미 동일한 ID가 있는지 체크
+      const existingModule = state.placedModules.find(m => m.id === module.id);
+      if (existingModule) {
+        console.warn('⚠️ 이미 존재하는 가구 ID, 업데이트만 수행:', module.id);
+        return {
+          placedModules: state.placedModules.map(m => 
+            m.id === module.id ? module : m
+          )
+        };
+      }
+      
+      return {
+        placedModules: [...state.placedModules, module]
+      };
+    });
   },
 
   // 모듈 제거 함수 (기존 Context 로직과 동일)
@@ -100,13 +114,35 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)
   moveModule: (id: string, position: { x: number; y: number; z: number }) => {
-    set((state) => ({
-      placedModules: state.placedModules.map(module => 
-        module.id === id 
-          ? { ...module, position } 
-          : module
-      )
-    }));
+    set((state) => {
+      // 중복 방지: 동일한 ID가 여러 개 있는지 체크
+      const moduleCount = state.placedModules.filter(m => m.id === id).length;
+      if (moduleCount > 1) {
+        console.warn('⚠️ 중복된 가구 발견, 중복 제거:', id);
+        // 중복된 경우 첫 번째만 남기고 나머지 제거
+        const uniqueModules = [];
+        let foundFirst = false;
+        for (const module of state.placedModules) {
+          if (module.id === id) {
+            if (!foundFirst) {
+              uniqueModules.push({ ...module, position });
+              foundFirst = true;
+            }
+          } else {
+            uniqueModules.push(module);
+          }
+        }
+        return { placedModules: uniqueModules };
+      }
+      
+      return {
+        placedModules: state.placedModules.map(module => 
+          module.id === id 
+            ? { ...module, position } 
+            : module
+        )
+      };
+    });
   },
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
@@ -118,13 +154,35 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       position: updates.position
     });
     
-    set((state) => ({
-      placedModules: state.placedModules.map(module => 
-        module.id === id 
-          ? { ...module, ...updates } 
-          : module
-      )
-    }));
+    set((state) => {
+      // 중복 방지: 동일한 ID가 여러 개 있는지 체크
+      const moduleCount = state.placedModules.filter(m => m.id === id).length;
+      if (moduleCount > 1) {
+        console.warn('⚠️ updatePlacedModule: 중복된 가구 발견, 중복 제거:', id);
+        // 중복된 경우 첫 번째만 업데이트하고 나머지 제거
+        const uniqueModules = [];
+        let foundFirst = false;
+        for (const module of state.placedModules) {
+          if (module.id === id) {
+            if (!foundFirst) {
+              uniqueModules.push({ ...module, ...updates });
+              foundFirst = true;
+            }
+          } else {
+            uniqueModules.push(module);
+          }
+        }
+        return { placedModules: uniqueModules };
+      }
+      
+      return {
+        placedModules: state.placedModules.map(module => 
+          module.id === id 
+            ? { ...module, ...updates } 
+            : module
+        )
+      };
+    });
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)

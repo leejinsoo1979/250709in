@@ -6,8 +6,6 @@ import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
-import BackPanelBetweenCabinets from './BackPanelBetweenCabinets';
-import UpperCabinetIndirectLight from './UpperCabinetIndirectLight';
 
 interface PlacedFurnitureContainerProps {
   viewMode: '2D' | '3D';
@@ -15,8 +13,6 @@ interface PlacedFurnitureContainerProps {
   renderMode: 'solid' | 'wireframe';
   placedModules?: any[];
   activeZone?: 'normal' | 'dropped';
-  showFurniture?: boolean; // 가구 표시 여부 추가
-  isReadOnly?: boolean; // 읽기 전용 모드 (미리보기용)
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -24,20 +20,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   view2DDirection,
   renderMode,
   placedModules: propPlacedModules,
-  activeZone,
-  showFurniture = true, // 기본값 true
-  isReadOnly = false // 읽기 전용 모드
+  activeZone
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  
-  // spaceInfo 변경 감지 디버그
-  React.useEffect(() => {
-    console.log('🎯 PlacedFurnitureContainer - spaceInfo 변경:', {
-      baseConfig: spaceInfo?.baseConfig,
-      placementType: spaceInfo?.baseConfig?.placementType,
-      floatHeight: spaceInfo?.baseConfig?.floatHeight
-    });
-  }, [spaceInfo?.baseConfig?.placementType, spaceInfo?.baseConfig?.floatHeight]);
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
   // activeZone 필터링 제거 - 모든 가구 표시
   const placedModules = propPlacedModules || storePlacedModules;
@@ -58,20 +43,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     });
   }, [activeZone]);
   
-  // placedModules 변경 감지
-  React.useEffect(() => {
-    console.log('📦📦📦 PlacedFurnitureContainer - placedModules 변경:', {
-      count: placedModules.length,
-      modules: placedModules.map(m => ({
-        id: m.id,
-        moduleId: m.moduleId,
-        position: m.position,
-        slotIndex: m.slotIndex,
-        zone: m.zone
-      }))
-    });
-  }, [placedModules]);
-  
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -81,52 +52,28 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
   
   // 받침대 설정에 따른 가구 시작 높이 계산
-  // 바닥마감재 높이도 고려해야 함
   let furnitureStartY: number;
   
   if (!spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor') {
-    // 받침대 있음: 바닥마감재 + 받침대 높이
+    // 받침대 있음: 바닥재 + 받침대 높이
     furnitureStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameHeightMm);
   } else if (spaceInfo.baseConfig.type === 'stand') {
     // 받침대 없음
     if (spaceInfo.baseConfig.placementType === 'float') {
-      // 띄워서 배치: 바닥마감재 + 띄움 높이
+      // 띄워서 배치: 바닥재 + 띄움 높이
       const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
       furnitureStartY = mmToThreeUnits(floorFinishHeightMm + floatHeightMm);
-      console.log('🔥 띄워서 배치 Y 위치 계산:', {
-        placementType: spaceInfo.baseConfig.placementType,
-        floorFinishHeightMm,
-        floatHeightMm,
-        totalHeightMm: floorFinishHeightMm + floatHeightMm,
-        furnitureStartY
-      });
     } else {
-      // 바닥에 배치: 바닥마감재 높이만
+      // 바닥에 배치: 바닥재만
       furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
     }
   } else {
-    // 기본값: 0
-    furnitureStartY = 0;
+    // 기본값: 바닥재만
+    furnitureStartY = mmToThreeUnits(floorFinishHeightMm);
   }
-  
-  // furnitureStartY 디버깅
-  console.log('📍📍📍 PlacedFurnitureContainer - furnitureStartY 계산:', {
-    baseConfig: spaceInfo.baseConfig,
-    floorFinishHeightMm,
-    baseFrameHeightMm,
-    furnitureStartY,
-    furnitureStartY_mm: furnitureStartY / 0.01,
-    설명: '하부장 시작 Y 위치'
-  });
 
   // 커스텀 훅들 사용 - 조건부 호출 제거
   const isViewerOnly = !!propPlacedModules;
-  
-  console.log('🎮 PlacedFurnitureContainer 모드:', {
-    isViewerOnly,
-    propPlacedModules: !!propPlacedModules,
-    propPlacedModulesLength: propPlacedModules?.length
-  });
   
   // 항상 훅을 호출하되, 결과를 조건부로 사용
   const selectionStateFromHook = useFurnitureSelection();
@@ -151,31 +98,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   return (
     <group>
-      {/* 상부장 간접조명 렌더링 (연속된 하나의 조명) */}
-      {spaceInfo && (
-        <UpperCabinetIndirectLight 
-          placedModules={placedModules}
-          spaceInfo={spaceInfo}
-        />
-      )}
-      
-      {/* 상하부장 사이의 백패널 렌더링 */}
-      {spaceInfo && (
-        <BackPanelBetweenCabinets 
-          placedModules={placedModules}
-          spaceInfo={spaceInfo}
-        />
-      )}
-      
-      {/* 간접조명 - 상부장과 띄워서 배치 모두 통합 렌더링 */}
-      {viewMode === '3D' && spaceInfo && (
-        <UpperCabinetIndirectLight 
-          placedModules={placedModules}
-          spaceInfo={spaceInfo}
-        />
-      )}
-      
-      {/* 개별 가구 렌더링 */}
       {placedModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
@@ -183,7 +105,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
         return (
           <FurnitureItem
-            key={`${placedModule.id}-${JSON.stringify(spaceInfo.baseConfig)}-${JSON.stringify(spaceInfo.droppedCeiling)}-${placedModule.zone}-${JSON.stringify(spaceInfo.frameSize)}-${spaceInfo.surroundType}-${spaceInfo.installType}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}-${(placedModule as any)._lastYUpdate || 0}`}
+            key={`${placedModule.id}-${spaceInfo.columns?.map(c => `${c.id}-${c.position[0]}`).join('-') || 'no-columns'}`}
             placedModule={placedModule}
             placedModules={placedModules}
             spaceInfo={spaceInfo}
@@ -198,8 +120,6 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             onPointerMove={dragHandlers.handlePointerMove}
             onPointerUp={dragHandlers.handlePointerUp}
             onDoubleClick={selectionState.handleFurnitureClick}
-            showFurniture={showFurniture} // 가구 표시 여부 전달
-            isReadOnly={isReadOnly} // 읽기 전용 모드 전달
           />
         );
       })}
