@@ -1119,10 +1119,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 };
 
 interface ModuleGalleryProps {
-  moduleCategory?: 'tall' | 'upper' | 'lower';
+  moduleCategory?: 'tall' | 'upper' | 'lower' | 'upperlower';
+  upperLowerTab?: 'upper' | 'lower';
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', upperLowerTab = 'upper' }) => {
   const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('all');
