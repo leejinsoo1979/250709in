@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
 import { Column, Wall, PanelB } from '@/types/space';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -253,8 +254,35 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         };
       }
       
+      // 임시 spaceInfo 생성
+      let tempSpaceInfo = { ...state.spaceInfo, ...processedInfo };
+      
+      // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
+      const shouldAdjust = 
+        processedInfo.width !== undefined ||
+        processedInfo.customColumnCount !== undefined ||
+        processedInfo.installType !== undefined ||
+        processedInfo.surroundType !== undefined ||
+        processedInfo.wallConfig !== undefined;
+      
+      if (shouldAdjust) {
+        const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
+        
+        if (adjustmentResult.adjustmentMade) {
+          // 조정된 값을 tempSpaceInfo에 반영
+          tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+          
+          console.log('🎯 슬롯 정수화 자동 조정 완료:', {
+            슬롯너비: adjustmentResult.slotWidth,
+            프레임크기: tempSpaceInfo.frameSize,
+            이격거리: tempSpaceInfo.gapConfig,
+            조정여부: adjustmentResult.adjustmentMade
+          });
+        }
+      }
+      
       const newState = {
-        spaceInfo: { ...state.spaceInfo, ...processedInfo },
+        spaceInfo: tempSpaceInfo,
         isDirty: true,
       };
       

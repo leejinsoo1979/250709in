@@ -434,23 +434,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 문 높이 계산 ===
-  // 문 높이 = 전체 공간 높이 - 바닥재 높이 (내경 공간 높이)
-  let fullSpaceHeight = spaceInfo.height;
+  // 상부장/하부장인지 확인
+  const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
+  const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet');
   
-  // 단내림 구간인 경우 높이 조정
-  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-    const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-    fullSpaceHeight = spaceInfo.height - dropHeight;
-    console.log('🚪📏 단내림 도어 높이 조정:', {
-      originalHeight: spaceInfo.height,
-      dropHeight,
-      adjustedHeight: fullSpaceHeight,
-      zone: (spaceInfo as any).zone
+  let actualDoorHeight: number;
+  
+  if (isUpperCabinet || isLowerCabinet) {
+    // 상하부장의 경우 모듈 높이 사용
+    actualDoorHeight = moduleData?.dimensions?.height || 600; // 기본값 600mm
+    console.log('🚪📏 상하부장 도어 높이:', {
+      moduleId: moduleData?.id,
+      moduleHeight: moduleData?.dimensions?.height,
+      actualDoorHeight,
+      type: isUpperCabinet ? '상부장' : '하부장'
     });
+  } else {
+    // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
+    let fullSpaceHeight = spaceInfo.height;
+    
+    // 단내림 구간인 경우 높이 조정
+    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+      fullSpaceHeight = spaceInfo.height - dropHeight;
+      console.log('🚪📏 단내림 도어 높이 조정:', {
+        originalHeight: spaceInfo.height,
+        dropHeight,
+        adjustedHeight: fullSpaceHeight,
+        zone: (spaceInfo as any).zone
+      });
+    }
+    
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+    actualDoorHeight = fullSpaceHeight - floorHeight;
   }
   
-  const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-  const actualDoorHeight = fullSpaceHeight - floorHeight;
   const doorHeight = mmToThreeUnits(actualDoorHeight - 30); // 30mm 줄임 (기존 20mm에서 10mm 추가)
   
   // === 문 Y 위치 계산 (기존 작동하던 로직으로 복원) ===

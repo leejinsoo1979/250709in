@@ -64,7 +64,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
 
   const handleInputBlur = (side: 'left' | 'right') => {
     const value = side === 'left' ? leftGap : rightGap;
-    const clampedValue = Math.max(0, Math.min(50, value)); // 0-50mm 범위로 제한
+    const clampedValue = Math.max(2, Math.min(5, value)); // 2-5mm 범위로 제한
     
     if (side === 'left') {
       setLeftGap(clampedValue);
@@ -79,7 +79,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
     <div className={styles.configSection}>
       <div className={styles.sectionHeader}>
         <span className={styles.sectionDot}></span>
-        <h3 className={styles.sectionTitle}>이격거리 설정</h3>
+        <h3 className={styles.sectionTitle}>이격거리 설정 (2-5mm)</h3>
       </div>
       
       <div className={styles.content}>
@@ -96,7 +96,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 disabled={!hasLeftWall}
                 onClick={() => {
                   if (hasLeftWall) {
-                    const newValue = Math.max(0, leftGap - 1);
+                    const newValue = Math.max(2, leftGap - 1);
                     setLeftGap(newValue);
                     updateGap('left', newValue);
                   }
@@ -110,8 +110,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 onChange={(e) => hasLeftWall && handleInputChange('left', e.target.value)}
                 onBlur={() => hasLeftWall && handleInputBlur('left')}
                 className={styles.gapInput}
-                min="0"
-                max="50"
+                min="2"
+                max="5"
                 disabled={!hasLeftWall}
               />
               <button 
@@ -119,7 +119,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 disabled={!hasLeftWall}
                 onClick={() => {
                   if (hasLeftWall) {
-                    const newValue = Math.min(50, leftGap + 1);
+                    const newValue = Math.min(5, leftGap + 1);
                     setLeftGap(newValue);
                     updateGap('left', newValue);
                   }
@@ -142,7 +142,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 disabled={!hasRightWall}
                 onClick={() => {
                   if (hasRightWall) {
-                    const newValue = Math.max(0, rightGap - 1);
+                    const newValue = Math.max(2, rightGap - 1);
                     setRightGap(newValue);
                     updateGap('right', newValue);
                   }
@@ -156,8 +156,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 onChange={(e) => hasRightWall && handleInputChange('right', e.target.value)}
                 onBlur={() => hasRightWall && handleInputBlur('right')}
                 className={styles.gapInput}
-                min="0"
-                max="50"
+                min="2"
+                max="5"
                 disabled={!hasRightWall}
               />
               <button 
@@ -165,7 +165,7 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
                 disabled={!hasRightWall}
                 onClick={() => {
                   if (hasRightWall) {
-                    const newValue = Math.min(50, rightGap + 1);
+                    const newValue = Math.min(5, rightGap + 1);
                     setRightGap(newValue);
                     updateGap('right', newValue);
                   }
