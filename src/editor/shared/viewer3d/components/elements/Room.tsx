@@ -2252,7 +2252,7 @@ const Room: React.FC<RoomProps> = ({
                 );
               });
             });
-          })()}
+          })}
         </>
       )}
       
