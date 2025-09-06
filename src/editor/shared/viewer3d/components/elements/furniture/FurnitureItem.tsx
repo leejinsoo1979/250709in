@@ -992,9 +992,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id]);
 
   return (
-    <group>
+    <group userData={{ furnitureId: placedModule.id }}>
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
       <group
+        userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
           adjustedPosition.x + positionAdjustmentForEndPanel,
           furnitureStartY + height / 2, // 내경 바닥 높이 + 가구 높이의 절반
@@ -1259,6 +1260,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         return true;
       })() && (
         <group
+          userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
             originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
             furnitureStartY + height / 2, // 가구와 동일한 Y 위치

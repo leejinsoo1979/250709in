@@ -94,6 +94,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   // 키보드 이벤트 훅 - 항상 호출
   useFurnitureKeyboard({ spaceInfo });
   
+  // 드래그 중인 모듈 ID 추적 (중복 렌더링 방지용)
+  const [lastDraggedId, setLastDraggedId] = React.useState<string | null>(null);
+  
   // viewer 모드에 따라 실제 사용할 값 결정
   const selectionState = !isViewerOnly 
     ? selectionStateFromHook 
@@ -107,6 +110,30 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         handlePointerUp: () => {},
         draggingModuleId: null
       };
+
+  // 이전 렌더링 상태 추적하여 중복 방지
+  const prevModuleIdsRef = React.useRef<Set<string>>(new Set());
+  
+  React.useEffect(() => {
+    const currentIds = new Set(placedModules.map(m => m.id));
+    const prevIds = prevModuleIdsRef.current;
+    
+    // 추가된 가구
+    const addedIds = Array.from(currentIds).filter(id => !prevIds.has(id));
+    // 제거된 가구
+    const removedIds = Array.from(prevIds).filter(id => !currentIds.has(id));
+    
+    if (addedIds.length > 0 || removedIds.length > 0) {
+      console.log('🔄 PlacedFurnitureContainer - 가구 변경 감지:', {
+        추가: addedIds,
+        제거: removedIds,
+        현재개수: currentIds.size,
+        이전개수: prevIds.size
+      });
+    }
+    
+    prevModuleIdsRef.current = currentIds;
+  }, [placedModules]);
 
   console.log('🔥🔥 PlacedFurnitureContainer 렌더링 시작:', {
     가구개수: placedModules.length,

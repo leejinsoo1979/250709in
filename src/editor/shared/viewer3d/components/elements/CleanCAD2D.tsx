@@ -3194,6 +3194,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   anchorY="middle"
                   rotation={[-Math.PI / 2, 0, 0]}
                   renderOrder={1000}
+                  depthTest={false}
                 >
                   {leftValue}
                 </Text>
