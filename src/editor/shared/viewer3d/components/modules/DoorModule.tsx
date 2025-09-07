@@ -441,17 +441,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷과 같은 크기로, 천장과 5mm 간격 유지
+    // 상부장 도어는 캐비넷 높이에서 위쪽 5mm 줄여서 천장과 간격 유지
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
+    const topGap = 5; // 천장과 5mm 간격
     
-    // 상부장 도어 높이 = 캐비넷 높이와 동일
-    actualDoorHeight = upperCabinetHeight;
+    // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격
+    actualDoorHeight = upperCabinetHeight - topGap;
     
     console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
+      천장간격: topGap,
       도어높이: actualDoorHeight,
-      설명: '캐비넷과 동일한 높이 (천장과 5mm 간격은 캐비넷 위치로 조정)'
+      설명: '캐비넷 높이에서 위쪽 5mm 줄임 (천장과 간격)'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -490,13 +492,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 중심과 동일 (캐비넷 자체가 천장에서 5mm 떨어진 위치)
-    doorYPosition = 0;
+    // 상부장 도어는 위쪽 5mm 간격으로 인해 중심이 아래로 이동
+    const topGap = 5; // 천장과 5mm 간격
+    
+    // 도어 중심 = -topGap/2 (아래로 2.5mm)
+    doorYPosition = -mmToThreeUnits(topGap / 2);
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
+      천장간격: topGap,
       doorYPosition,
-      설명: '캐비넷 중심과 동일 (캐비넷이 천장에서 5mm 떨어진 위치)'
+      설명: '위쪽 5mm 간격으로 인해 중심이 2.5mm 아래로'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
