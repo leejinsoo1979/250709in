@@ -494,33 +494,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 상단 기준으로 위치 계산
+    // 상부장 도어는 천장에서 5mm 떨어진 위치에 배치 (키큰장과 상단 정렬)
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const topExtension = 10; // 위로 확장 (양수: 확장, 음수: 축소)
-    const bottomExtension = 40; // 아래로 확장 (양수: 확장, 음수: 축소)
+    const topGapFromCeiling = 5; // 천장에서 5mm 간격
     
-    // 도어 높이 (위에서 이미 계산됨)
-    const doorHeightMm = upperCabinetHeight + topExtension + bottomExtension;
+    // 상부장 도어 높이 계산을 위한 변수 (위에서 이미 계산된 actualDoorHeight 사용)
+    const doorHeightMm = actualDoorHeight;
     
-    // 캐비넷 상단 = 캐비넷 중심 + 캐비넷 높이/2
-    // 도어 상단 = 캐비넷 상단 + topExtension
+    // 천장 위치를 기준으로 계산
+    // 내부 공간 높이의 절반이 천장 위치 (Three.js 좌표계에서)
+    const internalSpaceHeight = spaceInfo.height - (spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0);
+    const ceilingPosition = internalSpaceHeight / 2;
+    
+    // 도어 상단 = 천장 - topGapFromCeiling
+    const doorTop = ceilingPosition - topGapFromCeiling;
     // 도어 중심 = 도어 상단 - 도어 높이/2
-    const cabinetTop = upperCabinetHeight / 2;
-    const doorTop = cabinetTop + topExtension;
     const doorCenter = doorTop - doorHeightMm / 2;
     
     // 캐비넷 중심(0)에서 도어 중심까지의 거리
     doorYPosition = mmToThreeUnits(doorCenter);
     
-    console.log('🚪🔴 상부장 도어 Y 위치 (상단 기준):', {
+    console.log('🚪🔴 상부장 도어 Y 위치 (천장 기준):', {
       moduleId: moduleData?.id,
-      캐비넷높이: upperCabinetHeight,
-      캐비넷상단: cabinetTop,
+      내부공간높이: internalSpaceHeight,
+      천장위치: ceilingPosition,
+      천장간격: topGapFromCeiling,
       도어상단: doorTop,
       도어높이: doorHeightMm,
       도어중심: doorCenter,
       doorYPosition,
-      설명: '상부장 도어는 캐비넷 상단 기준으로 배치'
+      설명: '천장에서 5mm 떨어진 위치 (키큰장과 상단 정렬)'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
