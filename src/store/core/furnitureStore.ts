@@ -112,9 +112,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       
       if (existingModulesInSlot.length > 0) {
         // 상부장과 하부장이 공존할 수 있는지 체크
-        let canCoexist = false;
         let moduleToReplace = null;
         
+        // 모든 기존 가구와 공존 가능한지 확인
         for (const existing of existingModulesInSlot) {
           const existingModuleData = getModuleById(existing.moduleId, undefined, undefined);
           const existingCategory = existingModuleData?.category;
@@ -122,7 +122,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 상부장-하부장 조합인지 확인
           if ((newCategory === 'upper' && existingCategory === 'lower') ||
               (newCategory === 'lower' && existingCategory === 'upper')) {
-            canCoexist = true;
+            // 공존 가능 - 계속 진행
             console.log('✅ 상부장과 하부장 공존 가능:', {
               새가구: { id: module.id, category: newCategory },
               기존가구: { id: existing.id, category: existingCategory }
@@ -134,15 +134,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               새가구: { id: module.id, category: newCategory },
               기존가구: { id: existing.id, category: existingCategory }
             });
+            break; // 교체가 필요하면 더 이상 확인할 필요 없음
           }
-        }
-        
-        // 공존 가능하면 추가
-        if (canCoexist && !moduleToReplace) {
-          console.log('✅ 가구 공존 추가');
-          return {
-            placedModules: [...state.placedModules, module]
-          };
         }
         
         // 교체가 필요한 경우
@@ -160,6 +153,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             )
           };
         }
+        
+        // 모든 기존 가구와 공존 가능하면 추가
+        console.log('✅ 가구 공존 추가');
+        return {
+          placedModules: [...state.placedModules, module]
+        };
       }
       
       console.log('✅ 가구 추가 완료:', {
