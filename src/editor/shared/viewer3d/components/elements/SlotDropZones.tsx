@@ -93,7 +93,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   }, [spaceInfo, columns, placedModules]);
 
   // 가구 충돌 감지 함수 (새 가구 배치용)
-  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false) => {
+  const detectNewFurnitureCollisions = React.useCallback((newSlotIndex: number, isDualFurniture: boolean, zone: 'normal' | 'dropped' = 'normal', skipColumnC: boolean = false, newModuleId?: string) => {
     // Column C 슬롯인 경우 충돌 검사 건너뛰기
     if (skipColumnC) {
       const slotInfo = columnSlots[newSlotIndex];
@@ -101,6 +101,13 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         console.log('🔵 Column C 슬롯 - 충돌 검사 건너뛰기');
         return []; // Column C는 2개 가구 배치 가능
       }
+    }
+    
+    // 새 가구의 카테고리 확인
+    let newCategory: string | undefined;
+    if (newModuleId) {
+      const newModuleData = getModuleById(newModuleId, internalSpace, spaceInfo);
+      newCategory = newModuleData?.category;
     }
     
     // 새 가구가 차지할 슬롯들 계산

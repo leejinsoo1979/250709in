@@ -460,17 +460,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 키큰장과 동일한 하단 위치를 가지도록 설정
-    // 하부장 높이(1000mm) + 바닥재 높이만큼 도어 높이 설정
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    actualDoorHeight = (moduleData?.dimensions?.height || 1000) + floorHeight;
+    // 하부장 도어는 정확히 1000mm 높이
+    actualDoorHeight = 1000;
     console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
-      moduleHeight: moduleData?.dimensions?.height,
-      floorHeight,
       actualDoorHeight,
       type: '하부장',
-      설명: '바닥부터 하부장 상단까지'
+      설명: '고정 1000mm'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
@@ -526,22 +522,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 바닥부터 시작해야 함 (키큰장과 동일)
-    // 하부장 높이가 1000mm이고, 중심이 바닥+500mm 위치에 있음
-    // 도어는 바닥부터 시작하므로 중심을 하부장 높이의 절반만큼 아래로 조정
-    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    
-    // 도어 중심 = (바닥재 높이 + 하부장 높이) / 2
-    doorYPosition = mmToThreeUnits((floorHeight + lowerCabinetHeight) / 2 - lowerCabinetHeight / 2);
+    // 하부장 도어 Y 위치는 하부장 중심과 동일
+    doorYPosition = 0;
     
     console.log('🚪📍 하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
-      lowerCabinetHeight,
-      floorHeight,
       doorYPosition,
       type: '하부장',
-      설명: '바닥부터 시작 (키큰장과 동일한 하단)'
+      설명: '하부장 중심과 동일'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
