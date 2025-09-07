@@ -534,70 +534,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     placedModulePosition: placedModule.position
   });
   
-  // 노서라운드 모드에서 엔드패널 옆 캐비넷 처리
-  // 키큰장: 벽이 있는 쪽 엔드패널 옆에서는 너비 유지(18mm 이격), 벽이 없는 쪽에서는 18mm 축소
-  // 상하부장과 인접한 키큰장은 이미 위에서 처리됨 (needsEndPanelAdjustment)
-  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined && !needsEndPanelAdjustment) {
+  // 노서라운드 모드에서 엔드패널 처리
+  // ColumnIndexer에서 이미 슬롯 너비를 조정했으므로, 여기서는 추가 조정하지 않음
+  // 슬롯 너비가 이미 엔드패널을 고려하여 계산되어 있음
+  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     
-    if (spaceInfo.installType === 'freestanding') {
-      // 벽없음(freestanding): 모든 캐비넷이 엔드패널과 딱 맞게 18mm 축소
-      // 키큰장도 상하부장도 동일하게 처리
-      if (isFirstSlotNoSurround) {
-        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-        // 첫번째 슬롯: 캐비넷이 줄어든 후 위치 조정
-        // 캐비넷이 줄어든 절반(9mm)만큼 오른쪽으로 이동
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-        console.log('🔧 노서라운드 엔드패널 조정 (첫번째):', {
-          moduleType: isTallCabinet ? '키큰장' : '상하부장',
-          originalWidth: furnitureWidthMm,
-          adjustedWidth: adjustedWidthForEndPanel,
-          설명: '엔드패널에 맞춤'
-        });
-        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
-      } else if (isLastSlotNoSurround) {
-        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-        // 마지막 슬롯: 캐비넷이 줄어든 후 위치 조정
-        // 캐비넷이 줄어든 절반(9mm)만큼 왼쪽으로 이동
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-        console.log('🔧 노서라운드 엔드패널 조정 (마지막):', {
-          moduleType: isTallCabinet ? '키큰장' : '상하부장',
-          originalWidth: furnitureWidthMm,
-          adjustedWidth: adjustedWidthForEndPanel,
-          설명: '엔드패널에 맞춤'
-        });
-        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
-      }
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽이 없는 쪽만 엔드패널에 맞게 조정
-      // 키큰장도 상하부장도 동일하게 처리 (벽없는 쪽은 엔드패널과 딱 맞게)
-      if (spaceInfo.wallConfig?.left && isLastSlotNoSurround) {
-        // 왼쪽 벽이 있고 오른쪽 끝 슬롯 (오른쪽에 엔드패널)
-        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-        console.log('🔧 노서라운드 엔드패널 조정 (오른쪽):', {
-          moduleType: isTallCabinet ? '키큰장' : '상하부장',
-          originalWidth: furnitureWidthMm,
-          adjustedWidth: adjustedWidthForEndPanel,
-          설명: '엔드패널에 맞춤'
-        });
-        furnitureWidthMm = adjustedWidthForEndPanel;
-      } else if (spaceInfo.wallConfig?.right && isFirstSlotNoSurround) {
-        // 오른쪽 벽이 있고 왼쪽 첫 슬롯 (왼쪽에 엔드패널)
-        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-        console.log('🔧 노서라운드 엔드패널 조정 (왼쪽):', {
-          moduleType: isTallCabinet ? '키큰장' : '상하부장',
-          originalWidth: furnitureWidthMm,
-          adjustedWidth: adjustedWidthForEndPanel,
-          설명: '엔드패널에 맞춤'
-        });
-        furnitureWidthMm = adjustedWidthForEndPanel;
-      }
-      // 벽이 있는 쪽은 조정하지 않음 (벽에 바로 붙음)
-    }
-    // builtin은 양쪽 벽이 있으므로 조정 불필요
+    // 노서라운드 모드에서는 slotWidths가 이미 엔드패널을 고려하여 계산되어 있음
+    // FurnitureItem에서 추가로 조정하지 않음
+    console.log('📌 노서라운드 엔드패널 처리:', {
+      moduleType: isTallCabinet ? '키큰장' : '상하부장',
+      slotIndex: placedModule.slotIndex,
+      isFirstSlot: isFirstSlotNoSurround,
+      isLastSlot: isLastSlotNoSurround,
+      needsEndPanelAdjustment,
+      customWidth: placedModule.customWidth,
+      furnitureWidthMm,
+      slotWidth: indexing.slotWidths?.[placedModule.slotIndex],
+      설명: 'slotWidths에서 이미 엔드패널 고려됨, 추가 조정 없음'
+    });
   }
 
   // 디버깅용 로그 추가
