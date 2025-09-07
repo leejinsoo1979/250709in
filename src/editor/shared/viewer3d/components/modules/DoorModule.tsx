@@ -495,15 +495,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   if (isUpperCabinet) {
     // 상부장 도어는 위에서 15mm, 아래에서 12mm 줄어들므로
-    // 도어 중심을 위로 이동: (15 - 12) / 2 = 1.5mm
-    const yOffset = (15 - 12) / 2; // 1.5mm 위로
-    doorYPosition = mmToThreeUnits(yOffset); // 양수로 위 방향
+    // 캐비넷 중심에서 도어 중심이 이동: (아래 축소 - 위 축소) / 2 = (12 - 15) / 2 = -1.5mm
+    const yOffset = (12 - 15) / 2; // -1.5mm (아래로)
+    doorYPosition = mmToThreeUnits(yOffset);
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition,
       yOffsetMm: yOffset,
-      설명: '축소된 도어의 중심 위치 (1.5mm 위로)'
+      설명: '도어 중심이 캐비넷 중심보다 1.5mm 아래'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
