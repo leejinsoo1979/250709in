@@ -491,24 +491,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let adjustedWidthForEndPanel = furnitureWidthMm;
   let positionAdjustmentForEndPanel = 0; // 위치 조정값
   
-  // 키큰장/듀얼 캐비넷이 상하부장과 인접했을 때 너비 조정
+  // 키큰장/듀얼 캐비넷이 상하부장과 인접했을 때 - 너비 조정 없음, 도어가 커버
   if (needsEndPanelAdjustment && endPanelSide) {
-    const endPanelCount = endPanelSide === 'both' ? 2 : 1;
-    adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * endPanelCount);
+    // 너비 조정 없음 - 도어가 엔드패널을 커버하는 방식
+    // adjustedWidthForEndPanel과 positionAdjustmentForEndPanel 모두 그대로 유지
     
-    // 위치 조정 없음 - 도어가 엔드패널을 커버하는 방식
-    // positionAdjustmentForEndPanel = 0 유지
-    
-    console.log('🎯 키큰장 엔드패널 조정 (커버도어):', {
+    console.log('🎯 키큰장이 상하부장과 인접 (커버도어):', {
       moduleId: placedModule.moduleId,
       originalWidth: furnitureWidthMm,
-      adjustedWidth: adjustedWidthForEndPanel,
       endPanelSide,
-      endPanelCount,
-      설명: '도어가 엔드패널을 커버하는 방식, 위치 조정 없음'
+      설명: '너비/위치 조정 없음, 도어가 엔드패널을 커버'
     });
-    
-    furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
   }
   
   console.log('🔍 노서라운드 조정 전 상태:', {

@@ -445,17 +445,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상부장이 천장에서 600mm 아래까지 있으므로
     // 도어는 천장부터 상부장 하단까지 = spaceInfo.height에서 상부장 아래 공간을 뺀 높이
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
+    const bottomFinishingPanel = 18; // 상부장 하단 마감패널 두께 18mm
     const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     
-    // 상부장 도어 높이 = 전체 높이 - 바닥재 - (전체 높이 - 바닥재 - 상부장 높이)
-    // = 상부장 높이
-    actualDoorHeight = upperCabinetHeight;
+    // 상부장 도어 높이 = 상부장 캐비넷 높이 - 하단 마감패널 두께
+    actualDoorHeight = upperCabinetHeight - bottomFinishingPanel;
     
     console.log('🚪🔴 상부장 도어 높이:', {
       moduleId: moduleData?.id,
       상부장높이: upperCabinetHeight,
+      하단마감패널: bottomFinishingPanel,
       actualDoorHeight,
-      설명: '상부장 캐비넷 높이와 동일'
+      설명: '상부장 캐비넷 높이 - 하단 마감패널(18mm)'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
