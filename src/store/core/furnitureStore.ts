@@ -77,6 +77,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   addModule: (module: PlacedModule) => {
     console.log('🟢 addModule 호출:', {
       id: module.id,
+      moduleId: module.moduleId,
       position: {
         x: module.position.x.toFixed(3),
         y: module.position.y.toFixed(3),
@@ -86,8 +87,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       customWidth: module.customWidth,
       adjustedWidth: module.adjustedWidth,
       slotIndex: module.slotIndex,
+      zone: module.zone,
       isSplit: module.isSplit,
-      spaceType: module.columnSlotInfo?.spaceType
+      spaceType: module.columnSlotInfo?.spaceType,
+      callStack: new Error().stack?.split('\n').slice(1, 5).join('\n')
     });
     
     set((state) => {
@@ -214,15 +217,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
+    const currentModule = get().placedModules.find(m => m.id === id);
     console.log('📦 updatePlacedModule 호출:', {
       id,
-      updates,
-      hasPosition: !!updates.position,
-      position: updates.position,
-      슬롯변경: updates.slotIndex,
-      zone변경: updates.zone,
+      현재모듈: currentModule ? {
+        moduleId: currentModule.moduleId,
+        슬롯: currentModule.slotIndex,
+        zone: currentModule.zone
+      } : null,
+      업데이트: {
+        ...updates,
+        position: updates.position,
+        슬롯변경: updates.slotIndex,
+        zone변경: updates.zone,
+      },
       현재가구수: get().placedModules.length,
-      현재가구IDs: get().placedModules.map(m => m.id)
+      현재가구IDs: get().placedModules.map(m => ({ id: m.id, slot: m.slotIndex, zone: m.zone }))
     });
     
     set((state) => {

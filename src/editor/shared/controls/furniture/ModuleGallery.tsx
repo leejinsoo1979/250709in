@@ -1111,6 +1111,12 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       
       try {
         console.log('🎯 Calling addModule with:', JSON.stringify(newModule));
+        console.log('🚨🚨🚨 [CRITICAL] addModule 호출 직전 - 하부장 체크:', {
+          isLowerCabinet: module.category === 'lower',
+          moduleCategory: module.category,
+          timestamp: Date.now(),
+          callStack: new Error().stack
+        });
         addModule(newModule);
         console.log('✅ [ModuleGallery] Module added successfully');
         
