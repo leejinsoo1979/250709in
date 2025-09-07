@@ -494,19 +494,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어가 확장/축소될 때 중심 이동 계산
+    // 상부장 도어는 캐비넷 상단 기준으로 위치 계산
+    const upperCabinetHeight = moduleData?.dimensions?.height || 600;
     const topExtension = 10; // 위로 확장 (양수: 확장, 음수: 축소)
     const bottomExtension = 40; // 아래로 확장 (양수: 확장, 음수: 축소)
     
-    // 도어 중심 이동 = (아래 확장 - 위 확장) / 2
-    const yOffset = (bottomExtension - topExtension) / 2; // 15mm 아래로
-    doorYPosition = -mmToThreeUnits(yOffset); // 음수로 아래 방향
+    // 도어 높이 (위에서 이미 계산됨)
+    const doorHeightMm = upperCabinetHeight + topExtension + bottomExtension;
     
-    console.log('🚪🔴 상부장 도어 Y 위치:', {
+    // 캐비넷 상단 = 캐비넷 중심 + 캐비넷 높이/2
+    // 도어 상단 = 캐비넷 상단 + topExtension
+    // 도어 중심 = 도어 상단 - 도어 높이/2
+    const cabinetTop = upperCabinetHeight / 2;
+    const doorTop = cabinetTop + topExtension;
+    const doorCenter = doorTop - doorHeightMm / 2;
+    
+    // 캐비넷 중심(0)에서 도어 중심까지의 거리
+    doorYPosition = mmToThreeUnits(doorCenter);
+    
+    console.log('🚪🔴 상부장 도어 Y 위치 (상단 기준):', {
       moduleId: moduleData?.id,
+      캐비넷높이: upperCabinetHeight,
+      캐비넷상단: cabinetTop,
+      도어상단: doorTop,
+      도어높이: doorHeightMm,
+      도어중심: doorCenter,
       doorYPosition,
-      yOffsetMm: yOffset,
-      설명: `도어 중심이 캐비넷 중심보다 ${yOffset}mm 아래로 이동`
+      설명: '상부장 도어는 캐비넷 상단 기준으로 배치'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
