@@ -614,21 +614,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedPosition = { ...placedModule.position };
   }
   
-  // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 매우 중요!
+  // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 상부프레임에 붙이기!
   const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
                          placedModule.moduleId?.includes('dual-upper-cabinet');
   
   if (isUpperCabinet) {
-    // 상부장은 무조건 1400mm 높이에 위치
-    const UPPER_CABINET_Y = 14; // 1400mm in Three.js units
+    // 상부장은 상부프레임(천장)에 붙어야 함
+    // 내경 공간 높이 - 상부장 높이 = 상부장 하단 Y 위치
+    const internalSpaceHeight = internalSpace.height; // mm 단위
+    const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이 (600mm)
+    const upperCabinetBottomY = (internalSpaceHeight - upperCabinetHeight) * 0.01; // mm to Three.js units
+    
     adjustedPosition = {
       ...adjustedPosition,
-      y: UPPER_CABINET_Y
+      y: furnitureStartY + upperCabinetBottomY
     };
-    console.log('🔴🔴🔴 상부장 Y 위치 강제 설정!:', {
+    
+    console.log('🔴🔴🔴 상부장을 상부프레임에 붙이기!:', {
       moduleId: placedModule.moduleId,
-      강제Y위치: UPPER_CABINET_Y,
-      설명: '상부장은 무조건 14 (1400mm) 높이'
+      내경높이: internalSpaceHeight,
+      상부장높이: upperCabinetHeight,
+      상부장하단Y: upperCabinetBottomY,
+      furnitureStartY,
+      최종Y: adjustedPosition.y,
+      설명: '상부장은 천장에 붙어야 함'
     });
   }
   
@@ -1185,15 +1194,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id, isEditMode]);
 
-  // 🔴🔴🔴 최종 Y 위치 강제 확인 및 수정
-  const finalYPosition = isUpperCabinet ? 14 : adjustedPosition.y;
+  // 🔴🔴🔴 최종 Y 위치 확인
+  const finalYPosition = adjustedPosition.y;
   
   if (isUpperCabinet) {
-    console.log('🔴🔴🔴 상부장 최종 렌더링 - Y 위치 강제!:', {
+    console.log('🔴🔴🔴 상부장 최종 렌더링 Y 위치:', {
       moduleId: placedModule.moduleId,
-      adjustedPositionY: adjustedPosition.y,
       finalYPosition: finalYPosition,
-      강제설정: '상부장은 무조건 Y=14'
+      설명: '상부장은 상부프레임에 붙어있음'
     });
   }
 
