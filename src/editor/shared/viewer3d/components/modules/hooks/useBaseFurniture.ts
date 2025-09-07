@@ -102,18 +102,23 @@ export const useBaseFurniture = (
   // 듀얼 가구 판별
   const isDualFurniture = moduleData.id.includes('dual');
   
-  if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
+  // adjustedWidth가 있으면 최우선 사용 (엔드패널이나 기둥 침범 시 조정된 너비)
+  if (adjustedWidth !== undefined) {
+    actualWidthMm = adjustedWidth;
+    console.log('🔧 조정된 너비 사용 (엔드패널/기둥):', {
+      moduleId: moduleData.id,
+      isDualFurniture,
+      adjustedWidth: adjustedWidth + 'mm',
+      설명: '엔드패널이나 기둥 침범으로 인한 너비 조정'
+    });
+  } else if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
     // 듀얼 가구이고 slotWidths가 제공된 경우: 두 슬롯 너비 합산
     actualWidthMm = slotWidths[0] + slotWidths[1];
     console.log('🔧 듀얼 가구 너비 계산 (slotWidths 합산):', {
       slot1: slotWidths[0],
       slot2: slotWidths[1],
-      total: actualWidthMm,
-      adjustedWidth: adjustedWidth ? `${adjustedWidth}mm (무시됨)` : 'undefined'
+      total: actualWidthMm
     });
-  } else if (adjustedWidth !== undefined) {
-    // adjustedWidth가 제공된 경우 사용
-    actualWidthMm = adjustedWidth;
   } else {
     // 기본값: 원래 모듈 너비 사용
     actualWidthMm = moduleData.dimensions.width;
