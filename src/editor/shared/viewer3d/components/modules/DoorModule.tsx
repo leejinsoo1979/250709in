@@ -440,34 +440,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   let actualDoorHeight: number;
   
-  if (isUpperCabinet) {
-    // 상부장 도어는 키큰장과 상단을 맞추기 위해 특별 계산
-    // 상부장이 천장에 붙어있고, 도어 상단이 키큰장과 맞아야 함
-    // 키큰장 도어 높이 = 전체 내경 높이 - 바닥재
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    const fullHeight = spaceInfo.height - floorHeight; // 키큰장 도어 높이
-    const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    
-    // 도어 높이를 키큰장과 맞추되, 상부장 높이보다 크면 상부장 높이 사용
-    actualDoorHeight = Math.min(fullHeight, upperCabinetHeight);
-    
-    console.log('🚪🔴 상부장 도어 특별 계산:', {
-      moduleId: moduleData?.id,
-      내경높이: spaceInfo.height,
-      바닥재높이: floorHeight,
-      키큰장도어높이: fullHeight,
-      상부장캐비넷높이: upperCabinetHeight,
-      최종도어높이: actualDoorHeight,
-      설명: '키큰장 도어 상단과 정렬'
-    });
-  } else if (isLowerCabinet) {
-    // 하부장의 경우 모듈 높이 사용
-    actualDoorHeight = moduleData?.dimensions?.height || 800; // 기본값 800mm
-    console.log('🚪📏 하부장 도어 높이:', {
+  if (isUpperCabinet || isLowerCabinet) {
+    // 상하부장의 경우 모듈 높이 사용
+    actualDoorHeight = moduleData?.dimensions?.height || 600; // 기본값 600mm
+    console.log('🚪📏 상하부장 도어 높이:', {
       moduleId: moduleData?.id,
       moduleHeight: moduleData?.dimensions?.height,
       actualDoorHeight,
-      type: '하부장'
+      type: isUpperCabinet ? '상부장' : '하부장'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
@@ -494,35 +474,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // === 문 Y 위치 계산 ===
   let doorYPosition: number;
   
-  if (isUpperCabinet) {
-    // 상부장 도어는 하단이 상부장 하부프레임과 맞아야 함
-    // 상부장 캐비넷 높이의 절반만큼 아래로 이동해야 도어 하단이 캐비넷 하단과 맞음
-    const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    const fullHeight = spaceInfo.height - floorHeight;
-    const doorHeightMm = Math.min(fullHeight, upperCabinetHeight) - 30; // 실제 도어 높이
-    
-    // 도어를 아래로 이동시켜 하단을 맞춤
-    // 상부장 캐비넷의 하단 = -upperCabinetHeight/2
-    // 도어의 하단 = doorYPosition - doorHeight/2
-    // 이 둘이 같아야 함: doorYPosition - doorHeight/2 = -upperCabinetHeight/2
-    // doorYPosition = doorHeight/2 - upperCabinetHeight/2
-    doorYPosition = mmToThreeUnits((doorHeightMm - upperCabinetHeight) / 2);
-    
-    console.log('🚪🔴 상부장 도어 Y 위치 특별 계산:', {
-      moduleId: moduleData?.id,
-      상부장높이: upperCabinetHeight,
-      도어높이: doorHeightMm,
-      doorYPosition,
-      설명: '도어 하단을 상부장 하단과 정렬'
-    });
-  } else if (isLowerCabinet) {
-    // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
+  if (isUpperCabinet || isLowerCabinet) {
+    // 상하부장의 경우 Y 위치는 0 (가구 중심과 동일)
     doorYPosition = 0;
-    console.log('🚪📍 하부장 도어 Y 위치:', {
+    console.log('🚪📍 상하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition: 0,
-      type: '하부장',
+      type: isUpperCabinet ? '상부장' : '하부장',
       note: '가구 중심과 동일'
     });
   } else {
