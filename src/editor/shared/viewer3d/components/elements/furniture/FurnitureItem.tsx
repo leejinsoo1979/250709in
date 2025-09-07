@@ -620,24 +620,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   if (isUpperCabinet) {
     // 상부장은 상부프레임(천장)에 붙어야 함
-    // 내경 공간 높이 - 상부장 높이 = 상부장 하단 Y 위치
-    const internalSpaceHeight = internalSpace.height; // mm 단위
+    const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
     const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이 (600mm)
-    const upperCabinetBottomY = (internalSpaceHeight - upperCabinetHeight) * 0.01; // mm to Three.js units
+    
+    // BoxModule은 중심 기준으로 렌더링되므로:
+    // 상부장 중심 Y = (내경 높이 - 상부장 높이/2) * 0.01
+    const upperCabinetCenterY = (internalSpaceHeight - upperCabinetHeight/2) * 0.01;
     
     adjustedPosition = {
       ...adjustedPosition,
-      y: furnitureStartY + upperCabinetBottomY
+      y: upperCabinetCenterY  // 절대 위치 사용 (furnitureStartY 더하지 않음)
     };
     
-    console.log('🔴🔴🔴 상부장을 상부프레임에 붙이기!:', {
+    console.log('🔴🔴🔴 상부장 천장 붙이기 계산:', {
       moduleId: placedModule.moduleId,
-      내경높이: internalSpaceHeight,
-      상부장높이: upperCabinetHeight,
-      상부장하단Y: upperCabinetBottomY,
-      furnitureStartY,
-      최종Y: adjustedPosition.y,
-      설명: '상부장은 천장에 붙어야 함'
+      내경높이_mm: internalSpaceHeight,
+      상부장높이_mm: upperCabinetHeight,
+      상부장중심Y_mm: internalSpaceHeight - upperCabinetHeight/2,
+      상부장중심Y_Three: upperCabinetCenterY,
+      furnitureStartY_비교용: furnitureStartY,
+      최종Y: adjustedPosition.y
     });
   }
   
