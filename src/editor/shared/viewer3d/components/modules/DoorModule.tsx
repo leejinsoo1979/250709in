@@ -531,14 +531,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어 Y 위치는 하부장 중심과 동일
-    doorYPosition = 0;
+    // 하부장 도어도 키큰장과 동일하게 바닥부터 시작
+    // 키큰장과 동일한 Y 위치 계산 로직 적용
+    if (spaceInfo.baseConfig?.type === 'floor') {
+      // 받침대 있음
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      doorYPosition = floorHeight > 0 
+        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
+        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+    } else {
+      // 받침대 없음
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+    }
     
     console.log('🚪📍 하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition,
       type: '하부장',
-      설명: '하부장 중심과 동일'
+      설명: '키큰장과 동일한 하단 라인'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
