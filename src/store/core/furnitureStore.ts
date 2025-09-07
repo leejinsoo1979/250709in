@@ -347,7 +347,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             if (canCoexist) {
               console.log('✅ 상부장과 하부장 공존 - 위치 업데이트:', {
                 슬롯: newSlotIndex,
-                이동가구: { id, category: targetCategory, zone: newZone }
+                이동가구: { id, category: targetCategory, zone: newZone },
+                기존가구유지: existingModulesInSlot.map(m => m.id)
               });
               
               const newModules = state.placedModules.map(module => 
