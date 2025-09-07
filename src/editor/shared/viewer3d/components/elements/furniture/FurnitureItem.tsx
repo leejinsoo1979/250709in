@@ -496,22 +496,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const endPanelCount = endPanelSide === 'both' ? 2 : 1;
     adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * endPanelCount);
     
-    // 위치 조정: 엔드패널이 한쪽에만 있으면 위치도 조정
-    // 키큰장이 줄어든 만큼의 절반을 이동
-    if (endPanelSide === 'left') {
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
-    } else if (endPanelSide === 'right') {
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
-    }
-    // both인 경우는 중앙 유지 (positionAdjustmentForEndPanel = 0)
+    // 위치 조정 없음 - 도어가 엔드패널을 커버하는 방식
+    // positionAdjustmentForEndPanel = 0 유지
     
-    console.log('🎯 키큰장 엔드패널 조정:', {
+    console.log('🎯 키큰장 엔드패널 조정 (커버도어):', {
       moduleId: placedModule.moduleId,
       originalWidth: furnitureWidthMm,
       adjustedWidth: adjustedWidthForEndPanel,
       endPanelSide,
       endPanelCount,
-      positionAdjustment: positionAdjustmentForEndPanel
+      설명: '도어가 엔드패널을 커버하는 방식, 위치 조정 없음'
     });
     
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
@@ -1549,16 +1543,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const endPanelXPositions = [];
         
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          // 왼쪽 엔드패널: 가구의 조정된 위치에서 계산
+          // 왼쪽 엔드패널: 가구의 원래 위치에서 계산
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel - adjustedHalfWidth - endPanelWidth/2,
+            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2,
             side: 'left'
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          // 오른쪽 엔드패널: 가구의 조정된 위치에서 계산
+          // 오른쪽 엔드패널: 가구의 원래 위치에서 계산
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel + adjustedHalfWidth + endPanelWidth/2,
+            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2,
             side: 'right'
           });
         }
