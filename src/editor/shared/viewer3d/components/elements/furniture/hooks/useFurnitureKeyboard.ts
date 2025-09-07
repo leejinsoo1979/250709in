@@ -155,13 +155,14 @@ export const useFurnitureKeyboard = ({
                 return indexing.columnWidth;
               })();
               
-              // 업데이트
+              // 업데이트 (zone 정보 유지)
               updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
                 adjustedWidth: adjustedWidth,
-                customWidth: customWidth
+                customWidth: customWidth,
+                zone: editingModule.zone // 현재 zone 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -242,13 +243,14 @@ export const useFurnitureKeyboard = ({
                 return indexing.columnWidth;
               })();
               
-              // 업데이트
+              // 업데이트 (zone 정보 유지)
               updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
                 slotIndex: nextSlot,
                 customDepth: customDepth,
                 adjustedWidth: adjustedWidth,
-                customWidth: customWidth
+                customWidth: customWidth,
+                zone: editingModule.zone // 현재 zone 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
