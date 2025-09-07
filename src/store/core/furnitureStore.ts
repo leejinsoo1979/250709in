@@ -75,65 +75,59 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
+    console.log('🟢 addModule 호출:', {
+      id: module.id,
+      position: {
+        x: module.position.x.toFixed(3),
+        y: module.position.y.toFixed(3),
+        z: module.position.z.toFixed(3)
+      },
+      customDepth: module.customDepth,
+      customWidth: module.customWidth,
+      adjustedWidth: module.adjustedWidth,
+      slotIndex: module.slotIndex,
+      zone: module.zone,
+      isSplit: module.isSplit,
+      spaceType: module.columnSlotInfo?.spaceType
+    });
     
     set((state) => {
       // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
+        console.warn('⚠️ 이미 존재하는 가구 ID:', module.id);
+        console.trace('중복 addModule 호출 스택:');
         return state; // 변경 없음
       }
       
-      // 배치하려는 모듈의 카테고리 확인 (상부장/하부장 체크용)
-      const spaceInfo = useSpaceConfigStore.getState();
-      const internalSpace = calculateInternalSpace(spaceInfo);
-      const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-      const newCategory = newModuleData?.category;
-      const isNewUpper = newCategory === 'upper';
-      const isNewLower = newCategory === 'lower';
-      
       // 동일한 슬롯에 이미 가구가 있는지 체크
-      const existingModulesInSlot = state.placedModules.filter(m => 
-        m.slotIndex === module.slotIndex
+      const slotOccupied = state.placedModules.find(m => 
+        m.slotIndex === module.slotIndex && 
+        m.zone === module.zone
       );
       
-      if (existingModulesInSlot.length > 0) {
+      if (slotOccupied) {
+        console.warn('⚠️ 슬롯에 이미 가구가 존재:', {
+          슬롯: module.slotIndex,
+          zone: module.zone,
+          기존가구: slotOccupied.id,
+          새가구: module.id
+        });
         
-        // 상부장-하부장 공존 가능 여부를 먼저 체크
-        let canCoexist = false;
-        let moduleToReplace = null;
-        
-        for (const existing of existingModulesInSlot) {
-          const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-          const existingCategory = existingModuleData?.category;
-          
-          // 상부장-하부장 관계인지 체크
-          if ((isNewUpper && existingCategory === 'lower') || (isNewLower && existingCategory === 'upper')) {
-            // 상부장과 하부장은 공존 가능
-            canCoexist = true;
-            // 공존 가능하면 교체 대상 없음
-            break;
-          } else {
-            // 상부장-하부장 관계가 아니면 교체 대상
-            moduleToReplace = existing;
-          }
-        }
-        
-        // 공존 가능한 경우 추가
-        if (canCoexist) {
-          return {
-            placedModules: [...state.placedModules, module]
-          };
-        }
-        
-        // 교체가 필요한 경우
-        if (moduleToReplace) {
-          return {
-            placedModules: state.placedModules.map(m => 
-              m.id === moduleToReplace.id ? module : m
-            )
-          };
-        }
+        // 기존 가구를 새 가구로 교체
+        return {
+          placedModules: state.placedModules.map(m => 
+            m.id === slotOccupied.id ? module : m
+          )
+        };
       }
+      
+      console.log('✅ 가구 추가 완료:', {
+        id: module.id,
+        슬롯: module.slotIndex,
+        zone: module.zone,
+        전체가구수: state.placedModules.length + 1
+      });
       
       return {
         placedModules: [...state.placedModules, module]
