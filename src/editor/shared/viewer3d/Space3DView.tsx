@@ -20,6 +20,7 @@ import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
+import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 
 
@@ -1026,6 +1027,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 단내림 공간 렌더링 */}
             <DroppedCeilingSpace spaceInfo={spaceInfo} />
+            
+            {/* 상하부장 사이 백패널 렌더링 */}
+            <BackPanelBetweenCabinets 
+              placedModules={placedModules}
+              spaceInfo={spaceInfo}
+            />
             
             {/* 기둥 에셋 렌더링 */}
             {(spaceInfo?.columns || []).map((column) => {
