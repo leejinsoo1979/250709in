@@ -496,26 +496,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
   
-  // 키큰장이 상하부장과 인접했을 때 - 너비만 조정 (위치는 조정하지 않음)
+  // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
     // 엔드패널 두께만큼 키큰장 너비를 줄임
-    if (endPanelSide === 'left' || endPanelSide === 'right') {
-      // 한쪽에 상하부장이 있으면 18mm 줄임
+    if (endPanelSide === 'left') {
+      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
       adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+    } else if (endPanelSide === 'right') {
+      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
+      adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
-      // 양쪽에 상하부장이 있으면 36mm 줄임
+      // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * 2);
+      positionAdjustmentForEndPanel = 0; // 중앙 유지
     }
     
-    // 위치는 조정하지 않음 (positionAdjustmentForEndPanel = 0 유지)
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
     
-    console.log('🎯 키큰장이 상하부장과 인접 - 너비만 조정:', {
+    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
       moduleId: placedModule.moduleId,
       originalWidth: furnitureWidthMm + (endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS),
       adjustedWidth: adjustedWidthForEndPanel,
+      positionAdjustment: positionAdjustmentForEndPanel,
       endPanelSide,
-      설명: '키큰장 너비만 축소, 위치는 유지'
+      설명: '키큰장 너비 축소 및 위치 이동'
     });
   }
   
