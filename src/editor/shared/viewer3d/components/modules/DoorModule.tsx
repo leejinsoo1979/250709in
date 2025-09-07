@@ -461,7 +461,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
-    actualDoorHeight = moduleData?.dimensions?.height || 800; // 기본값 800mm
+    actualDoorHeight = moduleData?.dimensions?.height || 1000; // 기본값 1000mm (하부장 실제 높이)
     console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
       moduleHeight: moduleData?.dimensions?.height,
