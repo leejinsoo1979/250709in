@@ -441,21 +441,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 높이에서 상하 조정
+    // 상부장 도어는 위로 5mm 확장하여 키큰장과 상단 라인 일치
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const topGap = 20; // 위쪽 간격 20mm
-    const bottomGap = 0; // 아래쪽 간격 0mm
+    const topExtension = 5; // 위로 5mm 확장
+    const bottomReduction = 0; // 아래는 변경 없음
     
-    // 상부장 도어 높이 = 캐비넷 높이 - 위 간격 - 아래 간격
-    actualDoorHeight = upperCabinetHeight - topGap - bottomGap;
+    // 상부장 도어 높이 = 캐비넷 높이 + 위 확장
+    actualDoorHeight = upperCabinetHeight + topExtension;
     
     console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
-      위간격: topGap,
-      아래간격: bottomGap,
+      위확장: topExtension,
       도어높이: actualDoorHeight,
-      설명: '캐비넷에서 위 20mm 간격'
+      설명: '위로 5mm 확장하여 키큰장과 상단 정렬'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -494,18 +493,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 위쪽 간격을 고려한 위치
-    const topGap = 20; // 위쪽 간격 20mm
+    // 상부장 도어는 위로 5mm 확장되므로 중심이 위로 이동
+    const topExtension = 5; // 위로 5mm 확장
     
-    // 도어가 위에서 20mm 떨어진 만큼 중심도 아래로 이동
-    // 도어 중심 = -topGap/2 (아래로 10mm)
-    doorYPosition = -mmToThreeUnits(topGap / 2);
+    // 도어 중심 = 위 확장의 절반만큼 위로 이동
+    doorYPosition = mmToThreeUnits(topExtension / 2); // 위로 2.5mm
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
-      위간격: topGap,
+      위확장: topExtension,
       doorYPosition,
-      설명: '위쪽 20mm 간격으로 인한 중심 이동'
+      설명: '위로 5mm 확장으로 인한 중심 이동 (2.5mm 위로)'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
