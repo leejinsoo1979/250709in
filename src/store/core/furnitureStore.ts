@@ -333,19 +333,37 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               const existingCategory = existingModuleData?.category;
               const existingIsDual = existing.moduleId.includes('dual-');
               
-              console.log('🔍 공존 체크 중:', {
-                이동가구: { id, category: targetCategory, isDual },
-                기존가구: { id: existing.id, category: existingCategory, isDual: existingIsDual },
-                상부장여부: { 이동: isTargetUpper, 기존: existingCategory === 'upper' },
-                하부장여부: { 이동: isTargetLower, 기존: existingCategory === 'lower' }
+              console.log('🔍 [DEBUG] 공존 체크 시작:', {
+                이동가구: { 
+                  id, 
+                  moduleId: updates.moduleId || targetModule.moduleId,
+                  category: targetCategory, 
+                  isDual,
+                  isUpper: isTargetUpper,
+                  isLower: isTargetLower
+                },
+                기존가구: { 
+                  id: existing.id, 
+                  moduleId: existing.moduleId,
+                  category: existingCategory, 
+                  isDual: existingIsDual,
+                  isUpper: existingCategory === 'upper',
+                  isLower: existingCategory === 'lower'
+                }
               });
               
               // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
               const canCoexist = (isTargetUpper && existingCategory === 'lower') || 
                                 (isTargetLower && existingCategory === 'upper');
               
+              console.log('🔍 [DEBUG] 공존 가능 여부:', {
+                canCoexist,
+                조건1: `이동이상부장(${isTargetUpper}) && 기존이하부장(${existingCategory === 'lower'}) = ${isTargetUpper && existingCategory === 'lower'}`,
+                조건2: `이동이하부장(${isTargetLower}) && 기존이상부장(${existingCategory === 'upper'}) = ${isTargetLower && existingCategory === 'upper'}`
+              });
+              
               if (canCoexist) {
-                console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule):', {
+                console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule) - 유지:', {
                   기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
                   이동: { id, category: targetCategory, isDual }
                 });
@@ -353,9 +371,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               } else {
                 // 같은 카테고리거나 full 카테고리면 교체 필요
                 modulesToReplace.push(existing);
-                console.log('⚠️ 같은 카테고리 또는 full - 교체 필요 (updatePlacedModule):', {
+                console.log('❌ 교체 필요 (updatePlacedModule) - 제거 예정:', {
                   기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
-                  이동: { id, category: targetCategory, isDual }
+                  이동: { id, category: targetCategory, isDual },
+                  이유: `같은카테고리(${targetCategory === existingCategory}) 또는 full포함`
                 });
               }
             }
