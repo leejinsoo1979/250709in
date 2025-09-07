@@ -113,76 +113,56 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       );
       
       if (existingModulesInSlot.length > 0) {
-        // 상부장과 하부장 공존 체크
-        let canCoexist = false;
-        let moduleToReplace = null;
+        // 같은 zone에 이미 가구가 있는지 확인
+        const sameZoneModule = existingModulesInSlot.find(m => m.zone === module.zone);
         
-        for (const existing of existingModulesInSlot) {
-          const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-          const existingCategory = existingModuleData?.category;
-          const isExistingUpper = existingCategory === 'upper';
-          const isExistingLower = existingCategory === 'lower';
-          
-          // 같은 zone의 같은 카테고리는 교체
-          if (existing.zone === module.zone) {
-            // 같은 카테고리면 교체
-            if ((isNewUpper && isExistingUpper) || (isNewLower && isExistingLower) || (!isNewUpper && !isNewLower && !isExistingUpper && !isExistingLower)) {
-              moduleToReplace = existing;
-              break;
-            }
-            // 다른 카테고리면 공존 불가 (상부장과 하부장이 같은 zone에 있을 수 없음)
-            if ((isNewUpper || isNewLower) && (isExistingUpper || isExistingLower) && newCategory !== existingCategory) {
-              console.error('❌ 상부장과 하부장은 같은 zone에 배치할 수 없음:', {
-                슬롯: module.slotIndex,
-                zone: module.zone,
-                기존가구: { id: existing.id, category: existingCategory },
-                새가구: { id: module.id, category: newCategory }
-              });
-              return state; // 배치 불가
-            }
-          } else {
-            // 다른 zone이면서 상부장-하부장 관계면 공존 가능
-            if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
-              canCoexist = true;
-              console.log('✅ 상부장과 하부장 공존 허용 (addModule):', {
-                슬롯: module.slotIndex,
-                기존가구: { id: existing.id, category: existingCategory, zone: existing.zone },
-                새가구: { id: module.id, category: newCategory, zone: module.zone }
-              });
-            } else if ((isNewUpper && isExistingUpper) || (isNewLower && isExistingLower)) {
-              // 같은 카테고리는 다른 zone에도 중복 불가
-              console.error('❌ 같은 카테고리 가구는 한 슬롯에 하나만 배치 가능:', {
-                슬롯: module.slotIndex,
-                기존가구: { id: existing.id, category: existingCategory, zone: existing.zone },
-                새가구: { id: module.id, category: newCategory, zone: module.zone }
-              });
-              return state; // 배치 불가
-            }
-          }
-        }
-        
-        // 교체할 가구가 있으면 교체
-        if (moduleToReplace) {
-          console.warn('⚠️ 기존 가구를 교체:', {
+        if (sameZoneModule) {
+          // 같은 zone에 가구가 있으면 교체
+          console.warn('⚠️ 같은 zone에 이미 가구가 존재 - 교체:', {
             슬롯: module.slotIndex,
             zone: module.zone,
-            기존가구: moduleToReplace.id,
+            기존가구: sameZoneModule.id,
             새가구: module.id
           });
           
           return {
             placedModules: state.placedModules.map(m => 
-              m.id === moduleToReplace.id ? module : m
+              m.id === sameZoneModule.id ? module : m
             )
           };
         }
         
-        // 공존 가능하면 추가
-        if (canCoexist) {
-          return {
-            placedModules: [...state.placedModules, module]
-          };
+        // 다른 zone의 가구들과 카테고리 체크
+        for (const existing of existingModulesInSlot) {
+          const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
+          const existingCategory = existingModuleData?.category;
+          
+          // 상부장-하부장 관계가 아니면 배치 불가
+          if (!((isNewUpper && existingCategory === 'lower') || (isNewLower && existingCategory === 'upper'))) {
+            console.warn('⚠️ 상부장과 하부장만 공존 가능:', {
+              슬롯: module.slotIndex,
+              기존가구: { id: existing.id, category: existingCategory },
+              새가구: { id: module.id, category: newCategory }
+            });
+            
+            // 기존 가구를 교체
+            return {
+              placedModules: state.placedModules.map(m => 
+                m.id === existing.id ? module : m
+              )
+            };
+          }
         }
+        
+        // 상부장-하부장 관계면 추가
+        console.log('✅ 상부장과 하부장 공존 허용:', {
+          슬롯: module.slotIndex,
+          새가구: { id: module.id, category: newCategory, zone: module.zone }
+        });
+        
+        return {
+          placedModules: [...state.placedModules, module]
+        };
       }
       
       console.log('✅ 가구 추가 완료:', {
@@ -255,63 +235,53 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           );
           
           if (existingModulesInSlot.length > 0) {
-            let canCoexist = false;
+            // 같은 zone에 이미 가구가 있는지 확인
+            const sameZoneModule = existingModulesInSlot.find(m => m.zone === newZone);
+            
+            if (sameZoneModule) {
+              // 같은 zone에 가구가 있으면 충돌 - 기존 가구 제거
+              console.warn('⚠️ 슬롯 충돌 감지 - 기존 가구 제거:', {
+                이동하는가구: id,
+                충돌가구: sameZoneModule.id,
+                슬롯: newSlotIndex,
+                zone: newZone
+              });
+              
+              const filteredModules = state.placedModules.filter(m => m.id !== sameZoneModule.id);
+              const newModules = filteredModules.map(module => 
+                module.id === id 
+                  ? { ...module, ...updates } 
+                  : module
+              );
+              
+              return {
+                placedModules: newModules
+              };
+            }
+            
+            // 다른 zone의 가구들과 카테고리 체크
+            let canCoexist = true;
             let moduleToReplace = null;
             
             for (const existing of existingModulesInSlot) {
               const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
               const existingCategory = existingModuleData?.category;
-              const isExistingUpper = existingCategory === 'upper';
-              const isExistingLower = existingCategory === 'lower';
               
-              // 같은 zone의 가구는 교체
-              if (existing.zone === newZone) {
-                // 같은 카테고리면 교체
-                if ((isTargetUpper && isExistingUpper) || (isTargetLower && isExistingLower) || (!isTargetUpper && !isTargetLower && !isExistingUpper && !isExistingLower)) {
-                  moduleToReplace = existing;
-                  break;
-                }
-                // 다른 카테고리면 공존 불가
-                if ((isTargetUpper || isTargetLower) && (isExistingUpper || isExistingLower) && targetCategory !== existingCategory) {
-                  console.error('❌ 상부장과 하부장은 같은 zone에 배치할 수 없음 (updatePlacedModule):', {
-                    슬롯: newSlotIndex,
-                    zone: newZone,
-                    이동하는가구: { id, category: targetCategory },
-                    기존가구: { id: existing.id, category: existingCategory }
-                  });
-                  return state; // 이동 불가
-                }
-              } else {
-                // 다른 zone이면서 상부장-하부장 관계면 공존 가능
-                if ((isTargetUpper && isExistingLower) || (isTargetLower && isExistingUpper)) {
-                  canCoexist = true;
-                  console.log('✅ 상부장과 하부장 공존 허용 (updatePlacedModule):', {
-                    슬롯: newSlotIndex,
-                    이동하는가구: { id, category: targetCategory, zone: newZone },
-                    기존가구: { id: existing.id, category: existingCategory, zone: existing.zone }
-                  });
-                } else if ((isTargetUpper && isExistingUpper) || (isTargetLower && isExistingLower)) {
-                  // 같은 카테고리는 다른 zone에도 중복 불가
-                  console.error('❌ 같은 카테고리 가구는 한 슬롯에 하나만 배치 가능 (updatePlacedModule):', {
-                    슬롯: newSlotIndex,
-                    이동하는가구: { id, category: targetCategory, zone: newZone },
-                    기존가구: { id: existing.id, category: existingCategory, zone: existing.zone }
-                  });
-                  return state; // 이동 불가
-                }
+              // 상부장-하부장 관계가 아니면 기존 가구 교체
+              if (!((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper'))) {
+                canCoexist = false;
+                moduleToReplace = existing;
+                break;
               }
             }
             
-            // 교체할 가구가 있으면 교체
-            if (moduleToReplace) {
-              console.warn('⚠️ 슬롯 충돌 감지 - 기존 가구 제거:', {
+            if (!canCoexist && moduleToReplace) {
+              console.warn('⚠️ 상부장과 하부장만 공존 가능 - 기존 가구 제거:', {
                 이동하는가구: id,
                 충돌가구: moduleToReplace.id,
-                슬롯: newSlotIndex,
-                zone: newZone
+                슬롯: newSlotIndex
               });
               
-              // 충돌하는 가구를 제거하고 현재 가구만 업데이트
               const filteredModules = state.placedModules.filter(m => m.id !== moduleToReplace.id);
               const newModules = filteredModules.map(module => 
                 module.id === id 
@@ -319,29 +289,26 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
                   : module
               );
               
-              console.log('📦 슬롯 충돌 해결 - 기존 가구 제거:', {
-                제거된가구: moduleToReplace.id,
-                이전가구수: beforeCount,
-                이후가구수: newModules.length
-              });
-              
               return {
                 placedModules: newModules
               };
             }
             
             // 공존 가능하면 그냥 업데이트
-            if (canCoexist) {
-              const newModules = state.placedModules.map(module => 
-                module.id === id 
-                  ? { ...module, ...updates } 
-                  : module
-              );
-              
-              return {
-                placedModules: newModules
-              };
-            }
+            console.log('✅ 상부장과 하부장 공존 허용 (updatePlacedModule):', {
+              슬롯: newSlotIndex,
+              이동하는가구: { id, category: targetCategory, zone: newZone }
+            });
+            
+            const newModules = state.placedModules.map(module => 
+              module.id === id 
+                ? { ...module, ...updates } 
+                : module
+            );
+            
+            return {
+              placedModules: newModules
+            };
           }
         }
       }
