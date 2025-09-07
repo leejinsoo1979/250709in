@@ -263,13 +263,24 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 이동하는 모듈의 카테고리 확인
           const spaceInfo = useSpaceConfigStore.getState();
           const internalSpace = calculateInternalSpace(spaceInfo);
-          const targetModuleData = getModuleById(targetModule.moduleId, internalSpace, spaceInfo);
+          // updates.moduleId가 있으면 그걸 우선 사용 (모듈 타입이 변경되는 경우를 위해)
+          const moduleIdToCheck = updates.moduleId || targetModule.moduleId;
+          const targetModuleData = getModuleById(moduleIdToCheck, internalSpace, spaceInfo);
           const targetCategory = targetModuleData?.category;
           const isTargetUpper = targetCategory === 'upper';
           const isTargetLower = targetCategory === 'lower';
           
-          // 듀얼 가구인지 확인
-          const isDual = targetModule.moduleId.includes('dual-');
+          console.log('🎯 [DEBUG] 이동 가구 카테고리 확인:', {
+            id,
+            moduleId: moduleIdToCheck,
+            category: targetCategory,
+            isUpper: isTargetUpper,
+            isLower: isTargetLower,
+            targetModuleData: targetModuleData ? '존재' : '없음'
+          });
+          
+          // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
+          const isDual = moduleIdToCheck.includes('dual-');
           const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
           
           // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
