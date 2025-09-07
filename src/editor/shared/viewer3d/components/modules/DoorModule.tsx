@@ -462,7 +462,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (isLowerCabinet) {
     // 하부장 도어는 키큰장 도어와 동일한 하단에서 시작하여 위로만 확장
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    const LOWER_CABINET_TOP_EXTENSION = 50; // 하부장 도어 위쪽 확장 (mm)
+    const LOWER_CABINET_TOP_EXTENSION = 20; // 하부장 도어 위쪽 확장 (mm) - 줄임
     
     // 하부장 도어 높이 = 캐비넷 높이 + 위쪽 확장
     actualDoorHeight = lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION;
@@ -529,36 +529,54 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어 위치 수정 - 더 위로 올려야 함
-    const LOWER_CABINET_TOP_EXTENSION = 50; // 위쪽 확장
+    // 하부장 도어는 키큰장과 정확히 같은 Y 위치 사용
+    // 하부장 높이만 다름
+    const LOWER_CABINET_TOP_EXTENSION = 20; // 위쪽 약간 확장
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
     
-    // 하부장 도어 높이 (위쪽 확장 포함)
+    // 하부장 도어 높이
     const lowerDoorHeight = lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION;
     
-    // 하부장 도어는 바닥에서 약간 위에서 시작
-    // 받침대와 프레임을 고려한 위치 조정
+    // 키큰장과 완전히 동일한 Y 위치 계산 로직 사용
     if (spaceInfo.baseConfig?.type === 'floor') {
-      // 받침대 있음
-      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      // 받침대 있음: 키큰장과 동일
       const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
       
-      // 하부장 도어 중심 = 받침대 높이 + 하부장 도어 높이/2
-      doorYPosition = mmToThreeUnits(baseFrameHeight + lowerDoorHeight/2);
+      // 키큰장과 동일한 계산
+      const baseY = mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+      
+      // 하부장은 높이가 낮으므로 중심점 조정 필요
+      // 키큰장 도어 하단과 하부장 도어 하단이 일치하도록
+      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
+      const tallDoorBottom = baseY - mmToThreeUnits(tallDoorHeight) / 2;
+      
+      // 하부장 도어 중심 = 키큰장 도어 하단 + 하부장 도어 높이/2
+      doorYPosition = tallDoorBottom + mmToThreeUnits(lowerDoorHeight) / 2;
     } else {
-      // 받침대 없음 - 바닥에서 바로 시작
-      doorYPosition = mmToThreeUnits(lowerDoorHeight/2);
+      // 받침대 없음
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      
+      // 키큰장과 동일한 계산
+      const baseY = mmToThreeUnits(topFrameHeight) / 2;
+      
+      // 하부장은 높이가 낮으므로 중심점 조정 필요
+      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
+      const tallDoorBottom = baseY - mmToThreeUnits(tallDoorHeight) / 2;
+      
+      // 하부장 도어 중심 = 키큰장 도어 하단 + 하부장 도어 높이/2
+      doorYPosition = tallDoorBottom + mmToThreeUnits(lowerDoorHeight) / 2;
     }
     
-    console.log('🚪📍 하부장 도어 Y 위치 (수정):', {
+    console.log('🚪📍 하부장 도어 Y 위치 (키큰장과 동일한 하단):', {
       moduleId: moduleData?.id,
       하부장도어높이: lowerDoorHeight,
       doorYPosition,
-      받침대타입: spaceInfo.baseConfig?.type,
-      받침대높이: spaceInfo.baseConfig?.height,
       위확장: LOWER_CABINET_TOP_EXTENSION,
       type: '하부장',
-      설명: '받침대 위에서 시작, 위로 확장'
+      설명: '키큰장 도어와 정확히 같은 하단 위치'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
