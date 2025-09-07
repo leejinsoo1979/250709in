@@ -1185,6 +1185,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id, isEditMode]);
 
+  // 🔴🔴🔴 최종 Y 위치 강제 확인 및 수정
+  const finalYPosition = isUpperCabinet ? 14 : adjustedPosition.y;
+  
+  if (isUpperCabinet) {
+    console.log('🔴🔴🔴 상부장 최종 렌더링 - Y 위치 강제!:', {
+      moduleId: placedModule.moduleId,
+      adjustedPositionY: adjustedPosition.y,
+      finalYPosition: finalYPosition,
+      강제설정: '상부장은 무조건 Y=14'
+    });
+  }
+
   return (
     <group userData={{ furnitureId: placedModule.id }}>
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
@@ -1192,7 +1204,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
           adjustedPosition.x + positionAdjustmentForEndPanel,
-          adjustedPosition.y, // placedModule의 Y 위치 사용 (상부장/하부장/키큰장 고려)
+          finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
         rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
@@ -1458,7 +1470,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
             originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
-            adjustedPosition.y, // 가구와 동일한 Y 위치 (상부장/하부장 고려)
+            finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
             furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
@@ -1542,7 +1554,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             {endPanelXPositions.map((panel, index) => (
               <group
                 key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, adjustedPosition.y, furnitureZ]}
+                position={[panel.x, finalYPosition, furnitureZ]}
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}
@@ -1565,7 +1577,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <Html
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,
-            adjustedPosition.y - height / 2 - 0.2, // 가구 하단 아래
+            finalYPosition - height / 2 - 0.2, // 가구 하단 아래
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
           center
