@@ -101,7 +101,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
       
       // 새 가구의 카테고리 확인
-      const newModuleData = getModuleById(module.moduleId, undefined, undefined);
+      const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
       
       // 동일한 슬롯에 이미 가구가 있는지 체크
@@ -116,7 +118,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         // 모든 기존 가구와 공존 가능한지 확인
         for (const existing of existingModulesInSlot) {
-          const existingModuleData = getModuleById(existing.moduleId, undefined, undefined);
+          const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
           const existingCategory = existingModuleData?.category;
           
           // 상부장-하부장 조합인지 확인

@@ -524,14 +524,53 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 하부장과 동일한 Y 위치 (중심 기준)
-    doorYPosition = 0;
+    // 하부장 도어 위치 계산
+    // 하부장 도어의 하단은 키큰장 도어와 동일해야 하고
+    // 상단은 하부장 캐비넷 상단과 일치해야 함
     
-    console.log('🚪📍 하부장 도어 Y 위치:', {
+    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
+    
+    // 키큰장 도어의 하단 위치 계산 (바닥 기준)
+    let tallCabinetDoorBottom: number;
+    if (spaceInfo.baseConfig?.type === 'floor') {
+      // 받침대 있음
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      
+      // 키큰장 도어 전체 높이
+      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
+      // 키큰장 도어 중심 Y 위치
+      const tallDoorCenterY = mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+      // 키큰장 도어 하단 = 중심 - 높이/2
+      tallCabinetDoorBottom = tallDoorCenterY - mmToThreeUnits(tallDoorHeight) / 2;
+    } else {
+      // 받침대 없음
+      const topFrameHeight = spaceInfo.frameSize?.top || 50;
+      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+      
+      // 키큰장 도어 전체 높이
+      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
+      // 키큰장 도어 중심 Y 위치
+      const tallDoorCenterY = mmToThreeUnits(topFrameHeight) / 2;
+      // 키큰장 도어 하단 = 중심 - 높이/2
+      tallCabinetDoorBottom = tallDoorCenterY - mmToThreeUnits(tallDoorHeight) / 2;
+    }
+    
+    // 하부장 도어 하단 = 키큰장 도어 하단과 동일
+    // 하부장 도어 높이 = 하부장 캐비넷 높이 (1000mm)
+    // 하부장 도어 중심 = 하단 + 높이/2
+    const lowerDoorHeight = mmToThreeUnits(lowerCabinetHeight);
+    doorYPosition = tallCabinetDoorBottom + lowerDoorHeight / 2;
+    
+    console.log('🚪📍 하부장 도어 Y 위치 계산:', {
       moduleId: moduleData?.id,
+      lowerCabinetHeight,
+      tallCabinetDoorBottom,
+      lowerDoorHeight,
       doorYPosition,
       type: '하부장',
-      설명: '하부장 중심과 동일'
+      설명: '하단은 키큰장 도어와 동일, 상단은 하부장 높이만큼'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
