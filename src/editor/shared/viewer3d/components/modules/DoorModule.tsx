@@ -492,13 +492,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // === 문 Y 위치 계산 ===
   let doorYPosition: number;
   
-  if (isUpperCabinet || isLowerCabinet) {
-    // 상하부장의 경우 Y 위치는 0 (가구 중심과 동일)
+  if (isUpperCabinet) {
+    // 상부장 도어는 하단을 맞춰야 함
+    // 상부장 캐비넷은 중심 기준, 도어도 중심 기준
+    // 하지만 도어가 마감패널 제외한 높이이므로 위로 이동 필요
+    const bottomFinishingPanel = 18;
+    doorYPosition = mmToThreeUnits(bottomFinishingPanel / 2);
+    
+    console.log('🚪🔴 상부장 도어 Y 위치:', {
+      moduleId: moduleData?.id,
+      doorYPosition,
+      마감패널: bottomFinishingPanel,
+      설명: '마감패널 위에 도어 위치'
+    });
+  } else if (isLowerCabinet) {
+    // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
     doorYPosition = 0;
-    console.log('🚪📍 상하부장 도어 Y 위치:', {
+    console.log('🚪📍 하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition: 0,
-      type: isUpperCabinet ? '상부장' : '하부장',
+      type: '하부장',
       note: '가구 중심과 동일'
     });
   } else {
