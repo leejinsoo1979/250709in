@@ -433,6 +433,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorThickness = 20;
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
+  // === 도어 확장 설정 (변수화) ===
+  const UPPER_CABINET_TOP_GAP = 5; // 상부장 도어 천장 간격 (mm)
+  const UPPER_CABINET_BOTTOM_EXTENSION = 28; // 상부장 도어 아래 확장 (mm)
+  
   // === 문 높이 계산 ===
   // 상부장/하부장인지 확인
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
@@ -441,21 +445,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷보다 아래로 28mm 더 확장, 위쪽 5mm 간격
+    // 상부장 도어는 캐비넷보다 아래로 확장, 위쪽 간격
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const topGap = 5; // 천장과 5mm 간격
-    const bottomExtension = 28; // 아래로 28mm 더 확장
     
     // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격 + 아래 확장
-    actualDoorHeight = upperCabinetHeight - topGap + bottomExtension;
+    actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
     
     console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
-      천장간격: topGap,
-      아래확장: bottomExtension,
+      천장간격: UPPER_CABINET_TOP_GAP,
+      아래확장: UPPER_CABINET_BOTTOM_EXTENSION,
       도어높이: actualDoorHeight,
-      설명: '위쪽 5mm 간격, 아래로 28mm 확장'
+      설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -494,18 +496,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷보다 아래로 28mm 더 확장
+    // 상부장 도어는 캐비넷보다 아래로 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const topGap = 5; // 천장과 5mm 간격
-    const bottomExtension = 28; // 아래로 28mm 더 확장
     
     // 캐비넷 하단 = -캐비넷높이/2
-    // 도어 하단 = 캐비넷 하단 - 28mm (더 아래로)
-    // 도어 높이 = 캐비넷높이 - 5mm + 28mm
+    // 도어 하단 = 캐비넷 하단 - 확장값 (더 아래로)
+    // 도어 높이 = 캐비넷높이 - 위쪽 간격 + 아래 확장
     // 도어 중심 = 도어 하단 + 도어높이/2
-    const doorHeightMm = upperCabinetHeight - topGap + bottomExtension;
+    const doorHeightMm = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
     const cabinetBottom = -upperCabinetHeight / 2;
-    const doorBottom = cabinetBottom - bottomExtension;
+    const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
     const doorCenter = doorBottom + doorHeightMm / 2;
     
     doorYPosition = mmToThreeUnits(doorCenter);
@@ -518,7 +518,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       도어높이: doorHeightMm,
       도어중심: doorCenter,
       doorYPosition,
-      설명: '도어가 캐비넷보다 28mm 아래로 확장'
+      설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
