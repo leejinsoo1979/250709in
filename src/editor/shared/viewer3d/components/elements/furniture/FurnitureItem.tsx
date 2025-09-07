@@ -496,14 +496,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
   
-  // 키큰장이 상하부장과 인접했을 때 - 너비 조정하지 않음 (도어가 커버)
+  // 키큰장이 상하부장과 인접했을 때 - 너비만 조정 (위치는 조정하지 않음)
   if (needsEndPanelAdjustment && endPanelSide) {
-    // 너비 조정 없음 - 도어가 엔드패널을 커버하는 방식
-    console.log('🎯 키큰장이 상하부장과 인접 (커버도어):', {
+    // 엔드패널 두께만큼 키큰장 너비를 줄임
+    if (endPanelSide === 'left' || endPanelSide === 'right') {
+      // 한쪽에 상하부장이 있으면 18mm 줄임
+      adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+    } else if (endPanelSide === 'both') {
+      // 양쪽에 상하부장이 있으면 36mm 줄임
+      adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * 2);
+    }
+    
+    // 위치는 조정하지 않음 (positionAdjustmentForEndPanel = 0 유지)
+    furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
+    
+    console.log('🎯 키큰장이 상하부장과 인접 - 너비만 조정:', {
       moduleId: placedModule.moduleId,
-      originalWidth: furnitureWidthMm,
+      originalWidth: furnitureWidthMm + (endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS),
+      adjustedWidth: adjustedWidthForEndPanel,
       endPanelSide,
-      설명: '너비 조정 없음, 도어가 엔드패널을 커버'
+      설명: '키큰장 너비만 축소, 위치는 유지'
     });
   }
   
