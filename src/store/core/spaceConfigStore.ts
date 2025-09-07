@@ -179,52 +179,70 @@ export const FURNITURE_LIMITS = {
   DUAL_THRESHOLD: 1200,     // 듀얼장 사용 가능 최소 내경폭
 } as const;
 
-// 기본 SpaceInfo 객체 (다른 파일에서 재사용 가능)
-export const DEFAULT_SPACE_CONFIG: SpaceInfo = {
-  width: DEFAULT_SPACE_VALUES.WIDTH,
-  height: DEFAULT_SPACE_VALUES.HEIGHT,
-  depth: DEFAULT_SPACE_VALUES.DEPTH,
-  installType: 'builtin' as const,
-  wallConfig: {
-    left: true,
-    right: true,
-  },
-  hasFloorFinish: false,
-  floorFinish: {
-    height: DEFAULT_BASE_VALUES.FLOOR_FINISH_HEIGHT
-  },
-  // Configurator 초기값 설정
-  surroundType: 'surround',  // 기본값을 서라운드로 변경
-  frameSize: {
-    left: 50,  // 서라운드 기본 프레임 크기
-    right: 50,
-    top: 10
-  },
-  gapConfig: {
-    left: 2, // 기본 이격거리 2mm
-    right: 2, // 기본 이격거리 2mm
-  },
-  baseConfig: {
-    type: 'floor',
-    height: DEFAULT_BASE_VALUES.HEIGHT,
-    placementType: 'float'  // 기본값을 띄워서 배치로 변경
-  },
-  // 재질 설정 초기값
-  materialConfig: {
-    interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,
-    doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR
-  },
-  // 단내림 기본값 설정
-  droppedCeiling: {
-    enabled: false,
-    position: 'right',
-    width: 900,
-    dropHeight: 200
-  },
-  // 도어 개수 기본값 설정
-  mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
-  droppedCeilingDoorCount: 0  // 단내림 구간 도어 개수 기본값
+// 기본 SpaceInfo 객체를 생성하는 함수
+const createDefaultSpaceConfig = (): SpaceInfo => {
+  const baseConfig: SpaceInfo = {
+    width: DEFAULT_SPACE_VALUES.WIDTH,
+    height: DEFAULT_SPACE_VALUES.HEIGHT,
+    depth: DEFAULT_SPACE_VALUES.DEPTH,
+    installType: 'builtin' as const,
+    wallConfig: {
+      left: true,
+      right: true,
+    },
+    hasFloorFinish: false,
+    floorFinish: {
+      height: DEFAULT_BASE_VALUES.FLOOR_FINISH_HEIGHT
+    },
+    // Configurator 초기값 설정
+    surroundType: 'surround',  // 기본값을 서라운드로 변경
+    frameSize: {
+      left: 50,  // 서라운드 기본 프레임 크기
+      right: 50,
+      top: 10
+    },
+    gapConfig: {
+      left: 2, // 기본 이격거리 2mm
+      right: 2, // 기본 이격거리 2mm
+    },
+    baseConfig: {
+      type: 'floor',
+      height: DEFAULT_BASE_VALUES.HEIGHT,
+      placementType: 'float'  // 기본값을 띄워서 배치로 변경
+    },
+    // 재질 설정 초기값
+    materialConfig: {
+      interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,
+      doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR
+    },
+    // 단내림 기본값 설정
+    droppedCeiling: {
+      enabled: false,
+      position: 'right',
+      width: 900,
+      dropHeight: 200
+    },
+    // 도어 개수 기본값 설정
+    mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
+    droppedCeilingDoorCount: 0  // 단내림 구간 도어 개수 기본값
+  };
+
+  // 정수 슬롯 너비를 위한 초기 자동 조정
+  const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(baseConfig);
+  if (adjustmentResult.adjustmentMade) {
+    console.log('🎯 초기값 슬롯 정수화 자동 조정:', {
+      슬롯너비: adjustmentResult.slotWidth,
+      프레임크기: adjustmentResult.adjustedSpaceInfo.frameSize,
+      조정여부: adjustmentResult.adjustmentMade
+    });
+    return adjustmentResult.adjustedSpaceInfo;
+  }
+
+  return baseConfig;
 };
+
+// 기본 SpaceInfo 객체 (다른 파일에서 재사용 가능)
+export const DEFAULT_SPACE_CONFIG: SpaceInfo = createDefaultSpaceConfig();
 
 // 초기 상태
 const initialState: Omit<SpaceConfigState, 'setSpaceInfo' | 'resetSpaceInfo' | 'resetMaterialConfig' | 'setColumns' | 'addColumn' | 'removeColumn' | 'updateColumn' | 'setWalls' | 'addWall' | 'removeWall' | 'updateWall' | 'setPanelBs' | 'addPanelB' | 'removePanelB' | 'updatePanelB' | 'resetAll' | 'markAsSaved'> = {
