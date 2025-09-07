@@ -75,9 +75,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
+    // 하부장 중복 호출 디버깅
+    const moduleData = getModuleById(module.moduleId);
+    const isLowerCabinet = moduleData?.category === 'lower';
+    
     console.log('🟢 addModule 호출:', {
       id: module.id,
       moduleId: module.moduleId,
+      isLowerCabinet,
+      category: moduleData?.category,
+      timestamp: Date.now(),
+      callStack: new Error().stack?.split('\n').slice(1, 5).join('\n'),
       position: {
         x: module.position.x.toFixed(3),
         y: module.position.y.toFixed(3),
@@ -92,6 +100,26 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       spaceType: module.columnSlotInfo?.spaceType,
       callStack: new Error().stack?.split('\n').slice(1, 5).join('\n')
     });
+    
+    if (isLowerCabinet) {
+      const currentState = get();
+      console.log('🚨🚨🚨 [하부장 배치 전 상태 체크]:', {
+        현재_전체_가구수: currentState.placedModules.length,
+        현재_하부장들: currentState.placedModules.filter(m => {
+          const data = getModuleById(m.moduleId);
+          return data?.category === 'lower';
+        }).map(m => ({ 
+          id: m.id, 
+          moduleId: m.moduleId, 
+          slotIndex: m.slotIndex 
+        })),
+        새로_추가할_하부장: {
+          id: module.id,
+          moduleId: module.moduleId,
+          slotIndex: module.slotIndex
+        }
+      });
+    }
     
     set((state) => {
       // ID 중복 체크
@@ -191,9 +219,26 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         전체가구수: state.placedModules.length + 1
       });
       
-      return {
+      const newState = {
         placedModules: [...state.placedModules, module]
       };
+      
+      // 하부장 배치 후 상태 체크
+      if (isNewLower) {
+        console.log('🚨🚨🚨 [하부장 배치 후 상태]:', {
+          새로운_전체_가구수: newState.placedModules.length,
+          새로운_하부장들: newState.placedModules.filter(m => {
+            const data = getModuleById(m.moduleId);
+            return data?.category === 'lower';
+          }).map(m => ({ 
+            id: m.id, 
+            moduleId: m.moduleId, 
+            slotIndex: m.slotIndex 
+          }))
+        });
+      }
+      
+      return newState;
     });
   },
 
