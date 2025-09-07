@@ -4,7 +4,7 @@ import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
-import { spaceConfigStore } from './spaceConfigStore';
+import { useSpaceConfigStore } from './spaceConfigStore';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -100,7 +100,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
       
       // 배치하려는 모듈의 카테고리 확인 (상부장/하부장 체크용)
-      const spaceInfo = spaceConfigStore.getState();
+      const spaceInfo = useSpaceConfigStore.getState();
       const internalSpace = calculateInternalSpace(spaceInfo);
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
@@ -212,7 +212,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
           
           // 이동하는 모듈의 카테고리 확인
-          const spaceInfo = spaceConfigStore.getState();
+          const spaceInfo = useSpaceConfigStore.getState();
           const internalSpace = calculateInternalSpace(spaceInfo);
           const targetModuleData = getModuleById(targetModule.moduleId, internalSpace, spaceInfo);
           const targetCategory = targetModuleData?.category;
