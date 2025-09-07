@@ -430,8 +430,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       slotIndex: placedModule.slotIndex,
       isDualFurniture,
       category: actualModuleData.category,
-      adjacentCheck,
-      needsEndPanelAdjustment
+      adjacentCheck
     });
   }
   
