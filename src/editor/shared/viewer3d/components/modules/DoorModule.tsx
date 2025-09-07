@@ -524,18 +524,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 바닥부터 시작
-    // 하부장 높이가 1000mm이고, 도어도 바닥부터 1000mm 높이
-    // 도어 중심 = 바닥 + 도어높이/2 = 0 + 500mm = 5 (Three.js 단위)
-    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    doorYPosition = mmToThreeUnits(lowerCabinetHeight / 2);
+    // 하부장 도어는 하부장과 동일한 Y 위치 (중심 기준)
+    doorYPosition = 0;
     
     console.log('🚪📍 하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition,
-      lowerCabinetHeight,
       type: '하부장',
-      설명: '바닥부터 시작, 중심은 500mm 높이'
+      설명: '하부장 중심과 동일'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
