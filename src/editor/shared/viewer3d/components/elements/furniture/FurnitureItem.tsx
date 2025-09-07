@@ -624,22 +624,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이 (600mm)
     
     // BoxModule은 중심 기준으로 렌더링되므로:
-    // 상부장 중심 Y = (내경 높이 - 상부장 높이/2) * 0.01
-    const upperCabinetCenterY = (internalSpaceHeight - upperCabinetHeight/2) * 0.01;
+    // 상부장 중심 Y = furnitureStartY + (내경 높이 - 상부장 높이/2) * 0.01
+    // furnitureStartY는 바닥 기준점, 여기에 상부장 위치를 더함
+    const upperCabinetCenterY = furnitureStartY + ((internalSpaceHeight - upperCabinetHeight/2) * 0.01);
     
     adjustedPosition = {
       ...adjustedPosition,
-      y: upperCabinetCenterY  // 절대 위치 사용 (furnitureStartY 더하지 않음)
+      y: upperCabinetCenterY
     };
     
-    console.log('🔴🔴🔴 상부장 천장 붙이기 계산:', {
+    console.log('🔴🔴🔴 상부장을 천장에 완전히 붙이기:', {
       moduleId: placedModule.moduleId,
       내경높이_mm: internalSpaceHeight,
       상부장높이_mm: upperCabinetHeight,
-      상부장중심Y_mm: internalSpaceHeight - upperCabinetHeight/2,
-      상부장중심Y_Three: upperCabinetCenterY,
-      furnitureStartY_비교용: furnitureStartY,
-      최종Y: adjustedPosition.y
+      바닥기준_furnitureStartY: furnitureStartY,
+      상부장중심위치_계산: `${furnitureStartY} + ${((internalSpaceHeight - upperCabinetHeight/2) * 0.01).toFixed(2)}`,
+      최종Y: upperCabinetCenterY,
+      설명: '상부장 상단이 천장에 완전히 닿도록'
     });
   }
   
