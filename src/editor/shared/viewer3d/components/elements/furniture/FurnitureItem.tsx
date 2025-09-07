@@ -71,7 +71,50 @@ const checkAdjacentUpperLowerToFull = (
   }
   
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
-  let leftAdjacentModule = allModules.find(m => m.slotIndex === currentSlotIndex - 1);
+  console.log('🔍 인접 가구 체크 시작:', {
+    currentModule: currentModule.moduleId,
+    currentSlotIndex,
+    isCurrentDual,
+    allModulesInfo: allModules.map(m => ({
+      moduleId: m.moduleId,
+      slotIndex: m.slotIndex,
+      isDual: m.moduleId?.includes('dual-')
+    }))
+  });
+  
+  // 왼쪽: 싱글 가구는 -1, 듀얼 가구는 시작 슬롯이 -2 위치에 있어야 함
+  let leftAdjacentModule = allModules.find(m => {
+    // 왼쪽에 있는 가구가 듀얼인 경우 처리
+    const isLeftDual = m.moduleId?.includes('dual-');
+    if (isLeftDual) {
+      // 듀얼 가구의 시작 슬롯이 currentSlotIndex - 2 위치에 있고,
+      // 듀얼이 차지하는 두 번째 슬롯(+1)이 현재 가구 바로 왼쪽(currentSlotIndex - 1)에 있는지 확인
+      const isAdjacent = m.slotIndex === currentSlotIndex - 2;
+      if (isAdjacent) {
+        console.log('✅ 왼쪽 듀얼 가구 감지:', {
+          leftModule: m.moduleId,
+          leftSlotIndex: m.slotIndex,
+          currentSlotIndex,
+          계산: `${m.slotIndex} === ${currentSlotIndex} - 2`
+        });
+      }
+      return isAdjacent;
+    } else {
+      // 싱글 가구는 바로 왼쪽 슬롯에 있어야 함
+      const isAdjacent = m.slotIndex === currentSlotIndex - 1;
+      if (isAdjacent) {
+        console.log('✅ 왼쪽 싱글 가구 감지:', {
+          leftModule: m.moduleId,
+          leftSlotIndex: m.slotIndex,
+          currentSlotIndex,
+          계산: `${m.slotIndex} === ${currentSlotIndex} - 1`
+        });
+      }
+      return isAdjacent;
+    }
+  });
+  
+  // 오른쪽: 현재 가구가 듀얼이면 +2, 싱글이면 +1 위치 체크
   let rightAdjacentModule = isCurrentDual 
     ? allModules.find(m => m.slotIndex === currentSlotIndex + 2)  // 듀얼은 +2
     : allModules.find(m => m.slotIndex === currentSlotIndex + 1); // 싱글은 +1
