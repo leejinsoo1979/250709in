@@ -54,6 +54,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const isDualFurniture = movingModule.isDualSlot !== undefined ? movingModule.isDualSlot :
                            Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
 
+    // 이동하는 가구의 카테고리 확인
+    const movingCategory = moduleData.category;
+    const isMovingUpper = movingCategory === 'upper';
+    const isMovingLower = movingCategory === 'lower';
+
     // 이동하는 가구가 차지할 슬롯들 계산
     let occupiedSlots: number[] = [];
     if (isDualFurniture) {
@@ -85,6 +90,20 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleInfo) return;
 
+      // 기존 가구의 카테고리 확인
+      const existingCategory = moduleInfo.category;
+      const isExistingUpper = existingCategory === 'upper';
+      const isExistingLower = existingCategory === 'lower';
+
+      // 상부장과 하부장은 같은 슬롯에 공존 가능
+      if ((isMovingUpper && isExistingLower) || (isMovingLower && isExistingUpper)) {
+        console.log('✅ 상부장-하부장 공존 가능 (useFurnitureDrag):', {
+          이동하는가구: { id: movingModuleId, category: movingCategory },
+          기존가구: { id: module.id, category: existingCategory }
+        });
+        return; // 충돌로 간주하지 않음
+      }
+
       // 기존 가구의 isDualSlot 속성을 우선 사용
       const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot :
                           Math.abs(moduleInfo.dimensions.width - (columnWidth * 2)) < 50;
@@ -103,11 +122,13 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         console.log('💥 충돌 감지:', {
           이동하는가구: {
             id: movingModuleId,
+            category: movingCategory,
             isDual: isDualFurniture,
             targetSlots: occupiedSlots
           },
           기존가구: {
             id: module.id,
+            category: existingCategory,
             isDual: isModuleDual,
             occupiedSlots: moduleSlots
           }
