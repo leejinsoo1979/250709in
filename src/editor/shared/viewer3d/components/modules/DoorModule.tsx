@@ -460,13 +460,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장의 경우 모듈 높이 사용
-    actualDoorHeight = moduleData?.dimensions?.height || 1000; // 기본값 1000mm (하부장 실제 높이)
+    // 하부장 도어는 키큰장과 동일한 하단 위치를 가지도록 설정
+    // 하부장 높이(1000mm) + 바닥재 높이만큼 도어 높이 설정
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+    actualDoorHeight = (moduleData?.dimensions?.height || 1000) + floorHeight;
     console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
       moduleHeight: moduleData?.dimensions?.height,
+      floorHeight,
       actualDoorHeight,
-      type: '하부장'
+      type: '하부장',
+      설명: '바닥부터 하부장 상단까지'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
@@ -489,7 +493,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   
   // 상부장은 이미 확장 높이를 계산했으므로 추가로 빼지 않음
-  const doorHeightAdjustment = isUpperCabinet ? 0 : 30; // 상부장이 아닌 경우만 30mm 줄임
+  // 하부장도 전체 높이를 사용하므로 빼지 않음
+  const doorHeightAdjustment = (isUpperCabinet || isLowerCabinet) ? 0 : 30; // 상부장/하부장이 아닌 경우만 30mm 줄임
   const doorHeight = mmToThreeUnits(actualDoorHeight - doorHeightAdjustment);
   
   // === 문 Y 위치 계산 ===
@@ -521,13 +526,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
-    doorYPosition = 0;
+    // 하부장 도어는 바닥부터 시작해야 함 (키큰장과 동일)
+    // 하부장 높이가 1000mm이고, 중심이 바닥+500mm 위치에 있음
+    // 도어는 바닥부터 시작하므로 중심을 하부장 높이의 절반만큼 아래로 조정
+    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+    
+    // 도어 중심 = (바닥재 높이 + 하부장 높이) / 2
+    doorYPosition = mmToThreeUnits((floorHeight + lowerCabinetHeight) / 2 - lowerCabinetHeight / 2);
+    
     console.log('🚪📍 하부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
-      doorYPosition: 0,
+      lowerCabinetHeight,
+      floorHeight,
+      doorYPosition,
       type: '하부장',
-      note: '가구 중심과 동일'
+      설명: '바닥부터 시작 (키큰장과 동일한 하단)'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
