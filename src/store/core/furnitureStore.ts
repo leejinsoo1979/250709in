@@ -160,7 +160,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         id: module.id,
         슬롯: module.slotIndex,
         zone: module.zone,
-        category: newCategory,
+        category: newModuleData?.category,
         전체가구수: state.placedModules.length + 1
       });
       
