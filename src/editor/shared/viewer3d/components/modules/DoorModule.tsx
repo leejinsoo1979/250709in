@@ -441,17 +441,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 자체 높이보다 크게 설정
+    // 상부장 도어는 캐비넷보다 위로 10mm, 아래로 43mm 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
+    const topExtension = 10; // 위로 10mm 확장
+    const bottomExtension = 43; // 아래로 43mm 확장
     
-    // 상부장 도어 높이 = 캐비넷 높이만 사용 (확장 제거)
-    actualDoorHeight = upperCabinetHeight;
+    // 상부장 도어 높이 = 캐비넷 높이 + 위 확장 + 아래 확장
+    actualDoorHeight = upperCabinetHeight + topExtension + bottomExtension;
     
     console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
+      위확장: topExtension,
+      아래확장: bottomExtension,
       도어높이: actualDoorHeight,
-      설명: '캐비넷 높이와 동일'
+      설명: '캐비넷보다 위로 10mm, 아래로 43mm 확장'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -490,13 +494,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 중심과 동일
-    doorYPosition = 0;
+    // 상부장 도어는 확장된 만큼 Y 위치 조정
+    // 위로 10mm, 아래로 43mm 확장이므로
+    // 도어 중심을 아래로 이동: (43 - 10) / 2 = 16.5mm
+    const yOffset = (43 - 10) / 2; // 16.5mm 아래로
+    doorYPosition = -mmToThreeUnits(yOffset); // 음수로 아래 방향
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition,
-      설명: '캐비넷 중심과 동일'
+      yOffsetMm: yOffset,
+      설명: '확장된 도어의 중심 위치 (16.5mm 아래로)'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
