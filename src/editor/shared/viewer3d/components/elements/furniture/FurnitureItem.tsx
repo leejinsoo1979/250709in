@@ -312,6 +312,38 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
+  // Hook은 조건부 return 전에 선언되어야 함
+  useEffect(() => {
+    invalidate();
+    
+    // 3D 모드에서 그림자 강제 업데이트
+    if (gl && gl.shadowMap) {
+      gl.shadowMap.needsUpdate = true;
+      
+      // 메쉬 렌더링 완료 보장을 위한 지연 업데이트
+      setTimeout(() => {
+        gl.shadowMap.needsUpdate = true;
+        invalidate();
+      }, 100);
+      
+      // 추가로 300ms 후에도 한 번 더 (완전한 렌더링 보장)
+      setTimeout(() => {
+        gl.shadowMap.needsUpdate = true;
+        invalidate();
+      }, 300);
+    }
+  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate, gl]);
+
+  // mm를 Three.js 단위로 변환
+  const mmToThreeUnits = (mm: number) => mm * 0.01;
+  
+  // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
+  // Hook은 조건부 return 전에 선언되어야 함
+  const columnSlots = React.useMemo(() => {
+    return analyzeColumnSlots(spaceInfo, placedModules);
+  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
+
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   if (!moduleData) {
@@ -337,36 +369,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     zone: placedModule.zone,
     internalSpaceHeight: internalSpace.height
   });
-
-  // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
-  useEffect(() => {
-    invalidate();
-    
-    // 3D 모드에서 그림자 강제 업데이트
-    if (gl && gl.shadowMap) {
-      gl.shadowMap.needsUpdate = true;
-      
-      // 메쉬 렌더링 완료 보장을 위한 지연 업데이트
-      setTimeout(() => {
-        gl.shadowMap.needsUpdate = true;
-        invalidate();
-      }, 100);
-      
-      // 추가로 300ms 후에도 한 번 더 (완전한 렌더링 보장)
-      setTimeout(() => {
-        gl.shadowMap.needsUpdate = true;
-        invalidate();
-      }, 300);
-    }
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, placedModule.id, invalidate, gl]);
-  
-  // mm를 Three.js 단위로 변환
-  const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
-  // 기둥 포함 슬롯 분석 (기둥 변경사항 실시간 반영)
-  const columnSlots = React.useMemo(() => {
-    return analyzeColumnSlots(spaceInfo, placedModules);
-  }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
