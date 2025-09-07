@@ -120,6 +120,13 @@ export const isSlotAvailable = (
     return true;
   } else {
     // 기둥이 없는 슬롯에서는 기존 로직 사용
+    
+    // 배치하려는 모듈의 카테고리 확인
+    const newModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
+    const newCategory = newModuleData?.category;
+    const isNewUpper = newCategory === 'upper';
+    const isNewLower = newCategory === 'lower';
+    
     for (const placedModule of placedModules) {
       // 제외할 모듈은 건너뛰기
       if (excludeModuleId && placedModule.id === excludeModuleId) {
@@ -128,6 +135,17 @@ export const isSlotAvailable = (
       
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData) continue;
+      
+      // 기존 가구의 카테고리 확인
+      const existingCategory = moduleData.category;
+      const isExistingUpper = existingCategory === 'upper';
+      const isExistingLower = existingCategory === 'lower';
+      
+      // 상부장과 하부장은 같은 슬롯에 공존 가능
+      if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+        // 공존 가능한 경우, 이 모듈은 충돌로 간주하지 않음
+        continue;
+      }
       
       // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
       const isModuleDual = placedModule.isDualSlot !== undefined ? placedModule.isDualSlot : 
@@ -154,6 +172,7 @@ export const isSlotAvailable = (
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
         
         if (hasOverlap) {
+          // 상부장과 하부장 공존은 허용되므로 이미 위에서 체크함
           console.log('🚫 슬롯 충돌 감지 (isSlotAvailable):', {
             targetSlots,
             existingModule: {
@@ -161,7 +180,12 @@ export const isSlotAvailable = (
               moduleId: placedModule.moduleId,
               slotIndex: moduleSlot,
               isDual: isModuleDual,
-              occupiedSlots: moduleSlots
+              occupiedSlots: moduleSlots,
+              category: existingCategory
+            },
+            newModule: {
+              moduleId,
+              category: newCategory
             },
             isDualFurniture,
             conflict: true

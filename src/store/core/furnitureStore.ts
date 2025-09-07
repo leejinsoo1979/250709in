@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { PlacedModule, CurrentDragData } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { getModuleById } from '@/data/modules';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { spaceConfigStore } from './spaceConfigStore';
 
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
@@ -96,6 +99,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         return state; // 변경 없음
       }
       
+      // 배치하려는 모듈의 카테고리 확인 (상부장/하부장 체크용)
+      const spaceInfo = spaceConfigStore.getState();
+      const internalSpace = calculateInternalSpace(spaceInfo);
+      const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      const newCategory = newModuleData?.category;
+      const isNewUpper = newCategory === 'upper';
+      const isNewLower = newCategory === 'lower';
+      
       // 동일한 슬롯에 이미 가구가 있는지 체크
       const slotOccupied = state.placedModules.find(m => 
         m.slotIndex === module.slotIndex && 
@@ -103,6 +114,33 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       );
       
       if (slotOccupied) {
+        // 기존 가구의 카테고리 확인
+        const existingModuleData = getModuleById(slotOccupied.moduleId, internalSpace, spaceInfo);
+        const existingCategory = existingModuleData?.category;
+        const isExistingUpper = existingCategory === 'upper';
+        const isExistingLower = existingCategory === 'lower';
+        
+        // 상부장과 하부장은 같은 슬롯에 공존 가능
+        if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+          console.log('✅ 상부장과 하부장 공존 허용 (addModule):', {
+            슬롯: module.slotIndex,
+            zone: module.zone,
+            기존가구: {
+              id: slotOccupied.id,
+              category: existingCategory
+            },
+            새가구: {
+              id: module.id,
+              category: newCategory
+            }
+          });
+          
+          // 공존 가능한 경우 둘 다 유지
+          return {
+            placedModules: [...state.placedModules, module]
+          };
+        }
+        
         console.warn('⚠️ 슬롯에 이미 가구가 존재:', {
           슬롯: module.slotIndex,
           zone: module.zone,
@@ -122,6 +160,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         id: module.id,
         슬롯: module.slotIndex,
         zone: module.zone,
+        category: newCategory,
         전체가구수: state.placedModules.length + 1
       });
       
@@ -172,6 +211,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
           const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
           
+          // 이동하는 모듈의 카테고리 확인
+          const spaceInfo = spaceConfigStore.getState();
+          const internalSpace = calculateInternalSpace(spaceInfo);
+          const targetModuleData = getModuleById(targetModule.moduleId, internalSpace, spaceInfo);
+          const targetCategory = targetModuleData?.category;
+          const isTargetUpper = targetCategory === 'upper';
+          const isTargetLower = targetCategory === 'lower';
+          
           // 다른 가구가 이미 해당 슬롯에 있는지 확인
           const slotOccupied = state.placedModules.find(m => 
             m.id !== id && // 자기 자신은 제외
@@ -180,6 +227,39 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           );
           
           if (slotOccupied) {
+            // 기존 가구의 카테고리 확인
+            const existingModuleData = getModuleById(slotOccupied.moduleId, internalSpace, spaceInfo);
+            const existingCategory = existingModuleData?.category;
+            const isExistingUpper = existingCategory === 'upper';
+            const isExistingLower = existingCategory === 'lower';
+            
+            // 상부장과 하부장은 같은 슬롯에 공존 가능
+            if ((isTargetUpper && isExistingLower) || (isTargetLower && isExistingUpper)) {
+              console.log('✅ 상부장과 하부장 공존 허용 (updatePlacedModule):', {
+                슬롯: newSlotIndex,
+                zone: newZone,
+                이동하는가구: {
+                  id,
+                  category: targetCategory
+                },
+                기존가구: {
+                  id: slotOccupied.id,
+                  category: existingCategory
+                }
+              });
+              
+              // 공존 가능한 경우 충돌하지 않으므로 그냥 업데이트
+              const newModules = state.placedModules.map(module => 
+                module.id === id 
+                  ? { ...module, ...updates } 
+                  : module
+              );
+              
+              return {
+                placedModules: newModules
+              };
+            }
+            
             console.warn('⚠️ 슬롯 충돌 감지:', {
               이동하는가구: id,
               충돌가구: slotOccupied.id,
