@@ -440,14 +440,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   let actualDoorHeight: number;
   
-  if (isUpperCabinet || isLowerCabinet) {
-    // 상하부장의 경우 모듈 높이 사용
-    actualDoorHeight = moduleData?.dimensions?.height || 600; // 기본값 600mm
-    console.log('🚪📏 상하부장 도어 높이:', {
+  if (isUpperCabinet) {
+    // 상부장 도어는 상부장 캐비넷 높이와 동일
+    // 상부장 도어 상단 = 키큰장 도어 상단과 정렬 (Y 위치로 조정)
+    // 상부장 도어 하단 = 상부장 하부프레임 하단과 정렬
+    const upperCabinetHeight = moduleData?.dimensions?.height || 600; // 상부장 캐비넷 높이
+    
+    // 상부장 도어 높이는 상부장 캐비넷 높이와 동일
+    actualDoorHeight = upperCabinetHeight;
+    
+    console.log('🚪🔴 상부장 도어 높이 설정:', {
+      moduleId: moduleData?.id,
+      상부장캐비넷높이: upperCabinetHeight,
+      도어높이: actualDoorHeight,
+      설명: '상부장 도어는 캐비넷 높이와 동일, Y 위치로 키큰장과 정렬'
+    });
+  } else if (isLowerCabinet) {
+    // 하부장의 경우 모듈 높이 사용
+    actualDoorHeight = moduleData?.dimensions?.height || 800; // 기본값 800mm
+    console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
       moduleHeight: moduleData?.dimensions?.height,
       actualDoorHeight,
-      type: isUpperCabinet ? '상부장' : '하부장'
+      type: '하부장'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
