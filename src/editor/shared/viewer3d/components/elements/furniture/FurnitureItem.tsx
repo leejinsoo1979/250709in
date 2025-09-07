@@ -527,8 +527,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     placedModulePosition: placedModule.position
   });
   
-  // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기 (기존 로직 유지)
-  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
+  // 노서라운드 모드에서 엔드패널 옆 캐비넷은 18mm 줄이기
+  // 단, 키큰장이 이미 상하부장과 인접하여 조정된 경우는 제외
+  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined && !needsEndPanelAdjustment) {
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     
@@ -545,6 +546,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           positionAdjustment: positionAdjustmentForEndPanel,
           설명: '엔드패널에 맞춤'
         });
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
       } else if (isLastSlotNoSurround) {
         adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
         // 마지막 슬롯: 캐비넷이 줄어든 후 위치 조정
@@ -556,6 +558,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           positionAdjustment: positionAdjustmentForEndPanel,
           설명: '엔드패널에 맞춤'
         });
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
       }
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
       // 벽1개: 벽이 없는 쪽만 축소 및 위치 조정
@@ -564,19 +567,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
         positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
         console.log('🔧 노서라운드 엔드패널 조정 (오른쪽):', adjustedWidthForEndPanel);
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
       } else if (spaceInfo.wallConfig?.right && isFirstSlotNoSurround) {
         // 오른쪽 벽이 있으면 왼쪽 끝만 축소
         adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
         positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
         console.log('🔧 노서라운드 엔드패널 조정 (왼쪽):', adjustedWidthForEndPanel);
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
       }
     }
     // builtin은 양쪽 벽이 있으므로 조정 불필요
-  }
-  
-  // 최종 가구 너비 적용 (키큰장 엔드패널 조정이 있었다면 그것을 우선 적용)
-  if (!needsEndPanelAdjustment) {
-    furnitureWidthMm = adjustedWidthForEndPanel;
   }
 
   // 디버깅용 로그 추가
