@@ -460,13 +460,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `위쪽 ${UPPER_CABINET_TOP_GAP}mm 간격, 아래로 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 정확히 1000mm 높이
-    actualDoorHeight = 1000;
+    // 하부장 도어는 모듈 높이와 동일
+    actualDoorHeight = moduleData?.dimensions?.height || 1000;
     console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
+      moduleHeight: moduleData?.dimensions?.height,
       actualDoorHeight,
       type: '하부장',
-      설명: '고정 1000mm'
+      설명: '모듈 높이와 동일'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)

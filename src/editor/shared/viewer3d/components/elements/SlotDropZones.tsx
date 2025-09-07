@@ -126,6 +126,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       
       const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleData) return;
+      const existingCategory = moduleData.category;
 
       const indexing = calculateSpaceIndexing(spaceInfo);
       const columnWidth = indexing.columnWidth;
@@ -142,20 +143,35 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       // 슬롯 겹침 확인
       const hasOverlap = occupiedSlots.some(slot => moduleSlots.includes(slot));
       if (hasOverlap) {
+        // 상부장-하부장 조합인지 확인
+        if (newCategory && existingCategory &&
+            ((newCategory === 'upper' && existingCategory === 'lower') ||
+             (newCategory === 'lower' && existingCategory === 'upper'))) {
+          // 상부장과 하부장은 공존 가능 - 충돌로 간주하지 않음
+          console.log('✅ 상부장과 하부장 공존 가능 (SlotDropZones):', {
+            새가구: newCategory,
+            기존가구: existingCategory,
+            슬롯: newSlotIndex
+          });
+          return; // 충돌 목록에 추가하지 않음
+        }
+        
         collidingModules.push(module.id);
         if (import.meta.env.DEV) {
           console.log('🚨 새 가구 배치로 인한 충돌 감지:', {
             newSlots: occupiedSlots,
             collidingModule: module.id,
             existingSlots: moduleSlots,
-            zone
+            zone,
+            newCategory,
+            existingCategory
           });
         }
       }
     });
 
     return collidingModules;
-  }, [placedModules, internalSpace, spaceInfo]);
+  }, [placedModules, internalSpace, spaceInfo, columnSlots]);
 
   // 충돌한 가구들 제거
   const removeCollidingFurniture = React.useCallback((collidingModuleIds: string[]) => {
@@ -706,7 +722,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       };
       
       // 충돌 감지 및 충돌한 가구 제거
-      const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone);
+      const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleId);
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
       }
@@ -881,7 +897,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     };
     
     // 충돌 감지 및 충돌한 가구 제거
-    const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone);
+    const collidingModules = detectNewFurnitureCollisions(zoneSlotIndex, actualIsDual, zone, false, actualModuleId);
     if (collidingModules.length > 0) {
       removeCollidingFurniture(collidingModules);
       if (import.meta.env.DEV) {
@@ -1144,7 +1160,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       };
 
       // 캐비넷 배치 시 충돌 감지 및 제거 - zone은 기본값 'normal' 사용
-      const collidingModules = detectNewFurnitureCollisions(cabinet.slotIndex, false, 'normal'); // 캐비넷은 단일 슬롯
+      const collidingModules = detectNewFurnitureCollisions(cabinet.slotIndex, false, 'normal', false, cabinet.moduleId); // 캐비넷은 단일 슬롯
       if (collidingModules.length > 0) {
         removeCollidingFurniture(collidingModules);
         if (import.meta.env.DEV) {
