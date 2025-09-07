@@ -614,6 +614,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedPosition = { ...placedModule.position };
   }
   
+  // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 매우 중요!
+  const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
+                         placedModule.moduleId?.includes('dual-upper-cabinet');
+  
+  if (isUpperCabinet) {
+    // 상부장은 무조건 1400mm 높이에 위치
+    const UPPER_CABINET_Y = 14; // 1400mm in Three.js units
+    adjustedPosition = {
+      ...adjustedPosition,
+      y: UPPER_CABINET_Y
+    };
+    console.log('🔴🔴🔴 상부장 Y 위치 강제 설정!:', {
+      moduleId: placedModule.moduleId,
+      강제Y위치: UPPER_CABINET_Y,
+      설명: '상부장은 무조건 14 (1400mm) 높이'
+    });
+  }
+  
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
   
   let adjustedDepthMm = actualModuleData.dimensions.depth;
@@ -877,7 +895,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 기둥 침범 시에는 항상 폭 조정
       furnitureWidthMm = furnitureBounds.renderWidth;
       adjustedPosition = {
-        ...placedModule.position,
+        ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
         x: furnitureBounds.center + positionAdjustmentForEndPanel
       };
       
@@ -978,7 +996,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 위치도 슬롯 중심으로 복구
     const slotCenterX = indexing.threeUnitPositions[placedModule.slotIndex] || placedModule.position.x;
     adjustedPosition = {
-      ...placedModule.position,
+      ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
       x: slotCenterX + positionAdjustmentForEndPanel
     };
     
