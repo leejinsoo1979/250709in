@@ -23,6 +23,7 @@ import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
+import ViewerToolbar from './components/ViewerToolbar';
 
 
 import { useLocation } from 'react-router-dom';
@@ -1224,6 +1225,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <InternalDimensionDisplay />
           </React.Suspense>
         </ThreeCanvas>
+
+        {/* 간접조명 툴바 - 3D 모드에서만 표시 */}
+        <ViewerToolbar viewMode={viewMode} />
 
         {/* 분할 모드 버튼 - 2D 모드에서만 표시 */}
         {viewMode === '2D' && view2DDirection !== 'all' && (

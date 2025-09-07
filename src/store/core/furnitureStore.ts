@@ -106,15 +106,46 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
       
-      // 동일한 슬롯에 이미 가구가 있는지 체크
-      const existingModulesInSlot = state.placedModules.filter(m => 
-        m.slotIndex === module.slotIndex && 
-        m.zone === module.zone
-      );
+      // 듀얼 가구인지 확인
+      const isDual = module.moduleId.includes('dual-');
+      const occupiedSlots = isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex];
+      
+      // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
+      let existingModulesInSlot: typeof state.placedModules = [];
+      for (const slotIdx of occupiedSlots) {
+        const modulesInThisSlot = state.placedModules.filter(m => {
+          // 기존 가구가 듀얼인지 확인
+          const existingIsDual = m.moduleId.includes('dual-');
+          const existingOccupiedSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
+          
+          // 기존 가구가 차지하는 슬롯 중 하나라도 현재 슬롯과 겹치는지 확인
+          return existingOccupiedSlots.includes(slotIdx) && m.zone === module.zone;
+        });
+        
+        // 중복 제거하며 추가
+        modulesInThisSlot.forEach(m => {
+          if (!existingModulesInSlot.find(existing => existing.id === m.id)) {
+            existingModulesInSlot.push(m);
+          }
+        });
+      }
+      
+      console.log('🔍 듀얼 가구 슬롯 체크:', {
+        새가구ID: module.id,
+        isDual,
+        occupiedSlots,
+        기존가구수: existingModulesInSlot.length,
+        기존가구들: existingModulesInSlot.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slot: m.slotIndex,
+          isDual: m.moduleId.includes('dual-')
+        }))
+      });
       
       if (existingModulesInSlot.length > 0) {
         // 상부장과 하부장이 공존할 수 있는지 체크
-        let moduleToReplace = null;
+        let modulesToReplace: typeof state.placedModules = [];
         
         // 모든 기존 가구와 공존 가능한지 확인
         for (const existing of existingModulesInSlot) {
@@ -126,33 +157,36 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               (newCategory === 'lower' && existingCategory === 'upper')) {
             // 공존 가능 - 계속 진행
             console.log('✅ 상부장과 하부장 공존 가능:', {
-              새가구: { id: module.id, category: newCategory },
-              기존가구: { id: existing.id, category: existingCategory }
+              새가구: { id: module.id, category: newCategory, isDual },
+              기존가구: { id: existing.id, category: existingCategory, isDual: existing.moduleId.includes('dual-') }
             });
           } else {
             // 같은 카테고리거나 full 타입이면 교체 필요
-            moduleToReplace = existing;
+            modulesToReplace.push(existing);
             console.log('⚠️ 교체 필요:', {
-              새가구: { id: module.id, category: newCategory },
-              기존가구: { id: existing.id, category: existingCategory }
+              새가구: { id: module.id, category: newCategory, isDual },
+              기존가구: { id: existing.id, category: existingCategory, isDual: existing.moduleId.includes('dual-') }
             });
-            break; // 교체가 필요하면 더 이상 확인할 필요 없음
           }
         }
         
         // 교체가 필요한 경우
-        if (moduleToReplace) {
+        if (modulesToReplace.length > 0) {
           console.warn('⚠️ 기존 가구 교체:', {
-            슬롯: module.slotIndex,
+            슬롯들: occupiedSlots,
             zone: module.zone,
-            기존가구: moduleToReplace.id,
+            교체될가구들: modulesToReplace.map(m => m.id),
             새가구: module.id
           });
           
+          // 교체될 가구들의 ID 목록
+          const replaceIds = modulesToReplace.map(m => m.id);
+          
           return {
-            placedModules: state.placedModules.map(m => 
-              m.id === moduleToReplace.id ? module : m
-            )
+            placedModules: [
+              ...state.placedModules.filter(m => !replaceIds.includes(m.id)),
+              module
+            ]
           };
         }
         
@@ -167,6 +201,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         id: module.id,
         슬롯: module.slotIndex,
         zone: module.zone,
+        듀얼여부: isDual,
+        차지하는슬롯: occupiedSlots,
         전체가구수: state.placedModules.length + 1
       });
       
@@ -232,12 +268,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const isTargetUpper = targetCategory === 'upper';
           const isTargetLower = targetCategory === 'lower';
           
-          // 다른 가구가 이미 해당 슬롯에 있는지 확인
-          const existingModulesInSlot = state.placedModules.filter(m => 
-            m.id !== id && // 자기 자신은 제외
-            m.slotIndex === newSlotIndex &&
-            m.zone === newZone // zone도 같아야 함
-          );
+          // 듀얼 가구인지 확인
+          const isDual = targetModule.moduleId.includes('dual-');
+          const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
+          
+          // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
+          let existingModulesInSlot: typeof state.placedModules = [];
+          for (const slotIdx of occupiedSlots) {
+            const modulesInThisSlot = state.placedModules.filter(m => {
+              if (m.id === id) return false; // 자기 자신은 제외
+              
+              // 기존 가구가 듀얼인지 확인
+              const existingIsDual = m.moduleId.includes('dual-');
+              const existingOccupiedSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
+              
+              // 기존 가구가 차지하는 슬롯 중 하나라도 현재 슬롯과 겹치는지 확인
+              return existingOccupiedSlots.includes(slotIdx) && m.zone === newZone;
+            });
+            
+            // 중복 제거하며 추가
+            modulesInThisSlot.forEach(m => {
+              if (!existingModulesInSlot.find(existing => existing.id === m.id)) {
+                existingModulesInSlot.push(m);
+              }
+            });
+          }
           
           console.log('🔍 updatePlacedModule - 슬롯 체크:', {
             이동가구ID: id,
