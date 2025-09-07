@@ -326,33 +326,65 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             
             // 상부장-하부장 공존 가능 여부를 체크
             let modulesToReplace: typeof state.placedModules = [];
-            let canCoexistWithAll = true;
             
-            for (const existing of existingModulesInSlot) {
-              const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-              const existingCategory = existingModuleData?.category;
+            // 듀얼 가구의 경우 각 슬롯별로 공존 가능 여부를 체크
+            if (isDual) {
+              // 듀얼 가구가 차지하는 각 슬롯에 대해 개별적으로 체크
+              const slot1Modules = existingModulesInSlot.filter(m => {
+                const mIsDual = m.moduleId.includes('dual-');
+                return mIsDual ? m.slotIndex === newSlotIndex || m.slotIndex === newSlotIndex - 1 : m.slotIndex === newSlotIndex;
+              });
               
-              // 상부장-하부장 관계인지 체크
-              if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
-                // 상부장과 하부장은 공존 가능
-                console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule):', {
-                  기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
-                  이동: { id, category: targetCategory, zone: newZone, isDual }
-                });
-                // 공존 가능 - 다음 가구도 확인
-              } else {
-                // 상부장-하부장 관계가 아니면 교체 대상
-                canCoexistWithAll = false;
-                modulesToReplace.push(existing);
-                console.log('⚠️ 공존 불가능한 가구 (updatePlacedModule):', {
-                  기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
-                  이동: { id, category: targetCategory, zone: newZone, isDual }
-                });
+              const slot2Modules = existingModulesInSlot.filter(m => {
+                const mIsDual = m.moduleId.includes('dual-');
+                return mIsDual ? m.slotIndex === newSlotIndex || m.slotIndex === newSlotIndex + 1 : m.slotIndex === newSlotIndex + 1;
+              });
+              
+              // 각 슬롯의 기존 가구와 공존 가능 여부 체크
+              for (const existing of existingModulesInSlot) {
+                const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
+                const existingCategory = existingModuleData?.category;
+                
+                // 상부장-하부장 관계인지 체크
+                if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
+                  console.log('✅ 듀얼 가구 - 상부장-하부장 공존 가능 (updatePlacedModule):', {
+                    기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
+                    이동: { id, category: targetCategory, zone: newZone, isDual }
+                  });
+                } else {
+                  // 같은 카테고리면 교체 필요
+                  modulesToReplace.push(existing);
+                  console.log('⚠️ 듀얼 가구 - 공존 불가능한 가구 (updatePlacedModule):', {
+                    기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
+                    이동: { id, category: targetCategory, zone: newZone, isDual }
+                  });
+                }
+              }
+            } else {
+              // 싱글 가구의 경우 기존 로직 유지
+              for (const existing of existingModulesInSlot) {
+                const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
+                const existingCategory = existingModuleData?.category;
+                
+                // 상부장-하부장 관계인지 체크
+                if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
+                  console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule):', {
+                    기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
+                    이동: { id, category: targetCategory, zone: newZone, isDual }
+                  });
+                } else {
+                  // 같은 카테고리거나 full 타입이면 교체 필요
+                  modulesToReplace.push(existing);
+                  console.log('⚠️ 공존 불가능한 가구 (updatePlacedModule):', {
+                    기존: { id: existing.id, category: existingCategory, zone: existing.zone, isDual: existing.moduleId.includes('dual-') },
+                    이동: { id, category: targetCategory, zone: newZone, isDual }
+                  });
+                }
               }
             }
             
             // 모든 기존 가구와 공존 가능하면 그냥 업데이트
-            if (canCoexistWithAll && modulesToReplace.length === 0) {
+            if (modulesToReplace.length === 0) {
               console.log('✅ 상부장과 하부장 공존 - 위치 업데이트:', {
                 슬롯: newSlotIndex,
                 이동가구: { id, category: targetCategory, zone: newZone },
