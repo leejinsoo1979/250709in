@@ -441,21 +441,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷보다 위에서 15mm, 아래에서 12mm 줄어듦
+    // 상부장 도어는 캐비넷보다 위로 10mm, 아래로 40mm 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    const topReduction = 15; // 위에서 15mm 줄어듦
-    const bottomReduction = 12; // 아래에서 12mm 줄어듦
+    const topExtension = 10; // 위로 확장 (양수: 확장, 음수: 축소)
+    const bottomExtension = 40; // 아래로 확장 (양수: 확장, 음수: 축소)
     
-    // 상부장 도어 높이 = 캐비넷 높이 - 위 축소 - 아래 축소
-    actualDoorHeight = upperCabinetHeight - topReduction - bottomReduction;
+    // 상부장 도어 높이 = 캐비넷 높이 + 위 확장 + 아래 확장
+    actualDoorHeight = upperCabinetHeight + topExtension + bottomExtension;
     
     console.log('🚪🔴 상부장 도어 높이 계산:', {
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
-      위축소: topReduction,
-      아래축소: bottomReduction,
+      위확장: topExtension,
+      아래확장: bottomExtension,
       도어높이: actualDoorHeight,
-      설명: '캐비넷보다 위에서 15mm, 아래에서 12mm 줄어듦'
+      설명: `캐비넷보다 위로 ${topExtension}mm, 아래로 ${bottomExtension}mm 확장`
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -494,16 +494,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 위에서 15mm, 아래에서 12mm 줄어들므로
-    // 캐비넷 중심에서 도어 중심이 이동: (아래 축소 - 위 축소) / 2 = (12 - 15) / 2 = -1.5mm
-    const yOffset = (12 - 15) / 2; // -1.5mm (아래로)
-    doorYPosition = mmToThreeUnits(yOffset);
+    // 상부장 도어가 확장/축소될 때 중심 이동 계산
+    const topExtension = 10; // 위로 확장 (양수: 확장, 음수: 축소)
+    const bottomExtension = 40; // 아래로 확장 (양수: 확장, 음수: 축소)
+    
+    // 도어 중심 이동 = (아래 확장 - 위 확장) / 2
+    const yOffset = (bottomExtension - topExtension) / 2; // 15mm 아래로
+    doorYPosition = -mmToThreeUnits(yOffset); // 음수로 아래 방향
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
       doorYPosition,
       yOffsetMm: yOffset,
-      설명: '도어 중심이 캐비넷 중심보다 1.5mm 아래'
+      설명: `도어 중심이 캐비넷 중심보다 ${yOffset}mm 아래로 이동`
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
