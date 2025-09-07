@@ -534,6 +534,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
     const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
+    const DOOR_POSITION_ADJUSTMENT = 10; // 위치 조정값 (10mm 더 아래로)
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
     
     // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
@@ -550,8 +551,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const cabinetBottom = -mmToThreeUnits(lowerCabinetHeight) / 2;
     const doorBottom = cabinetBottom - mmToThreeUnits(LOWER_CABINET_BOTTOM_EXTENSION);
     
-    // 도어 중심 = 도어 하단 + 도어 높이/2
-    doorYPosition = doorBottom + mmToThreeUnits(doorHeight) / 2;
+    // 도어 중심 = 도어 하단 + 도어 높이/2 - 추가 조정값
+    doorYPosition = doorBottom + mmToThreeUnits(doorHeight) / 2 - mmToThreeUnits(DOOR_POSITION_ADJUSTMENT);
     
     console.log('🚪📍 하부장 도어 Y 위치 (상단 일치, 아래 확장):', {
       moduleId: moduleData?.id,
@@ -563,8 +564,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorYPosition,
       위확장: LOWER_CABINET_TOP_EXTENSION,
       아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
+      위치조정: DOOR_POSITION_ADJUSTMENT,
       type: '하부장',
-      설명: '하부장 상단과 일치, 아래로 60mm 확장'
+      설명: '하부장 상단과 일치, 아래로 40mm 확장, 10mm 아래로 조정'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
