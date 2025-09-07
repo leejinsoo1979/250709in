@@ -497,10 +497,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * endPanelCount);
     
     // 위치 조정: 엔드패널이 한쪽에만 있으면 위치도 조정
+    // 키큰장이 줄어든 만큼의 절반을 이동
     if (endPanelSide === 'left') {
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 이동
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
     } else if (endPanelSide === 'right') {
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 이동
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
     }
     // both인 경우는 중앙 유지 (positionAdjustmentForEndPanel = 0)
     
@@ -1548,14 +1549,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const endPanelXPositions = [];
         
         if (endPanelSide === 'left' || endPanelSide === 'both') {
+          // 왼쪽 엔드패널: 가구의 원래 위치에서 계산
           endPanelXPositions.push({
-            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2 + positionAdjustmentForEndPanel,
+            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2,
             side: 'left'
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
+          // 오른쪽 엔드패널: 가구의 원래 위치에서 계산
           endPanelXPositions.push({
-            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2 + positionAdjustmentForEndPanel,
+            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2,
             side: 'right'
           });
         }
