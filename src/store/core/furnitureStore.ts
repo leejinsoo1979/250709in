@@ -333,73 +333,30 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               const existingCategory = existingModuleData?.category;
               const existingIsDual = existing.moduleId.includes('dual-');
               
-              // 듀얼 가구의 경우, 정확히 같은 슬롯들을 차지하는지 확인
-              if (isDual && existingIsDual) {
-                // 둘 다 듀얼이면, 시작 슬롯이 같은지 확인
-                if (existing.slotIndex === newSlotIndex) {
-                  // 같은 위치의 듀얼 가구
-                  if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
-                    console.log('✅ 듀얼↔듀얼 상부장-하부장 공존 가능 (updatePlacedModule):', {
-                      기존: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                      이동: { id, category: targetCategory, slotIndex: newSlotIndex }
-                    });
-                  } else {
-                    // 같은 카테고리의 듀얼 가구는 교체
-                    modulesToReplace.push(existing);
-                    console.log('⚠️ 듀얼↔듀얼 같은 카테고리 - 교체 필요 (updatePlacedModule):', {
-                      기존: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                      이동: { id, category: targetCategory, slotIndex: newSlotIndex }
-                    });
-                  }
-                }
-                // 다른 위치의 듀얼 가구는 공존 가능 (일부만 겹침)
-              } else if (isDual && !existingIsDual) {
-                // 이동하는 가구가 듀얼, 기존이 싱글
-                // 싱글 가구가 듀얼이 차지하는 슬롯 중 하나에 있음
-                if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
-                  console.log('✅ 듀얼↔싱글 상부장-하부장 공존 가능 (updatePlacedModule):', {
-                    기존싱글: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                    이동듀얼: { id, category: targetCategory, slotIndex: newSlotIndex }
-                  });
-                } else {
-                  // 같은 카테고리면 교체
-                  modulesToReplace.push(existing);
-                  console.log('⚠️ 듀얼↔싱글 같은 카테고리 - 교체 필요 (updatePlacedModule):', {
-                    기존싱글: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                    이동듀얼: { id, category: targetCategory, slotIndex: newSlotIndex }
-                  });
-                }
-              } else if (!isDual && existingIsDual) {
-                // 이동하는 가구가 싱글, 기존이 듀얼
-                // 싱글이 듀얼의 일부 슬롯을 차지하려 함
-                if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
-                  console.log('✅ 싱글↔듀얼 상부장-하부장 공존 가능 (updatePlacedModule):', {
-                    기존듀얼: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                    이동싱글: { id, category: targetCategory, slotIndex: newSlotIndex }
-                  });
-                } else {
-                  // 같은 카테고리면 교체
-                  modulesToReplace.push(existing);
-                  console.log('⚠️ 싱글↔듀얼 같은 카테고리 - 교체 필요 (updatePlacedModule):', {
-                    기존듀얼: { id: existing.id, category: existingCategory, slotIndex: existing.slotIndex },
-                    이동싱글: { id, category: targetCategory, slotIndex: newSlotIndex }
-                  });
-                }
+              console.log('🔍 공존 체크 중:', {
+                이동가구: { id, category: targetCategory, isDual },
+                기존가구: { id: existing.id, category: existingCategory, isDual: existingIsDual },
+                상부장여부: { 이동: isTargetUpper, 기존: existingCategory === 'upper' },
+                하부장여부: { 이동: isTargetLower, 기존: existingCategory === 'lower' }
+              });
+              
+              // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
+              const canCoexist = (isTargetUpper && existingCategory === 'lower') || 
+                                (isTargetLower && existingCategory === 'upper');
+              
+              if (canCoexist) {
+                console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule):', {
+                  기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
+                  이동: { id, category: targetCategory, isDual }
+                });
+                // 공존 가능하므로 modulesToReplace에 추가하지 않음
               } else {
-                // 둘 다 싱글
-                if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
-                  console.log('✅ 싱글↔싱글 상부장-하부장 공존 가능 (updatePlacedModule):', {
-                    기존: { id: existing.id, category: existingCategory },
-                    이동: { id, category: targetCategory }
-                  });
-                } else {
-                  // 같은 카테고리면 교체
-                  modulesToReplace.push(existing);
-                  console.log('⚠️ 싱글↔싱글 같은 카테고리 - 교체 필요 (updatePlacedModule):', {
-                    기존: { id: existing.id, category: existingCategory },
-                    이동: { id, category: targetCategory }
-                  });
-                }
+                // 같은 카테고리거나 full 카테고리면 교체 필요
+                modulesToReplace.push(existing);
+                console.log('⚠️ 같은 카테고리 또는 full - 교체 필요 (updatePlacedModule):', {
+                  기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
+                  이동: { id, category: targetCategory, isDual }
+                });
               }
             }
             
