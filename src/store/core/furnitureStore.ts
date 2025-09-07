@@ -234,7 +234,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 다른 가구가 이미 해당 슬롯에 있는지 확인
           const existingModulesInSlot = state.placedModules.filter(m => 
             m.id !== id && // 자기 자신은 제외
-            m.slotIndex === newSlotIndex
+            m.slotIndex === newSlotIndex &&
+            m.zone === newZone // zone도 같아야 함
           );
           
           if (existingModulesInSlot.length > 0) {
