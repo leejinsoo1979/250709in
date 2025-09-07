@@ -441,11 +441,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 높이에서 위쪽 5mm 줄여서 천장과 간격 유지
-    // 아래는 캐비넷과 일치
+    // 상부장 도어는 캐비넷보다 아래로 28mm 더 확장, 위쪽 5mm 간격
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
     const topGap = 5; // 천장과 5mm 간격
-    const bottomExtension = 0; // 아래는 캐비넷과 일치
+    const bottomExtension = 28; // 아래로 28mm 더 확장
     
     // 상부장 도어 높이 = 캐비넷 높이 - 위쪽 간격 + 아래 확장
     actualDoorHeight = upperCabinetHeight - topGap + bottomExtension;
@@ -456,7 +455,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       천장간격: topGap,
       아래확장: bottomExtension,
       도어높이: actualDoorHeight,
-      설명: '위쪽 5mm 간격, 아래는 캐비넷과 일치'
+      설명: '위쪽 5mm 간격, 아래로 28mm 확장'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
@@ -495,17 +494,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷 하단과 일치, 위쪽만 5mm 간격
+    // 상부장 도어는 캐비넷보다 아래로 28mm 더 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
     const topGap = 5; // 천장과 5mm 간격
+    const bottomExtension = 28; // 아래로 28mm 더 확장
     
     // 캐비넷 하단 = -캐비넷높이/2
-    // 도어 하단 = 캐비넷 하단과 동일
-    // 도어 높이가 캐비넷높이 - 5mm이므로
-    // 도어 중심 = 도어 하단 + 도어높이/2 = -캐비넷높이/2 + (캐비넷높이-5)/2
-    const doorHeightMm = upperCabinetHeight - topGap;
+    // 도어 하단 = 캐비넷 하단 - 28mm (더 아래로)
+    // 도어 높이 = 캐비넷높이 - 5mm + 28mm
+    // 도어 중심 = 도어 하단 + 도어높이/2
+    const doorHeightMm = upperCabinetHeight - topGap + bottomExtension;
     const cabinetBottom = -upperCabinetHeight / 2;
-    const doorCenter = cabinetBottom + doorHeightMm / 2;
+    const doorBottom = cabinetBottom - bottomExtension;
+    const doorCenter = doorBottom + doorHeightMm / 2;
     
     doorYPosition = mmToThreeUnits(doorCenter);
     
@@ -513,10 +514,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       moduleId: moduleData?.id,
       캐비넷높이: upperCabinetHeight,
       캐비넷하단: cabinetBottom,
+      도어하단: doorBottom,
       도어높이: doorHeightMm,
       도어중심: doorCenter,
       doorYPosition,
-      설명: '도어 하단이 캐비넷 하단과 일치'
+      설명: '도어가 캐비넷보다 28mm 아래로 확장'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 Y 위치는 0 (가구 중심과 동일)
