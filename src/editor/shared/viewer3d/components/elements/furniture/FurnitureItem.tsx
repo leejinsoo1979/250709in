@@ -528,95 +528,60 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     
     if (spaceInfo.installType === 'freestanding') {
-      // 벽없음: 키큰장이 아닌 경우에만 양쪽 끝 캐비넷 축소 및 위치 조정
-      if (!isTallCabinet) {
-        if (isFirstSlotNoSurround) {
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          // 첫번째 슬롯: 캐비넷이 줄어든 후 위치 조정
-          // 캐비넷이 줄어든 절반(9mm)만큼 오른쪽으로 이동
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 노서라운드 엔드패널 조정 (첫번째):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '엔드패널에 맞춤'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
-        } else if (isLastSlotNoSurround) {
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          // 마지막 슬롯: 캐비넷이 줄어든 후 위치 조정
-          // 캐비넷이 줄어든 절반(9mm)만큼 왼쪽으로 이동
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 노서라운드 엔드패널 조정 (마지막):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '엔드패널에 맞춤'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
-        }
-      } else {
-        // 키큰장: 벽이 없는 위치에서만 너비 축소 (18mm 이격 생성)
-        if (isFirstSlotNoSurround) {
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 키큰장 벽없음 위치 조정 (첫번째):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '벽이 없는 위치에서 18mm 이격'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        } else if (isLastSlotNoSurround) {
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 키큰장 벽없음 위치 조정 (마지막):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '벽이 없는 위치에서 18mm 이격'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        }
+      // 벽없음(freestanding): 모든 캐비넷이 엔드패널과 딱 맞게 18mm 축소
+      // 키큰장도 상하부장도 동일하게 처리
+      if (isFirstSlotNoSurround) {
+        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+        // 첫번째 슬롯: 캐비넷이 줄어든 후 위치 조정
+        // 캐비넷이 줄어든 절반(9mm)만큼 오른쪽으로 이동
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+        console.log('🔧 노서라운드 엔드패널 조정 (첫번째):', {
+          moduleType: isTallCabinet ? '키큰장' : '상하부장',
+          originalWidth: furnitureWidthMm,
+          adjustedWidth: adjustedWidthForEndPanel,
+          설명: '엔드패널에 맞춤'
+        });
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
+      } else if (isLastSlotNoSurround) {
+        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+        // 마지막 슬롯: 캐비넷이 줄어든 후 위치 조정
+        // 캐비넷이 줄어든 절반(9mm)만큼 왼쪽으로 이동
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+        console.log('🔧 노서라운드 엔드패널 조정 (마지막):', {
+          moduleType: isTallCabinet ? '키큰장' : '상하부장',
+          originalWidth: furnitureWidthMm,
+          adjustedWidth: adjustedWidthForEndPanel,
+          설명: '엔드패널에 맞춤'
+        });
+        furnitureWidthMm = adjustedWidthForEndPanel; // 너비 업데이트
       }
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 벽1개: 벽이 없는 쪽만 처리
+      // 세미스탠딩: 벽이 없는 쪽만 엔드패널에 맞게 조정
+      // 키큰장도 상하부장도 동일하게 처리 (벽없는 쪽은 엔드패널과 딱 맞게)
       if (spaceInfo.wallConfig?.left && isLastSlotNoSurround) {
-        // 왼쪽 벽이 있고 오른쪽 끝 슬롯
-        if (isTallCabinet) {
-          // 키큰장: 벽이 없는 쪽(오른쪽)에서 18mm 축소
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 키큰장 벽없음 위치 조정 (오른쪽):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '벽이 없는 오른쪽에서 18mm 이격'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        } else {
-          // 상하부장: 기존 로직 유지
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 노서라운드 엔드패널 조정 (오른쪽):', adjustedWidthForEndPanel);
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        }
+        // 왼쪽 벽이 있고 오른쪽 끝 슬롯 (오른쪽에 엔드패널)
+        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+        console.log('🔧 노서라운드 엔드패널 조정 (오른쪽):', {
+          moduleType: isTallCabinet ? '키큰장' : '상하부장',
+          originalWidth: furnitureWidthMm,
+          adjustedWidth: adjustedWidthForEndPanel,
+          설명: '엔드패널에 맞춤'
+        });
+        furnitureWidthMm = adjustedWidthForEndPanel;
       } else if (spaceInfo.wallConfig?.right && isFirstSlotNoSurround) {
-        // 오른쪽 벽이 있고 왼쪽 첫 슬롯
-        if (isTallCabinet) {
-          // 키큰장: 벽이 없는 쪽(왼쪽)에서 18mm 축소
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 키큰장 벽없음 위치 조정 (왼쪽):', {
-            originalWidth: furnitureWidthMm,
-            adjustedWidth: adjustedWidthForEndPanel,
-            설명: '벽이 없는 왼쪽에서 18mm 이격'
-          });
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        } else {
-          // 상하부장: 기존 로직 유지
-          adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🔧 노서라운드 엔드패널 조정 (왼쪽):', adjustedWidthForEndPanel);
-          furnitureWidthMm = adjustedWidthForEndPanel;
-        }
+        // 오른쪽 벽이 있고 왼쪽 첫 슬롯 (왼쪽에 엔드패널)
+        adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+        console.log('🔧 노서라운드 엔드패널 조정 (왼쪽):', {
+          moduleType: isTallCabinet ? '키큰장' : '상하부장',
+          originalWidth: furnitureWidthMm,
+          adjustedWidth: adjustedWidthForEndPanel,
+          설명: '엔드패널에 맞춤'
+        });
+        furnitureWidthMm = adjustedWidthForEndPanel;
       }
-      // 벽이 있는 쪽의 키큰장은 조정하지 않음 (너비 유지, 18mm 이격은 엔드패널로 처리)
+      // 벽이 있는 쪽은 조정하지 않음 (벽에 바로 붙음)
     }
     // builtin은 양쪽 벽이 있으므로 조정 불필요
   }
