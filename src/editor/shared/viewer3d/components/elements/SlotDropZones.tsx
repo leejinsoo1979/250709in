@@ -302,9 +302,16 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       targetSlotInfo
     });
     
+    // 이동 중인 가구의 ID 찾기 (기존 가구를 이동하는 경우)
+    const excludeModuleId = currentDragData?.placedModuleId || undefined;
+    
     // 모든 슬롯에 대해 기본 가용성 검사 수행 (기둥 유무 관계없이)
-    if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id)) {
-      console.log('❌ 슬롯 가용성 검사 실패');
+    if (!isSlotAvailable(zoneSlotIndex, isDual, placedModules, spaceInfo, dragData.moduleData.id, excludeModuleId)) {
+      console.log('❌ 슬롯 가용성 검사 실패:', {
+        슬롯: zoneSlotIndex,
+        이동중인가구ID: excludeModuleId,
+        모듈ID: dragData.moduleData.id
+      });
       return false; // 충돌하는 슬롯에는 배치 불가
     }
     

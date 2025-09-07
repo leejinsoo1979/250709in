@@ -144,7 +144,20 @@ export const isSlotAvailable = (
       // 상부장과 하부장은 같은 슬롯에 공존 가능
       if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
         // 공존 가능한 경우, 이 모듈은 충돌로 간주하지 않음
+        console.log('✅ 상부장-하부장 공존 가능 (isSlotAvailable):', {
+          기존: { id: placedModule.id, category: existingCategory },
+          새가구: { moduleId, category: newCategory }
+        });
         continue;
+      }
+      
+      // 같은 카테고리끼리는 공존 불가능 (상부장-상부장, 하부장-하부장)
+      if ((isNewUpper && isExistingUpper) || (isNewLower && isExistingLower)) {
+        console.log('❌ 같은 카테고리 충돌 (isSlotAvailable):', {
+          기존: { id: placedModule.id, category: existingCategory },
+          새가구: { moduleId, category: newCategory }
+        });
+        // 충돌 체크는 아래에서 계속 진행
       }
       
       // 기존 가구의 듀얼/싱글 여부 판별 - isDualSlot 속성을 우선 사용
