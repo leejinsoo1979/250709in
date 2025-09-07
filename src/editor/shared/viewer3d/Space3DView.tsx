@@ -21,6 +21,7 @@ import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
+import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 
 
@@ -1030,6 +1031,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 상하부장 사이 백패널 렌더링 */}
             <BackPanelBetweenCabinets 
+              placedModules={placedModules}
+              spaceInfo={spaceInfo}
+            />
+            
+            {/* 상부장 간접조명 및 띄워서 배치 간접조명 렌더링 */}
+            <UpperCabinetIndirectLight
               placedModules={placedModules}
               spaceInfo={spaceInfo}
             />
