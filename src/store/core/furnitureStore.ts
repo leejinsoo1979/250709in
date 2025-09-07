@@ -239,6 +239,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             m.zone === newZone // zone도 같아야 함
           );
           
+          console.log('🔍 updatePlacedModule - 슬롯 체크:', {
+            이동가구ID: id,
+            목표슬롯: newSlotIndex,
+            목표zone: newZone,
+            현재전체가구: state.placedModules.map(m => ({
+              id: m.id,
+              slot: m.slotIndex,
+              zone: m.zone
+            })),
+            자기자신제외후: existingModulesInSlot.map(m => ({
+              id: m.id,
+              slot: m.slotIndex,
+              zone: m.zone
+            }))
+          });
+          
           if (existingModulesInSlot.length > 0) {
             console.log('🔍 슬롯 이동 - 같은 슬롯에 이미 가구가 존재:', {
               슬롯: newSlotIndex,
