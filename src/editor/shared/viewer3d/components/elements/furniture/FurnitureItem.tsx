@@ -486,17 +486,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
+  let originalFurnitureWidthMm = furnitureWidthMm; // 엔드패널 조정 전 원래 너비 저장
   
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
+    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm, '(기둥 A 침범 케이스)');
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     // customWidth가 명시적으로 설정되어 있으면 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
     furnitureWidthMm = placedModule.customWidth;
+    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 customWidth 사용:', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
+    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
   }
   
@@ -548,15 +552,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
       // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
-      adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
       positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'right') {
       // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
-      adjustedWidthForEndPanel = furnitureWidthMm - END_PANEL_THICKNESS;
+      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
       positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
-      adjustedWidthForEndPanel = furnitureWidthMm - (END_PANEL_THICKNESS * 2);
+      adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
       positionAdjustmentForEndPanel = 0; // 중앙 유지
     }
     
@@ -564,11 +568,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
       moduleId: placedModule.moduleId,
-      originalWidth: furnitureWidthMm + (endPanelSide === 'both' ? END_PANEL_THICKNESS * 2 : END_PANEL_THICKNESS),
+      isDualFurniture,
+      originalWidth: originalFurnitureWidthMm,
       adjustedWidth: adjustedWidthForEndPanel,
+      reduction: originalFurnitureWidthMm - adjustedWidthForEndPanel,
       positionAdjustment: positionAdjustmentForEndPanel,
       endPanelSide,
-      설명: '키큰장 너비 축소 및 위치 이동'
+      설명: isDualFurniture ? '듀얼 키큰장 너비 축소 및 위치 이동' : '싱글 키큰장 너비 축소 및 위치 이동'
     });
   }
   
