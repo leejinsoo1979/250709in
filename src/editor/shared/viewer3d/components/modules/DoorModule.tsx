@@ -529,54 +529,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 키큰장과 정확히 같은 Y 위치 사용
-    // 하부장 높이만 다름
-    const LOWER_CABINET_TOP_EXTENSION = 20; // 위쪽 약간 확장
-    const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    
-    // 하부장 도어 높이
-    const lowerDoorHeight = lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION;
-    
-    // 키큰장과 완전히 동일한 Y 위치 계산 로직 사용
+    // 하부장 도어는 키큰장과 동일한 Y 위치 계산 사용
+    // 단, 높이가 다르므로 그에 맞게 조정
     if (spaceInfo.baseConfig?.type === 'floor') {
-      // 받침대 있음: 키큰장과 동일
+      // 받침대 있음: 키큰장과 동일한 계산
       const topFrameHeight = spaceInfo.frameSize?.top || 50;
       const baseFrameHeight = spaceInfo.baseConfig.height || 65;
       const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      
-      // 키큰장과 동일한 계산
-      const baseY = mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
-      
-      // 하부장은 높이가 낮으므로 중심점 조정 필요
-      // 키큰장 도어 하단과 하부장 도어 하단이 일치하도록
-      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
-      const tallDoorBottom = baseY - mmToThreeUnits(tallDoorHeight) / 2;
-      
-      // 하부장 도어 중심 = 키큰장 도어 하단 + 하부장 도어 높이/2
-      doorYPosition = tallDoorBottom + mmToThreeUnits(lowerDoorHeight) / 2;
+      doorYPosition = floorHeight > 0 
+        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
+        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
     } else {
-      // 받침대 없음
+      // 받침대 없음: 키큰장과 동일한 계산
       const topFrameHeight = spaceInfo.frameSize?.top || 50;
       const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      
-      // 키큰장과 동일한 계산
-      const baseY = mmToThreeUnits(topFrameHeight) / 2;
-      
-      // 하부장은 높이가 낮으므로 중심점 조정 필요
-      const tallDoorHeight = spaceInfo.height - floorHeight - 30;
-      const tallDoorBottom = baseY - mmToThreeUnits(tallDoorHeight) / 2;
-      
-      // 하부장 도어 중심 = 키큰장 도어 하단 + 하부장 도어 높이/2
-      doorYPosition = tallDoorBottom + mmToThreeUnits(lowerDoorHeight) / 2;
+      doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
     }
     
-    console.log('🚪📍 하부장 도어 Y 위치 (키큰장과 동일한 하단):', {
+    console.log('🚪📍 하부장 도어 Y 위치 (키큰장과 동일):', {
       moduleId: moduleData?.id,
-      하부장도어높이: lowerDoorHeight,
       doorYPosition,
-      위확장: LOWER_CABINET_TOP_EXTENSION,
+      actualDoorHeight: actualDoorHeight - doorHeightAdjustment,
       type: '하부장',
-      설명: '키큰장 도어와 정확히 같은 하단 위치'
+      설명: '키큰장과 완전히 동일한 Y 위치 계산'
     });
   } else {
     // 키큰장의 경우 기존 로직 유지
