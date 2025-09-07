@@ -1234,8 +1234,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               internalHeight={furnitureHeightMm}
               viewMode={viewMode}
               renderMode={renderMode}
-              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) 
-                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 도어는 별도 렌더링
+              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 키큰장이 상하부장과 인접한 경우 도어는 별도 렌더링
                 : (placedModule.hasDoor ?? false)}
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
@@ -1430,11 +1430,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
       </group>
 
-      {/* 기둥 침범 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
-      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 커버도어 렌더링 */}
+      {/* 기둥 침범 시 또는 키큰장이 상하부장과 인접 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
+      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 키큰장이 상하부장과 인접한 경우 커버도어 렌더링 */}
       {(placedModule.hasDoor ?? false) && 
        ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
-        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null)) && 
+        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
+        needsEndPanelAdjustment) && 
        spaceInfo && (() => {
         console.log('🚪🚨 커버도어 렌더링 조건 체크:', {
           hasDoor: placedModule.hasDoor,
