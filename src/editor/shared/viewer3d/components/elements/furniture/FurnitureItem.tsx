@@ -1311,7 +1311,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
               slotWidths={(() => {
                 // 듀얼 가구인 경우 개별 슬롯 너비 전달
-                if (isDualFurniture) {
+                // 단, 엔드패널 조정이 필요한 경우는 slotWidths를 전달하지 않음 (adjustedWidth 사용하도록)
+                if (isDualFurniture && !needsEndPanelAdjustment) {
                   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
                     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
                     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
