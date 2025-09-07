@@ -462,8 +462,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치, 아래로 확장
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    const LOWER_CABINET_BOTTOM_EXTENSION = 60; // 하부장 도어 아래쪽 확장 (mm) - 증가
-    const LOWER_CABINET_TOP_EXTENSION = 18; // 하부장 상부 마감재 두께만큼 위로 확장
+    const LOWER_CABINET_BOTTOM_EXTENSION = 50; // 하부장 도어 아래쪽 확장 (mm) - 줄임
+    const LOWER_CABINET_TOP_EXTENSION = 10; // 하부장 상부 마감재 두께만큼 위로 확장 - 줄임
     
     // 하부장 도어 높이 = 캐비넷 높이 + 아래 확장 + 위 확장
     actualDoorHeight = lowerCabinetHeight + LOWER_CABINET_BOTTOM_EXTENSION + LOWER_CABINET_TOP_EXTENSION;
@@ -532,8 +532,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   } else if (isLowerCabinet) {
     // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
-    const LOWER_CABINET_BOTTOM_EXTENSION = 60; // 아래쪽 확장
-    const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께
+    const LOWER_CABINET_BOTTOM_EXTENSION = 50; // 아래쪽 확장 - 줄임
+    const LOWER_CABINET_TOP_EXTENSION = 10; // 상부 마감재 두께 - 줄임
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
     
     // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
