@@ -974,7 +974,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         };
       }
       
-      const internalSpace = calculateInternalSpace(zoneSpaceInfo);
+      const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
       const furnitureHeightMm = module.dimensions.height || 600;
       const furnitureHeight = furnitureHeightMm * 0.01; // Three.js 단위로 변환
       
