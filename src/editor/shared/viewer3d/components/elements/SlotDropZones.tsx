@@ -108,6 +108,13 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     if (newModuleId) {
       const newModuleData = getModuleById(newModuleId, internalSpace, spaceInfo);
       newCategory = newModuleData?.category;
+      console.log('🔍 detectNewFurnitureCollisions - 새 가구 카테고리:', {
+        newModuleId,
+        newCategory,
+        newModuleData: newModuleData ? '있음' : '없음'
+      });
+    } else {
+      console.warn('⚠️ detectNewFurnitureCollisions - newModuleId가 없음');
     }
     
     // 새 가구가 차지할 슬롯들 계산
