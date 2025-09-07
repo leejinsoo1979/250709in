@@ -100,26 +100,66 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         return state; // 변경 없음
       }
       
+      // 새 가구의 카테고리 확인
+      const newModuleData = getModuleById(module.moduleId, undefined, undefined);
+      const newCategory = newModuleData?.category;
+      
       // 동일한 슬롯에 이미 가구가 있는지 체크
-      const slotOccupied = state.placedModules.find(m => 
+      const existingModulesInSlot = state.placedModules.filter(m => 
         m.slotIndex === module.slotIndex && 
         m.zone === module.zone
       );
       
-      if (slotOccupied) {
-        console.warn('⚠️ 슬롯에 이미 가구가 존재:', {
-          슬롯: module.slotIndex,
-          zone: module.zone,
-          기존가구: slotOccupied.id,
-          새가구: module.id
-        });
+      if (existingModulesInSlot.length > 0) {
+        // 상부장과 하부장이 공존할 수 있는지 체크
+        let canCoexist = false;
+        let moduleToReplace = null;
         
-        // 기존 가구를 새 가구로 교체
-        return {
-          placedModules: state.placedModules.map(m => 
-            m.id === slotOccupied.id ? module : m
-          )
-        };
+        for (const existing of existingModulesInSlot) {
+          const existingModuleData = getModuleById(existing.moduleId, undefined, undefined);
+          const existingCategory = existingModuleData?.category;
+          
+          // 상부장-하부장 조합인지 확인
+          if ((newCategory === 'upper' && existingCategory === 'lower') ||
+              (newCategory === 'lower' && existingCategory === 'upper')) {
+            canCoexist = true;
+            console.log('✅ 상부장과 하부장 공존 가능:', {
+              새가구: { id: module.id, category: newCategory },
+              기존가구: { id: existing.id, category: existingCategory }
+            });
+          } else {
+            // 같은 카테고리거나 full 타입이면 교체 필요
+            moduleToReplace = existing;
+            console.log('⚠️ 교체 필요:', {
+              새가구: { id: module.id, category: newCategory },
+              기존가구: { id: existing.id, category: existingCategory }
+            });
+          }
+        }
+        
+        // 공존 가능하면 추가
+        if (canCoexist && !moduleToReplace) {
+          console.log('✅ 가구 공존 추가');
+          return {
+            placedModules: [...state.placedModules, module]
+          };
+        }
+        
+        // 교체가 필요한 경우
+        if (moduleToReplace) {
+          console.warn('⚠️ 기존 가구 교체:', {
+            슬롯: module.slotIndex,
+            zone: module.zone,
+            기존가구: moduleToReplace.id,
+            새가구: module.id
+          });
+          
+          return {
+            placedModules: state.placedModules.map(m => 
+              m.id === moduleToReplace.id ? module : m
+            )
+          };
+        }
       }
       
       console.log('✅ 가구 추가 완료:', {
