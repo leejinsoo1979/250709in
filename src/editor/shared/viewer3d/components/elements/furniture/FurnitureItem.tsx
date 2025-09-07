@@ -32,7 +32,8 @@ const checkAdjacentUpperLowerToFull = (
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   }
   
-  // 키큰장(full)이 아니고 듀얼 캐비넷도 아니면 처리하지 않음
+  // 키큰장(full)이 아니면 처리하지 않음
+  // 듀얼 캐비넷이어도 상부장/하부장이면 엔드패널 처리하지 않음
   const isDualCabinet = currentModule.moduleId?.includes('dual-');
   
   console.log('🔍 checkAdjacentUpperLowerToFull 시작:', {
@@ -42,8 +43,10 @@ const checkAdjacentUpperLowerToFull = (
     slotIndex: currentModule.slotIndex
   });
   
-  if (currentModuleData.category !== 'full' && !isDualCabinet) {
-    console.log('❌ 키큰장/듀얼이 아니므로 처리 안함');
+  // 키큰장(full 카테고리)만 처리
+  // 듀얼 상부장/하부장은 처리하지 않음 (같은 카테고리끼리는 엔드패널 불필요)
+  if (currentModuleData.category !== 'full') {
+    console.log('❌ 키큰장이 아니므로 처리 안함 (category:', currentModuleData.category, ')');
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   }
 
