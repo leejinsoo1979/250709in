@@ -765,18 +765,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       moduleIdFromPlaced: placedModule.moduleId
     });
     
-    // 도어 너비가 가구 너비와 크게 차이나는 경우 - 기둥 침범 시에는 보정하지 않음
+    // 도어 너비가 가구 너비와 크게 차이나는 경우 - 기둥 침범 시와 엔드패널 있는 경우에는 보정하지 않음
     // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
+    // 키큰장에 엔드패널이 있을 때도 도어는 원래 슬롯 너비를 유지해야 함
     const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
-    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn)) {
-      console.warn('⚠️ 도어와 가구 너비 불일치 감지 (기둥 없는 경우):', {
+    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
+      console.warn('⚠️ 도어와 가구 너비 불일치 감지 (기둥/엔드패널 없는 경우):', {
         originalSlotWidthMm,
         furnitureWidthMm,
         difference: widthDifference,
         '보정여부': '가구 너비로 도어 너비 보정'
       });
-      // 기둥이 없는 경우에만 가구 너비를 기준으로 도어 너비 보정
+      // 기둥이 없고 엔드패널도 없는 경우에만 가구 너비를 기준으로 도어 너비 보정
       originalSlotWidthMm = furnitureWidthMm;
+    } else if (needsEndPanelAdjustment) {
+      console.log('🚪 키큰장 엔드패널 - 도어는 원래 슬롯 너비 유지:', {
+        originalSlotWidthMm,
+        furnitureWidthMm,
+        엔드패널측: endPanelSide,
+        도어너비: originalSlotWidthMm,
+        가구너비: furnitureWidthMm,
+        차이: widthDifference
+      });
     }
   }
   
