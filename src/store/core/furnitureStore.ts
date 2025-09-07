@@ -248,9 +248,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               이동가구: { id, zone: newZone, category: targetCategory }
             });
             
-            // 상부장-하부장 공존 가능 여부를 먼저 체크
-            let canCoexist = false;
+            // 상부장-하부장 공존 가능 여부를 체크
             let moduleToReplace = null;
+            let canCoexistWithAll = true;
             
             for (const existing of existingModulesInSlot) {
               const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
@@ -259,25 +259,25 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               // 상부장-하부장 관계인지 체크
               if ((isTargetUpper && existingCategory === 'lower') || (isTargetLower && existingCategory === 'upper')) {
                 // 상부장과 하부장은 공존 가능
-                canCoexist = true;
                 console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule):', {
                   기존: { id: existing.id, category: existingCategory, zone: existing.zone },
                   이동: { id, category: targetCategory, zone: newZone }
                 });
-                // 공존 가능하면 교체 대상 없음
-                break;
+                // 공존 가능 - 다음 가구도 확인
               } else {
                 // 상부장-하부장 관계가 아니면 교체 대상
+                canCoexistWithAll = false;
                 moduleToReplace = existing;
                 console.log('⚠️ 공존 불가능한 가구 (updatePlacedModule):', {
                   기존: { id: existing.id, category: existingCategory, zone: existing.zone },
                   이동: { id, category: targetCategory, zone: newZone }
                 });
+                break; // 교체가 필요하면 즉시 종료
               }
             }
             
-            // 공존 가능하면 그냥 업데이트
-            if (canCoexist) {
+            // 모든 기존 가구와 공존 가능하면 그냥 업데이트
+            if (canCoexistWithAll && !moduleToReplace) {
               console.log('✅ 상부장과 하부장 공존 - 위치 업데이트:', {
                 슬롯: newSlotIndex,
                 이동가구: { id, category: targetCategory, zone: newZone },
