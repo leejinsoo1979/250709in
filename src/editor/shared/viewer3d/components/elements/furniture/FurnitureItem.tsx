@@ -422,8 +422,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const adjacentCheck = actualModuleData 
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
-  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
-  const endPanelSide = adjacentCheck.adjacentSide;
   
   // 듀얼 가구 인접 체크 디버깅
   if (isDualFurniture && actualModuleData) {
@@ -477,6 +475,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // 키큰장인지 확인 (2hanging이 포함된 모듈 ID)
+  const isTallCabinet = actualModuleData.id.includes('2hanging');
+  
   // 마지막 슬롯인지 먼저 확인
   let isLastSlot = false;
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
@@ -487,11 +488,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
   }
 
-  // 키큰장이 상하부장과 인접했을 때 키큰장 너비를 18mm 줄이기
+  // 키큰장 엔드패널 처리
   let adjustedWidthForEndPanel = furnitureWidthMm;
   let positionAdjustmentForEndPanel = 0; // 위치 조정값
   
-  // 키큰장/듀얼 캐비넷이 상하부장과 인접했을 때 - 너비 조정 없음, 도어가 커버
+  // 키큰장이 상하부장과 인접한 경우 확인
+  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
+  const endPanelSide = adjacentCheck.adjacentSide;
+  
+  // 키큰장이 상하부장과 인접했을 때 - 너비 조정 없음, 도어가 커버
   if (needsEndPanelAdjustment && endPanelSide) {
     // 너비 조정 없음 - 도어가 엔드패널을 커버하는 방식
     // adjustedWidthForEndPanel과 positionAdjustmentForEndPanel 모두 그대로 유지

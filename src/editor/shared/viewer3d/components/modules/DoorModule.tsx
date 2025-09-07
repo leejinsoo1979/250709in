@@ -441,22 +441,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어: 상단은 키큰장과 맞추고, 하단은 상부장 하부프레임과 맞춤
-    // 상부장이 천장에서 600mm 아래까지 있으므로
-    // 도어는 천장부터 상부장 하단까지 = spaceInfo.height에서 상부장 아래 공간을 뺀 높이
+    // 상부장 도어는 캐비넷 전면을 완전히 덮어야 함
+    // 도어는 캐비넷보다 커야 하고, 마감패널까지 포함해야 함
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
     const bottomFinishingPanel = 18; // 상부장 하단 마감패널 두께 18mm
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     
-    // 상부장 도어 높이 = 상부장 캐비넷 높이 - 하단 마감패널 두께
-    actualDoorHeight = upperCabinetHeight - bottomFinishingPanel;
+    // 상부장 도어 높이 = 상부장 캐비넷 높이 (마감패널 포함)
+    // 도어가 캐비넷 전체를 덮어야 하므로
+    actualDoorHeight = upperCabinetHeight;
     
     console.log('🚪🔴 상부장 도어 높이:', {
       moduleId: moduleData?.id,
       상부장높이: upperCabinetHeight,
-      하단마감패널: bottomFinishingPanel,
       actualDoorHeight,
-      설명: '상부장 캐비넷 높이 - 하단 마감패널(18mm)'
+      설명: '도어가 캐비넷 전체를 덮음'
     });
   } else if (isLowerCabinet) {
     // 하부장의 경우 모듈 높이 사용
