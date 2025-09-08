@@ -1444,8 +1444,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
                 // 듀얼장의 경우 몸통이 이동했으므로 도어를 반대로 보정
-                if (isDualFurniture && needsEndPanelAdjustment && positionAdjustmentForEndPanel !== 0) {
-                  return -positionAdjustmentForEndPanel;
+                if (isDualFurniture && needsEndPanelAdjustment) {
+                  // 듀얼장 몸통이 이동한 만큼 도어는 두 배로 반대로 보정 (group 이동 + 도어 보정)
+                  const adjustment = -positionAdjustmentForEndPanel * 2;
+                  console.log('🚨🚨 듀얼장 도어 보정 (2배):', {
+                    moduleId: placedModule.id,
+                    positionAdjustmentForEndPanel,
+                    adjustment,
+                    adjustedPositionX: adjustedPosition.x,
+                    가구위치: adjustedPosition.x + positionAdjustmentForEndPanel,
+                    도어보정: adjustment,
+                    설명: '가구 이동량의 2배 반대로 보정'
+                  });
+                  return adjustment;
                 }
                 // 싱글장의 경우 기존 로직
                 if (!isDualFurniture && positionAdjustmentForEndPanel !== 0) {
