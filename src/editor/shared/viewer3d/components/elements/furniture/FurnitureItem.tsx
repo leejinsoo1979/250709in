@@ -765,7 +765,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 마지막-1 슬롯의 듀얼 가구인 경우
       const normalSlotWidth = targetZone.columnWidth;
       const lastSlotStart = targetZone.startX + ((targetZone.columnCount - 1) * targetZone.columnWidth);
-      const lastSlotEnd = targetZone.startX + targetZone.width;
+      let lastSlotEnd = targetZone.startX + targetZone.width;
+      
+      // 노서라운드 모드에서는 오른쪽 엔드패널 공간(18mm) 제외
+      if (spaceInfo.surroundType === 'no-surround') {
+        const END_PANEL_THICKNESS = 18; // mm
+        lastSlotEnd -= END_PANEL_THICKNESS;
+        console.log('🚨 듀얼 캐비넷 오른쪽 끝 배치 - 엔드패널 공간 제외:', {
+          moduleId: placedModule.moduleId,
+          원래끝위치: targetZone.startX + targetZone.width,
+          엔드패널제외끝위치: lastSlotEnd,
+          엔드패널두께: END_PANEL_THICKNESS
+        });
+      }
+      
       const lastSlotWidth = lastSlotEnd - lastSlotStart;
       originalSlotWidthMm = normalSlotWidth + lastSlotWidth;
     } else if (isDualFurniture) {
