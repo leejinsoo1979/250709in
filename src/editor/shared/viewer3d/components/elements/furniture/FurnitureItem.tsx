@@ -1393,7 +1393,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
-          adjustedPosition.x + (isDualFurniture && needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0), // 듀얼장만 엔드패널 있을 때 추가 이동
+          adjustedPosition.x, // adjustedPosition.x에 이미 positionAdjustmentForEndPanel 포함됨
           finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
@@ -1443,25 +1443,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비 유지
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼장의 경우 몸통이 이동했으므로 도어를 반대로 보정
-                if (isDualFurniture && needsEndPanelAdjustment) {
-                  // 듀얼장 몸통이 이동한 만큼 도어는 두 배로 반대로 보정 (group 이동 + 도어 보정)
-                  const adjustment = -positionAdjustmentForEndPanel * 2;
-                  console.log('🚨🚨 듀얼장 도어 보정 (2배):', {
-                    moduleId: placedModule.id,
-                    positionAdjustmentForEndPanel,
-                    adjustment,
-                    adjustedPositionX: adjustedPosition.x,
-                    가구위치: adjustedPosition.x + positionAdjustmentForEndPanel,
-                    도어보정: adjustment,
-                    설명: '가구 이동량의 2배 반대로 보정'
-                  });
-                  return adjustment;
-                }
-                // 싱글장의 경우 기존 로직
+                // 싱글장의 경우만 도어 위치 보정
                 if (!isDualFurniture && positionAdjustmentForEndPanel !== 0) {
                   return -positionAdjustmentForEndPanel;
                 }
+                // 듀얼장은 보정 없음 (이미 adjustedPosition.x가 올바른 위치)
                 return 0;
               })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
@@ -1754,8 +1740,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
         
-        // 듀얼장은 몸통이 이동하므로 엔드패널도 따라감
-        const furnitureX = adjustedPosition.x + (isDualFurniture ? positionAdjustmentForEndPanel : 0);
+        // adjustedPosition.x에 이미 positionAdjustmentForEndPanel이 포함됨
+        const furnitureX = adjustedPosition.x;
         
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           // 왼쪽 엔드패널: 키큰장 왼쪽 가장자리에 딱 붙여서
@@ -1799,7 +1785,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {showDimensions && viewMode === '3D' && (
         <Html
           position={[
-            adjustedPosition.x + (isDualFurniture && needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0),
+            adjustedPosition.x,
             finalYPosition - height / 2 - 1.0, // 하부 프레임보다 아래로
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
