@@ -1344,9 +1344,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
     
-    // 벽 위치 설정 (freestanding은 양쪽 벽 없음)
-    hasLeftWall = false;
-    hasRightWall = false;
+    // 벽 위치 설정 (freestanding은 양쪽 벽 없음) - hasLeftWall, hasRightWall은 이미 위에서 설정됨
   } else if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlot = placedModule.slotIndex === 0;
     const isLastSlotForDual = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
@@ -1354,13 +1352,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 벽 위치 확인
     if (spaceInfo.installType === 'freestanding') {
-      // 벽없음 모드: 양쪽 모두 벽 없음
-      hasLeftWall = false;
-      hasRightWall = false;
+      // 벽없음 모드: 양쪽 모두 벽 없음 - hasLeftWall, hasRightWall은 이미 위에서 false로 설정됨
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 반벽 모드: gapConfig로 확인
-      hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
-      hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
+      // 반벽 모드: hasLeftWall, hasRightWall은 이미 wallConfig에서 설정됨
     }
     
     console.log('🔍 벽 위치 확인:', {
