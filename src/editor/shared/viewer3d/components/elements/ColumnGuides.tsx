@@ -405,21 +405,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       
       // 2D 정면 뷰에서도 단내림이 있는 경우 각 영역의 실제 경계 사용
       // 단내림이 없는 경우에만 내경 범위로 클리핑
-      // 노서라운드 + 벽없음 모드에서는 내경 범위를 사용
-      const isNoSurroundWithoutWall = spaceInfo.surroundType === 'no-surround' && 
-        (spaceInfo.installType === 'freestanding' || 
-         (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing'));
-      
       const startBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
         ? Math.max(zoneStartX, internalStartX) 
-        : (isNoSurroundWithoutWall && zoneType === 'dropped') 
-          ? internalStartX  // 노서라운드+벽없음+단내림구간: 내경 시작점 사용
-          : zoneStartX;
+        : zoneStartX;
       const endBoundaryX = (viewMode === '2D' && view2DDirection === 'front' && !hasDroppedCeiling)
         ? Math.min(zoneEndX, internalEndX) 
-        : (isNoSurroundWithoutWall && zoneType === 'dropped')
-          ? Math.min(zoneEndX, internalEndX)  // 노서라운드+벽없음+단내림구간: 내경 끝점까지만
-          : zoneEndX;
+        : zoneEndX;
       
       // 바닥 가이드
       guides.push(

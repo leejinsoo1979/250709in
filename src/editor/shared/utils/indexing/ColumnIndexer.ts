@@ -762,18 +762,25 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
         
-        // 왼쪽 처리 (이격거리 무시)
-        if (spaceInfo.wallConfig?.left) {
-          leftReduction = 0;  // 벽이 있으면 이격거리 무시
+        // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
+        if (spaceInfo.installType === 'freestanding') {
+          // 벽없음: 엔드패널이 슬롯에 포함됨
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        
-        // 오른쪽 처리 (이격거리 무시)
-        if (spaceInfo.wallConfig?.right) {
-          rightReduction = 0;  // 벽이 있으면 이격거리 무시
-        } else {
-          rightReduction = END_PANEL_THICKNESS;
+          // 왼쪽 처리 (이격거리 무시)
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = 0;  // 벽이 있으면 이격거리 무시
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+          
+          // 오른쪽 처리 (이격거리 무시)
+          if (spaceInfo.wallConfig?.right) {
+            rightReduction = 0;  // 벽이 있으면 이격거리 무시
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
         }
         
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
@@ -809,20 +816,28 @@ export class ColumnIndexer {
         });
       } else {
         // 노서라운드: 엔드패널 고려하여 계산
-        // 왼쪽 처리
         let leftReduction = 0;
-        if (spaceInfo.wallConfig?.left) {
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-        } else {
-          leftReduction = END_PANEL_THICKNESS;
-        }
-        
-        // 오른쪽 처리
         let rightReduction = 0;
-        if (spaceInfo.wallConfig?.right) {
-          rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+        
+        // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
+        if (spaceInfo.installType === 'freestanding') {
+          // 벽없음: 엔드패널이 슬롯에 포함됨
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
-          rightReduction = END_PANEL_THICKNESS;
+          // 왼쪽 처리
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = spaceInfo.gapConfig?.left || 2;
+          } else {
+            leftReduction = END_PANEL_THICKNESS;
+          }
+          
+          // 오른쪽 처리
+          if (spaceInfo.wallConfig?.right) {
+            rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+          } else {
+            rightReduction = END_PANEL_THICKNESS;
+          }
         }
         
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
@@ -888,8 +903,19 @@ export class ColumnIndexer {
     const normalSlotWidths: number[] = [];
     const droppedSlotWidths: number[] = [];
     
+    // 노서라운드 프리스탠딩인 경우 (벽없음)
+    if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
+      // 프리스탠딩: 엔드패널이 슬롯에 포함되므로 감소 없음
+      for (let i = 0; i < normalColumnCount; i++) {
+        normalSlotWidths.push(i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth);
+      }
+      
+      for (let i = 0; i < droppedColumnCount; i++) {
+        droppedSlotWidths.push(i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth);
+      }
+    }
     // 세미스탠딩 노서라운드인 경우 특별 처리
-    if (spaceInfo.surroundType === 'no-surround' && 
+    else if (spaceInfo.surroundType === 'no-surround' && 
         (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
       
       // 메인 영역 슬롯 너비 계산
