@@ -202,32 +202,50 @@ const Room: React.FC<RoomProps> = ({
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   
   // 노서라운드 모드에서 각 끝에 가구가 있는지 확인
+  const indexingForCheck = calculateSpaceIndexing(spaceInfo);
+  const lastSlotIndex = indexingForCheck.columnCount - 1;
+  
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModulesFromStore.some(module => {
       // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
-      if (module.slotIndex === 0) return true;
-      // 듀얼 모듈이 1번에서 시작하면 0번도 차지
-      if (module.isDualSlot && module.slotIndex === 1) return true;
-      return false;
+      const isLeft = module.slotIndex === 0 || (module.isDualSlot && module.slotIndex === 1);
+      if (isLeft) {
+        console.log('🟢 왼쪽 가구 감지:', { slotIndex: module.slotIndex, isDualSlot: module.isDualSlot });
+      }
+      return isLeft;
     });
+    
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModulesFromStore.some(module => {
-      // 전체 슬롯 개수를 알아야 마지막 슬롯인지 확인 가능
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      const lastSlotIndex = indexing.columnCount - 1;
       // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
-      if (module.slotIndex === lastSlotIndex) return true;
-      // 듀얼 모듈이 마지막-1에서 시작하면 마지막도 차지
-      if (module.isDualSlot && module.slotIndex === lastSlotIndex - 1) return true;
-      return false;
+      const isRight = module.slotIndex === lastSlotIndex || 
+        (module.isDualSlot && module.slotIndex === lastSlotIndex - 1);
+      if (isRight) {
+        console.log('🔴 오른쪽 가구 감지:', { 
+          slotIndex: module.slotIndex, 
+          isDualSlot: module.isDualSlot,
+          lastSlotIndex,
+          columnCount: indexingForCheck.columnCount,
+          체크조건: `slotIndex === ${lastSlotIndex} 또는 (듀얼 && slotIndex === ${lastSlotIndex - 1})`
+        });
+      }
+      return isRight;
     });
   
+  const indexingDebug = calculateSpaceIndexing(spaceInfo);
   console.log('🔍 Room - 엔드패널 렌더링 조건:', {
     surroundType: spaceInfo.surroundType,
     placedModulesCount: placedModulesFromStore.length,
     hasLeftFurniture,
     hasRightFurniture,
-    slotIndexes: placedModulesFromStore.map(m => m.slotIndex),
+    columnCount: indexingDebug.columnCount,
+    lastSlotIndex: indexingDebug.columnCount - 1,
+    placedModules: placedModulesFromStore.map(m => ({
+      slotIndex: m.slotIndex,
+      isDualSlot: m.isDualSlot,
+      moduleId: m.moduleId,
+      '오른쪽끝체크': m.slotIndex === indexingDebug.columnCount - 1 || (m.isDualSlot && m.slotIndex === indexingDebug.columnCount - 2)
+    })),
     installType: spaceInfo.installType,
     wallConfig: spaceInfo.wallConfig
   });
