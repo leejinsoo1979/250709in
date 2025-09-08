@@ -557,7 +557,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       originalFurnitureWidthMm,
       furnitureWidthMm,
       endPanelSide,
-      END_PANEL_THICKNESS
+      END_PANEL_THICKNESS,
+      설명: isDualFurniture ? '듀얼 캐비넷은 위치 이동 없음' : '싱글 캐비넷만 9mm 이동'
     });
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
@@ -588,9 +589,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       adjustedWidth: adjustedWidthForEndPanel,
       reduction: originalFurnitureWidthMm - adjustedWidthForEndPanel,
       positionAdjustment: positionAdjustmentForEndPanel,
+      positionAdjustment_mm: positionAdjustmentForEndPanel * 100,
       endPanelSide,
       furnitureWidthMm,
-      설명: isDualFurniture ? '듀얼 키큰장 너비 축소 및 위치 이동' : '싱글 키큰장 너비 축소 및 위치 이동'
+      설명: isDualFurniture ? '듀얼 캐비넷: 너비만 축소, 위치 이동 없음' : '싱글 캐비넷: 너비 축소 및 9mm 위치 이동'
     });
   }
   
