@@ -869,15 +869,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         positionAdjustmentForEndPanel = 0;
       }
     } else {
-      // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄임
+      // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄이고 위치 조정
       if (endPanelSide === 'left') {
-        // 왼쪽에 상하부장이 있으면 18mm 줄이고 위치는 유지
+        // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = 0; // 위치 이동 없음
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
       } else if (endPanelSide === 'right') {
-        // 오른쪽에 상하부장이 있으면 18mm 줄이고 위치는 유지
+        // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = 0; // 위치 이동 없음
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
       } else if (endPanelSide === 'both') {
         // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
@@ -1026,6 +1026,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         });
       } else {
         // 키큰장이 상하부장과 인접한 경우는 위에서 이미 처리했으므로
+        // 하지만 노서라운드 첫/마지막 슬롯이면 추가 위치 조정이 필요할 수 있음
+        console.log('🔍 needsEndPanelAdjustment=true인 상태에서 노서라운드 첫/마지막 슬롯 처리:', {
+          moduleId: placedModule.moduleId,
+          needsEndPanelAdjustment,
+          isFirstSlotNoSurround,
+          isLastSlotNoSurround,
+          currentPositionAdjustment: positionAdjustmentForEndPanel,
+          isTallCabinet,
+          isUpperCabinet,
+          isLowerCabinet
+        });
+        
         // 상하부장 자체는 추가 처리가 필요함
         if (isUpperCabinet || isLowerCabinet) {
           // 상하부장이 첫/마지막 슬롯에 있는 경우도 처리
