@@ -1084,7 +1084,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const secondSlotReduction = indexing.slotWidths?.[1] ? indexing.columnWidth - indexing.slotWidths[1] : 0;
         // 두 슬롯의 총 너비에 18mm 추가
         doorWidthExpansion = END_PANEL_THICKNESS + firstSlotReduction + secondSlotReduction;
-        doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ? 
+          positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
         
         console.log('🚪🔧 노서라운드 왼쪽 벽 없음 - 듀얼장 도어 확장:', {
           moduleId: placedModule.moduleId,
@@ -1097,9 +1099,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           설명: '듀얼장 전체 도어를 18mm 확장, 왼쪽으로 9mm 이동'
         });
       } else {
-        // 싱글장: 18mm 확장, 왼쪽으로 9mm 이동
+        // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
         doorWidthExpansion = END_PANEL_THICKNESS;
-        doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01;
+        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ? 
+          positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
         
         console.log('🚪🔧 노서라운드 왼쪽 벽 없음 - 싱글장 도어 확장:', {
           moduleId: placedModule.moduleId,
@@ -1123,7 +1127,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           indexing.columnWidth - indexing.slotWidths[beforeLastSlotIndex] : 0;
         // 두 슬롯의 총 너비에 18mm 추가
         doorWidthExpansion = END_PANEL_THICKNESS + lastSlotReduction + beforeLastSlotReduction;
-        doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
+        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ? 
+          positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
         
         console.log('🚪🔧 노서라운드 오른쪽 벽 없음 - 듀얼장 도어 확장:', {
           moduleId: placedModule.moduleId,
@@ -1137,9 +1143,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           설명: '듀얼장 전체 도어를 18mm 확장, 오른쪽으로 9mm 이동'
         });
       } else {
-        // 싱글장: 18mm 확장, 오른쪽으로 9mm 이동
+        // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
         doorWidthExpansion = END_PANEL_THICKNESS;
-        doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01;
+        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ? 
+          positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
         
         console.log('🚪🔧 노서라운드 오른쪽 벽 없음 - 싱글장 도어 확장:', {
           moduleId: placedModule.moduleId,
