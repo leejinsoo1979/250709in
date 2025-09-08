@@ -205,9 +205,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
-    placedModules.some(module => module.slotIndex === 0);
+    placedModules.some(module => {
+      // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
+      if (module.slotIndex === 0) return true;
+      // 듀얼 모듈이 1번에서 시작하면 0번도 차지
+      if (module.isDualSlot && module.slotIndex === 1) return true;
+      return false;
+    });
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
-    placedModules.some(module => module.slotIndex === indexing.columnCount - 1);
+    placedModules.some(module => {
+      const lastSlotIndex = indexing.columnCount - 1;
+      // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
+      if (module.slotIndex === lastSlotIndex) return true;
+      // 듀얼 모듈이 마지막-1에서 시작하면 마지막도 차지
+      if (module.isDualSlot && module.slotIndex === lastSlotIndex - 1) return true;
+      return false;
+    });
   
   console.log('🎯 CleanCAD2D 전체 렌더링:', {
     showDimensionsProp,

@@ -203,12 +203,23 @@ const Room: React.FC<RoomProps> = ({
   
   // 노서라운드 모드에서 각 끝에 가구가 있는지 확인
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
-    placedModulesFromStore.some(module => module.slotIndex === 0);
+    placedModulesFromStore.some(module => {
+      // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
+      if (module.slotIndex === 0) return true;
+      // 듀얼 모듈이 1번에서 시작하면 0번도 차지
+      if (module.isDualSlot && module.slotIndex === 1) return true;
+      return false;
+    });
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModulesFromStore.some(module => {
       // 전체 슬롯 개수를 알아야 마지막 슬롯인지 확인 가능
       const indexing = calculateSpaceIndexing(spaceInfo);
-      return module.slotIndex === indexing.columnCount - 1;
+      const lastSlotIndex = indexing.columnCount - 1;
+      // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
+      if (module.slotIndex === lastSlotIndex) return true;
+      // 듀얼 모듈이 마지막-1에서 시작하면 마지막도 차지
+      if (module.isDualSlot && module.slotIndex === lastSlotIndex - 1) return true;
+      return false;
     });
   
   console.log('🔍 Room - 엔드패널 렌더링 조건:', {
