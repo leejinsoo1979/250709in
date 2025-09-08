@@ -641,9 +641,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     } else {
       // 일반 배치 (받침대 있거나 바닥 배치)
-      // 받침대 높이 확인 - baseConfig가 없거나 type이 'floor'일 때 받침대 있음
-      const hasBase = !spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor';
-      const baseHeightMm = hasBase ? (spaceInfo.baseConfig?.height || 65) : 0;
+      // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
+      const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
       const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
       
       // 바닥 마감재 높이
@@ -665,7 +664,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       console.log('📍 일반 배치 Y축 위치 계산:', {
         moduleId: placedModule.moduleId,
         category: actualModuleData?.category,
-        hasBase,
+        baseConfigType: spaceInfo.baseConfig?.type,
         바닥마감재_mm: floorFinishHeightMm,
         받침대높이_mm: baseHeightMm,
         가구높이_mm: actualModuleData.dimensions.height,
