@@ -435,6 +435,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
+  // moduleData가 없으면 빈 그룹 반환
+  if (!moduleData) {
+    console.error('⚠️ [FurnitureItem] 모듈을 찾을 수 없음:', {
+      targetModuleId,
+      originalModuleId: placedModule.moduleId,
+      zone: placedModule.zone
+    });
+    return <group />;
+  }
+  
   console.log('✅ [FurnitureItem] 찾은 모듈:', {
     targetModuleId: targetModuleId,
     originalModuleId: placedModule.moduleId,
