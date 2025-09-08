@@ -919,15 +919,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   });
   
   // 노서라운드 모드에서 엔드패널 처리
-  // 벽없음(freestanding) 모드에서 첫번째 또는 마지막 슬롯 처리
+  // 벽없음(freestanding) 또는 한쪽벽(semistanding) 모드에서 엔드패널이 있는 슬롯 처리
   if (spaceInfo.surroundType === 'no-surround' && 
-      spaceInfo.installType === 'freestanding' && 
+      (spaceInfo.installType === 'freestanding' || 
+       spaceInfo.installType === 'semistanding' || 
+       spaceInfo.installType === 'semi-standing') && 
       placedModule.slotIndex !== undefined) {
     
-    const isFirstSlotNoSurround = placedModule.slotIndex === 0;
-    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
+    // 세미스탠딩에서는 벽이 없는 쪽만 처리
+    let shouldProcessFirstSlot = false;
+    let shouldProcessLastSlot = false;
+    
+    if (spaceInfo.installType === 'freestanding') {
+      // 프리스탠딩: 양쪽 모두 처리
+      shouldProcessFirstSlot = placedModule.slotIndex === 0;
+      shouldProcessLastSlot = isLastSlot;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 없는 쪽만 처리
+      shouldProcessFirstSlot = placedModule.slotIndex === 0 && !spaceInfo.wallConfig?.left;
+      shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
+    }
+    
+    const isFirstSlotNoSurround = shouldProcessFirstSlot;
+    const isDualLastSlot = isDualFurniture && shouldProcessLastSlot && placedModule.slotIndex === indexing.columnCount - 2;
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
-    const isLastSlotNoSurround = isDualLastSlot ? false : isLastSlot;
+    const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
     
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     if (isDualLastSlot && !needsEndPanelAdjustment) {
@@ -1192,14 +1208,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let hasLeftWall = true;
   let hasRightWall = true;
   
-  // 벽없음 노서라운드 첫/마지막 슬롯 도어 확장 처리
+  // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
   if (spaceInfo.surroundType === 'no-surround' && 
-      spaceInfo.installType === 'freestanding' && 
+      (spaceInfo.installType === 'freestanding' || 
+       spaceInfo.installType === 'semistanding' || 
+       spaceInfo.installType === 'semi-standing') && 
       placedModule.slotIndex !== undefined) {
     
-    const isFirstSlotFreestanding = placedModule.slotIndex === 0;
-    const isLastSlotFreestanding = isLastSlot;
-    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
+    // 세미스탠딩에서는 벽이 없는 쪽만 처리
+    let shouldExpandFirstSlot = false;
+    let shouldExpandLastSlot = false;
+    
+    if (spaceInfo.installType === 'freestanding') {
+      // 프리스탠딩: 양쪽 모두 확장
+      shouldExpandFirstSlot = placedModule.slotIndex === 0;
+      shouldExpandLastSlot = isLastSlot;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 없는 쪽만 확장
+      shouldExpandFirstSlot = placedModule.slotIndex === 0 && !spaceInfo.wallConfig?.left;
+      shouldExpandLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
+    }
+    
+    const isFirstSlotFreestanding = shouldExpandFirstSlot;
+    const isLastSlotFreestanding = shouldExpandLastSlot;
+    const isDualLastSlot = isDualFurniture && shouldExpandLastSlot && placedModule.slotIndex === indexing.columnCount - 2;
     
     // 첫번째 또는 마지막 슬롯: 도어 확장
     if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualLastSlot) {
