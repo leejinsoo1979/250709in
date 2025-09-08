@@ -552,19 +552,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
   
-  // moduleData가 없을 때를 위한 상태 - Hook은 조건부 리턴 전에 호출되어야 함
-  const [moduleNotFound, setModuleNotFound] = React.useState(false);
+  // moduleData가 없을 때 체크 - 단순 변수로 처리
+  const moduleNotFound = !moduleData;
   
-  // moduleData가 없으면 상태 설정
+  // moduleData가 없으면 에러 로그
   if (!moduleData) {
     console.error('⚠️ [FurnitureItem] 모듈을 찾을 수 없음:', {
       targetModuleId,
       originalModuleId: placedModule.moduleId,
       zone: placedModule.zone
     });
-    setModuleNotFound(true);
-  } else {
-    setModuleNotFound(false);
   }
   
   console.log('✅ [FurnitureItem] 찾은 모듈:', {
