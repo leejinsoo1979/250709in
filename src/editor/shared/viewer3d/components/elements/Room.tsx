@@ -199,10 +199,10 @@ const Room: React.FC<RoomProps> = ({
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
-  const { placedFurniture } = useFurnitureStore(); // 가구 정보 가져오기
+  const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   
   // 노서라운드 모드에서 가구가 배치되었는지 확인
-  const hasFurnitureInNoSurround = spaceInfo.surroundType === 'no-surround' && placedFurniture.length > 0;
+  const hasFurnitureInNoSurround = spaceInfo.surroundType === 'no-surround' && placedModulesFromStore.length > 0;
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
@@ -219,7 +219,7 @@ const Room: React.FC<RoomProps> = ({
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules); // 가구/프레임용 (동적 계산)
-    const frameThicknessMm = calculateFrameThickness(spaceInfo, placedFurniture?.length > 0);
+    const frameThicknessMm = calculateFrameThickness(spaceInfo, placedModulesFromStore?.length > 0);
     console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
       frameThicknessMm,
       wallConfig: spaceInfo.wallConfig,
@@ -318,7 +318,7 @@ const Room: React.FC<RoomProps> = ({
     // 노서라운드일 때는 엔드패널 안쪽 범위 사용
     let frameWidth, frameX;
     if (spaceInfo.surroundType === 'no-surround') {
-      const indexing = calculateSpaceIndexing(spaceInfo, placedFurniture?.length > 0);
+      const indexing = calculateSpaceIndexing(spaceInfo, placedModulesFromStore?.length > 0);
       const { threeUnitBoundaries } = indexing;
       const slotStartX = threeUnitBoundaries[0];
       const slotEndX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
