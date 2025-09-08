@@ -1578,7 +1578,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           position={[
             originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
             finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
-            furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
+            furnitureZ // 다른 도어들과 동일한 z축 위치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
