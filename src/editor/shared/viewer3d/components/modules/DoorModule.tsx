@@ -582,34 +582,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
         : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
       
-      // 플로팅 배치 시 Y 위치 조정 (받침대 있어도 플로팅 가능)
-      if (floatHeight > 0) {
-        // 도어 높이가 줄어들었으므로 중심을 위로 이동시켜 상단 위치 유지
-        doorYPosition = doorYPosition + mmToThreeUnits(floatHeight / 2);
-        console.log('🚪📍 플로팅 배치 도어 Y 위치 조정 (받침대 있음):', {
-          원래위치: doorYPosition - mmToThreeUnits(floatHeight / 2),
-          플로팅높이: floatHeight,
-          조정된위치: doorYPosition,
-          설명: '도어 상단 유지, 하단만 올라감'
-        });
-      }
     } else {
       // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
       const topFrameHeight = spaceInfo.frameSize?.top || 50;
       const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
       doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
       
-      // 플로팅 배치 시 Y 위치 조정
-      if (floatHeight > 0) {
-        // 도어 높이가 줄어들었으므로 중심을 위로 이동시켜 상단 위치 유지
-        doorYPosition = doorYPosition + mmToThreeUnits(floatHeight / 2);
-        console.log('🚪📍 플로팅 배치 도어 Y 위치 조정 (받침대 없음):', {
-          원래위치: doorYPosition - mmToThreeUnits(floatHeight / 2),
-          플로팅높이: floatHeight,
-          조정된위치: doorYPosition,
-          설명: '도어 상단 유지, 하단만 올라감'
-        });
-      }
     }
   }
   
