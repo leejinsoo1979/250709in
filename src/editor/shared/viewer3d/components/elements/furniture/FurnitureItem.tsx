@@ -402,6 +402,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     columnCParams.width
   );
 
+  // 위치 변경 로깅용 useEffect - early return 전에 선언
+  const [positionLogData, setPositionLogData] = React.useState<any>(null);
+  
+  useEffect(() => {
+    if (positionLogData) {
+      console.log('📍 FurnitureItem 위치 변경:', positionLogData);
+    }
+  }, [positionLogData]);
+
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // 모듈 데이터가 없으면 바로 빈 그룹 반환
@@ -1266,9 +1275,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  // 위치 변경 로깅 (adjustedPosition 계산 후)
-  useEffect(() => {
-    console.log('📍 FurnitureItem 위치 변경:', {
+  // 위치 변경 로깅 데이터 업데이트
+  React.useEffect(() => {
+    setPositionLogData({
       id: placedModule.id,
       isEditMode,
       placedModulePosition: placedModule.position,
