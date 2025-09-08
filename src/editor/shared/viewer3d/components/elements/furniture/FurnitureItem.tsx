@@ -621,17 +621,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
-      // 노서라운드에서는 노서라운드 18mm + 상하부장 18mm = 총 36mm 줄임
+      // 노서라운드에서는 바깥쪽 엔드패널 18mm + 안쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
       if (endPanelSide === 'left') {
-        // 왼쪽 상하부장: 총 36mm 줄이고 오른쪽으로 18mm 이동
+        // 마지막 슬롯에서 왼쪽 상하부장: 총 36mm 줄이고 왼쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS) * 0.01; // 18mm 이동
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm 이동
       } else if (endPanelSide === 'right') {
-        // 오른쪽 상하부장: 총 36mm 줄이고 왼쪽으로 18mm 이동
+        // 첫번째 슬롯에서 오른쪽 상하부장: 총 36mm 줄이고 오른쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS) * 0.01; // -18mm 이동
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm 이동
       } else if (endPanelSide === 'both') {
-        // 양쪽 상하부장: 54mm 줄이고 중앙 유지 (노서라운드 18mm + 양쪽 상하부장 36mm)
+        // 양쪽 상하부장: 54mm 줄이고 중앙 유지 (바깥쪽 18mm + 양쪽 안쪽 36mm)
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 3);
         positionAdjustmentForEndPanel = 0;
       }
@@ -1907,11 +1907,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 단, 다음의 경우는 제외:
           1. 벽 없는 구간에 있는 경우 (기존 로직)
           2. 노서라운드 벽없음 첫/마지막 슬롯 (엔드패널 생성 안함) */}
-      {needsEndPanelAdjustment && endPanelSide && 
-       !(spaceInfo.surroundType === 'no-surround' && 
-         ((placedModule.slotIndex === 0 && !hasLeftWall) || 
-          ((isDualFurniture ? placedModule.slotIndex === indexing.columnCount - 2 : placedModule.slotIndex === indexing.columnCount - 1) && !hasRightWall))) &&
-       !(isNoSurroundFirstSlot || isNoSurroundLastSlot) && (() => {
+      {needsEndPanelAdjustment && endPanelSide && (() => {
         console.log('🎯 엔드패널 렌더링 시작:', {
           moduleId: placedModule.moduleId,
           endPanelSide,
