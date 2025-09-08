@@ -1333,25 +1333,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               spaceInfo={zoneSpaceInfo}
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
-              slotCenterX={(() => {
-                // 모든 가구의 도어를 슬롯 중심에 고정
-                if (positionAdjustmentForEndPanel !== 0) {
-                  // 가구가 이동한 만큼 도어는 반대로 보정하여 슬롯 중심 유지
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
-                  
-                  console.log('🚪 도어 슬롯 중심 고정:', {
-                    moduleId: placedModule.id,
-                    isDualFurniture,
-                    positionAdjustmentForEndPanel,
-                    doorAdjustment,
-                    endPanelSide,
-                    설명: '도어는 항상 슬롯 중심에 고정'
-                  });
-                  
-                  return doorAdjustment;
-                }
-                return 0;
-              })()}
+              slotCenterX={0} // 도어는 항상 슬롯 중심(0)에 고정
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
