@@ -411,6 +411,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }, [positionLogData]);
 
+  // columnCParams 업데이트를 위한 useEffect - early return 전에 선언
+  const [columnCParamsUpdate, setColumnCParamsUpdate] = React.useState<any>(null);
+  
+  React.useEffect(() => {
+    if (columnCParamsUpdate) {
+      setColumnCParams(columnCParamsUpdate);
+    }
+  }, [columnCParamsUpdate]);
+
+  // adjustedPosition 로깅을 위한 useEffect - early return 전에 선언
+  const [adjustedPositionLog, setAdjustedPositionLog] = React.useState<any>(null);
+  
+  React.useEffect(() => {
+    if (adjustedPositionLog) {
+      setPositionLogData(adjustedPositionLog);
+    }
+  }, [adjustedPositionLog]);
+
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // 모듈 데이터가 없으면 바로 빈 그룹 반환
@@ -1239,9 +1257,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // columnCResize 훅 파라미터 업데이트 (훅은 이미 상단에서 호출됨)
+  // columnCResize 훅 파라미터 업데이트 (useEffect는 이미 상단에서 선언됨)
   React.useEffect(() => {
-    setColumnCParams({
+    setColumnCParamsUpdate({
       isEnabled: isColumnCFront,
       depth: slotInfo?.column?.depth || 300,
       width: indexing.columnWidth
@@ -1275,9 +1293,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  // 위치 변경 로깅 데이터 업데이트
+  // 위치 변경 로깅 데이터 업데이트 (useEffect는 이미 상단에서 선언됨)
   React.useEffect(() => {
-    setPositionLogData({
+    setAdjustedPositionLog({
       id: placedModule.id,
       isEditMode,
       placedModulePosition: placedModule.position,
