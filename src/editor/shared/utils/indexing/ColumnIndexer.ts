@@ -221,7 +221,7 @@ export class ColumnIndexer {
       };
     }
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
-    const frameThickness = calculateFrameThickness(spaceInfo);
+    const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
     
     // 전체 폭과 내경 계산
     const totalWidth = spaceInfo.width;
@@ -554,8 +554,8 @@ export class ColumnIndexer {
   /**
    * 단내림 영역별 슬롯 정보 계산
    */
-  static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number) {
-    const frameThickness = calculateFrameThickness(spaceInfo);
+  static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number, hasFurniture: boolean = false) {
+    const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
     if (!spaceInfo.droppedCeiling?.enabled) {
