@@ -824,7 +824,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
               
               leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-              leftText = `EP ${leftValue}`;
+              leftText = `${leftValue}`;
             }
             
             return (
@@ -3114,7 +3114,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                leftText = `EP ${leftValue}`;
+                leftText = `${leftValue}`;
               }
               
               return (
