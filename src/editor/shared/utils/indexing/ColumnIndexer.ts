@@ -51,7 +51,7 @@ export class ColumnIndexer {
    * - 내경 600mm 초과: 균등 분할된 N개 슬롯
    * - customColumnCount가 설정된 경우 해당 값 우선 사용
    */
-  static calculateSpaceIndexing(spaceInfo: SpaceInfo): SpaceIndexingResult {
+  static calculateSpaceIndexing(spaceInfo: SpaceInfo, hasFurniture: boolean = false): SpaceIndexingResult {
     if (!spaceInfo) {
       return {
         columnCount: 0,
@@ -72,8 +72,8 @@ export class ColumnIndexer {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 전체 영역에 대한 기본 계산 수행
       const totalWidth = spaceInfo.width;
-      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-      const frameThickness = calculateFrameThickness(spaceInfo);
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
+      const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
       
       // 전체 영역의 시작점
       let internalStartX;
@@ -227,7 +227,7 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     
     // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
-    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
     
     // 컬럼 수 결정 로직
     let columnCount: number;
@@ -560,7 +560,7 @@ export class ColumnIndexer {
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
-      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
       let columnCount: number;
       
       // mainDoorCount가 설정되어 있으면 최우선 사용
@@ -731,7 +731,7 @@ export class ColumnIndexer {
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
     
     // 전체 내부 너비 (프레임 제외)
-    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
     
     // 시작 위치 계산 (노서라운드의 경우 엔드패널과 gapConfig 고려)
     // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작

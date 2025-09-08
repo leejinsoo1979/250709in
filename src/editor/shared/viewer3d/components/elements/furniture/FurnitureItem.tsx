@@ -435,7 +435,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       threeUnitBoundaries: []
     };
   } else {
-    indexing = calculateSpaceIndexing(zoneSpaceInfo);
+    indexing = calculateSpaceIndexing(zoneSpaceInfo, true); // 가구가 배치되고 있으므로 true
   }
   
   const slotInfo = placedModule.slotIndex !== undefined ? columnSlots[placedModule.slotIndex] : undefined;

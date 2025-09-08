@@ -212,7 +212,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         const placedModules = useFurnitureStore.getState().placedModules;
         const addModule = useFurnitureStore.getState().addModule;
         const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
-        const indexing = calculateSpaceIndexing(spaceInfo);
+        const hasFurniture = placedModules.length > 0 || true; // 가구를 추가하려고 하므로 true
+        const indexing = calculateSpaceIndexing(spaceInfo, hasFurniture);
         
         // 첫 번째 빈 슬롯 찾기
         let availableSlot = -1;

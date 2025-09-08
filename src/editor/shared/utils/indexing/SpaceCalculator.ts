@@ -16,9 +16,9 @@ export class SpaceCalculator {
   /**
    * 내경 폭 계산 유틸리티 함수
    */
-  static calculateInternalWidth(spaceInfo: SpaceInfo): number {
+  static calculateInternalWidth(spaceInfo: SpaceInfo, hasFurniture: boolean = false): number {
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
-    const frameThickness = calculateFrameThickness(spaceInfo);
+    const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
     
     // 전체 폭
     const totalWidth = spaceInfo.width;
