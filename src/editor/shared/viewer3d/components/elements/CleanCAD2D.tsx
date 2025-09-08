@@ -202,6 +202,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
   
+  // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModules.some(module => module.slotIndex === 0);
+  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModules.some(module => module.slotIndex === indexing.columnCount - 1);
+  
   console.log('🎯 CleanCAD2D 전체 렌더링:', {
     showDimensionsProp,
     showDimensionsFromStore,
@@ -618,7 +625,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const subDimensionY = topDimensionY - mmToThreeUnits(120); // 전체 폭 치수선 아래 (간격 증가)
             
             // 프레임 두께 계산
-            const frameThickness = calculateFrameThickness(spaceInfo);
+            const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
             
             // 프레임을 포함한 전체 좌표 계산
             const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
@@ -816,7 +823,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               leftText = `이격 ${leftValue}`;
             } else {
               // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 왼쪽 벽이 있으면 표시하지 않음
               if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
@@ -940,7 +947,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               rightText = `이격 ${rightValue}`;
             } else {
               // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 오른쪽 벽이 있으면 표시하지 않음
               if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
@@ -1675,7 +1682,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const subDimensionZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 300 : 250); // 전체 폭 치수선 아래
             
             // 프레임 두께 계산
-            const frameThickness = calculateFrameThickness(spaceInfo);
+            const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
             
             // 프레임을 포함한 전체 좌표 계산
             const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;
@@ -2423,7 +2430,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorY="middle"
                   >
                     {(() => {
-                      const frameThickness = calculateFrameThickness(spaceInfo);
+                      const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
                       console.log('🔍 좌측뷰 메인구간 프레임 계산:', {
                         surroundType: spaceInfo.surroundType,
                         installType: spaceInfo.installType,
@@ -2488,7 +2495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     anchorY="middle"
                   >
                     {(() => {
-                      const frameThickness = calculateFrameThickness(spaceInfo);
+                      const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
                       
                       // 노서라운드일 때 실제 축소값 계산
                       let leftReduction = frameThickness.left;
@@ -3106,7 +3113,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 leftText = `이격 ${leftValue}`;
               } else {
                 // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
-                const frameThickness = calculateFrameThickness(spaceInfo);
+                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
                 
                 // 왼쪽 벽만 있으면 표시하지 않음
                 if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
@@ -3157,7 +3164,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               );
             } else {
               // 서라운드 모드일 때는 기존 로직 유지
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 왼쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
               if (frameThickness.left === 0) {
@@ -3224,7 +3231,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 rightText = `이격 ${rightValue}`;
               } else {
                 // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
-                const frameThickness = calculateFrameThickness(spaceInfo);
+                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
                 
                 // 오른쪽 벽만 있으면 표시하지 않음
                 if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
@@ -3275,7 +3282,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               );
             } else {
               // 서라운드 모드일 때는 기존 로직 유지
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 오른쪽 프레임 두께가 0이면 (벽이 있으면) 표시하지 않음
               if (frameThickness.right === 0) {
@@ -3333,7 +3340,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const subDimensionZ = spaceZOffset - mmToThreeUnits(280); // 전체 폭 치수선 아래
               
               // 프레임 두께 계산
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 프레임을 포함한 전체 좌표 계산
               const mainWidth = spaceInfo.width - spaceInfo.droppedCeiling.width;

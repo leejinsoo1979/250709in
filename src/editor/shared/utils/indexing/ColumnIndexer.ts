@@ -51,7 +51,7 @@ export class ColumnIndexer {
    * - 내경 600mm 초과: 균등 분할된 N개 슬롯
    * - customColumnCount가 설정된 경우 해당 값 우선 사용
    */
-  static calculateSpaceIndexing(spaceInfo: SpaceInfo, hasFurniture: boolean = false): SpaceIndexingResult {
+  static calculateSpaceIndexing(spaceInfo: SpaceInfo, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false): SpaceIndexingResult {
     if (!spaceInfo) {
       return {
         columnCount: 0,
@@ -72,8 +72,8 @@ export class ColumnIndexer {
     if (spaceInfo.droppedCeiling?.enabled) {
       // 전체 영역에 대한 기본 계산 수행
       const totalWidth = spaceInfo.width;
-      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
-      const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
+      const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
       
       // 전체 영역의 시작점
       let internalStartX;
@@ -221,13 +221,13 @@ export class ColumnIndexer {
       };
     }
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
-    const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
+    const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
     
     // 전체 폭과 내경 계산
     const totalWidth = spaceInfo.width;
     
     // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
-    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
     
     // 컬럼 수 결정 로직
     let columnCount: number;
@@ -554,13 +554,13 @@ export class ColumnIndexer {
   /**
    * 단내림 영역별 슬롯 정보 계산
    */
-  static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number, hasFurniture: boolean = false) {
-    const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
+  static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false) {
+    const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
     const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
-      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
       let columnCount: number;
       
       // mainDoorCount가 설정되어 있으면 최우선 사용
@@ -731,7 +731,7 @@ export class ColumnIndexer {
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
     
     // 전체 내부 너비 (프레임 제외)
-    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasFurniture);
+    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
     
     // 시작 위치 계산 (노서라운드의 경우 엔드패널과 gapConfig 고려)
     // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작

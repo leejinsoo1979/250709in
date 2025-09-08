@@ -201,13 +201,22 @@ const Room: React.FC<RoomProps> = ({
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   
-  // 노서라운드 모드에서 가구가 배치되었는지 확인
-  const hasFurnitureInNoSurround = spaceInfo.surroundType === 'no-surround' && placedModulesFromStore.length > 0;
+  // 노서라운드 모드에서 각 끝에 가구가 있는지 확인
+  const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModulesFromStore.some(module => module.slotIndex === 0);
+  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModulesFromStore.some(module => {
+      // 전체 슬롯 개수를 알아야 마지막 슬롯인지 확인 가능
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      return module.slotIndex === indexing.columnCount - 1;
+    });
   
   console.log('🔍 Room - 엔드패널 렌더링 조건:', {
     surroundType: spaceInfo.surroundType,
     placedModulesCount: placedModulesFromStore.length,
-    hasFurnitureInNoSurround,
+    hasLeftFurniture,
+    hasRightFurniture,
+    slotIndexes: placedModulesFromStore.map(m => m.slotIndex),
     installType: spaceInfo.installType,
     wallConfig: spaceInfo.wallConfig
   });
@@ -227,7 +236,13 @@ const Room: React.FC<RoomProps> = ({
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules); // 가구/프레임용 (동적 계산)
-    const frameThicknessMm = calculateFrameThickness(spaceInfo, placedModulesFromStore?.length > 0);
+    const frameThicknessMm = calculateFrameThickness(spaceInfo, 
+      placedModulesFromStore.some(m => m.slotIndex === 0),
+      placedModulesFromStore.some(m => {
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        return m.slotIndex === indexing.columnCount - 1;
+      })
+    );
     console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
       frameThicknessMm,
       wallConfig: spaceInfo.wallConfig,
@@ -791,7 +806,7 @@ const Room: React.FC<RoomProps> = ({
             let rightReduction = 0;
             
             if (spaceInfo.surroundType === 'surround') {
-              const frameThickness = calculateFrameThickness(spaceInfo);
+              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               leftReduction = frameThickness.left;
               rightReduction = frameThickness.right;
             } else {
@@ -1318,7 +1333,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasFurnitureInNoSurround) && (() => {
+      {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture) && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1418,7 +1433,7 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasFurnitureInNoSurround) && (() => {
+      {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture) && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
@@ -1586,7 +1601,7 @@ const Room: React.FC<RoomProps> = ({
               let rightReduction = 0;
               
               if (spaceInfo.surroundType === 'surround') {
-                const frameThickness = calculateFrameThickness(spaceInfo);
+                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
                 leftReduction = frameThickness.left;
                 rightReduction = frameThickness.right;
               } else {

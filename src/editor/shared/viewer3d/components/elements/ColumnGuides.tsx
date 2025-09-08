@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
@@ -18,11 +19,21 @@ interface ColumnGuidesProps {
  */
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
+  const { placedModules } = useFurnitureStore();
   const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
+  
+  // 전체 공간의 인덱싱 계산 (가구 위치 판단용)
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  
+  // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
+  const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModules.some(module => module.slotIndex === 0);
+  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
+    placedModules.some(module => module.slotIndex === indexing.columnCount - 1);
   
   // UIStore의 activeDroppedCeilingTab을 직접 사용하고, 필요시 업데이트만 수행
   useEffect(() => {
@@ -36,8 +47,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 내경 공간 계산 (바닥, 천장 높이 등)
   const internalSpace = calculateInternalSpace(spaceInfo);
   
-  // 전체 공간의 인덱싱 계산 (단내림 포함)
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // indexing은 이미 위에서 계산됨
   const { columnCount, threeUnitBoundaries } = indexing;
   
   
@@ -240,7 +250,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const frontZ = frameEndZ;
   
   // 프레임 두께 계산
-  const frameThickness = calculateFrameThickness(spaceInfo);
+  const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
   
   // 슬롯 가이드 렌더링 헬퍼 함수
   const renderSlotGuides = (

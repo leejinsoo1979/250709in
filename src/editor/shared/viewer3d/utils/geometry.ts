@@ -69,11 +69,11 @@ export const calculateRoomDimensions = (spaceInfo: SpaceInfo) => {
  * 내부장 배치 가능한 내경 공간 치수 계산 (mm 단위)
  * 좌우 프레임 사이의 공간에서 모듈이 배치될 수 있는 실제 공간
  */
-export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasFurniture: boolean = false) => {
+export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false) => {
   if (!spaceInfo) {
     return { width: 0, height: 0, depth: 0, startX: 0, startY: 0, startZ: 0 };
   }
-  const frameThickness = calculateFrameThickness(spaceInfo, hasFurniture);
+  const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
   const floorFinishHeight = calculateFloorFinishHeight(spaceInfo);
   const topFrameHeight = calculateTopBottomFrameHeight(spaceInfo);
   const baseFrameHeight = calculateBaseFrameHeight(spaceInfo);
@@ -216,7 +216,7 @@ export const calculateFloorFinishHeight = (spaceInfo: SpaceInfo) => {
  * 설치 타입에 따른 좌우 프레임 두께 계산 (mm 단위)
  * frameSize 설정값을 우선 사용하고, 벽이 없는 쪽은 18mm 엔드패널 고정
  */
-export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasFurniture: boolean = false) => {
+export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false) => {
   if (!spaceInfo) {
     return { left: 0, right: 0, leftMm: 0, rightMm: 0 };
   }
@@ -224,49 +224,46 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasFurniture: bool
   
   // 노서라운드 타입인 경우
   if (surroundType === 'no-surround') {
-    // 가구가 배치된 경우에만 엔드패널 생성
-    if (hasFurniture) {
-      console.log('🎯 노서라운드 모드 - 가구 배치됨, 엔드패널 생성');
-      
-      let leftThickness = 0;
-      let rightThickness = 0;
-      
-      // 설치 타입에 따라 엔드패널 위치 결정
-      if (installType === 'builtin' || installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 엔드패널 없음
+    let leftThickness = 0;
+    let rightThickness = 0;
+    
+    // 설치 타입에 따라 엔드패널 위치 결정
+    if (installType === 'builtin' || installType === 'built-in') {
+      // 빌트인: 양쪽 벽이 있으므로 엔드패널 없음
+      leftThickness = 0;
+      rightThickness = 0;
+    } else if (installType === 'semistanding' || installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 없는 쪽에만 엔드패널 (가구가 있는 경우에만)
+      if (wallConfig?.left) {
+        // 왼쪽 벽이 있으면 오른쪽에만 엔드패널 가능
         leftThickness = 0;
+        rightThickness = hasRightFurniture ? END_PANEL_THICKNESS : 0;
+      } else {
+        // 오른쪽 벽이 있으면 왼쪽에만 엔드패널 가능
+        leftThickness = hasLeftFurniture ? END_PANEL_THICKNESS : 0;
         rightThickness = 0;
-      } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        // 세미스탠딩: 벽이 없는 쪽에만 엔드패널
-        if (wallConfig?.left) {
-          leftThickness = 0;
-          rightThickness = END_PANEL_THICKNESS;
-        } else {
-          leftThickness = END_PANEL_THICKNESS;
-          rightThickness = 0;
-        }
-      } else if (installType === 'freestanding') {
-        // 프리스탠딩: 양쪽 엔드패널
-        leftThickness = END_PANEL_THICKNESS;
-        rightThickness = END_PANEL_THICKNESS;
       }
-      
-      return {
-        left: leftThickness,
-        right: rightThickness,
-        leftMm: leftThickness,
-        rightMm: rightThickness
-      };
-    } else {
-      console.log('🚫 노서라운드 모드 - 가구 없음, 엔드패널 없음');
-      // 가구가 없으면 엔드패널도 없음
-      return {
-        left: 0,
-        right: 0,
-        leftMm: 0,
-        rightMm: 0
-      };
+    } else if (installType === 'freestanding') {
+      // 프리스탠딩: 각 쪽에 가구가 있으면 엔드패널
+      leftThickness = hasLeftFurniture ? END_PANEL_THICKNESS : 0;
+      rightThickness = hasRightFurniture ? END_PANEL_THICKNESS : 0;
     }
+    
+    console.log('🎯 노서라운드 엔드패널 계산:', {
+      hasLeftFurniture,
+      hasRightFurniture,
+      leftThickness,
+      rightThickness,
+      installType,
+      wallConfig
+    });
+    
+    return {
+      left: leftThickness,
+      right: rightThickness,
+      leftMm: leftThickness,
+      rightMm: rightThickness
+    };
   }
   
   let leftThickness = 0;
