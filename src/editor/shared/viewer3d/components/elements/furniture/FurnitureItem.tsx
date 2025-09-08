@@ -1393,7 +1393,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
-          adjustedPosition.x + positionAdjustmentForEndPanel,
+          adjustedPosition.x, // positionAdjustmentForEndPanel은 이미 adjustedPosition.x에 포함됨
           finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
@@ -1681,14 +1681,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group
           userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
-            originalSlotCenterX - positionAdjustmentForEndPanel, // 도어는 가구 이동의 반대로 조정하여 원래 위치 유지
+            originalSlotCenterX, // 도어는 원래 슬롯 위치 유지
             finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
             furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
           {console.log('🚪🚪 커버도어 렌더링 중:', {
-            그룹위치: [originalSlotCenterX - positionAdjustmentForEndPanel, finalYPosition, furnitureZ + 0.02],
+            그룹위치: [originalSlotCenterX, finalYPosition, furnitureZ + 0.02],
             원래슬롯: originalSlotCenterX,
             조정량: -positionAdjustmentForEndPanel,
             너비: originalSlotWidthMm,
@@ -1754,14 +1754,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           // 왼쪽 엔드패널: 키큰장 왼쪽 가장자리에 딱 붙여서
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel - adjustedHalfWidth - endPanelWidth/2,
+            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2,
             side: 'left'
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           // 오른쪽 엔드패널: 키큰장 오른쪽 가장자리에 딱 붙여서
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel + adjustedHalfWidth + endPanelWidth/2,
+            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2,
             side: 'right'
           });
         }
@@ -1793,7 +1793,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {showDimensions && viewMode === '3D' && (
         <Html
           position={[
-            adjustedPosition.x + positionAdjustmentForEndPanel,
+            adjustedPosition.x,
             finalYPosition - height / 2 - 1.0, // 하부 프레임보다 아래로
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
