@@ -807,7 +807,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     console.log('🚪 도어 크기 계산:', {
       zone: placedModule.zone,
       slotIndex: placedModule.slotIndex,
-      targetZoneInfo,
+      targetZoneInfo: targetZoneInfo ? {
+        columnWidth: targetZoneInfo.columnWidth,
+        columnCount: targetZoneInfo.columnCount,
+        width: targetZoneInfo.width
+      } : null,
       targetZoneSlotWidths,
       originalSlotWidthMm,
       모듈ID: placedModule.moduleId,
@@ -818,12 +822,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       placedModule전체: placedModule,
       difference: originalSlotWidthMm - furnitureWidthMm,
       indexingSlotWidths: indexing.slotWidths,
-      targetZoneSlotWidths,
-      targetZoneInfo: targetZoneInfo ? {
-        columnWidth: targetZoneInfo.columnWidth,
-        columnCount: targetZoneInfo.columnCount,
-        width: targetZoneInfo.width
-      } : null,
       isDroppedZone: placedModule.zone === 'dropped',
       customWidth: placedModule.customWidth,
       adjustedWidth: placedModule.adjustedWidth,
