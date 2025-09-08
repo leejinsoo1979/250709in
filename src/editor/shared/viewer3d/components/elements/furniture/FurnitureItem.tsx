@@ -1335,8 +1335,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={(() => {
                 // 듀얼 캐비넷 도어를 9mm 안쪽으로 이동
                 if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 도어를 9mm 안쪽으로 이동
-                  const doorAdjustment = -0.09; // 9mm를 Three.js 단위로 (음수는 안쪽)
+                  // 도어를 9mm 안쪽으로 이동 (양수가 안쪽)
+                  const doorAdjustment = 0.09; // 9mm를 Three.js 단위로 (양수는 안쪽)
                   
                   console.log('🚪 듀얼 캐비넷 도어 9mm 안쪽 이동:', {
                     moduleId: placedModule.id,
