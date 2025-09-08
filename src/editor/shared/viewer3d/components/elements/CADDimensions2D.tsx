@@ -673,14 +673,38 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
         const indexing = calculateSpaceIndexing(spaceInfo);
         
-        // 실제 렌더링될 가구 폭과 위치 계산 (FurnitureItem.tsx와 동일한 로직)
-        let furnitureWidthMm = moduleData.dimensions.width;
-        let furniturePositionX = module.position.x;
-        
         // 듀얼 가구인지 확인 (FurnitureItem.tsx와 동일한 로직)
         const isDualFurniture = module.isDualSlot !== undefined 
           ? module.isDualSlot 
           : moduleData.id.includes('dual-');
+        
+        // 실제 렌더링될 가구 폭과 위치 계산 (FurnitureItem.tsx와 동일한 로직)
+        let furnitureWidthMm = moduleData.dimensions.width;
+        let furniturePositionX = module.position.x;
+        
+        // 노서라운드 모드 위치 보정 되돌리기
+        // FurnitureItem.tsx에서 positionAdjustmentForEndPanel로 조정된 것을 원복
+        if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
+          const END_PANEL_THICKNESS = 18;
+          
+          if (isDualFurniture && module.slotIndex === 0) {
+            // 첫번째 슬롯 듀얼: 9mm 오른쪽으로 이동했으므로 왼쪽으로 되돌림
+            furniturePositionX = furniturePositionX - ((END_PANEL_THICKNESS / 2) * 0.01);
+            console.log('📐 노서라운드 듀얼 첫번째 슬롯 위치 원복:', {
+              moduleId: module.moduleId,
+              adjustedX: module.position.x,
+              originalX: furniturePositionX
+            });
+          } else if (isDualFurniture && module.slotIndex === indexing.columnCount - 2) {
+            // 마지막-1 슬롯 듀얼: 9mm 왼쪽으로 이동했으므로 오른쪽으로 되돌림
+            furniturePositionX = furniturePositionX + ((END_PANEL_THICKNESS / 2) * 0.01);
+            console.log('📐 노서라운드 듀얼 마지막 슬롯 위치 원복:', {
+              moduleId: module.moduleId,
+              adjustedX: module.position.x,
+              originalX: furniturePositionX
+            });
+          }
+        }
         
         // FurnitureItem.tsx와 동일한 우선순위 적용
         // 우선순위 1: adjustedWidth (기둥 침범 조정 너비 - 최우선)
@@ -755,43 +779,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         let displayWidth = actualFurnitureWidthMm;
         let displayPositionX = furniturePositionX;
         
-        // 치수는 항상 슬롯 중심에 표시
-        if (module.slotIndex !== undefined) {
-          let expectedSlotX;
-          
-          if (isDualFurniture && module.slotIndex < indexing.threeUnitPositions.length - 1) {
-            // 듀얼 가구: 두 슬롯의 중간점
-            const leftSlotX = indexing.threeUnitPositions[module.slotIndex];
-            const rightSlotX = indexing.threeUnitPositions[module.slotIndex + 1];
-            expectedSlotX = (leftSlotX + rightSlotX) / 2;
-            
-            console.log('📐 듀얼 가구 치수 위치 계산:', {
-              moduleId: module.moduleId,
-              slotIndex: module.slotIndex,
-              leftSlotX,
-              rightSlotX,
-              centerX: expectedSlotX,
-              actualPositionX: furniturePositionX,
-              difference: (furniturePositionX - expectedSlotX) * 100
-            });
-          } else if (indexing.threeUnitPositions[module.slotIndex] !== undefined) {
-            // 싱글 가구: 해당 슬롯 중심
-            expectedSlotX = indexing.threeUnitPositions[module.slotIndex];
-            
-            console.log('📐 싱글 가구 치수 위치 계산:', {
-              moduleId: module.moduleId,
-              slotIndex: module.slotIndex,
-              expectedSlotX,
-              actualPositionX: furniturePositionX,
-              difference: (furniturePositionX - expectedSlotX) * 100
-            });
-          }
-          
-          if (expectedSlotX !== undefined) {
-            // 치수는 항상 슬롯 위치에 표시
-            displayPositionX = expectedSlotX;
-          }
-        }
         
         // 도어 치수 표시 코드 주석 처리
         // if (module.doorConfig) {
