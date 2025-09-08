@@ -596,6 +596,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
   
+  // 노서라운드 첫/마지막 슬롯 여부 확인 (상하부장 처리에서 사용)
+  const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' && 
+                                  spaceInfo.installType === 'freestanding' && 
+                                  placedModule.slotIndex === 0;
+  const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' && 
+                                 spaceInfo.installType === 'freestanding' && 
+                                 isLastSlot;
+  
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
     console.log('🔴🔴🔴 엔드패널 조정 시작:', {
@@ -606,37 +614,65 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       originalFurnitureWidthMm,
       furnitureWidthMm,
       endPanelSide,
-      END_PANEL_THICKNESS
+      END_PANEL_THICKNESS,
+      isNoSurroundFirstSlot,
+      isNoSurroundLastSlot
     });
     
-    // 엔드패널 두께만큼 키큰장 너비를 줄임
-    if (endPanelSide === 'left') {
-      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
-      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
-    } else if (endPanelSide === 'right') {
-      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
-      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
-    } else if (endPanelSide === 'both') {
-      // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
-      adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
-      positionAdjustmentForEndPanel = 0; // 중앙 유지
+    // 노서라운드 첫/마지막 슬롯에서는 너비를 줄이지 않고 위치만 조정
+    if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
+      // 벽없는 구간: 너비는 유지하고 바깥쪽으로 밀림
+      adjustedWidthForEndPanel = originalFurnitureWidthMm; // 너비 유지
+      
+      if (endPanelSide === 'left') {
+        // 왼쪽에 상하부장: 오른쪽으로 18mm 밀림
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS) * 0.01;
+      } else if (endPanelSide === 'right') {
+        // 오른쪽에 상하부장: 왼쪽으로 18mm 밀림
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS) * 0.01;
+      } else if (endPanelSide === 'both') {
+        // 양쪽에 상하부장: 중앙 유지 (이미 양쪽에서 밀려있음)
+        positionAdjustmentForEndPanel = 0;
+      }
+      
+      console.log('🚫 노서라운드 첫/마지막 슬롯 - 바깥쪽으로만 밀림:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        endPanelSide,
+        originalWidth: originalFurnitureWidthMm,
+        adjustedWidth: adjustedWidthForEndPanel,
+        positionAdjustment: positionAdjustmentForEndPanel,
+        설명: '벽없는 구간에서는 너비 유지하고 바깥쪽으로만 밀림'
+      });
+    } else {
+      // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄임
+      if (endPanelSide === 'left') {
+        // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+      } else if (endPanelSide === 'right') {
+        // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+      } else if (endPanelSide === 'both') {
+        // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
+        positionAdjustmentForEndPanel = 0;
+      }
+      
+      console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
+        moduleId: placedModule.moduleId,
+        isDualFurniture,
+        originalWidth: originalFurnitureWidthMm,
+        adjustedWidth: adjustedWidthForEndPanel,
+        reduction: originalFurnitureWidthMm - adjustedWidthForEndPanel,
+        positionAdjustment: positionAdjustmentForEndPanel,
+        endPanelSide,
+        설명: '일반적인 경우 - 너비 줄이고 위치 조정'
+      });
     }
     
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
-    
-    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
-      moduleId: placedModule.moduleId,
-      isDualFurniture,
-      originalWidth: originalFurnitureWidthMm,
-      adjustedWidth: adjustedWidthForEndPanel,
-      reduction: originalFurnitureWidthMm - adjustedWidthForEndPanel,
-      positionAdjustment: positionAdjustmentForEndPanel,
-      endPanelSide,
-      furnitureWidthMm,
-      설명: isDualFurniture ? '듀얼 키큰장 너비 축소 및 위치 이동' : '싱글 키큰장 너비 축소 및 위치 이동'
-    });
   }
   
   console.log('🔍 노서라운드 조정 전 상태:', {
@@ -1870,11 +1906,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-      {/* 단, 벽 없는 구간에 있는 경우는 제외 (기존 로직) */}
+      {/* 단, 다음의 경우는 제외:
+          1. 벽 없는 구간에 있는 경우 (기존 로직)
+          2. 노서라운드 벽없음 첫/마지막 슬롯 (엔드패널 생성 안함) */}
       {needsEndPanelAdjustment && endPanelSide && 
        !(spaceInfo.surroundType === 'no-surround' && 
          ((placedModule.slotIndex === 0 && !hasLeftWall) || 
-          ((isDualFurniture ? placedModule.slotIndex === indexing.columnCount - 2 : placedModule.slotIndex === indexing.columnCount - 1) && !hasRightWall))) && (() => {
+          ((isDualFurniture ? placedModule.slotIndex === indexing.columnCount - 2 : placedModule.slotIndex === indexing.columnCount - 1) && !hasRightWall))) &&
+       !(isNoSurroundFirstSlot || isNoSurroundLastSlot) && (() => {
         console.log('🎯 엔드패널 렌더링 시작:', {
           moduleId: placedModule.moduleId,
           endPanelSide,
