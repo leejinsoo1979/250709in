@@ -641,9 +641,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     } else {
       // 일반 배치 (받침대 있거나 바닥 배치)
-      // 받침대 높이 확인
-      const hasBase = spaceInfo.baseConfig?.type === 'floor';
-      const baseHeightMm = hasBase ? (spaceInfo.baseConfig?.height || 0) : 0;
+      // 받침대 높이 확인 - baseConfig가 없거나 type이 'floor'일 때 받침대 있음
+      const hasBase = !spaceInfo.baseConfig || spaceInfo.baseConfig?.type === 'floor';
+      const baseHeightMm = hasBase ? (spaceInfo.baseConfig?.height || 65) : 0;
       const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
       
       // 바닥 마감재 높이
