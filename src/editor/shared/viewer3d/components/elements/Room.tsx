@@ -204,6 +204,14 @@ const Room: React.FC<RoomProps> = ({
   // 노서라운드 모드에서 가구가 배치되었는지 확인
   const hasFurnitureInNoSurround = spaceInfo.surroundType === 'no-surround' && placedModulesFromStore.length > 0;
   
+  console.log('🔍 Room - 엔드패널 렌더링 조건:', {
+    surroundType: spaceInfo.surroundType,
+    placedModulesCount: placedModulesFromStore.length,
+    hasFurnitureInNoSurround,
+    installType: spaceInfo.installType,
+    wallConfig: spaceInfo.wallConfig
+  });
+  
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
     console.log('🔍 Room Component - spaceInfo:', {
@@ -283,7 +291,7 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, spaceInfo.wallConfig, placedModules]);
+  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, spaceInfo.wallConfig, placedModules, placedModulesFromStore]);
   
   const { 
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
