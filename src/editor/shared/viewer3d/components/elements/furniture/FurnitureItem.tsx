@@ -529,30 +529,37 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
   
-  // moduleData가 없으면 에러 로그
+  // moduleData가 없으면 에러 로그하고 렌더링 스킵
   if (!moduleData) {
     console.error('⚠️ [FurnitureItem] 모듈을 찾을 수 없음:', {
       targetModuleId,
       originalModuleId: placedModule.moduleId,
-      zone: placedModule.zone
+      zone: placedModule.zone,
+      spaceInfo: {
+        width: spaceInfo.width,
+        height: spaceInfo.height,
+        droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+        customColumnCount: spaceInfo.customColumnCount
+      }
     });
+    
+    // 모듈을 찾을 수 없으면 빈 요소 반환 (렌더링 스킵)
+    return null;
   }
   
-  if (moduleData) {
-    console.log('✅ [FurnitureItem] 찾은 모듈:', {
-      targetModuleId: targetModuleId,
-      originalModuleId: placedModule.moduleId,
-      moduleId: moduleData.id,
-      moduleWidth: moduleData.dimensions.width,
-      moduleHeight: moduleData.dimensions.height,
-      customWidth: placedModule.customWidth,
-      expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
-      placedModuleId: placedModule.moduleId,
-      idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
-      zone: placedModule.zone,
-      internalSpaceHeight: internalSpace.height
-    });
-  }
+  console.log('✅ [FurnitureItem] 찾은 모듈:', {
+    targetModuleId: targetModuleId,
+    originalModuleId: placedModule.moduleId,
+    moduleId: moduleData.id,
+    moduleWidth: moduleData.dimensions.width,
+    moduleHeight: moduleData.dimensions.height,
+    customWidth: placedModule.customWidth,
+    expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
+    placedModuleId: placedModule.moduleId,
+    idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
+    zone: placedModule.zone,
+    internalSpaceHeight: internalSpace.height
+  });
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
@@ -577,35 +584,37 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만, 기둥 C가 아닐 때만)
   let actualModuleData = moduleData;
-  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC) {
-    const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
-    if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
-      actualModuleData = conversionResult.convertedModuleData;
-    }
-  }
-  
-  // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
-  if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-')) {
-    actualModuleData = {
-      ...moduleData,
-      id: moduleData.id.replace('dual-', 'single-'),
-      name: moduleData.name.replace('듀얼', '싱글'),
-      dimensions: {
-        ...moduleData.dimensions,
-        width: slotInfo?.subSlots ? 
-          (placedModule.subSlotPosition === 'left' ? 
-            slotInfo.subSlots.left.availableWidth : 
-            slotInfo.subSlots.right.availableWidth) : 
-          indexing.columnWidth / 2
+  if (moduleData) {
+    if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC) {
+      const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
+      if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
+        actualModuleData = conversionResult.convertedModuleData;
       }
-    };
+    }
+    
+    // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
+    if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-')) {
+      actualModuleData = {
+        ...moduleData,
+        id: moduleData.id.replace('dual-', 'single-'),
+        name: moduleData.name.replace('듀얼', '싱글'),
+        dimensions: {
+          ...moduleData.dimensions,
+          width: slotInfo?.subSlots ? 
+            (placedModule.subSlotPosition === 'left' ? 
+              slotInfo.subSlots.left.availableWidth : 
+              slotInfo.subSlots.right.availableWidth) : 
+            indexing.columnWidth / 2
+        }
+      };
+    }
   }
   
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
   const isDualFurniture = placedModule.isDualSlot !== undefined 
     ? placedModule.isDualSlot 
-    : actualModuleData.id.includes('dual-');
+    : actualModuleData?.id.includes('dual-') || false;
   
   // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
   const adjacentCheck = actualModuleData 
@@ -1884,7 +1893,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
-          adjustedPosition.x + positionAdjustmentForEndPanel,
+          adjustedPosition.x + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0),
           finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
