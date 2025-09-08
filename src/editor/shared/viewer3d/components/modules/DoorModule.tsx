@@ -563,28 +563,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '하부장 상단과 일치, 아래로 40mm 확장, 10mm 아래로 조정'
     });
   } else {
-    // 키큰장: 도어 상단은 항상 상부 프레임 하단에서 5mm 아래 고정
+    // 키큰장: Three.js 좌표계에서 계산
+    // Y=0이 바닥, 양수가 위쪽
     // 도어 높이 = actualDoorHeight - 30mm (이미 계산됨)
-    // 도어 중심 Y = (전체높이 - 상부프레임 - 5mm) - (도어높이/2)
     
     const topFrameHeight = spaceInfo.frameSize?.top || 50;
     const DOOR_TOP_GAP = 5; // 도어와 상부 프레임 사이 간격
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     
-    // 도어 상단 위치 (상부 프레임 하단에서 5mm 아래)
-    const doorTopY = (spaceInfo.height - topFrameHeight - DOOR_TOP_GAP);
-    
-    // 도어 중심 Y 위치 = 도어 상단 - 도어 높이의 절반
+    // 도어 높이 (mm)
     const doorHeightMm = actualDoorHeight - 30; // doorHeightAdjustment 적용
-    doorYPosition = mmToThreeUnits(doorTopY - doorHeightMm / 2);
+    
+    // Three.js 좌표계에서:
+    // 도어 상단 Y = (전체높이 - 상부프레임 - 5mm) (Three.js 단위로)
+    // 도어 중심 Y = 도어상단Y - 도어높이/2
+    const doorTopY = mmToThreeUnits(spaceInfo.height - topFrameHeight - DOOR_TOP_GAP);
+    doorYPosition = doorTopY - mmToThreeUnits(doorHeightMm / 2);
+    
+    // 바닥 마감재가 있으면 그만큼 위로 이동
+    if (floorHeight > 0) {
+      doorYPosition = doorYPosition + mmToThreeUnits(floorHeight);
+    }
     
     console.log('🚪📍 키큰장 도어 Y 위치 계산:', {
       전체높이: spaceInfo.height,
       상부프레임: topFrameHeight,
       도어상단간격: DOOR_TOP_GAP,
-      도어상단Y: doorTopY,
-      도어높이: doorHeightMm,
-      도어중심Y: doorTopY - doorHeightMm / 2,
-      doorYPosition,
+      도어높이mm: doorHeightMm,
+      도어상단Y_three: doorTopY,
+      도어중심Y_three: doorYPosition,
+      바닥마감: floorHeight,
       플로팅높이: floatHeight,
       설명: '도어 상단은 항상 상부 프레임에서 5mm 아래 고정'
     });
