@@ -387,6 +387,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return analyzeColumnSlots(spaceInfo, placedModules);
   }, [spaceInfo, spaceInfo.columns, placedModule.id, placedModule.slotIndex, placedModules]);
 
+  // Column C 크기 조절 훅 - 모든 Hook은 조건부 return 전에 호출되어야 함
+  // 실제 값은 나중에 계산되므로 여기서는 기본값으로 호출
+  const [columnCParams, setColumnCParams] = React.useState({
+    isEnabled: false,
+    depth: 300,
+    width: 600
+  });
+  
+  const columnCResize = useColumnCResize(
+    placedModule,
+    columnCParams.isEnabled,
+    columnCParams.depth,
+    columnCParams.width
+  );
+
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // 모듈 데이터가 없으면 바로 빈 그룹 반환
@@ -1215,13 +1230,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // Column C 크기 조절 훅 사용 (기둥 앞 가구일 때만)
-  const columnCResize = useColumnCResize(
-    placedModule,
-    isColumnCFront,
-    slotInfo?.column?.depth || 300,
-    indexing.columnWidth // 동적으로 실제 슬롯 너비 사용
-  );
+  // columnCResize 훅 파라미터 업데이트 (훅은 이미 상단에서 호출됨)
+  React.useEffect(() => {
+    setColumnCParams({
+      isEnabled: isColumnCFront,
+      depth: slotInfo?.column?.depth || 300,
+      width: indexing.columnWidth
+    });
+  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth]);
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
