@@ -601,9 +601,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } 
   // 하부장과 키큰장의 띄워서 배치 처리
   else if (isLowerCabinet || isTallCabinetForY) {
-    // 띄워서 배치 확인
-    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && 
-                            spaceInfo.baseConfig?.placementType === 'float';
+    // 띄워서 배치 확인 - type이 floor 또는 stand일 때 모두 가능
+    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
     
     if (isFloatPlacement) {
       // 바닥 마감재 높이
@@ -611,8 +610,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                   spaceInfo.floorFinish.height : 0;
       const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
       
-      // 띄움 높이
-      const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+      // 띄움 높이 - baseConfig가 있을 때만 floatHeight 가져오기
+      const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
       const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
       
       // 가구 높이
