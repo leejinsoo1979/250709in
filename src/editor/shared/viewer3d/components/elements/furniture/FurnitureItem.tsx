@@ -529,6 +529,107 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
+  // 상부장 체크
+  const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
+                         placedModule.moduleId?.includes('dual-upper-cabinet');
+  
+  // 하부장 체크
+  const isLowerCabinet = placedModule.moduleId?.includes('lower-cabinet') || 
+                         placedModule.moduleId?.includes('dual-lower-cabinet');
+  
+  // 키큰장 체크
+  const isTallCabinetForY = actualModuleData?.category === 'full';
+  
+  if (isUpperCabinet) {
+    // 상부장은 상부프레임(천장)에 붙어야 함
+    const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
+    const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이
+    
+    // 띄워서 배치 모드와 관계없이 상부장은 항상 천장에 붙어야 함
+    // 바닥 마감재 높이
+    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    
+    // 상부장 중심 Y = 바닥마감재 + (내경 높이 - 상부장 높이/2)
+    // 받침대나 띄움 높이와 관계없이 천장에 붙이기
+    const upperCabinetCenterY = (floorFinishHeightMm + internalSpaceHeight - upperCabinetHeight/2) * 0.01;
+    
+    adjustedPosition = {
+      ...adjustedPosition,
+      y: upperCabinetCenterY
+    };
+    
+    console.log('🔴🔴🔴 상부장을 천장에 완전히 붙이기:', {
+      moduleId: placedModule.moduleId,
+      내경높이_mm: internalSpaceHeight,
+      상부장높이_mm: upperCabinetHeight,
+      바닥마감재_mm: floorFinishHeightMm,
+      상부장중심위치_계산: `(${floorFinishHeightMm} + ${internalSpaceHeight} - ${upperCabinetHeight/2}) * 0.01`,
+      최종Y: upperCabinetCenterY,
+      설명: '띄워서 배치와 관계없이 상부장은 항상 천장에 붙임'
+    });
+  } 
+  // 하부장과 키큰장의 띄워서 배치 처리
+  else if (isLowerCabinet || isTallCabinetForY) {
+    // 띄워서 배치 확인
+    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && 
+                            spaceInfo.baseConfig?.placementType === 'float';
+    
+    if (isFloatPlacement) {
+      // 바닥 마감재 높이
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? 
+                                  spaceInfo.floorFinish.height : 0;
+      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+      
+      // 띄움 높이
+      const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
+      const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
+      
+      // 가구 높이
+      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
+      
+      // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
+      const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+      
+      adjustedPosition = {
+        ...adjustedPosition,
+        y: yPos
+      };
+      
+      console.log('🎈 띄워서 배치 Y축 위치 계산:', {
+        moduleId: placedModule.moduleId,
+        category: actualModuleData?.category,
+        isLowerCabinet,
+        isTallCabinet: isTallCabinetForY,
+        바닥마감재_mm: floorFinishHeightMm,
+        띄움높이_mm: floatHeightMm,
+        가구높이_mm: actualModuleData.dimensions.height,
+        최종Y: yPos,
+        계산식: `${floorFinishHeight.toFixed(3)} + ${floatHeight.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`,
+        설명: '바닥마감재 + 띄움높이 + 가구높이/2'
+      });
+    } else {
+      // 일반 배치 (받침대 있거나 바닥 배치)
+      // furnitureStartY를 사용
+      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
+      const yPos = furnitureStartY + (furnitureHeight / 2);
+      
+      adjustedPosition = {
+        ...adjustedPosition,
+        y: yPos
+      };
+      
+      console.log('📍 일반 배치 Y축 위치 계산:', {
+        moduleId: placedModule.moduleId,
+        category: actualModuleData?.category,
+        furnitureStartY,
+        가구높이_mm: actualModuleData.dimensions.height,
+        최종Y: yPos,
+        계산식: `${furnitureStartY.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`
+      });
+    }
+  }
+  
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
@@ -788,106 +889,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (isLastSlot && !isFurnitureDragging) {
     // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
     adjustedPosition = { ...placedModule.position };
-  }
-  
-  // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 상부프레임에 붙이기!
-  const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
-                         placedModule.moduleId?.includes('dual-upper-cabinet');
-  
-  // 하부장 체크
-  const isLowerCabinet = placedModule.moduleId?.includes('lower-cabinet') || 
-                         placedModule.moduleId?.includes('dual-lower-cabinet');
-  
-  // 키큰장 체크
-  const isTallCabinetForY = actualModuleData?.category === 'full';
-  
-  if (isUpperCabinet) {
-    // 상부장은 상부프레임(천장)에 붙어야 함
-    const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
-    const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이
-    
-    // 띄워서 배치 모드와 관계없이 상부장은 항상 천장에 붙어야 함
-    // 바닥 마감재 높이
-    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-    
-    // 상부장 중심 Y = 바닥마감재 + (내경 높이 - 상부장 높이/2)
-    // 받침대나 띄움 높이와 관계없이 천장에 붙이기
-    const upperCabinetCenterY = (floorFinishHeightMm + internalSpaceHeight - upperCabinetHeight/2) * 0.01;
-    
-    adjustedPosition = {
-      ...adjustedPosition,
-      y: upperCabinetCenterY
-    };
-    
-    console.log('🔴🔴🔴 상부장을 천장에 완전히 붙이기:', {
-      moduleId: placedModule.moduleId,
-      내경높이_mm: internalSpaceHeight,
-      상부장높이_mm: upperCabinetHeight,
-      바닥마감재_mm: floorFinishHeightMm,
-      상부장중심위치_계산: `(${floorFinishHeightMm} + ${internalSpaceHeight} - ${upperCabinetHeight/2}) * 0.01`,
-      최종Y: upperCabinetCenterY,
-      설명: '띄워서 배치와 관계없이 상부장은 항상 천장에 붙임'
-    });
-  } 
-  // 하부장과 키큰장의 띄워서 배치 처리
-  else if (isLowerCabinet || isTallCabinetForY) {
-    // 띄워서 배치 확인
-    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && 
-                            spaceInfo.baseConfig?.placementType === 'float';
-    
-    if (isFloatPlacement) {
-      // 바닥 마감재 높이
-      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? 
-                                  spaceInfo.floorFinish.height : 0;
-      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-      
-      // 띄움 높이
-      const floatHeightMm = spaceInfo.baseConfig.floatHeight || 0;
-      const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-      
-      // 가구 높이
-      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
-      
-      // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
-      const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
-      
-      adjustedPosition = {
-        ...adjustedPosition,
-        y: yPos
-      };
-      
-      console.log('🎈 띄워서 배치 Y축 위치 계산:', {
-        moduleId: placedModule.moduleId,
-        category: actualModuleData?.category,
-        isLowerCabinet,
-        isTallCabinet: isTallCabinetForY,
-        바닥마감재_mm: floorFinishHeightMm,
-        띄움높이_mm: floatHeightMm,
-        가구높이_mm: actualModuleData.dimensions.height,
-        최종Y: yPos,
-        계산식: `${floorFinishHeight.toFixed(3)} + ${floatHeight.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`,
-        설명: '바닥마감재 + 띄움높이 + 가구높이/2'
-      });
-    } else {
-      // 일반 배치 (받침대 있거나 바닥 배치)
-      // furnitureStartY를 사용
-      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
-      const yPos = furnitureStartY + (furnitureHeight / 2);
-      
-      adjustedPosition = {
-        ...adjustedPosition,
-        y: yPos
-      };
-      
-      console.log('📍 일반 배치 Y축 위치 계산:', {
-        moduleId: placedModule.moduleId,
-        category: actualModuleData?.category,
-        furnitureStartY,
-        가구높이_mm: actualModuleData.dimensions.height,
-        최종Y: yPos,
-        계산식: `${furnitureStartY.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`
-      });
-    }
   }
   
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
