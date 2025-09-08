@@ -389,16 +389,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
-  if (!moduleData) {
-    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음:', {
-      targetModuleId,
-      originalModuleId: placedModule.moduleId,
-      adjustedWidth: placedModule.adjustedWidth,
-      customWidth: placedModule.customWidth
-    });
-    return null; // 모듈 데이터가 없으면 렌더링하지 않음
-  }
-  
   console.log('✅ [FurnitureItem] 찾은 모듈:', {
     targetModuleId: targetModuleId,
     originalModuleId: placedModule.moduleId,
@@ -1275,6 +1265,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       finalYPosition: finalYPosition,
       설명: '상부장은 상부프레임에 붙어있음'
     });
+  }
+
+  // 모듈 데이터가 없으면 빈 그룹 반환
+  if (!moduleData) {
+    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음:', {
+      targetModuleId,
+      originalModuleId: placedModule.moduleId,
+      adjustedWidth: placedModule.adjustedWidth,
+      customWidth: placedModule.customWidth
+    });
+    return <group />;
   }
 
   return (
