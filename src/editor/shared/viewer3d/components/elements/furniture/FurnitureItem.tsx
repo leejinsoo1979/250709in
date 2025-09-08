@@ -1580,7 +1580,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureWidthMm = furnitureBounds.renderWidth;
       adjustedPosition = {
         ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-        x: furnitureBounds.center + positionAdjustmentForEndPanel
+        x: furnitureBounds.center + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
       };
       
       console.log('🪑 폭 조정 방식 - 가구 크기 및 위치 조정:', {
@@ -1681,7 +1681,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const slotCenterX = indexing.threeUnitPositions[placedModule.slotIndex] || placedModule.position.x;
     adjustedPosition = {
       ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-      x: slotCenterX + positionAdjustmentForEndPanel
+      x: slotCenterX + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
     };
     
     // adjustedWidth와 columnSlotInfo 제거를 위해 updatePlacedModule 호출
@@ -2226,14 +2226,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           // 왼쪽 엔드패널: 키큰장 왼쪽 가장자리에 딱 붙여서
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel - adjustedHalfWidth - endPanelWidth/2,
+            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2,
             side: 'left'
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           // 오른쪽 엔드패널: 키큰장 오른쪽 가장자리에 딱 붙여서
           endPanelXPositions.push({
-            x: adjustedPosition.x + positionAdjustmentForEndPanel + adjustedHalfWidth + endPanelWidth/2,
+            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2,
             side: 'right'
           });
         }
