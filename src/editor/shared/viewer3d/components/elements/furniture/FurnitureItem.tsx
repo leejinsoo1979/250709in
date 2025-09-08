@@ -529,6 +529,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // adjustedPosition 초기화 - Y축 위치 계산 전에 먼저 초기화
+  let adjustedPosition = placedModule.position;
+  if (isLastSlot && !isFurnitureDragging) {
+    // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
+    adjustedPosition = { ...placedModule.position };
+  }
+  
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
   // 상부장 체크
   const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
@@ -883,13 +890,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     })()
   });
   
-  
-  // adjustedPosition 계산 - 마지막 슬롯의 경우 원본 슬롯 중심 사용
-  let adjustedPosition = placedModule.position;
-  if (isLastSlot && !isFurnitureDragging) {
-    // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
-    adjustedPosition = { ...placedModule.position };
-  }
   
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
   // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상부프레임 하단까지
