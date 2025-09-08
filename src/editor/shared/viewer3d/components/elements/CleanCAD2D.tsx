@@ -487,8 +487,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const largeFontSize = 0.5; // 큰 텍스트
   const smallFontSize = 0.35; // 작은 텍스트
   
-  // 인덱싱 계산 (컬럼 정보)
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // 인덱싱은 이미 상단에서 계산됨
   const { threeUnitBoundaries, columnCount } = indexing;
   
   // 치수선 위치 설정 - 3D 모드에서는 더 위쪽에 배치
