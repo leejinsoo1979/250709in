@@ -244,19 +244,31 @@ const Room: React.FC<RoomProps> = ({
     });
   
   const indexingDebug = calculateSpaceIndexing(spaceInfo);
-  console.log('🔍 Room - 엔드패널 렌더링 조건:', {
+  
+  // 모든 가구에 대해 디버깅
+  placedModulesFromStore.forEach(module => {
+    const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+    console.log('📦 가구 정보:', {
+      moduleId: module.moduleId,
+      slotIndex: module.slotIndex,
+      isDualSlot: module.isDualSlot,
+      isDual,
+      '듀얼판단근거': module.isDualSlot ? 'isDualSlot속성' : (module.moduleId.includes('dual-') ? 'moduleId에dual포함' : '싱글'),
+      '차지하는슬롯': isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex],
+      '왼쪽끝인가': module.slotIndex === 0 || (isDual && module.slotIndex === 1),
+      '오른쪽끝인가': module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === lastSlotIndex - 1),
+      lastSlotIndex,
+      columnCount: indexingDebug.columnCount
+    });
+  });
+  
+  console.log('🔍 Room - 엔드패널 렌더링 최종 결과:', {
     surroundType: spaceInfo.surroundType,
     placedModulesCount: placedModulesFromStore.length,
     hasLeftFurniture,
     hasRightFurniture,
     columnCount: indexingDebug.columnCount,
-    lastSlotIndex: indexingDebug.columnCount - 1,
-    placedModules: placedModulesFromStore.map(m => ({
-      slotIndex: m.slotIndex,
-      isDualSlot: m.isDualSlot,
-      moduleId: m.moduleId,
-      '오른쪽끝체크': m.slotIndex === indexingDebug.columnCount - 1 || (m.isDualSlot && m.slotIndex === indexingDebug.columnCount - 2)
-    })),
+    lastSlotIndex,
     installType: spaceInfo.installType,
     wallConfig: spaceInfo.wallConfig
   });
