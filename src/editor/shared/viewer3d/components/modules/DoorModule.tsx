@@ -563,42 +563,31 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '하부장 상단과 일치, 아래로 40mm 확장, 10mm 아래로 조정'
     });
   } else {
-    // 키큰장의 경우 기존 로직 유지
-    // 
-    // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
-    // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
-    // 
-    // 조정 로직:
-    // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
-    // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
-    // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
-    //
-    if (spaceInfo.baseConfig?.type === 'floor') {
-      // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
-      const topFrameHeight = spaceInfo.frameSize?.top || 50;
-      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
-      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      doorYPosition = floorHeight > 0 
-        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
-        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
-    } else {
-      // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
-      const topFrameHeight = spaceInfo.frameSize?.top || 50;
-      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
-    }
+    // 키큰장: 도어 상단은 항상 상부 프레임 하단에서 5mm 아래 고정
+    // 도어 높이 = actualDoorHeight - 30mm (이미 계산됨)
+    // 도어 중심 Y = (전체높이 - 상부프레임 - 5mm) - (도어높이/2)
     
-    // 플로팅 배치 시 Y 위치 조정 (도어 상단 고정, 아래에서 줄어듦)
-    if (floatHeight > 0) {
-      // 도어 높이가 줄어든 만큼 중심을 위로 이동 (상단 고정 효과)
-      doorYPosition = doorYPosition + mmToThreeUnits(floatHeight / 2);
-      console.log('🚪📍 플로팅 배치 도어 Y 위치 조정:', {
-        원래위치: doorYPosition - mmToThreeUnits(floatHeight / 2),
-        플로팅높이: floatHeight,
-        조정된위치: doorYPosition,
-        설명: '도어 상단 고정, 아래에서 높이 감소'
-      });
-    }
+    const topFrameHeight = spaceInfo.frameSize?.top || 50;
+    const DOOR_TOP_GAP = 5; // 도어와 상부 프레임 사이 간격
+    
+    // 도어 상단 위치 (상부 프레임 하단에서 5mm 아래)
+    const doorTopY = (spaceInfo.height - topFrameHeight - DOOR_TOP_GAP);
+    
+    // 도어 중심 Y 위치 = 도어 상단 - 도어 높이의 절반
+    const doorHeightMm = actualDoorHeight - 30; // doorHeightAdjustment 적용
+    doorYPosition = mmToThreeUnits(doorTopY - doorHeightMm / 2);
+    
+    console.log('🚪📍 키큰장 도어 Y 위치 계산:', {
+      전체높이: spaceInfo.height,
+      상부프레임: topFrameHeight,
+      도어상단간격: DOOR_TOP_GAP,
+      도어상단Y: doorTopY,
+      도어높이: doorHeightMm,
+      도어중심Y: doorTopY - doorHeightMm / 2,
+      doorYPosition,
+      플로팅높이: floatHeight,
+      설명: '도어 상단은 항상 상부 프레임에서 5mm 아래 고정'
+    });
   }
   
   // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)
