@@ -529,6 +529,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
+  // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
+  const isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
+  
   // adjustedPosition 초기화 - Y축 위치 계산 전에 먼저 초기화
   // placedModule.position을 항상 spread하여 새 객체 생성
   let adjustedPosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
@@ -1561,7 +1564,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 노서라운드 모드에서 커버도어의 힌지 위치 조정
   if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
     const isFirstSlot = placedModule.slotIndex === 0;
-    const isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
+    // isLastSlot은 이미 위에서 정의됨
     
     if (spaceInfo.installType === 'freestanding') {
       if (isFirstSlot) {
