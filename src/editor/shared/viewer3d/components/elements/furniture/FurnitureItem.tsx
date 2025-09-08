@@ -803,15 +803,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const endPanelSide = adjacentCheck.adjacentSide;
   
   // 노서라운드 첫/마지막 슬롯 여부 확인 (상하부장 처리에서 사용)
+  // 세미스탠딩도 프리스탠딩과 동일하게 처리
+  // 세미스탠딩의 경우 벽이 없는 쪽 슬롯만 해당
+  const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+  const hasLeftWall = spaceInfo.wallConfig?.left;
+  const hasRightWall = spaceInfo.wallConfig?.right;
+  
   const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' && 
-                                  spaceInfo.installType === 'freestanding' && 
+                                  ((spaceInfo.installType === 'freestanding') || 
+                                   (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
                                   placedModule.slotIndex === 0;
   const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' && 
-                                 spaceInfo.installType === 'freestanding' && 
+                                 ((spaceInfo.installType === 'freestanding') ||
+                                  (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
                                  isLastSlot;
   // 듀얼 가구가 마지막 슬롯에 있는 경우
   const isNoSurroundDualLastSlot = spaceInfo.surroundType === 'no-surround' && 
-                                    spaceInfo.installType === 'freestanding' && 
+                                    ((spaceInfo.installType === 'freestanding') ||
+                                     (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
                                     isDualFurniture && 
                                     placedModule.slotIndex === indexing.columnCount - 2;
   
