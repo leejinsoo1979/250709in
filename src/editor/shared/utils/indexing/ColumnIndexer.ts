@@ -541,23 +541,13 @@ export class ColumnIndexer {
           // 벽없음: 전체 너비 사용 (엔드패널도 슬롯에 포함)
           actualInternalWidth = spaceInfo.width;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 세미스탠딩: 전체 너비 사용 (엔드패널도 슬롯에 포함)
           actualInternalWidth = spaceInfo.width;
-          
-          // 이격거리는 무시하고 엔드패널만 고려
-          if (!spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 없으면 엔드패널 두께 빼기
-            actualInternalWidth -= END_PANEL_THICKNESS;
-          }
-          
-          if (!spaceInfo.wallConfig?.right) {
-            // 오른쪽 벽이 없으면 엔드패널 두께 빼기
-            actualInternalWidth -= END_PANEL_THICKNESS;
-          }
         }
       }
       
       // 프레임을 고려한 내부 시작점 (노서라운드의 경우 엔드패널과 gapConfig 고려)
-      // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
+      // 슬롯 가이드용 시작점 계산 - 엔드패널도 슬롯에 포함
       let internalStartX: number;
       let leftReduction = 0; // 변수를 if 블록 밖에 선언
       
@@ -566,14 +556,8 @@ export class ColumnIndexer {
           // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
           leftReduction = spaceInfo.gapConfig?.left || 2;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 한쪽 벽만 있음
-          if (spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-            leftReduction = 0;
-          } else {
-            // 왼쪽 벽이 없으면: 엔드패널 두께만
-            leftReduction = END_PANEL_THICKNESS;
-          }
+          // 세미스탠딩: 엔드패널도 슬롯에 포함되므로 항상 0
+          leftReduction = 0;
         } else {
           // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
           leftReduction = 0;
@@ -669,7 +653,7 @@ export class ColumnIndexer {
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
     
     // 시작 위치 계산 (노서라운드의 경우 엔드패널과 gapConfig 고려)
-    // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
+    // 슬롯 가이드용 시작점 계산 - 엔드패널도 슬롯에 포함
     let internalStartX: number;
     if (spaceInfo.surroundType === 'no-surround') {
       let leftReduction = 0;
@@ -678,14 +662,8 @@ export class ColumnIndexer {
         // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
         leftReduction = spaceInfo.gapConfig?.left || 2;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 한쪽 벽만 있음
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-          leftReduction = 0;
-        } else {
-          // 왼쪽 벽이 없으면: 엔드패널 두께만
-          leftReduction = END_PANEL_THICKNESS;
-        }
+        // 세미스탠딩: 엔드패널도 슬롯에 포함되므로 항상 0
+        leftReduction = 0;
       } else {
         // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
         leftReduction = 0;
