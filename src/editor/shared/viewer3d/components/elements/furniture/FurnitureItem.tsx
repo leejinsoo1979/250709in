@@ -432,19 +432,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
   let targetModuleId = placedModule.moduleId;
   
-  // baseConfig 변경 시 모듈 ID 조정이 필요한지 확인
-  // 띄워서 배치(stand) 모드로 변경되었을 때 모듈 ID가 맞지 않을 수 있음
-  if (targetModuleId && !targetModuleId.includes('-')) {
-    // 기본 모듈 ID에 폭 정보가 없으면 customWidth 또는 기본 폭 추가
-    const defaultWidth = placedModule.customWidth || 600; // 기본값 600
-    targetModuleId = `${targetModuleId}-${defaultWidth}`;
-    console.log('🔧 [FurnitureItem] 기본 모듈 ID에 폭 정보 추가:', {
-      original: placedModule.moduleId,
-      width: defaultWidth,
-      newTargetModuleId: targetModuleId
-    });
-  }
-  
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
   // 폭 조정은 렌더링 시에만 적용
   if (placedModule.adjustedWidth) {
@@ -455,14 +442,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
-  else if (placedModule.customWidth && !placedModule.adjustedWidth && !targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
-    const baseType = targetModuleId.replace(/-\d+$/, '');
-    targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
-      original: placedModule.moduleId,
-      customWidth: placedModule.customWidth,
-      newTargetModuleId: targetModuleId
-    });
+  else if (placedModule.customWidth && !placedModule.adjustedWidth) {
+    // 모듈 ID가 이미 customWidth를 포함하고 있는지 확인
+    if (!targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
+      // ID에서 기존 폭 정보 제거하고 새로운 customWidth 추가
+      const baseType = targetModuleId.replace(/-\d+$/, '');
+      targetModuleId = `${baseType}-${placedModule.customWidth}`;
+      console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
+        original: placedModule.moduleId,
+        customWidth: placedModule.customWidth,
+        newTargetModuleId: targetModuleId
+      });
+    }
   }
 
   console.log('🔍 [FurnitureItem] getModuleById 호출:', {
@@ -485,23 +476,44 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
   }
   
-  // 그래도 못 찾으면 폭 정보 없는 기본 ID로 재시도
+  // 그래도 못 찾으면 다양한 패턴으로 재시도
   if (!moduleData) {
-    const baseModuleId = placedModule.moduleId.replace(/-\d+$/, '');
-    if (baseModuleId !== placedModule.moduleId) {
-      console.warn('⚠️ [FurnitureItem] 기본 모듈 ID로 재시도:', baseModuleId);
-      moduleData = getModuleById(baseModuleId, internalSpace, zoneSpaceInfo);
-      
-      // 기본 모듈을 찾았으면 customWidth 적용
-      if (moduleData && placedModule.customWidth) {
-        moduleData = {
-          ...moduleData,
-          dimensions: {
-            ...moduleData.dimensions,
-            width: placedModule.customWidth
-          }
-        };
+    // 패턴 1: single-open-upper-586 형태를 처리
+    const parts = placedModule.moduleId.split('-');
+    if (parts.length >= 3) {
+      // 마지막이 숫자면 제거하고 시도
+      if (/^\d+$/.test(parts[parts.length - 1])) {
+        const withoutWidth = parts.slice(0, -1).join('-');
+        console.warn('⚠️ [FurnitureItem] 폭 정보 제거하고 재시도:', withoutWidth);
+        moduleData = getModuleById(withoutWidth, internalSpace, zoneSpaceInfo);
       }
+      
+      // 그래도 없으면 upper/lower 제거하고 시도  
+      if (!moduleData && (parts.includes('upper') || parts.includes('lower'))) {
+        const withoutCategory = parts.filter(p => p !== 'upper' && p !== 'lower').join('-');
+        console.warn('⚠️ [FurnitureItem] 카테고리 제거하고 재시도:', withoutCategory);
+        moduleData = getModuleById(withoutCategory, internalSpace, zoneSpaceInfo);
+      }
+    }
+    
+    // 패턴 2: 기본 타입만으로 시도 (single-open)
+    if (!moduleData) {
+      const baseType = parts.slice(0, 2).join('-');
+      if (baseType !== placedModule.moduleId) {
+        console.warn('⚠️ [FurnitureItem] 기본 타입으로 재시도:', baseType);
+        moduleData = getModuleById(baseType, internalSpace, zoneSpaceInfo);
+      }
+    }
+    
+    // customWidth 적용
+    if (moduleData && placedModule.customWidth) {
+      moduleData = {
+        ...moduleData,
+        dimensions: {
+          ...moduleData.dimensions,
+          width: placedModule.customWidth
+        }
+      };
     }
   }
   
