@@ -1333,23 +1333,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼 캐비넷의 도어는 항상 슬롯 중심에 고정
+                // 듀얼 캐비넷 도어를 슬롯 중심에 고정
                 if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 가구 몸체가 이동한 만큼 도어는 반대로 이동하여 슬롯 중심 유지
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                  // 듀얼 캐비넷은 가구가 9mm 이동하지만 도어는 18mm(엔드패널 전체 두께) 보정 필요
+                  // 가구가 오른쪽으로 이동하면 도어는 왼쪽으로 18mm
+                  // 가구가 왼쪽으로 이동하면 도어는 오른쪽으로 18mm
+                  const doorAdjustment = positionAdjustmentForEndPanel > 0 
+                    ? -END_PANEL_THICKNESS * 0.01  // 가구가 오른쪽 이동 시 도어는 왼쪽으로 18mm
+                    : END_PANEL_THICKNESS * 0.01;   // 가구가 왼쪽 이동 시 도어는 오른쪽으로 18mm
                   
-                  console.log('🚪 듀얼 캐비넷 도어 위치 고정:', {
+                  console.log('🚪 듀얼 캐비넷 도어 18mm 보정:', {
                     moduleId: placedModule.id,
-                    isDualFurniture,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '도어는 항상 슬롯 중심에 고정'
+                    설명: '듀얼 캐비넷 도어는 18mm(엔드패널 전체 두께) 보정'
                   });
                   
                   return doorAdjustment;
                 }
-                return 0; // 기본값
+                return 0;
               })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
