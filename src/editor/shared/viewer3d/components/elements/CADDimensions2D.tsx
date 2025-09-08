@@ -755,39 +755,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         let displayWidth = actualFurnitureWidthMm;
         let displayPositionX = furniturePositionX;
         
-        // 노서라운드 모드에서 벽 없는 구간의 가구 치수 위치 보정
-        if (spaceInfo.surroundType === 'no-surround' && module.slotIndex !== undefined) {
-          const isFirstSlot = module.slotIndex === 0;
-          const isLastSlot = isDualFurniture ? 
-            module.slotIndex === indexing.columnCount - 2 : 
-            module.slotIndex === indexing.columnCount - 1;
+        // 디버깅: 가구 위치와 슬롯 위치 비교
+        if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+          const expectedSlotX = indexing.threeUnitPositions[module.slotIndex];
+          const positionDiff = (furniturePositionX - expectedSlotX) * 100; // mm 단위로 변환
           
-          let hasLeftWall = true;
-          let hasRightWall = true;
-          
-          if (spaceInfo.installType === 'freestanding') {
-            hasLeftWall = false;
-            hasRightWall = false;
-          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-            hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
-            hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
-          }
-          
-          // 벽이 없는 쪽의 가구는 엔드패널로 인해 9mm 이동되었으므로 원위치로 보정
-          if (isFirstSlot && !hasLeftWall) {
-            displayPositionX = displayPositionX + mmToThreeUnits(9); // 원위치로 되돌림
-            console.log('📐 노서라운드 왼쪽 치수 위치 보정:', {
+          if (Math.abs(positionDiff) > 5) { // 5mm 이상 차이나면
+            console.log('⚠️ 치수 위치 불일치 감지:', {
               moduleId: module.moduleId,
-              originalX: furniturePositionX,
-              correctedX: displayPositionX
+              slotIndex: module.slotIndex,
+              expectedSlotX,
+              actualPositionX: furniturePositionX,
+              differenceInMm: positionDiff,
+              isDualFurniture,
+              surroundType: spaceInfo.surroundType,
+              installType: spaceInfo.installType
             });
-          } else if (isLastSlot && !hasRightWall) {
-            displayPositionX = displayPositionX - mmToThreeUnits(9); // 원위치로 되돌림
-            console.log('📐 노서라운드 오른쪽 치수 위치 보정:', {
-              moduleId: module.moduleId,
-              originalX: furniturePositionX,
-              correctedX: displayPositionX
-            });
+            
+            // 슬롯 위치를 사용하도록 보정
+            displayPositionX = expectedSlotX;
           }
         }
         
