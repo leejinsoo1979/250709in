@@ -562,13 +562,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
-      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
-      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
-    } else if (endPanelSide === 'right') {
-      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
+      // 왼쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
       positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+    } else if (endPanelSide === 'right') {
+      // 오른쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
+      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
@@ -1333,17 +1333,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼 캐비넷 도어를 가구와 함께 이동
+                // 듀얼 캐비넷 도어를 슬롯 중심에 고정
                 if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 도어를 가구와 같이 이동 (보정 없음 = 가구 이동량 그대로 적용)
-                  const doorAdjustment = 0;
+                  // 가구가 이동한 만큼 도어는 반대로 보정하여 슬롯 중심 유지
+                  const doorAdjustment = -positionAdjustmentForEndPanel;
                   
-                  console.log('🚪 듀얼 캐비넷 도어 위치 이동:', {
+                  console.log('🚪 듀얼 캐비넷 도어 슬롯 중심 고정:', {
                     moduleId: placedModule.id,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '도어를 가구와 함께 9mm 안쪽으로 이동'
+                    설명: '도어는 항상 슬롯 중심에 고정'
                   });
                   
                   return doorAdjustment;
