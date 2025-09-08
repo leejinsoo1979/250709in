@@ -377,33 +377,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
     // originalSlotWidth가 없으면 fallback으로 계산
     if (!originalSlotWidth) {
-      // 전체 너비에서 엔드패널/프레임을 제외한 실제 가구 공간을 슬롯 수로 나눔
-      let availableWidth = spaceInfo.width;
-      
-      // installType에 따라 엔드패널/이격거리 처리
-      if (spaceInfo.installType === 'freestanding') {
-        // 벽없음: 양쪽 엔드패널 18mm씩
-        availableWidth -= 36; // 18mm * 2
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 한쪽벽: 벽이 없는 쪽에만 엔드패널
-        if (!spaceInfo.wallConfig?.left) {
-          availableWidth -= 18; // 왼쪽 엔드패널
-        } else if (!spaceInfo.wallConfig?.right) {
-          availableWidth -= 18; // 오른쪽 엔드패널
-        }
-      } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 양쪽벽: 엔드패널 없음 (이격거리는 별도 처리)
-        // availableWidth 그대로 사용
-      }
-      
-      actualDoorWidth = Math.floor(availableWidth / indexing.columnCount);
+      // 노서라운드에서는 슬롯 너비를 그대로 사용 (엔드패널이 슬롯에 포함됨)
+      // indexing에서 이미 계산된 슬롯 너비를 사용
+      actualDoorWidth = indexing.columnWidth;
       console.log(`🚪 노서라운드 도어 너비 계산:`, {
         전체너비: spaceInfo.width,
-        좌측제외: spaceInfo.wallConfig?.left ? 2 : 18,
-        우측제외: spaceInfo.wallConfig?.right ? 2 : 18,
-        가용너비: availableWidth,
-        슬롯수: indexing.columnCount,
-        도어너비: actualDoorWidth
+        indexingColumnWidth: indexing.columnWidth,
+        actualDoorWidth,
+        설명: '노서라운드에서는 슬롯 너비를 그대로 사용 (엔드패널 포함)'
       });
     }
   }
@@ -862,29 +843,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   if (isDualFurniture) {
-    // 듀얼 가구: 개별 슬롯 너비에서 각각 3mm씩 빼기
-    const totalWidth = actualDoorWidth; // 원래 슬롯 크기 사용
-    
+    // 듀얼 가구: 두 슬롯의 전체 너비 계산
+    let totalWidth: number;
     let leftDoorWidth: number;
     let rightDoorWidth: number;
     
     if (slotWidths && slotWidths.length >= 2) {
       // 개별 슬롯 너비가 제공된 경우
+      totalWidth = slotWidths[0] + slotWidths[1];
       leftDoorWidth = slotWidths[0] - 3;
       rightDoorWidth = slotWidths[1] - 3;
     } else {
-      // fallback: 균등분할
-      const doorWidth = (totalWidth - 6) / 2;
-      leftDoorWidth = doorWidth;
-      rightDoorWidth = doorWidth;
+      // fallback: indexing에서 계산된 값 사용
+      totalWidth = indexing.columnWidth * 2;
+      leftDoorWidth = indexing.columnWidth - 3;
+      rightDoorWidth = indexing.columnWidth - 3;
     }
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
     // 도어 위치 계산 (개별 슬롯 너비 기반)
-    const leftSlotWidth = slotWidths?.[0] || totalWidth / 2;
-    const rightSlotWidth = slotWidths?.[1] || totalWidth / 2;
+    const leftSlotWidth = slotWidths?.[0] || indexing.columnWidth;
+    const rightSlotWidth = slotWidths?.[1] || indexing.columnWidth;
     
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
