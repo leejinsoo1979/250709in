@@ -93,8 +93,8 @@ export class ColumnIndexer {
             leftReduction = END_PANEL_THICKNESS;
           }
         } else {
-          // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널만
-          leftReduction = END_PANEL_THICKNESS;
+          // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
+          leftReduction = 0;
         }
         
         internalStartX = -(totalWidth / 2) + leftReduction;
@@ -250,23 +250,13 @@ export class ColumnIndexer {
     const slotWidths: number[] = [];
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 벽없음: 커버도어 방식 - 전체너비를 균등 분할 후, 양쪽 끝 슬롯에서 18mm씩 빼기
+      // 노서라운드 벽없음: 전체너비를 균등 분할 (엔드패널은 첫/마지막 슬롯에 포함)
       const baseSlotWidth = Math.floor(totalWidth / columnCount);
       const remainder = totalWidth % columnCount;
       
       for (let i = 0; i < columnCount; i++) {
         let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
-        
-        // 첫 번째 슬롯은 왼쪽 엔드패널 두께를 뺌
-        if (i === 0) {
-          slotWidth = slotWidth - END_PANEL_THICKNESS;
-        }
-        // 마지막 슬롯은 오른쪽 엔드패널 두께를 뺌
-        else if (i === columnCount - 1) {
-          slotWidth = slotWidth - END_PANEL_THICKNESS;
-        }
-        // 중간 슬롯들은 그대로
-        
+        // 엔드패널을 빼지 않음 - 슬롯에 포함
         slotWidths.push(slotWidth);
       }
       
@@ -352,8 +342,8 @@ export class ColumnIndexer {
           leftReduction = END_PANEL_THICKNESS;
         }
       } else {
-        // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
-        leftReduction = END_PANEL_THICKNESS;
+        // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
+        leftReduction = 0;
       }
       
       internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
@@ -368,7 +358,7 @@ export class ColumnIndexer {
     
     if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
       // 노서라운드: 항상 전체 공간을 균등 분할하여 일관된 위치 유지
-      // 프리스탠딩: 전체 너비를 균등 분할 (양쪽 엔드패널 포함)
+      // 프리스탠딩: 전체 너비를 균등 분할 (엔드패널도 슬롯 안에 포함)
       // 세미스탠딩: 전체 너비를 균등 분할 (한쪽 엔드패널 포함)
       // 벽 설정이 변경되어도 슬롯 위치는 동일하게 유지
       currentX = -(totalWidth / 2);
@@ -377,10 +367,10 @@ export class ColumnIndexer {
       const baseSlotWidth = Math.floor(totalWidth / columnCount);
       const remainder = totalWidth % columnCount;
       
-      // 프리스탠딩은 양쪽, 세미스탠딩은 한쪽에 엔드패널 공간 확보
+      // 프리스탠딩은 전체 공간의 왼쪽 끝에서 시작 (엔드패널도 슬롯 안에 포함)
       if (spaceInfo.installType === 'freestanding') {
-        // 양쪽 엔드패널 공간 확보 (18mm씩)
-        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
+        // 전체 공간의 왼쪽 끝에서 시작
+        currentX = -(totalWidth / 2);
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
         // 세미스탠딩: 벽 위치에 따라 엔드패널 공간 확보
         if (spaceInfo.wallConfig?.left) {
@@ -622,8 +612,8 @@ export class ColumnIndexer {
             leftReduction = END_PANEL_THICKNESS;
           }
         } else {
-          // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
-          leftReduction = END_PANEL_THICKNESS;
+          // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
+          leftReduction = 0;
         }
         
         internalStartX = -(spaceInfo.width / 2) + leftReduction;
@@ -646,23 +636,13 @@ export class ColumnIndexer {
       const slotWidths: number[] = [];
       
       if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
-        // 노서라운드 벽없음: 커버도어 방식 - 전체너비를 균등 분할 후, 양쪽 끝 슬롯에서 18mm씩 빼기
+        // 노서라운드 벽없음: 전체너비를 균등 분할 (엔드패널은 첫/마지막 슬롯에 포함)
         const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
         const remainder = spaceInfo.width % columnCount;
         
         for (let i = 0; i < columnCount; i++) {
           let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
-          
-          // 첫 번째 슬롯은 왼쪽 엔드패널 두께를 뺌
-          if (i === 0) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 마지막 슬롯은 오른쪽 엔드패널 두께를 뺌
-          else if (i === columnCount - 1) {
-            slotWidth = slotWidth - END_PANEL_THICKNESS;
-          }
-          // 중간 슬롯들은 그대로
-          
+          // 엔드패널을 빼지 않음 - 슬롯에 포함
           slotWidths.push(slotWidth);
         }
       } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
@@ -752,8 +732,8 @@ export class ColumnIndexer {
           leftReduction = END_PANEL_THICKNESS;
         }
       } else {
-        // 프리스탠딩: 양쪽 벽이 없으므로 엔드패널 두께만
-        leftReduction = END_PANEL_THICKNESS;
+        // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
+        leftReduction = 0;
       }
       
       internalStartX = -(totalWidth / 2) + leftReduction;
