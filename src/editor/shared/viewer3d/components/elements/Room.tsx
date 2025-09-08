@@ -1305,7 +1305,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (() => {
+      {showFrame && frameThickness.left > 0 && spaceInfo.surroundType !== 'no-surround' && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1405,7 +1405,7 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {showFrame && frameThickness.right > 0 && (() => {
+      {showFrame && frameThickness.right > 0 && spaceInfo.surroundType !== 'no-surround' && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';

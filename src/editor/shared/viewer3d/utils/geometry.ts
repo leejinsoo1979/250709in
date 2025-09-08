@@ -82,18 +82,15 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo) => {
   let internalWidth;
   
   if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: 설치 유형에 따라 다르게 계산
+    // 노서라운드: 엔드패널 없음, 이격거리만 고려
     if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
       // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
       const leftGap = spaceInfo.gapConfig?.left || 2;
       const rightGap = spaceInfo.gapConfig?.right || 2;
       internalWidth = spaceInfo.width - leftGap - rightGap;
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 엔드패널만 고려, 이격거리 무시
-      internalWidth = spaceInfo.width - 18; // 엔드패널 두께 18mm
     } else {
-      // 프리스탠딩: 양쪽 엔드패널
-      internalWidth = spaceInfo.width - 36; // 양쪽 엔드패널 18mm * 2
+      // 세미스탠딩, 프리스탠딩: 노서라운드에서는 엔드패널 없음
+      internalWidth = spaceInfo.width;
     }
   } else {
     // 서라운드: 내경 너비 = 전체 너비 - 좌측 프레임 - 우측 프레임
@@ -225,60 +222,16 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo) => {
   }
   const { installType, wallConfig, frameSize, surroundType } = spaceInfo;
   
-  // 노서라운드 타입인 경우 벽 유무에 따라 처리
+  // 노서라운드 타입인 경우 엔드패널 없음 (사용자 요청)
   if (surroundType === 'no-surround') {
-    let leftThickness = 0;
-    let rightThickness = 0;
+    console.log('🚫 노서라운드 모드 - 엔드패널 없음');
     
-    // frameSize가 명시적으로 설정되고 0이 아닌 경우 사용 (프레임 크기 조정 시)
-    // 노서라운드 모드에서는 frameSize가 0이므로 무시하고 자동 계산
-    console.log('🔍 노서라운드 frameSize 체크:', {
-      frameSize,
-      'frameSize?.left': frameSize?.left,
-      'frameSize?.right': frameSize?.right,
-      installType,
-      wallConfig
-    });
-    
-    // 노서라운드 모드에서는 frameSize를 무시하고 설치 타입과 벽 구성에 따라 자동 계산
-    {
-      // frameSize가 없으면 설치 타입과 벽 구성에 따라 자동 계산
-      if (installType === 'builtin' || installType === 'built-in') {
-        // 양쪽벽: 모두 0mm (프레임 없음)
-        leftThickness = 0;
-        rightThickness = 0;
-      } else if (installType === 'semistanding' || installType === 'semi-standing') {
-        // 한쪽벽: 벽이 있는 쪽은 0mm, 없는 쪽은 18mm 엔드패널
-        if (wallConfig?.left) {
-          leftThickness = 0;   // 좌측벽 있음: 프레임 없음
-          rightThickness = END_PANEL_THICKNESS; // 우측벽 없음: 18mm 엔드패널
-        } else {
-          leftThickness = END_PANEL_THICKNESS;  // 좌측벽 없음: 18mm 엔드패널
-          rightThickness = 0;  // 우측벽 있음: 프레임 없음
-        }
-      } else if (installType === 'freestanding') {
-        // 벽없음(freestanding): 양쪽 모두 18mm 엔드패널
-        leftThickness = END_PANEL_THICKNESS;
-        rightThickness = END_PANEL_THICKNESS;
-      }
-    }
-    
-    console.log('🔍 노서라운드 프레임 계산 결과:', { 
-      frameSize, 
-      leftThickness, 
-      rightThickness,
-      installType,
-      surroundType,
-      wallConfig,
-      '벽위치': wallConfig?.left ? '좌측' : wallConfig?.right ? '우측' : '없음',
-      '엔드패널위치': wallConfig?.left ? '우측' : '좌측'
-    });
-    
+    // 노서라운드 모드에서는 엔드패널이 전혀 없음
     return {
-      left: leftThickness, // mm 단위 그대로 반환 (Room.tsx에서 필요에 따라 변환)
-      right: rightThickness,
-      leftMm: leftThickness,
-      rightMm: rightThickness
+      left: 0,
+      right: 0,
+      leftMm: 0,
+      rightMm: 0
     };
   }
   
