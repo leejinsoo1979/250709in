@@ -657,8 +657,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       placedModule.slotIndex !== undefined) {
     
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
-    const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
+    // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
+    const isLastSlotNoSurround = isDualLastSlot ? false : isLastSlot;
     
     // 듀얼 가구 마지막 슬롯 특별 처리 (양쪽에서 줄어듦)
     if (isDualLastSlot) {
