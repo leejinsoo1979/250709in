@@ -984,30 +984,59 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         설명: '오른쪽 엔드패널에 맞춰 18mm 줄이고 왼쪽으로 9mm 이동'
       });
     }
-    // 싱글 가구 또는 듀얼 가구 첫번째 슬롯 처리 (한쪽만 줄어듦)
-    else if ((isFirstSlotNoSurround || isLastSlotNoSurround) && !needsEndPanelAdjustment) {
-      // 가구 너비를 18mm 줄임 (상하부장 옆 키큰장처럼)
-      const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
-      
-      // 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
-      if (isFirstSlotNoSurround) {
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
-      } else if (isLastSlotNoSurround) {
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+    // 싱글 가구 첫/마지막 슬롯 처리 (상하부장도 포함)
+    else if ((isFirstSlotNoSurround || isLastSlotNoSurround)) {
+      // 키큰장이 아니거나, 키큰장이지만 상하부장과 인접하지 않은 경우
+      if (!needsEndPanelAdjustment) {
+        // 가구 너비를 18mm 줄임
+        const originalWidth = furnitureWidthMm;
+        furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
+        
+        // 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
+        if (isFirstSlotNoSurround) {
+          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
+        } else if (isLastSlotNoSurround) {
+          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+        }
+        
+        console.log('🔴 벽없음 노서라운드 첫/마지막 슬롯 처리:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isFirstSlot: isFirstSlotNoSurround,
+          isLastSlot: isLastSlotNoSurround,
+          isDualFurniture,
+          isUpperOrLower: isUpperCabinet || isLowerCabinet,
+          adjustedWidth: furnitureWidthMm,
+          reduction: END_PANEL_THICKNESS,
+          positionAdjustment: positionAdjustmentForEndPanel,
+          설명: '엔드패널 공간 처리: 너비 줄이고 위치 이동'
+        });
+      } else {
+        // 키큰장이 상하부장과 인접한 경우는 위에서 이미 처리했으므로
+        // 상하부장 자체는 추가 처리가 필요함
+        if (isUpperCabinet || isLowerCabinet) {
+          // 상하부장이 첫/마지막 슬롯에 있는 경우도 처리
+          const originalWidth = furnitureWidthMm;
+          // 이미 키큰장 때문에 조정된 경우가 아니면 조정
+          if (furnitureWidthMm === originalFurnitureWidthMm) {
+            furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
+            
+            if (isFirstSlotNoSurround) {
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            } else if (isLastSlotNoSurround) {
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            }
+            
+            console.log('🔴 상하부장 노서라운드 첫/마지막 슬롯 처리:', {
+              moduleId: placedModule.moduleId,
+              isUpperCabinet,
+              isLowerCabinet,
+              adjustedWidth: furnitureWidthMm,
+              positionAdjustment: positionAdjustmentForEndPanel
+            });
+          }
+        }
       }
-      
-      console.log('🔴 벽없음 노서라운드 첫/마지막 슬롯 처리:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isFirstSlot: isFirstSlotNoSurround,
-        isLastSlot: isLastSlotNoSurround,
-        isDualFurniture,
-        adjustedWidth: furnitureWidthMm,
-        reduction: END_PANEL_THICKNESS,
-        positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '빈 공간을 상하부장처럼 취급하여 너비 줄이고 위치 이동'
-      });
     }
     
     // 노서라운드 모드에서는 slotWidths가 이미 엔드패널을 고려하여 계산되어 있음
