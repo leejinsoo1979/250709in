@@ -1931,7 +1931,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
-          adjustedPosition.x + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0),
+          adjustedPosition.x + positionAdjustmentForEndPanel,
           finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
