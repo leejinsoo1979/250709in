@@ -661,49 +661,52 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = isDualLastSlot ? false : isLastSlot;
     
-    // 듀얼 가구 마지막 슬롯 특별 처리 (오른쪽만 줄어듦)
-    if (isDualLastSlot) {
-      // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
-      const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
-      
-      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 오른쪽만 줄임:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isDualFurniture: true,
-        originalWidth,
-        adjustedWidth: furnitureWidthMm,
-        reduction: END_PANEL_THICKNESS,
-        positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '오른쪽 엔드패널에 맞춰 18mm 줄이고 왼쪽으로 9mm 이동'
-      });
-    }
-    // 싱글 가구 또는 듀얼 가구 첫번째 슬롯 처리 (한쪽만 줄어듦)
-    else if (isFirstSlotNoSurround || isLastSlotNoSurround) {
-      // 가구 너비를 18mm 줄임 (상하부장 옆 키큰장처럼)
-      const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
-      
-      // 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
-      if (isFirstSlotNoSurround) {
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
-      } else if (isLastSlotNoSurround) {
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+    // 상하부장이 있으면 이미 처리되었으므로 추가 처리하지 않음
+    if (!needsEndPanelAdjustment) {
+      // 듀얼 가구 마지막 슬롯 특별 처리 (오른쪽만 줄어듦)
+      if (isDualLastSlot) {
+        // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
+        const originalWidth = furnitureWidthMm;
+        furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+        
+        console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 오른쪽만 줄임:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isDualFurniture: true,
+          originalWidth,
+          adjustedWidth: furnitureWidthMm,
+          reduction: END_PANEL_THICKNESS,
+          positionAdjustment: positionAdjustmentForEndPanel,
+          설명: '오른쪽 엔드패널에 맞춰 18mm 줄이고 왼쪽으로 9mm 이동'
+        });
       }
-      
-      console.log('🔴 벽없음 노서라운드 첫/마지막 슬롯 처리:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isFirstSlot: isFirstSlotNoSurround,
-        isLastSlot: isLastSlotNoSurround,
-        isDualFurniture,
-        originalWidth,
-        adjustedWidth: furnitureWidthMm,
-        reduction: END_PANEL_THICKNESS,
-        positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '빈 공간을 상하부장처럼 취급하여 너비 줄이고 위치 이동'
-      });
+      // 싱글 가구 또는 듀얼 가구 첫번째 슬롯 처리 (한쪽만 줄어듦)
+      else if (isFirstSlotNoSurround || isLastSlotNoSurround) {
+        // 가구 너비를 18mm 줄임 (상하부장 옆 키큰장처럼)
+        const originalWidth = furnitureWidthMm;
+        furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
+        
+        // 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
+        if (isFirstSlotNoSurround) {
+          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
+        } else if (isLastSlotNoSurround) {
+          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+        }
+        
+        console.log('🔴 벽없음 노서라운드 첫/마지막 슬롯 처리:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isFirstSlot: isFirstSlotNoSurround,
+          isLastSlot: isLastSlotNoSurround,
+          isDualFurniture,
+          originalWidth,
+          adjustedWidth: furnitureWidthMm,
+          reduction: END_PANEL_THICKNESS,
+          positionAdjustment: positionAdjustmentForEndPanel,
+          설명: '빈 공간을 상하부장처럼 취급하여 너비 줄이고 위치 이동'
+        });
+      }
     }
     
     // 노서라운드 모드에서는 slotWidths가 이미 엔드패널을 고려하여 계산되어 있음
@@ -1867,17 +1870,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-      {/* 단, 다음의 경우는 엔드패널 생성 제외:
-          1. 벽 없는 구간에 있는 경우 (기존 로직)
-          2. 벽없음 노서라운드 첫/마지막 슬롯 (새로운 로직) */}
+      {/* 단, 벽 없는 구간에 있는 경우는 제외 (기존 로직) */}
       {needsEndPanelAdjustment && endPanelSide && 
        !(spaceInfo.surroundType === 'no-surround' && 
          ((placedModule.slotIndex === 0 && !hasLeftWall) || 
-          ((isDualFurniture ? placedModule.slotIndex === indexing.columnCount - 2 : placedModule.slotIndex === indexing.columnCount - 1) && !hasRightWall))) &&
-       // 벽없음 노서라운드 첫/마지막 슬롯인 경우 엔드패널 생성하지 않음
-       !(spaceInfo.surroundType === 'no-surround' && 
-         spaceInfo.installType === 'freestanding' && 
-         (placedModule.slotIndex === 0 || isLastSlot)) && (() => {
+          ((isDualFurniture ? placedModule.slotIndex === indexing.columnCount - 2 : placedModule.slotIndex === indexing.columnCount - 1) && !hasRightWall))) && (() => {
         console.log('🎯 엔드패널 렌더링 시작:', {
           moduleId: placedModule.moduleId,
           endPanelSide,
