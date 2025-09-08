@@ -259,17 +259,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 렌더링 추적 및 클린업
   React.useEffect(() => {
-    console.log('🎨 FurnitureItem 마운트:', {
-      id: placedModule.id,
-      slotIndex: placedModule.slotIndex,
-      position: placedModule.position.x.toFixed(3),
-      isDragging: isDraggingThis
-    });
-    
+    // 마운트/언마운트 로그 제거 (성능 최적화)
     return () => {
-      console.log('🧹 FurnitureItem 언마운트:', {
-        id: placedModule.id
-      });
       // 무거운 클린업 제거 - React Three Fiber가 자동으로 처리
     };
   }, [placedModule.id]);
