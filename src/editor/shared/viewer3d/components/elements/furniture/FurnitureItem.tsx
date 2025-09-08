@@ -1014,11 +1014,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const originalWidth = furnitureWidthMm;
         furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
         
-        // 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
-        if (isFirstSlotNoSurround) {
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
-        } else if (isLastSlotNoSurround) {
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+        // 키큰장은 위치 이동하지 않음 (엔드패널에 맞춰서 너비만 조정)
+        // 상하부장만 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
+        if (isTallCabinet) {
+          // 키큰장은 위치 이동 없음
+          positionAdjustmentForEndPanel = 0;
+        } else {
+          // 상하부장만 위치 이동
+          if (isFirstSlotNoSurround) {
+            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
+          } else if (isLastSlotNoSurround) {
+            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+          }
         }
         
         console.log('🔴 벽없음 노서라운드 첫/마지막 슬롯 처리:', {
@@ -1027,11 +1034,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           isFirstSlot: isFirstSlotNoSurround,
           isLastSlot: isLastSlotNoSurround,
           isDualFurniture,
+          isTallCabinet,
           isUpperOrLower: isUpperCabinet || isLowerCabinet,
           adjustedWidth: furnitureWidthMm,
           reduction: END_PANEL_THICKNESS,
           positionAdjustment: positionAdjustmentForEndPanel,
-          설명: '엔드패널 공간 처리: 너비 줄이고 위치 이동'
+          설명: isTallCabinet ? 
+                '키큰장: 엔드패널 공간 처리 - 너비만 줄이고 위치 유지' : 
+                '상하부장: 엔드패널 공간 처리 - 너비 줄이고 위치 이동'
         });
       } else {
         // 키큰장이 상하부장과 인접한 경우는 위에서 이미 처리했으므로
