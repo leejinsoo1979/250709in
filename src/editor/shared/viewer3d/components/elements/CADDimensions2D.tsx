@@ -755,6 +755,42 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         let displayWidth = actualFurnitureWidthMm;
         let displayPositionX = furniturePositionX;
         
+        // 노서라운드 모드에서 벽 없는 구간의 가구 치수 위치 보정
+        if (spaceInfo.surroundType === 'no-surround' && module.slotIndex !== undefined) {
+          const isFirstSlot = module.slotIndex === 0;
+          const isLastSlot = isDualFurniture ? 
+            module.slotIndex === indexing.columnCount - 2 : 
+            module.slotIndex === indexing.columnCount - 1;
+          
+          let hasLeftWall = true;
+          let hasRightWall = true;
+          
+          if (spaceInfo.installType === 'freestanding') {
+            hasLeftWall = false;
+            hasRightWall = false;
+          } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+            hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
+            hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
+          }
+          
+          // 벽이 없는 쪽의 가구는 엔드패널로 인해 9mm 이동되었으므로 원위치로 보정
+          if (isFirstSlot && !hasLeftWall) {
+            displayPositionX = displayPositionX + mmToThreeUnits(9); // 원위치로 되돌림
+            console.log('📐 노서라운드 왼쪽 치수 위치 보정:', {
+              moduleId: module.moduleId,
+              originalX: furniturePositionX,
+              correctedX: displayPositionX
+            });
+          } else if (isLastSlot && !hasRightWall) {
+            displayPositionX = displayPositionX - mmToThreeUnits(9); // 원위치로 되돌림
+            console.log('📐 노서라운드 오른쪽 치수 위치 보정:', {
+              moduleId: module.moduleId,
+              originalX: furniturePositionX,
+              correctedX: displayPositionX
+            });
+          }
+        }
+        
         // 도어 치수 표시 코드 주석 처리
         // if (module.doorConfig) {
         //   // no-surround freestanding에서 첫 번째/마지막 슬롯은 특별 처리
