@@ -925,6 +925,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
   
+  // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
+  let doorWidthExpansion = 0;
+  let doorXOffset = 0;
+  
+  if (spaceInfo.surroundType === 'no-surround' && placedModule.slotIndex !== undefined) {
+    const isFirstSlot = placedModule.slotIndex === 0;
+    const isLastSlotForDual = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
+    const isLastSlotForSingle = !isDualFurniture && isLastSlot;
+    
+    if (isFirstSlot) {
+      // 첫번째 슬롯: 도어를 왼쪽으로 18mm 확장
+      doorWidthExpansion = END_PANEL_THICKNESS;
+      doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 도어 중심을 왼쪽으로 9mm 이동
+      console.log('🚪🔧 노서라운드 첫번째 슬롯 - 도어 왼쪽 확장:', {
+        moduleId: placedModule.moduleId,
+        originalDoorWidth: originalSlotWidthMm,
+        expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
+        doorXOffset: doorXOffset,
+        설명: '왼쪽 엔드패널(18mm)을 덮도록 도어 확장'
+      });
+    } else if (isLastSlotForDual || isLastSlotForSingle) {
+      // 마지막 슬롯: 도어를 오른쪽으로 18mm 확장
+      doorWidthExpansion = END_PANEL_THICKNESS;
+      doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 도어 중심을 오른쪽으로 9mm 이동
+      console.log('🚪🔧 노서라운드 마지막 슬롯 - 도어 오른쪽 확장:', {
+        moduleId: placedModule.moduleId,
+        isDualFurniture,
+        slotIndex: placedModule.slotIndex,
+        originalDoorWidth: originalSlotWidthMm,
+        expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
+        doorXOffset: doorXOffset,
+        설명: '오른쪽 엔드패널(18mm)을 덮도록 도어 확장'
+      });
+    }
+  }
+  
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
   let originalSlotCenterX: number;
   
@@ -1406,9 +1442,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={zoneSpaceInfo}
-              doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
+              doorWidth={originalSlotWidthMm + doorWidthExpansion} // 도어 너비에 확장분 추가
               originalSlotWidth={originalSlotWidthMm}
-              slotCenterX={0} // 도어는 항상 슬롯 중심(0)에 고정
+              slotCenterX={doorXOffset} // 도어 위치 오프셋 적용
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
@@ -1627,26 +1663,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group
           userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
-            originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
+            originalSlotCenterX + doorXOffset, // 도어 중심에 오프셋 적용
             finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
             furnitureZ // 다른 도어들과 동일한 z축 위치
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
           {console.log('🚪🚪 커버도어 렌더링 중:', {
-            위치: [originalSlotCenterX, adjustedPosition.y, furnitureZ],
-            너비: originalSlotWidthMm,
+            위치: [originalSlotCenterX + doorXOffset, adjustedPosition.y, furnitureZ],
+            너비: originalSlotWidthMm + doorWidthExpansion,
             깊이: actualDepthMm,
             가구너비: furnitureWidthMm,
-            차이: originalSlotWidthMm - furnitureWidthMm
+            차이: originalSlotWidthMm - furnitureWidthMm,
+            확장: doorWidthExpansion,
+            오프셋: doorXOffset
           })}
           <DoorModule
-            moduleWidth={originalSlotWidthMm} // 원래 슬롯 크기 사용 (커버도어)
+            moduleWidth={originalSlotWidthMm + doorWidthExpansion} // 도어 너비에 확장분 추가
             moduleDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={zoneSpaceInfo}
             color={furnitureColor}
-            doorXOffset={0} // 사용하지 않음
+            doorXOffset={0} // DoorModule 내부에서는 오프셋 불필요 (이미 group에서 처리)
             originalSlotWidth={originalSlotWidthMm}
             slotCenterX={0} // 이미 절대 좌표로 배치했으므로 0
             moduleData={actualModuleData} // 실제 모듈 데이터
