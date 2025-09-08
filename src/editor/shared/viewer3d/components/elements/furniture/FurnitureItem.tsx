@@ -1309,15 +1309,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               internalHeight={furnitureHeightMm}
               viewMode={viewMode}
               renderMode={renderMode}
-              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 키큰장이 상하부장과 인접한 경우 도어는 별도 렌더링
+              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || (needsEndPanelAdjustment && !isDualFurniture)
+                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 싱글 키큰장이 상하부장과 인접한 경우 도어는 별도 렌더링 (듀얼은 제외)
                 : (placedModule.hasDoor ?? false)}
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={zoneSpaceInfo}
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
-              slotCenterX={0} // 도어는 가구 내에서 중앙에 위치 (가구가 이동해도 도어는 가구와 함께 이동)
+              slotCenterX={(() => {
+                // 듀얼 키큰장이 엔드패널로 인해 이동한 경우 도어 위치 보정
+                if (isDualFurniture && needsEndPanelAdjustment && positionAdjustmentForEndPanel !== 0) {
+                  // 가구 몸체는 positionAdjustmentForEndPanel만큼 이동
+                  // 도어는 원래 위치에 있어야 하므로 반대로 보정
+                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                  console.log('🚪 듀얼 키큰장 도어 위치 보정:', {
+                    moduleId: placedModule.id,
+                    positionAdjustmentForEndPanel,
+                    doorAdjustment,
+                    설명: '가구 몸체가 이동한 만큼 도어는 반대로 보정'
+                  });
+                  return doorAdjustment;
+                }
+                return 0; // 기본값
+              })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
@@ -1506,12 +1521,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
       </group>
 
-      {/* 기둥 침범 시 또는 키큰장이 상하부장과 인접 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
-      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 키큰장이 상하부장과 인접한 경우 커버도어 렌더링 */}
+      {/* 기둥 침범 시 또는 싱글 키큰장이 상하부장과 인접 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
+      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 싱글 키큰장이 상하부장과 인접한 경우 커버도어 렌더링 */}
+      {/* 듀얼 가구는 커버도어 없이 원래 도어 사용 */}
       {(placedModule.hasDoor ?? false) && 
        ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
         (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-        needsEndPanelAdjustment) && 
+        (needsEndPanelAdjustment && !isDualFurniture)) && 
        spaceInfo && (() => {
         console.log('🚪🚨 커버도어 렌더링 조건 체크:', {
           hasDoor: placedModule.hasDoor,
