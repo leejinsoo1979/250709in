@@ -332,29 +332,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     internalSpace: internalSpace
   });
   
-  // 너비에 따라 모듈 ID 생성
-  let targetModuleId = placedModule.moduleId;
-  
-  // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
-  // 폭 조정은 렌더링 시에만 적용
-  if (placedModule.adjustedWidth) {
-    console.log('🔧 [FurnitureItem] 기둥 A 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정:', {
-      moduleId: placedModule.moduleId,
-      adjustedWidth: placedModule.adjustedWidth,
-      renderWidth: placedModule.adjustedWidth
-    });
-  }
-  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
-  else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
-    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
-    targetModuleId = `${baseType}-${placedModule.customWidth}`;
-    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
-      original: placedModule.moduleId,
-      customWidth: placedModule.customWidth,
-      newTargetModuleId: targetModuleId
-    });
-  }
-  
   // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
   // Hook은 조건부 return 전에 선언되어야 함
   useEffect(() => {
@@ -452,6 +429,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }, [deferredEffects.position]);
 
+  // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
+  let targetModuleId = placedModule.moduleId;
+  
+  // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
+  // 폭 조정은 렌더링 시에만 적용
+  if (placedModule.adjustedWidth) {
+    console.log('🔧 [FurnitureItem] 기둥 A 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정:', {
+      moduleId: placedModule.moduleId,
+      adjustedWidth: placedModule.adjustedWidth,
+      renderWidth: placedModule.adjustedWidth
+    });
+  }
+  // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
+  else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
+    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+    targetModuleId = `${baseType}-${placedModule.customWidth}`;
+    console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
+      original: placedModule.moduleId,
+      customWidth: placedModule.customWidth,
+      newTargetModuleId: targetModuleId
+    });
+  }
+
   console.log('🔍 [FurnitureItem] getModuleById 호출:', {
     targetModuleId,
     originalModuleId: placedModule.moduleId,
@@ -460,6 +460,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     zone: placedModule.zone
   });
 
+  // getModuleById 호출
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // moduleData가 없으면 빈 그룹 반환
