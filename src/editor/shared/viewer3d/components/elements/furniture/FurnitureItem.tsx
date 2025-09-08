@@ -486,23 +486,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
-  let originalFurnitureWidthMm = furnitureWidthMm; // 엔드패널 조정 전 원래 너비 저장
   
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
-    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 adjustedWidth 사용 (기둥 침범):', furnitureWidthMm, '(기둥 A 침범 케이스)');
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     // customWidth가 명시적으로 설정되어 있으면 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
     furnitureWidthMm = placedModule.customWidth;
-    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 customWidth 사용:', furnitureWidthMm);
   } else {
     // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
-    originalFurnitureWidthMm = furnitureWidthMm;
     console.log('📐 기본 너비 사용:', furnitureWidthMm);
   }
+  
+  // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
+  let originalFurnitureWidthMm = furnitureWidthMm;
   
   // 슬롯 가이드와의 크기 비교 로그
   if (indexing.slotWidths && placedModule.slotIndex !== undefined) {
