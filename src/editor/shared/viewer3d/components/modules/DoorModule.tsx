@@ -588,14 +588,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
     }
     
-    // 플로팅 배치 시 Y 위치 조정 (도어가 가구와 함께 올라감)
+    // 플로팅 배치 시 Y 위치 조정 (도어 상단 고정, 아래에서 줄어듦)
     if (floatHeight > 0) {
+      // 도어 높이가 줄어든 만큼 중심을 위로 이동 (상단 고정 효과)
       doorYPosition = doorYPosition + mmToThreeUnits(floatHeight / 2);
       console.log('🚪📍 플로팅 배치 도어 Y 위치 조정:', {
         원래위치: doorYPosition - mmToThreeUnits(floatHeight / 2),
         플로팅높이: floatHeight,
         조정된위치: doorYPosition,
-        설명: '플로팅 높이의 절반만큼 위로 이동'
+        설명: '도어 상단 고정, 아래에서 높이 감소'
       });
     }
   }
