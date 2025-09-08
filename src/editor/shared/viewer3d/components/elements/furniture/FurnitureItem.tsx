@@ -547,9 +547,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
   
-  // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
-  if (needsEndPanelAdjustment && endPanelSide) {
-    console.log('🔴🔴🔴 엔드패널 조정 시작:', {
+  // 서라운드 모드에서만 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
+  // 노서라운드 모드에서는 엔드패널 로직 제거
+  if (needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType !== 'no-surround') {
+    console.log('🔴🔴🔴 엔드패널 조정 시작 (서라운드 모드):', {
       moduleId: placedModule.moduleId,
       isDualFurniture,
       customWidth: placedModule.customWidth,
@@ -558,6 +559,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureWidthMm,
       endPanelSide,
       END_PANEL_THICKNESS,
+      surroundType: spaceInfo.surroundType,
       설명: isDualFurniture ? '듀얼 캐비넷은 위치 이동 없음' : '싱글 캐비넷만 9mm 이동'
     });
     
@@ -582,7 +584,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
     
-    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
+    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정 (서라운드):', {
       moduleId: placedModule.moduleId,
       isDualFurniture,
       originalWidth: originalFurnitureWidthMm,
@@ -593,6 +595,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       endPanelSide,
       furnitureWidthMm,
       설명: isDualFurniture ? '듀얼 캐비넷: 너비만 축소, 위치 이동 없음' : '싱글 캐비넷: 너비 축소 및 9mm 위치 이동'
+    });
+  } else if (needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType === 'no-surround') {
+    console.log('📌 노서라운드 모드 - 엔드패널 조정 없음:', {
+      moduleId: placedModule.moduleId,
+      surroundType: spaceInfo.surroundType,
+      설명: '노서라운드 모드에서는 엔드패널 로직 비활성화'
     });
   }
   
@@ -1330,8 +1338,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               internalHeight={furnitureHeightMm}
               viewMode={viewMode}
               renderMode={renderMode}
-              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || (needsEndPanelAdjustment && !isDualFurniture)
-                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 싱글 키큰장이 상하부장과 인접한 경우 도어는 별도 렌더링 (듀얼은 제외)
+              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround')
+                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 도어는 별도 렌더링 (듀얼은 제외)
                 : (placedModule.hasDoor ?? false)}
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
@@ -1544,13 +1552,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         
       </group>
 
-      {/* 기둥 침범 시 또는 싱글 키큰장이 상하부장과 인접 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
-      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 싱글 키큰장이 상하부장과 인접한 경우 커버도어 렌더링 */}
+      {/* 기둥 침범 시 또는 서라운드 모드에서 싱글 키큰장이 상하부장과 인접 시 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
+      {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 커버도어 렌더링 */}
       {/* 듀얼 가구는 커버도어 없이 원래 도어 사용 */}
+      {/* 노서라운드 모드에서는 엔드패널 관련 커버도어 렌더링 제외 */}
       {(placedModule.hasDoor ?? false) && 
        ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
         (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-        (needsEndPanelAdjustment && !isDualFurniture)) && 
+        (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround')) && 
        spaceInfo && (() => {
         console.log('🚪🚨 커버도어 렌더링 조건 체크:', {
           hasDoor: placedModule.hasDoor,
@@ -1590,21 +1599,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           })}
           <DoorModule
             moduleWidth={(() => {
-              // 싱글 키큰장이 상하부장과 인접한 경우 엔드패널을 고려한 너비 사용
-              if (needsEndPanelAdjustment && !isDualFurniture) {
+              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 엔드패널을 고려한 너비 사용
+              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
                 // 엔드패널이 한쪽인지 양쪽인지에 따라 너비 조정
                 const endPanelReduction = endPanelSide === 'both' ? 36 : 18; // 양쪽: 36mm, 한쪽: 18mm
                 const adjustedDoorWidth = originalSlotWidthMm - endPanelReduction;
-                console.log('🚪 싱글 키큰장 커버도어 너비 조정:', {
+                console.log('🚪 싱글 키큰장 커버도어 너비 조정 (서라운드):', {
                   originalSlotWidth: originalSlotWidthMm,
                   endPanelSide,
                   endPanelReduction,
                   adjustedDoorWidth,
+                  surroundType: spaceInfo.surroundType,
                   설명: '엔드패널 영역만큼 도어 너비 감소'
                 });
                 return adjustedDoorWidth;
               }
-              // 기둥 침범 시 원래 슬롯 크기 사용
+              // 기둥 침범 시 또는 노서라운드 모드에서는 원래 슬롯 크기 사용
               return originalSlotWidthMm;
             })()}
             moduleDepth={actualDepthMm}
@@ -1613,16 +1623,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             color={furnitureColor}
             doorXOffset={0} // 사용하지 않음
             originalSlotWidth={(() => {
-              // 싱글 키큰장이 상하부장과 인접한 경우 조정된 너비를 originalSlotWidth로 전달
-              if (needsEndPanelAdjustment && !isDualFurniture) {
+              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 조정된 너비를 originalSlotWidth로 전달
+              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
                 const endPanelReduction = endPanelSide === 'both' ? 36 : 18;
                 return originalSlotWidthMm - endPanelReduction;
               }
               return originalSlotWidthMm;
             })()}
             slotCenterX={(() => {
-              // 싱글 키큰장이 상하부장과 인접한 경우 도어 위치 조정
-              if (needsEndPanelAdjustment && !isDualFurniture) {
+              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 도어 위치 조정
+              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
                 // 엔드패널에 따른 도어 중심 이동
                 // 왼쪽 엔드패널: 도어를 오른쪽으로 9mm 이동
                 // 오른쪽 엔드패널: 도어를 왼쪽으로 9mm 이동
@@ -1658,9 +1668,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </group>
       )}
 
-      {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-      {needsEndPanelAdjustment && endPanelSide && (() => {
-        console.log('🎯 엔드패널 렌더링 시작:', {
+      {/* 서라운드 모드에서만 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
+      {needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType !== 'no-surround' && (() => {
+        console.log('🎯 엔드패널 렌더링 시작 (서라운드 모드):', {
           moduleId: placedModule.moduleId,
           endPanelSide,
           furnitureHeightMm,
@@ -1668,7 +1678,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           adjustedPosition,
           width,
           height,
-          depth
+          depth,
+          surroundType: spaceInfo.surroundType
         });
         
         // 엔드패널 위치 계산
