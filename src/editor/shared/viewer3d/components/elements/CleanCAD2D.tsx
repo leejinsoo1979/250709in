@@ -583,53 +583,94 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <>
           {/* 상단 전체 프레임 포함 폭 치수선 */}
           <group>
-        {/* 치수선 */}
-        <Line
-          points={[[leftOffset, topDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY, 0.002]]}
-          color={dimensionColor}
-          lineWidth={1}
-        />
-        
-        {/* 좌측 화살표 */}
-        <Line
-          points={createArrowHead([leftOffset, topDimensionY, 0.002], [leftOffset + 0.05, topDimensionY, 0.002])}
-          color={dimensionColor}
-          lineWidth={1}
-        />
-        
-        {/* 우측 화살표 */}
-        <Line
-          points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.05, topDimensionY, 0.002])}
-          color={dimensionColor}
-          lineWidth={1}
-        />
-        
-        {/* 전체 폭 치수 텍스트 - Text 3D 사용 */}
-        {(showDimensionsText || isStep2) && (
-          <Text
-            position={[mmToThreeUnits(spaceInfo.width) / 2 + leftOffset, topDimensionY + mmToThreeUnits(40), 0.01]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {spaceInfo.width}
-          </Text>
-        )}
-        
-        {/* 연장선 (좌측 프레임) - 간격 조정 */}
-        <Line
-          points={[[leftOffset, 0, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
-          color={dimensionColor}
-          lineWidth={1}
-        />
-        
-        {/* 연장선 (우측 프레임) - 간격 조정 */}
-        <Line
-          points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, 0, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
-          color={dimensionColor}
-          lineWidth={1}
-        />
+        {(() => {
+          // 노서라운드 모드에서 가구 배치에 따른 실제 폭 계산
+          let actualLeftEdge = leftOffset;
+          let actualRightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+          let displayWidth = spaceInfo.width;
+          
+          if (spaceInfo.surroundType === 'no-surround' && placedModules.length > 0) {
+            // 가장 왼쪽과 오른쪽 가구 위치 찾기
+            let leftmostFurnitureX = null;
+            let rightmostFurnitureX = null;
+            
+            placedModules.forEach(module => {
+              const moduleData = getModuleById(module.moduleId);
+              if (moduleData) {
+                const moduleX = module.position.x;
+                const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                const moduleLeft = moduleX - moduleWidth / 2;
+                const moduleRight = moduleX + moduleWidth / 2;
+                
+                if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
+                  leftmostFurnitureX = moduleLeft;
+                }
+                if (rightmostFurnitureX === null || moduleRight > rightmostFurnitureX) {
+                  rightmostFurnitureX = moduleRight;
+                }
+              }
+            });
+            
+            // 가구가 있으면 가구 경계를 기준으로 폭 계산
+            if (leftmostFurnitureX !== null && rightmostFurnitureX !== null) {
+              actualLeftEdge = leftmostFurnitureX;
+              actualRightEdge = rightmostFurnitureX;
+              displayWidth = Math.round((rightmostFurnitureX - leftmostFurnitureX) * 100);
+            }
+          }
+          
+          return (
+            <>
+              {/* 치수선 */}
+              <Line
+                points={[[actualLeftEdge, topDimensionY, 0.002], [actualRightEdge, topDimensionY, 0.002]]}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 좌측 화살표 */}
+              <Line
+                points={createArrowHead([actualLeftEdge, topDimensionY, 0.002], [actualLeftEdge + 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 우측 화살표 */}
+              <Line
+                points={createArrowHead([actualRightEdge, topDimensionY, 0.002], [actualRightEdge - 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 전체 폭 치수 텍스트 - Text 3D 사용 */}
+              {(showDimensionsText || isStep2) && (
+                <Text
+                  position={[(actualLeftEdge + actualRightEdge) / 2, topDimensionY + mmToThreeUnits(40), 0.01]}
+                  fontSize={largeFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                >
+                  {displayWidth}
+                </Text>
+              )}
+              
+              {/* 연장선 (좌측 프레임) - 간격 조정 */}
+              <Line
+                points={[[actualLeftEdge, 0, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+              
+              {/* 연장선 (우측 프레임) - 간격 조정 */}
+              <Line
+                points={[[actualRightEdge, 0, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                color={dimensionColor}
+                lineWidth={1}
+              />
+            </>
+          );
+        })()}
       </group>
 
       {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
