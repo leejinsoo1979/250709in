@@ -621,18 +621,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
-      // 노서라운드에서는 추가로 줄이고 엔드패널과 겹치지 않도록 이동
+      // 노서라운드에서는 노서라운드 18mm + 상하부장 18mm = 총 36mm 줄임
       if (endPanelSide === 'left') {
-        // 왼쪽 상하부장: 18mm 더 줄이고 오른쪽으로 18mm 이동
-        adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+        // 왼쪽 상하부장: 총 36mm 줄이고 오른쪽으로 18mm 이동
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
         positionAdjustmentForEndPanel = (END_PANEL_THICKNESS) * 0.01; // 18mm 이동
       } else if (endPanelSide === 'right') {
-        // 오른쪽 상하부장: 18mm 더 줄이고 왼쪽으로 18mm 이동
-        adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+        // 오른쪽 상하부장: 총 36mm 줄이고 왼쪽으로 18mm 이동
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
         positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS) * 0.01; // -18mm 이동
       } else if (endPanelSide === 'both') {
-        // 양쪽 상하부장: 36mm 줄이고 중앙 유지
-        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
+        // 양쪽 상하부장: 54mm 줄이고 중앙 유지 (노서라운드 18mm + 양쪽 상하부장 36mm)
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 3);
         positionAdjustmentForEndPanel = 0;
       }
     } else {
@@ -735,7 +735,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           isFirstSlot: isFirstSlotNoSurround,
           isLastSlot: isLastSlotNoSurround,
           isDualFurniture,
-          originalWidth,
           adjustedWidth: furnitureWidthMm,
           reduction: END_PANEL_THICKNESS,
           positionAdjustment: positionAdjustmentForEndPanel,
