@@ -48,8 +48,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   
-  // UIStore에서 2D 뷰 테마 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging } = useUIStore();
+  // UIStore에서 2D 뷰 테마와 카메라 설정 가져오기
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -788,8 +788,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         {/* Fog 효과 제거 - 멀다고 흐려질 필요 없음 */}
         {/* <fog attach="fog" args={[CANVAS_SETTINGS.FOG_COLOR, CANVAS_SETTINGS.FOG_NEAR, CANVAS_SETTINGS.FOG_FAR]} /> */}
         
-        {/* 카메라 설정 */}
-        {camera.is2DMode ? (
+        {/* 카메라 설정 - UI 스토어의 카메라 모드 사용 */}
+        {camera.is2DMode || (viewMode === '3D' && cameraMode === 'orthographic') ? (
           <OrthographicCamera 
             makeDefault 
             position={camera.position}
@@ -808,7 +808,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           <PerspectiveCamera
             makeDefault
             position={camera.position}
-            fov={camera.fov}
+            fov={cameraFov || camera.fov}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}
             onUpdate={(self) => self.lookAt(...camera.target)}
