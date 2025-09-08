@@ -470,11 +470,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
   // 폭 조정은 렌더링 시에만 적용
   if (placedModule.adjustedWidth) {
-    console.log('🔧 [FurnitureItem] 기둥 A 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정:', {
-      moduleId: placedModule.moduleId,
-      adjustedWidth: placedModule.adjustedWidth,
-      renderWidth: placedModule.adjustedWidth
-    });
+    // 기둥 A 침범 - 원본 모듈 사용, 폭은 렌더링 시 조정
   }
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
@@ -483,31 +479,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // ID에서 기존 폭 정보 제거하고 새로운 customWidth 추가
       const baseType = targetModuleId.replace(/-\d+$/, '');
       targetModuleId = `${baseType}-${placedModule.customWidth}`;
-      console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
-        original: placedModule.moduleId,
-        customWidth: placedModule.customWidth,
-        newTargetModuleId: targetModuleId
-      });
+      // customWidth로 ModuleID 생성
     }
   }
 
-  console.log('🔍 [FurnitureItem] getModuleById 호출:', {
-    targetModuleId,
-    originalModuleId: placedModule.moduleId,
-    customWidth: placedModule.customWidth,
-    adjustedWidth: placedModule.adjustedWidth,
-    zone: placedModule.zone
-  });
+  // console.log 제거 - 성능 개선
 
   // getModuleById 호출
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   // moduleData가 없으면 기본 모듈 ID로 재시도
   if (!moduleData && targetModuleId !== placedModule.moduleId) {
-    console.warn('⚠️ [FurnitureItem] targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도:', {
-      targetModuleId,
-      originalModuleId: placedModule.moduleId
-    });
+    // targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도
     moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
   }
   
@@ -519,14 +502,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 마지막이 숫자면 제거하고 시도
       if (/^\d+$/.test(parts[parts.length - 1])) {
         const withoutWidth = parts.slice(0, -1).join('-');
-        console.warn('⚠️ [FurnitureItem] 폭 정보 제거하고 재시도:', withoutWidth);
+        // 폭 정보 제거하고 재시도
         moduleData = getModuleById(withoutWidth, internalSpace, zoneSpaceInfo);
       }
       
       // 그래도 없으면 upper/lower 제거하고 시도  
       if (!moduleData && (parts.includes('upper') || parts.includes('lower'))) {
         const withoutCategory = parts.filter(p => p !== 'upper' && p !== 'lower').join('-');
-        console.warn('⚠️ [FurnitureItem] 카테고리 제거하고 재시도:', withoutCategory);
+        // 카테고리 제거하고 재시도
         moduleData = getModuleById(withoutCategory, internalSpace, zoneSpaceInfo);
       }
     }
@@ -535,7 +518,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!moduleData) {
       const baseType = parts.slice(0, 2).join('-');
       if (baseType !== placedModule.moduleId) {
-        console.warn('⚠️ [FurnitureItem] 기본 타입으로 재시도:', baseType);
+        // 기본 타입으로 재시도
         moduleData = getModuleById(baseType, internalSpace, zoneSpaceInfo);
       }
     }
