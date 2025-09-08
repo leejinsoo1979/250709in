@@ -269,7 +269,7 @@ export class ColumnIndexer {
         '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
       });
     } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 한쪽벽: 커버도어 방식 - 전체너비를 균등 분할 후, 엔드패널 쪽 슬롯만 18mm 빼기
+      // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨
       const baseSlotWidth = Math.floor(totalWidth / columnCount);
       const remainder = totalWidth % columnCount;
       
@@ -281,15 +281,7 @@ export class ColumnIndexer {
           slotWidth += 1;
         }
         
-        // 엔드패널이 있는 쪽 슬롯에서만 18mm 빼기 (커버도어는 엔드패널이 슬롯 밖에 있음)
-        if (!spaceInfo.wallConfig?.left && i === 0) {
-          // 왼쪽 벽이 없으면 첫 번째 슬롯에서 18mm 빼기
-          slotWidth -= END_PANEL_THICKNESS;
-        } else if (!spaceInfo.wallConfig?.right && i === columnCount - 1) {
-          // 오른쪽 벽이 없으면 마지막 슬롯에서 18mm 빼기
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
+        // 엔드패널을 빼지 않음 - 슬롯에 포함
         slotWidths.push(slotWidth);
       }
       

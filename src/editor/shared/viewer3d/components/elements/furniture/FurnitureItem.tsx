@@ -1687,18 +1687,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
 
-  // 모듈 데이터가 없으면 빈 그룹 반환
-  if (!moduleData) {
-    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음:', {
-      targetModuleId,
-      originalModuleId: placedModule.moduleId,
-      adjustedWidth: placedModule.adjustedWidth,
-      customWidth: placedModule.customWidth,
-      zone: placedModule.zone,
-      internalSpaceHeight: internalSpace?.height
-    });
-    return <group />;
-  }
+  // 모듈 데이터는 이미 line 458에서 체크했으므로 여기서는 체크하지 않음
+  // 이곳에서 early return하면 React Hooks 에러 발생
 
   return (
     <group userData={{ furnitureId: placedModule.id }}>
