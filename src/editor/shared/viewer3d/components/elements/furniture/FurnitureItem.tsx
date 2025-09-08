@@ -1332,7 +1332,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               spaceInfo={zoneSpaceInfo}
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
-              slotCenterX={0} // 듀얼 가구 도어는 가구와 함께 이동 (보정 불필요)
+              slotCenterX={(() => {
+                // 듀얼 키큰장이 엔드패널로 인해 이동한 경우 도어 위치 보정
+                // 도어는 항상 원래 슬롯 중심에 위치해야 함
+                if (isDualFurniture && needsEndPanelAdjustment) {
+                  // 가구 몸체가 이동한 만큼 도어는 반대로 이동
+                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                  
+                  console.log('🚪 듀얼 키큰장 도어 위치 보정:', {
+                    moduleId: placedModule.id,
+                    isDualFurniture,
+                    needsEndPanelAdjustment,
+                    positionAdjustmentForEndPanel,
+                    doorAdjustment,
+                    endPanelSide,
+                    설명: '도어를 슬롯 중심에 고정'
+                  });
+                  
+                  return doorAdjustment;
+                }
+                return 0; // 기본값
+              })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
