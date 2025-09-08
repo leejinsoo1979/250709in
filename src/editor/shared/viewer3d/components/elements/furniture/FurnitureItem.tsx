@@ -1335,16 +1335,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={(() => {
                 // 모든 가구의 도어를 슬롯 중심에 고정
                 if (positionAdjustmentForEndPanel !== 0) {
-                  // 가구가 이동한 만큼 도어는 반대로 보정하여 슬롯 중심 유지
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                  // 가구 그룹이 positionAdjustmentForEndPanel만큼 이동했으므로
+                  // 도어는 2배로 반대 보정해야 원래 슬롯 위치로 돌아옴
+                  const doorAdjustment = -positionAdjustmentForEndPanel * 2;
                   
-                  console.log('🚪 도어 슬롯 중심 고정:', {
+                  console.log('🚪 도어 슬롯 중심 고정 (2배 보정):', {
                     moduleId: placedModule.id,
                     isDualFurniture,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '도어는 항상 슬롯 중심에 고정'
+                    설명: '그룹 이동 + 도어 보정 = 2배 보정 필요'
                   });
                   
                   return doorAdjustment;
