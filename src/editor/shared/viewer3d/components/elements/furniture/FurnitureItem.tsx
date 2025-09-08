@@ -934,20 +934,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isLastSlotForDual = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
     const isLastSlotForSingle = !isDualFurniture && isLastSlot;
     
-    // 벽이 없는 쪽 판별 - gapConfig로 확인
-    // gapConfig에 값이 있으면 gap이 있다는 의미 (벽이 없음)
-    const hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
-    const hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
+    // 벽이 없는 쪽 판별
+    // installType이 'freestanding'이면 양쪽 모두 벽 없음
+    // 'semistanding'이면 gapConfig로 확인 (gap이 있으면 벽 없음)
+    let hasLeftWall = true;
+    let hasRightWall = true;
+    
+    if (spaceInfo.installType === 'freestanding') {
+      // 벽없음 모드: 양쪽 모두 벽 없음
+      hasLeftWall = false;
+      hasRightWall = false;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 반벽 모드: gapConfig로 확인
+      hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
+      hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
+    }
     
     console.log('🔍 벽 위치 확인:', {
       moduleId: placedModule.moduleId,
       slotIndex: placedModule.slotIndex,
+      installType: spaceInfo.installType,
       gapConfig: spaceInfo.gapConfig,
       hasLeftWall,
       hasRightWall,
       isFirstSlot,
       isLastSlot,
-      isDualFurniture
+      isDualFurniture,
+      설명: `installType=${spaceInfo.installType}, 왼쪽벽=${hasLeftWall}, 오른쪽벽=${hasRightWall}`
     });
     
     if (isFirstSlot && !hasLeftWall) {
