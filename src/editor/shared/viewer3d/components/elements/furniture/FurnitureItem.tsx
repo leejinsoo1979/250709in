@@ -658,9 +658,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
+    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
     
-    // 첫번째 또는 마지막 슬롯에 배치된 경우 (빈 공간을 상하부장처럼 취급)
-    if (isFirstSlotNoSurround || isLastSlotNoSurround) {
+    // 듀얼 가구 마지막 슬롯 특별 처리 (양쪽에서 줄어듦)
+    if (isDualLastSlot) {
+      // 듀얼 가구가 마지막 슬롯에 있는 경우: 양쪽에서 18mm씩 총 36mm 줄임
+      const originalWidth = furnitureWidthMm;
+      furnitureWidthMm = originalWidth - (END_PANEL_THICKNESS * 2); // 양쪽에서 18mm씩 총 36mm 줄임
+      positionAdjustmentForEndPanel = 0; // 중앙 유지
+      
+      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 양쪽에서 줄임:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        isDualFurniture: true,
+        originalWidth,
+        adjustedWidth: furnitureWidthMm,
+        reduction: END_PANEL_THICKNESS * 2,
+        positionAdjustment: positionAdjustmentForEndPanel,
+        설명: '양쪽 엔드패널에 맞춰 36mm 줄이고 중앙 유지'
+      });
+    }
+    // 싱글 가구 또는 듀얼 가구 첫번째 슬롯 처리 (한쪽만 줄어듦)
+    else if (isFirstSlotNoSurround || isLastSlotNoSurround) {
       // 가구 너비를 18mm 줄임 (상하부장 옆 키큰장처럼)
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
@@ -677,34 +696,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         slotIndex: placedModule.slotIndex,
         isFirstSlot: isFirstSlotNoSurround,
         isLastSlot: isLastSlotNoSurround,
+        isDualFurniture,
         originalWidth,
         adjustedWidth: furnitureWidthMm,
         reduction: END_PANEL_THICKNESS,
         positionAdjustment: positionAdjustmentForEndPanel,
         설명: '빈 공간을 상하부장처럼 취급하여 너비 줄이고 위치 이동'
-      });
-    }
-    
-    // 듀얼 가구가 벽 없는 쪽에 배치된 경우 위치 조정
-    if (isDualFurniture && isFirstSlotNoSurround) {
-      // 첫번째 슬롯의 듀얼 가구: 왼쪽 엔드패널에 맞춰 오른쪽으로 9mm 이동
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
-      console.log('🔧 듀얼 가구 노서라운드 첫번째 슬롯 - 오른쪽으로 이동:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isDualFurniture: true,
-        positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '왼쪽 엔드패널에 맞춰 오른쪽으로 9mm 이동'
-      });
-    } else if (isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2) {
-      // 마지막-1 슬롯에서 시작하는 듀얼 가구: 오른쪽 엔드패널에 맞춰 왼쪽으로 9mm 이동
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
-      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 왼쪽으로 이동:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isDualFurniture: true,
-        positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '오른쪽 엔드패널에 맞춰 왼쪽으로 9mm 이동'
       });
     }
     
@@ -968,27 +965,45 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     const isFirstSlotFreestanding = placedModule.slotIndex === 0;
     const isLastSlotFreestanding = isLastSlot;
+    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
     
-    // 첫번째 또는 마지막 슬롯: 도어 18mm 확장
-    if (isFirstSlotFreestanding || isLastSlotFreestanding) {
-      doorWidthExpansion = END_PANEL_THICKNESS;
-      
-      // 도어 위치는 확장된 방향과 반대로 이동 (가구 위치에 맞춤)
-      if (isFirstSlotFreestanding) {
-        doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
+    // 첫번째 또는 마지막 슬롯: 도어 확장
+    if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualLastSlot) {
+      if (isDualFurniture && isDualLastSlot) {
+        // 듀얼 가구가 마지막 슬롯에 있는 경우: 양쪽 도어 각각 18mm씩 확장
+        doorWidthExpansion = END_PANEL_THICKNESS * 2; // 총 36mm 확장
+        doorXOffset = 0; // 중앙 유지
+        
+        console.log('🚪 듀얼 가구 벽없음 노서라운드 마지막 슬롯 - 양쪽 도어 확장:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isDualFurniture: true,
+          doorWidthExpansion,
+          doorXOffset: doorXOffset * 100,
+          설명: '듀얼 가구 양쪽 도어가 각각 엔드패널을 덮도록 총 36mm 확장'
+        });
       } else {
-        doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
+        // 싱글 가구 또는 듀얼 가구 첫번째 슬롯: 한쪽만 18mm 확장
+        doorWidthExpansion = END_PANEL_THICKNESS;
+        
+        // 도어 위치는 확장된 방향과 반대로 이동 (가구 위치에 맞춤)
+        if (isFirstSlotFreestanding) {
+          doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
+        } else {
+          doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
+        }
+        
+        console.log('🚪 벽없음 노서라운드 첫/마지막 슬롯 도어 확장:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isFirstSlot: isFirstSlotFreestanding,
+          isLastSlot: isLastSlotFreestanding,
+          isDualFurniture,
+          doorWidthExpansion,
+          doorXOffset: doorXOffset * 100,
+          설명: '도어가 엔드패널을 덮도록 18mm 확장'
+        });
       }
-      
-      console.log('🚪 벽없음 노서라운드 첫/마지막 슬롯 도어 확장:', {
-        moduleId: placedModule.moduleId,
-        slotIndex: placedModule.slotIndex,
-        isFirstSlot: isFirstSlotFreestanding,
-        isLastSlot: isLastSlotFreestanding,
-        doorWidthExpansion,
-        doorXOffset: doorXOffset * 100,
-        설명: '도어가 엔드패널을 덮도록 18mm 확장'
-      });
     }
     
     // 벽 위치 설정 (freestanding은 양쪽 벽 없음)
