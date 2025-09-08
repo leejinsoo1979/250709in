@@ -82,14 +82,23 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   let internalWidth;
   
   if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: 엔드패널 없음, 이격거리만 고려
+    // 노서라운드: 설치 타입에 따라 다르게 처리
     if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
       // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
       const leftGap = spaceInfo.gapConfig?.left || 2;
       const rightGap = spaceInfo.gapConfig?.right || 2;
       internalWidth = spaceInfo.width - leftGap - rightGap;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 없는 쪽의 엔드패널 두께 제외
+      if (spaceInfo.wallConfig?.left) {
+        // 왼쪽 벽이 있으면: 오른쪽 엔드패널 제외
+        internalWidth = spaceInfo.width - END_PANEL_THICKNESS;
+      } else {
+        // 오른쪽 벽이 있으면: 왼쪽 엔드패널 제외
+        internalWidth = spaceInfo.width - END_PANEL_THICKNESS;
+      }
     } else {
-      // 세미스탠딩, 프리스탠딩: 노서라운드에서는 엔드패널 없음
+      // 프리스탠딩: 전체 너비 사용 (양쪽 엔드패널이 슬롯에 포함)
       internalWidth = spaceInfo.width;
     }
   } else {
@@ -333,8 +342,8 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
       const rightGap = spaceInfo.gapConfig?.right || 2;
       baseWidthMm = spaceInfo.width - (leftGap + rightGap);
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함됨)
-      baseWidthMm = spaceInfo.width;
+      // 세미스탠딩: 엔드패널 두께 제외 (벽이 없는 쪽의 엔드패널)
+      baseWidthMm = spaceInfo.width - END_PANEL_THICKNESS;
     } else {
       // 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함됨)
       baseWidthMm = spaceInfo.width;

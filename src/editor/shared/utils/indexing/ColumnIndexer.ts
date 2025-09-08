@@ -84,12 +84,12 @@ export class ColumnIndexer {
           // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
           leftReduction = spaceInfo.gapConfig?.left || 2;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 한쪽 벽만 있음, 이격거리 무시
+          // 세미스탠딩: 벽이 없는 쪽의 엔드패널 두께만큼 이동
           if (spaceInfo.wallConfig?.left) {
-            // 왼쪽 벽이 있으면: 이격거리 무시
+            // 왼쪽 벽이 있으면: 오른쪽 엔드패널이 있으므로 reduction 없음
             leftReduction = 0;
           } else {
-            // 왼쪽 벽이 없으면: 엔드패널(18mm)만
+            // 오른쪽 벽이 있으면: 왼쪽 엔드패널이 있으므로 엔드패널 두께만큼 reduction
             leftReduction = END_PANEL_THICKNESS;
           }
         } else {
@@ -269,9 +269,10 @@ export class ColumnIndexer {
         '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
       });
     } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨
-      const baseSlotWidth = Math.floor(totalWidth / columnCount);
-      const remainder = totalWidth % columnCount;
+      // 노서라운드 한쪽벽: 벽이 없는 쪽의 엔드패널 제외하고 계산
+      const availableWidth = totalWidth - END_PANEL_THICKNESS;
+      const baseSlotWidth = Math.floor(availableWidth / columnCount);
+      const remainder = availableWidth % columnCount;
       
       for (let i = 0; i < columnCount; i++) {
         let slotWidth = baseSlotWidth;
@@ -281,13 +282,14 @@ export class ColumnIndexer {
           slotWidth += 1;
         }
         
-        // 엔드패널을 빼지 않음 - 슬롯에 포함
         slotWidths.push(slotWidth);
       }
       
       // 디버깅 로그
-      console.log('🔧 노서라운드 한쪽벽 슬롯 계산 (커버도어 방식):', {
+      console.log('🔧 노서라운드 한쪽벽 슬롯 계산:', {
         '전체 공간 너비': totalWidth,
+        '엔드패널 제외 너비': availableWidth,
+        '엔드패널 두께': END_PANEL_THICKNESS,
         '컬럼 수': columnCount,
         '기본 슬롯 너비': baseSlotWidth,
         '슬롯 너비 배열': slotWidths,
@@ -342,8 +344,14 @@ export class ColumnIndexer {
       // 엔드패널도 슬롯 안에 포함되므로 절대 왼쪽 끝에서 시작
       currentX = -(totalWidth / 2);
     } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 세미스탠딩: 엔드패널도 슬롯에 포함되므로 전체 폭 사용
-      currentX = -(totalWidth / 2);
+      // 노서라운드 세미스탠딩: 벽이 없는 쪽의 엔드패널 두께만큼 이동
+      if (spaceInfo.wallConfig?.left) {
+        // 왼쪽 벽이 있으면: 오른쪽 엔드패널이 있으므로 가구는 왼쪽에서 시작
+        currentX = -(totalWidth / 2);
+      } else {
+        // 오른쪽 벽이 있으면: 왼쪽 엔드패널이 있으므로 가구는 엔드패널 두께만큼 안쪽에서 시작
+        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
+      }
     } else {
       // 서라운드 또는 빌트인: 내경 시작점
       currentX = internalStartX;
