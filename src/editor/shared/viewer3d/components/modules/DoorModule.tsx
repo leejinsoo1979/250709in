@@ -117,6 +117,7 @@ interface DoorModuleProps {
   isEditMode?: boolean; // 편집 모드 여부
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
+  floatHeight?: number; // 플로팅 높이 (mm) - 띄워서 배치 시 도어 높이 조정용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -132,7 +133,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isDragging = false,
   isEditMode = false,
   slotWidths,
-  slotIndex
+  slotIndex,
+  floatHeight = 0 // 플로팅 높이 기본값 0
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -476,6 +478,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     actualDoorHeight = fullSpaceHeight - floorHeight;
+    
+    // 플로팅 배치 시 키큰장 도어 높이 조정
+    if (floatHeight > 0) {
+      actualDoorHeight = actualDoorHeight - floatHeight;
+      console.log('🚪📏 플로팅 배치 도어 높이 조정:', {
+        원래높이: fullSpaceHeight - floorHeight,
+        플로팅높이: floatHeight,
+        조정된높이: actualDoorHeight,
+        설명: '플로팅 높이만큼 도어 높이 감소'
+      });
+    }
   }
   
   // 상부장은 이미 확장 높이를 계산했으므로 추가로 빼지 않음
@@ -573,6 +586,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const topFrameHeight = spaceInfo.frameSize?.top || 50;
       const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
       doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
+    }
+    
+    // 플로팅 배치 시 Y 위치 조정 (도어가 가구와 함께 올라감)
+    if (floatHeight > 0) {
+      doorYPosition = doorYPosition + mmToThreeUnits(floatHeight / 2);
+      console.log('🚪📍 플로팅 배치 도어 Y 위치 조정:', {
+        원래위치: doorYPosition - mmToThreeUnits(floatHeight / 2),
+        플로팅높이: floatHeight,
+        조정된위치: doorYPosition,
+        설명: '플로팅 높이의 절반만큼 위로 이동'
+      });
     }
   }
   

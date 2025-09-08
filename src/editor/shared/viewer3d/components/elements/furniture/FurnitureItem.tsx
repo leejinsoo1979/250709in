@@ -2173,6 +2173,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
+            floatHeight={spaceInfo.baseConfig?.floatHeight || 0} // 플로팅 높이 전달
             slotWidths={(() => {
               // 듀얼 가구인 경우 개별 슬롯 너비 전달
               if (isDualFurniture) {
