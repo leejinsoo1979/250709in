@@ -26,32 +26,26 @@ const checkAdjacentUpperLowerToFull = (
   allModules: PlacedModule[],
   spaceInfo: SpaceInfo
 ): { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | 'both' | null } => {
-  // 노서라운드 모드에서는 엔드패널 처리 안함
-  if (spaceInfo.surroundType === 'no-surround') {
-    console.log('📌 노서라운드 모드 - 엔드패널 체크 비활성화');
-    return { hasAdjacentUpperLower: false, adjacentSide: null };
-  }
-  
   // 현재 가구가 키큰장(full) 또는 듀얼 캐비넷인지 확인
   const currentModuleData = getModuleById(currentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
   if (!currentModuleData) {
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   }
   
-  // 키큰장(full)이 아니면 처리하지 않음
-  // 듀얼 캐비넷이어도 상부장/하부장이면 엔드패널 처리하지 않음
+  // 키큰장(full) 카테고리만 처리 - 싱글과 듀얼 모두 포함
+  // 상부장/하부장은 처리하지 않음
   const isDualCabinet = currentModule.moduleId?.includes('dual-');
   
-  console.log('🔍 checkAdjacentUpperLowerToFull 시작 (서라운드 모드):', {
+  console.log('🔍 checkAdjacentUpperLowerToFull 시작:', {
     moduleId: currentModule.moduleId,
     category: currentModuleData.category,
     isDualCabinet,
     slotIndex: currentModule.slotIndex,
-    surroundType: spaceInfo.surroundType
+    surroundType: spaceInfo.surroundType,
+    처리여부: currentModuleData.category === 'full' ? '✅ 처리됨 (싱글/듀얼 키큰장 모두)' : '❌ 처리안됨'
   });
   
-  // 키큰장(full 카테고리)만 처리
-  // 듀얼 상부장/하부장은 처리하지 않음 (같은 카테고리끼리는 엔드패널 불필요)
+  // 키큰장(full 카테고리)만 처리 - 싱글과 듀얼 모두 포함
   if (currentModuleData.category !== 'full') {
     console.log('❌ 키큰장이 아니므로 처리 안함 (category:', currentModuleData.category, ')');
     return { hasAdjacentUpperLower: false, adjacentSide: null };
@@ -554,10 +548,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
   
-  // 서라운드 모드에서만 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
-  // 노서라운드 모드에서는 엔드패널 로직 제거
-  if (needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType !== 'no-surround') {
-    console.log('🔴🔴🔴 엔드패널 조정 시작 (서라운드 모드):', {
+  // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동 (서라운드/노서라운드 모두)
+  if (needsEndPanelAdjustment && endPanelSide) {
+    console.log('🔴🔴🔴 엔드패널 조정 시작:', {
       moduleId: placedModule.moduleId,
       isDualFurniture,
       customWidth: placedModule.customWidth,
@@ -567,22 +560,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       endPanelSide,
       END_PANEL_THICKNESS,
       surroundType: spaceInfo.surroundType,
-      설명: isDualFurniture ? '듀얼 캐비넷은 위치 이동 없음' : '싱글 캐비넷만 9mm 이동'
+      설명: '싱글/듀얼 모두 엔드패널과 한 몸체가 되어 9mm 이동'
     });
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
       // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 듀얼 캐비넷은 이동하지 않음 (이미 2개 슬롯의 중심에 있음)
-      // 싱글 캐비넷만 9mm 이동
-      positionAdjustmentForEndPanel = isDualFurniture ? 0 : (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 싱글과 듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체가 되므로)
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'right') {
       // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 듀얼 캐비넷은 이동하지 않음 (이미 2개 슬롯의 중심에 있음)
-      // 싱글 캐비넷만 9mm 이동
-      positionAdjustmentForEndPanel = isDualFurniture ? 0 : -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 싱글과 듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체가 되므로)
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
@@ -591,7 +582,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
     
-    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정 (서라운드):', {
+    console.log('🎯 키큰장이 상하부장과 인접 - 너비 및 위치 조정:', {
       moduleId: placedModule.moduleId,
       isDualFurniture,
       originalWidth: originalFurnitureWidthMm,
@@ -601,13 +592,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       positionAdjustment_mm: positionAdjustmentForEndPanel * 100,
       endPanelSide,
       furnitureWidthMm,
-      설명: isDualFurniture ? '듀얼 캐비넷: 너비만 축소, 위치 이동 없음' : '싱글 캐비넷: 너비 축소 및 9mm 위치 이동'
-    });
-  } else if (needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType === 'no-surround') {
-    console.log('📌 노서라운드 모드 - 엔드패널 조정 없음:', {
-      moduleId: placedModule.moduleId,
       surroundType: spaceInfo.surroundType,
-      설명: '노서라운드 모드에서는 엔드패널 로직 비활성화'
+      설명: '싱글/듀얼 모두: 너비 축소 및 9mm 위치 이동 (엔드패널과 한 몸체)'
     });
   }
   
@@ -677,6 +663,46 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (isLastSlot && !isFurnitureDragging) {
     // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
     adjustedPosition = { ...placedModule.position };
+  }
+  
+  // 노서라운드 모드에서 듀얼 캐비넷이 왼쪽 끝에 있을 때 위치 조정
+  // 단, 상하부장과 인접한 경우(엔드패널이 생성되는 경우)는 제외
+  if (spaceInfo.surroundType === 'no-surround' && isDualFurniture && 
+      placedModule.slotIndex === 0 && !adjacentCheck.hasAdjacentUpperLower) {
+    const END_PANEL_THICKNESS = 18; // mm
+    // 듀얼 캐비넷을 오른쪽으로 9mm (엔드패널 두께의 절반) 이동
+    adjustedPosition = {
+      ...adjustedPosition,
+      x: adjustedPosition.x + (END_PANEL_THICKNESS / 2) * 0.01 // mm to Three.js units
+    };
+    console.log('🎯 노서라운드 왼쪽 듀얼 캐비넷 위치 조정:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      originalX: placedModule.position.x,
+      adjustedX: adjustedPosition.x,
+      이동거리_mm: END_PANEL_THICKNESS / 2,
+      설명: '엔드패널 공간 확보를 위해 오른쪽으로 9mm 이동 (상하부장 인접 없음)'
+    });
+  }
+  
+  // 노서라운드 모드에서 듀얼 캐비넷이 오른쪽 끝에 있을 때 위치 조정
+  // 단, 상하부장과 인접한 경우(엔드패널이 생성되는 경우)는 제외
+  if (spaceInfo.surroundType === 'no-surround' && isDualFurniture && 
+      placedModule.slotIndex === indexing.columnCount - 2 && !adjacentCheck.hasAdjacentUpperLower) {
+    const END_PANEL_THICKNESS = 18; // mm
+    // 듀얼 캐비넷을 왼쪽으로 9mm (엔드패널 두께의 절반) 이동
+    adjustedPosition = {
+      ...adjustedPosition,
+      x: adjustedPosition.x - (END_PANEL_THICKNESS / 2) * 0.01 // mm to Three.js units
+    };
+    console.log('🎯 노서라운드 오른쪽 듀얼 캐비넷 위치 조정:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      originalX: placedModule.position.x,
+      adjustedX: adjustedPosition.x,
+      이동거리_mm: -END_PANEL_THICKNESS / 2,
+      설명: '엔드패널 공간 침범 방지를 위해 왼쪽으로 9mm 이동 (상하부장 인접 없음)'
+    });
   }
   
   // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 상부프레임에 붙이기!
@@ -771,11 +797,40 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (spaceInfo.surroundType === 'no-surround') {
         const END_PANEL_THICKNESS = 18; // mm
         lastSlotEnd -= END_PANEL_THICKNESS;
-        console.log('🚨 듀얼 캐비넷 오른쪽 끝 배치 - 엔드패널 공간 제외:', {
+        
+        // 듀얼 캐비넷 위치도 왼쪽으로 9mm 조정 (dropped ceiling 케이스)
+        adjustedPosition = {
+          ...adjustedPosition,
+          x: adjustedPosition.x - (END_PANEL_THICKNESS / 2) * 0.01 // mm to Three.js units
+        };
+        
+        console.log('🚨 듀얼 캐비넷 오른쪽 끝 배치 - 엔드패널 공간 제외 (dropped ceiling):', {
           moduleId: placedModule.moduleId,
           원래끝위치: targetZone.startX + targetZone.width,
           엔드패널제외끝위치: lastSlotEnd,
-          엔드패널두께: END_PANEL_THICKNESS
+          엔드패널두께: END_PANEL_THICKNESS,
+          위치조정: '왼쪽으로 9mm 이동',
+          originalX: placedModule.position.x,
+          adjustedX: adjustedPosition.x
+        });
+      }
+    } else if (isDualFurniture && placedModule.slotIndex === 0) {
+      // 듀얼 캐비넷이 왼쪽 끝에 배치된 경우 (dropped ceiling)
+      if (spaceInfo.surroundType === 'no-surround') {
+        const END_PANEL_THICKNESS = 18; // mm
+        
+        // 듀얼 캐비넷 위치를 오른쪽으로 9mm 조정
+        adjustedPosition = {
+          ...adjustedPosition,
+          x: adjustedPosition.x + (END_PANEL_THICKNESS / 2) * 0.01 // mm to Three.js units
+        };
+        
+        console.log('🚨 듀얼 캐비넷 왼쪽 끝 배치 - 엔드패널 공간 확보 (dropped ceiling):', {
+          moduleId: placedModule.moduleId,
+          엔드패널두께: END_PANEL_THICKNESS,
+          위치조정: '오른쪽으로 9mm 이동',
+          originalX: placedModule.position.x,
+          adjustedX: adjustedPosition.x
         });
       }
       
@@ -805,6 +860,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const usedWidth = indexing.columnWidth * (indexing.columnCount - 1);
       const totalInternalWidth = internalSpace.width;  // 내경 전체 너비
       originalSlotWidthMm = totalInternalWidth - usedWidth;
+    } else if (isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2) {
+      // 듀얼 캐비넷이 오른쪽 끝에 배치된 경우 (columnCount - 2 위치)
+      const normalSlotWidth = indexing.columnWidth;
+      const lastSlotStart = (indexing.columnCount - 1) * indexing.columnWidth;
+      let totalInternalWidth = internalSpace.width;
+      
+      // 노서라운드 모드에서는 오른쪽 엔드패널 공간(18mm) 제외
+      if (spaceInfo.surroundType === 'no-surround') {
+        const END_PANEL_THICKNESS = 18; // mm
+        totalInternalWidth -= END_PANEL_THICKNESS;
+        console.log('🚨 듀얼 캐비넷 오른쪽 끝 배치 (단내림X) - 엔드패널 공간 제외:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          원래내경너비: internalSpace.width,
+          엔드패널제외너비: totalInternalWidth,
+          엔드패널두께: END_PANEL_THICKNESS
+        });
+      }
+      
+      const lastSlotWidth = totalInternalWidth - lastSlotStart;
+      originalSlotWidthMm = normalSlotWidth + lastSlotWidth;
     } else if (isDualFurniture) {
       // 듀얼 가구: 실제 슬롯 너비들의 합계 사용
       if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
@@ -1364,16 +1440,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               customDepth={actualDepthMm}
               hingePosition={optimalHingePosition}
               spaceInfo={zoneSpaceInfo}
-              doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
+              doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비 유지
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼 캐비넷 도어를 슬롯 중심에 고정
-                if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
+                // 엔드패널로 인해 가구가 이동한 경우 도어는 반대로 보정
+                if (positionAdjustmentForEndPanel !== 0) {
                   // 가구가 이동한 만큼 도어는 반대로 보정
                   const doorAdjustment = -positionAdjustmentForEndPanel;
                   
-                  console.log('🚪 듀얼 캐비넷 도어 위치 보정:', {
+                  console.log('🚪 도어 위치 보정:', {
                     moduleId: placedModule.id,
+                    isDualFurniture,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
@@ -1618,53 +1695,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             차이: originalSlotWidthMm - furnitureWidthMm
           })}
           <DoorModule
-            moduleWidth={(() => {
-              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 엔드패널을 고려한 너비 사용
-              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
-                // 엔드패널이 한쪽인지 양쪽인지에 따라 너비 조정
-                const endPanelReduction = endPanelSide === 'both' ? 36 : 18; // 양쪽: 36mm, 한쪽: 18mm
-                const adjustedDoorWidth = originalSlotWidthMm - endPanelReduction;
-                console.log('🚪 싱글 키큰장 커버도어 너비 조정 (서라운드):', {
-                  originalSlotWidth: originalSlotWidthMm,
-                  endPanelSide,
-                  endPanelReduction,
-                  adjustedDoorWidth,
-                  surroundType: spaceInfo.surroundType,
-                  설명: '엔드패널 영역만큼 도어 너비 감소'
-                });
-                return adjustedDoorWidth;
-              }
-              // 기둥 침범 시 또는 노서라운드 모드에서는 원래 슬롯 크기 사용
-              return originalSlotWidthMm;
-            })()}
+            moduleWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비 유지
             moduleDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={zoneSpaceInfo}
             color={furnitureColor}
             doorXOffset={0} // 사용하지 않음
-            originalSlotWidth={(() => {
-              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 조정된 너비를 originalSlotWidth로 전달
-              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
-                const endPanelReduction = endPanelSide === 'both' ? 36 : 18;
-                return originalSlotWidthMm - endPanelReduction;
-              }
-              return originalSlotWidthMm;
-            })()}
-            slotCenterX={(() => {
-              // 서라운드 모드에서 싱글 키큰장이 상하부장과 인접한 경우 도어 위치 조정
-              if (needsEndPanelAdjustment && !isDualFurniture && spaceInfo.surroundType !== 'no-surround') {
-                // 엔드패널에 따른 도어 중심 이동
-                // 왼쪽 엔드패널: 도어를 오른쪽으로 9mm 이동
-                // 오른쪽 엔드패널: 도어를 왼쪽으로 9mm 이동
-                // 양쪽 엔드패널: 이동 없음 (대칭)
-                if (endPanelSide === 'left') {
-                  return mmToThreeUnits(9); // 오른쪽으로 9mm
-                } else if (endPanelSide === 'right') {
-                  return mmToThreeUnits(-9); // 왼쪽으로 9mm
-                }
-              }
-              return 0; // 이미 절대 좌표로 배치했으므로 0
-            })()}
+            originalSlotWidth={originalSlotWidthMm}
+            slotCenterX={0} // 도어는 항상 가구와 같은 위치 (이동 없음)
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
             isDragging={isDraggingThis}
@@ -1688,9 +1726,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </group>
       )}
 
-      {/* 서라운드 모드에서만 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-      {needsEndPanelAdjustment && endPanelSide && spaceInfo.surroundType !== 'no-surround' && (() => {
-        console.log('🎯 엔드패널 렌더링 시작 (서라운드 모드):', {
+      {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 (서라운드/노서라운드 모두) */}
+      {needsEndPanelAdjustment && endPanelSide && (() => {
+        console.log('🎯 엔드패널 렌더링 시작:', {
           moduleId: placedModule.moduleId,
           endPanelSide,
           furnitureHeightMm,

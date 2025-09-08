@@ -226,9 +226,9 @@ const Room: React.FC<RoomProps> = ({
     placedModulesFromStore.some(module => {
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-      // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
+      // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 columnCount - 2 위치에 있는 경우
       const isRight = module.slotIndex === lastSlotIndex || 
-        (isDual && module.slotIndex === lastSlotIndex - 1);
+        (isDual && module.slotIndex === indexingForCheck.columnCount - 2);
       if (isRight) {
         console.log('🔴 오른쪽 가구 감지:', { 
           slotIndex: module.slotIndex, 
@@ -237,7 +237,7 @@ const Room: React.FC<RoomProps> = ({
           moduleId: module.moduleId,
           lastSlotIndex,
           columnCount: indexingForCheck.columnCount,
-          체크조건: `slotIndex === ${lastSlotIndex} 또는 (듀얼 && slotIndex === ${lastSlotIndex - 1})`
+          체크조건: `slotIndex === ${lastSlotIndex} 또는 (듀얼 && slotIndex === ${indexingForCheck.columnCount - 2})`
         });
       }
       return isRight;
@@ -256,7 +256,7 @@ const Room: React.FC<RoomProps> = ({
       '듀얼판단근거': module.isDualSlot ? 'isDualSlot속성' : (module.moduleId.includes('dual-') ? 'moduleId에dual포함' : '싱글'),
       '차지하는슬롯': isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex],
       '왼쪽끝인가': module.slotIndex === 0 || (isDual && module.slotIndex === 1),
-      '오른쪽끝인가': module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === lastSlotIndex - 1),
+      '오른쪽끝인가': module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === indexingDebug.columnCount - 2),
       lastSlotIndex,
       columnCount: indexingDebug.columnCount
     });
@@ -270,7 +270,15 @@ const Room: React.FC<RoomProps> = ({
     columnCount: indexingDebug.columnCount,
     lastSlotIndex,
     installType: spaceInfo.installType,
-    wallConfig: spaceInfo.wallConfig
+    wallConfig: spaceInfo.wallConfig,
+    '오른쪽듀얼체크': placedModulesFromStore.filter(m => {
+      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
+      return isDual && m.slotIndex === indexingDebug.columnCount - 2;
+    }).map(m => ({
+      moduleId: m.moduleId,
+      slotIndex: m.slotIndex,
+      isDualSlot: m.isDualSlot
+    }))
   });
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
@@ -288,13 +296,23 @@ const Room: React.FC<RoomProps> = ({
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules); // 가구/프레임용 (동적 계산)
-    const frameThicknessMm = calculateFrameThickness(spaceInfo, 
-      placedModulesFromStore.some(m => m.slotIndex === 0),
-      placedModulesFromStore.some(m => {
-        const indexing = calculateSpaceIndexing(spaceInfo);
-        return m.slotIndex === indexing.columnCount - 1;
-      })
-    );
+    const hasLeftForFrame = placedModulesFromStore.some(m => {
+      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
+      return m.slotIndex === 0 || (isDual && m.slotIndex === 0);
+    });
+    const hasRightForFrame = placedModulesFromStore.some(m => {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
+      return m.slotIndex === indexing.columnCount - 1 || (isDual && m.slotIndex === indexing.columnCount - 2);
+    });
+    
+    console.log('🎯 frameThickness 계산 전 체크:', {
+      hasLeftForFrame,
+      hasRightForFrame,
+      surroundType: spaceInfo.surroundType
+    });
+    
+    const frameThicknessMm = calculateFrameThickness(spaceInfo, hasLeftForFrame, hasRightForFrame);
     console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
       frameThicknessMm,
       wallConfig: spaceInfo.wallConfig,
