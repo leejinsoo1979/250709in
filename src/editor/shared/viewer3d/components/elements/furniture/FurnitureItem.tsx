@@ -1267,15 +1267,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldExpandLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
     }
     
-    const isFirstSlotFreestanding = shouldExpandFirstSlot;
+    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리
+    const isDualFirstSlotDoor = isDualFurniture && placedModule.slotIndex === 0 && 
+                            (spaceInfo.installType === 'freestanding' || 
+                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+    
+    const isFirstSlotFreestanding = shouldExpandFirstSlot && !isDualFirstSlotDoor;
     const isLastSlotFreestanding = shouldExpandLastSlot;
     const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2 && 
                             (spaceInfo.installType === 'freestanding' || 
-                             (spaceInfo.installType !== 'freestanding' && shouldExpandLastSlot));
+                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     
     // 첫번째 또는 마지막 슬롯: 도어 확장
-    if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualLastSlot) {
-      if (isDualFurniture && isDualLastSlot) {
+    if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualFirstSlotDoor || isDualLastSlot) {
+      if (isDualFurniture && isDualFirstSlotDoor) {
+        // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽 도어만 18mm 확장
+        doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
+        // 상하부장이 인접한 경우 위치 조정 사용, 아니면 기본 9mm 이동
+        doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
+        
+        console.log('🚪 듀얼 가구 벽없음 노서라운드 첫번째 슬롯 - 왼쪽 도어 확장:', {
+          moduleId: placedModule.moduleId,
+          slotIndex: placedModule.slotIndex,
+          isDualFurniture: true,
+          doorWidthExpansion,
+          doorXOffset: doorXOffset * 100,
+          설명: '듀얼 가구 왼쪽 도어가 엔드패널을 덮도록 18mm 확장'
+        });
+      } else if (isDualFurniture && isDualLastSlot) {
         // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
         // 상하부장이 인접한 경우 위치 조정 사용, 아니면 기본 9mm 이동
