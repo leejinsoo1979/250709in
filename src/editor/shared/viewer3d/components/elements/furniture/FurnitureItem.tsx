@@ -1333,20 +1333,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 모든 가구의 도어를 슬롯 중심에 고정
-                if (positionAdjustmentForEndPanel !== 0) {
-                  // 가구가 이동한 만큼 도어는 반대로 보정하여 슬롯 중심 유지
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                // 듀얼 캐비넷 도어를 9mm 안쪽으로 이동
+                if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
+                  // 도어를 9mm 안쪽으로 이동
+                  const doorAdjustment = -0.09; // 9mm를 Three.js 단위로 (음수는 안쪽)
                   
-                  console.log('🚪 도어 슬롯 중심 고정:', {
+                  console.log('🚪 듀얼 캐비넷 도어 9mm 안쪽 이동:', {
                     moduleId: placedModule.id,
                     isDualFurniture,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '도어는 항상 슬롯 중심에 고정'
+                    설명: '도어를 9mm 안쪽으로 이동'
                   });
                   
+                  return doorAdjustment;
+                } else if (positionAdjustmentForEndPanel !== 0) {
+                  // 싱글 가구는 기존대로 슬롯 중심 유지
+                  const doorAdjustment = -positionAdjustmentForEndPanel;
                   return doorAdjustment;
                 }
                 return 0;
