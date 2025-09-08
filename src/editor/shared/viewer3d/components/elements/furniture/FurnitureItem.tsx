@@ -661,22 +661,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = isDualLastSlot ? false : isLastSlot;
     
-    // 듀얼 가구 마지막 슬롯 특별 처리 (양쪽에서 줄어듦)
+    // 듀얼 가구 마지막 슬롯 특별 처리 (오른쪽만 줄어듦)
     if (isDualLastSlot) {
-      // 듀얼 가구가 마지막 슬롯에 있는 경우: 양쪽에서 18mm씩 총 36mm 줄임
+      // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
       const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - (END_PANEL_THICKNESS * 2); // 양쪽에서 18mm씩 총 36mm 줄임
-      positionAdjustmentForEndPanel = 0; // 중앙 유지
+      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
       
-      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 양쪽에서 줄임:', {
+      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 오른쪽만 줄임:', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
         isDualFurniture: true,
         originalWidth,
         adjustedWidth: furnitureWidthMm,
-        reduction: END_PANEL_THICKNESS * 2,
+        reduction: END_PANEL_THICKNESS,
         positionAdjustment: positionAdjustmentForEndPanel,
-        설명: '양쪽 엔드패널에 맞춰 36mm 줄이고 중앙 유지'
+        설명: '오른쪽 엔드패널에 맞춰 18mm 줄이고 왼쪽으로 9mm 이동'
       });
     }
     // 싱글 가구 또는 듀얼 가구 첫번째 슬롯 처리 (한쪽만 줄어듦)
@@ -971,17 +971,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 첫번째 또는 마지막 슬롯: 도어 확장
     if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualLastSlot) {
       if (isDualFurniture && isDualLastSlot) {
-        // 듀얼 가구가 마지막 슬롯에 있는 경우: 양쪽 도어 각각 18mm씩 확장
-        doorWidthExpansion = END_PANEL_THICKNESS * 2; // 총 36mm 확장
-        doorXOffset = 0; // 중앙 유지
+        // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
+        doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
+        doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
         
-        console.log('🚪 듀얼 가구 벽없음 노서라운드 마지막 슬롯 - 양쪽 도어 확장:', {
+        console.log('🚪 듀얼 가구 벽없음 노서라운드 마지막 슬롯 - 오른쪽 도어 확장:', {
           moduleId: placedModule.moduleId,
           slotIndex: placedModule.slotIndex,
           isDualFurniture: true,
           doorWidthExpansion,
           doorXOffset: doorXOffset * 100,
-          설명: '듀얼 가구 양쪽 도어가 각각 엔드패널을 덮도록 총 36mm 확장'
+          설명: '듀얼 가구 오른쪽 도어가 엔드패널을 덮도록 18mm 확장'
         });
       } else {
         // 싱글 가구 또는 듀얼 가구 첫번째 슬롯: 한쪽만 18mm 확장
