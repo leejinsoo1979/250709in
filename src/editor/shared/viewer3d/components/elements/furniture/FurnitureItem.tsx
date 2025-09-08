@@ -1681,14 +1681,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group
           userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
           position={[
-            originalSlotCenterX, // 도어는 항상 원래 슬롯 중심에 위치
+            originalSlotCenterX, // 도어는 원래 슬롯 중심 위치
             finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
             furnitureZ + 0.02 // 가구보다 약간 앞쪽 (20mm)
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
           {console.log('🚪🚪 커버도어 렌더링 중:', {
-            위치: [originalSlotCenterX, adjustedPosition.y, furnitureZ],
+            위치: [originalSlotCenterX, finalYPosition, furnitureZ + 0.02],
+            도어X오프셋: -positionAdjustmentForEndPanel,
             너비: originalSlotWidthMm,
             깊이: actualDepthMm,
             가구너비: furnitureWidthMm,
@@ -1702,7 +1703,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             color={furnitureColor}
             doorXOffset={0} // 사용하지 않음
             originalSlotWidth={originalSlotWidthMm}
-            slotCenterX={0} // 도어는 항상 가구와 같은 위치 (이동 없음)
+            slotCenterX={-positionAdjustmentForEndPanel} // 도어는 가구 이동의 반대로 조정
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
             isDragging={isDraggingThis}
