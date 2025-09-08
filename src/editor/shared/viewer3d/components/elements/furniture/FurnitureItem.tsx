@@ -657,18 +657,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     
-    // 듀얼 가구가 벽 없는 쪽에 배치된 경우 위치 조정 제거
-    if (isDualFurniture && (isFirstSlotNoSurround || isLastSlotNoSurround)) {
-      // 듀얼 가구는 두 슬롯을 차지하므로 엔드패널 위치 조정 불필요
-      positionAdjustmentForEndPanel = 0;
-      console.log('🚫 듀얼 가구 노서라운드 - 위치 조정 제거:', {
+    // 듀얼 가구가 벽 없는 쪽에 배치된 경우 위치 조정
+    if (isDualFurniture && isFirstSlotNoSurround) {
+      // 첫번째 슬롯의 듀얼 가구: 왼쪽 엔드패널에 맞춰 오른쪽으로 9mm 이동
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
+      console.log('🔧 듀얼 가구 노서라운드 첫번째 슬롯 - 오른쪽으로 이동:', {
         moduleId: placedModule.moduleId,
         slotIndex: placedModule.slotIndex,
         isDualFurniture: true,
-        isFirstSlot: isFirstSlotNoSurround,
-        isLastSlot: isLastSlotNoSurround,
-        positionAdjustment: 0,
-        설명: '듀얼 가구는 두 슬롯 차지하므로 엔드패널 위치 조정 불필요'
+        positionAdjustment: positionAdjustmentForEndPanel,
+        설명: '왼쪽 엔드패널에 맞춰 오른쪽으로 9mm 이동'
+      });
+    } else if (isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2) {
+      // 마지막-1 슬롯에서 시작하는 듀얼 가구: 오른쪽 엔드패널에 맞춰 왼쪽으로 9mm 이동
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+      console.log('🔧 듀얼 가구 노서라운드 마지막 슬롯 - 왼쪽으로 이동:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        isDualFurniture: true,
+        positionAdjustment: positionAdjustmentForEndPanel,
+        설명: '오른쪽 엔드패널에 맞춰 왼쪽으로 9mm 이동'
       });
     }
     
