@@ -951,15 +951,40 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       columnCount: indexing.columnCount
     });
     
-    const isFirstSlotNoSurround = shouldProcessFirstSlot;
+    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리
+    const isDualFirstSlot = isDualFurniture && placedModule.slotIndex === 0 && 
+                            (spaceInfo.installType === 'freestanding' || 
+                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+    
+    const isFirstSlotNoSurround = shouldProcessFirstSlot && !isDualFirstSlot;
+    
+    // 듀얼 가구의 경우: 마지막에서 두번째 슬롯에 있고, 오른쪽에 벽이 없으면 처리
     const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2 && 
                             (spaceInfo.installType === 'freestanding' || 
-                             (spaceInfo.installType !== 'freestanding' && shouldProcessLastSlot));
+                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
     
+    // 듀얼 가구 첫번째 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
+    if (isDualFirstSlot && !needsEndPanelAdjustment) {
+      // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽만 18mm 줄임
+      const originalWidth = furnitureWidthMm;
+      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 왼쪽만 18mm 줄임
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
+      
+      console.log('🔧 듀얼 가구 노서라운드 첫번째 슬롯 - 왼쪽만 줄임:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        isDualFurniture: true,
+        originalWidth,
+        adjustedWidth: furnitureWidthMm,
+        reduction: END_PANEL_THICKNESS,
+        positionAdjustment: positionAdjustmentForEndPanel,
+        설명: '왼쪽 엔드패널에 맞춰 18mm 줄이고 오른쪽으로 9mm 이동'
+      });
+    }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
-    if (isDualLastSlot && !needsEndPanelAdjustment) {
+    else if (isDualLastSlot && !needsEndPanelAdjustment) {
       // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
