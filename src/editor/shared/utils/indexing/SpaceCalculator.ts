@@ -23,9 +23,9 @@ export class SpaceCalculator {
     // 전체 폭
     const totalWidth = spaceInfo.width;
     
-    // 내경 계산: 노서라운드인 경우 엔드패널 없음, 서라운드인 경우 프레임 두께 고려
+    // 내경 계산: 노서라운드인 경우 전체 너비 사용, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 엔드패널 없음, 이격거리만 고려
+      // 노서라운드: 전체 너비를 내경으로 사용 (엔드패널이 슬롯에 포함됨)
       let leftReduction = 0;
       let rightReduction = 0;
       
@@ -34,7 +34,7 @@ export class SpaceCalculator {
         leftReduction = spaceInfo.gapConfig?.left || 2;
         rightReduction = spaceInfo.gapConfig?.right || 2;
       }
-      // 세미스탠딩, 프리스탠딩: 노서라운드에서는 엔드패널 없음
+      // 세미스탠딩, 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함)
       
       return totalWidth - (leftReduction + rightReduction);
     } else {
