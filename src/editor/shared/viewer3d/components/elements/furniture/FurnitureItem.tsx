@@ -639,9 +639,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     } else {
       // 일반 배치 (받침대 있거나 바닥 배치)
-      // furnitureStartY를 사용
+      // 받침대 높이 확인
+      const hasBase = spaceInfo.baseConfig?.type === 'floor';
+      const baseHeightMm = hasBase ? (spaceInfo.baseConfig?.height || 0) : 0;
+      const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
+      
+      // 바닥 마감재 높이
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? 
+                                  spaceInfo.floorFinish.height : 0;
+      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+      
+      // 가구 높이
       const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
-      const yPos = furnitureStartY + (furnitureHeight / 2);
+      
+      // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
+      const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
       
       adjustedPosition = {
         ...adjustedPosition,
@@ -651,10 +663,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       console.log('📍 일반 배치 Y축 위치 계산:', {
         moduleId: placedModule.moduleId,
         category: actualModuleData?.category,
-        furnitureStartY,
+        hasBase,
+        바닥마감재_mm: floorFinishHeightMm,
+        받침대높이_mm: baseHeightMm,
         가구높이_mm: actualModuleData.dimensions.height,
         최종Y: yPos,
-        계산식: `${furnitureStartY.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`
+        계산식: `${floorFinishHeight.toFixed(3)} + ${baseHeight.toFixed(3)} + ${(furnitureHeight/2).toFixed(3)} = ${yPos.toFixed(3)}`
       });
     }
   }
