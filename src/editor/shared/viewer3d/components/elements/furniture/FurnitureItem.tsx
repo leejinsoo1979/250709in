@@ -603,8 +603,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } 
   // 하부장과 키큰장의 띄워서 배치 처리
   else if ((isLowerCabinet || isTallCabinetForY) && actualModuleData) {
-    // 띄워서 배치 확인 - type이 floor 또는 stand일 때 모두 가능
-    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+    // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
+    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     
     if (isFloatPlacement) {
       // 바닥 마감재 높이
