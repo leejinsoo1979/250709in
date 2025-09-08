@@ -560,22 +560,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       endPanelSide,
       END_PANEL_THICKNESS,
       surroundType: spaceInfo.surroundType,
-      설명: isDualFurniture ? '듀얼 캐비넷은 위치 이동 없음 (도어 위치 유지)' : '싱글 캐비넷만 9mm 이동'
+      설명: '싱글/듀얼 모두 엔드패널과 한 몸체가 되어 9mm 이동'
     });
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
       // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 듀얼 캐비넷은 이동하지 않음 (도어가 원래 슬롯 위치를 유지해야 함)
-      // 싱글 캐비넷만 9mm 이동
-      positionAdjustmentForEndPanel = isDualFurniture ? 0 : (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 싱글/듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체)
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'right') {
       // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 듀얼 캐비넷은 이동하지 않음 (도어가 원래 슬롯 위치를 유지해야 함)
-      // 싱글 캐비넷만 9mm 이동
-      positionAdjustmentForEndPanel = isDualFurniture ? 0 : -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 싱글/듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체)
+      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
@@ -595,7 +593,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       endPanelSide,
       furnitureWidthMm,
       surroundType: spaceInfo.surroundType,
-      설명: isDualFurniture ? '듀얼 캐비넷: 너비만 축소, 위치 이동 없음' : '싱글 캐비넷: 너비 축소 및 9mm 위치 이동'
+      설명: '싱글/듀얼 모두: 너비 축소 및 9mm 위치 이동 (엔드패널과 한 몸체)'
     });
   }
   
