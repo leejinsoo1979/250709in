@@ -411,23 +411,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }, [positionLogData]);
 
-  // columnCParams 업데이트를 위한 useEffect - early return 전에 선언
-  const [columnCParamsUpdate, setColumnCParamsUpdate] = React.useState<any>(null);
+  // Column C 파라미터 업데이트를 위한 상태와 useEffect
+  const [columnCState, setColumnCState] = React.useState<{
+    isEnabled: boolean;
+    depth: number;
+    width: number;
+  } | null>(null);
   
   React.useEffect(() => {
-    if (columnCParamsUpdate) {
-      setColumnCParams(columnCParamsUpdate);
+    if (columnCState) {
+      setColumnCParams(columnCState);
     }
-  }, [columnCParamsUpdate]);
-
-  // adjustedPosition 로깅을 위한 useEffect - early return 전에 선언
-  const [adjustedPositionLog, setAdjustedPositionLog] = React.useState<any>(null);
+  }, [columnCState]);
+  
+  // 위치 로깅을 위한 상태와 useEffect
+  const [positionState, setPositionState] = React.useState<any>(null);
   
   React.useEffect(() => {
-    if (adjustedPositionLog) {
-      setPositionLogData(adjustedPositionLog);
+    if (positionState) {
+      setPositionLogData(positionState);
     }
-  }, [adjustedPositionLog]);
+  }, [positionState]);
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
@@ -1257,27 +1261,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // columnCResize 훅 파라미터 업데이트
-  setColumnCParamsUpdate({
-    isEnabled: isColumnCFront,
-    depth: slotInfo?.column?.depth || 300,
-    width: indexing.columnWidth
-  });
+  // Column C 파라미터 업데이트
+  React.useEffect(() => {
+    setColumnCState({
+      isEnabled: isColumnCFront,
+      depth: slotInfo?.column?.depth || 300,
+      width: indexing.columnWidth
+    });
+  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth]);
   
-  // 위치 변경 로깅 데이터 업데이트
-  setAdjustedPositionLog({
-    id: placedModule.id,
-    isEditMode,
-    placedModulePosition: placedModule.position,
-    adjustedPosition: adjustedPosition,
-    positionDifference: {
-      x: adjustedPosition.x - placedModule.position.x,
-      y: adjustedPosition.y - placedModule.position.y,
-      z: adjustedPosition.z - placedModule.position.z
-    },
-    zone: placedModule.zone,
-    category: actualModuleData?.category
-  });
+  // 위치 변경 로깅 업데이트
+  React.useEffect(() => {
+    setPositionState({
+      id: placedModule.id,
+      isEditMode,
+      placedModulePosition: placedModule.position,
+      adjustedPosition: adjustedPosition,
+      positionDifference: {
+        x: adjustedPosition.x - placedModule.position.x,
+        y: adjustedPosition.y - placedModule.position.y,
+        z: adjustedPosition.z - placedModule.position.z
+      },
+      zone: placedModule.zone,
+      category: actualModuleData?.category
+    });
+  }, [placedModule.id, isEditMode, placedModule.position.x, placedModule.position.y, placedModule.position.z, 
+      adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.zone, actualModuleData?.category]);
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
