@@ -325,14 +325,20 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
   
   let baseWidthMm;
   
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 이격거리를 고려한 너비 계산
-    baseWidthMm = spaceInfo.width - (spaceInfo.gapConfig.left + spaceInfo.gapConfig.right);
-    
-    // 디버깅 로그 추가 (개발 모드에서만 출력)
-    // if (import.meta.env.DEV) {
-    //   console.log(`🔧 [프레임폭] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 프레임폭=${baseWidthMm}mm`);
-    // }
+  if (spaceInfo.surroundType === 'no-surround') {
+    // 노서라운드 모드
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 이격거리를 고려한 너비 계산
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      const rightGap = spaceInfo.gapConfig?.right || 2;
+      baseWidthMm = spaceInfo.width - (leftGap + rightGap);
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함됨)
+      baseWidthMm = spaceInfo.width;
+    } else {
+      // 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함됨)
+      baseWidthMm = spaceInfo.width;
+    }
   } else {
     // 서라운드: 프레임 두께를 고려한 너비 계산
     const frameThickness = calculateFrameThickness(spaceInfo);

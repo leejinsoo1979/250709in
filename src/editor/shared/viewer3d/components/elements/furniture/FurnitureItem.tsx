@@ -432,6 +432,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
   let targetModuleId = placedModule.moduleId;
   
+  // baseConfig 변경 시 모듈 ID 조정이 필요한지 확인
+  // 띄워서 배치(stand) 모드로 변경되었을 때 모듈 ID가 맞지 않을 수 있음
+  if (targetModuleId && !targetModuleId.includes('-')) {
+    // 기본 모듈 ID에 폭 정보가 없으면 customWidth 또는 기본 폭 추가
+    const defaultWidth = placedModule.customWidth || 600; // 기본값 600
+    targetModuleId = `${targetModuleId}-${defaultWidth}`;
+    console.log('🔧 [FurnitureItem] 기본 모듈 ID에 폭 정보 추가:', {
+      original: placedModule.moduleId,
+      width: defaultWidth,
+      newTargetModuleId: targetModuleId
+    });
+  }
+  
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
   // 폭 조정은 렌더링 시에만 적용
   if (placedModule.adjustedWidth) {
@@ -442,8 +455,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
-  else if (placedModule.customWidth && !placedModule.adjustedWidth && !placedModule.moduleId.endsWith(`-${placedModule.customWidth}`)) {
-    const baseType = placedModule.moduleId.replace(/-\d+$/, '');
+  else if (placedModule.customWidth && !placedModule.adjustedWidth && !targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
+    const baseType = targetModuleId.replace(/-\d+$/, '');
     targetModuleId = `${baseType}-${placedModule.customWidth}`;
     console.log('🔧 [FurnitureItem] customWidth로 ModuleID 생성:', {
       original: placedModule.moduleId,
@@ -462,6 +475,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // getModuleById 호출
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+  
+  // moduleData가 없으면 기본 모듈 ID로 재시도
+  if (!moduleData && targetModuleId !== placedModule.moduleId) {
+    console.warn('⚠️ [FurnitureItem] targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도:', {
+      targetModuleId,
+      originalModuleId: placedModule.moduleId
+    });
+    moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
+  }
+  
+  // 그래도 못 찾으면 폭 정보 없는 기본 ID로 재시도
+  if (!moduleData) {
+    const baseModuleId = placedModule.moduleId.replace(/-\d+$/, '');
+    if (baseModuleId !== placedModule.moduleId) {
+      console.warn('⚠️ [FurnitureItem] 기본 모듈 ID로 재시도:', baseModuleId);
+      moduleData = getModuleById(baseModuleId, internalSpace, zoneSpaceInfo);
+      
+      // 기본 모듈을 찾았으면 customWidth 적용
+      if (moduleData && placedModule.customWidth) {
+        moduleData = {
+          ...moduleData,
+          dimensions: {
+            ...moduleData.dimensions,
+            width: placedModule.customWidth
+          }
+        };
+      }
+    }
+  }
   
   // moduleData가 없으면 빈 그룹 반환
   if (!moduleData) {
