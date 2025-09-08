@@ -657,6 +657,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isFirstSlotNoSurround = placedModule.slotIndex === 0;
     const isLastSlotNoSurround = isLastSlot; // 이미 계산된 isLastSlot 사용
     
+    // 듀얼 가구가 벽 없는 쪽에 배치된 경우 위치 조정 제거
+    if (isDualFurniture && (isFirstSlotNoSurround || isLastSlotNoSurround)) {
+      // 듀얼 가구는 두 슬롯을 차지하므로 엔드패널 위치 조정 불필요
+      positionAdjustmentForEndPanel = 0;
+      console.log('🚫 듀얼 가구 노서라운드 - 위치 조정 제거:', {
+        moduleId: placedModule.moduleId,
+        slotIndex: placedModule.slotIndex,
+        isDualFurniture: true,
+        isFirstSlot: isFirstSlotNoSurround,
+        isLastSlot: isLastSlotNoSurround,
+        positionAdjustment: 0,
+        설명: '듀얼 가구는 두 슬롯 차지하므로 엔드패널 위치 조정 불필요'
+      });
+    }
+    
     // 노서라운드 모드에서는 slotWidths가 이미 엔드패널을 고려하여 계산되어 있음
     // FurnitureItem에서 추가로 조정하지 않음
     console.log('📌 노서라운드 엔드패널 처리:', {
@@ -668,6 +683,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       customWidth: placedModule.customWidth,
       furnitureWidthMm,
       slotWidth: indexing.slotWidths?.[placedModule.slotIndex],
+      isDualFurniture,
+      positionAdjustmentForEndPanel,
       설명: 'slotWidths에서 이미 엔드패널 고려됨, 추가 조정 없음'
     });
   }
