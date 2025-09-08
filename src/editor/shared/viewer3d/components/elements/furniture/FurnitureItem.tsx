@@ -871,13 +871,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄임
       if (endPanelSide === 'left') {
-        // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
+        // 왼쪽에 상하부장이 있으면 18mm 줄이고 위치는 유지
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+        positionAdjustmentForEndPanel = 0; // 위치 이동 없음
       } else if (endPanelSide === 'right') {
-        // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
+        // 오른쪽에 상하부장이 있으면 18mm 줄이고 위치는 유지
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+        positionAdjustmentForEndPanel = 0; // 위치 이동 없음
       } else if (endPanelSide === 'both') {
         // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
