@@ -895,8 +895,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   } else {
     // zone이 없는 경우 기존 로직
-    // 슬롯 인덱스가 있으면 정확한 슬롯 중심 위치 계산 (우선순위)
-    if (placedModule.slotIndex !== undefined && indexing.threeUnitPositions[placedModule.slotIndex] !== undefined) {
+    // 듀얼 가구는 두 슬롯의 중간 위치 계산
+    if (isDualFurniture && placedModule.slotIndex !== undefined) {
+      // 듀얼 가구: 두 슬롯의 중간 위치
+      const leftSlotX = indexing.threeUnitPositions[placedModule.slotIndex];
+      const rightSlotX = indexing.threeUnitPositions[placedModule.slotIndex + 1] || leftSlotX;
+      originalSlotCenterX = (leftSlotX + rightSlotX) / 2;
+      
+      console.log('🔍 듀얼 가구 원래 슬롯 중심 계산:', {
+        moduleId: placedModule.id,
+        slotIndex: placedModule.slotIndex,
+        leftSlotX,
+        rightSlotX,
+        originalSlotCenterX,
+        설명: '두 슬롯의 중간 위치'
+      });
+    } else if (placedModule.slotIndex !== undefined && indexing.threeUnitPositions[placedModule.slotIndex] !== undefined) {
+      // 싱글 가구: 슬롯 중심 위치
       originalSlotCenterX = indexing.threeUnitPositions[placedModule.slotIndex]; // 실제 슬롯 중심 위치
     } else {
       // 슬롯 인덱스가 없는 경우, 듀얼 가구라면 듀얼 위치에서 찾기
@@ -1320,14 +1335,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={(() => {
                 // 듀얼 키큰장이 엔드패널로 인해 이동한 경우 도어 위치 보정
                 if (isDualFurniture && needsEndPanelAdjustment && positionAdjustmentForEndPanel !== 0) {
-                  // 가구 몸체는 positionAdjustmentForEndPanel만큼 이동
-                  // 도어는 원래 위치에 있어야 하므로 반대로 보정
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                  // 가구 몸체의 현재 위치
+                  const furnitureBodyX = adjustedPosition.x + positionAdjustmentForEndPanel;
+                  // 도어가 있어야 할 원래 위치와의 차이
+                  const doorAdjustment = originalSlotCenterX - furnitureBodyX;
+                  
                   console.log('🚪 듀얼 키큰장 도어 위치 보정:', {
                     moduleId: placedModule.id,
+                    originalSlotCenterX,
+                    furnitureBodyX,
+                    adjustedPositionX: adjustedPosition.x,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
-                    설명: '가구 몸체가 이동한 만큼 도어는 반대로 보정'
+                    endPanelSide,
+                    설명: '도어를 원래 슬롯 중심으로 이동'
                   });
                   return doorAdjustment;
                 }
