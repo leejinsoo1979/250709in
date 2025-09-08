@@ -940,6 +940,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
     }
     
+    console.log('🔍 Width Reduction Logic:', {
+      installType: spaceInfo.installType,
+      slotIndex: placedModule.slotIndex,
+      isLastSlot,
+      shouldProcessFirstSlot,
+      shouldProcessLastSlot,
+      wallConfig: spaceInfo.wallConfig,
+      isDualFurniture,
+      columnCount: indexing.columnCount
+    });
+    
     const isFirstSlotNoSurround = shouldProcessFirstSlot;
     const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2 && 
                             (spaceInfo.installType === 'freestanding' || 
