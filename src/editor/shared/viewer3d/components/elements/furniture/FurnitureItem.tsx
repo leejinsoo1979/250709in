@@ -935,9 +935,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isLastSlotForSingle = !isDualFurniture && isLastSlot;
     
     if (isFirstSlot) {
-      // 첫번째 슬롯: 도어를 왼쪽으로 18mm 확장
+      // 첫번째 슬롯: 도어를 양쪽으로 9mm씩 (총 18mm) 확장
       doorWidthExpansion = END_PANEL_THICKNESS;
-      doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+      doorXOffset = 0; // 중심은 그대로 유지
       
       if (isDualFurniture) {
         // 듀얼장의 경우 slotWidths가 이미 엔드패널을 고려해서 줄어들었을 수 있음
@@ -945,10 +945,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const firstSlotReduction = indexing.slotWidths?.[0] ? indexing.columnWidth - indexing.slotWidths[0] : 0;
         if (firstSlotReduction > 0) {
           doorWidthExpansion = END_PANEL_THICKNESS + firstSlotReduction;
-          // 오프셋은 항상 9mm (엔드패널의 절반)
-          doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01;
         }
-        console.log('🚪🔧 듀얼장 노서라운드 첫번째 슬롯 - 도어 왼쪽 확장:', {
+        console.log('🚪🔧 듀얼장 노서라운드 첫번째 슬롯 - 도어 양쪽 확장:', {
           moduleId: placedModule.moduleId,
           firstSlotWidth: indexing.slotWidths?.[0],
           columnWidth: indexing.columnWidth,
@@ -956,21 +954,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           originalDoorWidth: originalSlotWidthMm,
           expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
           doorXOffset: doorXOffset,
-          설명: '왼쪽 엔드패널을 완전히 덮도록 도어 확장'
+          설명: '양쪽으로 9mm씩 확장하여 엔드패널 덮기'
         });
       }
-      console.log('🚪🔧 노서라운드 첫번째 슬롯 - 도어 왼쪽 확장:', {
+      console.log('🚪🔧 노서라운드 첫번째 슬롯 - 도어 양쪽 확장:', {
         moduleId: placedModule.moduleId,
         isDualFurniture,
         originalDoorWidth: originalSlotWidthMm,
         expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
         doorXOffset: doorXOffset,
-        설명: '왼쪽 엔드패널(18mm)을 덮도록 도어 확장'
+        설명: '양쪽으로 9mm씩 (총 18mm) 확장'
       });
     } else if (isLastSlotForDual || isLastSlotForSingle) {
-      // 마지막 슬롯: 도어를 오른쪽으로 18mm 확장
+      // 마지막 슬롯: 도어를 양쪽으로 9mm씩 (총 18mm) 확장
       doorWidthExpansion = END_PANEL_THICKNESS;
-      doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
+      doorXOffset = 0; // 중심은 그대로 유지
       
       if (isDualFurniture) {
         // 듀얼장의 경우 마지막 슬롯이 이미 엔드패널을 고려해서 줄어들었을 수 있음
@@ -979,10 +977,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           indexing.columnWidth - indexing.slotWidths[lastSlotIndex] : 0;
         if (lastSlotReduction > 0) {
           doorWidthExpansion = END_PANEL_THICKNESS + lastSlotReduction;
-          // 오프셋은 항상 9mm (엔드패널의 절반)
-          doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01;
         }
-        console.log('🚪🔧 듀얼장 노서라운드 마지막 슬롯 - 도어 오른쪽 확장:', {
+        console.log('🚪🔧 듀얼장 노서라운드 마지막 슬롯 - 도어 양쪽 확장:', {
           moduleId: placedModule.moduleId,
           lastSlotWidth: indexing.slotWidths?.[lastSlotIndex],
           columnWidth: indexing.columnWidth,
@@ -990,17 +986,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           originalDoorWidth: originalSlotWidthMm,
           expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
           doorXOffset: doorXOffset,
-          설명: '오른쪽 엔드패널을 완전히 덮도록 도어 확장'
+          설명: '양쪽으로 9mm씩 확장하여 엔드패널 덮기'
         });
       }
-      console.log('🚪🔧 노서라운드 마지막 슬롯 - 도어 오른쪽 확장:', {
+      console.log('🚪🔧 노서라운드 마지막 슬롯 - 도어 양쪽 확장:', {
         moduleId: placedModule.moduleId,
         isDualFurniture,
         slotIndex: placedModule.slotIndex,
         originalDoorWidth: originalSlotWidthMm,
         expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
         doorXOffset: doorXOffset,
-        설명: '오른쪽 엔드패널(18mm)을 덮도록 도어 확장'
+        설명: '양쪽으로 9mm씩 (총 18mm) 확장'
       });
     }
   }
