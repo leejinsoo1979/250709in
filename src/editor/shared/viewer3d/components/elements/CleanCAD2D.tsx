@@ -830,6 +830,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 양쪽 벽이 모두 있는지 확인
             const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
             
+            // 가장 왼쪽 가구 위치 찾기
+            let leftmostFurnitureX = null;
+            if (placedModules.length > 0) {
+              placedModules.forEach(module => {
+                const moduleData = getModuleById(module.moduleId);
+                if (moduleData) {
+                  const moduleX = module.position.x;
+                  const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                  const moduleLeft = moduleX - moduleWidth / 2;
+                  if (leftmostFurnitureX === null || moduleLeft < leftmostFurnitureX) {
+                    leftmostFurnitureX = moduleLeft;
+                  }
+                }
+              });
+            }
+            
             let leftValue: number;
             let leftText: string;
             
@@ -837,8 +853,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 양쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left || 2;
               leftText = `이격 ${leftValue}`;
+            } else if (leftmostFurnitureX !== null) {
+              // 가구가 있으면 실제 가구 위치까지의 거리 표시
+              const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
+              leftValue = Math.round(Math.abs(distanceFromLeft));
+              leftText = `${leftValue}`;
             } else {
-              // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+              // 가구가 없으면 프레임 두께 표시
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 왼쪽 벽이 있으면 표시하지 않음
@@ -954,6 +975,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 양쪽 벽이 모두 있는지 확인
             const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
             
+            // 가장 오른쪽 가구 위치 찾기
+            let rightmostFurnitureX = null;
+            if (placedModules.length > 0) {
+              placedModules.forEach(module => {
+                const moduleData = getModuleById(module.moduleId);
+                if (moduleData) {
+                  const moduleX = module.position.x;
+                  const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+                  const moduleRight = moduleX + moduleWidth / 2;
+                  if (rightmostFurnitureX === null || moduleRight > rightmostFurnitureX) {
+                    rightmostFurnitureX = moduleRight;
+                  }
+                }
+              });
+            }
+            
             let rightValue: number;
             let rightText: string;
             
@@ -961,8 +998,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 양쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right || 2;
               rightText = `이격 ${rightValue}`;
+            } else if (rightmostFurnitureX !== null) {
+              // 가구가 있으면 실제 가구 위치까지의 거리 표시
+              const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
+              const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
+              rightValue = Math.round(Math.abs(distanceFromRight));
+              rightText = `${rightValue}`;
             } else {
-              // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+              // 가구가 없으면 프레임 두께 표시
               const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
               
               // 오른쪽 벽이 있으면 표시하지 않음
