@@ -565,15 +565,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
-      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 이동
+      // 왼쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 이동 (왼쪽 엔드패널을 위한 공간 확보)
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 싱글/듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체)
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
-    } else if (endPanelSide === 'right') {
-      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 이동
-      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      // 싱글/듀얼 모두 9mm 이동 (엔드패널과 가구가 한 몸체)
+      // 싱글/듀얼 모두 9mm 왼쪽 이동 (엔드패널과 가구가 한 몸체)
       positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+    } else if (endPanelSide === 'right') {
+      // 오른쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 이동 (오른쪽 엔드패널을 위한 공간 확보)
+      adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
+      // 싱글/듀얼 모두 9mm 오른쪽 이동 (엔드패널과 가구가 한 몸체)
+      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
