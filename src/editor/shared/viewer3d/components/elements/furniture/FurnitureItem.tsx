@@ -1443,24 +1443,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비 유지
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼장은 도어 위치 보정 안함 (도어는 원래 위치 유지)
-                // 싱글장만 도어 위치 보정
-                if (!isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 싱글장: 가구가 이동한 만큼 도어는 반대로 보정
-                  const doorAdjustment = -positionAdjustmentForEndPanel;
+                // 엔드패널로 인해 가구가 이동한 경우 도어는 반대로 보정
+                if (positionAdjustmentForEndPanel !== 0) {
+                  // 듀얼장도 가구가 이동한 만큼 도어는 반대로 보정해야 원위치 유지
+                  const doorAdjustment = isDualFurniture && needsEndPanelAdjustment 
+                    ? -positionAdjustmentForEndPanel  // 듀얼장: 몸통이 이동한 만큼 반대로
+                    : -positionAdjustmentForEndPanel; // 싱글장: 기존 로직
                   
-                  console.log('🚪 싱글장 도어 위치 보정:', {
+                  console.log('🚪 도어 위치 보정:', {
                     moduleId: placedModule.id,
                     isDualFurniture,
+                    needsEndPanelAdjustment,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '싱글장만 도어 위치 보정'
+                    설명: '가구 이동량만큼 반대로 보정하여 원위치 유지'
                   });
                   
                   return doorAdjustment;
                 }
-                return 0; // 듀얼장은 보정 없음
+                return 0;
               })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
