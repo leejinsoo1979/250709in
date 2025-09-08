@@ -26,6 +26,12 @@ const checkAdjacentUpperLowerToFull = (
   allModules: PlacedModule[],
   spaceInfo: SpaceInfo
 ): { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | 'both' | null } => {
+  // 노서라운드 모드에서는 엔드패널 처리 안함
+  if (spaceInfo.surroundType === 'no-surround') {
+    console.log('📌 노서라운드 모드 - 엔드패널 체크 비활성화');
+    return { hasAdjacentUpperLower: false, adjacentSide: null };
+  }
+  
   // 현재 가구가 키큰장(full) 또는 듀얼 캐비넷인지 확인
   const currentModuleData = getModuleById(currentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
   if (!currentModuleData) {
@@ -36,11 +42,12 @@ const checkAdjacentUpperLowerToFull = (
   // 듀얼 캐비넷이어도 상부장/하부장이면 엔드패널 처리하지 않음
   const isDualCabinet = currentModule.moduleId?.includes('dual-');
   
-  console.log('🔍 checkAdjacentUpperLowerToFull 시작:', {
+  console.log('🔍 checkAdjacentUpperLowerToFull 시작 (서라운드 모드):', {
     moduleId: currentModule.moduleId,
     category: currentModuleData.category,
     isDualCabinet,
-    slotIndex: currentModule.slotIndex
+    slotIndex: currentModule.slotIndex,
+    surroundType: spaceInfo.surroundType
   });
   
   // 키큰장(full 카테고리)만 처리
