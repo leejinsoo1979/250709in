@@ -936,10 +936,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     if (isFirstSlot) {
       // 첫번째 슬롯: 도어를 왼쪽으로 18mm 확장
-      doorWidthExpansion = END_PANEL_THICKNESS;
-      doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01; // 도어 중심을 왼쪽으로 9mm 이동
+      if (isDualFurniture) {
+        // 듀얼장의 경우 slotWidths가 이미 엔드패널을 고려해서 줄어들었을 수 있음
+        // 원래 크기를 복원하고 추가로 18mm 확장
+        const firstSlotReduction = indexing.slotWidths?.[0] ? indexing.columnWidth - indexing.slotWidths[0] : 0;
+        doorWidthExpansion = END_PANEL_THICKNESS + firstSlotReduction;
+        doorXOffset = -(doorWidthExpansion / 2) * 0.01;
+        console.log('🚪🔧 듀얼장 노서라운드 첫번째 슬롯 - 도어 왼쪽 확장:', {
+          moduleId: placedModule.moduleId,
+          firstSlotWidth: indexing.slotWidths?.[0],
+          columnWidth: indexing.columnWidth,
+          firstSlotReduction,
+          originalDoorWidth: originalSlotWidthMm,
+          expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
+          doorXOffset: doorXOffset,
+          설명: '왼쪽 엔드패널을 완전히 덮도록 도어 확장'
+        });
+      } else {
+        doorWidthExpansion = END_PANEL_THICKNESS;
+        doorXOffset = -(END_PANEL_THICKNESS / 2) * 0.01;
+      }
       console.log('🚪🔧 노서라운드 첫번째 슬롯 - 도어 왼쪽 확장:', {
         moduleId: placedModule.moduleId,
+        isDualFurniture,
         originalDoorWidth: originalSlotWidthMm,
         expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
         doorXOffset: doorXOffset,
@@ -947,8 +966,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       });
     } else if (isLastSlotForDual || isLastSlotForSingle) {
       // 마지막 슬롯: 도어를 오른쪽으로 18mm 확장
-      doorWidthExpansion = END_PANEL_THICKNESS;
-      doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 도어 중심을 오른쪽으로 9mm 이동
+      if (isDualFurniture) {
+        // 듀얼장의 경우 마지막 슬롯이 이미 엔드패널을 고려해서 줄어들었을 수 있음
+        const lastSlotIndex = indexing.columnCount - 1;
+        const lastSlotReduction = indexing.slotWidths?.[lastSlotIndex] ? 
+          indexing.columnWidth - indexing.slotWidths[lastSlotIndex] : 0;
+        doorWidthExpansion = END_PANEL_THICKNESS + lastSlotReduction;
+        doorXOffset = (doorWidthExpansion / 2) * 0.01;
+        console.log('🚪🔧 듀얼장 노서라운드 마지막 슬롯 - 도어 오른쪽 확장:', {
+          moduleId: placedModule.moduleId,
+          lastSlotWidth: indexing.slotWidths?.[lastSlotIndex],
+          columnWidth: indexing.columnWidth,
+          lastSlotReduction,
+          originalDoorWidth: originalSlotWidthMm,
+          expandedDoorWidth: originalSlotWidthMm + doorWidthExpansion,
+          doorXOffset: doorXOffset,
+          설명: '오른쪽 엔드패널을 완전히 덮도록 도어 확장'
+        });
+      } else {
+        doorWidthExpansion = END_PANEL_THICKNESS;
+        doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01;
+      }
       console.log('🚪🔧 노서라운드 마지막 슬롯 - 도어 오른쪽 확장:', {
         moduleId: placedModule.moduleId,
         isDualFurniture,
