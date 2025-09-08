@@ -103,12 +103,15 @@ export const useBaseFurniture = (
   const isDualFurniture = moduleData.id.includes('dual');
   
   // adjustedWidth가 있으면 최우선 사용 (엔드패널이나 기둥 침범 시 조정된 너비)
-  if (adjustedWidth !== undefined) {
+  if (adjustedWidth !== undefined && adjustedWidth !== null) {
     actualWidthMm = adjustedWidth;
     console.log('🔧 조정된 너비 사용 (엔드패널/기둥):', {
       moduleId: moduleData.id,
       isDualFurniture,
+      originalModuleWidth: moduleData.dimensions.width,
       adjustedWidth: adjustedWidth + 'mm',
+      reduction: moduleData.dimensions.width - adjustedWidth,
+      slotWidths: slotWidths ? slotWidths.map(w => w + 'mm') : 'undefined',
       설명: '엔드패널이나 기둥 침범으로 인한 너비 조정'
     });
   } else if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
