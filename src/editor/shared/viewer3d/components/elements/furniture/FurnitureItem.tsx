@@ -934,9 +934,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isLastSlotForDual = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2;
     const isLastSlotForSingle = !isDualFurniture && isLastSlot;
     
-    // 벽이 없는 쪽 판별
-    const hasLeftWall = spaceInfo.wallPositions?.left;
-    const hasRightWall = spaceInfo.wallPositions?.right;
+    // 벽이 없는 쪽 판별 - gapConfig로 확인
+    // gapConfig에 값이 있으면 gap이 있다는 의미 (벽이 없음)
+    const hasLeftWall = !spaceInfo.gapConfig?.left || spaceInfo.gapConfig.left === 0;
+    const hasRightWall = !spaceInfo.gapConfig?.right || spaceInfo.gapConfig.right === 0;
+    
+    console.log('🔍 벽 위치 확인:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      gapConfig: spaceInfo.gapConfig,
+      hasLeftWall,
+      hasRightWall,
+      isFirstSlot,
+      isLastSlot,
+      isDualFurniture
+    });
     
     if (isFirstSlot && !hasLeftWall) {
       // 왼쪽 벽이 없는 첫번째 슬롯: 도어를 18mm 확장하고 왼쪽으로 9mm 이동
