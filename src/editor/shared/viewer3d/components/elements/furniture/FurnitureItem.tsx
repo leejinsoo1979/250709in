@@ -1020,9 +1020,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         if (isTallCabinet) {
           // 키큰장은 엔드패널 반대쪽으로 이동 (침범 방지)
           if (isFirstSlotNoSurround) {
-            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm (엔드패널 반대)
+            // 첫번째 슬롯: 왼쪽에 엔드패널이 있으므로 오른쪽으로 9mm 이동
+            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
           } else if (isLastSlotNoSurround) {
-            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm (엔드패널 반대)
+            // 마지막 슬롯: 오른쪽에 엔드패널이 있으므로 왼쪽으로 9mm 이동
+            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
           }
         } else {
           // 상하부장은 엔드패널 쪽으로 이동
