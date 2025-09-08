@@ -626,37 +626,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
-      // 듀얼 가구 마지막 슬롯은 특별 처리 (오른쪽만 엔드패널)
-      if (isNoSurroundDualLastSlot) {
-        // 듀얼 가구: 오른쪽 엔드패널 18mm + 왼쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
-        if (endPanelSide === 'left') {
-          // 왼쪽 상하부장: 총 36mm 줄이고 왼쪽으로 9mm 이동
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임  
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm 이동
-        } else if (endPanelSide === 'right') {
-          // 오른쪽 상하부장은 없어야 함 (듀얼 가구가 마지막 두 슬롯 차지)
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS; // 18mm만 줄임
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm 이동
-        } else if (endPanelSide === 'both') {
-          // 양쪽 상하부장: 불가능한 경우
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-        }
-      } else {
-        // 싱글 가구 첫/마지막 슬롯: 바깥쪽 엔드패널 18mm + 안쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
-        if (endPanelSide === 'left') {
-          // 마지막 슬롯에서 왼쪽 상하부장: 총 36mm 줄이고 위치 유지
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
-          positionAdjustmentForEndPanel = 0; // 위치 유지
-        } else if (endPanelSide === 'right') {
-          // 첫번째 슬롯에서 오른쪽 상하부장: 총 36mm 줄이고 위치 유지
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
-          positionAdjustmentForEndPanel = 0; // 위치 유지
-        } else if (endPanelSide === 'both') {
-          // 양쪽 상하부장: 54mm 줄이고 중앙 유지 (바깥쪽 18mm + 양쪽 안쪽 36mm)
-          adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 3);
-          positionAdjustmentForEndPanel = 0;
-        }
+      // 노서라운드에서는 바깥쪽 엔드패널 18mm + 안쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
+      if (endPanelSide === 'left') {
+        // 마지막 슬롯에서 왼쪽 상하부장: 총 36mm 줄이고 위치 유지
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
+        positionAdjustmentForEndPanel = 0; // 위치 유지
+      } else if (endPanelSide === 'right') {
+        // 첫번째 슬롯에서 오른쪽 상하부장: 총 36mm 줄이고 위치 유지
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2); // 36mm 줄임
+        positionAdjustmentForEndPanel = 0; // 위치 유지
+      } else if (endPanelSide === 'both') {
+        // 양쪽 상하부장: 54mm 줄이고 중앙 유지 (바깥쪽 18mm + 양쪽 안쪽 36mm)
+        adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 3);
+        positionAdjustmentForEndPanel = 0;
       }
     } else {
       // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄임
