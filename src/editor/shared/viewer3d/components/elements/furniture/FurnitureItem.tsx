@@ -325,7 +325,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // 모듈 데이터 가져오기 - zone별 spaceInfo 사용
-  console.log('🔍 [FurnitureItem] getModuleById 호출:', {
+  console.log('🔍 [FurnitureItem] getModuleById 호출 전:', {
     moduleId: placedModule.moduleId,
     customWidth: placedModule.customWidth,
     zone: placedModule.zone,
@@ -451,6 +451,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       setPositionLogData(deferredEffects.position);
     }
   }, [deferredEffects.position]);
+
+  console.log('🔍 [FurnitureItem] getModuleById 호출:', {
+    targetModuleId,
+    originalModuleId: placedModule.moduleId,
+    customWidth: placedModule.customWidth,
+    adjustedWidth: placedModule.adjustedWidth,
+    zone: placedModule.zone
+  });
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
