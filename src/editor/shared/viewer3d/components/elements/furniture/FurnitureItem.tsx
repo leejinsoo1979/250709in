@@ -1335,19 +1335,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={(() => {
                 // 듀얼 캐비넷 도어를 슬롯 중심에 고정
                 if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 듀얼 캐비넷은 가구가 9mm 이동하지만 도어는 18mm(엔드패널 전체 두께) 보정 필요
-                  // 가구가 오른쪽으로 이동하면 도어는 왼쪽으로 18mm
-                  // 가구가 왼쪽으로 이동하면 도어는 오른쪽으로 18mm
-                  const doorAdjustment = positionAdjustmentForEndPanel > 0 
-                    ? -END_PANEL_THICKNESS * 0.01  // 가구가 오른쪽 이동 시 도어는 왼쪽으로 18mm
-                    : END_PANEL_THICKNESS * 0.01;   // 가구가 왼쪽 이동 시 도어는 오른쪽으로 18mm
+                  // 가구가 이동한 만큼 도어는 반대로 보정
+                  const doorAdjustment = -positionAdjustmentForEndPanel;
                   
-                  console.log('🚪 듀얼 캐비넷 도어 18mm 보정:', {
+                  console.log('🚪 듀얼 캐비넷 도어 위치 보정:', {
                     moduleId: placedModule.id,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
                     endPanelSide,
-                    설명: '듀얼 캐비넷 도어는 18mm(엔드패널 전체 두께) 보정'
+                    설명: '가구 이동량만큼 반대로 보정'
                   });
                   
                   return doorAdjustment;
