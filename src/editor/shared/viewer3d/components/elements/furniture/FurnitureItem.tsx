@@ -1257,14 +1257,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // columnCResize 훅 파라미터 업데이트 (useEffect는 이미 상단에서 선언됨)
-  React.useEffect(() => {
-    setColumnCParamsUpdate({
-      isEnabled: isColumnCFront,
-      depth: slotInfo?.column?.depth || 300,
-      width: indexing.columnWidth
-    });
-  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth]);
+  // columnCResize 훅 파라미터 업데이트
+  setColumnCParamsUpdate({
+    isEnabled: isColumnCFront,
+    depth: slotInfo?.column?.depth || 300,
+    width: indexing.columnWidth
+  });
+  
+  // 위치 변경 로깅 데이터 업데이트
+  setAdjustedPositionLog({
+    id: placedModule.id,
+    isEditMode,
+    placedModulePosition: placedModule.position,
+    adjustedPosition: adjustedPosition,
+    positionDifference: {
+      x: adjustedPosition.x - placedModule.position.x,
+      y: adjustedPosition.y - placedModule.position.y,
+      z: adjustedPosition.z - placedModule.position.z
+    },
+    zone: placedModule.zone,
+    category: actualModuleData?.category
+  });
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
@@ -1293,22 +1306,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   };
 
-  // 위치 변경 로깅 데이터 업데이트 (useEffect는 이미 상단에서 선언됨)
-  React.useEffect(() => {
-    setAdjustedPositionLog({
-      id: placedModule.id,
-      isEditMode,
-      placedModulePosition: placedModule.position,
-      adjustedPosition: adjustedPosition,
-      positionDifference: {
-        x: adjustedPosition.x - placedModule.position.x,
-        y: adjustedPosition.y - placedModule.position.y,
-        z: adjustedPosition.z - placedModule.position.z
-      },
-      zone: placedModule.zone,
-      category: actualModuleData?.category
-    });
-  }, [placedModule.position.x, placedModule.position.y, placedModule.position.z, adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.id, isEditMode]);
+  // 위치 변경 로깅은 이미 상단에서 처리됨
 
   // 🔴🔴🔴 최종 Y 위치 확인
   const finalYPosition = adjustedPosition.y;
