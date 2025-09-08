@@ -571,7 +571,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
   
-  if (isUpperCabinet) {
+  if (isUpperCabinet && actualModuleData) {
     // 상부장은 상부프레임(천장)에 붙어야 함
     const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
     const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이
@@ -600,7 +600,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   } 
   // 하부장과 키큰장의 띄워서 배치 처리
-  else if (isLowerCabinet || isTallCabinetForY) {
+  else if ((isLowerCabinet || isTallCabinetForY) && actualModuleData) {
     // 띄워서 배치 확인 - type이 floor 또는 stand일 때 모두 가능
     const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
     
