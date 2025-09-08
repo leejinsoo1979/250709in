@@ -813,8 +813,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // 키큰장은 바닥 배치 시 furnitureStartY 사용 (PlacedFurnitureContainer에서 전달받은 값)
-  // 키큰장은 바닥부터 시작해야 하므로 별도 조정 불필요
+  // 키큰장 높이 조정 - 띄워서 배치 시에도 천장에 닿도록
+  const isFullCabinet = placedModule.moduleId?.includes('full-cabinet') || 
+                        placedModule.moduleId?.includes('dual-full-cabinet') ||
+                        actualModuleData.category === 'full';
+  
+  if (isFullCabinet && spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float') {
+    // 띄워서 배치 모드에서 키큰장 높이 조정
+    const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+    const internalSpaceHeight = internalSpace.height;
+    
+    // 키큰장 높이를 내경 높이 - 띄움 높이로 조정
+    furnitureHeightMm = internalSpaceHeight - floatHeightMm;
+    
+    console.log('🔴🔴🔴 키큰장 띄워서 배치 높이 조정:', {
+      moduleId: placedModule.moduleId,
+      원래높이: actualModuleData.dimensions.height,
+      조정높이: furnitureHeightMm,
+      내경높이: internalSpaceHeight,
+      띄움높이: floatHeightMm,
+      설명: '띄워서 배치 시 키큰장 높이를 줄여 천장에 닿도록'
+    });
+  }
   
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
   
