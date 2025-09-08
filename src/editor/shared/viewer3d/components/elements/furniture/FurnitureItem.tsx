@@ -530,10 +530,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   
   // adjustedPosition 초기화 - Y축 위치 계산 전에 먼저 초기화
-  let adjustedPosition = placedModule.position;
+  // placedModule.position을 항상 spread하여 새 객체 생성
+  let adjustedPosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
   if (isLastSlot && !isFurnitureDragging) {
     // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
-    adjustedPosition = { ...placedModule.position };
+    adjustedPosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
   }
   
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
