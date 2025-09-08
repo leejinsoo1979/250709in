@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User, ChevronDown } from 'lucide-react';
+import { Settings, Menu, User, ChevronDown, Camera } from 'lucide-react';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -78,9 +78,13 @@ const Header: React.FC<HeaderProps> = ({
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
+  const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
+  const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
+  const [fovValue, setFovValue] = useState(50);
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
+  const cameraMenuRef = useRef<HTMLDivElement>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -94,6 +98,23 @@ const Header: React.FC<HeaderProps> = ({
       }
     };
   }, []);
+
+  // 카메라 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cameraMenuRef.current && !cameraMenuRef.current.contains(event.target as Node)) {
+        setIsCameraMenuOpen(false);
+      }
+    };
+
+    if (isCameraMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCameraMenuOpen]);
 
   const handleHelpClick = () => {
     setIsHelpModalOpen(true);
@@ -323,6 +344,65 @@ const Header: React.FC<HeaderProps> = ({
             </svg>
             {t('help.title')}
           </button>
+
+          {/* 카메라 설정 버튼 */}
+          <div className={styles.cameraMenuContainer} ref={cameraMenuRef}>
+            <button 
+              className={styles.actionButton} 
+              onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
+            >
+              <Camera size={20} />
+              카메라
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
+                <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </button>
+            
+            {isCameraMenuOpen && (
+              <div className={styles.cameraDropdown}>
+                <div className={styles.cameraOption}>
+                  <label>투영 모드:</label>
+                  <div className={styles.cameraToggle}>
+                    <button 
+                      className={cameraMode === 'perspective' ? styles.active : ''}
+                      onClick={() => {
+                        setCameraMode('perspective');
+                        // TODO: 실제 카메라 전환 로직 추가
+                      }}
+                    >
+                      원근
+                    </button>
+                    <button 
+                      className={cameraMode === 'orthographic' ? styles.active : ''}
+                      onClick={() => {
+                        setCameraMode('orthographic');
+                        // TODO: 실제 카메라 전환 로직 추가
+                      }}
+                    >
+                      평행
+                    </button>
+                  </div>
+                </div>
+                
+                {cameraMode === 'perspective' && (
+                  <div className={styles.cameraOption}>
+                    <label>FOV: {fovValue}°</label>
+                    <input 
+                      type="range" 
+                      min="30" 
+                      max="120" 
+                      value={fovValue}
+                      onChange={(e) => {
+                        setFovValue(Number(e.target.value));
+                        // TODO: 실제 FOV 변경 로직 추가
+                      }}
+                      className={styles.fovSlider}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 우측 액션 버튼들 */}
