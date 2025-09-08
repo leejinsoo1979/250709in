@@ -1443,11 +1443,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 원래 슬롯 너비 유지
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 싱글장의 경우만 도어 위치 보정
-                if (!isDualFurniture && positionAdjustmentForEndPanel !== 0) {
+                // 가구가 이동한 경우 도어는 반대로 보정하여 원래 슬롯 위치 유지
+                if (positionAdjustmentForEndPanel !== 0) {
                   return -positionAdjustmentForEndPanel;
                 }
-                // 듀얼장은 보정 없음 (이미 adjustedPosition.x가 올바른 위치)
                 return 0;
               })()}
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
