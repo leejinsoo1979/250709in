@@ -389,21 +389,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
-  if (moduleData) {
-    console.log('✅ [FurnitureItem] 찾은 모듈:', {
-      targetModuleId: targetModuleId,
+  // 모듈 데이터가 없으면 바로 빈 그룹 반환
+  if (!moduleData) {
+    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음 (early return):', {
+      targetModuleId,
       originalModuleId: placedModule.moduleId,
-      moduleId: moduleData.id,
-      moduleWidth: moduleData.dimensions.width,
-      moduleHeight: moduleData.dimensions.height,
+      adjustedWidth: placedModule.adjustedWidth,
       customWidth: placedModule.customWidth,
-      expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
-      placedModuleId: placedModule.moduleId,
-      idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
       zone: placedModule.zone,
-      internalSpaceHeight: internalSpace.height
+      internalSpaceHeight: internalSpace?.height
     });
+    return <group />;
   }
+  
+  console.log('✅ [FurnitureItem] 찾은 모듈:', {
+    targetModuleId: targetModuleId,
+    originalModuleId: placedModule.moduleId,
+    moduleId: moduleData.id,
+    moduleWidth: moduleData.dimensions.width,
+    moduleHeight: moduleData.dimensions.height,
+    customWidth: placedModule.customWidth,
+    expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
+    placedModuleId: placedModule.moduleId,
+    idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
+    zone: placedModule.zone,
+    internalSpaceHeight: internalSpace.height
+  });
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
@@ -1267,17 +1278,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       finalYPosition: finalYPosition,
       설명: '상부장은 상부프레임에 붙어있음'
     });
-  }
-
-  // 모듈 데이터가 없으면 빈 그룹 반환
-  if (!moduleData) {
-    console.error('❌ [FurnitureItem] 모듈을 찾을 수 없음:', {
-      targetModuleId,
-      originalModuleId: placedModule.moduleId,
-      adjustedWidth: placedModule.adjustedWidth,
-      customWidth: placedModule.customWidth
-    });
-    return <group />;
   }
 
   return (
