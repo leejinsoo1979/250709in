@@ -356,30 +356,18 @@ export class ColumnIndexer {
     const columnBoundaries = [];
     let currentX: number;
     
-    if (isNoSurround && (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드: 항상 전체 공간을 균등 분할하여 일관된 위치 유지
-      // 프리스탠딩: 전체 너비를 균등 분할 (엔드패널도 슬롯 안에 포함)
-      // 세미스탠딩: 전체 너비를 균등 분할 (한쪽 엔드패널 포함)
-      // 벽 설정이 변경되어도 슬롯 위치는 동일하게 유지
+    if (isNoSurround && spaceInfo.installType === 'freestanding') {
+      // 노서라운드 프리스탠딩: 전체 공간의 왼쪽 끝에서 시작
+      // 엔드패널도 슬롯 안에 포함되므로 절대 왼쪽 끝에서 시작
       currentX = -(totalWidth / 2);
-      
-      // 첫 슬롯 시작 위치 계산 (균등 분할 기준)
-      const baseSlotWidth = Math.floor(totalWidth / columnCount);
-      const remainder = totalWidth % columnCount;
-      
-      // 프리스탠딩은 전체 공간의 왼쪽 끝에서 시작 (엔드패널도 슬롯 안에 포함)
-      if (spaceInfo.installType === 'freestanding') {
-        // 전체 공간의 왼쪽 끝에서 시작
+    } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
+      // 노서라운드 세미스탠딩: 벽 위치에 따라 조정
+      if (spaceInfo.wallConfig?.left) {
+        // 왼쪽 벽이 있으면: 벽에 바로 붙음
         currentX = -(totalWidth / 2);
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 벽 위치에 따라 엔드패널 공간 확보
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음
-          currentX = -(totalWidth / 2);
-        } else {
-          // 왼쪽 벽이 없으면: 왼쪽에 엔드패널 공간 확보 (18mm)
-          currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
-        }
+      } else {
+        // 왼쪽 벽이 없으면: 왼쪽에 엔드패널 공간 확보 (18mm)
+        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
       }
     } else {
       // 서라운드 또는 빌트인: 내경 시작점
