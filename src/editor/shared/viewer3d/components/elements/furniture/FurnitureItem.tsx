@@ -2247,16 +2247,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const endPanelXPositions = [];
         
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          // 왼쪽 엔드패널: 키큰장 왼쪽 가장자리에 딱 붙여서
+          // 왼쪽 엔드패널: 키큰장 왼쪽 가장자리에 딱 붙여서 (위치 조정 포함)
           endPanelXPositions.push({
-            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth/2,
+            x: adjustedPosition.x + positionAdjustmentForEndPanel - adjustedHalfWidth - endPanelWidth/2,
             side: 'left'
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          // 오른쪽 엔드패널: 키큰장 오른쪽 가장자리에 딱 붙여서
+          // 오른쪽 엔드패널: 키큰장 오른쪽 가장자리에 딱 붙여서 (위치 조정 포함)
           endPanelXPositions.push({
-            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth/2,
+            x: adjustedPosition.x + positionAdjustmentForEndPanel + adjustedHalfWidth + endPanelWidth/2,
             side: 'right'
           });
         }
