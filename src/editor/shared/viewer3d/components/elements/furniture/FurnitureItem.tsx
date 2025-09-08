@@ -428,6 +428,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       setPositionLogData(deferredEffects.position);
     }
   }, [deferredEffects.position]);
+  
+  // Column C와 위치 계산을 위한 상태 - 나중에 계산될 값들
+  const [calculatedValues, setCalculatedValues] = React.useState<{
+    isColumnCFront?: boolean;
+    slotInfoColumn?: any;
+    indexingColumnWidth?: number;
+    adjustedPosition?: any;
+    actualModuleData?: any;
+  }>({});
+  
+  // 계산된 값들이 변경될 때 deferredEffects 업데이트
+  React.useEffect(() => {
+    if (calculatedValues.isColumnCFront !== undefined) {
+      setDeferredEffects({
+        columnC: {
+          isEnabled: calculatedValues.isColumnCFront,
+          depth: calculatedValues.slotInfoColumn?.depth || 300,
+          width: calculatedValues.indexingColumnWidth || 600
+        },
+        position: {
+          id: placedModule.id,
+          isEditMode,
+          placedModulePosition: placedModule.position,
+          adjustedPosition: calculatedValues.adjustedPosition,
+          positionDifference: calculatedValues.adjustedPosition ? {
+            x: calculatedValues.adjustedPosition.x - placedModule.position.x,
+            y: calculatedValues.adjustedPosition.y - placedModule.position.y,
+            z: calculatedValues.adjustedPosition.z - placedModule.position.z
+          } : { x: 0, y: 0, z: 0 },
+          zone: placedModule.zone,
+          category: calculatedValues.actualModuleData?.category
+        }
+      });
+    }
+  }, [calculatedValues, placedModule.id, isEditMode, placedModule.position, placedModule.zone]);
 
   // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
   let targetModuleId = placedModule.moduleId;
@@ -517,14 +552,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
   
-  // moduleData가 없으면 빈 그룹 반환
+  // moduleData가 없을 때를 위한 상태 - Hook은 조건부 리턴 전에 호출되어야 함
+  const [moduleNotFound, setModuleNotFound] = React.useState(false);
+  
+  // moduleData가 없으면 상태 설정
   if (!moduleData) {
     console.error('⚠️ [FurnitureItem] 모듈을 찾을 수 없음:', {
       targetModuleId,
       originalModuleId: placedModule.moduleId,
       zone: placedModule.zone
     });
-    return <group />;
+    setModuleNotFound(true);
+  } else {
+    setModuleNotFound(false);
   }
   
   console.log('✅ [FurnitureItem] 찾은 모듈:', {
@@ -1684,31 +1724,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // 변수들이 계산된 후 effect 실행을 위한 deferred 설정
+  // 계산된 값들을 상태로 업데이트
   React.useEffect(() => {
-    setDeferredEffects({
-      columnC: {
-        isEnabled: isColumnCFront,
-        depth: slotInfo?.column?.depth || 300,
-        width: indexing.columnWidth
-      },
-      position: {
-        id: placedModule.id,
-        isEditMode,
-        placedModulePosition: placedModule.position,
-        adjustedPosition: adjustedPosition,
-        positionDifference: {
-          x: adjustedPosition.x - placedModule.position.x,
-          y: adjustedPosition.y - placedModule.position.y,
-          z: adjustedPosition.z - placedModule.position.z
-        },
-        zone: placedModule.zone,
-        category: actualModuleData?.category
-      }
+    setCalculatedValues({
+      isColumnCFront,
+      slotInfoColumn: slotInfo?.column,
+      indexingColumnWidth: indexing.columnWidth,
+      adjustedPosition,
+      actualModuleData
     });
-  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth, 
-      placedModule.id, isEditMode, placedModule.position.x, placedModule.position.y, placedModule.position.z,
-      adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.zone, actualModuleData?.category]);
+  }, [isColumnCFront, slotInfo?.column, indexing.columnWidth, adjustedPosition, actualModuleData]);
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
@@ -1752,6 +1777,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 모듈 데이터는 이미 line 458에서 체크했으므로 여기서는 체크하지 않음
   // 이곳에서 early return하면 React Hooks 에러 발생
+  
+  // moduleData가 없으면 빈 그룹 반환
+  if (moduleNotFound || !moduleData) {
+    return <group />;
+  }
 
   return (
     <group userData={{ furnitureId: placedModule.id }}>
