@@ -1679,20 +1679,10 @@ const Room: React.FC<RoomProps> = ({
                 if (spaceInfo.installType === 'builtin') {
                   leftReduction = 2;
                   rightReduction = 2;
-                } else if (spaceInfo.installType === 'semistanding') {
-                  // 세미스탠딩: 한쪽 벽만 있음
-                  // 벽이 있는 쪽은 이격거리 무시(0), 없는 쪽은 엔드패널
-                  if (spaceInfo.wallConfig?.left) {
-                    leftReduction = 0;  // 이격거리 무시
-                    rightReduction = END_PANEL_THICKNESS;
-                  } else if (spaceInfo.wallConfig?.right) {
-                    leftReduction = END_PANEL_THICKNESS;
-                    rightReduction = 0;  // 이격거리 무시
-                  } else {
-                    // 벽 설정이 없으면 기본값 (오른쪽 벽 있다고 가정)
-                    leftReduction = END_PANEL_THICKNESS;
-                    rightReduction = 0;  // 이격거리 무시
-                  }
+                } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+                  // 세미스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
+                  leftReduction = 0;
+                  rightReduction = 0;
                 } else if (spaceInfo.installType === 'freestanding') {
                   // 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
                   leftReduction = 0;

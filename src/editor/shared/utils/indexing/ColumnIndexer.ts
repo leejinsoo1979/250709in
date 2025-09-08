@@ -626,7 +626,7 @@ export class ColumnIndexer {
           slotWidths.push(slotWidth);
         }
       } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-        // 노서라운드 한쪽벽: 커버도어 방식 - 전체너비를 균등 분할 후, 엔드패널 쪽 슬롯만 18mm 빼기
+        // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨
         const baseSlotWidth = Math.floor(spaceInfo.width / columnCount);
         const remainder = spaceInfo.width % columnCount;
         
@@ -638,15 +638,7 @@ export class ColumnIndexer {
             slotWidth += 1;
           }
           
-          // 엔드패널이 있는 쪽 슬롯에서만 18mm 빼기 (커버도어는 엔드패널이 슬롯 밖에 있음)
-          if (!spaceInfo.wallConfig?.left && i === 0) {
-            // 왼쪽 벽이 없으면 첫 번째 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          } else if (!spaceInfo.wallConfig?.right && i === columnCount - 1) {
-            // 오른쪽 벽이 없으면 마지막 슬롯에서 18mm 빼기
-            slotWidth -= END_PANEL_THICKNESS;
-          }
-          
+          // 엔드패널을 빼지 않음 - 슬롯에 포함
           slotWidths.push(slotWidth);
         }
       } else {
@@ -759,6 +751,10 @@ export class ColumnIndexer {
           // 벽없음: 엔드패널이 슬롯에 포함됨
           leftReduction = 0;
           rightReduction = 0;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 세미스탠딩: 엔드패널이 슬롯에 포함됨
+          leftReduction = 0;
+          rightReduction = 0;
         } else {
           // 왼쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.left) {
@@ -814,6 +810,10 @@ export class ColumnIndexer {
         // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
         if (spaceInfo.installType === 'freestanding') {
           // 벽없음: 엔드패널이 슬롯에 포함됨
+          leftReduction = 0;
+          rightReduction = 0;
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 세미스탠딩: 엔드패널이 슬롯에 포함됨
           leftReduction = 0;
           rightReduction = 0;
         } else {
@@ -910,36 +910,14 @@ export class ColumnIndexer {
     else if (spaceInfo.surroundType === 'no-surround' && 
         (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
       
-      // 메인 영역 슬롯 너비 계산
+      // 메인 영역 슬롯 너비 계산 - 엔드패널 포함
       for (let i = 0; i < normalColumnCount; i++) {
-        let slotWidth = i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth;
-        
-        // 왼쪽 단내림인 경우, 메인 영역의 마지막 슬롯에 엔드패널이 있을 수 있음
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.right && i === normalColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림인 경우, 메인 영역의 첫 슬롯에 엔드패널이 있을 수 있음
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
-        normalSlotWidths.push(slotWidth);
+        normalSlotWidths.push(i < normalRemainder ? normalBaseWidth + 1 : normalBaseWidth);
       }
       
-      // 단내림 영역 슬롯 너비 계산
+      // 단내림 영역 슬롯 너비 계산 - 엔드패널 포함
       for (let i = 0; i < droppedColumnCount; i++) {
-        let slotWidth = i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth;
-        
-        // 왼쪽 단내림이고 왼쪽 벽이 없는 경우, 첫 슬롯에 엔드패널
-        if (droppedPosition === 'left' && !spaceInfo.wallConfig?.left && i === 0) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        // 오른쪽 단내림이고 오른쪽 벽이 없는 경우, 마지막 슬롯에 엔드패널
-        else if (droppedPosition === 'right' && !spaceInfo.wallConfig?.right && i === droppedColumnCount - 1) {
-          slotWidth -= END_PANEL_THICKNESS;
-        }
-        
-        droppedSlotWidths.push(slotWidth);
+        droppedSlotWidths.push(i < droppedRemainder ? droppedBaseWidth + 1 : droppedBaseWidth);
       }
     } else {
       // 기존 로직: 서라운드 또는 빌트인
