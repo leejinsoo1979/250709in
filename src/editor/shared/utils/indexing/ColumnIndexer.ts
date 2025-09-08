@@ -563,8 +563,8 @@ export class ColumnIndexer {
       let actualInternalWidth = internalWidth;
       if (spaceInfo.surroundType === 'no-surround') {
         if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 양쪽 엔드패널을 제외한 너비 (프레임이 엔드패널 안쪽에만 위치)
-          actualInternalWidth = spaceInfo.width - (END_PANEL_THICKNESS * 2);
+          // 벽없음: 전체 너비 사용 (엔드패널도 슬롯에 포함)
+          actualInternalWidth = spaceInfo.width;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           actualInternalWidth = spaceInfo.width;
           
