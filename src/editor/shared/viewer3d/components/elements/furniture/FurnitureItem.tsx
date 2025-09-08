@@ -802,10 +802,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
     const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이 (600mm)
     
-    // BoxModule은 중심 기준으로 렌더링되므로:
-    // 상부장 중심 Y = furnitureStartY + (내경 높이 - 상부장 높이/2) * 0.01
-    // furnitureStartY는 바닥 기준점, 여기에 상부장 위치를 더함
-    const upperCabinetCenterY = furnitureStartY + ((internalSpaceHeight - upperCabinetHeight/2) * 0.01);
+    // 띄워서 배치 모드와 관계없이 상부장은 항상 천장에 붙어야 함
+    // 바닥 마감재 높이
+    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    
+    // 상부장 중심 Y = 바닥마감재 + (내경 높이 - 상부장 높이/2)
+    // 받침대나 띄움 높이와 관계없이 천장에 붙이기
+    const upperCabinetCenterY = (floorFinishHeightMm + internalSpaceHeight - upperCabinetHeight/2) * 0.01;
     
     adjustedPosition = {
       ...adjustedPosition,
@@ -816,10 +819,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       moduleId: placedModule.moduleId,
       내경높이_mm: internalSpaceHeight,
       상부장높이_mm: upperCabinetHeight,
-      바닥기준_furnitureStartY: furnitureStartY,
-      상부장중심위치_계산: `${furnitureStartY} + ${((internalSpaceHeight - upperCabinetHeight/2) * 0.01).toFixed(2)}`,
+      바닥마감재_mm: floorFinishHeightMm,
+      상부장중심위치_계산: `(${floorFinishHeightMm} + ${internalSpaceHeight} - ${upperCabinetHeight/2}) * 0.01`,
       최종Y: upperCabinetCenterY,
-      설명: '상부장 상단이 천장에 완전히 닿도록'
+      설명: '띄워서 배치와 관계없이 상부장은 항상 천장에 붙임'
     });
   }
   
