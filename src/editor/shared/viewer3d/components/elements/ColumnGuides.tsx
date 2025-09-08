@@ -32,19 +32,23 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModules.some(module => {
+      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
       if (module.slotIndex === 0) return true;
       // 듀얼 모듈이 1번에서 시작하면 0번도 차지
-      if (module.isDualSlot && module.slotIndex === 1) return true;
+      if (isDual && module.slotIndex === 1) return true;
       return false;
     });
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModules.some(module => {
       const lastSlotIndex = indexing.columnCount - 1;
+      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
       if (module.slotIndex === lastSlotIndex) return true;
       // 듀얼 모듈이 마지막-1에서 시작하면 마지막도 차지
-      if (module.isDualSlot && module.slotIndex === lastSlotIndex - 1) return true;
+      if (isDual && module.slotIndex === lastSlotIndex - 1) return true;
       return false;
     });
   

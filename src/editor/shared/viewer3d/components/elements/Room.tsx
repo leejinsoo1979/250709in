@@ -207,23 +207,34 @@ const Room: React.FC<RoomProps> = ({
   
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModulesFromStore.some(module => {
+      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
-      const isLeft = module.slotIndex === 0 || (module.isDualSlot && module.slotIndex === 1);
+      const isLeft = module.slotIndex === 0 || (isDual && module.slotIndex === 1);
       if (isLeft) {
-        console.log('🟢 왼쪽 가구 감지:', { slotIndex: module.slotIndex, isDualSlot: module.isDualSlot });
+        console.log('🟢 왼쪽 가구 감지:', { 
+          slotIndex: module.slotIndex, 
+          isDualSlot: module.isDualSlot,
+          isDual,
+          moduleId: module.moduleId 
+        });
       }
       return isLeft;
     });
     
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModulesFromStore.some(module => {
+      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 마지막 슬롯을 포함하는 경우
       const isRight = module.slotIndex === lastSlotIndex || 
-        (module.isDualSlot && module.slotIndex === lastSlotIndex - 1);
+        (isDual && module.slotIndex === lastSlotIndex - 1);
       if (isRight) {
         console.log('🔴 오른쪽 가구 감지:', { 
           slotIndex: module.slotIndex, 
           isDualSlot: module.isDualSlot,
+          isDual,
+          moduleId: module.moduleId,
           lastSlotIndex,
           columnCount: indexingForCheck.columnCount,
           체크조건: `slotIndex === ${lastSlotIndex} 또는 (듀얼 && slotIndex === ${lastSlotIndex - 1})`
