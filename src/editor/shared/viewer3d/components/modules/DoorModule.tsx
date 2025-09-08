@@ -848,16 +848,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let leftDoorWidth: number;
     let rightDoorWidth: number;
     
+    // 노서라운드에서는 갭 없이 슬롯 너비 그대로 사용
+    const doorGap = spaceInfo.surroundType === 'no-surround' ? 0 : 3;
+    
     if (slotWidths && slotWidths.length >= 2) {
       // 개별 슬롯 너비가 제공된 경우
       totalWidth = slotWidths[0] + slotWidths[1];
-      leftDoorWidth = slotWidths[0] - 3;
-      rightDoorWidth = slotWidths[1] - 3;
+      leftDoorWidth = slotWidths[0] - doorGap;
+      rightDoorWidth = slotWidths[1] - doorGap;
     } else {
       // fallback: indexing에서 계산된 값 사용
       totalWidth = indexing.columnWidth * 2;
-      leftDoorWidth = indexing.columnWidth - 3;
-      rightDoorWidth = indexing.columnWidth - 3;
+      leftDoorWidth = indexing.columnWidth - doorGap;
+      rightDoorWidth = indexing.columnWidth - doorGap;
     }
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
@@ -1233,8 +1236,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
-    // 문의 폭 = 원래 슬롯 전체 폭 - 3mm (갭)
-    const doorWidth = actualDoorWidth - 3; // 슬롯사이즈 - 3mm
+    // 노서라운드에서는 갭 없이 슬롯 너비 그대로 사용
+    const doorGap = spaceInfo.surroundType === 'no-surround' ? 0 : 3;
+    const doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
     const doorWidthUnits = mmToThreeUnits(doorWidth);
     
     console.log('🚪 싱글 도어 크기:', {
