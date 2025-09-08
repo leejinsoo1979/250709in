@@ -473,12 +473,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 듀얼 가구 인접 체크 디버깅
   if (isDualFurniture && actualModuleData) {
-    console.log('🔍 듀얼 가구 인접 체크:', {
+    console.log('🔍🔍🔍 듀얼 가구 인접 체크 결과:', {
       moduleId: placedModule.moduleId,
       slotIndex: placedModule.slotIndex,
       isDualFurniture,
       category: actualModuleData.category,
-      adjacentCheck
+      adjacentCheck,
+      is2hanging: actualModuleData.id.includes('2hanging')
     });
   }
   
