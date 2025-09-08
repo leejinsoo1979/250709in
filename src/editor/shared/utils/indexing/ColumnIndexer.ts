@@ -318,25 +318,14 @@ export class ColumnIndexer {
     // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
     let internalStartX;
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 이격거리만 고려 (엔드패널 내부에서 시작)
+      // 노서라운드: 이격거리만 고려
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
         // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
         leftReduction = spaceInfo.gapConfig?.left || 2;
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 한쪽 벽만 있음
-        if (spaceInfo.wallConfig?.left) {
-          // 왼쪽 벽이 있으면: 벽에 바로 붙음 (이격거리 무시)
-          leftReduction = 0;
-        } else {
-          // 왼쪽 벽이 없으면: 엔드패널 두께만
-          leftReduction = END_PANEL_THICKNESS;
-        }
-      } else {
-        // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
-        leftReduction = 0;
       }
+      // 세미스탠딩, 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
       
       internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
     } else {
@@ -353,14 +342,8 @@ export class ColumnIndexer {
       // 엔드패널도 슬롯 안에 포함되므로 절대 왼쪽 끝에서 시작
       currentX = -(totalWidth / 2);
     } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 세미스탠딩: 벽 위치에 따라 조정
-      if (spaceInfo.wallConfig?.left) {
-        // 왼쪽 벽이 있으면: 벽에 바로 붙음
-        currentX = -(totalWidth / 2);
-      } else {
-        // 왼쪽 벽이 없으면: 왼쪽에 엔드패널 공간 확보 (18mm)
-        currentX = -(totalWidth / 2) + END_PANEL_THICKNESS;
-      }
+      // 노서라운드 세미스탠딩: 엔드패널도 슬롯에 포함되므로 전체 폭 사용
+      currentX = -(totalWidth / 2);
     } else {
       // 서라운드 또는 빌트인: 내경 시작점
       currentX = internalStartX;
