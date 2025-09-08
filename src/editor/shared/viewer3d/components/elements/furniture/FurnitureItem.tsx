@@ -562,13 +562,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     // 엔드패널 두께만큼 키큰장 너비를 줄임
     if (endPanelSide === 'left') {
-      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
+      // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 듀얼 캐비넷은 이동하지 않음 (이미 2개 슬롯의 중심에 있음)
+      // 싱글 캐비넷만 9mm 이동
+      positionAdjustmentForEndPanel = isDualFurniture ? 0 : (END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'right') {
-      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
+      // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 이동
       adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
+      // 듀얼 캐비넷은 이동하지 않음 (이미 2개 슬롯의 중심에 있음)
+      // 싱글 캐비넷만 9mm 이동
+      positionAdjustmentForEndPanel = isDualFurniture ? 0 : -(END_PANEL_THICKNESS / 2) * 0.01; // mm를 Three.js 단위로 변환
     } else if (endPanelSide === 'both') {
       // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
       adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
@@ -1583,14 +1587,52 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             차이: originalSlotWidthMm - furnitureWidthMm
           })}
           <DoorModule
-            moduleWidth={originalSlotWidthMm} // 원래 슬롯 크기 사용 (커버도어)
+            moduleWidth={(() => {
+              // 싱글 키큰장이 상하부장과 인접한 경우 엔드패널을 고려한 너비 사용
+              if (needsEndPanelAdjustment && !isDualFurniture) {
+                // 엔드패널이 한쪽인지 양쪽인지에 따라 너비 조정
+                const endPanelReduction = endPanelSide === 'both' ? 36 : 18; // 양쪽: 36mm, 한쪽: 18mm
+                const adjustedDoorWidth = originalSlotWidthMm - endPanelReduction;
+                console.log('🚪 싱글 키큰장 커버도어 너비 조정:', {
+                  originalSlotWidth: originalSlotWidthMm,
+                  endPanelSide,
+                  endPanelReduction,
+                  adjustedDoorWidth,
+                  설명: '엔드패널 영역만큼 도어 너비 감소'
+                });
+                return adjustedDoorWidth;
+              }
+              // 기둥 침범 시 원래 슬롯 크기 사용
+              return originalSlotWidthMm;
+            })()}
             moduleDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={zoneSpaceInfo}
             color={furnitureColor}
             doorXOffset={0} // 사용하지 않음
-            originalSlotWidth={originalSlotWidthMm}
-            slotCenterX={0} // 이미 절대 좌표로 배치했으므로 0
+            originalSlotWidth={(() => {
+              // 싱글 키큰장이 상하부장과 인접한 경우 조정된 너비를 originalSlotWidth로 전달
+              if (needsEndPanelAdjustment && !isDualFurniture) {
+                const endPanelReduction = endPanelSide === 'both' ? 36 : 18;
+                return originalSlotWidthMm - endPanelReduction;
+              }
+              return originalSlotWidthMm;
+            })()}
+            slotCenterX={(() => {
+              // 싱글 키큰장이 상하부장과 인접한 경우 도어 위치 조정
+              if (needsEndPanelAdjustment && !isDualFurniture) {
+                // 엔드패널에 따른 도어 중심 이동
+                // 왼쪽 엔드패널: 도어를 오른쪽으로 9mm 이동
+                // 오른쪽 엔드패널: 도어를 왼쪽으로 9mm 이동
+                // 양쪽 엔드패널: 이동 없음 (대칭)
+                if (endPanelSide === 'left') {
+                  return mmToThreeUnits(9); // 오른쪽으로 9mm
+                } else if (endPanelSide === 'right') {
+                  return mmToThreeUnits(-9); // 왼쪽으로 9mm
+                }
+              }
+              return 0; // 이미 절대 좌표로 배치했으므로 0
+            })()}
             moduleData={actualModuleData} // 실제 모듈 데이터
             slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
             isDragging={isDraggingThis}
