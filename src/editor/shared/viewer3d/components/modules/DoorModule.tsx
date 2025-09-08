@@ -848,8 +848,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let leftDoorWidth: number;
     let rightDoorWidth: number;
     
-    // 노서라운드에서는 갭 없이 슬롯 너비 그대로 사용
-    const doorGap = spaceInfo.surroundType === 'no-surround' ? 0 : 3;
+    // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
+    const doorGap = 3;
     
     if (slotWidths && slotWidths.length >= 2) {
       // 개별 슬롯 너비가 제공된 경우
@@ -1236,8 +1236,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
   } else {
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
-    // 노서라운드에서는 갭 없이 슬롯 너비 그대로 사용
-    const doorGap = spaceInfo.surroundType === 'no-surround' ? 0 : 3;
+    // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
+    const doorGap = 3;
     const doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
     const doorWidthUnits = mmToThreeUnits(doorWidth);
     

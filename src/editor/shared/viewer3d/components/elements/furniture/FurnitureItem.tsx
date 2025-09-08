@@ -926,7 +926,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
        spaceInfo.installType === 'semi-standing') && 
       placedModule.slotIndex !== undefined) {
     
-    // 세미스탠딩에서는 벽이 없는 쪽만 처리
+    // 프리스탠딩에서는 양쪽 모두, 세미스탠딩에서는 벽이 없는 쪽만 처리
     let shouldProcessFirstSlot = false;
     let shouldProcessLastSlot = false;
     
@@ -941,7 +941,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     const isFirstSlotNoSurround = shouldProcessFirstSlot;
-    const isDualLastSlot = isDualFurniture && shouldProcessLastSlot && placedModule.slotIndex === indexing.columnCount - 2;
+    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2 && 
+                            (spaceInfo.installType === 'freestanding' || 
+                             (spaceInfo.installType !== 'freestanding' && shouldProcessLastSlot));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
     
@@ -1215,7 +1217,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
        spaceInfo.installType === 'semi-standing') && 
       placedModule.slotIndex !== undefined) {
     
-    // 세미스탠딩에서는 벽이 없는 쪽만 처리
+    // 프리스탠딩에서는 양쪽 모두, 세미스탠딩에서는 벽이 없는 쪽만 처리
     let shouldExpandFirstSlot = false;
     let shouldExpandLastSlot = false;
     
@@ -1231,7 +1233,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     const isFirstSlotFreestanding = shouldExpandFirstSlot;
     const isLastSlotFreestanding = shouldExpandLastSlot;
-    const isDualLastSlot = isDualFurniture && shouldExpandLastSlot && placedModule.slotIndex === indexing.columnCount - 2;
+    const isDualLastSlot = isDualFurniture && placedModule.slotIndex === indexing.columnCount - 2 && 
+                            (spaceInfo.installType === 'freestanding' || 
+                             (spaceInfo.installType !== 'freestanding' && shouldExpandLastSlot));
     
     // 첫번째 또는 마지막 슬롯: 도어 확장
     if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualLastSlot) {
