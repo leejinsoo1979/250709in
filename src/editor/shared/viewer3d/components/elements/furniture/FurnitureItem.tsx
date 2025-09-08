@@ -432,6 +432,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       setPositionLogData(positionState);
     }
   }, [positionState]);
+  
+  // 모든 Hook 선언을 여기에 추가 (조건부 return 이전)
+  // 이 Hook들은 나중에 계산되는 변수들을 사용하므로 별도 state로 관리
+  const [deferredEffects, setDeferredEffects] = React.useState<{
+    columnC?: any;
+    position?: any;
+  }>({});
+  
+  React.useEffect(() => {
+    if (deferredEffects.columnC) {
+      setColumnCParams(deferredEffects.columnC);
+    }
+  }, [deferredEffects.columnC]);
+  
+  React.useEffect(() => {
+    if (deferredEffects.position) {
+      setPositionLogData(deferredEffects.position);
+    }
+  }, [deferredEffects.position]);
 
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
@@ -1588,31 +1607,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
-  // Column C 파라미터 업데이트
+  // 변수들이 계산된 후 effect 실행을 위한 deferred 설정
   React.useEffect(() => {
-    setColumnCState({
-      isEnabled: isColumnCFront,
-      depth: slotInfo?.column?.depth || 300,
-      width: indexing.columnWidth
-    });
-  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth]);
-  
-  // 위치 변경 로깅 업데이트
-  React.useEffect(() => {
-    setPositionState({
-      id: placedModule.id,
-      isEditMode,
-      placedModulePosition: placedModule.position,
-      adjustedPosition: adjustedPosition,
-      positionDifference: {
-        x: adjustedPosition.x - placedModule.position.x,
-        y: adjustedPosition.y - placedModule.position.y,
-        z: adjustedPosition.z - placedModule.position.z
+    setDeferredEffects({
+      columnC: {
+        isEnabled: isColumnCFront,
+        depth: slotInfo?.column?.depth || 300,
+        width: indexing.columnWidth
       },
-      zone: placedModule.zone,
-      category: actualModuleData?.category
+      position: {
+        id: placedModule.id,
+        isEditMode,
+        placedModulePosition: placedModule.position,
+        adjustedPosition: adjustedPosition,
+        positionDifference: {
+          x: adjustedPosition.x - placedModule.position.x,
+          y: adjustedPosition.y - placedModule.position.y,
+          z: adjustedPosition.z - placedModule.position.z
+        },
+        zone: placedModule.zone,
+        category: actualModuleData?.category
+      }
     });
-  }, [placedModule.id, isEditMode, placedModule.position.x, placedModule.position.y, placedModule.position.z, 
+  }, [isColumnCFront, slotInfo?.column?.depth, indexing.columnWidth, 
+      placedModule.id, isEditMode, placedModule.position.x, placedModule.position.y, placedModule.position.z,
       adjustedPosition.x, adjustedPosition.y, adjustedPosition.z, placedModule.zone, actualModuleData?.category]);
 
   // Column C 전용 이벤트 핸들러 래핑
