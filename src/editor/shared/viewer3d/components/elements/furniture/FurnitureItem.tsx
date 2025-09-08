@@ -793,36 +793,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedPosition = { ...placedModule.position };
   }
   
-  // 🔴🔴🔴 상부장 Y 위치 강제 조정 - 상부프레임에 붙이기!
+  // 🔴🔴🔴 상부장과 키큰장 Y 위치 강제 조정 - 상부프레임에 붙이기!
   const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
                          placedModule.moduleId?.includes('dual-upper-cabinet');
+  const isFullCabinet = placedModule.moduleId?.includes('full-cabinet') || 
+                        placedModule.moduleId?.includes('dual-full-cabinet') ||
+                        actualModuleData.category === 'full';
   
-  if (isUpperCabinet) {
-    // 상부장은 상부프레임(천장)에 붙어야 함
+  if (isUpperCabinet || isFullCabinet) {
+    // 상부장과 키큰장은 상부프레임(천장)에 붙어야 함
     const internalSpaceHeight = internalSpace.height; // mm 단위 (예: 2400mm)
-    const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이 (600mm)
+    const furnitureHeight = actualModuleData.dimensions.height; // 가구 높이
     
-    // 띄워서 배치 모드와 관계없이 상부장은 항상 천장에 붙어야 함
+    // 띄워서 배치 모드와 관계없이 항상 천장에 붙어야 함
     // 바닥 마감재 높이
     const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     
-    // 상부장 중심 Y = 바닥마감재 + (내경 높이 - 상부장 높이/2)
+    // 가구 중심 Y = 바닥마감재 + (내경 높이 - 가구 높이/2)
     // 받침대나 띄움 높이와 관계없이 천장에 붙이기
-    const upperCabinetCenterY = (floorFinishHeightMm + internalSpaceHeight - upperCabinetHeight/2) * 0.01;
+    const furnitureCenterY = (floorFinishHeightMm + internalSpaceHeight - furnitureHeight/2) * 0.01;
     
     adjustedPosition = {
       ...adjustedPosition,
-      y: upperCabinetCenterY
+      y: furnitureCenterY
     };
     
-    console.log('🔴🔴🔴 상부장을 천장에 완전히 붙이기:', {
+    console.log('🔴🔴🔴 상부장/키큰장을 천장에 완전히 붙이기:', {
       moduleId: placedModule.moduleId,
+      category: actualModuleData.category,
+      isUpperCabinet,
+      isFullCabinet,
       내경높이_mm: internalSpaceHeight,
-      상부장높이_mm: upperCabinetHeight,
+      가구높이_mm: furnitureHeight,
       바닥마감재_mm: floorFinishHeightMm,
-      상부장중심위치_계산: `(${floorFinishHeightMm} + ${internalSpaceHeight} - ${upperCabinetHeight/2}) * 0.01`,
-      최종Y: upperCabinetCenterY,
-      설명: '띄워서 배치와 관계없이 상부장은 항상 천장에 붙임'
+      가구중심위치_계산: `(${floorFinishHeightMm} + ${internalSpaceHeight} - ${furnitureHeight/2}) * 0.01`,
+      최종Y: furnitureCenterY,
+      설명: '띄워서 배치와 관계없이 상부장/키큰장은 항상 천장에 붙임'
     });
   }
   
