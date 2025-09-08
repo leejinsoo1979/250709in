@@ -1015,17 +1015,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const originalWidth = furnitureWidthMm;
         furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
         
-        // 키큰장은 위치 이동하지 않음 (엔드패널에 맞춰서 너비만 조정)
-        // 상하부장만 위치 조정: 첫번째 슬롯은 오른쪽으로, 마지막 슬롯은 왼쪽으로 9mm 이동
+        // 노서라운드 모드에서 위치 조정
+        // 키큰장: 엔드패널에서 멀어지는 방향으로 9mm 이동 (침범 방지)
+        // 상하부장: 엔드패널 쪽으로 9mm 이동 (엔드패널과 함께 이동)
         if (isTallCabinet) {
-          // 키큰장은 위치 이동 없음
-          positionAdjustmentForEndPanel = 0;
-        } else {
-          // 상하부장만 위치 이동
+          // 키큰장은 엔드패널 반대쪽으로 이동 (침범 방지)
           if (isFirstSlotNoSurround) {
-            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm를 Three.js 단위로
+            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm (엔드패널 반대)
           } else if (isLastSlotNoSurround) {
-            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // -9mm를 Three.js 단위로
+            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm (엔드패널 반대)
+          }
+        } else {
+          // 상하부장은 엔드패널 쪽으로 이동
+          if (isFirstSlotNoSurround) {
+            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
+          } else if (isLastSlotNoSurround) {
+            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
           }
         }
         
