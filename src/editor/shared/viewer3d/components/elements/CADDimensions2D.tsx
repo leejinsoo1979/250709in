@@ -755,24 +755,40 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         let displayWidth = actualFurnitureWidthMm;
         let displayPositionX = furniturePositionX;
         
-        // 디버깅: 가구 위치와 슬롯 위치 비교
-        if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
-          const expectedSlotX = indexing.threeUnitPositions[module.slotIndex];
-          const positionDiff = (furniturePositionX - expectedSlotX) * 100; // mm 단위로 변환
+        // 치수는 항상 슬롯 중심에 표시
+        if (module.slotIndex !== undefined) {
+          let expectedSlotX;
           
-          if (Math.abs(positionDiff) > 5) { // 5mm 이상 차이나면
-            console.log('⚠️ 치수 위치 불일치 감지:', {
+          if (isDualFurniture && module.slotIndex < indexing.threeUnitPositions.length - 1) {
+            // 듀얼 가구: 두 슬롯의 중간점
+            const leftSlotX = indexing.threeUnitPositions[module.slotIndex];
+            const rightSlotX = indexing.threeUnitPositions[module.slotIndex + 1];
+            expectedSlotX = (leftSlotX + rightSlotX) / 2;
+            
+            console.log('📐 듀얼 가구 치수 위치 계산:', {
+              moduleId: module.moduleId,
+              slotIndex: module.slotIndex,
+              leftSlotX,
+              rightSlotX,
+              centerX: expectedSlotX,
+              actualPositionX: furniturePositionX,
+              difference: (furniturePositionX - expectedSlotX) * 100
+            });
+          } else if (indexing.threeUnitPositions[module.slotIndex] !== undefined) {
+            // 싱글 가구: 해당 슬롯 중심
+            expectedSlotX = indexing.threeUnitPositions[module.slotIndex];
+            
+            console.log('📐 싱글 가구 치수 위치 계산:', {
               moduleId: module.moduleId,
               slotIndex: module.slotIndex,
               expectedSlotX,
               actualPositionX: furniturePositionX,
-              differenceInMm: positionDiff,
-              isDualFurniture,
-              surroundType: spaceInfo.surroundType,
-              installType: spaceInfo.installType
+              difference: (furniturePositionX - expectedSlotX) * 100
             });
-            
-            // 슬롯 위치를 사용하도록 보정
+          }
+          
+          if (expectedSlotX !== undefined) {
+            // 치수는 항상 슬롯 위치에 표시
             displayPositionX = expectedSlotX;
           }
         }
