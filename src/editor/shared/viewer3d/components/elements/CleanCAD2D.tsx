@@ -887,6 +887,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               });
             }
             
+            // 벽이 없고 가구도 없으면 치수 표시하지 않음
+            if (!hasBothWalls && leftmostFurnitureX === null) {
+              return null;
+            }
+            
             let leftValue: number;
             let leftText: string;
             
@@ -898,17 +903,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 가구가 있으면 실제 가구 위치까지의 거리 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
               leftValue = Math.round(Math.abs(distanceFromLeft));
-              leftText = `${leftValue}`;
-            } else {
-              // 가구가 없으면 프레임 두께 표시
-              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-              
-              // 왼쪽 벽이 있으면 표시하지 않음
-              if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-                return null;
-              }
-              
-              leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
               leftText = `${leftValue}`;
             }
             
@@ -1032,6 +1026,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               });
             }
             
+            // 벽이 없고 가구도 없으면 치수 표시하지 않음
+            if (!hasBothWalls && rightmostFurnitureX === null) {
+              return null;
+            }
+            
             let rightValue: number;
             let rightText: string;
             
@@ -1044,17 +1043,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
               rightValue = Math.round(Math.abs(distanceFromRight));
-              rightText = `${rightValue}`;
-            } else {
-              // 가구가 없으면 프레임 두께 표시
-              const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-              
-              // 오른쪽 벽이 있으면 표시하지 않음
-              if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
-                return null;
-              }
-              
-              rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
               rightText = `${rightValue}`;
             }
             
