@@ -686,16 +686,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 키큰장인지 확인 (2hanging이 포함된 모듈 ID)
   const isTallCabinet = actualModuleData.id.includes('2hanging');
-  
-  // 마지막 슬롯인지 먼저 확인
-  let isLastSlot = false;
-  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    isLastSlot = placedModule.slotIndex === targetZone.columnCount - 1;
-  } else {
-    isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
-  }
 
   // 키큰장 엔드패널 처리
   let adjustedWidthForEndPanel = furnitureWidthMm;
