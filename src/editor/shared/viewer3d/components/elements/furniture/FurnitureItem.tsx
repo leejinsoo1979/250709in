@@ -538,19 +538,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  console.log('✅ [FurnitureItem] 찾은 모듈:', {
-    targetModuleId: targetModuleId,
-    originalModuleId: placedModule.moduleId,
-    moduleId: moduleData.id,
-    moduleWidth: moduleData.dimensions.width,
-    moduleHeight: moduleData.dimensions.height,
-    customWidth: placedModule.customWidth,
-    expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
-    placedModuleId: placedModule.moduleId,
-    idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
-    zone: placedModule.zone,
-    internalSpaceHeight: internalSpace.height
-  });
+  if (moduleData) {
+    console.log('✅ [FurnitureItem] 찾은 모듈:', {
+      targetModuleId: targetModuleId,
+      originalModuleId: placedModule.moduleId,
+      moduleId: moduleData.id,
+      moduleWidth: moduleData.dimensions.width,
+      moduleHeight: moduleData.dimensions.height,
+      customWidth: placedModule.customWidth,
+      expectedWidth: placedModule.customWidth || moduleData.dimensions.width,
+      placedModuleId: placedModule.moduleId,
+      idContainsWidth: placedModule.moduleId.match(/-(\d+)$/),
+      zone: placedModule.zone,
+      internalSpaceHeight: internalSpace.height
+    });
+  }
   
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
