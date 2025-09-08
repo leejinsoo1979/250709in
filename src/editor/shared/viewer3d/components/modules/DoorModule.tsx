@@ -499,7 +499,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // === 문 Y 위치 계산 ===
   let doorYPosition: number;
   
-  if (isUpperCabinet) {
+  // 키큰장이고 플로팅 배치인 경우 특별 처리
+  if (!isUpperCabinet && !isLowerCabinet && floatHeight > 0) {
+    // 플로팅 배치 시: 도어 상단은 고정, 하단만 올라감
+    // 도어가 줄어든 만큼(floatHeight)의 절반만큼 Y 위치를 아래로 이동
+    // 이렇게 하면 도어 상단은 원래 위치 유지, 하단만 올라감
+    doorYPosition = mmToThreeUnits(-floatHeight / 2);
+    console.log('🚪📍 플로팅 배치 키큰장 도어 Y 위치 조정:', {
+      floatHeight,
+      doorYPosition_units: doorYPosition,
+      doorYPosition_mm: doorYPosition / 0.01,
+      설명: '도어 상단 고정, 하단만 올라가도록 Y 위치 조정'
+    });
+  } else if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
     
