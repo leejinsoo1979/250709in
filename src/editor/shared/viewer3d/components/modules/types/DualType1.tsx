@@ -25,7 +25,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   originalSlotWidth,
   slotIndex,
   slotCenterX,
-  slotWidths
+  slotWidths,
+  adjustedWidth // adjustedWidth 추가
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -34,7 +35,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    slotWidths // 듀얼 가구의 개별 슬롯 너비 전달
+    slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
+    adjustedWidth // adjustedWidth 전달
   });
 
   const { renderMode } = useSpace3DView();
