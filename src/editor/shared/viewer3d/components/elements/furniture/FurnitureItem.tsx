@@ -1333,18 +1333,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorWidth={originalSlotWidthMm} // 도어 너비는 슬롯 너비 사용
               originalSlotWidth={originalSlotWidthMm}
               slotCenterX={(() => {
-                // 듀얼 캐비넷 도어를 9mm 안쪽으로 이동
+                // 듀얼 캐비넷 도어를 엔드패널 두께의 절반만큼 안쪽으로 이동
                 if (isDualFurniture && positionAdjustmentForEndPanel !== 0) {
-                  // 도어를 9mm 안쪽으로 이동 (양수가 안쪽)
-                  const doorAdjustment = 0.09; // 9mm를 Three.js 단위로 (양수는 안쪽)
+                  // 엔드패널이 있을 때 도어를 안쪽으로 이동
+                  // positionAdjustmentForEndPanel의 절대값이 이미 9mm (END_PANEL_THICKNESS / 2)
+                  const doorAdjustment = Math.abs(positionAdjustmentForEndPanel);
                   
-                  console.log('🚪 듀얼 캐비넷 도어 9mm 안쪽 이동:', {
+                  console.log('🚪 듀얼 캐비넷 도어 안쪽 이동:', {
                     moduleId: placedModule.id,
                     isDualFurniture,
                     positionAdjustmentForEndPanel,
                     doorAdjustment,
+                    doorAdjustment_mm: doorAdjustment * 100,
                     endPanelSide,
-                    설명: '도어를 9mm 안쪽으로 이동'
+                    설명: '도어를 엔드패널 두께의 절반만큼 안쪽으로 이동'
                   });
                   
                   return doorAdjustment;
