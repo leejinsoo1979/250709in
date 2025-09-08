@@ -1693,6 +1693,10 @@ const Room: React.FC<RoomProps> = ({
                     leftReduction = END_PANEL_THICKNESS;
                     rightReduction = 0;  // 이격거리 무시
                   }
+                } else if (spaceInfo.installType === 'freestanding') {
+                  // 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
+                  leftReduction = 0;
+                  rightReduction = 0;
                 } else {
                   leftReduction = END_PANEL_THICKNESS;
                   rightReduction = END_PANEL_THICKNESS;
