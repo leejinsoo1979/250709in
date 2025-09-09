@@ -954,6 +954,7 @@ const Configurator: React.FC = () => {
   // URL에서 프로젝트 ID 읽기 및 로드
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+    const designFileId = searchParams.get('designFileId');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
@@ -961,11 +962,18 @@ const Configurator: React.FC = () => {
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
       
+      // designFileId가 있으면 저장
+      if (designFileId) {
+        setCurrentDesignFileId(designFileId);
+        console.log('📝 디자인파일 ID 설정:', designFileId);
+      }
+      
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
         console.log('✅ skipLoad=true 또는 design=new - Step 1-3에서 설정한 데이터 유지');
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
+        console.log('🔍 현재 designFileId:', designFileId);
         
         // 로딩 완료 처리
         setTimeout(() => {
