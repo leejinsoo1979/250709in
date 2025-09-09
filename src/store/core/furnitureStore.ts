@@ -77,6 +77,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   addModule: (module: PlacedModule) => {
     console.log('🟢 addModule 호출:', {
       id: module.id,
+      moduleId: module.moduleId,
+      isUpperCabinet: module.moduleId?.includes('upper-cabinet'),
+      isLowerCabinet: module.moduleId?.includes('lower-cabinet'),
       position: {
         x: module.position.x.toFixed(3),
         y: module.position.y.toFixed(3),
@@ -191,7 +194,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
         
         // 모든 기존 가구와 공존 가능하면 추가
-        console.log('✅ 가구 공존 추가');
+        console.log('✅ 가구 공존 추가:', {
+          새가구: {
+            id: module.id,
+            moduleId: module.moduleId,
+            category: newCategory,
+            isUpperCabinet: module.moduleId?.includes('upper-cabinet'),
+            isLowerCabinet: module.moduleId?.includes('lower-cabinet')
+          },
+          기존가구수: state.placedModules.length,
+          추가후가구수: state.placedModules.length + 1
+        });
         return {
           placedModules: [...state.placedModules, module]
         };

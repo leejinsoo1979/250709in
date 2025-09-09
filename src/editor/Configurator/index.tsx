@@ -438,6 +438,21 @@ const Configurator: React.FC = () => {
         height: spaceInfo.height,
         materialConfig: spaceInfo.materialConfig
       });
+      
+      // furnitureStore의 현재 상태 직접 확인
+      const currentFurnitureState = useFurnitureStore.getState().placedModules;
+      console.log('💾 [DEBUG] furnitureStore 현재 상태:', {
+        storeCount: currentFurnitureState.length,
+        propCount: placedModules.length,
+        같은가: currentFurnitureState === placedModules,
+        storeModules: currentFurnitureState.map(m => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
+          isLowerCabinet: m.moduleId?.includes('lower-cabinet')
+        }))
+      });
+      
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
       console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
         const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
