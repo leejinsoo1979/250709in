@@ -203,44 +203,53 @@ const Room: React.FC<RoomProps> = ({
   
   // 노서라운드 모드에서 엔드패널이 생성되는 위치 확인
   const getEndPanelPositions = () => {
-    if (spaceInfo.surroundType !== 'no-surround') return { left: false, right: false };
+    if (spaceInfo.surroundType !== 'no-surround') return { left: false, right: false, slots: [] };
     
     const modules = placedModules || placedModulesFromStore;
-    if (!modules || modules.length === 0) return { left: false, right: false };
+    if (!modules || modules.length === 0) return { left: false, right: false, slots: [] };
     
-    // 왼쪽과 오른쪽 끝 슬롯에 키큰장과 상하부장이 함께 있는지 확인
+    // 각 슬롯에서 엔드패널 생성 여부 확인
+    const endPanelSlots = [];
     let hasLeftEndPanel = false;
     let hasRightEndPanel = false;
     
-    modules.forEach((module) => {
-      const isTallCabinet = module.category === 'tall-cabinet';
-      const isUpperLower = module.category === 'upper-cabinet' || module.category === 'lower-cabinet';
+    const columnCount = spaceInfo.mainDoorCount || 3;
+    
+    // 모든 슬롯 확인
+    for (let slotIndex = 0; slotIndex < columnCount; slotIndex++) {
+      const slotModules = modules.filter(m => m.slotIndex === slotIndex);
+      const hasTall = slotModules.some(m => m.category === 'tall-cabinet');
+      const hasUpperLower = slotModules.some(m => m.category === 'upper-cabinet' || m.category === 'lower-cabinet');
       
-      // 첫 번째 슬롯(인덱스 0)
-      if (module.slotIndex === 0) {
-        // 해당 슬롯에 키큰장과 상하부장이 함께 있는지 확인
-        const slotModules = modules.filter(m => m.slotIndex === 0);
-        const hasTall = slotModules.some(m => m.category === 'tall-cabinet');
-        const hasUpperLower = slotModules.some(m => m.category === 'upper-cabinet' || m.category === 'lower-cabinet');
-        if (hasTall && hasUpperLower) {
+      // 키큰장과 상하부장이 함께 있으면 엔드패널 생성
+      if (hasTall && hasUpperLower) {
+        endPanelSlots.push(slotIndex);
+        
+        // 첫 번째 슬롯
+        if (slotIndex === 0) {
           hasLeftEndPanel = true;
         }
-      }
-      
-      // 마지막 슬롯 확인 (컬럼 수에 따라 다름)
-      const columnCount = spaceInfo.mainDoorCount || 3;
-      const lastSlotIndex = columnCount - 1;
-      if (module.slotIndex === lastSlotIndex) {
-        const slotModules = modules.filter(m => m.slotIndex === lastSlotIndex);
-        const hasTall = slotModules.some(m => m.category === 'tall-cabinet');
-        const hasUpperLower = slotModules.some(m => m.category === 'upper-cabinet' || m.category === 'lower-cabinet');
-        if (hasTall && hasUpperLower) {
+        // 마지막 슬롯
+        if (slotIndex === columnCount - 1) {
           hasRightEndPanel = true;
         }
       }
+    }
+    
+    console.log('🔍 엔드패널 생성 위치:', {
+      노서라운드모드: spaceInfo.surroundType === 'no-surround',
+      설치타입: spaceInfo.installType,
+      엔드패널슬롯: endPanelSlots,
+      왼쪽엔드패널: hasLeftEndPanel,
+      오른쪽엔드패널: hasRightEndPanel,
+      전체슬롯수: columnCount
     });
     
-    return { left: hasLeftEndPanel, right: hasRightEndPanel };
+    return { 
+      left: hasLeftEndPanel, 
+      right: hasRightEndPanel,
+      slots: endPanelSlots
+    };
   };
   
   const endPanelPositions = getEndPanelPositions();
@@ -1741,21 +1750,21 @@ const Room: React.FC<RoomProps> = ({
                 leftReduction = frameThickness.left;
                 rightReduction = frameThickness.right;
               } else {
-                // 노서라운드: 이격거리 또는 엔드패널
+                // 노서라운드: 엔드패널이 있는 쪽만 조정
                 if (spaceInfo.installType === 'builtin') {
                   leftReduction = 2;
                   rightReduction = 2;
                 } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-                  // 세미스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
-                  leftReduction = 0;
-                  rightReduction = 0;
+                  // 세미스탠딩: 엔드패널이 생성된 위치만 조정
+                  leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
+                  rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
                 } else if (spaceInfo.installType === 'freestanding') {
-                  // 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
-                  leftReduction = 0;
-                  rightReduction = 0;
+                  // 프리스탠딩: 엔드패널이 생성된 위치만 조정
+                  leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
+                  rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
                 } else {
-                  leftReduction = END_PANEL_THICKNESS;
-                  rightReduction = END_PANEL_THICKNESS;
+                  leftReduction = endPanelPositions.left ? END_PANEL_THICKNESS : 0;
+                  rightReduction = endPanelPositions.right ? END_PANEL_THICKNESS : 0;
                 }
               }
               
@@ -1855,14 +1864,33 @@ const Room: React.FC<RoomProps> = ({
               x: number;
             }> = [];
             
-            // 전체 프레임 범위 계산 - 변수명 중복 제거
-            const segmentFrameStartX = frameX - frameWidth / 2;
-            const segmentFrameEndX = frameX + frameWidth / 2;
+            // 엔드패널이 있는 경우 프레임 범위 조정
+            let adjustedFrameStartX = frameX - frameWidth / 2;
+            let adjustedFrameEndX = frameX + frameWidth / 2;
+            
+            if (spaceInfo.surroundType === 'no-surround') {
+              // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
+              if (endPanelPositions.left) {
+                adjustedFrameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
+              }
+              if (endPanelPositions.right) {
+                adjustedFrameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+              }
+              
+              console.log('🔧 상부프레임 분절 엔드패널 조정:', {
+                원래시작: frameX - frameWidth / 2,
+                원래끝: frameX + frameWidth / 2,
+                조정된시작: adjustedFrameStartX,
+                조정된끝: adjustedFrameEndX,
+                왼쪽엔드패널: endPanelPositions.left,
+                오른쪽엔드패널: endPanelPositions.right
+              });
+            }
             
             // 기둥들을 X 위치 기준으로 정렬
             const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
             
-            let currentX = segmentFrameStartX;
+            let currentX = adjustedFrameStartX;
             
             // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
             sortedColumns.forEach((column, index) => {
@@ -1871,7 +1899,7 @@ const Room: React.FC<RoomProps> = ({
               const columnRightX = column.position[0] + columnWidthM / 2;
               
               // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
-              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+              if (columnLeftX < adjustedFrameEndX && columnRightX > adjustedFrameStartX && column.depth >= 730) {
                 // 기둥 왼쪽 프레임 세그먼트
                 const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                 if (leftSegmentWidth > 0) {
@@ -1887,7 +1915,7 @@ const Room: React.FC<RoomProps> = ({
             });
             
             // 마지막 세그먼트 (마지막 기둥 오른쪽)
-            const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+            const lastSegmentWidth = Math.max(0, adjustedFrameEndX - currentX);
             if (lastSegmentWidth > 0) {
               frameSegments.push({
                 width: lastSegmentWidth,
@@ -2026,7 +2054,7 @@ const Room: React.FC<RoomProps> = ({
               const columnRightX = column.position[0] + columnWidthM / 2;
               
               // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
-              if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+              if (columnLeftX < adjustedFrameEndX && columnRightX > adjustedFrameStartX && column.depth >= 730) {
                 // 기둥 왼쪽 프레임 세그먼트
                 const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                 if (leftSegmentWidth > 0) {
@@ -2042,7 +2070,7 @@ const Room: React.FC<RoomProps> = ({
             });
             
             // 마지막 세그먼트 (마지막 기둥 오른쪽)
-            const lastSegmentWidth = Math.max(0, frameEndX - currentX);
+            const lastSegmentWidth = Math.max(0, adjustedFrameEndX - currentX);
             if (lastSegmentWidth > 0) {
               frameSegments.push({
                 width: lastSegmentWidth,
@@ -2347,14 +2375,33 @@ const Room: React.FC<RoomProps> = ({
                 x: number;
               }> = [];
               
-              // 전체 프레임 범위 계산 - frameStartX와 frameEndX를 재계산
-              const frameStartXCalc = frameX - frameWidth / 2;
-              const frameEndXCalc = frameX + frameWidth / 2;
+              // 엔드패널이 있는 경우 프레임 범위 조정
+              let adjustedFrameStartXCalc = frameX - frameWidth / 2;
+              let adjustedFrameEndXCalc = frameX + frameWidth / 2;
+              
+              if (spaceInfo.surroundType === 'no-surround') {
+                // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
+                if (endPanelPositions.left) {
+                  adjustedFrameStartXCalc += mmToThreeUnits(END_PANEL_THICKNESS);
+                }
+                if (endPanelPositions.right) {
+                  adjustedFrameEndXCalc -= mmToThreeUnits(END_PANEL_THICKNESS);
+                }
+                
+                console.log('🔧 하부프레임 분절 엔드패널 조정:', {
+                  원래시작: frameX - frameWidth / 2,
+                  원래끝: frameX + frameWidth / 2,
+                  조정된시작: adjustedFrameStartXCalc,
+                  조정된끝: adjustedFrameEndXCalc,
+                  왼쪽엔드패널: endPanelPositions.left,
+                  오른쪽엔드패널: endPanelPositions.right
+                });
+              }
               
               // 기둥들을 X 위치 기준으로 정렬
               const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
               
-              let currentX = frameStartXCalc;
+              let currentX = adjustedFrameStartXCalc;
               
               // 각 기둥에 대해 분절 계산 (730mm 이상 기둥만 분절)
               sortedColumns.forEach((column, index) => {
@@ -2363,7 +2410,7 @@ const Room: React.FC<RoomProps> = ({
                 const columnRightX = column.position[0] + columnWidthM / 2;
                 
                 // 기둥이 프레임 범위 내에 있고, 깊이가 730mm 이상인 경우만 분절
-                if (columnLeftX < frameEndXCalc && columnRightX > frameStartXCalc && column.depth >= 730) {
+                if (columnLeftX < adjustedFrameEndXCalc && columnRightX > adjustedFrameStartXCalc && column.depth >= 730) {
                   // 기둥 왼쪽 프레임 세그먼트
                   const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
                   if (leftSegmentWidth > 0) {
@@ -2379,7 +2426,7 @@ const Room: React.FC<RoomProps> = ({
               });
               
               // 마지막 세그먼트 (마지막 기둥 오른쪽)
-              const lastSegmentWidth = Math.max(0, frameEndXCalc - currentX);
+              const lastSegmentWidth = Math.max(0, adjustedFrameEndXCalc - currentX);
               if (lastSegmentWidth > 0) {
                 frameSegments.push({
                   width: lastSegmentWidth,
