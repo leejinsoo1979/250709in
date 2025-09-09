@@ -994,6 +994,44 @@ const Configurator: React.FC = () => {
           }
           setLoading(false);
         });
+      } else if (designFileId && !skipLoad) {
+        // designFileId가 있는 경우 디자인 파일 데이터 로드
+        console.log('📂 디자인파일 데이터 로드 시작:', designFileId);
+        
+        import('@/firebase/projects').then(({ getDesignFileById }) => {
+          getDesignFileById(designFileId).then(({ designFile, error }) => {
+            if (designFile && !error) {
+              console.log('✅ 디자인파일 로드 성공:', designFile);
+              
+              // 프로젝트 기본 정보 설정
+              if (designFile.projectData) {
+                setBasicInfo(designFile.projectData);
+                console.log('📝 프로젝트 데이터 설정:', designFile.projectData);
+              }
+              
+              // 공간 설정
+              if (designFile.spaceConfig) {
+                setSpaceInfo(designFile.spaceConfig);
+                console.log('📐 공간 설정 데이터 설정:', designFile.spaceConfig);
+              }
+              
+              // 가구 배치 데이터 설정
+              if (designFile.furniture?.placedModules) {
+                setPlacedModules(designFile.furniture.placedModules);
+                console.log('🪑 가구 배치 데이터 설정:', designFile.furniture.placedModules);
+              }
+              
+              // 디자인파일 이름 설정
+              if (designFile.fileName) {
+                setCurrentDesignFileName(designFile.fileName);
+                console.log('📝 디자인파일명 설정:', designFile.fileName);
+              }
+            } else {
+              console.error('디자인파일 로드 실패:', error);
+            }
+            setLoading(false);
+          });
+        });
       } else {
         // 기존 프로젝트 로드
         loadProject(projectId);
