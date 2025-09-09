@@ -433,6 +433,16 @@ const Configurator: React.FC = () => {
         materialConfig: spaceInfo.materialConfig
       });
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
+      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        position: m.position,
+        zone: m.zone,
+        hasDoor: m.hasDoor,
+        customDepth: m.customDepth,
+        customWidth: m.customWidth
+      })));
       
       // 썸네일 생성
       let thumbnail;
@@ -473,7 +483,14 @@ const Configurator: React.FC = () => {
               name: updatePayload.name,
               spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
               furnitureCount: updatePayload.furniture.placedModules.length,
-              hasThumbnail: !!updatePayload.thumbnail
+              hasThumbnail: !!updatePayload.thumbnail,
+              furnitureDetails: updatePayload.furniture.placedModules.map(m => ({
+                id: m.id,
+                moduleId: m.moduleId,
+                slotIndex: m.slotIndex,
+                zone: m.zone,
+                hasDoor: m.hasDoor
+              }))
             });
             
             const { error } = await updateDesignFile(currentDesignFileId, updatePayload);
@@ -1020,7 +1037,16 @@ const Configurator: React.FC = () => {
               // 가구 배치 데이터 설정
               if (designFile.furniture?.placedModules) {
                 setPlacedModules(designFile.furniture.placedModules);
-                console.log('🪑 가구 배치 데이터 설정:', designFile.furniture.placedModules);
+                console.log('🪑 가구 배치 데이터 설정:', {
+                  count: designFile.furniture.placedModules.length,
+                  modules: designFile.furniture.placedModules.map(m => ({
+                    id: m.id,
+                    moduleId: m.moduleId,
+                    slotIndex: m.slotIndex,
+                    zone: m.zone,
+                    position: m.position
+                  }))
+                });
               }
               
               // 디자인파일 이름 설정
