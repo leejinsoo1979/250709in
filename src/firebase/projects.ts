@@ -682,7 +682,14 @@ export const updateDesignFile = async (
       foundPath,
       hasUpdatedAt: !!updateData.updatedAt,
       keys: Object.keys(updateData),
-      furnitureModulesCount: updateData.furniture?.placedModules?.length || 0
+      furnitureModulesCount: updateData.furniture?.placedModules?.length || 0,
+      furnitureDetails: updateData.furniture?.placedModules?.map((m: any) => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        slotIndex: m.slotIndex,
+        isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
+        isLowerCabinet: m.moduleId?.includes('lower-cabinet')
+      }))
     });
 
     // 찾은 경로에 업데이트

@@ -1675,9 +1675,22 @@ const Room: React.FC<RoomProps> = ({
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
             const normalZone = zoneInfo.normal;
             
-            // mm 단위를 Three.js 단위로 변환
-            const frameStartX = mmToThreeUnits(normalZone.startX);
-            const frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+            // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
+            let frameStartX = mmToThreeUnits(normalZone.startX);
+            let frameEndX = mmToThreeUnits(normalZone.startX + normalZone.width);
+            
+            // 노서라운드 모드에서 세미스탠딩/프리스탠딩은 엔드패널을 제외한 프레임 범위 계산
+            if (spaceInfo.surroundType === 'no-surround' && 
+                (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
+                 spaceInfo.installType === 'freestanding')) {
+              // 엔드패널이 있는 쪽은 프레임 범위에서 제외
+              if (endPanelPositions.left) {
+                frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
+              }
+              if (endPanelPositions.right) {
+                frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+              }
+            }
             
             const frameWidth = frameEndX - frameStartX;
             const frameX = (frameStartX + frameEndX) / 2;

@@ -494,13 +494,19 @@ const Configurator: React.FC = () => {
               spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
               furnitureCount: updatePayload.furniture.placedModules.length,
               hasThumbnail: !!updatePayload.thumbnail,
-              furnitureDetails: updatePayload.furniture.placedModules.map(m => ({
-                id: m.id,
-                moduleId: m.moduleId,
-                slotIndex: m.slotIndex,
-                zone: m.zone,
-                hasDoor: m.hasDoor
-              }))
+              furnitureDetails: updatePayload.furniture.placedModules.map(m => {
+                const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
+                return {
+                  id: m.id,
+                  moduleId: m.moduleId,
+                  category: moduleData?.category || 'unknown',
+                  slotIndex: m.slotIndex,
+                  zone: m.zone,
+                  hasDoor: m.hasDoor,
+                  isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
+                  isLowerCabinet: m.moduleId?.includes('lower-cabinet')
+                };
+              })
             });
             
             const { error } = await updateDesignFile(currentDesignFileId, updatePayload);
