@@ -461,6 +461,7 @@ const Configurator: React.FC = () => {
             
             const updatePayload = {
               name: currentDesignFileName || basicInfo.title,
+              projectData: removeUndefinedValues(basicInfo),
               spaceConfig: removeUndefinedValues(spaceInfo),
               furniture: {
                 placedModules: removeUndefinedValues(placedModules)
@@ -506,6 +507,7 @@ const Configurator: React.FC = () => {
             const { id: designFileId, error } = await createDesignFile({
               name: basicInfo.title || '새 디자인',
               projectId: currentProjectId,
+              projectData: removeUndefinedValues(basicInfo),
               spaceConfig: removeUndefinedValues(spaceInfo),
               furniture: {
                 placedModules: removeUndefinedValues(placedModules)

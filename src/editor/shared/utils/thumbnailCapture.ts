@@ -43,9 +43,16 @@ export const findThreeCanvas = (): HTMLCanvasElement | null => {
   
   for (const canvas of canvases) {
     // Three.js 캔버스인지 확인 (WebGL 컨텍스트 존재 여부로 판단)
-    const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-    if (gl && canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
-      return canvas;
+    try {
+      // WebGL 컨텍스트가 이미 사용 중일 수 있으므로 try-catch로 처리
+      const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true }) || 
+                 canvas.getContext('webgl2', { preserveDrawingBuffer: true });
+      if (gl && canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
+        return canvas;
+      }
+    } catch (e) {
+      // WebGL 컨텍스트를 가져올 수 없으면 해당 캔버스는 건너뜀
+      console.warn('캔버스 WebGL 컨텍스트 접근 실패:', e);
     }
   }
   
@@ -185,28 +192,26 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
   
   // 치수 및 슬롯 가이드 임시 숨기기
   if (uiStore) {
-    const state = uiStore.getState();
-    originalShowDimensions = state.showDimensions;
-    originalShowDimensionsText = state.showDimensionsText;
-    
-    // 썸네일 캡처를 위해 일시적으로 숨기기
-    uiStore.getState().setShowDimensions(false);
-    uiStore.getState().setShowDimensionsText(false);
-    console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
+    try {
+      const state = uiStore.getState();
+      originalShowDimensions = state.showDimensions;
+      originalShowDimensionsText = state.showDimensionsText;
+      
+      // 썸네일 캡처를 위해 일시적으로 숨기기
+      uiStore.getState().setShowDimensions(false);
+      uiStore.getState().setShowDimensionsText(false);
+      console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
+    } catch (e) {
+      console.warn('UI Store 접근 실패:', e);
+    }
   }
   
   try {
-    // 먼저 정면 뷰로 캡처 시도
-    const frontViewThumbnail = await captureFrontViewThumbnail();
-    if (frontViewThumbnail) {
-      return frontViewThumbnail; // 이미 base64 문자열
-    }
-    
-    // 정면 뷰 캡처 실패 시 기존 방식 사용
+    // 먼저 현재 뷰에서 직접 캡처 시도
     const canvas = findThreeCanvas();
     
     if (!canvas) {
-      console.warn('3D 캔버스를 찾을 수 없어 썸네일을 생성할 수 없습니다.');
+      console.warn('3D 캔버스를 찾을 수 없어 기본 썸네일을 생성합니다.');
       return null;
     }
     
@@ -222,29 +227,36 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
     });
     
     // 렌더링이 완료될 시간을 주기 위해 잠시 대기
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     // 여러 번 시도하여 가장 좋은 결과 선택
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const thumbnail = captureCanvasThumbnail(canvas, {
-          width: 300,
-          height: 200,
-          quality: 0.7
+          width: 400,
+          height: 300,
+          quality: 0.9
         });
         
         if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
-          console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도)`);
+          console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도), 크기: ${(thumbnail.length / 1024).toFixed(2)}KB`);
           return thumbnail; // base64 문자열 반환
         }
         
-        // 실패 시 100ms 대기 후 재시도
+        // 실패 시 200ms 대기 후 재시도
         if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       } catch (error) {
         console.warn(`썸네일 캡처 시도 ${attempt} 실패:`, error);
       }
+    }
+    
+    // 모든 시도가 실패한 경우 정면 뷰로 전환하여 캡처 시도
+    console.log('📸 현재 뷰 캡처 실패, 정면 뷰로 전환하여 재시도...');
+    const frontViewThumbnail = await captureFrontViewThumbnail();
+    if (frontViewThumbnail) {
+      return frontViewThumbnail;
     }
     
     console.warn('모든 썸네일 캡처 시도 실패');
@@ -252,9 +264,13 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
   } finally {
     // 원래 상태로 복원
     if (uiStore) {
-      uiStore.getState().setShowDimensions(originalShowDimensions);
-      uiStore.getState().setShowDimensionsText(originalShowDimensionsText);
-      console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
+      try {
+        uiStore.getState().setShowDimensions(originalShowDimensions);
+        uiStore.getState().setShowDimensionsText(originalShowDimensionsText);
+        console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
+      } catch (e) {
+        console.warn('UI Store 복원 실패:', e);
+      }
     }
   }
 };
