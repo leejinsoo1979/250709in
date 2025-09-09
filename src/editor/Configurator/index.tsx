@@ -11,6 +11,7 @@ import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shar
 import { useAuth } from '@/auth/AuthProvider';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // 새로운 컴포넌트들 import
@@ -391,14 +392,19 @@ const Configurator: React.FC = () => {
     }
     
     if (Array.isArray(obj)) {
-      return obj.map(removeUndefinedValues);
+      // 배열의 각 요소를 재귀적으로 처리하되, null이 아닌 요소만 유지
+      return obj.map(removeUndefinedValues).filter(item => item !== null);
     }
     
     if (typeof obj === 'object') {
       const result: any = {};
       for (const [key, value] of Object.entries(obj)) {
         if (value !== undefined) {
-          result[key] = removeUndefinedValues(value);
+          const cleanedValue = removeUndefinedValues(value);
+          // null이 아닌 값만 포함
+          if (cleanedValue !== null) {
+            result[key] = cleanedValue;
+          }
         }
       }
       return result;
@@ -433,16 +439,20 @@ const Configurator: React.FC = () => {
         materialConfig: spaceInfo.materialConfig
       });
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
-      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => ({
-        id: m.id,
-        moduleId: m.moduleId,
-        slotIndex: m.slotIndex,
-        position: m.position,
-        zone: m.zone,
-        hasDoor: m.hasDoor,
-        customDepth: m.customDepth,
-        customWidth: m.customWidth
-      })));
+      console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
+        const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
+        return {
+          id: m.id,
+          moduleId: m.moduleId,
+          category: moduleData?.category || 'unknown',
+          slotIndex: m.slotIndex,
+          position: m.position,
+          zone: m.zone,
+          hasDoor: m.hasDoor,
+          customDepth: m.customDepth,
+          customWidth: m.customWidth
+        };
+      }));
       
       // 썸네일 생성
       let thumbnail;
