@@ -1334,14 +1334,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     z: adjustedPosition.z
   }), [adjustedPosition.x, adjustedPosition.y, adjustedPosition.z]);
   
-  // 계산된 값들을 상태로 업데이트
+  // 계산된 값들을 상태로 업데이트 - 값이 실제로 변경될 때만 업데이트
   React.useEffect(() => {
-    setCalculatedValues({
-      isColumnCFront,
-      slotInfoColumn: slotInfo?.column,
-      indexingColumnWidth: indexing.columnWidth,
-      adjustedPosition: memoizedAdjustedPosition,
-      actualModuleData
+    setCalculatedValues(prev => {
+      // 값이 실제로 변경되었는지 확인
+      const hasChanged = 
+        prev.isColumnCFront !== isColumnCFront ||
+        prev.slotInfoColumn !== slotInfo?.column ||
+        prev.indexingColumnWidth !== indexing.columnWidth ||
+        prev.adjustedPosition?.x !== memoizedAdjustedPosition.x ||
+        prev.adjustedPosition?.y !== memoizedAdjustedPosition.y ||
+        prev.adjustedPosition?.z !== memoizedAdjustedPosition.z ||
+        prev.actualModuleData?.id !== actualModuleData?.id;
+      
+      if (!hasChanged) {
+        return prev; // 변경 없으면 이전 값 유지 (리렌더링 방지)
+      }
+      
+      return {
+        isColumnCFront,
+        slotInfoColumn: slotInfo?.column,
+        indexingColumnWidth: indexing.columnWidth,
+        adjustedPosition: memoizedAdjustedPosition,
+        actualModuleData
+      };
     });
   }, [isColumnCFront, slotInfo?.column, indexing.columnWidth, memoizedAdjustedPosition, actualModuleData]);
 
