@@ -75,14 +75,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
-    
-    
+
     set((state) => {
       // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
         
-        console.trace('중복 addModule 호출 스택:');
         return state; // 변경 없음
       }
       
@@ -115,9 +113,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           }
         });
       }
-      
-      
-      
+
       if (existingModulesInSlot.length > 0) {
         // 상부장과 하부장이 공존할 수 있는지 체크
         let modulesToReplace: typeof state.placedModules = [];
@@ -141,8 +137,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         // 교체가 필요한 경우
         if (modulesToReplace.length > 0) {
-          
-          
+
           // 교체될 가구들의 ID 목록
           const replaceIds = modulesToReplace.map(m => m.id);
           
@@ -160,9 +155,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           placedModules: [...state.placedModules, module]
         };
       }
-      
-      
-      
+
       return {
         placedModules: [...state.placedModules, module]
       };
@@ -190,8 +183,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
     const currentModule = get().placedModules.find(m => m.id === id);
-    
-    
+
     set((state) => {
       const beforeCount = state.placedModules.length;
       
@@ -211,9 +203,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const targetCategory = targetModuleData?.category;
           const isTargetUpper = targetCategory === 'upper';
           const isTargetLower = targetCategory === 'lower';
-          
-          
-          
+
           // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
           const isDual = moduleIdToCheck.includes('dual-');
           const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
@@ -239,12 +229,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               }
             });
           }
-          
-          
-          
+
           if (existingModulesInSlot.length > 0) {
-            
-            
+
             // 상부장-하부장 공존 가능 여부를 체크
             let modulesToReplace: typeof state.placedModules = [];
             
@@ -253,15 +240,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
               const existingCategory = existingModuleData?.category;
               const existingIsDual = existing.moduleId.includes('dual-');
-              
-              
-              
+
               // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
               const canCoexist = (isTargetUpper && existingCategory === 'lower') || 
                                 (isTargetLower && existingCategory === 'upper');
-              
-              
-              
+
               if (canCoexist) {
                 
                 // 공존 가능하므로 modulesToReplace에 추가하지 않음
@@ -274,8 +257,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             
             // 모든 기존 가구와 공존 가능하면 그냥 업데이트
             if (modulesToReplace.length === 0) {
-              
-              
+
               const newModules = state.placedModules.map(module => 
                 module.id === id 
                   ? { ...module, ...updates } 
@@ -289,8 +271,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             
             // 교체가 필요한 경우
             if (modulesToReplace.length > 0) {
-              
-              
+
               // 교체될 가구들의 ID 목록
               const replaceIds = modulesToReplace.map(m => m.id);
               
@@ -315,9 +296,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           ? { ...module, ...updates } 
           : module
       );
-      
-      
-      
+
       return {
         placedModules: newModules
       };
@@ -388,16 +367,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {
-    
-    
+
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({
         ...module,
         hasDoor
       }));
-      
-      
-      
+
       return {
         placedModules: updatedModules
       };
@@ -407,11 +383,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 기둥 변경 시 가구 adjustedWidth 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => {
     set((state) => {
-      
-      
+
       const columnSlots = analyzeColumnSlots(spaceInfo);
-      
-      
+
       const updatedModules = state.placedModules.map(module => {
         if (module.slotIndex === undefined) return module;
         
@@ -425,9 +399,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
         
         const slotInfo = columnSlots[globalSlotIndex];
-        
-        
-        
+
         // 기둥이 있는 슬롯인 경우 adjustedWidth 설정
         if (slotInfo?.hasColumn) {
           const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
@@ -439,8 +411,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         } else {
           // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
           if (module.adjustedWidth !== undefined) {
-            
-            
+
             // 원래 슬롯 중심 위치로 복원
             const indexing = calculateSpaceIndexing(spaceInfo);
             let originalX = module.position.x;
@@ -480,9 +451,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           };
         }
       });
-      
-      
-      
+
       return {
         placedModules: updatedModules
       };
