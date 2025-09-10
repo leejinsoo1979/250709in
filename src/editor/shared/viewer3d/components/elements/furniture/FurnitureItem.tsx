@@ -1373,6 +1373,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return <group />;
   }
 
+  // 듀얼 가구의 슬롯 너비 계산 (useMemo로 최적화)
+  const calculatedSlotWidths = React.useMemo(() => {
+    // 듀얼 가구인 경우 개별 슬롯 너비 전달
+    // 단, 엔드패널 조정이 필요한 경우는 slotWidths를 전달하지 않음 (adjustedWidth 사용하도록)
+    if (isDualFurniture && !needsEndPanelAdjustment) {
+      if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
+          return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
+        }
+      } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
+        return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
+      }
+    }
+    return undefined;
+  }, [isDualFurniture, needsEndPanelAdjustment, placedModule.zone, placedModule.slotIndex, 
+      spaceInfo.droppedCeiling?.enabled, spaceInfo.customColumnCount, indexing.slotWidths]);
+
   return (
     <group userData={{ furnitureId: placedModule.id }}>
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
@@ -1431,22 +1450,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
-              slotWidths={(() => {
-                // 듀얼 가구인 경우 개별 슬롯 너비 전달
-                // 단, 엔드패널 조정이 필요한 경우는 slotWidths를 전달하지 않음 (adjustedWidth 사용하도록)
-                if (isDualFurniture && !needsEndPanelAdjustment) {
-                  if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
-                    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                    const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-                    if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-                      return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
-                    }
-                  } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
-                    return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
-                  }
-                }
-                return undefined;
-              })()}
+              slotWidths={calculatedSlotWidths}
             />
             
             {/* 가구 너비 디버깅 */}
