@@ -149,11 +149,7 @@ const checkAdjacentUpperLowerToFull = (
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   })();
 
-  // 듀얼 가구일 때만 디버그 로그
-  if (isCurrentDual) {
-    )
-    });
-  }
+  // 듀얼 가구 디버그 로그 제거 완료
 
   return result;
 };
