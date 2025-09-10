@@ -945,6 +945,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let doorWidthExpansion = 0;
   let doorWidth = actualModuleData?.dimensions.width || 0;
   let doorXOffset = 0;
+  let originalSlotWidthForDoor = originalSlotWidthMm;
   
   // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
   // hasLeftWall과 hasRightWall은 이미 위에서 선언됨 (809-810줄)
