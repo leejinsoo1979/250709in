@@ -943,6 +943,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
   let doorWidthExpansion = 0;
+  let doorWidth = actualModuleData?.dimensions.width || 0;
   let doorXOffset = 0;
   
   // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
