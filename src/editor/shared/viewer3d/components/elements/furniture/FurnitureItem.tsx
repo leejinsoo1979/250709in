@@ -59,9 +59,6 @@ const checkAdjacentUpperLowerToFull = (
   
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
   
-    }))
-  });
-  
   // 왼쪽: 싱글 가구는 -1, 듀얼 가구는 시작 슬롯이 -2 위치에 있어야 함
   let leftAdjacentModule = allModules.find(m => {
     // 왼쪽에 있는 가구가 듀얼인 경우 처리
@@ -868,19 +865,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
   }
 
-  // 디버깅용 로그 추가
-   => {
-      if (placedModule.customWidth) {
-        return `customWidth 사용 (${placedModule.customWidth}mm)`;
-      } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-        return `slotWidths 사용 (${indexing.slotWidths[placedModule.slotIndex]}mm)`;
-      } else if (placedModule.adjustedWidth) {
-        return `adjustedWidth 사용 (${placedModule.adjustedWidth}mm)`;
-      } else {
-        return `기본 모듈 너비 사용 (${actualModuleData.dimensions.width}mm)`;
-      }
-    })()
-  });
+  // 디버깅용 로그 제거 완료
 
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
   // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상부프레임 하단까지
@@ -1546,39 +1531,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 return undefined;
               })()}
             />
-            
-            {/* 가구 너비 디버깅 */}
-            {(() => {
-              const slotWidthMm = (() => {
-                if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && indexing.zones) {
-                  const targetZone = placedModule.zone === 'dropped' && indexing.zones.dropped ? indexing.zones.dropped : indexing.zones.normal;
-                  return targetZone.slotWidths?.[placedModule.slotIndex] || targetZone.columnWidth;
-                }
-                return indexing.slotWidths?.[placedModule.slotIndex] || indexing.columnWidth;
-              })();
-              
-              const expectedThreeUnits = mmToThreeUnits(slotWidthMm);
-              const actualThreeUnits = mmToThreeUnits(furnitureWidthMm);
-              
-              ,
-                '가구너비_three': actualThreeUnits.toFixed(4),
-                '차이_three': (expectedThreeUnits - actualThreeUnits).toFixed(4),
-                customWidth: placedModule.customWidth,
-                adjustedWidth: placedModule.adjustedWidth,
-                계산방법: (() => {
-                  if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-                    return 'slotWidths 배열 사용';
-                  } else if (placedModule.customWidth) {
-                    return 'customWidth 사용';
-                  } else if (placedModule.adjustedWidth) {
-                    return 'adjustedWidth 사용';
-                  } else {
-                    return '기본 모듈 너비 사용';
-                  }
-                })()
-              });
-              return null;
-            })()}
           </>
         ) : (
           // 기본 가구 (단순 Box) 렌더링
