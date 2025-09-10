@@ -306,17 +306,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   if (moduleData.id.includes('dual-2drawer-styler')) {
-    console.log('🔍 BoxModule: 스타일러장 렌더링 시작', {
-      moduleId: moduleData.id,
-      showFurniture,
-      isDragging,
-      isEditMode,
-      spaceInfo: {
-        hasSpaceInfo: !!spaceInfo,
-        placementType: spaceInfo?.baseConfig?.placementType,
-        floatHeight: spaceInfo?.baseConfig?.floatHeight
-      }
-    });
+    
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -353,17 +343,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   if (moduleData.id.includes('dual-4drawer-pantshanger')) {
-    console.log('🔍 BoxModule: 바지걸이장 렌더링 시작', {
-      moduleId: moduleData.id,
-      showFurniture,
-      isDragging,
-      isEditMode,
-      spaceInfo: {
-        hasSpaceInfo: !!spaceInfo,
-        placementType: spaceInfo?.baseConfig?.placementType,
-        floatHeight: spaceInfo?.baseConfig?.floatHeight
-      }
-    });
+    
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -494,14 +474,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {(() => {
-        console.log('🚪 BoxModule 도어 체크:', {
-          moduleId: moduleData.id,
-          hasDoor,
-          spaceInfo: !!spaceInfo,
-          showFurniture,
-          viewMode: useSpace3DView().viewMode,
-          willRenderDoor: hasDoor && spaceInfo
-        });
+        
         
         // 2D 모드에서 showFurniture가 false여도 도어는 렌더링
         if (hasDoor && spaceInfo) {

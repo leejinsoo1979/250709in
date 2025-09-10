@@ -67,14 +67,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
   
-  console.log('🏗️ 하부장 띄움 배치 조정:', {
-    isFloating,
-    floatHeight,
-    originalHeight: baseFurniture.height,
-    adjustedHeight,
-    cabinetYPosition,
-    furnitureBottomY
-  });
+  
 
   return (
     <>

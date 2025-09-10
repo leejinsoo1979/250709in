@@ -75,27 +75,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 추가 함수 (기존 Context 로직과 동일)
   addModule: (module: PlacedModule) => {
-    console.log('🟢 addModule 호출:', {
-      id: module.id,
-      position: {
-        x: module.position.x.toFixed(3),
-        y: module.position.y.toFixed(3),
-        z: module.position.z.toFixed(3)
-      },
-      customDepth: module.customDepth,
-      customWidth: module.customWidth,
-      adjustedWidth: module.adjustedWidth,
-      slotIndex: module.slotIndex,
-      zone: module.zone,
-      isSplit: module.isSplit,
-      spaceType: module.columnSlotInfo?.spaceType
-    });
+    
     
     set((state) => {
       // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
-        console.warn('⚠️ 이미 존재하는 가구 ID:', module.id);
+        
         console.trace('중복 addModule 호출 스택:');
         return state; // 변경 없음
       }
@@ -130,18 +116,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         });
       }
       
-      console.log('🔍 듀얼 가구 슬롯 체크:', {
-        새가구ID: module.id,
-        isDual,
-        occupiedSlots,
-        기존가구수: existingModulesInSlot.length,
-        기존가구들: existingModulesInSlot.map(m => ({
-          id: m.id,
-          moduleId: m.moduleId,
-          slot: m.slotIndex,
-          isDual: m.moduleId.includes('dual-')
-        }))
-      });
+      
       
       if (existingModulesInSlot.length > 0) {
         // 상부장과 하부장이 공존할 수 있는지 체크
@@ -156,28 +131,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           if ((newCategory === 'upper' && existingCategory === 'lower') ||
               (newCategory === 'lower' && existingCategory === 'upper')) {
             // 공존 가능 - 계속 진행
-            console.log('✅ 상부장과 하부장 공존 가능:', {
-              새가구: { id: module.id, category: newCategory, isDual },
-              기존가구: { id: existing.id, category: existingCategory, isDual: existing.moduleId.includes('dual-') }
-            });
+            
           } else {
             // 같은 카테고리거나 full 타입이면 교체 필요
             modulesToReplace.push(existing);
-            console.log('⚠️ 교체 필요:', {
-              새가구: { id: module.id, category: newCategory, isDual },
-              기존가구: { id: existing.id, category: existingCategory, isDual: existing.moduleId.includes('dual-') }
-            });
+            
           }
         }
         
         // 교체가 필요한 경우
         if (modulesToReplace.length > 0) {
-          console.warn('⚠️ 기존 가구 교체:', {
-            슬롯들: occupiedSlots,
-            zone: module.zone,
-            교체될가구들: modulesToReplace.map(m => m.id),
-            새가구: module.id
-          });
+          
           
           // 교체될 가구들의 ID 목록
           const replaceIds = modulesToReplace.map(m => m.id);
@@ -191,20 +155,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
         
         // 모든 기존 가구와 공존 가능하면 추가
-        console.log('✅ 가구 공존 추가');
+        
         return {
           placedModules: [...state.placedModules, module]
         };
       }
       
-      console.log('✅ 가구 추가 완료:', {
-        id: module.id,
-        슬롯: module.slotIndex,
-        zone: module.zone,
-        듀얼여부: isDual,
-        차지하는슬롯: occupiedSlots,
-        전체가구수: state.placedModules.length + 1
-      });
+      
       
       return {
         placedModules: [...state.placedModules, module]
@@ -233,22 +190,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
     const currentModule = get().placedModules.find(m => m.id === id);
-    console.log('📦 updatePlacedModule 호출:', {
-      id,
-      현재모듈: currentModule ? {
-        moduleId: currentModule.moduleId,
-        슬롯: currentModule.slotIndex,
-        zone: currentModule.zone
-      } : null,
-      업데이트: {
-        ...updates,
-        position: updates.position,
-        슬롯변경: updates.slotIndex,
-        zone변경: updates.zone,
-      },
-      현재가구수: get().placedModules.length,
-      현재가구IDs: get().placedModules.map(m => ({ id: m.id, slot: m.slotIndex, zone: m.zone }))
-    });
+    
     
     set((state) => {
       const beforeCount = state.placedModules.length;
@@ -270,14 +212,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const isTargetUpper = targetCategory === 'upper';
           const isTargetLower = targetCategory === 'lower';
           
-          console.log('🎯 [DEBUG] 이동 가구 카테고리 확인:', {
-            id,
-            moduleId: moduleIdToCheck,
-            category: targetCategory,
-            isUpper: isTargetUpper,
-            isLower: isTargetLower,
-            targetModuleData: targetModuleData ? '존재' : '없음'
-          });
+          
           
           // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
           const isDual = moduleIdToCheck.includes('dual-');
@@ -305,35 +240,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             });
           }
           
-          console.log('🔍 updatePlacedModule - 슬롯 체크:', {
-            이동가구ID: id,
-            isDual,
-            목표슬롯들: occupiedSlots,
-            목표zone: newZone,
-            현재전체가구: state.placedModules.map(m => ({
-              id: m.id,
-              slot: m.slotIndex,
-              zone: m.zone,
-              isDual: m.moduleId.includes('dual-')
-            })),
-            자기자신제외후: existingModulesInSlot.map(m => ({
-              id: m.id,
-              slot: m.slotIndex,
-              zone: m.zone,
-              isDual: m.moduleId.includes('dual-')
-            }))
-          });
+          
           
           if (existingModulesInSlot.length > 0) {
-            console.log('🔍 슬롯 이동 - 같은 슬롯에 이미 가구가 존재:', {
-              슬롯: newSlotIndex,
-              기존가구: existingModulesInSlot.map(m => ({ 
-                id: m.id, 
-                zone: m.zone,
-                category: getModuleById(m.moduleId, internalSpace, spaceInfo)?.category 
-              })),
-              이동가구: { id, zone: newZone, category: targetCategory }
-            });
+            
             
             // 상부장-하부장 공존 가능 여부를 체크
             let modulesToReplace: typeof state.placedModules = [];
@@ -344,59 +254,27 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               const existingCategory = existingModuleData?.category;
               const existingIsDual = existing.moduleId.includes('dual-');
               
-              console.log('🔍 [DEBUG] 공존 체크 시작:', {
-                이동가구: { 
-                  id, 
-                  moduleId: updates.moduleId || targetModule.moduleId,
-                  category: targetCategory, 
-                  isDual,
-                  isUpper: isTargetUpper,
-                  isLower: isTargetLower
-                },
-                기존가구: { 
-                  id: existing.id, 
-                  moduleId: existing.moduleId,
-                  category: existingCategory, 
-                  isDual: existingIsDual,
-                  isUpper: existingCategory === 'upper',
-                  isLower: existingCategory === 'lower'
-                }
-              });
+              
               
               // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
               const canCoexist = (isTargetUpper && existingCategory === 'lower') || 
                                 (isTargetLower && existingCategory === 'upper');
               
-              console.log('🔍 [DEBUG] 공존 가능 여부:', {
-                canCoexist,
-                조건1: `이동이상부장(${isTargetUpper}) && 기존이하부장(${existingCategory === 'lower'}) = ${isTargetUpper && existingCategory === 'lower'}`,
-                조건2: `이동이하부장(${isTargetLower}) && 기존이상부장(${existingCategory === 'upper'}) = ${isTargetLower && existingCategory === 'upper'}`
-              });
+              
               
               if (canCoexist) {
-                console.log('✅ 상부장-하부장 공존 가능 (updatePlacedModule) - 유지:', {
-                  기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
-                  이동: { id, category: targetCategory, isDual }
-                });
+                
                 // 공존 가능하므로 modulesToReplace에 추가하지 않음
               } else {
                 // 같은 카테고리거나 full 카테고리면 교체 필요
                 modulesToReplace.push(existing);
-                console.log('❌ 교체 필요 (updatePlacedModule) - 제거 예정:', {
-                  기존: { id: existing.id, category: existingCategory, isDual: existingIsDual },
-                  이동: { id, category: targetCategory, isDual },
-                  이유: `같은카테고리(${targetCategory === existingCategory}) 또는 full포함`
-                });
+                
               }
             }
             
             // 모든 기존 가구와 공존 가능하면 그냥 업데이트
             if (modulesToReplace.length === 0) {
-              console.log('✅ 상부장과 하부장 공존 - 위치 업데이트:', {
-                슬롯: newSlotIndex,
-                이동가구: { id, category: targetCategory, zone: newZone },
-                기존가구유지: existingModulesInSlot.map(m => m.id)
-              });
+              
               
               const newModules = state.placedModules.map(module => 
                 module.id === id 
@@ -411,11 +289,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             
             // 교체가 필요한 경우
             if (modulesToReplace.length > 0) {
-              console.warn('⚠️ 기존 가구 제거 후 이동:', {
-                제거가구들: modulesToReplace.map(m => m.id),
-                이동가구: id,
-                슬롯들: occupiedSlots
-              });
+              
               
               // 교체될 가구들의 ID 목록
               const replaceIds = modulesToReplace.map(m => m.id);
@@ -442,12 +316,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           : module
       );
       
-      console.log('📦 updatePlacedModule 완료:', {
-        이전가구수: beforeCount,
-        이후가구수: newModules.length,
-        변경된가구: id,
-        가구목록변경: beforeCount !== newModules.length
-      });
+      
       
       return {
         placedModules: newModules
@@ -519,11 +388,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {
-    console.log('🚪 setAllDoors 호출:', {
-      hasDoor,
-      currentModulesCount: get().placedModules.length,
-      currentModules: get().placedModules.map(m => ({ id: m.id, hasDoor: m.hasDoor }))
-    });
+    
     
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({
@@ -531,10 +396,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         hasDoor
       }));
       
-      console.log('🚪 setAllDoors 완료:', {
-        updatedModulesCount: updatedModules.length,
-        updatedModules: updatedModules.map(m => ({ id: m.id, hasDoor: m.hasDoor }))
-      });
+      
       
       return {
         placedModules: updatedModules
@@ -545,14 +407,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 기둥 변경 시 가구 adjustedWidth 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => {
     set((state) => {
-      console.log('🔧 updateFurnitureForColumns 호출:', {
-        surroundType: spaceInfo.surroundType,
-        columnCount: spaceInfo.columns?.length || 0,
-        columns: spaceInfo.columns?.map(c => ({ id: c.id, position: c.position, depth: c.depth }))
-      });
+      
       
       const columnSlots = analyzeColumnSlots(spaceInfo);
-      console.log('🔧 analyzeColumnSlots 결과:', columnSlots);
+      
       
       const updatedModules = state.placedModules.map(module => {
         if (module.slotIndex === undefined) return module;
@@ -568,17 +426,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         const slotInfo = columnSlots[globalSlotIndex];
         
-        console.log(`🔧 가구 ${module.id} (슬롯 ${module.slotIndex} → ${globalSlotIndex}):`, {
-          hasColumn: slotInfo?.hasColumn,
-          availableWidth: slotInfo?.availableWidth,
-          adjustedWidth: slotInfo?.adjustedWidth,
-          intrusionDirection: slotInfo?.intrusionDirection
-        });
+        
         
         // 기둥이 있는 슬롯인 경우 adjustedWidth 설정
         if (slotInfo?.hasColumn) {
           const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
-          console.log(`✅ 가구 ${module.id} adjustedWidth 설정: ${newAdjustedWidth}mm`);
+          
           return {
             ...module,
             adjustedWidth: newAdjustedWidth
@@ -586,7 +439,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         } else {
           // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
           if (module.adjustedWidth !== undefined) {
-            console.log(`❌ 가구 ${module.id} adjustedWidth 제거 및 위치 복원`);
+            
             
             // 원래 슬롯 중심 위치로 복원
             const indexing = calculateSpaceIndexing(spaceInfo);
@@ -628,14 +481,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       });
       
-      console.log('🔧 기둥 변경에 따른 가구 업데이트 완료:', {
-        columnCount: spaceInfo.columns?.length || 0,
-        updatedFurniture: updatedModules.filter(m => m.adjustedWidth !== undefined).map(m => ({
-          id: m.id,
-          slotIndex: m.slotIndex,
-          adjustedWidth: m.adjustedWidth
-        }))
-      });
+      
       
       return {
         placedModules: updatedModules

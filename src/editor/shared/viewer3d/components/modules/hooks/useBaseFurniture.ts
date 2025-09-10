@@ -105,23 +105,11 @@ export const useBaseFurniture = (
   // adjustedWidth가 있으면 최우선 사용 (엔드패널이나 기둥 침범 시 조정된 너비)
   if (adjustedWidth !== undefined && adjustedWidth !== null) {
     actualWidthMm = adjustedWidth;
-    console.log('🔧 조정된 너비 사용 (엔드패널/기둥):', {
-      moduleId: moduleData.id,
-      isDualFurniture,
-      originalModuleWidth: moduleData.dimensions.width,
-      adjustedWidth: adjustedWidth + 'mm',
-      reduction: moduleData.dimensions.width - adjustedWidth,
-      slotWidths: slotWidths ? slotWidths.map(w => w + 'mm') : 'undefined',
-      설명: '엔드패널이나 기둥 침범으로 인한 너비 조정'
-    });
+    
   } else if (isDualFurniture && slotWidths && slotWidths.length >= 2) {
     // 듀얼 가구이고 slotWidths가 제공된 경우: 두 슬롯 너비 합산
     actualWidthMm = slotWidths[0] + slotWidths[1];
-    console.log('🔧 듀얼 가구 너비 계산 (slotWidths 합산):', {
-      slot1: slotWidths[0],
-      slot2: slotWidths[1],
-      total: actualWidthMm
-    });
+    
   } else {
     // 기본값: 원래 모듈 너비 사용
     actualWidthMm = moduleData.dimensions.width;
@@ -132,20 +120,7 @@ export const useBaseFurniture = (
   const actualDepthMm = customDepth || moduleData.dimensions.depth;
   const depth = mmToThreeUnits(actualDepthMm);
   
-  console.log('🔧 useBaseFurniture 폭 결정:', {
-    moduleId: moduleData.id,
-    isDualFurniture,
-    originalWidth: moduleData.dimensions.width + 'mm',
-    adjustedWidth: adjustedWidth ? adjustedWidth + 'mm' : 'undefined',
-    slotWidths: slotWidths ? slotWidths.map(w => w + 'mm').join(' + ') : 'undefined',
-    actualWidthMm: actualWidthMm + 'mm',
-    finalWidth: width.toFixed(3) + ' (Three.js units)',
-    logic: isDualFurniture && slotWidths ? 'slotWidths 합산' : 
-           (adjustedWidth !== undefined ? '조정된 폭 사용' : '원래 폭 사용'),
-    isDragging,
-    isEditMode,
-    호출스택: new Error().stack?.split('\n').slice(1, 4).join(' → ')
-  });
+  
   
   // 내경 치수 계산
   const innerWidth = width - basicThickness * 2;
@@ -190,7 +165,7 @@ export const useBaseFurniture = (
       emissive: new THREE.Color(0x000000),
     });
     
-    console.log('🎨 useBaseFurniture 재질 생성 (한 번만)');
+    
     
     return mat;
   }, []); // 의존성 배열 비움 - 한 번만 생성
@@ -221,17 +196,7 @@ export const useBaseFurniture = (
                         (isEditMode ? 0.3 : 1.0));
       material.needsUpdate = true;
       
-      console.log('🎨 재질 속성 업데이트:', {
-        furnitureColor: (isDragging || isEditMode) ? getThemeColor() : furnitureColor,
-        actualColor: material.color.getHexString(),
-        transparent: material.transparent,
-        opacity: material.opacity,
-        hasMap: !!material.map,
-        isDragging,
-        isEditMode,
-        emissive: material.emissive.getHexString(),
-        emissiveIntensity: material.emissiveIntensity
-      });
+      
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
@@ -248,25 +213,14 @@ export const useBaseFurniture = (
     
     const textureUrl = materialConfig.interiorTexture;
     
-    console.log('🎨 useBaseFurniture 텍스처 적용 시작:', {
-      textureUrl,
-      hasMaterial: !!material,
-      furnitureColor,
-      isDragging,
-      materialConfig,
-      isCabinetTexture1: textureUrl ? isCabinetTexture1(textureUrl) : false
-    });
+    
     
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(textureUrl)) {
-        console.log('🎨 Cabinet Texture1 즉시 어둡게 적용 중...');
+        
         applyCabinetTexture1Settings(material);
-        console.log('✅ Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용):', {
-          color: material.color.getHexString(),
-          toneMapped: material.toneMapped,
-          roughness: material.roughness
-        });
+        
         
         // 강제로 씬 업데이트
         material.needsUpdate = true;
@@ -274,11 +228,7 @@ export const useBaseFurniture = (
       
       const textureLoader = new THREE.TextureLoader();
       const fullUrl = textureUrl.startsWith('http') ? textureUrl : `${window.location.origin}${textureUrl}`;
-      console.log('🔄 텍스처 로딩 시작:', {
-        원본URL: textureUrl,
-        전체URL: fullUrl,
-        현재위치: window.location.href
-      });
+      
       
       textureLoader.load(
         textureUrl, 
@@ -289,11 +239,7 @@ export const useBaseFurniture = (
             return;
           }
           
-          console.log('✅ 텍스처 로딩 성공:', {
-            url: textureUrl,
-            image: texture.image,
-            size: texture.image ? `${texture.image.width}x${texture.image.height}` : 'unknown'
-          });
+          
           
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
@@ -312,22 +258,16 @@ export const useBaseFurniture = (
           // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
           requestAnimationFrame(() => {
             material.needsUpdate = true;
-            console.log('🔄 서랍/선반 텍스처 강제 업데이트 완료:', {
-              hasMap: !!material.map,
-              mapImage: material.map?.image?.src,
-              color: material.color.getHexString(),
-              toneMapped: material.toneMapped,
-              roughness: material.roughness
-            });
+            
           });
         },
         undefined,
         (error) => {
-          console.error('❌ 텍스처 로딩 실패:', textureUrl, error);
+          
         }
       );
     } else if (material) {
-      console.log('🧹 텍스처 제거, 색상만 사용');
+      
       // 텍스처가 없으면 맵 제거하고 기본 색상으로 복원
       if (material.map) {
         material.map.dispose(); // 기존 텍스처 메모리 해제

@@ -34,15 +34,7 @@ export const getModulesByCategory = (
   internalSpace: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
-  console.log('🚨 [getModulesByCategory] Called with:', {
-    category,
-    internalSpace,
-    spaceInfo: spaceInfo ? {
-      width: spaceInfo.width,
-      customColumnCount: spaceInfo.customColumnCount,
-      columnMode: spaceInfo.columnMode
-    } : null
-  });
+  
   
   const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
   const staticModules = STATIC_MODULES;
@@ -50,16 +42,7 @@ export const getModulesByCategory = (
   const allModules = [...dynamicModules, ...staticModules];
   const filteredModules = allModules.filter(module => module.category === category);
   
-  console.log('📦 [getModulesByCategory] 모듈 필터링 결과:', {
-    category,
-    allModulesCount: allModules.length,
-    filteredCount: filteredModules.length,
-    upperModules: allModules.filter(m => m.category === 'upper').map(m => ({ id: m.id, name: m.name, category: m.category })),
-    lowerModules: allModules.filter(m => m.category === 'lower').map(m => ({ id: m.id, name: m.name, category: m.category })),
-    allCategories: [...new Set(allModules.map(m => m.category))],
-    dynamicModulesCount: dynamicModules.length,
-    staticModulesCount: staticModules.length
-  });
+  
   
   return filteredModules;
 };
@@ -74,12 +57,7 @@ export const getModuleById = (
   const widthMatch = id.match(/-(\d+)$/);
   const requestedWidth = widthMatch ? parseInt(widthMatch[1]) : null;
   
-  console.log('🔍 [getModuleById] 모듈 검색:', {
-    id,
-    baseType,
-    requestedWidth,
-    hasInternalSpace: !!internalSpace
-  });
+  
   
   // ID로 직접 찾기
   if (internalSpace) {
@@ -111,40 +89,19 @@ export const getModuleById = (
         ...modifiedSpaceInfo,
         zone: (spaceInfo as any).zone
       };
-      console.log('🔧 [getModuleById] Zone 정보 유지:', {
-        zone: (spaceInfo as any).zone,
-        modifiedSpaceInfo: {
-          zone: (modifiedSpaceInfo as any).zone,
-          droppedCeilingEnabled: modifiedSpaceInfo.droppedCeiling?.enabled
-        }
-      });
+      
     }
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     
-    console.log('🔍 [getModuleById] 생성된 모듈 확인:', {
-      searchingId: id,
-      generatedCount: dynamicModules.length,
-      generatedIds: dynamicModules.map(m => m.id),
-      upperModules: dynamicModules.filter(m => m.category === 'upper').map(m => m.id),
-      lowerModules: dynamicModules.filter(m => m.category === 'lower').map(m => m.id),
-      zone: (modifiedSpaceInfo as any).zone,
-      internalSpaceHeight: internalSpace.height
-    });
+    
     
     const found = dynamicModules.find(module => module.id === id);
     if (found) {
-      console.log('✅ [getModuleById] 모듈 찾음:', {
-        id: found.id,
-        category: found.category, // category 추가
-        width: found.dimensions.width
-      });
+      
       return found;
     } else {
-      console.warn('⚠️ [getModuleById] 모듈을 찾을 수 없음:', {
-        searchingId: id,
-        availableIds: dynamicModules.map(m => m.id).slice(0, 10)
-      });
+      
     }
   }
   
