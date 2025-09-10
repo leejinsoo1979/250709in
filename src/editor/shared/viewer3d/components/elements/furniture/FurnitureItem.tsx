@@ -443,12 +443,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
   
-  // moduleData가 없으면 에러 로그하고 렌더링 스킵
-  if (!moduleData) {
-    // 모듈을 찾을 수 없으면 빈 요소 반환 (렌더링 스킵)
-    return null;
-  }
-  
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
@@ -1424,6 +1418,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return undefined;
   }, [isDualFurniture, needsEndPanelAdjustment, placedModule.zone, placedModule.slotIndex, 
       spaceInfo.droppedCeiling?.enabled, spaceInfo.customColumnCount, indexing.slotWidths]);
+
+  // moduleData가 없으면 렌더링 스킵 (모든 Hook 호출 이후)
+  if (!moduleData) {
+    return null;
+  }
 
   return (
     <group userData={{ furnitureId: placedModule.id }}>
