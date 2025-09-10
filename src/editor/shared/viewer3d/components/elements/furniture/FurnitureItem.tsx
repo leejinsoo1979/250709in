@@ -1654,7 +1654,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             spaceInfo={spaceInfo}
             color={isDraggingThis ? '#ff6600' : actualModuleData.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
             originalSlotWidth={originalSlotWidthForDoor}
-            slotCenterX={slotCenterX}
+            slotCenterX={doorXOffset}
             moduleData={actualModuleData}
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
