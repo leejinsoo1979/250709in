@@ -540,7 +540,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   if (isUpperCabinet && actualModuleData) {
     // 상부장은 상부프레임 하단에 붙어야 함
-    const upperCabinetHeight = actualModuleData.dimensions.height; // 상부장 높이
+    const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
     
     // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
     // 바닥 마감재 높이
@@ -581,7 +581,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
       
       // 가구 높이
-      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
+      const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
       
       // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
       const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
@@ -603,7 +603,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
       
       // 가구 높이
-      const furnitureHeight = actualModuleData.dimensions.height * 0.01; // mm to Three.js units
+      const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
       
       // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
       const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
@@ -619,7 +619,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
-  let furnitureWidthMm = actualModuleData.dimensions.width; // 기본값
+  let furnitureWidthMm = actualModuleData?.dimensions.width || 0; // 기본값
   
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
@@ -833,10 +833,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
   
-  let adjustedDepthMm = actualModuleData.dimensions.depth;
+  let adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
 
   // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
-  let furnitureHeightMm = actualModuleData.dimensions.height;
+  let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
   
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
@@ -1205,7 +1205,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (isDualFurniture && remainingDepth <= 300) {
         // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
         // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
-        adjustedDepthMm = actualModuleData.dimensions.depth;
+        adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
       } else {
         // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로
         adjustedDepthMm = remainingDepth;
@@ -1215,7 +1215,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth) {
     // 기둥이 슬롯을 벗어났을 때 customDepth 제거
     // 깊이를 원래대로 복구
-    adjustedDepthMm = actualModuleData.dimensions.depth;
+    adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
     
     // customDepth 제거를 위해 updatePlacedModule 호출
     if (!isFurnitureDragging) {
@@ -1224,7 +1224,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else if (slotInfo && !slotInfo.hasColumn && (placedModule.adjustedWidth || placedModule.columnSlotInfo)) {
     // 기둥이 슬롯을 벗어났을 때 폭도 원상복구
     // 폭을 원래대로 복구
-    furnitureWidthMm = actualModuleData.dimensions.width;
+    furnitureWidthMm = actualModuleData?.dimensions.width || 0;
     
     // 위치도 슬롯 중심으로 복구
     const slotCenterX = indexing.threeUnitPositions[placedModule.slotIndex] || placedModule.position.x;
@@ -1257,7 +1257,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   
   // 깊이 계산: customDepth 우선, 기둥 충돌로 조정된 깊이, 기본 깊이 순
-  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData.dimensions.depth ? adjustedDepthMm : actualModuleData.dimensions.depth);
+  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData?.dimensions.depth ? adjustedDepthMm : actualModuleData?.dimensions.depth || 0);
   const depth = mmToThreeUnits(actualDepthMm);
   
   // Column C 깊이 디버깅
@@ -1282,7 +1282,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
   
   // 기둥 C 디버깅 - 위치는 유지, 깊이만 조정
-  if (adjustedDepthMm !== actualModuleData.dimensions.depth && slotInfo?.hasColumn) {
+  if (adjustedDepthMm !== actualModuleData?.dimensions.depth && slotInfo?.hasColumn) {
     }
   
   // 기둥 C가 있는 경우 디버깅
@@ -1648,7 +1648,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         >
           <DoorModule
             moduleWidth={doorWidth}
-            moduleDepth={actualModuleData.dimensions.depth}
+            moduleDepth={actualModuleData?.dimensions.depth || 0}
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
             color={isDraggingThis ? '#ff6600' : actualModuleData.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
