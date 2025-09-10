@@ -1610,7 +1610,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
-          {(() => {
+          <DoorModule
+            moduleWidth={doorWidth}
+            moduleDepth={actualModuleData.dimensions.depth}
+            hingePosition={hingePosition}
+            spaceInfo={spaceInfo}
+            color={isDraggingThis ? '#ff6600' : actualModuleData.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+            originalSlotWidth={originalSlotWidthForDoor}
+            slotCenterX={slotCenterX}
+            moduleData={actualModuleData}
+            isDragging={isDraggingThis}
+            isEditMode={isEditMode}
+            slotWidths={(() => {
               if (placedModule.zone === 'dropped' && zoneInfo.dropped) {
                 const targetZone = zoneInfo.dropped;
                 if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
