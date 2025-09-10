@@ -471,32 +471,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
   
   // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만, 기둥 C가 아닐 때만)
-  let actualModuleData = moduleData;
-  if (moduleData) {
-    if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC) {
-      const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
-      if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
-        actualModuleData = conversionResult.convertedModuleData;
+  const actualModuleData = React.useMemo(() => {
+    let result = moduleData;
+    if (moduleData) {
+      if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC) {
+        const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
+        if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
+          result = conversionResult.convertedModuleData;
+        }
+      }
+      
+      // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
+      if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-')) {
+        result = {
+          ...moduleData,
+          id: moduleData.id.replace('dual-', 'single-'),
+          name: moduleData.name.replace('듀얼', '싱글'),
+          dimensions: {
+            ...moduleData.dimensions,
+            width: slotInfo?.subSlots ? 
+              (placedModule.subSlotPosition === 'left' ? 
+                slotInfo.subSlots.left.availableWidth : 
+                slotInfo.subSlots.right.availableWidth) : 
+              indexing.columnWidth / 2
+          }
+        };
       }
     }
-    
-    // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
-    if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-')) {
-      actualModuleData = {
-        ...moduleData,
-        id: moduleData.id.replace('dual-', 'single-'),
-        name: moduleData.name.replace('듀얼', '싱글'),
-        dimensions: {
-          ...moduleData.dimensions,
-          width: slotInfo?.subSlots ? 
-            (placedModule.subSlotPosition === 'left' ? 
-              slotInfo.subSlots.left.availableWidth : 
-              slotInfo.subSlots.right.availableWidth) : 
-            indexing.columnWidth / 2
-        }
-      };
-    }
-  }
+    return result;
+  }, [moduleData, isFurnitureDragging, slotInfo, isColumnC, spaceInfo, placedModule.subSlotPosition, indexing.columnWidth]);
   
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
@@ -516,13 +519,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   const isLastSlot = placedModule.slotIndex === indexing.columnCount - 1;
   
-  // adjustedPosition 초기화 - Y축 위치 계산 전에 먼저 초기화
-  // placedModule.position을 항상 spread하여 새 객체 생성
-  let adjustedPosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
-  if (isLastSlot && !isFurnitureDragging) {
-    // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
-    adjustedPosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
-  }
+  // adjustedPosition 계산을 useMemo로 최적화 (초기값만 설정)
+  const initialAdjustedPosition = React.useMemo(() => {
+    const basePosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
+    if (isLastSlot && !isFurnitureDragging) {
+      // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
+      return { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
+    }
+    return basePosition;
+  }, [placedModule.position, isLastSlot, isFurnitureDragging]);
   
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
   // 상부장 체크
@@ -535,6 +540,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
+  
+  // adjustedPosition 계산 (Y축 위치 포함)
+  let adjustedPosition = initialAdjustedPosition;
   
   if (isUpperCabinet && actualModuleData) {
     // 상부장은 상부프레임 하단에 붙어야 함
@@ -1319,16 +1327,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
   
+  // adjustedPosition을 memoize하여 참조 안정성 확보
+  const memoizedAdjustedPosition = React.useMemo(() => ({
+    x: adjustedPosition.x,
+    y: adjustedPosition.y,
+    z: adjustedPosition.z
+  }), [adjustedPosition.x, adjustedPosition.y, adjustedPosition.z]);
+  
   // 계산된 값들을 상태로 업데이트
   React.useEffect(() => {
     setCalculatedValues({
       isColumnCFront,
       slotInfoColumn: slotInfo?.column,
       indexingColumnWidth: indexing.columnWidth,
-      adjustedPosition,
+      adjustedPosition: memoizedAdjustedPosition,
       actualModuleData
     });
-  }, [isColumnCFront, slotInfo?.column, indexing.columnWidth, adjustedPosition, actualModuleData]);
+  }, [isColumnCFront, slotInfo?.column, indexing.columnWidth, memoizedAdjustedPosition, actualModuleData]);
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
