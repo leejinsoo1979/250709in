@@ -824,17 +824,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // FurnitureItem에서 추가로 조정하지 않음
     }
 
-  // 디버깅용 로그 추가
-  `;
-      } else if (indexing.slotWidths && placedModule.slotIndex !== undefined && indexing.slotWidths[placedModule.slotIndex]) {
-        return `slotWidths 사용 (${indexing.slotWidths[placedModule.slotIndex]}mm)`;
-      } else if (placedModule.adjustedWidth) {
-        return `adjustedWidth 사용 (${placedModule.adjustedWidth}mm)`;
-      } else {
-        return `기본 모듈 너비 사용 (${actualModuleData.dimensions.width}mm)`;
-      }
-    })()
-  });
+  // 디버깅용 로그 추가 제거됨
 
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
   // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상부프레임 하단까지
@@ -1472,17 +1462,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const expectedThreeUnits = mmToThreeUnits(slotWidthMm);
               const actualThreeUnits = mmToThreeUnits(furnitureWidthMm);
               
-              {
-                    return 'slotWidths 배열 사용';
-                  } else if (placedModule.customWidth) {
-                    return 'customWidth 사용';
-                  } else if (placedModule.adjustedWidth) {
-                    return 'adjustedWidth 사용';
-                  } else {
-                    return '기본 모듈 너비 사용';
-                  }
-                })()
-              });
               return null;
             })()}
           </>
@@ -1631,13 +1610,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           ]}
           rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
         >
-          {const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-                  if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
-                    return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
-                  }
-                } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
-                  return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
+          {(() => {
+              if (placedModule.zone === 'dropped' && zoneInfo.dropped) {
+                const targetZone = zoneInfo.dropped;
+                if (targetZone.slotWidths && placedModule.slotIndex < targetZone.slotWidths.length - 1) {
+                  return [targetZone.slotWidths[placedModule.slotIndex], targetZone.slotWidths[placedModule.slotIndex + 1]];
                 }
+              } else if (indexing.slotWidths && placedModule.slotIndex < indexing.slotWidths.length - 1) {
+                return [indexing.slotWidths[placedModule.slotIndex], indexing.slotWidths[placedModule.slotIndex + 1]];
               }
               return undefined;
             })()}
