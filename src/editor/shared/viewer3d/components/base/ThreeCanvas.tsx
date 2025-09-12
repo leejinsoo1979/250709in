@@ -49,7 +49,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마와 카메라 설정 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, cameraZoom } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -793,7 +793,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           <OrthographicCamera 
             makeDefault 
             position={camera.position}
-            zoom={camera.zoom * cameraZoom}
+            zoom={camera.zoom}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}
             up={camera.up || [0, 1, 0]}
@@ -807,11 +807,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         ) : (
           <PerspectiveCamera
             makeDefault
-            position={[
-              camera.position[0] / cameraZoom,
-              camera.position[1] / cameraZoom,
-              camera.position[2] / cameraZoom
-            ]}
+            position={camera.position}
             fov={cameraFov || camera.fov}
             near={CAMERA_SETTINGS.NEAR_PLANE}
             far={CAMERA_SETTINGS.FAR_PLANE}

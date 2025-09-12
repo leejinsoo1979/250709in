@@ -380,49 +380,51 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
                 
-                <div className={styles.cameraOption}>
-                  <label>줌: {Math.round(cameraZoom * 100)}%</label>
-                  <input 
-                    type="range" 
-                    min="10" 
-                    max="500" 
-                    value={cameraZoom * 100}
-                    onChange={(e) => setCameraZoom(Number(e.target.value) / 100)}
-                    className={styles.fovSlider}
-                  />
-                  <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
-                    <button 
-                      onClick={() => setCameraZoom(0.5)}
-                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                    >
-                      50%
-                    </button>
-                    <button 
-                      onClick={() => setCameraZoom(1)}
-                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                    >
-                      100%
-                    </button>
-                    <button 
-                      onClick={() => setCameraZoom(2)}
-                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                    >
-                      200%
-                    </button>
-                  </div>
-                </div>
-                
                 {cameraMode === 'perspective' && (
                   <div className={styles.cameraOption}>
-                    <label>화각(FOV): {cameraFov}°</label>
+                    <label>초점거리: {Math.round(50 / Math.tan((cameraFov * Math.PI / 180) / 2))}mm (화각 {cameraFov}°)</label>
                     <input 
                       type="range" 
-                      min="30" 
+                      min="10" 
                       max="120" 
                       value={cameraFov}
                       onChange={(e) => setCameraFov(Number(e.target.value))}
                       className={styles.fovSlider}
                     />
+                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+                      <button 
+                        onClick={() => setCameraFov(94)}
+                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                      >
+                        광각
+                        <br/>
+                        <small>18mm</small>
+                      </button>
+                      <button 
+                        onClick={() => setCameraFov(53)}
+                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                      >
+                        표준
+                        <br/>
+                        <small>50mm</small>
+                      </button>
+                      <button 
+                        onClick={() => setCameraFov(28)}
+                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                      >
+                        망원
+                        <br/>
+                        <small>100mm</small>
+                      </button>
+                      <button 
+                        onClick={() => setCameraFov(14)}
+                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                      >
+                        초망원
+                        <br/>
+                        <small>200mm</small>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
