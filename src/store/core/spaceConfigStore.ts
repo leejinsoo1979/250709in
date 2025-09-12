@@ -287,14 +287,21 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
         
         if (adjustmentResult.adjustmentMade) {
-          // 조정된 값을 tempSpaceInfo에 반영
+          // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount는 보존
+          const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
           tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+          
+          // customColumnCount가 명시적으로 설정된 경우 보존
+          if (preservedCustomColumnCount !== undefined) {
+            tempSpaceInfo.customColumnCount = preservedCustomColumnCount;
+          }
           
           console.log('🎯 슬롯 정수화 자동 조정 완료:', {
             슬롯너비: adjustmentResult.slotWidth,
             프레임크기: tempSpaceInfo.frameSize,
             이격거리: tempSpaceInfo.gapConfig,
-            조정여부: adjustmentResult.adjustmentMade
+            조정여부: adjustmentResult.adjustmentMade,
+            customColumnCount: tempSpaceInfo.customColumnCount
           });
         }
       }
