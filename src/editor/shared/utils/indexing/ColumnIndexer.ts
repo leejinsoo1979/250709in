@@ -229,12 +229,15 @@ export class ColumnIndexer {
     // mainDoorCount가 설정되어 있으면 최우선 사용 (4분할 창 등)
     if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
       columnCount = spaceInfo.mainDoorCount;
+      console.log('📐 Using mainDoorCount:', columnCount);
     } else if (spaceInfo.customColumnCount) {
       // 사용자 지정 컬럼 수가 있으면 사용
       columnCount = spaceInfo.customColumnCount;
+      console.log('📐 Using customColumnCount:', columnCount);
     } else {
       // 기존 자동 계산 로직
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
+      console.log('📐 Using auto-calculated columnCount:', columnCount);
     }
     
     // 노서라운드 모드인지 확인

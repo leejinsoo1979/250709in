@@ -1203,7 +1203,11 @@ const Configurator: React.FC = () => {
 
   // derivedSpaceStore 재계산 (구조적 변경 시만 실행)
   useEffect(() => {
-    console.log('🔄 derivedSpaceStore 재계산 (구조적 변경)');
+    console.log('🔄 derivedSpaceStore 재계산:', {
+      customColumnCount: spaceInfo.customColumnCount,
+      mainDoorCount: spaceInfo.mainDoorCount,
+      width: spaceInfo.width
+    });
     derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
   }, [
     spaceInfo.width, 
