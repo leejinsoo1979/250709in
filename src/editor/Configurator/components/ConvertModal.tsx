@@ -77,16 +77,22 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     const originalShowAll = showAll;
     
     // 캡처를 위해 그리드, 축, 컬럼 끄기
+    console.log('캡처 전 상태:', { showGuides, showAxis, showDimensions, showAll });
+    
     if (showGuides) setShowGuides(false);
     if (showAxis) setShowAxis(false);
     if (showDimensions) setShowDimensions(false);
-    if (showAll && setShowAll) {
-      console.log('컬럼 끄기: showAll을 false로 설정');
+    
+    // showAll 확인 및 설정
+    if (setShowAll) {
+      console.log('컬럼 끄기: showAll을 false로 설정 (현재값:', showAll, ')');
       setShowAll(false);
+    } else {
+      console.error('setShowAll 함수가 전달되지 않았습니다!');
     }
     
     // 상태 변경이 렌더링에 반영되도록 충분히 대기
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const captures: typeof capturedViews = {};
     
@@ -119,16 +125,18 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       captures.top = threeCanvas.toDataURL();
       console.log('상부뷰 캡처 완료');
       
-      // 정면뷰 캡처
+      // 정면뷰 캡처 - wireframe 유지
       console.log('정면뷰 캡처 시작');
       setView2DDirection('front');
+      setRenderMode('wireframe');  // 2D는 wireframe으로!
       await new Promise(resolve => setTimeout(resolve, 1000));
       captures.front = threeCanvas.toDataURL();
       console.log('정면뷰 캡처 완료');
       
-      // 측면뷰 캡처
+      // 측면뷰 캡처 - wireframe 유지
       console.log('측면뷰 캡처 시작');
       setView2DDirection('left');
+      setRenderMode('wireframe');  // 2D는 wireframe으로!
       await new Promise(resolve => setTimeout(resolve, 1000));
       captures.side = threeCanvas.toDataURL();
       console.log('측면뷰 캡처 완료');
