@@ -282,7 +282,23 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       } else {
         // 초기 상태가 없으면 기본값으로 설정
         const spaceHeight = spaceInfo?.height || 2400;
-        const defaultDistance = 30; // 기본 카메라 거리 (첫 번째 이미지처럼 크게 보이도록)
+        const spaceWidth = spaceInfo?.width || 3000;
+        const spaceDepth = spaceInfo?.depth || 600;
+        
+        // 초기 카메라와 동일한 거리 계산 사용
+        const calculateOptimalDistance = (width: number, height: number, depth: number) => {
+          const diagonal = Math.sqrt(width * width + height * height + depth * depth);
+          const furnitureMargin = 0.8;
+          const fov = 50;
+          const fovRad = (fov * Math.PI) / 180;
+          const maxDimension = Math.max(width, height, depth);
+          const baseDistance = (maxDimension / 2) / Math.tan(fovRad / 2);
+          const diagonalDistance = (diagonal / 2) / Math.tan(fovRad / 2);
+          const safeDistance = Math.max(baseDistance, diagonalDistance);
+          return (safeDistance * 0.01) * furnitureMargin;
+        };
+        
+        const defaultDistance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth);
         
         const centerX = 0; // X축 중앙은 0
         const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
@@ -293,7 +309,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           spaceHeight
         });
         
-        // 카메라를 정면 중앙에 위치 (기본 거리 사용)
+        // 카메라를 정면 중앙에 위치 (초기와 동일한 거리 사용)
         controls.object.position.set(0, centerY, defaultDistance);
         controls.target.set(0, centerY, 0);
         controls.object.up.set(0, 1, 0);

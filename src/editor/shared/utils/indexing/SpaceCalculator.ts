@@ -89,6 +89,9 @@ export class SpaceCalculator {
 
   /**
    * 내경폭에 맞는 기본 컬럼 수 계산 (자동 모드)
+   * wardrobe_slot_rules_v4.md 규칙에 따라:
+   * - 슬롯폭은 400~600mm 범위
+   * - 2 × 슬롯폭은 정수여야 함
    */
   static getDefaultColumnCount(internalWidth: number): number {
     const SLOT_MIN_WIDTH = 400; // 한 슬롯의 최소 너비 (mm)
@@ -96,37 +99,39 @@ export class SpaceCalculator {
     
     console.log('🔍 getDefaultColumnCount - internalWidth:', internalWidth);
     
-    // 내경이 400mm 이하면 1개 컬럼 (최소 너비 확보)
-    if (internalWidth <= SLOT_MIN_WIDTH) {
-      console.log('→ 내경이 400mm 이하, 컬럼 개수: 1');
-      return 1;
+    // 최적의 슬롯 개수 찾기
+    // 슬롯폭이 400~600mm 범위에 들어가도록 슬롯 개수 결정
+    let bestSlotCount = 1;
+    let bestSlotWidth = internalWidth;
+    
+    // 가능한 슬롯 개수를 탐색
+    for (let slotCount = 1; slotCount <= 10; slotCount++) {
+      const slotWidth = Math.floor(internalWidth / slotCount);
+      
+      // 슬롯폭이 400~600mm 범위에 있는지 확인
+      if (slotWidth >= SLOT_MIN_WIDTH && slotWidth <= SLOT_MAX_WIDTH) {
+        // 2 × 슬롯폭이 정수인지 확인 (슬롯폭이 정수이거나 0.5 단위)
+        const isValidWidth = Number.isInteger(slotWidth) || Number.isInteger(slotWidth * 2);
+        
+        if (isValidWidth) {
+          bestSlotCount = slotCount;
+          bestSlotWidth = slotWidth;
+          console.log(`→ 유효한 슬롯 개수 찾음: ${slotCount}개 (슬롯폭: ${slotWidth}mm)`);
+          break;
+        }
+      }
     }
-    // 내경이 600mm 이하면 1개 컬럼
-    else if (internalWidth <= SLOT_MAX_WIDTH) {
-      console.log('→ 내경이 600mm 이하, 컬럼 개수: 1');
-      return 1;
+    
+    // 만약 유효한 슬롯 개수를 못 찾았다면, 가장 가까운 값 사용
+    if (bestSlotWidth < SLOT_MIN_WIDTH || bestSlotWidth > SLOT_MAX_WIDTH) {
+      // 슬롯폭이 600mm를 넘지 않도록 최소 개수 계산
+      bestSlotCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      bestSlotWidth = Math.floor(internalWidth / bestSlotCount);
+      console.log(`⚠️ 정확한 조건을 만족하는 슬롯 개수 없음. 근사값 사용: ${bestSlotCount}개 (슬롯폭: ${bestSlotWidth}mm)`);
     }
-    // 내경이 1200mm 이하면 2개 컬럼
-    else if (internalWidth <= 1200) {
-      console.log('→ 내경이 1200mm 이하, 컬럼 개수: 2');
-      return 2;
-    }
-    // 내경이 1800mm 이하면 3개 컬럼
-    else if (internalWidth <= 1800) {
-      console.log('→ 내경이 1800mm 이하, 컬럼 개수: 3');
-      return 3;
-    }
-    // 내경이 2400mm 이하면 4개 컬럼
-    else if (internalWidth <= 2400) {
-      console.log('→ 내경이 2400mm 이하, 컬럼 개수: 4');
-      return 4;
-    }
-    // 그 이상은 600mm 단위로 나누기
-    else {
-      const columnCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
-      console.log('→ 계산된 컬럼 개수:', columnCount, '(내경:', internalWidth, 'mm, 슬롯당:', Math.floor(internalWidth / columnCount), 'mm)');
-      return columnCount;
-    }
+    
+    console.log(`→ 최종 컬럼 개수: ${bestSlotCount}, 슬롯폭: ${bestSlotWidth}mm`);
+    return bestSlotCount;
   }
 
   /**
