@@ -381,10 +381,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
     // 모듈 ID가 이미 customWidth를 포함하고 있는지 확인
     if (!targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
-      // ID에서 기존 폭 정보 제거하고 새로운 customWidth 추가
-      const baseType = targetModuleId.replace(/-\d+$/, '');
-      targetModuleId = `${baseType}-${placedModule.customWidth}`;
-      // customWidth로 ModuleID 생성
+      // 상하부장인지 확인 (upper-cabinet 또는 lower-cabinet 포함)
+      const isUpperLower = targetModuleId.includes('upper-cabinet') || targetModuleId.includes('lower-cabinet');
+      
+      if (isUpperLower) {
+        // 상하부장의 경우: 마지막 숫자만 customWidth로 교체
+        // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[customWidth]
+        // 예: dual-upper-cabinet-shelf-1200 -> dual-upper-cabinet-shelf-[customWidth]
+        targetModuleId = targetModuleId.replace(/-\d+$/, `-${placedModule.customWidth}`);
+      } else {
+        // 일반 가구의 경우: 기존 로직 유지
+        const baseType = targetModuleId.replace(/-\d+$/, '');
+        targetModuleId = `${baseType}-${placedModule.customWidth}`;
+      }
     }
   }
 
@@ -401,30 +410,52 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 그래도 못 찾으면 다양한 패턴으로 재시도
   if (!moduleData) {
-    // 패턴 1: single-open-upper-586 형태를 처리
     const parts = placedModule.moduleId.split('-');
-    if (parts.length >= 3) {
-      // 마지막이 숫자면 제거하고 시도
-      if (/^\d+$/.test(parts[parts.length - 1])) {
-        const withoutWidth = parts.slice(0, -1).join('-');
-        // 폭 정보 제거하고 재시도
-        moduleData = getModuleById(withoutWidth, internalSpace, zoneSpaceInfo);
+    
+    // 상하부장 특별 처리
+    const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
+    const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet');
+    
+    if (isUpperCabinet || isLowerCabinet) {
+      // 상하부장의 경우 너비를 변경해서 재시도
+      // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[internalSpace.width]
+      if (internalSpace) {
+        const baseId = targetModuleId.replace(/-\d+$/, '');
+        const newId = `${baseId}-${internalSpace.width}`;
+        moduleData = getModuleById(newId, internalSpace, zoneSpaceInfo);
+        
+        // 그래도 못 찾으면 기본 너비들로 시도
+        if (!moduleData) {
+          const defaultWidths = [600, 900, 1200, 1500, 1800];
+          for (const width of defaultWidths) {
+            const testId = `${baseId}-${width}`;
+            moduleData = getModuleById(testId, internalSpace, zoneSpaceInfo);
+            if (moduleData) break;
+          }
+        }
+      }
+    } else {
+      // 일반 가구 처리 (기존 로직)
+      if (parts.length >= 3) {
+        // 마지막이 숫자면 제거하고 시도
+        if (/^\d+$/.test(parts[parts.length - 1])) {
+          const withoutWidth = parts.slice(0, -1).join('-');
+          moduleData = getModuleById(withoutWidth, internalSpace, zoneSpaceInfo);
+        }
+        
+        // 그래도 없으면 upper/lower 제거하고 시도  
+        if (!moduleData && (parts.includes('upper') || parts.includes('lower'))) {
+          const withoutCategory = parts.filter(p => p !== 'upper' && p !== 'lower').join('-');
+          moduleData = getModuleById(withoutCategory, internalSpace, zoneSpaceInfo);
+        }
       }
       
-      // 그래도 없으면 upper/lower 제거하고 시도  
-      if (!moduleData && (parts.includes('upper') || parts.includes('lower'))) {
-        const withoutCategory = parts.filter(p => p !== 'upper' && p !== 'lower').join('-');
-        // 카테고리 제거하고 재시도
-        moduleData = getModuleById(withoutCategory, internalSpace, zoneSpaceInfo);
-      }
-    }
-    
-    // 패턴 2: 기본 타입만으로 시도 (single-open)
-    if (!moduleData) {
-      const baseType = parts.slice(0, 2).join('-');
-      if (baseType !== placedModule.moduleId) {
-        // 기본 타입으로 재시도
-        moduleData = getModuleById(baseType, internalSpace, zoneSpaceInfo);
+      // 패턴 2: 기본 타입만으로 시도 (single-open)
+      if (!moduleData) {
+        const baseType = parts.slice(0, 2).join('-');
+        if (baseType !== placedModule.moduleId) {
+          moduleData = getModuleById(baseType, internalSpace, zoneSpaceInfo);
+        }
       }
     }
     
