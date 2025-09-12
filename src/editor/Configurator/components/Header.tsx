@@ -80,10 +80,8 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
-  const [shadowEnabled, setShadowEnabled] = useState(true);
-  
-  // UIStore에서 카메라 설정 가져오기
-  const { cameraMode, setCameraMode } = useUIStore();
+  // UIStore에서 카메라 및 그림자 설정 가져오기
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled } = useUIStore();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -388,6 +386,44 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+
+          {/* 그림자 토글 버튼 */}
+          <button 
+            className={`${styles.actionButton} ${shadowEnabled ? styles.active : ''}`}
+            onClick={() => setShadowEnabled(!shadowEnabled)}
+            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              {shadowEnabled ? (
+                // 그림자 ON 아이콘
+                <>
+                  <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2"/>
+                </>
+              ) : (
+                // 그림자 OFF 아이콘 (흐린 태양)
+                <>
+                  <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                </>
+              )}
+            </svg>
+            그림자
+          </button>
         </div>
 
         {/* 우측 액션 버튼들 */}

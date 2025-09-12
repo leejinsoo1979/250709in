@@ -49,7 +49,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
   
   // UIStore에서 2D 뷰 테마와 카메라 설정 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -128,17 +128,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
       if (import.meta.env.DEV) {
-        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트, cameraMode:', cameraMode);
+        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트, shadowEnabled:', shadowEnabled);
       }
-      // 3D 모드에서는 Perspective일 때만 그림자 활성화
-      const enableShadows = cameraMode === 'perspective';
-      rendererRef.current.shadowMap.enabled = enableShadows;
-      rendererRef.current.shadowMap.needsUpdate = enableShadows;
+      // 3D 모드에서는 shadowEnabled 상태에 따라 그림자 활성화
+      rendererRef.current.shadowMap.enabled = shadowEnabled;
+      rendererRef.current.shadowMap.needsUpdate = shadowEnabled;
     } else if (rendererRef.current && viewMode === '2D') {
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
     }
-  }, [viewMode, cameraMode]);
+  }, [viewMode, shadowEnabled]);
 
   // 테마 변경 시 배경색 업데이트
   useEffect(() => {
@@ -744,8 +743,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             // 기본 렌더링 설정
             gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             
-            // 그림자 설정 - 3D 모드이면서 Perspective일 때만
-            const enableShadows = viewMode === '3D' && cameraMode === 'perspective';
+            // 그림자 설정 - 3D 모드이면서 shadowEnabled가 true일 때만
+            const enableShadows = viewMode === '3D' && shadowEnabled;
             gl.shadowMap.enabled = enableShadows;
             if (enableShadows) {
               gl.shadowMap.type = THREE.PCFSoftShadowMap;

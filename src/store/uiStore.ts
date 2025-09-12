@@ -98,6 +98,9 @@ interface UIState {
   cameraFov: number;
   cameraZoom: number;
   
+  // 그림자 설정
+  shadowEnabled: boolean;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -151,6 +154,7 @@ interface UIState {
   setCameraMode: (mode: 'perspective' | 'orthographic') => void;
   setCameraFov: (fov: number) => void;
   setCameraZoom: (zoom: number) => void;
+  setShadowEnabled: (enabled: boolean) => void;
   resetUI: () => void;
 }
 
@@ -190,6 +194,7 @@ const initialUIState = {
   cameraMode: 'perspective' as const,  // 기본값: 원근 투영
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
+  shadowEnabled: true,  // 기본값: 그림자 활성화
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -396,6 +401,9 @@ export const useUIStore = create<UIState>()(
       
       setCameraZoom: (zoom) =>
         set({ cameraZoom: zoom }),
+      
+      setShadowEnabled: (enabled) =>
+        set({ shadowEnabled: enabled }),
       
       resetUI: () =>
         set(initialUIState),
