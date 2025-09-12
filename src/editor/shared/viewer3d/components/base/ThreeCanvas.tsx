@@ -124,20 +124,23 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 기본: 한 손가락 회전, 두 손가락 줌+팬
   
-  // viewMode 변경 시 그림자 설정 업데이트
+  // viewMode 및 cameraMode 변경 시 그림자 설정 업데이트
+  const { cameraMode } = useUIStore();
+  
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
       if (import.meta.env.DEV) {
-        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트');
+        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트, cameraMode:', cameraMode);
       }
-      // 그림자 설정 업데이트
-      rendererRef.current.shadowMap.enabled = true;
-      rendererRef.current.shadowMap.needsUpdate = true;
+      // 3D 모드에서는 Perspective일 때만 그림자 활성화
+      const enableShadows = cameraMode === 'perspective';
+      rendererRef.current.shadowMap.enabled = enableShadows;
+      rendererRef.current.shadowMap.needsUpdate = enableShadows;
     } else if (rendererRef.current && viewMode === '2D') {
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
     }
-  }, [viewMode]);
+  }, [viewMode, cameraMode]);
 
   // 테마 변경 시 배경색 업데이트
   useEffect(() => {
@@ -603,7 +606,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       >
         <Canvas
         key={canvasKey}
-        shadows={viewMode === '3D'}
+        shadows={viewMode === '3D' && cameraMode === 'perspective'}
         style={{ 
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: 'default',
@@ -743,9 +746,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             // 기본 렌더링 설정
             gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             
-            // 그림자 설정 - 3D 모드에서만
-            gl.shadowMap.enabled = viewMode === '3D';
-            if (viewMode === '3D') {
+            // 그림자 설정 - 3D 모드이면서 Perspective일 때만
+            const enableShadows = viewMode === '3D' && cameraMode === 'perspective';
+            gl.shadowMap.enabled = enableShadows;
+            if (enableShadows) {
               gl.shadowMap.type = THREE.PCFSoftShadowMap;
               gl.shadowMap.autoUpdate = true;
               gl.shadowMap.needsUpdate = true;
