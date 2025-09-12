@@ -300,12 +300,8 @@ const Configurator: React.FC = () => {
         count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
       }
     } else {
-      // 단내림이 비활성화된 경우 mainDoorCount는 무시하고 customColumnCount 사용
-      if (spaceInfo.customColumnCount) {
-        count = spaceInfo.customColumnCount;
-      } else if (derivedSpaceStore.isCalculated && derivedSpaceStore.columnCount) {
-        count = derivedSpaceStore.columnCount;
-      }
+      // 단내림이 비활성화된 경우 customColumnCount 우선 사용
+      count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
     }
     
     // 반드시 400-600mm 범위 안에서만 동작하도록 강제
@@ -1477,11 +1473,25 @@ const Configurator: React.FC = () => {
       const usableWidth = currentWidth - 100;
       const proposedSlotWidth = usableWidth / updates.customColumnCount;
       
+      console.log('🔧 customColumnCount 업데이트:', {
+        요청값: updates.customColumnCount,
+        현재폭: currentWidth,
+        사용가능폭: usableWidth,
+        제안슬롯폭: proposedSlotWidth,
+        범위: range,
+        유효범위: '400-600mm'
+      });
+      
       // 400-600mm 범위를 벗어나면 조정
       if (proposedSlotWidth < 400 || proposedSlotWidth > 600) {
         const correctedCount = Math.max(range.min, Math.min(range.max, 
           proposedSlotWidth < 400 ? Math.floor(usableWidth / 400) : Math.ceil(usableWidth / 600)
         ));
+        console.log('⚠️ 슬롯 크기가 범위를 벗어남, 조정:', {
+          원래값: updates.customColumnCount,
+          조정값: correctedCount,
+          이유: proposedSlotWidth < 400 ? '슬롯이 너무 작음' : '슬롯이 너무 큼'
+        });
         finalUpdates = { ...finalUpdates, customColumnCount: correctedCount };
       }
     }
