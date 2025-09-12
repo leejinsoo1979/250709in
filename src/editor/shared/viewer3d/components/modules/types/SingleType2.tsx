@@ -19,7 +19,7 @@ const BoxWithEdges: React.FC<{
   isBackPanel?: boolean; // 백패널 여부 추가
 }> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false, hideEdges = false, isBackPanel = false }) => {
   const { viewMode } = useSpace3DView();
-  const { view2DDirection, view2DTheme, indirectLightEnabled, indirectLightIntensity } = useUIStore(); // view2DDirection, view2DTheme 추가
+  const { view2DDirection, view2DTheme, indirectLightEnabled, indirectLightIntensity, shadowEnabled } = useUIStore(); // view2DDirection, view2DTheme, shadowEnabled 추가
   const { gl } = useThree();
   const { theme } = useTheme();
   
@@ -54,7 +54,7 @@ const BoxWithEdges: React.FC<{
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
-      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid'} castShadow={viewMode === '3D' && renderMode === 'solid'}>
+      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled} castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}>
         <boxGeometry args={args} />
         {renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 완전히 투명한 재질
