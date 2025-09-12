@@ -93,13 +93,18 @@ export class SpaceCalculator {
   static getDefaultColumnCount(internalWidth: number): number {
     const SLOT_MAX_WIDTH = 600; // 한 슬롯의 최대 너비 (mm)
     
+    console.log('🔍 getDefaultColumnCount - internalWidth:', internalWidth, 'SLOT_MAX_WIDTH:', SLOT_MAX_WIDTH);
+    
     // 내경이 600mm 이하면 1개 컬럼
     if (internalWidth <= SLOT_MAX_WIDTH) {
+      console.log('→ 내경이 600mm 이하, 컬럼 개수: 1');
       return 1;
     } 
     // 그 외의 경우 - 슬롯이 600mm를 초과하지 않도록 올림 처리
     else {
-      return Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      const columnCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      console.log('→ 계산된 컬럼 개수:', columnCount, '(', internalWidth, '/', SLOT_MAX_WIDTH, ')');
+      return columnCount;
     }
   }
 
