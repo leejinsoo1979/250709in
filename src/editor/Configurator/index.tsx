@@ -1201,11 +1201,26 @@ const Configurator: React.FC = () => {
     }
   }, [spaceInfo, previousSpaceInfo, updateFurnitureForNewSpace]);
 
-  // derivedSpaceStore 재계산 (spaceInfo 변경 시 항상 실행)
+  // derivedSpaceStore 재계산 (구조적 변경 시만 실행)
   useEffect(() => {
-    console.log('🔄 derivedSpaceStore 재계산 (spaceInfo 변경)');
+    console.log('🔄 derivedSpaceStore 재계산 (구조적 변경)');
     derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
-  }, [spaceInfo, derivedSpaceStore]);
+  }, [
+    spaceInfo.width, 
+    spaceInfo.height, 
+    spaceInfo.depth, 
+    spaceInfo.customColumnCount, 
+    spaceInfo.mainDoorCount, 
+    spaceInfo.droppedCeilingDoorCount,
+    spaceInfo.droppedCeiling?.enabled,
+    spaceInfo.droppedCeiling?.width,
+    spaceInfo.surroundType,
+    spaceInfo.installType,
+    spaceInfo.frameSize?.left,
+    spaceInfo.frameSize?.right,
+    spaceInfo.gapConfig?.left,
+    spaceInfo.gapConfig?.right
+  ]);
 
   // RightPanel에서 사용할 수 있도록 window 객체에 추가
   useEffect(() => {
