@@ -26,27 +26,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
-  
-  // CSS 변수에서 실제 테마 색상 가져오기
-  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
-    if (typeof window !== 'undefined') {
-      const computedColor = getComputedStyle(document.documentElement)
-        .getPropertyValue(variableName).trim();
-      return computedColor || fallback;
-    }
-    return fallback;
-  };
 
-  // 2D 도면 치수 색상 설정
+  // 2D 도면 치수 색상 설정 - 테마 색상 사용하지 않음
   // 라이트 모드: 검정색, 다크 모드: 흰색
-  const primaryColor = theme?.mode === 'light' ? '#000000' : '#FFFFFF';
+  const dimensionColor = theme?.mode === 'light' ? '#000000' : '#FFFFFF';
+  
+  console.log('📐 CADDimensions2D 치수 색상:', {
+    themeMode: theme?.mode,
+    dimensionColor,
+    expectedLight: '#000000',
+    expectedDark: '#FFFFFF'
+  });
+  
   const dimensionColors = {
-    primary: primaryColor,     // 기본 치수선
-    furniture: primaryColor,   // 가구 치수선
-    column: primaryColor,      // 컬럼 치수선
-    float: primaryColor,       // 띄움 높이
+    primary: dimensionColor,     // 기본 치수선
+    furniture: dimensionColor,   // 가구 치수선
+    column: dimensionColor,      // 컬럼 치수선
+    float: dimensionColor,       // 띄움 높이
     background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-    text: primaryColor         // 텍스트
+    text: dimensionColor         // 텍스트
   };
   
   // 실제 뷰 방향 결정
