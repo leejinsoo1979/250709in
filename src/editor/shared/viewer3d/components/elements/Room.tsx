@@ -119,7 +119,8 @@ const BoxWithEdges: React.FC<{
   viewMode?: '2D' | '3D';
   view2DTheme?: 'dark' | 'light';
   isEndPanel?: boolean; // 엔드패널 여부
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false }) => {
+  shadowEnabled?: boolean; // 그림자 활성화 여부
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode: contextViewMode } = useSpace3DView();
@@ -1297,7 +1298,9 @@ const Room: React.FC<RoomProps> = ({
           material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
           renderMode={renderMode}
           viewMode={viewMode}
+          shadowEnabled={shadowEnabled}
           view2DTheme={view2DTheme}
+          shadowEnabled={shadowEnabled}
         />
       )}
       
@@ -1505,7 +1508,9 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-              />
+              
+          shadowEnabled={shadowEnabled}
+        />
             </>
           );
         }
@@ -1550,7 +1555,9 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
-          />
+          
+          shadowEnabled={shadowEnabled}
+        />
         );
       })()}
       
@@ -1605,7 +1612,9 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-              />
+              
+          shadowEnabled={shadowEnabled}
+        />
             </>
           );
         }
@@ -1642,7 +1651,9 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
-          />
+          
+          shadowEnabled={shadowEnabled}
+        />
         );
       })()}
       
@@ -1738,7 +1749,9 @@ const Room: React.FC<RoomProps> = ({
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
-                />
+                
+          shadowEnabled={shadowEnabled}
+        />
               );
             }
             
@@ -1852,7 +1865,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                   {/* 일반 영역 상부 프레임 */}
                   <BoxWithEdges
                     args={[
@@ -1868,7 +1883,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 </>
               );
             }
@@ -1954,7 +1971,9 @@ const Room: React.FC<RoomProps> = ({
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
-                />
+                
+          shadowEnabled={shadowEnabled}
+        />
               );
             }
             
@@ -1988,7 +2007,9 @@ const Room: React.FC<RoomProps> = ({
                   ]}
                   material={createFrameMaterial('top')}
                   renderMode={renderMode}
-                />
+                
+          shadowEnabled={shadowEnabled}
+        />
               );
             });
           })()}
@@ -2040,7 +2061,9 @@ const Room: React.FC<RoomProps> = ({
                     position={[0, 0, 0]} // group 내에서 원점에 배치
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 </group>
               );
             }
@@ -2111,7 +2134,9 @@ const Room: React.FC<RoomProps> = ({
                     position={[0, 0, 0]} // group 내에서 원점에 배치
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 </group>
               );
             }
@@ -2135,7 +2160,9 @@ const Room: React.FC<RoomProps> = ({
                   position={[0, 0, 0]} // group 내에서 원점에 배치
                   material={topSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                   renderMode={renderMode}
-                />
+                
+          shadowEnabled={shadowEnabled}
+        />
               </group>
             ));
           })()}
@@ -2177,7 +2204,9 @@ const Room: React.FC<RoomProps> = ({
                 position={[0, 0, 0]}
                 material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-              />
+              
+          shadowEnabled={shadowEnabled}
+        />
             </group>
           );
         }
@@ -2201,7 +2230,9 @@ const Room: React.FC<RoomProps> = ({
               position={[0, 0, 0]}
               material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
               renderMode={renderMode}
-            />
+            
+          shadowEnabled={shadowEnabled}
+        />
           </group>
         );
       })()}
@@ -2241,7 +2272,9 @@ const Room: React.FC<RoomProps> = ({
                 position={[0, 0, 0]}
                 material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-              />
+              
+          shadowEnabled={shadowEnabled}
+        />
             </group>
           );
         }
@@ -2265,7 +2298,9 @@ const Room: React.FC<RoomProps> = ({
               position={[0, 0, 0]}
               material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
               renderMode={renderMode}
-            />
+            
+          shadowEnabled={shadowEnabled}
+        />
           </group>
         );
       })()}
@@ -2378,7 +2413,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 );
               }
             
@@ -2466,7 +2503,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 );
               }
               
@@ -2501,7 +2540,9 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}
-                  />
+                  
+          shadowEnabled={shadowEnabled}
+        />
                 );
               });
             });
