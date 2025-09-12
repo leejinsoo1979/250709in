@@ -606,13 +606,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [placedModule.position, isLastSlot, isFurnitureDragging]);
   
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
-  // 상부장 체크
-  const isUpperCabinet = placedModule.moduleId?.includes('upper-cabinet') || 
-                         placedModule.moduleId?.includes('dual-upper-cabinet');
+  // 상부장 체크 (변수명 변경: 위에서 이미 선언됨)
+  const isUpperCabinetForY = placedModule.moduleId?.includes('upper-cabinet') || 
+                             placedModule.moduleId?.includes('dual-upper-cabinet');
   
-  // 하부장 체크
-  const isLowerCabinet = placedModule.moduleId?.includes('lower-cabinet') || 
-                         placedModule.moduleId?.includes('dual-lower-cabinet');
+  // 하부장 체크 (변수명 변경: 위에서 이미 선언됨)
+  const isLowerCabinetForY = placedModule.moduleId?.includes('lower-cabinet') || 
+                             placedModule.moduleId?.includes('dual-lower-cabinet');
   
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
@@ -620,7 +620,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // adjustedPosition 계산 (Y축 위치 포함)
   let adjustedPosition = initialAdjustedPosition;
   
-  if (isUpperCabinet && actualModuleData) {
+  if (isUpperCabinetForY && actualModuleData) {
     // 상부장은 상부프레임 하단에 붙어야 함
     const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
     
@@ -648,7 +648,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     } 
   // 하부장과 키큰장의 띄워서 배치 처리
-  else if ((isLowerCabinet || isTallCabinetForY) && actualModuleData) {
+  else if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
     // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
     const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     
