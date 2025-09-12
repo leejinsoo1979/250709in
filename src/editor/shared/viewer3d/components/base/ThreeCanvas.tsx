@@ -125,8 +125,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 기본: 한 손가락 회전, 두 손가락 줌+팬
   
   // viewMode 및 cameraMode 변경 시 그림자 설정 업데이트
-  const { cameraMode } = useUIStore();
-  
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
       if (import.meta.env.DEV) {
