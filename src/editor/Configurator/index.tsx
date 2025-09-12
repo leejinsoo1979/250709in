@@ -1201,12 +1201,10 @@ const Configurator: React.FC = () => {
     }
   }, [spaceInfo, previousSpaceInfo, updateFurnitureForNewSpace]);
 
-  // derivedSpaceStore 강제 재계산 (컬럼 수 동기화를 위해)
+  // derivedSpaceStore 재계산 (spaceInfo 변경 시 항상 실행)
   useEffect(() => {
-    if (!derivedSpaceStore.isCalculated) {
-      console.log('🔄 derivedSpaceStore 강제 재계산 (컬럼 수 동기화)');
-      derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
-    }
+    console.log('🔄 derivedSpaceStore 재계산 (spaceInfo 변경)');
+    derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
   }, [spaceInfo, derivedSpaceStore]);
 
   // RightPanel에서 사용할 수 있도록 window 객체에 추가
