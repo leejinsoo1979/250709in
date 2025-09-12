@@ -394,22 +394,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
-    // 모듈 ID가 이미 customWidth를 포함하고 있는지 확인
-    if (!targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
-      // 상하부장인지 확인 (upper-cabinet 또는 lower-cabinet 포함)
-      const isUpperLower = targetModuleId.includes('upper-cabinet') || targetModuleId.includes('lower-cabinet');
+    // 상하부장 특별 처리
+    const isUpperLower = targetModuleId.includes('upper-cabinet') || targetModuleId.includes('lower-cabinet');
+    
+    if (isUpperLower) {
+      // 싱글 상하부장의 경우 customWidth를 무조건 적용
+      // 이미 customWidth가 포함되어 있어도 다시 설정
+      const baseId = targetModuleId.replace(/-\d+$/, '');
+      targetModuleId = `${baseId}-${placedModule.customWidth}`;
       
-      if (isUpperLower) {
-        // 상하부장의 경우: 마지막 숫자만 customWidth로 교체
-        // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[customWidth]
-        // 예: dual-upper-cabinet-shelf-1200 -> dual-upper-cabinet-shelf-[customWidth]
-        const newTargetId = targetModuleId.replace(/-\d+$/, `-${placedModule.customWidth}`);
-        if (!isDualCabinet) {
-          console.log('🎯 싱글 상하부장 ID 변경:', targetModuleId, '->', newTargetId);
-        }
-        targetModuleId = newTargetId;
-      } else {
-        // 일반 가구의 경우: 기존 로직 유지
+      if (!isDualCabinet) {
+        console.log('🎯 싱글 상하부장 ID 강제 변경:', {
+          original: placedModule.moduleId,
+          baseId,
+          customWidth: placedModule.customWidth,
+          newTargetId: targetModuleId
+        });
+      }
+    } else {
+      // 일반 가구: 이미 customWidth를 포함하고 있지 않을 때만 변경
+      if (!targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
         const baseType = targetModuleId.replace(/-\d+$/, '');
         targetModuleId = `${baseType}-${placedModule.customWidth}`;
       }
@@ -456,24 +460,50 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
       
       // 상하부장의 경우 너비를 변경해서 재시도
-      // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[internalSpace.width]
+      // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[슬롯너비]
       if (internalSpace) {
         const baseId = targetModuleId.replace(/-\d+$/, '');
-        const newId = `${baseId}-${internalSpace.width}`;
+        
+        // 슬롯 너비 우선 사용
+        let tryWidth = placedModule.customWidth || internalSpace.width;
+        
+        // 슬롯 인덱스가 있고 indexing 정보가 있으면 슬롯 너비 사용
+        if (placedModule.slotIndex !== undefined && indexing && indexing.columnWidth) {
+          tryWidth = indexing.columnWidth;
+          if (!isDualCabinet) {
+            console.log('🔧 싱글 상하부장 슬롯 너비로 시도:', {
+              slotIndex: placedModule.slotIndex,
+              columnWidth: indexing.columnWidth,
+              tryWidth
+            });
+          }
+        }
+        
+        const newId = `${baseId}-${tryWidth}`;
         
         if (!isDualCabinet) {
-          console.log('🔧 싱글 상하부장 internalSpace.width로 시도:', newId);
+          console.log('🔧 싱글 상하부장 시도 ID:', newId);
         }
         
         moduleData = getModuleById(newId, internalSpace, zoneSpaceInfo);
         
-        // 그래도 못 찾으면 기본 너비들로 시도
+        // 그래도 못 찾으면 다양한 너비들로 시도
         if (!moduleData) {
-          const defaultWidths = [600, 900, 1200, 1500, 1800];
-          for (const width of defaultWidths) {
+          // 슬롯 기반 너비들 먼저 시도
+          const tryWidths = [
+            placedModule.customWidth,
+            indexing?.columnWidth,
+            internalSpace.width,
+            600, 900, 1200, 1500, 1800
+          ].filter(w => w && w > 0);
+          
+          // 중복 제거
+          const uniqueWidths = [...new Set(tryWidths)];
+          
+          for (const width of uniqueWidths) {
             const testId = `${baseId}-${width}`;
             if (!isDualCabinet) {
-              console.log('🔧 싱글 상하부장 기본 너비로 시도:', testId);
+              console.log('🔧 싱글 상하부장 너비로 시도:', testId);
             }
             moduleData = getModuleById(testId, internalSpace, zoneSpaceInfo);
             if (moduleData) {
