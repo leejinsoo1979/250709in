@@ -80,6 +80,7 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
+  const [shadowEnabled, setShadowEnabled] = useState(true);
   
   // UIStore에서 카메라 설정 가져오기
   const { cameraMode, setCameraMode } = useUIStore();
