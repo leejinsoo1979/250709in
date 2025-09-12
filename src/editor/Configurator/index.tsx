@@ -14,6 +14,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useHistoryStore } from '@/store/historyStore';
+import { useHistoryTracking } from './hooks/useHistoryTracking';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -102,6 +103,9 @@ const Configurator: React.FC = () => {
 
   // History Store
   const { saveState } = useHistoryStore();
+  
+  // 히스토리 트래킹 활성화
+  useHistoryTracking();
   
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
@@ -1233,13 +1237,6 @@ const Configurator: React.FC = () => {
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
     console.log('🔧 handleSpaceInfoUpdate called with:', updates);
     console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
-    
-    // 변경 전 현재 상태를 히스토리에 저장
-    saveState({
-      spaceInfo: spaceInfo,
-      placedModules: placedModules,
-      basicInfo: basicInfo
-    });
     
     // mainDoorCount 업데이트 감지
     if (updates.mainDoorCount !== undefined) {

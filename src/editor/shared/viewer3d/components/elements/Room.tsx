@@ -138,7 +138,7 @@ const BoxWithEdges: React.FC<{
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D'} castShadow={viewMode === '3D'} onBeforeRender={onBeforeRender}>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender}>
           <primitive object={material} />
         </mesh>
       )}
@@ -198,7 +198,7 @@ const Room: React.FC<RoomProps> = ({
   const { colors } = useThemeColors();
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   
   // 노서라운드 모드에서 엔드패널이 생성되는 위치 확인
@@ -1411,7 +1411,7 @@ const Room: React.FC<RoomProps> = ({
                 backZ + floorDepth/2  // 바닥면의 중심점을 backZ에서 프레임 앞쪽까지의 중앙에 배치
               ]}
               rotation={[-Math.PI / 2, 0, 0]}
-              receiveShadow
+              receiveShadow={shadowEnabled}
             >
               <planeGeometry args={[slotWidth, floorDepth]} />
               <meshStandardMaterial 
