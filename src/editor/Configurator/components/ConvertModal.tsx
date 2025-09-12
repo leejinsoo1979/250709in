@@ -11,9 +11,11 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 interface ConvertModalProps {
   isOpen: boolean;
   onClose: () => void;
+  showAll?: boolean;
+  setShowAll?: (value: boolean) => void;
 }
 
-const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
+const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, setShowAll }) => {
   const { t } = useTranslation();
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [capturedViews, setCapturedViews] = useState<{
@@ -70,11 +72,13 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
     const originalShowGuides = showGuides;
     const originalShowAxis = showAxis;
     const originalShowDimensions = showDimensions;
+    const originalShowAll = showAll;
     
     // 캡처를 위해 그리드, 축, 컬럼 끄기
     if (showGuides) setShowGuides(false);
     if (showAxis) setShowAxis(false);
     if (showDimensions) setShowDimensions(false);
+    if (showAll && setShowAll) setShowAll(false);
     
     const captures: typeof capturedViews = {};
     
@@ -138,6 +142,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       if (originalShowGuides) setShowGuides(true);
       if (originalShowAxis) setShowAxis(true);
       if (originalShowDimensions) setShowDimensions(true);
+      if (originalShowAll && setShowAll) setShowAll(true);
       
       setIsCapturing(false);
       setShowPDFPreview(true);
@@ -149,6 +154,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       if (originalShowGuides) setShowGuides(true);
       if (originalShowAxis) setShowAxis(true);
       if (originalShowDimensions) setShowDimensions(true);
+      if (originalShowAll && setShowAll) setShowAll(true);
       setIsCapturing(false);
       alert(t('messages.captureFailure'));
     }

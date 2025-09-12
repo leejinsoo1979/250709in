@@ -2685,6 +2685,8 @@ const Configurator: React.FC = () => {
       <ConvertModal
         isOpen={isConvertModalOpen}
         onClose={() => setIsConvertModalOpen(false)}
+        showAll={showAll}
+        setShowAll={setShowAll}
       />
       
       {/* PDF 템플릿 미리보기 */}
