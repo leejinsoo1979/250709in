@@ -96,6 +96,7 @@ interface UIState {
   // 카메라 설정
   cameraMode: 'perspective' | 'orthographic';
   cameraFov: number;
+  cameraZoom: number;
   
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
@@ -149,6 +150,7 @@ interface UIState {
   setIndirectLightColor: (color: string) => void;
   setCameraMode: (mode: 'perspective' | 'orthographic') => void;
   setCameraFov: (fov: number) => void;
+  setCameraZoom: (zoom: number) => void;
   resetUI: () => void;
 }
 
@@ -187,6 +189,7 @@ const initialUIState = {
   indirectLightColor: '#ffffff',  // 기본값: 흰색
   cameraMode: 'perspective' as const,  // 기본값: 원근 투영
   cameraFov: 50,  // 기본값: FOV 50도
+  cameraZoom: 1,  // 기본값: 줌 배율 1
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -390,6 +393,9 @@ export const useUIStore = create<UIState>()(
       
       setCameraFov: (fov) =>
         set({ cameraFov: fov }),
+      
+      setCameraZoom: (zoom) =>
+        set({ cameraZoom: zoom }),
       
       resetUI: () =>
         set(initialUIState),

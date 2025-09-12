@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   
   // UIStore에서 카메라 설정 가져오기
-  const { cameraMode, cameraFov, setCameraMode, setCameraFov } = useUIStore();
+  const { cameraMode, cameraFov, cameraZoom, setCameraMode, setCameraFov, setCameraZoom } = useUIStore();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -380,9 +380,41 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
                 
+                <div className={styles.cameraOption}>
+                  <label>줌: {Math.round(cameraZoom * 100)}%</label>
+                  <input 
+                    type="range" 
+                    min="10" 
+                    max="500" 
+                    value={cameraZoom * 100}
+                    onChange={(e) => setCameraZoom(Number(e.target.value) / 100)}
+                    className={styles.fovSlider}
+                  />
+                  <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+                    <button 
+                      onClick={() => setCameraZoom(0.5)}
+                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                    >
+                      50%
+                    </button>
+                    <button 
+                      onClick={() => setCameraZoom(1)}
+                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                    >
+                      100%
+                    </button>
+                    <button 
+                      onClick={() => setCameraZoom(2)}
+                      style={{ flex: 1, padding: '2px', fontSize: '12px' }}
+                    >
+                      200%
+                    </button>
+                  </div>
+                </div>
+                
                 {cameraMode === 'perspective' && (
                   <div className={styles.cameraOption}>
-                    <label>FOV: {cameraFov}°</label>
+                    <label>화각(FOV): {cameraFov}°</label>
                     <input 
                       type="range" 
                       min="30" 
