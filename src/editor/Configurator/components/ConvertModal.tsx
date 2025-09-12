@@ -80,10 +80,13 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     if (showGuides) setShowGuides(false);
     if (showAxis) setShowAxis(false);
     if (showDimensions) setShowDimensions(false);
-    if (showAll && setShowAll) setShowAll(false);
+    if (showAll && setShowAll) {
+      console.log('컬럼 끄기: showAll을 false로 설정');
+      setShowAll(false);
+    }
     
-    // 상태 변경이 렌더링에 반영되도록 대기
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // 상태 변경이 렌더링에 반영되도록 충분히 대기
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     const captures: typeof capturedViews = {};
     
