@@ -283,7 +283,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       } else {
         // 초기 상태가 없으면 기본값으로 설정
         const spaceHeight = spaceInfo?.height || 2400;
-        const defaultDistance = 50; // 기본 카메라 거리
+        const defaultDistance = 35; // 기본 카메라 거리 (더 가깝게 조정)
         
         const centerX = 0; // X축 중앙은 0
         const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
