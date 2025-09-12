@@ -1464,34 +1464,14 @@ const Configurator: React.FC = () => {
       finalUpdates = { ...finalUpdates, customColumnCount: finalCount };
     }
     
-    // customColumnCount가 직접 변경되었을 때도 검증
-    if (updates.customColumnCount) {
-      const currentWidth = finalUpdates.width || spaceInfo.width || 4800;
-      const range = calculateDoorRange(currentWidth);
-      const usableWidth = currentWidth - 100;
-      const proposedSlotWidth = usableWidth / updates.customColumnCount;
-      
+    // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
+    if (updates.customColumnCount !== undefined) {
       console.log('🔧 customColumnCount 업데이트:', {
         요청값: updates.customColumnCount,
-        현재폭: currentWidth,
-        사용가능폭: usableWidth,
-        제안슬롯폭: proposedSlotWidth,
-        범위: range,
-        유효범위: '400-600mm'
+        현재값: spaceInfo.customColumnCount
       });
-      
-      // 400-600mm 범위를 벗어나면 조정
-      if (proposedSlotWidth < 400 || proposedSlotWidth > 600) {
-        const correctedCount = Math.max(range.min, Math.min(range.max, 
-          proposedSlotWidth < 400 ? Math.floor(usableWidth / 400) : Math.ceil(usableWidth / 600)
-        ));
-        console.log('⚠️ 슬롯 크기가 범위를 벗어남, 조정:', {
-          원래값: updates.customColumnCount,
-          조정값: correctedCount,
-          이유: proposedSlotWidth < 400 ? '슬롯이 너무 작음' : '슬롯이 너무 큼'
-        });
-        finalUpdates = { ...finalUpdates, customColumnCount: correctedCount };
-      }
+      // 사용자가 설정한 값을 그대로 사용
+      finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
     }
     
     // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
