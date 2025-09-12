@@ -255,6 +255,10 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   
   // 공간 정보 설정
   setSpaceInfo: (info) => {
+    console.log('🏪 [Store] setSpaceInfo 호출:', {
+      customColumnCount: info.customColumnCount,
+      width: info.width
+    });
     set((state) => {
       // installType 하이픈 문제 수정
       const processedInfo = { ...info };
@@ -310,6 +314,11 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         spaceInfo: tempSpaceInfo,
         isDirty: true,
       };
+      
+      console.log('🏪🏪🏪 [Store] 최종 spaceInfo:', {
+        customColumnCount: newState.spaceInfo.customColumnCount,
+        width: newState.spaceInfo.width
+      });
       
       // wallConfig 업데이트 디버그
       if (processedInfo.wallConfig) {
