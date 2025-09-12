@@ -79,14 +79,12 @@ const Header: React.FC<HeaderProps> = ({
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
-  const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   
   // UIStore에서 카메라 설정 가져오기
-  const { cameraMode, cameraFov, cameraZoom, setCameraMode, setCameraFov, setCameraZoom } = useUIStore();
+  const { cameraMode, setCameraMode } = useUIStore();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
-  const cameraMenuRef = useRef<HTMLDivElement>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -100,23 +98,6 @@ const Header: React.FC<HeaderProps> = ({
       }
     };
   }, []);
-
-  // 카메라 메뉴 외부 클릭 시 닫기
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cameraMenuRef.current && !cameraMenuRef.current.contains(event.target as Node)) {
-        setIsCameraMenuOpen(false);
-      }
-    };
-
-    if (isCameraMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isCameraMenuOpen]);
 
   const handleHelpClick = () => {
     setIsHelpModalOpen(true);
@@ -347,89 +328,15 @@ const Header: React.FC<HeaderProps> = ({
             {t('help.title')}
           </button>
 
-          {/* 카메라 설정 버튼 */}
-          <div className={styles.cameraMenuContainer} ref={cameraMenuRef}>
-            <button 
-              className={styles.actionButton} 
-              onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
-            >
-              <Camera size={20} />
-              카메라
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
-                <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </button>
-            
-            {isCameraMenuOpen && (
-              <div className={styles.cameraDropdown}>
-                <div className={styles.cameraOption}>
-                  <label>투영 모드:</label>
-                  <div className={styles.cameraToggle}>
-                    <button 
-                      className={cameraMode === 'perspective' ? styles.active : ''}
-                      onClick={() => setCameraMode('perspective')}
-                    >
-                      원근
-                    </button>
-                    <button 
-                      className={cameraMode === 'orthographic' ? styles.active : ''}
-                      onClick={() => setCameraMode('orthographic')}
-                    >
-                      평행
-                    </button>
-                  </div>
-                </div>
-                
-                {cameraMode === 'perspective' && (
-                  <div className={styles.cameraOption}>
-                    <label>초점거리: {Math.round(50 / Math.tan((cameraFov * Math.PI / 180) / 2))}mm (화각 {cameraFov}°)</label>
-                    <input 
-                      type="range" 
-                      min="10" 
-                      max="120" 
-                      value={cameraFov}
-                      onChange={(e) => setCameraFov(Number(e.target.value))}
-                      className={styles.fovSlider}
-                    />
-                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
-                      <button 
-                        onClick={() => setCameraFov(94)}
-                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                      >
-                        광각
-                        <br/>
-                        <small>18mm</small>
-                      </button>
-                      <button 
-                        onClick={() => setCameraFov(53)}
-                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                      >
-                        표준
-                        <br/>
-                        <small>50mm</small>
-                      </button>
-                      <button 
-                        onClick={() => setCameraFov(28)}
-                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                      >
-                        망원
-                        <br/>
-                        <small>100mm</small>
-                      </button>
-                      <button 
-                        onClick={() => setCameraFov(14)}
-                        style={{ flex: 1, padding: '2px', fontSize: '12px' }}
-                      >
-                        초망원
-                        <br/>
-                        <small>200mm</small>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* 카메라 설정 버튼 - Perspective 체크/해제 토글 */}
+          <button 
+            className={`${styles.actionButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+            onClick={() => setCameraMode(cameraMode === 'perspective' ? 'orthographic' : 'perspective')}
+            title={cameraMode === 'perspective' ? '원근법 켜짐 (클릭하여 끄기)' : '원근법 꺼짐 (클릭하여 켜기)'}
+          >
+            <Camera size={20} />
+            {cameraMode === 'perspective' ? 'Perspective 체크' : 'Perspective 체크 안함'}
+          </button>
         </div>
 
         {/* 우측 액션 버튼들 */}
