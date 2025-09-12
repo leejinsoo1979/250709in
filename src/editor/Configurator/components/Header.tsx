@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User, ChevronDown, Camera } from 'lucide-react';
+import { Settings, Menu, User, ChevronDown, Camera, Undo, Redo } from 'lucide-react';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -12,6 +12,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
+import { useHistoryStore } from '@/store/historyStore';
 
 interface HeaderProps {
   title: string;
@@ -86,6 +87,12 @@ const Header: React.FC<HeaderProps> = ({
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const cameraMenuRef = useRef<HTMLDivElement>(null);
+  
+  // HistoryStore에서 undo/redo 기능 가져오기
+  const { canUndo, canRedo, undo, redo } = useHistoryStore();
+  const setSpaceInfo = useSpaceConfigStore(state => state.setSpaceInfo);
+  const setPlacedModules = useFurnitureStore(state => state.setPlacedModules);
+  const setBasicInfo = useProjectStore(state => state.setBasicInfo);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -131,6 +138,26 @@ const Header: React.FC<HeaderProps> = ({
     fileMenuTimeoutRef.current = setTimeout(() => {
       setIsFileMenuOpen(false);
     }, 300);
+  };
+  
+  // Undo 핸들러
+  const handleUndo = () => {
+    const previousState = undo();
+    if (previousState) {
+      setSpaceInfo(previousState.spaceInfo);
+      setPlacedModules(previousState.placedModules);
+      setBasicInfo(previousState.basicInfo);
+    }
+  };
+  
+  // Redo 핸들러
+  const handleRedo = () => {
+    const nextState = redo();
+    if (nextState) {
+      setSpaceInfo(nextState.spaceInfo);
+      setPlacedModules(nextState.placedModules);
+      setBasicInfo(nextState.basicInfo);
+    }
   };
 
   const handleNewProject = () => {
@@ -291,6 +318,26 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+
+          {/* Undo 버튼 */}
+          <button 
+            className={styles.actionButton}
+            onClick={handleUndo}
+            disabled={!canUndo()}
+            title="실행 취소 (Ctrl+Z)"
+          >
+            <Undo size={20} />
+          </button>
+          
+          {/* Redo 버튼 */}
+          <button 
+            className={styles.actionButton}
+            onClick={handleRedo}
+            disabled={!canRedo()}
+            title="다시 실행 (Ctrl+Y)"
+          >
+            <Redo size={20} />
+          </button>
 
           <button 
             className={styles.actionButton}

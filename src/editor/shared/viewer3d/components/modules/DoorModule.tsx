@@ -26,7 +26,7 @@ const BoxWithEdges: React.FC<{
   onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut }) => {
   const { theme } = useViewerTheme();
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, shadowEnabled } = useUIStore();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   
@@ -65,8 +65,8 @@ const BoxWithEdges: React.FC<{
         <mesh 
           geometry={geometry} 
           material={processedMaterial}
-          receiveShadow={viewMode === '3D' && !isEditMode} 
-          castShadow={viewMode === '3D' && !isEditMode}
+          receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled} 
+          castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
           onClick={onClick}
           onPointerOver={onPointerOver}

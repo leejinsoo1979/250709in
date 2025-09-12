@@ -39,7 +39,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   onPointerOut
 }) => {
   const { viewMode } = useSpace3DView();
-  const { view2DDirection } = useUIStore(); // view2DDirection 추가
+  const { view2DDirection, shadowEnabled } = useUIStore(); // view2DDirection, shadowEnabled 추가
   const { gl } = useThree();
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
@@ -150,8 +150,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       <mesh 
-        receiveShadow={viewMode === '3D' && renderMode === 'solid'} 
-        castShadow={viewMode === '3D' && renderMode === 'solid'}
+        receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled} 
+        castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}

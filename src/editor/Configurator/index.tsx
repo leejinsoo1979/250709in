@@ -13,6 +13,7 @@ import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { useHistoryStore } from '@/store/historyStore';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -99,12 +100,32 @@ const Configurator: React.FC = () => {
     return initialSpaceInfo;
   });
 
+  // History Store
+  const { saveState } = useHistoryStore();
+  
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // input 필드에 포커스가 있으면 키보드 단축키 무시
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
+      // Ctrl+Z / Cmd+Z로 Undo
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        const headerUndo = document.querySelector('[title="실행 취소 (Ctrl+Z)"]') as HTMLButtonElement;
+        headerUndo?.click();
+        return;
+      }
+      
+      // Ctrl+Y / Cmd+Y 또는 Ctrl+Shift+Z / Cmd+Shift+Z로 Redo
+      if (((event.ctrlKey || event.metaKey) && event.key === 'y') || 
+          ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
+        event.preventDefault();
+        const headerRedo = document.querySelector('[title="다시 실행 (Ctrl+Y)"]') as HTMLButtonElement;
+        headerRedo?.click();
         return;
       }
       
@@ -1212,6 +1233,13 @@ const Configurator: React.FC = () => {
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
     console.log('🔧 handleSpaceInfoUpdate called with:', updates);
     console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
+    
+    // 변경 전 현재 상태를 히스토리에 저장
+    saveState({
+      spaceInfo: spaceInfo,
+      placedModules: placedModules,
+      basicInfo: basicInfo
+    });
     
     // mainDoorCount 업데이트 감지
     if (updates.mainDoorCount !== undefined) {
