@@ -91,19 +91,27 @@ export class SpaceCalculator {
    * 내경폭에 맞는 기본 컬럼 수 계산 (자동 모드)
    */
   static getDefaultColumnCount(internalWidth: number): number {
+    const SLOT_MIN_WIDTH = 400; // 한 슬롯의 최소 너비 (mm)
     const SLOT_MAX_WIDTH = 600; // 한 슬롯의 최대 너비 (mm)
     
-    console.log('🔍 getDefaultColumnCount - internalWidth:', internalWidth, 'SLOT_MAX_WIDTH:', SLOT_MAX_WIDTH);
+    console.log('🔍 getDefaultColumnCount - internalWidth:', internalWidth);
     
     // 내경이 600mm 이하면 1개 컬럼
     if (internalWidth <= SLOT_MAX_WIDTH) {
       console.log('→ 내경이 600mm 이하, 컬럼 개수: 1');
       return 1;
     } 
-    // 그 외의 경우 - 슬롯이 600mm를 초과하지 않도록 올림 처리
+    // 그 외의 경우 - 슬롯이 400mm 이상이 되도록 계산
     else {
-      const columnCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
-      console.log('→ 계산된 컬럼 개수:', columnCount, '(', internalWidth, '/', SLOT_MAX_WIDTH, ')');
+      // 각 슬롯이 최소 400mm는 되어야 하므로
+      const maxColumnsByMinWidth = Math.floor(internalWidth / SLOT_MIN_WIDTH);
+      // 각 슬롯이 600mm를 넘지 않도록
+      const minColumnsByMaxWidth = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      
+      // 두 조건을 모두 만족하는 컬럼 수 선택
+      const columnCount = minColumnsByMaxWidth;
+      
+      console.log('→ 계산된 컬럼 개수:', columnCount, '(내경:', internalWidth, 'mm, 슬롯당:', Math.floor(internalWidth / columnCount), 'mm)');
       return columnCount;
     }
   }
