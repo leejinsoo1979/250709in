@@ -56,7 +56,9 @@ export const useCameraManager = (
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
     // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.5배로 조정
     const zoomMultiplier = isSplitView ? 0.5 : 1.0;
-    const zoom = (1200 / distance) * zoomMultiplier;
+    // 공간 크기에 따라 동적으로 zoom 계산 (공간이 클수록 기준값도 크게)
+    const baseZoomDistance = Math.max(1200, spaceInfo.width * 0.4);
+    const zoom = (baseZoomDistance / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
     

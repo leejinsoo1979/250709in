@@ -62,9 +62,9 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + height * height + depth * depth);
   
-  // 여백을 줄여서 공간이 화면을 더 많이 차지하도록
+  // 적절한 여백으로 조정
   // 가구 유무와 관계없이 일정한 여백 사용
-  const furnitureMargin = 0.8; // 1.2 -> 0.8로 줄여서 더 가깝게
+  const furnitureMargin = 0.95; // 적절한 거리로 조정
   
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
@@ -82,7 +82,7 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const distance = mmToThreeUnits(safeDistance * furnitureMargin);
   
   // 큰 공간에서도 전체가 보이도록 최대 거리 제한 대폭 증가
-  return Math.max(5, Math.min(150, distance)); // 8→5로 더 가까이
+  return Math.max(7, Math.min(150, distance)); // 적절한 최소 거리
 };
 
 /**

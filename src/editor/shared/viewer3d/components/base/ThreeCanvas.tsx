@@ -288,8 +288,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceWidth = spaceInfo?.width || 3000;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // Space3DView와 완전히 동일한 거리 계산 사용
-        const defaultDistance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+        // Space3DView와 완전히 동일한 거리 계산 사용 - placedModules 개수는 0으로 (초기 상태와 동일)
+        const defaultDistance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, 0);
         
         const centerX = 0; // X축 중앙은 0
         const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
@@ -344,16 +344,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceHeight = spaceInfo?.height || 2400;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // 2D 모드를 위한 적절한 zoom 계산 - 공간이 화면에 꽉 차도록
-        // 일반적으로 3600mm 너비의 공간이 화면에 적절히 보이도록 설정
-        const baseZoom = 1.0; // 기본 zoom 값
-        const referenceWidth = 3600; // 기준 너비
-        const appropriateZoom = baseZoom * (referenceWidth / spaceWidth);
+        // 2D 모드에서는 매우 큰 zoom 값 사용
+        // 공간이 화면을 가득 채우도록 설정
+        const appropriateZoom = 300; // 화면을 가득 채우는 zoom 값
         
-        console.log('🎯 2D 카메라 계산된 초기값으로 리셋:', {
+        console.log('🎯 2D 카메라 초기값으로 리셋 (고정 zoom):', {
           zoom: appropriateZoom,
-          space: { width: spaceWidth, height: spaceHeight },
-          calculation: `${baseZoom} * (${referenceWidth} / ${spaceWidth})`
+          space: { width: spaceWidth, height: spaceHeight }
         });
         
         // OrbitControls 초기화

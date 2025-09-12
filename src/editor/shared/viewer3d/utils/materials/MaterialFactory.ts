@@ -281,14 +281,25 @@ export class MaterialFactory {
   /**
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
-  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal'): THREE.ShaderMaterial {
+  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode?: '2D' | '3D'): THREE.ShaderMaterial {
+    // viewMode가 명시적으로 '2D'가 아니면 3D로 처리
+    const is2DMode = viewMode === '2D';
+    console.log('🔍 createShaderGradientWallMaterial:', { viewMode, is2DMode, direction });
     const vertexShader = `
       varying vec2 vUv;
       varying vec3 vPosition;
+      varying vec3 vWorldNormal;
+      varying vec3 vViewDirection;
       
       void main() {
         vUv = uv;
         vPosition = position;
+        
+        // 월드 노말과 뷰 방향 계산
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        vViewDirection = normalize(cameraPosition - worldPosition.xyz);
+        
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `;
@@ -298,9 +309,12 @@ export class MaterialFactory {
         uniform vec3 colorEnd;
         uniform float direction;
         uniform float reverse;
+        uniform float isOrthographic;
         
         varying vec2 vUv;
         varying vec3 vPosition;
+        varying vec3 vWorldNormal;
+        varying vec3 vViewDirection;
         
         void main() {
           float gradientFactor;
@@ -319,7 +333,28 @@ export class MaterialFactory {
           }
           
           vec3 color = mix(colorStart, colorEnd, gradientFactor);
-          gl_FragColor = vec4(color, 1.0);
+          
+          // orthographic(2D) 모드에서만 투명도 계산
+          // 3D 모드에서는 항상 불투명 (opacity = 1.0)
+          float opacity = 1.0;
+          if (isOrthographic > 0.5) {
+            // 2D 모드에서만 투명도 적용
+            // 뷰 방향과 노말의 내적으로 각도 계산
+            float dotProduct = abs(dot(vWorldNormal, vViewDirection));
+            
+            // 카메라가 면을 뒤에서 보거나 옆에서 보면 투명하게
+            // dotProduct가 작을수록 (뒤에서 보는 각도) 더 투명하게
+            if (dotProduct < 0.2) {
+              opacity = 0.05; // 거의 완전 투명
+            } else if (dotProduct < 0.5) {
+              opacity = 0.2 + (dotProduct - 0.2) * 2.0; // 부드러운 전환
+            } else {
+              opacity = 0.8; // 정면에서 봐도 약간 투명
+            }
+          }
+          // isOrthographic가 0이면 (3D 모드) opacity는 1.0 유지
+          
+          gl_FragColor = vec4(color, opacity);
         }
       `;
     
@@ -333,10 +368,11 @@ export class MaterialFactory {
           colorStart: { value: new THREE.Color('#ffffff') }, // 앞쪽: 흰색
           colorEnd: { value: new THREE.Color('#c0c0c0') },   // 뒤쪽: 아주 살짝 더 진한 회색 (#c8c8c8 → #c0c0c0)
           direction: { value: directionValue },
-          reverse: { value: isReverse ? 1.0 : 0.0 }
+          reverse: { value: isReverse ? 1.0 : 0.0 },
+          isOrthographic: { value: is2DMode ? 1.0 : 0.0 }
         },
         side: THREE.DoubleSide,
-        transparent: false
+        transparent: is2DMode // 2D 모드에서만 투명 처리
       });
   }
 

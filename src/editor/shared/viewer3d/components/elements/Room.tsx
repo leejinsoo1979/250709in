@@ -814,7 +814,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
                 </mesh>
               );
             }
@@ -827,7 +827,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <planeGeometry args={[extendedPanelDepth, height]} />
-                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
               </mesh>
               );
             }
@@ -876,7 +876,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, -Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
                 </mesh>
               );
             }
@@ -889,7 +889,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, -Math.PI / 2, 0]}
               >
                 <planeGeometry args={[extendedPanelDepth, height]} />
-                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse')} />
+                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
               </mesh>
               );
             }
@@ -917,7 +917,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[width, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
                 </mesh>
               );
             }
@@ -1000,7 +1000,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
                 </mesh>
                 
                 {/* 일반 영역 천장 (원래 높이) */}
@@ -1009,7 +1009,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
                 </mesh>
                 
                 {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
@@ -1033,7 +1033,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal')} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
                 </mesh>
               </>
             );
@@ -1046,7 +1046,7 @@ const Room: React.FC<RoomProps> = ({
               rotation={[-Math.PI / 2, 0, 0]}
             >
               <planeGeometry args={[width, extendedPanelDepth]} />
-              <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical')} />
+              <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode)} />
             </mesh>
           )}
           

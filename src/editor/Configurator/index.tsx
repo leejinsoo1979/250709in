@@ -289,19 +289,20 @@ const Configurator: React.FC = () => {
     
     const range = calculateDoorRange(effectiveWidth);
     
-    let count = range.ideal;
+    // 기본값을 최소값으로 설정 (ideal 대신 min 사용)
+    let count = range.min;
     
     // 단내림이 활성화된 경우 메인구간 도어 개수 사용
     if (spaceInfo.droppedCeiling?.enabled) {
       if (spaceInfo.mainDoorCount) {
         count = spaceInfo.mainDoorCount;
       } else {
-        // mainDoorCount가 없으면 현재 customColumnCount 사용
-        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
+        // mainDoorCount가 없으면 현재 customColumnCount 사용, 없으면 최소값
+        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
       }
     } else {
-      // 단내림이 비활성화된 경우 customColumnCount 우선 사용
-      count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.ideal;
+      // 단내림이 비활성화된 경우 customColumnCount 우선 사용, 없으면 최소값
+      count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
     }
     
     // 반드시 400-600mm 범위 안에서만 동작하도록 강제
