@@ -6,10 +6,12 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
+import { calculateOptimalDistance as calculateOptimalDistanceUtil } from './utils/threeUtils';
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
@@ -53,6 +55,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
+  const { placedModules } = useFurnitureStore();
   
   // 반응형 감지
   const { isTouchDevice, isMobile, isTablet } = useResponsive();
@@ -285,10 +288,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceWidth = spaceInfo?.width || 3000;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // 초기 카메라와 동일한 거리 계산 사용
-        const calculateOptimalDistance = (width: number, height: number, depth: number) => {
+        // 초기 카메라와 동일한 거리 계산 사용 (Space3DView와 동일한 로직)
+        const calculateOptimalDistance = (width: number, height: number, depth: number, moduleCount: number) => {
           const diagonal = Math.sqrt(width * width + height * height + depth * depth);
-          const furnitureMargin = 0.8;
+          const furnitureMargin = 0.8; // Space3DView와 동일
           const fov = 50;
           const fovRad = (fov * Math.PI) / 180;
           const maxDimension = Math.max(width, height, depth);
@@ -298,7 +301,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           return (safeDistance * 0.01) * furnitureMargin;
         };
         
-        const defaultDistance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth);
+        const defaultDistance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
         
         const centerX = 0; // X축 중앙은 0
         const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)

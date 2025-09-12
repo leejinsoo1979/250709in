@@ -1147,7 +1147,7 @@ export const generateShelvingModules = (
       width: internalSpace.width,
       height: 2400, // 기본 높이
       depth: 600, // 기본 깊이
-      customColumnCount: Math.max(1, Math.floor(internalSpace.width / 600)), // 600mm당 1컬럼
+      customColumnCount: undefined, // customColumnCount를 설정하지 않으면 SpaceCalculator.getDefaultColumnCount가 사용됨
       columnMode: 'custom',
       baseConfig: {
         type: 'wall',
