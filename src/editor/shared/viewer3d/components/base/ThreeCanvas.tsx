@@ -102,13 +102,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
   useEffect(() => {
-    // 뷰 모드 변경 시 해당 모드의 초기 상태 리셋
-    if (viewMode === '2D') {
-      // 2D 모드로 전환 시 2D 초기 상태 리셋
-      initialCameraSetup.current.position2D = null;
-      initialCameraSetup.current.target2D = null;
-      initialCameraSetup.current.zoom2D = null;
-    }
+    // 뷰 모드 변경 시 해당 모드의 초기 상태 리셋 - 제거
+    // 초기 상태를 null로 리셋하면 스페이스 키 누를 때 초기값이 없어서 문제 발생
+    // if (viewMode === '2D') {
+    //   initialCameraSetup.current.position2D = null;
+    //   initialCameraSetup.current.target2D = null;
+    //   initialCameraSetup.current.zoom2D = null;
+    // }
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   }, [theme, viewMode, view2DDirection, view2DTheme]);
   
@@ -339,23 +339,35 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         
         console.log('🎯 2D 카메라 초기 상태 리셋 완료');
       } else {
-        // 저장된 상태가 없으면 현재 카메라 설정 사용 (폴백)
-        const initialPosition = camera.position;
-        const initialTarget = camera.target;
-        const initialUp = camera.up || [0, 1, 0];
-        const initialZoom = camera.zoom || 1;
+        // 저장된 상태가 없으면 적절한 초기값 계산
+        const spaceWidth = spaceInfo?.width || 3000;
+        const spaceHeight = spaceInfo?.height || 2400;
+        const spaceDepth = spaceInfo?.depth || 600;
         
-        console.log('🎯 2D 카메라 기본값으로 리셋 (저장된 상태 없음)');
+        // 2D 모드를 위한 적절한 zoom 계산
+        const maxDimension = Math.max(spaceWidth, spaceHeight);
+        const appropriateZoom = 1000 / maxDimension; // 화면에 적절히 보이도록 조정
         
-        controls.object.position.set(...initialPosition);
-        controls.target.set(...initialTarget);
-        controls.object.up.set(...initialUp);
-        controls.object.zoom = initialZoom;
+        console.log('🎯 2D 카메라 계산된 초기값으로 리셋:', {
+          zoom: appropriateZoom,
+          space: { width: spaceWidth, height: spaceHeight }
+        });
+        
+        // OrbitControls 초기화
+        controls.object.position.set(0, 0, 50);
+        controls.target.set(0, 0, 0);
+        controls.object.up.set(0, 1, 0);
+        controls.object.zoom = appropriateZoom;
         controls.object.updateProjectionMatrix();
         
         controls.object.lookAt(controls.target);
         controls.update();
         controls.saveState();
+        
+        // 다음번을 위해 초기 상태 저장
+        initialCameraSetup.current.position2D = controls.object.position.clone();
+        initialCameraSetup.current.target2D = controls.target.clone();
+        initialCameraSetup.current.zoom2D = appropriateZoom;
       }
     }
   }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo]);
