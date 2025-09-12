@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
 import { useSpace3DView } from '../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
 
 interface MullionPanelProps {
   column: Column;
@@ -24,6 +25,7 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   slotWidth
 }) => {
   const { viewMode } = useSpace3DView();
+  const { shadowEnabled } = useUIStore();
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -57,7 +59,7 @@ const MullionPanel: React.FC<MullionPanelProps> = ({
   return (
     <group position={[mullionX, column.position[1], 0]}>
       {/* 멍장 패널 본체 */}
-      <mesh castShadow receiveShadow geometry={panelGeometry}>
+      <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={panelGeometry}>
         <meshLambertMaterial color={panelColor} />
       </mesh>
       

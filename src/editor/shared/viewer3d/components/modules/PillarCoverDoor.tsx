@@ -4,6 +4,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
 import { PillarCoverDoor as PillarCoverDoorType } from '@/editor/shared/utils/columnSlotProcessor';
 import { useSpace3DView } from '../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
 
 interface PillarCoverDoorProps {
   column: Column;
@@ -23,6 +24,7 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   slotWidth
 }) => {
   const { viewMode } = useSpace3DView();
+  const { shadowEnabled } = useUIStore();
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -47,7 +49,7 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
   return (
     <group position={[column.position[0], column.position[1], doorZ]}>
       {/* 도어 본체 */}
-      <mesh castShadow receiveShadow geometry={doorGeometry}>
+      <mesh castShadow={shadowEnabled} receiveShadow={shadowEnabled} geometry={doorGeometry}>
         <meshLambertMaterial color={doorColor} />
       </mesh>
       
@@ -77,7 +79,7 @@ const PillarCoverDoor: React.FC<PillarCoverDoorProps> = ({
       {/* 도어 손잡이 */}
       <mesh 
         position={[doorWidth * 0.35, 0, doorThickness / 2 + 0.005]}
-        castShadow
+        castShadow={shadowEnabled}
       >
         <boxGeometry args={[0.02, 0.15, 0.01]} />
         <meshLambertMaterial color={handleColor} />
