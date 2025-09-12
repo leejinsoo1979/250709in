@@ -372,6 +372,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
   let targetModuleId = placedModule.moduleId;
   
+  // 싱글 상하부장 디버깅
+  const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
+  const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet');
+  const isDualCabinet = placedModule.moduleId.includes('dual-');
+  
+  if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
+    console.log('🔍 싱글 상하부장 처리 시작:', {
+      original: placedModule.moduleId,
+      customWidth: placedModule.customWidth,
+      adjustedWidth: placedModule.adjustedWidth,
+      internalSpace,
+      zoneSpaceInfo
+    });
+  }
+  
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
   // 폭 조정은 렌더링 시에만 적용
   if (placedModule.adjustedWidth) {
@@ -388,7 +403,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 상하부장의 경우: 마지막 숫자만 customWidth로 교체
         // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[customWidth]
         // 예: dual-upper-cabinet-shelf-1200 -> dual-upper-cabinet-shelf-[customWidth]
-        targetModuleId = targetModuleId.replace(/-\d+$/, `-${placedModule.customWidth}`);
+        const newTargetId = targetModuleId.replace(/-\d+$/, `-${placedModule.customWidth}`);
+        if (!isDualCabinet) {
+          console.log('🎯 싱글 상하부장 ID 변경:', targetModuleId, '->', newTargetId);
+        }
+        targetModuleId = newTargetId;
       } else {
         // 일반 가구의 경우: 기존 로직 유지
         const baseType = targetModuleId.replace(/-\d+$/, '');
@@ -397,15 +416,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // console.log 제거 - 성능 개선
-
   // getModuleById 호출
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
+  if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
+    console.log('📌 싱글 상하부장 getModuleById 결과:', {
+      targetModuleId,
+      moduleDataFound: !!moduleData,
+      moduleData: moduleData ? { id: moduleData.id, dimensions: moduleData.dimensions } : null
+    });
+  }
+  
   // moduleData가 없으면 기본 모듈 ID로 재시도
   if (!moduleData && targetModuleId !== placedModule.moduleId) {
+    if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
+      console.log('⚠️ 싱글 상하부장 첫 시도 실패, 원본 ID로 재시도:', placedModule.moduleId);
+    }
     // targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도
     moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
+    
+    if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
+      console.log('📌 싱글 상하부장 원본 ID 재시도 결과:', {
+        moduleDataFound: !!moduleData
+      });
+    }
   }
   
   // 그래도 못 찾으면 다양한 패턴으로 재시도
@@ -413,15 +447,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const parts = placedModule.moduleId.split('-');
     
     // 상하부장 특별 처리
-    const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
-    const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet');
+    const isUpperCabinetFallback = placedModule.moduleId.includes('upper-cabinet');
+    const isLowerCabinetFallback = placedModule.moduleId.includes('lower-cabinet');
     
-    if (isUpperCabinet || isLowerCabinet) {
+    if (isUpperCabinetFallback || isLowerCabinetFallback) {
+      if (!isDualCabinet) {
+        console.log('🚨 싱글 상하부장 모든 시도 실패, 패턴 재시도 시작');
+      }
+      
       // 상하부장의 경우 너비를 변경해서 재시도
       // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[internalSpace.width]
       if (internalSpace) {
         const baseId = targetModuleId.replace(/-\d+$/, '');
         const newId = `${baseId}-${internalSpace.width}`;
+        
+        if (!isDualCabinet) {
+          console.log('🔧 싱글 상하부장 internalSpace.width로 시도:', newId);
+        }
+        
         moduleData = getModuleById(newId, internalSpace, zoneSpaceInfo);
         
         // 그래도 못 찾으면 기본 너비들로 시도
@@ -429,8 +472,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const defaultWidths = [600, 900, 1200, 1500, 1800];
           for (const width of defaultWidths) {
             const testId = `${baseId}-${width}`;
+            if (!isDualCabinet) {
+              console.log('🔧 싱글 상하부장 기본 너비로 시도:', testId);
+            }
             moduleData = getModuleById(testId, internalSpace, zoneSpaceInfo);
-            if (moduleData) break;
+            if (moduleData) {
+              if (!isDualCabinet) {
+                console.log('✅ 싱글 상하부장 찾음!:', testId);
+              }
+              break;
+            }
           }
         }
       }
