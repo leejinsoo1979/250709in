@@ -643,7 +643,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   
   // 키큰장인지 확인 (2hanging이 포함된 모듈 ID)
-  const isTallCabinet = actualModuleData.id.includes('2hanging');
+  const isTallCabinet = actualModuleData?.id?.includes('2hanging') || false;
 
   // 키큰장 엔드패널 처리
   let adjustedWidthForEndPanel = furnitureWidthMm;
@@ -654,7 +654,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const endPanelSide = adjacentCheck.adjacentSide;
   
   // 🔴🔴🔴 엔드패널 디버깅 - 키큰장일 때만
-  if (actualModuleData.category === 'full') {
+  if (actualModuleData?.category === 'full') {
     }
   
   // 노서라운드 첫/마지막 슬롯 여부 확인 (상하부장 처리에서 사용)
@@ -1257,7 +1257,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   
   // 깊이 계산: customDepth 우선, 기둥 충돌로 조정된 깊이, 기본 깊이 순
-  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== actualModuleData?.dimensions.depth ? adjustedDepthMm : actualModuleData?.dimensions.depth || 0);
+  const moduleDepth = actualModuleData?.dimensions?.depth || 0;
+  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth);
   const depth = mmToThreeUnits(actualDepthMm);
   
   // Column C 깊이 디버깅
@@ -1282,7 +1283,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
   
   // 기둥 C 디버깅 - 위치는 유지, 깊이만 조정
-  if (adjustedDepthMm !== actualModuleData?.dimensions.depth && slotInfo?.hasColumn) {
+  if (adjustedDepthMm !== moduleDepth && slotInfo?.hasColumn) {
     }
   
   // 기둥 C가 있는 경우 디버깅
@@ -1651,7 +1652,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             moduleDepth={actualModuleData?.dimensions.depth || 0}
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
-            color={isDraggingThis ? '#ff6600' : actualModuleData.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+            color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
             originalSlotWidth={originalSlotWidthForDoor}
             slotCenterX={doorXOffset}
             moduleData={actualModuleData}
@@ -1678,7 +1679,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           2. 노서라운드 벽없음 첫/마지막 슬롯 (엔드패널 생성 안함) */}
       {(() => {
         // 엔드패널 렌더링 여부 디버깅
-        if (actualModuleData.category === 'full' && !needsEndPanelAdjustment) {
+        if (actualModuleData?.category === 'full' && !needsEndPanelAdjustment) {
           }
         return null;
       })()}
