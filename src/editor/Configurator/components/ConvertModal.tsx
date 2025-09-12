@@ -25,6 +25,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     door?: string;
   }>({});
   const [isCapturing, setIsCapturing] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState('');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   
   // 내보내기 옵션 상태
   const [exportType, setExportType] = useState<'pdf' | 'dxf'>('pdf');
@@ -46,10 +49,56 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
   if (!isOpen) return null;
 
+  // 로딩 화면 컴포넌트
+  const LoadingScreen = () => (
+    <div className={styles.loadingOverlay}>
+      <div className={styles.loadingContent}>
+        <div className={styles.loadingIcon}>
+          <div className={styles.loadingCircle}></div>
+          <div className={styles.loadingCircleActive}></div>
+          <div className={styles.loadingCircleInner}></div>
+          <div className={styles.loadingCircleInnerActive}></div>
+          <div className={styles.pdfIcon}>PDF</div>
+        </div>
+        
+        <h2 className={styles.loadingTitle}>도면 변환 중</h2>
+        <p className={styles.loadingSubtitle}>고품질 PDF 문서를 생성하고 있습니다</p>
+        
+        <div className={styles.loadingProgress}>
+          <div className={styles.loadingSteps}>
+            <div className={`${styles.loadingStep} ${loadingStep >= 1 ? styles.completed : ''} ${loadingStep === 0 ? styles.active : ''}`}>
+              준비
+            </div>
+            <div className={`${styles.loadingStep} ${loadingStep >= 2 ? styles.completed : ''} ${loadingStep === 1 ? styles.active : ''}`}>
+              캡처
+            </div>
+            <div className={`${styles.loadingStep} ${loadingStep >= 3 ? styles.completed : ''} ${loadingStep === 2 ? styles.active : ''}`}>
+              변환
+            </div>
+            <div className={`${styles.loadingStep} ${loadingStep >= 4 ? styles.completed : ''} ${loadingStep === 3 ? styles.active : ''}`}>
+              생성
+            </div>
+          </div>
+          
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${loadingProgress}%` }}></div>
+          </div>
+          
+          <div className={styles.loadingStatus}>
+            {loadingStatus}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // 뷰 캡처 함수
   const captureViews = async () => {
     console.log('captureViews 시작');
     setIsCapturing(true);
+    setLoadingStep(0);
+    setLoadingProgress(10);
+    setLoadingStatus('캡처 준비 중...');
     const { 
       viewMode, 
       view2DDirection,
@@ -118,6 +167,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       
       // 상부뷰 캡처
       console.log('상부뷰 캡처 시작');
+      setLoadingStep(1);
+      setLoadingProgress(25);
+      setLoadingStatus('상부 뷰 캡처 중...');
       setViewMode('2D');
       setView2DDirection('top');
       setRenderMode('wireframe');
@@ -127,6 +179,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       
       // 정면뷰 캡처 - wireframe 유지
       console.log('정면뷰 캡처 시작');
+      setLoadingProgress(40);
+      setLoadingStatus('정면 뷰 캡처 중...');
       setView2DDirection('front');
       setRenderMode('wireframe');  // 2D는 wireframe으로!
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -135,6 +189,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       
       // 측면뷰 캡처 - wireframe 유지
       console.log('측면뷰 캡처 시작');
+      setLoadingProgress(55);
+      setLoadingStatus('측면 뷰 캡처 중...');
       setView2DDirection('left');
       setRenderMode('wireframe');  // 2D는 wireframe으로!
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -143,14 +199,26 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       
       // 도어뷰 캡처 (3D 정면)
       console.log('도어뷰 캡처 시작');
+      setLoadingProgress(70);
+      setLoadingStatus('3D 뷰 캡처 중...');
       setViewMode('3D');
       setRenderMode('solid');
       await new Promise(resolve => setTimeout(resolve, 1500));
       captures.door = threeCanvas.toDataURL();
       console.log('도어뷰 캡처 완료');
       
+      setLoadingStep(2);
+      setLoadingProgress(85);
+      setLoadingStatus('도면 변환 중...');
+      
       setCapturedViews(captures);
       console.log('모든 캡처 완료:', captures);
+      
+      // 변환 완료
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoadingStep(3);
+      setLoadingProgress(100);
+      setLoadingStatus('PDF 생성 완료!');
       
       // 원래 상태로 복원
       setViewMode(originalViewMode);
@@ -275,6 +343,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
   return (
     <>
+      {/* 로딩 화면 */}
+      {(isCapturing || isPDFExporting || isDXFExporting) && <LoadingScreen />}
+      
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.header}>
