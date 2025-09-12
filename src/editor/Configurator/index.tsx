@@ -2479,6 +2479,7 @@ const Configurator: React.FC = () => {
         onProjectNameChange={handleProjectNameChange}
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
+        onExportPDF={() => setIsConvertModalOpen(true)}
       />
 
       <div className={styles.mainContent}>
