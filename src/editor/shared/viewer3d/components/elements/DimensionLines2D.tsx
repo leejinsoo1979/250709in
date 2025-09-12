@@ -15,18 +15,9 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
   // mm → three.js 단위 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // CSS 변수에서 실제 테마 색상 가져오기
-  const getThemeColorFromCSS = (variableName: string, fallback: string) => {
-    if (typeof window !== 'undefined') {
-      const computedColor = getComputedStyle(document.documentElement)
-        .getPropertyValue(variableName).trim();
-      return computedColor || fallback;
-    }
-    return fallback;
-  };
-
-  // 테마 기반 치수선 색상
-  const dimensionColor = getThemeColorFromCSS('--theme-primary', '#10b981');
+  // 2D 도면 치수선 색상 - 테마 색상 사용 안함
+  // 라이트 모드: 검정색, 다크 모드: 흰색
+  const dimensionColor = theme?.mode === 'light' ? '#000000' : '#FFFFFF';
 
   // 프레임 두께 포함 전체 외경 기준
   const topY = mmToThreeUnits(spaceInfo.height + 100); // 가구 맨 위 + 100mm

@@ -268,7 +268,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
 
-  // CSS 변수에서 실제 테마 색상 가져오기
+  // CSS 변수에서 실제 테마 색상 가져오기 (3D 모드용)
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {
     if (typeof window !== 'undefined') {
       const computedColor = getComputedStyle(document.documentElement)
@@ -278,18 +278,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return fallback;
   };
 
-  // 3D 모드에서는 검정색, 2D 모드에서는 테마 색상 사용
+  // 3D 모드에서는 회색, 2D 모드에서는 라이트/다크에 따라 검정/흰색
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
-  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
-  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : primaryColor);  // 다크모드에서 흰색
-  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : primaryColor);  // 다크모드에서 밝은 회색
-  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : primaryColor);  // 다크모드에서 중간 회색
+  const dimensionColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 라이트-검정, 다크-흰색
+  const textColor = currentViewDirection === '3D' ? '#666666' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 2D: 라이트-검정, 다크-흰색
+  const guideColor = currentViewDirection === '3D' ? '#999999' : (view2DTheme === 'dark' ? '#cccccc' : '#000000');  // 2D: 라이트-검정, 다크-밝은회색
+  const subGuideColor = currentViewDirection === '3D' ? '#cccccc' : (view2DTheme === 'dark' ? '#888888' : '#000000');  // 2D: 라이트-검정, 다크-중간회색
   const gridColor = currentViewDirection === '3D' 
     ? primaryColor  // 3D에서는 테마 색상 사용
     : getThemeColorFromCSS('--theme-border', '#e5e7eb');  // 2D에서는 border 색상
   
-  // 프레임 치수 색상도 테마 색상 사용
-  const frameDimensionColor = primaryColor;
+  // 프레임 치수 색상도 2D에서는 라이트/다크에 따라 검정/흰색
+  const frameDimensionColor = currentViewDirection === '3D' ? primaryColor : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
 
   // 기둥 간격 편집 핸들러
   const handleColumnDistanceEdit = (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => {
