@@ -104,10 +104,8 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       };
     }
     
-    // 컬럼 수 초기값 설정
-    if (!spaceInfo.customColumnCount && !spaceInfo.mainDoorCount) {
-      updates.customColumnCount = 3;
-    }
+    // 컬럼 수 초기값 설정 - 자동 계산에 맡김
+    // customColumnCount는 SpaceCalculator.getDefaultColumnCount에서 자동 계산됨
     
     // 업데이트가 필요한 경우에만 실행
     if (Object.keys(updates).length > 0) {
