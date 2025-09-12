@@ -38,14 +38,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   };
 
   // 테마 기반 치수 색상 설정
-  const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
+  // 라이트 모드에서는 검정색, 다크 모드에서는 테마 색상 사용
+  const primaryColor = theme?.mode === 'light' ? '#000000' : getThemeColorFromCSS('--theme-primary', '#10b981');
   const dimensionColors = {
-    primary: primaryColor,     // 기본 치수선 (테마 색상)
-    furniture: primaryColor,   // 가구 치수선 (테마 색상)
-    column: primaryColor,      // 컬럼 치수선 (테마 색상)
-    float: primaryColor,       // 띄움 높이 (테마 색상)
+    primary: primaryColor,     // 기본 치수선
+    furniture: primaryColor,   // 가구 치수선
+    column: primaryColor,      // 컬럼 치수선
+    float: primaryColor,       // 띄움 높이
     background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-    text: primaryColor         // 텍스트도 테마 색상
+    text: primaryColor         // 텍스트
   };
   
   // 실제 뷰 방향 결정
