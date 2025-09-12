@@ -81,6 +81,7 @@ const Configurator: React.FC = () => {
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false); // 내보내기 모달 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -2682,8 +2683,8 @@ const Configurator: React.FC = () => {
       
       {/* 컨버팅 모달 */}
       <ConvertModal
-        isOpen={isConvertPanelOpen}
-        onClose={() => setIsConvertPanelOpen(false)}
+        isOpen={isConvertModalOpen}
+        onClose={() => setIsConvertModalOpen(false)}
       />
       
       {/* PDF 템플릿 미리보기 */}
