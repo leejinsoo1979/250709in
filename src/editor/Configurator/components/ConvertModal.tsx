@@ -48,13 +48,33 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
   const captureViews = async () => {
     console.log('captureViews 시작');
     setIsCapturing(true);
-    const { viewMode, view2DDirection, setViewMode, setView2DDirection, setRenderMode } = useUIStore.getState();
+    const { 
+      viewMode, 
+      view2DDirection, 
+      setViewMode, 
+      setView2DDirection, 
+      setRenderMode,
+      showGuides,
+      showAxis,
+      showDimensions,
+      setShowGuides,
+      setShowAxis,
+      setShowDimensions
+    } = useUIStore.getState();
     
     console.log('현재 상태:', { viewMode, view2DDirection });
     
     // 현재 상태 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
+    const originalShowGuides = showGuides;
+    const originalShowAxis = showAxis;
+    const originalShowDimensions = showDimensions;
+    
+    // 캡처를 위해 그리드, 축, 컬럼 끄기
+    if (showGuides) setShowGuides(false);
+    if (showAxis) setShowAxis(false);
+    if (showDimensions) setShowDimensions(false);
     
     const captures: typeof capturedViews = {};
     
@@ -115,6 +135,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       // 원래 상태로 복원
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
+      if (originalShowGuides) setShowGuides(true);
+      if (originalShowAxis) setShowAxis(true);
+      if (originalShowDimensions) setShowDimensions(true);
       
       setIsCapturing(false);
       setShowPDFPreview(true);
@@ -123,6 +146,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose }) => {
       // 원래 상태로 복원
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
+      if (originalShowGuides) setShowGuides(true);
+      if (originalShowAxis) setShowAxis(true);
+      if (originalShowDimensions) setShowDimensions(true);
       setIsCapturing(false);
       alert(t('messages.captureFailure'));
     }
