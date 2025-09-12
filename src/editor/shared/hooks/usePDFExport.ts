@@ -312,34 +312,34 @@ export function usePDFExport() {
           color: colors.text
         });
         
-        // 도면 정보 필드
-        pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 26);
-        pdf.text(`${i + 1} / ${selectedViews.length}`, titleBlockX + 20, titleBlockY + 26);
+        // 도면 정보 필드 - 텍스트 위치 조정
+        pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 25);
+        pdf.text(`${i + 1} / ${selectedViews.length}`, titleBlockX + 25, titleBlockY + 25);
         
-        pdf.text('DATE:', titleBlockX + 5, titleBlockY + 32);
-        pdf.text(currentDate, titleBlockX + 20, titleBlockY + 32);
+        pdf.text('DATE:', titleBlockX + 5, titleBlockY + 31);
+        pdf.text(currentDate, titleBlockX + 25, titleBlockY + 31);
         
-        pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 38);
-        pdf.text('AS SHOWN', titleBlockX + 20, titleBlockY + 38);
+        pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 37);
+        pdf.text('AS SHOWN', titleBlockX + 25, titleBlockY + 37);
         
-        // 공간 사양
-        pdf.text('SPACE:', titleBlockX + 95, titleBlockY + 26);
+        // 공간 사양 - 중앙 칸 정렬
+        pdf.text('SPACE:', titleBlockX + 95, titleBlockY + 25);
         pdf.setFont('helvetica', 'bold');
-        pdf.text(`${spaceInfo.width} × ${spaceInfo.height} × ${spaceInfo.depth}`, titleBlockX + 95, titleBlockY + 32);
+        pdf.text(`${spaceInfo.width} × ${spaceInfo.height} × ${spaceInfo.depth}`, titleBlockX + 115, titleBlockY + 31);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('(W × H × D) mm', titleBlockX + 95, titleBlockY + 36);
+        pdf.text('(W × H × D) mm', titleBlockX + 115, titleBlockY + 37);
         
-        // 도면 타입
-        pdf.text('VIEW:', titleBlockX + 145, titleBlockY + 26);
-        await addMixedText(pdf, viewInfo.name, titleBlockX + 145, titleBlockY + 32, {
+        // 도면 타입 - 우측 칸 정렬
+        pdf.text('VIEW:', titleBlockX + 145, titleBlockY + 25);
+        await addMixedText(pdf, viewInfo.name, titleBlockX + 165, titleBlockY + 31, {
           fontSize: 9,
           color: colors.text,
           fontWeight: '500'
         });
         
         // 렌더링 모드
-        pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 38);
-        pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 165, titleBlockY + 38);
+        pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 37);
+        pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 175, titleBlockY + 37);
         
         try {
           // 뷰 캡처
@@ -356,21 +356,21 @@ export function usePDFExport() {
           pdf.setLineWidth(0.3);
           pdf.rect(drawingAreaX, viewTitleY, 100, 25, 'S');
           
-          // 뷰 타이틀 내용
+          // 뷰 타이틀 내용 - 텍스트 위치를 박스 내부 중앙에 맞춤
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(12);
-          pdf.text('VIEW TITLE', drawingAreaX + 50, viewTitleY + 10, { align: 'center' });
+          pdf.setFontSize(10);
+          pdf.text('VIEW TITLE', drawingAreaX + 50, viewTitleY + 8, { align: 'center' });
           
           pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(10);
-          await addMixedText(pdf, viewInfo.name.toUpperCase(), drawingAreaX + 50, viewTitleY + 16, {
-            fontSize: 10,
+          pdf.setFontSize(9);
+          await addMixedText(pdf, viewInfo.name.toUpperCase(), drawingAreaX + 50, viewTitleY + 15, {
+            fontSize: 9,
             color: colors.text,
             align: 'center'
           });
           
           pdf.setFontSize(8);
-          pdf.text('SCALE: AS SHOWN', drawingAreaX + 50, viewTitleY + 22, { align: 'center' });
+          pdf.text('SCALE: AS SHOWN', drawingAreaX + 50, viewTitleY + 21, { align: 'center' });
           
           // 이미지를 PDF에 삽입 (최고 품질로)
           pdf.addImage(
