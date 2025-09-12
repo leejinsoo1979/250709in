@@ -288,20 +288,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceWidth = spaceInfo?.width || 3000;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // 초기 카메라와 동일한 거리 계산 사용 (Space3DView와 동일한 로직)
-        const calculateOptimalDistance = (width: number, height: number, depth: number, moduleCount: number) => {
-          const diagonal = Math.sqrt(width * width + height * height + depth * depth);
-          const furnitureMargin = 0.8; // Space3DView와 동일
-          const fov = 50;
-          const fovRad = (fov * Math.PI) / 180;
-          const maxDimension = Math.max(width, height, depth);
-          const baseDistance = (maxDimension / 2) / Math.tan(fovRad / 2);
-          const diagonalDistance = (diagonal / 2) / Math.tan(fovRad / 2);
-          const safeDistance = Math.max(baseDistance, diagonalDistance);
-          return (safeDistance * 0.01) * furnitureMargin;
-        };
-        
-        const defaultDistance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+        // Space3DView와 완전히 동일한 거리 계산 사용
+        const defaultDistance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
         
         const centerX = 0; // X축 중앙은 0
         const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
