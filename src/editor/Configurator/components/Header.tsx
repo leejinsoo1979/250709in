@@ -79,12 +79,14 @@ const Header: React.FC<HeaderProps> = ({
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
+  const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   
   // UIStore에서 카메라 설정 가져오기
   const { cameraMode, setCameraMode } = useUIStore();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
+  const cameraMenuRef = useRef<HTMLDivElement>(null);
 
   // 디버깅용 로그
   console.log('🔍 Header 컴포넌트 title:', title);
@@ -182,6 +184,23 @@ const Header: React.FC<HeaderProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isConvertMenuOpen]);
+
+  // 카메라 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cameraMenuRef.current && !cameraMenuRef.current.contains(event.target as Node)) {
+        setIsCameraMenuOpen(false);
+      }
+    };
+
+    if (isCameraMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCameraMenuOpen]);
 
   return (
     <header className={styles.header}>
@@ -328,15 +347,46 @@ const Header: React.FC<HeaderProps> = ({
             {t('help.title')}
           </button>
 
-          {/* 카메라 설정 버튼 - Perspective 체크/해제 토글 */}
-          <button 
-            className={`${styles.actionButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
-            onClick={() => setCameraMode(cameraMode === 'perspective' ? 'orthographic' : 'perspective')}
-            title={cameraMode === 'perspective' ? '원근법 켜짐 (클릭하여 끄기)' : '원근법 꺼짐 (클릭하여 켜기)'}
-          >
-            <Camera size={20} />
-            {cameraMode === 'perspective' ? 'Perspective 체크' : 'Perspective 체크 안함'}
-          </button>
+          {/* 카메라 설정 드롭다운 */}
+          <div className={styles.dropdownContainer} ref={cameraMenuRef}>
+            <button 
+              className={styles.actionButton}
+              onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
+            >
+              <Camera size={20} />
+              카메라
+              <ChevronDown size={16} style={{ marginLeft: '4px' }} />
+            </button>
+            
+            {isCameraMenuOpen && (
+              <div className={styles.dropdownMenu}>
+                <button
+                  className={`${styles.dropdownItem} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                  onClick={() => {
+                    setCameraMode('perspective');
+                    setIsCameraMenuOpen(false);
+                  }}
+                >
+                  <span className={styles.checkmark}>
+                    {cameraMode === 'perspective' && '✓'}
+                  </span>
+                  Perspective
+                </button>
+                <button
+                  className={`${styles.dropdownItem} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                  onClick={() => {
+                    setCameraMode('orthographic');
+                    setIsCameraMenuOpen(false);
+                  }}
+                >
+                  <span className={styles.checkmark}>
+                    {cameraMode === 'orthographic' && '✓'}
+                  </span>
+                  Orthographic
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 우측 액션 버튼들 */}

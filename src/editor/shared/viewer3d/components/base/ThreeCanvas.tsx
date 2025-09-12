@@ -281,20 +281,40 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.reset();
       } else {
         // 초기 상태가 없으면 기본값으로 설정
+        const spaceWidth = spaceInfo?.width || 3000;
         const spaceHeight = spaceInfo?.height || 2400;
-        const defaultDistance = 50; // 기본 카메라 거리
+        
+        // mm to three.js units 변환 (1mm = 0.01 units)
+        const widthInUnits = spaceWidth * 0.01;
+        const heightInUnits = spaceHeight * 0.01;
+        
+        // FOV를 고려한 최적 거리 계산
+        // 카메라가 공간 전체를 볼 수 있도록 거리 설정
+        const fov = 50; // 기본 FOV (도)
+        const aspect = window.innerWidth / window.innerHeight;
+        
+        // 수직 FOV를 라디안으로 변환
+        const vFov = (fov * Math.PI) / 180;
+        
+        // 높이와 너비 중 더 큰 값을 기준으로 거리 계산
+        const maxDimension = Math.max(heightInUnits, widthInUnits / aspect);
+        
+        // 공간 전체가 화면에 맞도록 카메라 거리 계산
+        // 여유 공간을 위해 1.2배 정도의 거리 설정
+        const optimalDistance = (maxDimension / 2) / Math.tan(vFov / 2) * 1.2;
         
         const centerX = 0; // X축 중앙은 0
-        const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
+        const centerY = heightInUnits / 2; // Y축 중앙
         
-        console.log('🎯 3D 카메라 기본 위치로 리셋:', {
+        console.log('🎯 3D 카메라 최적 거리로 리셋:', {
           centerX, centerY, 
-          distance: defaultDistance,
-          spaceHeight
+          distance: optimalDistance,
+          spaceWidth: widthInUnits,
+          spaceHeight: heightInUnits
         });
         
-        // 카메라를 정면 중앙에 위치 (기본 거리 사용)
-        controls.object.position.set(0, centerY, defaultDistance);
+        // 카메라를 정면 중앙에 위치 (최적 거리 사용)
+        controls.object.position.set(0, centerY, optimalDistance);
         controls.target.set(0, centerY, 0);
         controls.object.up.set(0, 1, 0);
         
