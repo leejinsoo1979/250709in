@@ -344,13 +344,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceHeight = spaceInfo?.height || 2400;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // 2D 모드를 위한 적절한 zoom 계산
-        const maxDimension = Math.max(spaceWidth, spaceHeight);
-        const appropriateZoom = 1000 / maxDimension; // 화면에 적절히 보이도록 조정
+        // 2D 모드를 위한 적절한 zoom 계산 - 공간이 화면에 꽉 차도록
+        // 일반적으로 3600mm 너비의 공간이 화면에 적절히 보이도록 설정
+        const baseZoom = 1.0; // 기본 zoom 값
+        const referenceWidth = 3600; // 기준 너비
+        const appropriateZoom = baseZoom * (referenceWidth / spaceWidth);
         
         console.log('🎯 2D 카메라 계산된 초기값으로 리셋:', {
           zoom: appropriateZoom,
-          space: { width: spaceWidth, height: spaceHeight }
+          space: { width: spaceWidth, height: spaceHeight },
+          calculation: `${baseZoom} * (${referenceWidth} / ${spaceWidth})`
         });
         
         // OrbitControls 초기화

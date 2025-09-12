@@ -1485,12 +1485,14 @@ const Configurator: React.FC = () => {
     
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
     if (updates.customColumnCount !== undefined) {
-      console.log('🔧 customColumnCount 업데이트:', {
+      console.log('🚨🚨🚨 customColumnCount 업데이트:', {
         요청값: updates.customColumnCount,
-        현재값: spaceInfo.customColumnCount
+        현재값: spaceInfo.customColumnCount,
+        finalUpdates_before: finalUpdates
       });
       // 사용자가 설정한 값을 그대로 사용
       finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
+      console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
     }
     
     // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
@@ -1549,14 +1551,17 @@ const Configurator: React.FC = () => {
     console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
       hasWallConfig: !!finalUpdates.wallConfig,
-      wallConfig: finalUpdates.wallConfig
+      wallConfig: finalUpdates.wallConfig,
+      customColumnCount: finalUpdates.customColumnCount
     });
     
     // installType 변경 감지
     const isInstallTypeChanged = finalUpdates.installType !== undefined && 
                                   finalUpdates.installType !== spaceInfo.installType;
     
+    console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
     setSpaceInfo(finalUpdates);
+    console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
     
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
     if (isDroppedCeilingUpdate) {
