@@ -93,6 +93,10 @@ interface UIState {
   indirectLightIntensity: number;
   indirectLightColor: string;
   
+  // 카메라 설정
+  cameraMode: 'perspective' | 'orthographic';
+  cameraFov: number;
+  
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -143,6 +147,8 @@ interface UIState {
   setIndirectLightEnabled: (enabled: boolean) => void;
   setIndirectLightIntensity: (intensity: number) => void;
   setIndirectLightColor: (color: string) => void;
+  setCameraMode: (mode: 'perspective' | 'orthographic') => void;
+  setCameraFov: (fov: number) => void;
   resetUI: () => void;
 }
 
@@ -179,6 +185,8 @@ const initialUIState = {
   indirectLightEnabled: false,  // 기본값: 간접조명 비활성화 (띄워서 배치 포함)
   indirectLightIntensity: 0.8,  // 기본값: 강도 0.8
   indirectLightColor: '#ffffff',  // 기본값: 흰색
+  cameraMode: 'perspective' as const,  // 기본값: 원근 투영
+  cameraFov: 50,  // 기본값: FOV 50도
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -376,6 +384,12 @@ export const useUIStore = create<UIState>()(
       
       setIndirectLightColor: (color) =>
         set({ indirectLightColor: color }),
+      
+      setCameraMode: (mode) =>
+        set({ cameraMode: mode }),
+      
+      setCameraFov: (fov) =>
+        set({ cameraFov: fov }),
       
       resetUI: () =>
         set(initialUIState),

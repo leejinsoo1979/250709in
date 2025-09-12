@@ -11,6 +11,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
 
 interface HeaderProps {
   title: string;
@@ -79,8 +80,9 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
-  const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
-  const [fovValue, setFovValue] = useState(50);
+  
+  // UIStore에서 카메라 설정 가져오기
+  const { cameraMode, cameraFov, setCameraMode, setCameraFov } = useUIStore();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -365,19 +367,13 @@ const Header: React.FC<HeaderProps> = ({
                   <div className={styles.cameraToggle}>
                     <button 
                       className={cameraMode === 'perspective' ? styles.active : ''}
-                      onClick={() => {
-                        setCameraMode('perspective');
-                        // TODO: 실제 카메라 전환 로직 추가
-                      }}
+                      onClick={() => setCameraMode('perspective')}
                     >
                       원근
                     </button>
                     <button 
                       className={cameraMode === 'orthographic' ? styles.active : ''}
-                      onClick={() => {
-                        setCameraMode('orthographic');
-                        // TODO: 실제 카메라 전환 로직 추가
-                      }}
+                      onClick={() => setCameraMode('orthographic')}
                     >
                       평행
                     </button>
@@ -386,16 +382,13 @@ const Header: React.FC<HeaderProps> = ({
                 
                 {cameraMode === 'perspective' && (
                   <div className={styles.cameraOption}>
-                    <label>FOV: {fovValue}°</label>
+                    <label>FOV: {cameraFov}°</label>
                     <input 
                       type="range" 
                       min="30" 
                       max="120" 
-                      value={fovValue}
-                      onChange={(e) => {
-                        setFovValue(Number(e.target.value));
-                        // TODO: 실제 FOV 변경 로직 추가
-                      }}
+                      value={cameraFov}
+                      onChange={(e) => setCameraFov(Number(e.target.value))}
                       className={styles.fovSlider}
                     />
                   </div>
