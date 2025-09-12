@@ -52,7 +52,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     setIsCapturing(true);
     const { 
       viewMode, 
-      view2DDirection, 
+      view2DDirection,
+      renderMode, 
       setViewMode, 
       setView2DDirection, 
       setRenderMode,
@@ -64,11 +65,12 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       setShowDimensions
     } = useUIStore.getState();
     
-    console.log('현재 상태:', { viewMode, view2DDirection });
+    console.log('현재 상태:', { viewMode, view2DDirection, renderMode });
     
     // 현재 상태 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
+    const originalRenderMode = renderMode;
     const originalShowGuides = showGuides;
     const originalShowAxis = showAxis;
     const originalShowDimensions = showDimensions;
@@ -79,6 +81,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     if (showAxis) setShowAxis(false);
     if (showDimensions) setShowDimensions(false);
     if (showAll && setShowAll) setShowAll(false);
+    
+    // 상태 변경이 렌더링에 반영되도록 대기
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const captures: typeof capturedViews = {};
     
@@ -139,6 +144,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       // 원래 상태로 복원
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
+      setRenderMode(originalRenderMode);
       if (originalShowGuides) setShowGuides(true);
       if (originalShowAxis) setShowAxis(true);
       if (originalShowDimensions) setShowDimensions(true);
@@ -151,6 +157,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       // 원래 상태로 복원
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
+      setRenderMode(originalRenderMode);
       if (originalShowGuides) setShowGuides(true);
       if (originalShowAxis) setShowAxis(true);
       if (originalShowDimensions) setShowDimensions(true);
