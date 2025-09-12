@@ -1397,10 +1397,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 이곳에서 early return하면 React Hooks 에러 발생
   
   // moduleData가 없으면 빈 그룹 반환
-  if (moduleNotFound || !moduleData) {
-    return <group />;
-  }
-
   // 듀얼 가구의 슬롯 너비 계산 (useMemo로 최적화)
   const calculatedSlotWidths = React.useMemo(() => {
     // 듀얼 가구인 경우 개별 슬롯 너비 전달
@@ -1420,9 +1416,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [isDualFurniture, needsEndPanelAdjustment, placedModule.zone, placedModule.slotIndex, 
       spaceInfo.droppedCeiling?.enabled, spaceInfo.customColumnCount, indexing.slotWidths]);
 
-  // moduleData가 없으면 렌더링 스킵 (모든 Hook 호출 이후)
-  if (!moduleData) {
-    return null;
+  // moduleData가 없으면 빈 그룹 반환 (모든 Hook 호출 이후)
+  if (moduleNotFound || !moduleData) {
+    return <group />;
   }
 
   return (
