@@ -103,9 +103,10 @@ export class SpaceCalculator {
     // 슬롯폭이 400~600mm 범위에 들어가도록 슬롯 개수 결정
     let bestSlotCount = 1;
     let bestSlotWidth = internalWidth;
+    let bestDifference = Math.abs(500 - bestSlotWidth); // 500mm를 이상적인 슬롯폭으로 설정
     
-    // 가능한 슬롯 개수를 탐색
-    for (let slotCount = 1; slotCount <= 10; slotCount++) {
+    // 가능한 슬롯 개수를 탐색 (최대 20개까지 검토)
+    for (let slotCount = 1; slotCount <= 20; slotCount++) {
       const slotWidth = Math.floor(internalWidth / slotCount);
       
       // 슬롯폭이 400~600mm 범위에 있는지 확인
@@ -113,21 +114,43 @@ export class SpaceCalculator {
         // 2 × 슬롯폭이 정수인지 확인 (슬롯폭이 정수이거나 0.5 단위)
         const isValidWidth = Number.isInteger(slotWidth) || Number.isInteger(slotWidth * 2);
         
-        if (isValidWidth) {
+        // 500mm에 가장 가까운 슬롯폭을 선택
+        const difference = Math.abs(500 - slotWidth);
+        
+        if (isValidWidth && difference < bestDifference) {
           bestSlotCount = slotCount;
           bestSlotWidth = slotWidth;
-          console.log(`→ 유효한 슬롯 개수 찾음: ${slotCount}개 (슬롯폭: ${slotWidth}mm)`);
-          break;
+          bestDifference = difference;
+          console.log(`→ 더 나은 슬롯 개수 찾음: ${slotCount}개 (슬롯폭: ${slotWidth}mm, 500mm와의 차이: ${difference}mm)`);
         }
       }
     }
     
-    // 만약 유효한 슬롯 개수를 못 찾았다면, 가장 가까운 값 사용
+    // 만약 유효한 슬롯 개수를 못 찾았다면, 400-600mm 범위를 보장하도록 계산
     if (bestSlotWidth < SLOT_MIN_WIDTH || bestSlotWidth > SLOT_MAX_WIDTH) {
-      // 슬롯폭이 600mm를 넘지 않도록 최소 개수 계산
-      bestSlotCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      // 슬롯폭이 400mm 이상이 되도록 최대 개수 계산
+      const maxCount = Math.floor(internalWidth / SLOT_MIN_WIDTH);
+      // 슬롯폭이 600mm 이하가 되도록 최소 개수 계산
+      const minCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
+      
+      // 500mm에 가장 가까운 슬롯폭을 만드는 개수 선택
+      let optimalCount = Math.round(internalWidth / 500);
+      
+      // 범위 내로 조정
+      if (optimalCount < minCount) optimalCount = minCount;
+      if (optimalCount > maxCount) optimalCount = maxCount;
+      
+      bestSlotCount = optimalCount;
       bestSlotWidth = Math.floor(internalWidth / bestSlotCount);
-      console.log(`⚠️ 정확한 조건을 만족하는 슬롯 개수 없음. 근사값 사용: ${bestSlotCount}개 (슬롯폭: ${bestSlotWidth}mm)`);
+      
+      console.log(`⚠️ 조정된 슬롯 개수: ${bestSlotCount}개 (슬롯폭: ${bestSlotWidth}mm)`);
+      
+      // 여전히 범위를 벗어나면 경고
+      if (bestSlotWidth < SLOT_MIN_WIDTH) {
+        console.warn(`⚠️ 슬롯폭이 최소값(400mm) 미만: ${bestSlotWidth}mm`);
+      } else if (bestSlotWidth > SLOT_MAX_WIDTH) {
+        console.warn(`⚠️ 슬롯폭이 최대값(600mm) 초과: ${bestSlotWidth}mm`);
+      }
     }
     
     console.log(`→ 최종 컬럼 개수: ${bestSlotCount}, 슬롯폭: ${bestSlotWidth}mm`);
