@@ -211,7 +211,6 @@ const Room: React.FC<RoomProps> = ({
   const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const droppedWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
-  const droppedCeilingMaterialRef = useRef<THREE.ShaderMaterial>(null);
   
   // 카메라 각도에 따라 벽 투명도 업데이트 - orthographic 모드에서만
   useFrame(() => {
@@ -228,9 +227,6 @@ const Room: React.FC<RoomProps> = ({
       }
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = 1;
-      }
-      if (droppedCeilingMaterialRef.current && droppedCeilingMaterialRef.current.uniforms) {
-        droppedCeilingMaterialRef.current.uniforms.opacity.value = 1;
       }
     } else if (viewMode === '3D' && cameraMode === 'orthographic') {
       // orthographic 모드에서만 각도에 따른 투명도 적용
@@ -264,9 +260,6 @@ const Room: React.FC<RoomProps> = ({
       // 단내림 벽과 천장은 orthographic에서도 불투명하게 유지
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = 1;
-      }
-      if (droppedCeilingMaterialRef.current && droppedCeilingMaterialRef.current.uniforms) {
-        droppedCeilingMaterialRef.current.uniforms.opacity.value = 1;
       }
     }
   });
@@ -749,7 +742,6 @@ const Room: React.FC<RoomProps> = ({
   const rightWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode), [viewMode]);
   const topWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode), [viewMode]);
   const droppedWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode), [viewMode]);
-  const droppedCeilingMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode), [viewMode]);
   
 
   
@@ -893,8 +885,8 @@ const Room: React.FC<RoomProps> = ({
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 
-                    ref={droppedWallMaterialRef}
-                    object={droppedWallMaterial} />
+                    ref={leftWallMaterialRef}
+                    object={leftWallMaterial} />
                 </mesh>
               );
             }
@@ -962,8 +954,8 @@ const Room: React.FC<RoomProps> = ({
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 
-                    ref={droppedWallMaterialRef}
-                    object={droppedWallMaterial} />
+                    ref={rightWallMaterialRef}
+                    object={rightWallMaterial} />
                 </mesh>
               );
             }
@@ -1095,8 +1087,8 @@ const Room: React.FC<RoomProps> = ({
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
                   <primitive 
-                    ref={droppedCeilingMaterialRef}
-                    object={droppedCeilingMaterial} />
+                    ref={topWallMaterialRef}
+                    object={topWallMaterial} />
                 </mesh>
                 
                 {/* 일반 영역 천장 (원래 높이) */}
