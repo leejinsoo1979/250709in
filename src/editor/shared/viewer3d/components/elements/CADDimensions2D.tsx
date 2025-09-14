@@ -999,7 +999,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     pointerEvents: 'none'
                   }}
                 >
-                  {columnWidth % 1 === 0 ? columnWidth : columnWidth.toFixed(1)}mm
+                  {columnWidth}mm
                 </div>
               </Html>
             </group>
