@@ -136,7 +136,6 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       };
     } else {
       // 노서라운드(타이트) 설정
-      const gapSizeValue = 2; // 기본 이격거리
       
       // 노서라운드에서도 상부프레임은 필요하므로 기존 값 유지 또는 기본값 설정
       // (Firebase는 undefined를 허용하지 않음)
@@ -146,10 +145,16 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         top: spaceInfo.frameSize?.top || 10  // 상부프레임은 유지 (기본값 10mm)
       };
       
-      updates.gapConfig = {
-        left: hasLeftWall ? gapSizeValue : 0,
-        right: hasRightWall ? gapSizeValue : 0,
-      };
+      // 빌트인 모드에서는 스토어가 자동으로 최적 이격거리를 계산함
+      // 세미스탠딩/프리스탠딩일 때만 수동 설정
+      if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
+        const gapSizeValue = 2; // 기본 이격거리
+        updates.gapConfig = {
+          left: hasLeftWall ? gapSizeValue : 0,
+          right: hasRightWall ? gapSizeValue : 0,
+        };
+      }
+      // builtin의 경우 gapConfig를 설정하지 않아 스토어가 자동 계산하도록 함
     }
 
     onUpdate(updates);
