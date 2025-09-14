@@ -64,7 +64,7 @@ export const useCameraManager = (
     // 3D orthographic 모드에서는 zoom을 줄여서 더 멀리서 보기
     // 2D 모드는 그대로, 3D perspective도 그대로, 오직 3D orthographic만 조정
     const is3DOrthographic = viewMode === '3D' && cameraMode === 'orthographic';
-    const orthographicZoomFactor = is3DOrthographic ? 0.5 : 1.0; // 3D orthographic에서만 50%로 축소
+    const orthographicZoomFactor = is3DOrthographic ? 0.6 : 1.0; // 3D orthographic에서만 60%로 축소
     
     const zoom = (baseZoomDistance / distance) * zoomMultiplier * orthographicZoomFactor;
     
