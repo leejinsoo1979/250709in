@@ -70,7 +70,44 @@ const DroppedCeilingSpace: React.FC<DroppedCeilingSpaceProps> = ({ spaceInfo }) 
 
   return (
     <group>
-      {/* 단내림 영역 매쉬 완전 제거 - 시각적 표현 없음 */}
+      {/* 단내림 구간 내부 벽 (불투명) */}
+      <mesh
+        position={[
+          position === 'left' ? threeStartX + threeWidth : threeStartX,
+          wallY,
+          0
+        ]}
+      >
+        <boxGeometry args={[wallThickness, droppedAreaHeight, threeDepth]} />
+        <meshStandardMaterial 
+          color="#ffffff"
+          side={THREE.DoubleSide}
+          transparent={false}
+          opacity={1}
+          depthWrite={true}
+          depthTest={true}
+        />
+      </mesh>
+
+      {/* 단내림 천장 (불투명) */}
+      <mesh
+        position={[
+          centerX,
+          droppedAreaHeight,
+          0
+        ]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <planeGeometry args={[threeWidth, threeDepth]} />
+        <meshStandardMaterial 
+          color="#ffffff"
+          side={THREE.DoubleSide}
+          transparent={false}
+          opacity={1}
+          depthWrite={true}
+          depthTest={true}
+        />
+      </mesh>
     </group>
   );
 };
