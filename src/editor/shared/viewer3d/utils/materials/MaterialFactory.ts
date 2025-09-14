@@ -300,6 +300,7 @@ export class MaterialFactory {
         uniform vec3 colorEnd;
         uniform float direction;
         uniform float reverse;
+        uniform float opacity;
         
         varying vec2 vUv;
         
@@ -319,7 +320,7 @@ export class MaterialFactory {
           }
           
           vec3 color = mix(colorStart, colorEnd, gradientFactor);
-          gl_FragColor = vec4(color, 1.0);
+          gl_FragColor = vec4(color, opacity);
         }
       `;
       
@@ -330,10 +331,11 @@ export class MaterialFactory {
           colorStart: { value: new THREE.Color('#ffffff') },
           colorEnd: { value: new THREE.Color('#c0c0c0') },
           direction: { value: directionValue },
-          reverse: { value: isReverse ? 1.0 : 0.0 }
+          reverse: { value: isReverse ? 1.0 : 0.0 },
+          opacity: { value: 1.0 }
         },
         side: THREE.DoubleSide,
-        transparent: false,
+        transparent: true,
         depthWrite: true
       });
     }

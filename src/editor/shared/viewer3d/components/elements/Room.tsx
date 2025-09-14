@@ -206,17 +206,10 @@ const Room: React.FC<RoomProps> = ({
   // Three.js hooks for camera tracking
   const { camera } = useThree();
   
-  // 3D orthographic 모드에서 카메라 각도에 따른 벽 투명도
-  const [wallOpacity, setWallOpacity] = useState({
-    left: 1,
-    right: 1,
-    top: 1
-  });
-  
-  // 벽 재질 refs
-  const leftWallMaterialRef = useRef<THREE.Material>(null);
-  const rightWallMaterialRef = useRef<THREE.Material>(null);
-  const topWallMaterialRef = useRef<THREE.Material>(null);
+  // 벽 재질 refs - ShaderMaterial로 타입 변경
+  const leftWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   
   // 카메라 각도에 따라 벽 투명도 업데이트
   useFrame(() => {
@@ -224,31 +217,29 @@ const Room: React.FC<RoomProps> = ({
       const cameraDirection = new THREE.Vector3();
       camera.getWorldDirection(cameraDirection);
       
-      // 각도 계산
+      // 각도 계산 - 카메라가 바라보는 방향
       const angleY = Math.atan2(cameraDirection.x, cameraDirection.z);
       const angleX = Math.atan2(cameraDirection.y, Math.sqrt(cameraDirection.x * cameraDirection.x + cameraDirection.z * cameraDirection.z));
       
-      // 왼쪽 벽: 카메라가 오른쪽에서 볼 때 투명
-      const leftOpacity = angleY > 0 ? 0.1 : 1;
+      // 벽이 카메라 반대편에 있을 때 투명하게
+      // 왼쪽 벽: 카메라가 오른쪽에서 바라볼 때 투명
+      const leftOpacity = angleY > 0.2 ? 0.1 : 1;
       
-      // 오른쪽 벽: 카메라가 왼쪽에서 볼 때 투명
-      const rightOpacity = angleY < 0 ? 0.1 : 1;
+      // 오른쪽 벽: 카메라가 왼쪽에서 바라볼 때 투명
+      const rightOpacity = angleY < -0.2 ? 0.1 : 1;
       
-      // 천장: 카메라가 위에서 볼 때 투명
-      const topOpacity = angleX < -0.3 ? 0.1 : 1;
+      // 천장: 카메라가 위에서 바라볼 때 투명
+      const topOpacity = angleX < -0.2 ? 0.1 : 1;
       
-      // 재질 투명도 직접 업데이트
-      if (leftWallMaterialRef.current) {
-        leftWallMaterialRef.current.opacity = leftOpacity;
-        leftWallMaterialRef.current.transparent = true;
+      // ShaderMaterial의 uniform 업데이트
+      if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
+        leftWallMaterialRef.current.uniforms.opacity.value = leftOpacity;
       }
-      if (rightWallMaterialRef.current) {
-        rightWallMaterialRef.current.opacity = rightOpacity;
-        rightWallMaterialRef.current.transparent = true;
+      if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
+        rightWallMaterialRef.current.uniforms.opacity.value = rightOpacity;
       }
-      if (topWallMaterialRef.current) {
-        topWallMaterialRef.current.opacity = topOpacity;
-        topWallMaterialRef.current.transparent = true;
+      if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
+        topWallMaterialRef.current.uniforms.opacity.value = topOpacity;
       }
     }
   });
@@ -726,6 +717,11 @@ const Room: React.FC<RoomProps> = ({
   const horizontalGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
   const leftHorizontalGradientMaterial = useMemo(() => MaterialFactory.createWallMaterial(), []);
   
+  // 3D orthographic 모드용 벽 재질 생성 (refs와 함께 사용)
+  const leftWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode), [viewMode]);
+  const rightWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode), [viewMode]);
+  const topWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode), [viewMode]);
+  
 
   
   // 3D 룸 중앙 정렬을 위한 오프셋 계산
@@ -868,7 +864,7 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 
                     ref={leftWallMaterialRef}
-                    object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
+                    object={leftWallMaterial} />
                 </mesh>
               );
             }
@@ -883,7 +879,7 @@ const Room: React.FC<RoomProps> = ({
                 <planeGeometry args={[extendedPanelDepth, height]} />
                 <primitive 
                   ref={leftWallMaterialRef}
-                  object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
+                  object={leftWallMaterial} />
               </mesh>
               );
             }
@@ -935,7 +931,7 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 
                     ref={rightWallMaterialRef}
-                    object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
+                    object={rightWallMaterial} />
                 </mesh>
               );
             }
@@ -950,7 +946,7 @@ const Room: React.FC<RoomProps> = ({
                 <planeGeometry args={[extendedPanelDepth, height]} />
                 <primitive 
                   ref={rightWallMaterialRef}
-                  object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
+                  object={rightWallMaterial} />
               </mesh>
               );
             }
@@ -981,7 +977,7 @@ const Room: React.FC<RoomProps> = ({
                   <planeGeometry args={[width, extendedPanelDepth]} />
                   <primitive 
                     ref={topWallMaterialRef}
-                    object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
+                    object={topWallMaterial} />
                 </mesh>
               );
             }
@@ -1064,7 +1060,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
+                  <primitive object={topWallMaterial} />
                 </mesh>
                 
                 {/* 일반 영역 천장 (원래 높이) */}
@@ -1073,7 +1069,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
+                  <primitive object={topWallMaterial} />
                 </mesh>
                 
                 {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
