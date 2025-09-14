@@ -196,11 +196,24 @@ export class ColumnIndexer {
         }
       }
       
-      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해) - 균등 분할
-      const slotWidth = internalWidth / columnCount;
+      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해) - 0.5 단위 균등 분할
+      const exactSlotWidth = internalWidth / columnCount;
+      const slotWidth = Math.round(exactSlotWidth * 2) / 2;
+      
+      // 전체 너비와의 차이를 계산
+      const totalCalculated = slotWidth * columnCount;
+      const difference = internalWidth - totalCalculated;
+      
       const slotWidths: number[] = [];
       for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(slotWidth);
+        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
+        let adjustedWidth = slotWidth;
+        if (difference > 0 && i < difference * 2) {
+          adjustedWidth += 0.5;
+        } else if (difference < 0 && i < Math.abs(difference) * 2) {
+          adjustedWidth -= 0.5;
+        }
+        slotWidths.push(adjustedWidth);
       }
       
       return {
@@ -253,11 +266,23 @@ export class ColumnIndexer {
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
       // 노서라운드 프리스탠딩: 전체너비를 균등 분할
-      // 모든 슬롯이 동일한 너비를 가지도록 설정
-      const slotWidth = totalWidth / columnCount;
+      // 슬롯 너비를 0.5 단위로 반올림 (슬롯 2개 합이 정수가 되도록)
+      const exactSlotWidth = totalWidth / columnCount;
+      const slotWidth = Math.round(exactSlotWidth * 2) / 2; // 0.5 단위로 반올림
+      
+      // 전체 너비와의 차이를 계산
+      const totalCalculated = slotWidth * columnCount;
+      const difference = totalWidth - totalCalculated;
       
       for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(slotWidth);
+        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
+        let adjustedWidth = slotWidth;
+        if (difference > 0 && i < difference * 2) {
+          adjustedWidth += 0.5;
+        } else if (difference < 0 && i < Math.abs(difference) * 2) {
+          adjustedWidth -= 0.5;
+        }
+        slotWidths.push(adjustedWidth);
       }
       
       // 디버깅 로그
@@ -272,10 +297,24 @@ export class ColumnIndexer {
       // 노서라운드 세미스탠딩: 이격거리를 고려한 균등 분할
       const wallGap = spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left || 2) : (spaceInfo.gapConfig?.right || 2);
       const usableWidth = totalWidth - wallGap;
-      const slotWidth = usableWidth / columnCount;
+      
+      // 슬롯 너비를 0.5 단위로 반올림
+      const exactSlotWidth = usableWidth / columnCount;
+      const slotWidth = Math.round(exactSlotWidth * 2) / 2;
+      
+      // 전체 너비와의 차이를 계산
+      const totalCalculated = slotWidth * columnCount;
+      const difference = usableWidth - totalCalculated;
       
       for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(slotWidth);
+        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
+        let adjustedWidth = slotWidth;
+        if (difference > 0 && i < difference * 2) {
+          adjustedWidth += 0.5;
+        } else if (difference < 0 && i < Math.abs(difference) * 2) {
+          adjustedWidth -= 0.5;
+        }
+        slotWidths.push(adjustedWidth);
       }
       
       // 디버깅 로그
@@ -291,10 +330,23 @@ export class ColumnIndexer {
       });
     } else {
       // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할
-      const slotWidth = internalWidth / columnCount;
+      // 슬롯 너비를 0.5 단위로 반올림
+      const exactSlotWidth = internalWidth / columnCount;
+      const slotWidth = Math.round(exactSlotWidth * 2) / 2;
+      
+      // 전체 너비와의 차이를 계산
+      const totalCalculated = slotWidth * columnCount;
+      const difference = internalWidth - totalCalculated;
       
       for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(slotWidth);
+        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
+        let adjustedWidth = slotWidth;
+        if (difference > 0 && i < difference * 2) {
+          adjustedWidth += 0.5;
+        } else if (difference < 0 && i < Math.abs(difference) * 2) {
+          adjustedWidth -= 0.5;
+        }
+        slotWidths.push(adjustedWidth);
       }
     }
     

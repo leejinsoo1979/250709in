@@ -748,6 +748,27 @@ const Room: React.FC<RoomProps> = ({
   const topWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode), [viewMode]);
   const droppedWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode), [viewMode]);
   
+  // 단내림 벽을 위한 불투명 material
+  const opaqueLeftWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
+    mat.transparent = false;
+    mat.depthWrite = true;
+    return mat;
+  }, []);
+  
+  const opaqueRightWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', '3D');
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
+    mat.transparent = false;
+    mat.depthWrite = true;
+    return mat;
+  }, []);
+  
 
   
   // 3D 룸 중앙 정렬을 위한 오프셋 계산
@@ -889,9 +910,7 @@ const Room: React.FC<RoomProps> = ({
                   renderOrder={1}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive 
-                    ref={leftWallMaterialRef}
-                    object={leftWallMaterial} />
+                  <primitive object={opaqueLeftWallMaterial} />
                 </mesh>
               );
             }
@@ -958,9 +977,7 @@ const Room: React.FC<RoomProps> = ({
                   renderOrder={1}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive 
-                    ref={rightWallMaterialRef}
-                    object={rightWallMaterial} />
+                  <primitive object={opaqueRightWallMaterial} />
                 </mesh>
               );
             }
