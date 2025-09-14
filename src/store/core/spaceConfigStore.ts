@@ -222,9 +222,9 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
       width: 900,
       dropHeight: 200
     },
-    // 도어 개수 기본값 설정
-    mainDoorCount: 0,  // 메인 구간 도어 개수 기본값
-    droppedCeilingDoorCount: 0  // 단내림 구간 도어 개수 기본값
+    // 도어 개수 기본값 설정 - undefined로 설정하여 자동 모드
+    mainDoorCount: undefined,  // 메인 구간 도어 개수 기본값 (undefined = 자동)
+    droppedCeilingDoorCount: undefined  // 단내림 구간 도어 개수 기본값 (undefined = 자동)
   };
 
   // 정수 슬롯 너비를 위한 초기 자동 조정

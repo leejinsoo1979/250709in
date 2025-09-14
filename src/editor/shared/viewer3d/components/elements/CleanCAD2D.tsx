@@ -1674,14 +1674,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const shouldShowGuide = isInMainArea || isInStepDownArea;
         
         return (
-          <group key={`module-guide-${index}`} renderOrder={999999}>
+          <group key={`module-guide-${index}`} renderOrder={1000000}>
             
             {/* 가구 치수선 */}
             <NativeLine
-              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
+              points={[[leftX, dimY, 10], [rightX, dimY, 10]]}
               color={dimensionColor}
               lineWidth={2}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
@@ -1692,7 +1692,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
               lineWidth={2}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
@@ -1703,7 +1703,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
               lineWidth={2}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
@@ -1716,7 +1716,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor}
               anchorX="center"
               anchorY="middle"
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
             >
               {Math.round(actualWidth)}
@@ -1728,7 +1728,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
             />
@@ -1736,7 +1736,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
             />
@@ -1759,7 +1759,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color="#FF0000"
               lineWidth={1.5}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
             />
             
@@ -1768,7 +1768,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color="#FF0000"
               lineWidth={1.5}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
             />
             
@@ -1777,7 +1777,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color="#FF0000"
               lineWidth={1.5}
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
             />
             
@@ -1788,7 +1788,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color="#FF0000"
               anchorX="center"
               anchorY="middle"
-              renderOrder={999999}
+              renderOrder={1000000}
               depthTest={false}
             >
               {Math.round(column.width)}
@@ -1799,13 +1799,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color="#FF0000"
               lineWidth={0.5}
-              renderOrder={999999}
+              renderOrder={1000000}
             />
             <Line
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color="#FF0000"
               lineWidth={0.5}
-              renderOrder={999999}
+              renderOrder={1000000}
             />
           </group>
         );
@@ -2715,7 +2715,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const rightDimensionX = actualSpaceWidth + mmToThreeUnits(200); // 우측 치수선 X 위치
     
     return (
-      <group renderOrder={100000}>
+      <group renderOrder={1000000}>
         {/* 상단 전체 깊이 치수선 */}
         <group>
           {/* 치수선 */}
@@ -4816,7 +4816,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   return (
     <group 
       ref={groupRef} 
-      renderOrder={999999}
+      renderOrder={1000000}
     >
       {/* 치수선 렌더링 - 조건은 renderDimensions 내부에서 처리 */}
       {renderDimensions()}
