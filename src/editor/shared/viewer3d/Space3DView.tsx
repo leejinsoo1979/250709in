@@ -1013,24 +1013,26 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
-            {/* 기본 요소들 */}
+            {/* 기본 요소들 - 낮은 renderOrder로 설정 */}
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
-            <Room 
-              spaceInfo={spaceInfo} 
-              viewMode={viewMode} 
-              view2DDirection={view2DDirection}
-              renderMode={renderMode}
-              materialConfig={materialConfig} 
-              showAll={showAll} 
-              showFrame={showFrame}
-              showDimensions={showDimensions}
-              showGuides={showGuides}
-              isStep2={isStep2}
-              activeZone={activeZone}
-            />
-            
-            {/* 단내림 공간 렌더링 */}
-            <DroppedCeilingSpace spaceInfo={spaceInfo} />
+            <group renderOrder={-100}>
+              <Room 
+                spaceInfo={spaceInfo} 
+                viewMode={viewMode} 
+                view2DDirection={view2DDirection}
+                renderMode={renderMode}
+                materialConfig={materialConfig} 
+                showAll={showAll} 
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+                activeZone={activeZone}
+              />
+              
+              {/* 단내림 공간 렌더링 */}
+              <DroppedCeilingSpace spaceInfo={spaceInfo} />
+            </group>
             
             {/* CAD 스타일 치수/가이드 표시 - 모든 것 위에 렌더링 */}
             <CleanCAD2D 

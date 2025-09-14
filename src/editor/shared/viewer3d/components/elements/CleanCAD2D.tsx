@@ -64,7 +64,7 @@ const EditableLabel: React.FC<{
         center
         style={{ pointerEvents: 'auto' }}
         occlude={false}
-        zIndexRange={[10000, 10001]}
+        zIndexRange={[10000, 10.01]}
         transform={false}
       >
         <div 
@@ -205,6 +205,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
+  
+  // 디버깅 로그 추가
+  console.log('🔴 CleanCAD2D - indexing:', {
+    columnCount: indexing.columnCount,
+    columnWidth: indexing.columnWidth,
+    internalWidth: indexing.internalWidth,
+    mainDoorCount: spaceInfo.mainDoorCount,
+    customColumnCount: spaceInfo.customColumnCount
+  });
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     placedModules.some(module => {
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
@@ -1678,7 +1687,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수선 */}
             <NativeLine
-              points={[[leftX, dimY, 10], [rightX, dimY, 10]]}
+              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color={dimensionColor}
               lineWidth={2}
               renderOrder={1000000}
@@ -1731,6 +1740,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
+              transparent={true}
             />
             <NativeLine
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
@@ -1739,6 +1749,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
+              transparent={true}
             />
             
           </group>
