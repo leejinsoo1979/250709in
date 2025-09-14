@@ -931,7 +931,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         // columnCount가 1(싱글 캐비닛)일 때는 분할선/치수 분절을 모두 렌더링하지 않음
         return indexing.threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
           const rightX = indexing.threeUnitBoundaries[index + 1];
-          const columnWidth = (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
+          // slotWidths가 있으면 사용, 없으면 경계에서 계산
+          const columnWidth = indexing.slotWidths && indexing.slotWidths[index] 
+            ? indexing.slotWidths[index]
+            : (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
           const centerX = (leftX + rightX) / 2;
           const dimY = spaceHeight + mmToThreeUnits(80); // 중간 높이 치수선
           
@@ -990,7 +993,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     pointerEvents: 'none'
                   }}
                 >
-                  {Math.round(columnWidth)}mm
+                  {columnWidth % 1 === 0 ? columnWidth : columnWidth.toFixed(1)}mm
                 </div>
               </Html>
             </group>
