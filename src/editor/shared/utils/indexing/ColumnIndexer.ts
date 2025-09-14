@@ -236,7 +236,11 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     
     // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
-    const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
+    // 빌트인 노서라운드의 경우 최적화된 이격거리 사용
+    let internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
+    if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
+      internalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
+    }
     
     // 컬럼 수 결정 로직
     let columnCount: number;
@@ -257,6 +261,31 @@ export class ColumnIndexer {
     
     // 노서라운드 모드인지 확인
     const isNoSurround = spaceInfo.surroundType === 'no-surround';
+    
+    // 노서라운드 빌트인 모드에서 최적 이격거리 자동 선택
+    let optimizedGapConfig = spaceInfo.gapConfig;
+    if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+      const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
+      if (validGapSums.length > 0) {
+        // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
+        const optimalGapSum = validGapSums[0];
+        const halfGap = optimalGapSum / 2;
+        optimizedGapConfig = {
+          left: halfGap,
+          right: halfGap
+        };
+        console.log('🎯 빌트인 노서라운드 최적 이격거리 자동 선택:', {
+          전체너비: totalWidth,
+          슬롯수: columnCount,
+          유효한_이격합: validGapSums,
+          선택된_이격합: optimalGapSum,
+          좌이격: halfGap,
+          우이격: halfGap,
+          내경: totalWidth - optimalGapSum,
+          슬롯폭: (totalWidth - optimalGapSum) / columnCount
+        });
+      }
+    }
     
     // 슬롯별 실제 너비 배열 생성
     const slotWidths: number[] = [];
@@ -321,7 +350,12 @@ export class ColumnIndexer {
       });
     } else {
       // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할
-      const exactSlotWidth = internalWidth / columnCount;
+      // 빌트인의 경우 최적화된 이격거리 사용
+      let actualInternalWidth = internalWidth;
+      if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
+        actualInternalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
+      }
+      const exactSlotWidth = actualInternalWidth / columnCount;
       const baseSlotWidth = Math.floor(exactSlotWidth);
       const remainder = internalWidth - (baseSlotWidth * columnCount);
       
@@ -352,8 +386,8 @@ export class ColumnIndexer {
       let leftReduction = 0;
       
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-        leftReduction = spaceInfo.gapConfig?.left || 2;
+        // 빌트인: 최적화된 이격거리 사용
+        leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 2;
       }
       // 세미스탠딩, 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
       
