@@ -1,6 +1,6 @@
 import React from 'react';
 import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
-import { SpaceCalculator, ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import ColumnCountControls from '../customization/components/ColumnCountControls';
 
 interface ColumnCountControlsWrapperProps {
@@ -69,19 +69,7 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
         mainDoorCount: undefined  // mainDoorCount는 항상 undefined로 설정하여 자동 계산 비활성화
       };
       
-      // 노서라운드 빌트인 모드에서 슬롯 개수 변경 시 자동 이격거리 계산
-      if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'builtin') {
-        const tempSpaceInfo = { ...spaceInfo, customColumnCount: newCount, mainDoorCount: undefined };
-        const indexing = calculateSpaceIndexing(tempSpaceInfo);
-        
-        if (indexing.optimizedGapConfig) {
-          console.log('🔧 슬롯 개수 변경 - 자동 이격거리 적용:', {
-            slotCount: newCount,
-            optimizedGap: indexing.optimizedGapConfig
-          });
-          updates.gapConfig = indexing.optimizedGapConfig;
-        }
-      }
+      // 노서라운드 빌트인 모드에서는 스토어의 adjustForIntegerSlotWidth가 자동으로 이격거리 조정
       
       onUpdate(updates);
     }
