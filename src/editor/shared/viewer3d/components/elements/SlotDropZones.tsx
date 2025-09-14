@@ -321,8 +321,29 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     }
     
     // 가구 데이터 조회
+    console.log('🔥🔥🔥 [SlotDropZones] getModuleById 호출:', {
+      moduleId: dragData.moduleData.id,
+      internalSpace: internalSpace,
+      spaceInfo: {
+        width: spaceInfo.width,
+        surroundType: spaceInfo.surroundType,
+        customColumnCount: spaceInfo.customColumnCount
+      }
+    });
+    
     const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+    
+    console.log('🔥🔥🔥 [SlotDropZones] getModuleById 결과:', {
+      found: !!moduleData,
+      moduleData: moduleData ? {
+        id: moduleData.id,
+        name: moduleData.name,
+        width: moduleData.dimensions.width
+      } : null
+    });
+    
     if (!moduleData) {
+      console.error('❌❌❌ [SlotDropZones] 모듈을 찾을 수 없음:', dragData.moduleData.id);
       return false;
     }
     

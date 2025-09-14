@@ -57,11 +57,20 @@ export const getModuleById = (
   const widthMatch = id.match(/-([\d.]+)$/);
   const requestedWidth = widthMatch ? parseFloat(widthMatch[1]) : null;
   
-  console.log('🔍 getModuleById 요청:', {
+  console.log('🔍🔍🔍 getModuleById 요청:', {
     id,
     baseType,
     requestedWidth,
-    '소수점1자리': requestedWidth ? Math.round(requestedWidth * 10) / 10 : null
+    '소수점1자리': requestedWidth ? Math.round(requestedWidth * 10) / 10 : null,
+    internalSpace: internalSpace ? {
+      width: internalSpace.width,
+      height: internalSpace.height
+    } : null,
+    spaceInfo: spaceInfo ? {
+      width: spaceInfo.width,
+      surroundType: spaceInfo.surroundType,
+      customColumnCount: spaceInfo.customColumnCount
+    } : null
   });
   
   
@@ -100,9 +109,14 @@ export const getModuleById = (
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     
-    console.log('📦 생성된 모듈 중 매칭 시도:', {
+    console.log('📦📦📦 생성된 모듈 중 매칭 시도:', {
       요청ID: id,
-      생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id).slice(0, 3)
+      생성된모든ID: dynamicModules.map(m => m.id),
+      생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id),
+      modifiedSpaceInfo: modifiedSpaceInfo ? {
+        _tempSlotWidths: (modifiedSpaceInfo as any)._tempSlotWidths,
+        zone: (modifiedSpaceInfo as any).zone
+      } : null
     });
     
     // 먼저 정확히 일치하는 모듈 찾기
