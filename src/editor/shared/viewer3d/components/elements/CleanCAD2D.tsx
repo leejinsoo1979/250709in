@@ -1683,6 +1683,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={2}
               renderOrder={999999}
               depthTest={false}
+              depthWrite={false}
             />
             
             {/* 좌측 화살표 */}
@@ -1692,6 +1693,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={2}
               renderOrder={999999}
               depthTest={false}
+              depthWrite={false}
             />
             
             {/* 우측 화살표 */}
@@ -1701,6 +1703,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={2}
               renderOrder={999999}
               depthTest={false}
+              depthWrite={false}
             />
             
             {/* 가구 치수 텍스트 - Text 사용 */}
@@ -1724,6 +1727,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={1.5}
               renderOrder={999999}
               depthTest={false}
+              depthWrite={false}
             />
             <NativeLine
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
@@ -1731,6 +1735,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={1.5}
               renderOrder={999999}
               depthTest={false}
+              depthWrite={false}
             />
             
           </group>
@@ -2707,7 +2712,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const rightDimensionX = actualSpaceWidth + mmToThreeUnits(200); // 우측 치수선 X 위치
     
     return (
-      <group>
+      <group renderOrder={100000}>
         {/* 상단 전체 깊이 치수선 */}
         <group>
           {/* 치수선 */}
