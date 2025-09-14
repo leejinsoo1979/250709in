@@ -253,52 +253,22 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
       }
       
-      // 동적 가구인 경우 정확한 너비로 ID 생성
+      // 동적 가구인 경우 - 너비를 제외한 기본 타입만 전달
       if (module.isDynamic) {
-        const isDualFurniture = module.id.startsWith('dual-');
+        // 너비 정보를 제거한 기본 타입 ID만 사용
+        // 실제 너비는 배치 시점에 SlotDropZones에서 계산
+        const baseType = module.id.replace(/-[\d.]+$/, '');
+        dragModuleId = baseType; // 너비 없이 기본 타입만
         
-        // 노서라운드 모드에서는 원본 모듈 ID 사용 (고정 크기)
-        // 서라운드 모드에서만 slotWidths 사용
-        let targetWidth;
-        if (spaceInfo.surroundType === 'surround' && indexing.slotWidths && indexing.slotWidths.length > 0) {
-          // 서라운드 모드: slotWidths 사용
-          if (isDualFurniture && indexing.slotWidths.length >= 2) {
-            targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
-          } else {
-            targetWidth = indexing.slotWidths[0];
-          }
-          console.log('🚨 [ModuleGallery] 서라운드 모드 - slotWidths 사용:', {
-            isDualFurniture,
-            targetWidth,
-            slotWidths: indexing.slotWidths
-          });
-          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-          const widthForId = Math.round(targetWidth * 10) / 10;
-          const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${widthForId}`;
-          adjustedDimensions.width = targetWidth;
-        } else if (spaceInfo.surroundType === 'surround') {
-          // 서라운드 모드 fallback
-          targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
-          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-          const widthForId = Math.round(targetWidth * 10) / 10;
-          const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${widthForId}`;
-          adjustedDimensions.width = targetWidth;
-        } else {
-          // 노서라운드 모드: 항상 columnWidth 사용 (균일한 슬롯)
-          targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
-          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-          const widthForId = Math.round(targetWidth * 10) / 10;
-          const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${widthForId}`;
-          adjustedDimensions.width = targetWidth;
-          console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
-            originalId: module.id,
-            targetWidth,
-            dragModuleId
-          });
-        }
+        // dimensions는 기본값 사용 (실제 배치 시 재계산됨)
+        const isDualFurniture = module.id.startsWith('dual-');
+        adjustedDimensions.width = isDualFurniture ? 1000 : 500; // 임시값
+        
+        console.log('🚨 [ModuleGallery] 드래그 - 기본 타입만 전달:', {
+          originalId: module.id,
+          dragModuleId: dragModuleId,
+          baseType: baseType
+        });
       }
     }
 

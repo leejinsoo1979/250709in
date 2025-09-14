@@ -320,18 +320,46 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       console.log('✅ 기둥 슬롯 추가 검사 - findAvailableSpacesInColumnSlot에서 상세 검사 예정');
     }
     
-    // 가구 데이터 조회
+    // 가구 데이터 조회 - 기본 타입만 있는 경우 실제 너비 계산
+    let moduleId = dragData.moduleData.id;
+    
+    // ID에 너비가 없는 경우 (기본 타입만 있는 경우) 실제 너비 추가
+    if (!moduleId.match(/-[\d.]+$/)) {
+      const originalId = moduleId;  // 원래 ID 저장
+      const isDual = moduleId.includes('dual-');
+      const targetWidth = isDual ? indexing.columnWidth * 2 : indexing.columnWidth;
+      const widthForId = Math.round(targetWidth * 10) / 10;
+      moduleId = `${moduleId}-${widthForId}`;
+      
+      // dragData도 업데이트
+      dragData.moduleData.id = moduleId;
+      
+      console.log('🔥 [SlotDropZones] 너비 추가:', {
+        originalId: originalId,
+        calculatedId: moduleId,
+        targetWidth: targetWidth,
+        columnWidth: indexing.columnWidth
+      });
+    }
+    
+    // zone 정보를 포함한 spaceInfo 생성
+    const spaceInfoWithZone = {
+      ...spaceInfo,
+      zone: zone
+    } as any;
+    
     console.log('🔥🔥🔥 [SlotDropZones] getModuleById 호출:', {
-      moduleId: dragData.moduleData.id,
+      moduleId: moduleId,
       internalSpace: internalSpace,
       spaceInfo: {
         width: spaceInfo.width,
         surroundType: spaceInfo.surroundType,
-        customColumnCount: spaceInfo.customColumnCount
+        customColumnCount: spaceInfo.customColumnCount,
+        zone: zone
       }
     });
     
-    const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo);
+    const moduleData = getModuleById(moduleId, internalSpace, spaceInfoWithZone);
     
     console.log('🔥🔥🔥 [SlotDropZones] getModuleById 결과:', {
       found: !!moduleData,
@@ -343,7 +371,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     });
     
     if (!moduleData) {
-      console.error('❌❌❌ [SlotDropZones] 모듈을 찾을 수 없음:', dragData.moduleData.id);
+      console.error('❌❌❌ [SlotDropZones] 모듈을 찾을 수 없음:', moduleId);
       return false;
     }
     
