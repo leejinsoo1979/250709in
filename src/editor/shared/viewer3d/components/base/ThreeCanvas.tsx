@@ -298,18 +298,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         // Space3DView와 완전히 동일한 거리 계산 사용 - placedModules 개수는 0으로 (초기 상태와 동일)
         const defaultDistance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, 0);
         
-        const centerX = 0; // X축 중앙은 0
-        const centerY = spaceHeight / 200; // Y축 중앙 (mm to three units)
+        // 타겟 위치 계산 (calculateCameraTargetUtil 사용)
+        const target = calculateCameraTargetUtil(spaceHeight);
         
         console.log('🎯 3D 카메라 기본 위치로 리셋:', {
-          centerX, centerY, 
+          target,
           distance: defaultDistance,
           spaceHeight
         });
         
-        // 카메라를 정면 중앙에 위치 (초기와 동일한 거리 사용)
-        controls.object.position.set(0, centerY, defaultDistance);
-        controls.target.set(0, centerY, 0);
+        // 카메라를 정면에 위치
+        controls.object.position.set(0, target[1], defaultDistance);
+        controls.target.set(...target);
         controls.object.up.set(0, 1, 0);
         
         // 카메라가 타겟을 바라보도록 설정
