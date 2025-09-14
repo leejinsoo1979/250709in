@@ -1079,9 +1079,12 @@ const Room: React.FC<RoomProps> = ({
                 <mesh
                   position={[droppedAreaX, panelStartY + height - droppedCeilingHeight + 0.001, extendedZOffset + extendedPanelDepth/2]}
                   rotation={[Math.PI / 2, 0, 0]}
+                  renderOrder={-1}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
-                  <primitive object={topWallMaterial} />
+                  <primitive 
+                    ref={topWallMaterialRef}
+                    object={topWallMaterial} />
                 </mesh>
                 
                 {/* 일반 영역 천장 (원래 높이) */}
@@ -1091,7 +1094,9 @@ const Room: React.FC<RoomProps> = ({
                   renderOrder={-1}
                 >
                   <planeGeometry args={[normalAreaWidth, extendedPanelDepth]} />
-                  <primitive object={topWallMaterial} />
+                  <primitive 
+                    ref={topWallMaterialRef}
+                    object={topWallMaterial} />
                 </mesh>
                 
                 {/* 단내림 경계 수직 벽 - 정확한 X 위치 계산 */}
