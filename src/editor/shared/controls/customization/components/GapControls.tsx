@@ -21,21 +21,12 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
     if (optimizedGap) {
-      // 현재 값과 다를 때만 업데이트
-      if (spaceInfo?.gapConfig?.left !== optimizedGap.left || spaceInfo?.gapConfig?.right !== optimizedGap.right) {
-        setLeftGap(optimizedGap.left);
-        setRightGap(optimizedGap.right);
-        // 자동 최적화된 값으로 즉시 업데이트
-        onUpdate({
-          gapConfig: {
-            left: optimizedGap.left,
-            right: optimizedGap.right
-          }
-        });
-      }
-    } else {
-      setLeftGap(spaceInfo?.gapConfig?.left || 2);
-      setRightGap(spaceInfo?.gapConfig?.right || 2);
+      // 로컬 상태만 업데이트 (스토어 업데이트는 InstallTypeControls나 ColumnCountControlsWrapper에서 처리)
+      setLeftGap(optimizedGap.left);
+      setRightGap(optimizedGap.right);
+    } else if (spaceInfo?.gapConfig) {
+      setLeftGap(spaceInfo.gapConfig.left || 2);
+      setRightGap(spaceInfo.gapConfig.right || 2);
     }
   }, [optimizedGap?.left, optimizedGap?.right, spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
   

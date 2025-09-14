@@ -3,7 +3,7 @@ import styles from './RightPanel.module.css';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
-import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 
 // Window 인터페이스 확장
@@ -841,6 +841,20 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 onChange={(newWidth) => {
                   onWidthChange(newWidth);
                   // width 변경 시 doorCount 범위 체크 및 자동 조정은 useEffect에서 처리
+                  
+                  // 노서라운드 빌트인 모드에서 공간 너비 변경 시 자동 이격거리 계산
+                  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'builtin') {
+                    const tempSpaceInfo = { ...spaceInfo, spaceWidth: newWidth };
+                    const indexing = calculateSpaceIndexing(tempSpaceInfo);
+                    
+                    if (indexing.optimizedGapConfig) {
+                      console.log('📏 공간 너비 변경 - 자동 이격거리 적용:', {
+                        newWidth,
+                        optimizedGap: indexing.optimizedGapConfig
+                      });
+                      updateSpaceInfo({ gapConfig: indexing.optimizedGapConfig });
+                    }
+                  }
                 }}
                 min={1000}
                 max={8000}

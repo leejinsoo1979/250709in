@@ -82,6 +82,7 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
           updates.gapConfig = indexing.optimizedGapConfig;
         } else {
           // 자동 조정 실패 시 기본값
+          console.log('⚠️ 자동 이격거리 계산 실패 - 기본값 사용');
           updates.gapConfig = { left: 2, right: 2 };
         }
       } else {
