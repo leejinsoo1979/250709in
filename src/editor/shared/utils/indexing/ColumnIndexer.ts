@@ -399,19 +399,19 @@ export class ColumnIndexer {
         actualInternalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
       }
       const exactSlotWidth = actualInternalWidth / columnCount;
-      const baseSlotWidth = Math.floor(exactSlotWidth);
-      const remainder = internalWidth - (baseSlotWidth * columnCount);
       
-      // remainder를 0.5 단위로 분배
-      const slotsWithHalf = remainder * 2;
-      
+      // 정확한 슬롯 너비를 그대로 사용 (반올림하지 않음)
       for (let i = 0; i < columnCount; i++) {
-        if (i < slotsWithHalf) {
-          slotWidths.push(baseSlotWidth + 0.5);
-        } else {
-          slotWidths.push(baseSlotWidth);
-        }
+        slotWidths.push(exactSlotWidth);
       }
+      
+      console.log('🎯 빌트인/서라운드 슬롯 너비 계산:', {
+        actualInternalWidth,
+        columnCount,
+        exactSlotWidth,
+        optimizedGapConfig,
+        '계산식': `${actualInternalWidth} / ${columnCount} = ${exactSlotWidth}`
+      });
     }
     
     // 호환성을 위한 평균 너비

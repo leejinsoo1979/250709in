@@ -933,6 +933,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           gapConfig: spaceInfo.gapConfig
         });
         const indexing = calculateSpaceIndexing(spaceInfo);
+        console.log('📐 CADDimensions2D - indexing 결과:', {
+          slotWidths: indexing.slotWidths,
+          optimizedGapConfig: indexing.optimizedGapConfig,
+          columnCount: indexing.columnCount,
+          totalWidth: spaceInfo.width,
+          gapConfig: spaceInfo.gapConfig,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType
+        });
         if (indexing.columnCount <= 1) return null;
         // columnCount가 1(싱글 캐비닛)일 때는 분할선/치수 분절을 모두 렌더링하지 않음
         return indexing.threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
