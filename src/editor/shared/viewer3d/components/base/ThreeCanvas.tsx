@@ -315,61 +315,32 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       
       console.log('🎯 3D 카메라 리셋 완료');
     } else if (controlsRef.current && viewMode === '2D') {
-      // 2D 모드에서 저장된 초기 상태로 완전히 리셋
+      // 2D 모드에서는 정면 시점으로만 회전, 거리/zoom 변경 안함
       const controls = controlsRef.current;
       
-      // 저장된 2D 초기 상태가 있으면 사용, 없으면 현재 카메라 설정 사용
-      if (initialCameraSetup.current.position2D && 
-          initialCameraSetup.current.target2D && 
-          initialCameraSetup.current.zoom2D !== null) {
-        
-        console.log('🎯 2D 카메라 저장된 초기 상태로 리셋:', {
-          position: initialCameraSetup.current.position2D.toArray(),
-          target: initialCameraSetup.current.target2D.toArray(),
-          zoom: initialCameraSetup.current.zoom2D
-        });
-        
-        // OrbitControls의 저장된 초기 상태를 업데이트
-        controls.target0.copy(initialCameraSetup.current.target2D);
-        controls.position0.copy(initialCameraSetup.current.position2D);
-        controls.zoom0 = initialCameraSetup.current.zoom2D;
-        
-        // reset()을 호출하면 target0, position0, zoom0으로 완전히 리셋됨
-        controls.reset();
-        
-        console.log('🎯 2D 카메라 초기 상태 리셋 완료');
-      } else {
-        // 저장된 상태가 없으면 적절한 초기값 계산
-        const spaceWidth = spaceInfo?.width || 3000;
-        const spaceHeight = spaceInfo?.height || 2400;
-        const spaceDepth = spaceInfo?.depth || 600;
-        
-        // orthographic 모드에서는 훨씬 큰 zoom 값 필요
-        const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, 0);
-        const baseZoomDistance = Math.max(1200, spaceWidth * 0.4);
-        const appropriateZoom = (baseZoomDistance / distance) * 15; // 15배로 크게 설정하여 화면에 꽉 차도록
-        
-        console.log('🎯 2D 카메라 초기값으로 리셋 (고정 zoom):', {
-          zoom: appropriateZoom,
-          space: { width: spaceWidth, height: spaceHeight }
-        });
-        
-        // OrbitControls 초기화
-        controls.object.position.set(0, 0, 50);
-        controls.target.set(0, 0, 0);
-        controls.object.up.set(0, 1, 0);
-        controls.object.zoom = appropriateZoom;
+      // 현재 zoom과 거리는 유지하면서 정면 시점으로만 변경
+      const currentZoom = controls.object.zoom;
+      const currentDistance = controls.object.position.length();
+      
+      console.log('🎯 2D 카메라 정면 시점으로만 리셋 (zoom/거리 유지):', {
+        currentZoom,
+        currentDistance
+      });
+      
+      // 카메라를 정면 시점으로만 회전 (0, 0, 현재거리)
+      controls.object.position.set(0, 0, currentDistance);
+      controls.target.set(0, 0, 0);
+      controls.object.up.set(0, 1, 0);
+      
+      // zoom은 현재 값 그대로 유지
+      if (controls.object.type === 'OrthographicCamera') {
+        controls.object.zoom = currentZoom;
         controls.object.updateProjectionMatrix();
-        
-        controls.object.lookAt(controls.target);
-        controls.update();
-        controls.saveState();
-        
-        // 다음번을 위해 초기 상태 저장
-        initialCameraSetup.current.position2D = controls.object.position.clone();
-        initialCameraSetup.current.target2D = controls.target.clone();
-        initialCameraSetup.current.zoom2D = appropriateZoom;
       }
+      
+      controls.update();
+      
+      console.log('🎯 2D 카메라 정면 시점 리셋 완료');
     }
   }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo]);
 
