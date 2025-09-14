@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore'; // 상위 의존성 - 절대 경로
 import { useFurnitureStore } from '@/store/core/furnitureStore'; // 배치된 가구 정보
+import { useUIStore } from '@/store/uiStore'; // UI 스토어 추가
 import { calculateDynamicFOV, calculateCameraTarget, calculateOptimalDistance, mmToThreeUnits } from '../utils/threeUtils'; // 하위 의존성 - 상대 경로
 
 export interface CameraConfig {
@@ -37,6 +38,7 @@ export const useCameraManager = (
   // 스토어에서 공간 정보 가져오기 (상위 의존성)
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
+  const { cameraMode } = useUIStore(); // 3D orthographic 모드 확인용
 
   // 카메라 설정 계산 (메모이제이션으로 성능 최적화)
   const cameraConfig = useMemo(() => {
@@ -58,8 +60,13 @@ export const useCameraManager = (
     const zoomMultiplier = isSplitView ? 0.5 : 1.0;
     // 공간 크기에 따라 동적으로 zoom 계산 (공간이 클수록 기준값도 크게)
     const baseZoomDistance = Math.max(1200, spaceInfo.width * 0.4);
-    // zoom 계산 - 2D와 3D 동일하게 처리
-    const zoom = (baseZoomDistance / distance) * zoomMultiplier;
+    
+    // 3D orthographic 모드에서는 zoom을 줄여서 더 멀리서 보기
+    // 2D 모드는 그대로, 3D perspective도 그대로, 오직 3D orthographic만 조정
+    const is3DOrthographic = viewMode === '3D' && cameraMode === 'orthographic';
+    const orthographicZoomFactor = is3DOrthographic ? 0.3 : 1.0; // 3D orthographic에서만 30%로 축소
+    
+    const zoom = (baseZoomDistance / distance) * zoomMultiplier * orthographicZoomFactor;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
     
@@ -84,7 +91,7 @@ export const useCameraManager = (
       canvasAspectRatio,
       zoom,
     };
-  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode]);
 
   return cameraConfig;
 }; 
