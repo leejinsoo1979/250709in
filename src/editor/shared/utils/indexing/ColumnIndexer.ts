@@ -257,9 +257,20 @@ export class ColumnIndexer {
       const baseSlotWidth = Math.floor(totalWidth / columnCount);
       const remainder = totalWidth % columnCount;
       
+      // 나머지를 고르게 분배 (중앙부터 바깥쪽으로)
+      const middleIndex = Math.floor(columnCount / 2);
       for (let i = 0; i < columnCount; i++) {
-        let slotWidth = i < remainder ? baseSlotWidth + 1 : baseSlotWidth;
-        // 엔드패널을 빼지 않음 - 슬롯에 포함
+        let slotWidth = baseSlotWidth;
+        
+        // 나머지를 중앙 슬롯들부터 분배
+        if (remainder > 0) {
+          const distanceFromMiddle = Math.abs(i - middleIndex + 0.5);
+          const priority = columnCount - Math.floor(distanceFromMiddle * 2);
+          if (priority > (columnCount - remainder)) {
+            slotWidth += 1;
+          }
+        }
+        
         slotWidths.push(slotWidth);
       }
       

@@ -141,6 +141,32 @@ export class SpaceCalculator {
   }
 
   /**
+   * 균등분할을 위한 이격거리 자동 선택 (노서라운드 빌트인)
+   * 슬롯폭이 400~600이며 2×슬롯폭이 정수가 되도록 이격합을 4~10에서 탐색
+   */
+  static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
+    const validGapSums: number[] = [];
+    
+    for (let gapSum = 4; gapSum <= 10; gapSum++) {
+      // (2*(totalWidth - gapSum)) % slotCount == 0 체크
+      if ((2 * (totalWidth - gapSum)) % slotCount === 0) {
+        const slotWidth = (totalWidth - gapSum) / slotCount;
+        
+        // 슬롯폭이 400~600 범위인지 체크
+        if (slotWidth >= 400 && slotWidth <= 600) {
+          // 2×슬롯폭이 정수인지 체크
+          const doubleSlotWidth = slotWidth * 2;
+          if (Math.abs(doubleSlotWidth - Math.round(doubleSlotWidth)) < 1e-9) {
+            validGapSums.push(gapSum);
+          }
+        }
+      }
+    }
+    
+    return validGapSums;
+  }
+
+  /**
    * 정수 슬롯 너비를 위한 프레임/이격거리 자동 조정
    * @returns 조정된 spaceInfo와 슬롯 너비
    */
