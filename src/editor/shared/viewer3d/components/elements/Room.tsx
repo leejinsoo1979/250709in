@@ -237,12 +237,17 @@ const Room: React.FC<RoomProps> = ({
       const angleY = Math.atan2(cameraDirection.x, cameraDirection.z);
       const angleX = Math.atan2(cameraDirection.y, Math.sqrt(cameraDirection.x * cameraDirection.x + cameraDirection.z * cameraDirection.z));
       
-      // 벽이 카메라 반대편에 있을 때 투명하게
-      // 왼쪽 벽: 카메라가 오른쪽에서 바라볼 때 투명
-      const leftOpacity = angleY > 0.2 ? 0.1 : 1;
+      // 단내림 여부 확인
+      const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+      const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
+      const isRightDropped = spaceInfo.droppedCeiling?.position === 'right';
       
-      // 오른쪽 벽: 카메라가 왼쪽에서 바라볼 때 투명
-      const rightOpacity = angleY < -0.2 ? 0.1 : 1;
+      // 벽이 카메라 반대편에 있을 때 투명하게
+      // 왼쪽 벽: 단내림이 있으면 불투명, 없으면 각도에 따라
+      const leftOpacity = (hasDroppedCeiling && isLeftDropped) ? 1 : (angleY > 0.2 ? 0.1 : 1);
+      
+      // 오른쪽 벽: 단내림이 있으면 불투명, 없으면 각도에 따라
+      const rightOpacity = (hasDroppedCeiling && isRightDropped) ? 1 : (angleY < -0.2 ? 0.1 : 1);
       
       // 천장: 카메라가 위에서 아래를 바라볼 때 투명 (angleX가 음수일 때)
       const topOpacity = angleX < -0.1 ? 0.1 : 1;
@@ -257,7 +262,7 @@ const Room: React.FC<RoomProps> = ({
       if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
         topWallMaterialRef.current.uniforms.opacity.value = topOpacity;
       }
-      // 단내림 벽과 천장은 orthographic에서도 불투명하게 유지
+      // 단내림 벽은 orthographic에서도 불투명하게 유지
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = 1;
       }
