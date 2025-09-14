@@ -262,6 +262,14 @@ export class ColumnIndexer {
     
     // 노서라운드 모드에서 최적 이격거리 자동 선택 (벽이 있는 경우만 적용)
     let optimizedGapConfig = spaceInfo.gapConfig;
+    console.log('🔍 이격거리 자동 조정 체크:', {
+      isNoSurround,
+      wallConfig: spaceInfo.wallConfig,
+      gapConfig: spaceInfo.gapConfig,
+      총너비: totalWidth,
+      컬럼수: columnCount
+    });
+    
     if (isNoSurround && spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right)) {
       const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
       if (validGapSums.length > 0) {
