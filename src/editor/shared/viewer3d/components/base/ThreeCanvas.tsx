@@ -265,7 +265,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const controls = controlsRef.current;
       
       // 3D orthographic 모드인 경우 스페이스 키 동작 안함
-      if (controls.object.type === 'OrthographicCamera') {
+      console.log('🎯 카메라 타입 체크:', controls.object.type, cameraMode);
+      if (controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic') {
         console.log('🎯 3D Orthographic 모드에서 스페이스 키 - 아무 동작 안함');
         return; // 아무것도 하지 않고 종료
       }
@@ -326,7 +327,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       console.log('🎯 2D 모드에서 스페이스 키 - 아무 동작 안함');
       // 스페이스 키를 눌러도 카메라 위치, zoom, 각도 모두 현재 상태 유지
     }
-  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo]);
+  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo, cameraMode]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
