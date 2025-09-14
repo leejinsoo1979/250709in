@@ -444,6 +444,40 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           }
         }
         }
+      } else {
+        // 단내림이 없는 일반 경우에도 정확한 슬롯 너비로 ID 조정
+        if (module.isDynamic) {
+          const isDualFurniture = module.id.startsWith('dual-');
+          
+          if (indexing.slotWidths && indexing.slotWidths.length > 0) {
+            let targetWidth;
+            if (isDualFurniture && indexing.slotWidths.length >= 2) {
+              targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
+            } else {
+              targetWidth = indexing.slotWidths[0];
+            }
+            const baseType = module.id.replace(/-[\d.]+$/, '');
+            dragModuleId = `${baseType}-${targetWidth}`;
+            adjustedDimensions.width = targetWidth;
+            console.log('🎯 [ModuleGallery] Click - 일반 모드 정확한 슬롯 너비 사용:', {
+              originalId: module.id,
+              targetWidth,
+              dragModuleId,
+              slotWidths: indexing.slotWidths
+            });
+          } else {
+            // fallback: 평균 너비 사용
+            const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+            const baseType = module.id.replace(/-[\d.]+$/, '');
+            dragModuleId = `${baseType}-${targetWidth}`;
+            adjustedDimensions.width = targetWidth;
+            console.log('🎯 [ModuleGallery] Click - 일반 모드 평균 너비 사용:', {
+              originalId: module.id,
+              targetWidth,
+              dragModuleId
+            });
+          }
+        }
       }
       
       // 가구 선택 상태 설정
