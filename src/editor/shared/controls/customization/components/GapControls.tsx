@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import styles from './GapControls.module.css';
 
 interface GapControlsProps {
@@ -9,26 +8,17 @@ interface GapControlsProps {
 }
 
 const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
-  // 자동 최적화된 이격거리 계산
-  const indexing = calculateSpaceIndexing(spaceInfo);
-  const optimizedGap = indexing.optimizedGapConfig;
-  
-  // spaceInfo가 undefined인 경우 기본값 처리
-  // optimizedGap이 있으면 우선 사용
-  const [leftGap, setLeftGap] = useState(optimizedGap?.left || spaceInfo?.gapConfig?.left || 2);
-  const [rightGap, setRightGap] = useState(optimizedGap?.right || spaceInfo?.gapConfig?.right || 2);
+  // 실제 스토어에 저장된 값 사용 (자동 계산하지 않음)
+  const [leftGap, setLeftGap] = useState(spaceInfo?.gapConfig?.left || 2);
+  const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right || 2);
   
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
-    if (optimizedGap) {
-      // 로컬 상태만 업데이트 (스토어 업데이트는 InstallTypeControls나 ColumnCountControlsWrapper에서 처리)
-      setLeftGap(optimizedGap.left);
-      setRightGap(optimizedGap.right);
-    } else if (spaceInfo?.gapConfig) {
+    if (spaceInfo?.gapConfig) {
       setLeftGap(spaceInfo.gapConfig.left || 2);
       setRightGap(spaceInfo.gapConfig.right || 2);
     }
-  }, [optimizedGap?.left, optimizedGap?.right, spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
+  }, [spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
   
   // spaceInfo가 없거나 노서라운드가 아닌 경우 렌더링하지 않음
   if (!spaceInfo || spaceInfo.surroundType !== 'no-surround') {
