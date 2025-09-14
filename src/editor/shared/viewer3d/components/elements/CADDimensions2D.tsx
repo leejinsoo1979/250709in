@@ -926,6 +926,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       
       {/* 컬럼 치수 표시 */}
       {(() => {
+        console.log('🔍 CADDimensions2D - spaceInfo 체크:', {
+          width: spaceInfo.width,
+          wallConfig: spaceInfo.wallConfig,
+          surroundType: spaceInfo.surroundType,
+          gapConfig: spaceInfo.gapConfig
+        });
         const indexing = calculateSpaceIndexing(spaceInfo);
         if (indexing.columnCount <= 1) return null;
         // columnCount가 1(싱글 캐비닛)일 때는 분할선/치수 분절을 모두 렌더링하지 않음
