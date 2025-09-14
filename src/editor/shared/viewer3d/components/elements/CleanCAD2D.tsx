@@ -244,17 +244,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 그룹의 모든 자식 요소들에 renderOrder와 depthTest 설정
   useEffect(() => {
     if (groupRef.current) {
-      groupRef.current.traverse((child) => {
-        if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Mesh) {
-          child.renderOrder = 999999;
-          if (child.material) {
-            (child.material as any).depthTest = false;
-            (child.material as any).depthWrite = false;
-          }
+      // 일정 시간 후에 실행하여 모든 요소가 렌더링된 후 적용
+      const timer = setTimeout(() => {
+        if (groupRef.current) {
+          groupRef.current.traverse((child) => {
+            // Line, LineSegments, Mesh 모두에 적용
+            if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Mesh) {
+              child.renderOrder = 999999;
+              if (child.material) {
+                (child.material as any).depthTest = false;
+                (child.material as any).depthWrite = false;
+                (child.material as any).transparent = true;
+              }
+            }
+          });
         }
-      });
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  });
+  }, [showDimensions, currentViewDirection]);
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
 

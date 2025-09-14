@@ -1014,7 +1014,21 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 기본 요소들 - renderOrder를 낮게 설정 */}
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
-            <group renderOrder={1}>
+            <group 
+              renderOrder={1}
+              onUpdate={(self) => {
+                // Room의 모든 메쉬에 낮은 renderOrder 설정
+                self.traverse((child) => {
+                  if (child instanceof THREE.Mesh) {
+                    child.renderOrder = 1;
+                    if (child.material) {
+                      child.material.depthWrite = true;
+                      child.material.depthTest = true;
+                    }
+                  }
+                });
+              }}
+            >
               <Room 
                 spaceInfo={spaceInfo} 
                 viewMode={viewMode} 
