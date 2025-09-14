@@ -237,10 +237,11 @@ export class ColumnIndexer {
     
     // 내경 계산: 노서라운드인 경우 이격거리 고려, 서라운드인 경우 프레임 두께 고려
     // 빌트인 노서라운드의 경우 최적화된 이격거리 사용
+    // 노서라운드 모드인지 확인
+    const isNoSurround = spaceInfo.surroundType === 'no-surround';
+    
+    // 일단 기본 내경 계산
     let internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
-    if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
-      internalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
-    }
     
     // 컬럼 수 결정 로직
     let columnCount: number;
@@ -258,9 +259,6 @@ export class ColumnIndexer {
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
       console.log('📐 Using auto-calculated columnCount:', columnCount);
     }
-    
-    // 노서라운드 모드인지 확인
-    const isNoSurround = spaceInfo.surroundType === 'no-surround';
     
     // 노서라운드 빌트인 모드에서 최적 이격거리 자동 선택
     let optimizedGapConfig = spaceInfo.gapConfig;
@@ -284,6 +282,9 @@ export class ColumnIndexer {
           내경: totalWidth - optimalGapSum,
           슬롯폭: (totalWidth - optimalGapSum) / columnCount
         });
+        
+        // 최적화된 이격거리로 내경 재계산
+        internalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
       }
     }
     
