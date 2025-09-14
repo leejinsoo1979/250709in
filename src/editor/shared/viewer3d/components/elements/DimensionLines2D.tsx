@@ -41,17 +41,23 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
         points={[[overallLeft, topY, zVal], [overallRight, topY, zVal]]}
         color={dimensionColor}
         lineWidth={2.5}
+        renderOrder={1000}  // 높은 renderOrder로 항상 앞에 표시
+        depthTest={false}   // depth test 비활성화로 다른 메쉬에 가려지지 않도록
       />
       {/* 전체 치수선 양 끝 화살표 */}
       <NativeLine
         points={[[overallLeft, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallLeft, topY, zVal], [overallLeft, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
         lineWidth={1.5}
+        renderOrder={1000}
+        depthTest={false}
       />
       <NativeLine
         points={[[overallRight, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallRight, topY, zVal], [overallRight, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
         lineWidth={1.5}
+        renderOrder={1000}
+        depthTest={false}
       />
       
       {/* 내부 공간 치수 (슬롯 내경) */}
@@ -75,6 +81,8 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
               points={[[internalLeft, internalY, zVal], [internalRight, internalY, zVal]]}
               color={dimensionColor}
               lineWidth={2}
+              renderOrder={1000}
+              depthTest={false}
             />
             
             {/* 내부 폭 좌측 화살표 */}
@@ -86,6 +94,8 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
               ]}
               color={dimensionColor}
               lineWidth={1.5}
+              renderOrder={1000}
+              depthTest={false}
             />
             
             {/* 내부 폭 우측 화살표 */}
@@ -97,6 +107,8 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
               ]}
               color={dimensionColor}
               lineWidth={1.5}
+              renderOrder={1000}
+              depthTest={false}
             />
             
             {/* 내부 폭 텍스트 */}
