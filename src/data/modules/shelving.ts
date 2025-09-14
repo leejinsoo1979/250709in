@@ -229,7 +229,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `single-2drawer-hanging-${Math.round(columnWidth)}`,
+    `single-2drawer-hanging-${columnWidth}`,
     `2단서랍+옷장 ${columnWidth}mm`,
     columnWidth,
     maxHeight,
@@ -276,7 +276,7 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `single-2hanging-${Math.round(columnWidth)}`,
+    `single-2hanging-${columnWidth}`,
     `2단 옷장 ${columnWidth}mm`,
     columnWidth,
     maxHeight,
@@ -323,7 +323,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `single-4drawer-hanging-${Math.round(columnWidth)}`,
+    `single-4drawer-hanging-${columnWidth}`,
     `4단서랍+옷장 ${columnWidth}mm`,
     columnWidth, // columnWidth 사용 (500mm 대신)
     maxHeight,
@@ -375,7 +375,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-2drawer-hanging-${Math.round(dualColumnWidth)}`,
+    `dual-2drawer-hanging-${dualColumnWidth}`,
     `듀얼 2단서랍+옷장 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -422,7 +422,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-2hanging-${Math.round(dualColumnWidth)}`,
+    `dual-2hanging-${dualColumnWidth}`,
     `듀얼 2단 옷장 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -470,7 +470,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-4drawer-hanging-${Math.round(dualColumnWidth)}`,
+    `dual-4drawer-hanging-${dualColumnWidth}`,
     `듀얼 4단서랍+옷장 ${dualColumnWidth}mm`,
     dualColumnWidth, // dualColumnWidth 사용 (1000mm 대신)
     maxHeight,
@@ -531,7 +531,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const rightSections = applySafetyShelf(rightBaseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-2drawer-styler-${Math.round(dualColumnWidth)}`,
+    `dual-2drawer-styler-${dualColumnWidth}`,
     `듀얼 서랍+스타일러 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -567,7 +567,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const topHangingHeight = maxHeight - bottomSectionHeight; // 상단 옷장 높이
   
   const base = createFurnitureBase(
-    `dual-4drawer-pantshanger-${Math.round(dualColumnWidth)}`,
+    `dual-4drawer-pantshanger-${dualColumnWidth}`,
     `듀얼 서랍+바지걸이 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -630,7 +630,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
  */
 const createUpperCabinet1 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `upper-cabinet-shelf-${Math.round(columnWidth)}`,
+    `upper-cabinet-shelf-${columnWidth}`,
     `상부장 선반형 ${columnWidth}mm`,
     columnWidth,
     600, // 상부장 기본 높이 600mm
@@ -663,7 +663,7 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
  */
 const createUpperCabinet4 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `upper-cabinet-2tier-${Math.round(columnWidth)}`,
+    `upper-cabinet-2tier-${columnWidth}`,
     `상부장 2단형 ${columnWidth}mm`,
     columnWidth,
     600, // 상부장 기본 높이 600mm
@@ -695,7 +695,7 @@ const createUpperCabinet4 = (columnWidth: number): ModuleData => {
  */
 const createUpperCabinet2 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `upper-cabinet-open-${Math.round(columnWidth)}`,
+    `upper-cabinet-open-${columnWidth}`,
     `상부장 오픈형 ${columnWidth}mm`,
     columnWidth,
     600,
@@ -726,7 +726,7 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
  */
 const createUpperCabinet3 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `upper-cabinet-mixed-${Math.round(columnWidth)}`,
+    `upper-cabinet-mixed-${columnWidth}`,
     `상부장 혼합형 ${columnWidth}mm`,
     columnWidth,
     600,
@@ -765,7 +765,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
  */
 const createLowerCabinet1 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `lower-cabinet-basic-${Math.round(columnWidth)}`,
+    `lower-cabinet-basic-${columnWidth}`,
     `하부장 ${columnWidth}mm`,
     columnWidth,
     1000, // 하부장 높이 1000mm
@@ -801,7 +801,7 @@ const createLowerCabinet1 = (columnWidth: number): ModuleData => {
  */
 const createLowerCabinet2 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `lower-cabinet-2tier-${Math.round(columnWidth)}`,
+    `lower-cabinet-2tier-${columnWidth}`,
     `하부장 2단형 ${columnWidth}mm`,
     columnWidth,
     1000, // 하부장 높이 1000mm
@@ -841,7 +841,7 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
  */
 const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-shelf-${Math.round(dualWidth)}`,
+    `dual-upper-cabinet-shelf-${dualWidth}`,
     `듀얼 상부장 선반형 ${dualWidth}mm`,
     dualWidth,
     600, // 상부장 기본 높이 600mm
@@ -881,7 +881,7 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-2tier-${Math.round(dualWidth)}`,
+    `dual-upper-cabinet-2tier-${dualWidth}`,
     `듀얼 상부장 2단형 ${dualWidth}mm`,
     dualWidth,
     600, // 상부장 기본 높이 600mm
@@ -921,7 +921,7 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-open-${Math.round(dualWidth)}`,
+    `dual-upper-cabinet-open-${dualWidth}`,
     `듀얼 상부장 오픈형 ${dualWidth}mm`,
     dualWidth,
     600,
@@ -959,7 +959,7 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-mixed-${Math.round(dualWidth)}`,
+    `dual-upper-cabinet-mixed-${dualWidth}`,
     `듀얼 상부장 혼합형 ${dualWidth}mm`,
     dualWidth,
     600,
@@ -1013,7 +1013,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
  */
 const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-lower-cabinet-basic-${Math.round(dualWidth)}`,
+    `dual-lower-cabinet-basic-${dualWidth}`,
     `듀얼 하부장 ${dualWidth}mm`,
     dualWidth,
     1000, // 하부장 높이 1000mm
@@ -1057,7 +1057,7 @@ const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
  */
 const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-lower-cabinet-2tier-${Math.round(dualWidth)}`,
+    `dual-lower-cabinet-2tier-${dualWidth}`,
     `듀얼 하부장 2단형 ${dualWidth}mm`,
     dualWidth,
     1000, // 하부장 높이 1000mm
