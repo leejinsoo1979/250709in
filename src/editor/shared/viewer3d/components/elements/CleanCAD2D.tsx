@@ -263,7 +263,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       return () => clearTimeout(timer);
     }
-  }, [showDimensions, currentViewDirection]);
+  }, [showDimensions, viewDirection, view2DDirection]);
+  
+  // 실제 뷰 방향 결정 (useEffect보다 먼저 정의)
+  const currentViewDirection = viewDirection || view2DDirection;
+  
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
 
@@ -289,9 +293,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       return () => clearTimeout(timer);
     }
   }, [editingColumnId, editingSide]);
-
-  // 실제 뷰 방향 결정
-  const currentViewDirection = viewDirection || view2DDirection;
 
   // CSS 변수에서 실제 테마 색상 가져오기 (3D 모드용)
   const getThemeColorFromCSS = (variableName: string, fallback: string) => {
