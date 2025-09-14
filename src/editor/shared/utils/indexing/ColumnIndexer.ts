@@ -269,6 +269,12 @@ export class ColumnIndexer {
     console.log('🔍 이격거리 자동 조정 체크:', {
       isNoSurround,
       wallConfig: spaceInfo.wallConfig,
+      'wallConfig.left': spaceInfo.wallConfig?.left,
+      'wallConfig.right': spaceInfo.wallConfig?.right,
+      '조건1_노서라운드': isNoSurround,
+      '조건2_wallConfig존재': !!spaceInfo.wallConfig,
+      '조건3_벽있음': !!(spaceInfo.wallConfig?.left || spaceInfo.wallConfig?.right),
+      '전체조건': isNoSurround && spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right),
       gapConfig: spaceInfo.gapConfig,
       총너비: totalWidth,
       컬럼수: columnCount
