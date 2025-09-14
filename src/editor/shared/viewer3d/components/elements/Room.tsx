@@ -228,8 +228,8 @@ const Room: React.FC<RoomProps> = ({
       // 오른쪽 벽: 카메라가 왼쪽에서 바라볼 때 투명
       const rightOpacity = angleY < -0.2 ? 0.1 : 1;
       
-      // 천장: 카메라가 아래에서 바라볼 때 투명 (angleX가 양수일 때)
-      const topOpacity = angleX > 0.1 ? 0.1 : 1;
+      // 천장: 카메라가 위에서 아래를 바라볼 때 투명 (angleX가 음수일 때)
+      const topOpacity = angleX < -0.1 ? 0.1 : 1;
       
       // ShaderMaterial의 uniform 업데이트
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
