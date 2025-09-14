@@ -315,32 +315,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       
       console.log('🎯 3D 카메라 리셋 완료');
     } else if (controlsRef.current && viewMode === '2D') {
-      // 2D 모드에서는 정면 시점으로만 회전, 거리/zoom 변경 안함
-      const controls = controlsRef.current;
-      
-      // 현재 zoom과 거리는 유지하면서 정면 시점으로만 변경
-      const currentZoom = controls.object.zoom;
-      const currentDistance = controls.object.position.length();
-      
-      console.log('🎯 2D 카메라 정면 시점으로만 리셋 (zoom/거리 유지):', {
-        currentZoom,
-        currentDistance
-      });
-      
-      // 카메라를 정면 시점으로만 회전 (0, 0, 현재거리)
-      controls.object.position.set(0, 0, currentDistance);
-      controls.target.set(0, 0, 0);
-      controls.object.up.set(0, 1, 0);
-      
-      // zoom은 현재 값 그대로 유지
-      if (controls.object.type === 'OrthographicCamera') {
-        controls.object.zoom = currentZoom;
-        controls.object.updateProjectionMatrix();
-      }
-      
-      controls.update();
-      
-      console.log('🎯 2D 카메라 정면 시점 리셋 완료');
+      // 2D 모드에서는 아무것도 하지 않음 - 현재 상태 그대로 유지
+      console.log('🎯 2D 모드에서 스페이스 키 - 아무 동작 안함');
+      // 스페이스 키를 눌러도 카메라 위치, zoom, 각도 모두 현재 상태 유지
     }
   }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo]);
 
