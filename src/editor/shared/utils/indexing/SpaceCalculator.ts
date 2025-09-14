@@ -100,6 +100,12 @@ export class SpaceCalculator {
     
     console.log('🔍 getDefaultColumnCount - internalWidth:', internalWidth);
     
+    // 600mm 이하면 무조건 1개 슬롯
+    if (internalWidth <= SLOT_MAX_WIDTH) {
+      console.log(`→ 내경 ${internalWidth}mm ≤ 600mm → 1개 슬롯`);
+      return 1;
+    }
+    
     // 슬롯폭이 600mm 이하가 되도록 하는 최소 컬럼 수 계산
     const minColumnCount = Math.ceil(internalWidth / SLOT_MAX_WIDTH);
     
