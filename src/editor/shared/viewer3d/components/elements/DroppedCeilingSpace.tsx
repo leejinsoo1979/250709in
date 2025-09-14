@@ -4,7 +4,7 @@ import { getDroppedZoneBounds } from '@/editor/shared/utils/space/droppedCeiling
 import { mmToThreeUnits } from '../base/utils/threeUtils';
 import * as THREE from 'three';
 import { Box } from '@react-three/drei';
-import { MaterialFactory } from '../utils/materials/MaterialFactory';
+import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 
 interface DroppedCeilingSpaceProps {
   spaceInfo: SpaceInfo;
