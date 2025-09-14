@@ -1678,34 +1678,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수선 */}
             <NativeLine
-              points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
+              points={[[leftX, dimY, 1], [rightX, dimY, 1]]}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={2}
               renderOrder={999999}
               depthTest={false}
             />
             
             {/* 좌측 화살표 */}
             <NativeLine
-              points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
+              points={createArrowHead([leftX, dimY, 1], [leftX + 0.02, dimY, 1], 0.01)}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={2}
               renderOrder={999999}
               depthTest={false}
             />
             
             {/* 우측 화살표 */}
             <NativeLine
-              points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
+              points={createArrowHead([rightX, dimY, 1], [rightX - 0.02, dimY, 1], 0.01)}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={2}
               renderOrder={999999}
               depthTest={false}
             />
             
             {/* 가구 치수 텍스트 - Text 사용 */}
             <Text
-              position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
+              position={[actualPositionX, dimY - mmToThreeUnits(30), 1]}
               fontSize={baseFontSize}
               color={dimensionColor}
               anchorX="center"
