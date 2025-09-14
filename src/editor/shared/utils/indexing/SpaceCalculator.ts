@@ -147,22 +147,35 @@ export class SpaceCalculator {
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
     const validGapSums: number[] = [];
     
+    console.log('🔍 selectOptimalGapSum 시작:', { totalWidth, slotCount });
+    
     for (let gapSum = 4; gapSum <= 10; gapSum++) {
       // (2*(totalWidth - gapSum)) % slotCount == 0 체크
-      if ((2 * (totalWidth - gapSum)) % slotCount === 0) {
-        const slotWidth = (totalWidth - gapSum) / slotCount;
+      const internalWidth = totalWidth - gapSum;
+      const remainder = (2 * internalWidth) % slotCount;
+      
+      console.log(`  gapSum=${gapSum}: 내경=${internalWidth}, (2*내경)%슬롯수=${remainder}`);
+      
+      if (remainder === 0) {
+        const slotWidth = internalWidth / slotCount;
+        console.log(`    → 슬롯폭=${slotWidth}, 범위체크: ${slotWidth >= 400 && slotWidth <= 600}`);
         
         // 슬롯폭이 400~600 범위인지 체크
         if (slotWidth >= 400 && slotWidth <= 600) {
           // 2×슬롯폭이 정수인지 체크
           const doubleSlotWidth = slotWidth * 2;
-          if (Math.abs(doubleSlotWidth - Math.round(doubleSlotWidth)) < 1e-9) {
+          const isInteger = Math.abs(doubleSlotWidth - Math.round(doubleSlotWidth)) < 1e-9;
+          console.log(`    → 2×슬롯폭=${doubleSlotWidth}, 정수체크=${isInteger}`);
+          
+          if (isInteger) {
             validGapSums.push(gapSum);
+            console.log(`    ✅ 유효한 이격거리: ${gapSum}`);
           }
         }
       }
     }
     
+    console.log('🔍 selectOptimalGapSum 결과:', validGapSums);
     return validGapSums;
   }
 
