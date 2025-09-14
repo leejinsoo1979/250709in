@@ -523,7 +523,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         moduleId: module.id,
         adjustedId: dragModuleId,
         zone: targetZone,
-        data: clickPlaceData
+        data: clickPlaceData,
+        '정확한ID': dragModuleId,
+        '싱글인가': dragModuleId.includes('single-')
       });
     }, 300);
   };
