@@ -1012,27 +1012,42 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
-            {/* 기본 요소들 */}
+            {/* 기본 요소들 - renderOrder를 낮게 설정 */}
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
-            <Room 
-              spaceInfo={spaceInfo} 
-              viewMode={viewMode} 
-              view2DDirection={view2DDirection}
-              renderMode={renderMode}
-              materialConfig={materialConfig} 
-              showAll={showAll} 
-              showFrame={showFrame}
-              showDimensions={showDimensions}
-              showGuides={showGuides}
-              isStep2={isStep2}
-              activeZone={activeZone}
-            />
+            <group renderOrder={1}>
+              <Room 
+                spaceInfo={spaceInfo} 
+                viewMode={viewMode} 
+                view2DDirection={view2DDirection}
+                renderMode={renderMode}
+                materialConfig={materialConfig} 
+                showAll={showAll} 
+                showFrame={showFrame}
+                showDimensions={showDimensions}
+                showGuides={showGuides}
+                isStep2={isStep2}
+                activeZone={activeZone}
+              />
+              
+              {/* 단내림 공간 렌더링 */}
+              <DroppedCeilingSpace spaceInfo={spaceInfo} />
+            </group>
             
-            {/* 단내림 공간 렌더링 */}
-            <DroppedCeilingSpace spaceInfo={spaceInfo} />
-            
-            {/* CAD 스타일 치수/가이드 표시 - Room 다음에 렌더링하여 위에 표시 */}
-            <group renderOrder={10000}>
+            {/* CAD 스타일 치수/가이드 표시 - 모든 것 위에 렌더링 */}
+            <group 
+              renderOrder={99999}
+              onUpdate={(self) => {
+                // 이 그룹의 모든 자식들에 대해 depthTest를 비활성화
+                self.traverse((child) => {
+                  if (child.type === 'Line' || child.type === 'LineSegments' || child.type === 'Mesh') {
+                    child.renderOrder = 99999;
+                    child.material.depthTest = false;
+                    child.material.depthWrite = false;
+                    child.material.transparent = true;
+                  }
+                });
+              }}
+            >
               <CleanCAD2D 
                 viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
                 showDimensions={showDimensions}

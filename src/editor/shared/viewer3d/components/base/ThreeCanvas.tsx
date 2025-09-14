@@ -11,7 +11,10 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
-import { calculateOptimalDistance as calculateOptimalDistanceUtil } from './utils/threeUtils';
+import { 
+  calculateOptimalDistance as calculateOptimalDistanceUtil,
+  calculateCameraTarget as calculateCameraTargetUtil 
+} from './utils/threeUtils';
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
