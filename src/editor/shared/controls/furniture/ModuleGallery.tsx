@@ -410,13 +410,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           if (droppedSlotWidths.length > 0) {
             if (isDualFurniture && droppedSlotWidths.length >= 2) {
               const targetWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
-              const baseType = module.id.replace(/-\d+$/, '');
-              dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+              const baseType = module.id.replace(/-[\d.]+$/, '');
+              dragModuleId = `${baseType}-${targetWidth}`;
               adjustedDimensions.width = targetWidth;
             } else if (!isDualFurniture && droppedSlotWidths.length > 0) {
               const targetWidth = droppedSlotWidths[0];
-              const baseType = module.id.replace(/-\d+$/, '');
-              dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+              const baseType = module.id.replace(/-[\d.]+$/, '');
+              dragModuleId = `${baseType}-${targetWidth}`;
               adjustedDimensions.width = targetWidth;
             }
           }
