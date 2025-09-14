@@ -1,6 +1,7 @@
 import React from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { INSTALL_TYPES, InstallType } from '../types';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import styles from '../styles/common.module.css';
 
 interface InstallTypeControlsProps {
@@ -70,12 +71,27 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     else if (spaceInfo.surroundType === 'no-surround') {
       updates.frameSize = { left: 0, right: 0, top: 0 };
       
-      // gapConfig도 업데이트
-      const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
-      updates.gapConfig = {
-        left: wallConfig.left ? 2 : 20,
-        right: wallConfig.right ? 2 : 20,
-      };
+      // 빌트인 모드에서 자동 이격거리 계산
+      if (type === 'builtin') {
+        // spaceInfo를 임시로 업데이트하여 계산
+        const tempSpaceInfo = { ...spaceInfo, installType: type, wallConfig };
+        const indexing = calculateSpaceIndexing(tempSpaceInfo);
+        
+        if (indexing.optimizedGapConfig) {
+          console.log('🚀 빌트인 모드 - 자동 이격거리 적용:', indexing.optimizedGapConfig);
+          updates.gapConfig = indexing.optimizedGapConfig;
+        } else {
+          // 자동 조정 실패 시 기본값
+          updates.gapConfig = { left: 2, right: 2 };
+        }
+      } else {
+        // 세미스탠딩/프리스탠딩: 이격거리 조정
+        const currentGapConfig = spaceInfo.gapConfig || { left: 2, right: 2 };
+        updates.gapConfig = {
+          left: wallConfig.left ? 2 : 20,
+          right: wallConfig.right ? 2 : 20,
+        };
+      }
     }
     
     console.log('🏢 InstallTypeControls - updating with:', updates);
