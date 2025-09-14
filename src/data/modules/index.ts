@@ -57,6 +57,13 @@ export const getModuleById = (
   const widthMatch = id.match(/-([\d.]+)$/);
   const requestedWidth = widthMatch ? parseFloat(widthMatch[1]) : null;
   
+  console.log('🔍 getModuleById 요청:', {
+    id,
+    baseType,
+    requestedWidth,
+    '소수점1자리': requestedWidth ? Math.round(requestedWidth * 10) / 10 : null
+  });
+  
   
   // ID로 직접 찾기
   if (internalSpace) {
@@ -93,11 +100,17 @@ export const getModuleById = (
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     
+    console.log('📦 생성된 모듈 중 매칭 시도:', {
+      요청ID: id,
+      생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id).slice(0, 3)
+    });
     
     const found = dynamicModules.find(module => module.id === id);
     if (found) {
+      console.log('✅ 모듈 찾음');
       return found;
     } else {
+      console.log('❌ 모듈 못찾음');
     }
   }
   

@@ -106,6 +106,11 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         // 가구 데이터 조회하여 기본 깊이 계산
         const internalSpace = calculateInternalSpace(spaceInfo);
+        console.log('🎯 Click & Place 가구 배치 시도:', {
+          moduleId: currentDragData.moduleData.id,
+          isDual: currentDragData.moduleData.id.includes('dual-'),
+          isSingle: currentDragData.moduleData.id.includes('single-')
+        });
         const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
         
         if (!moduleData) {
