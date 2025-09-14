@@ -332,7 +332,7 @@ export class MaterialFactory {
           colorEnd: { value: new THREE.Color('#c0c0c0') },
           direction: { value: directionValue },
           reverse: { value: isReverse ? 1.0 : 0.0 },
-          opacity: { value: 1.0 }
+          opacity: { value: isDroppedWall ? 1.0 : 0.4 }
         },
         side: THREE.DoubleSide,
         transparent: true,

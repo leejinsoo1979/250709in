@@ -47,8 +47,8 @@ export interface SpaceIndexingResult {
 export class ColumnIndexer {
   /**
    * 공간 내경에 따른 슬롯(컬럼) 인덱싱 계산
-   * - 내경 800mm 이하: 1개 슬롯
-   * - 내경 800mm 초과: 균등 분할된 N개 슬롯
+   * - 내경 600mm 이하: 1개 슬롯
+   * - 내경 600mm 초과: 균등 분할된 N개 슬롯
    * - customColumnCount가 설정된 경우 해당 값 우선 사용
    */
   static calculateSpaceIndexing(spaceInfo: SpaceInfo, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false): SpaceIndexingResult {
@@ -505,7 +505,7 @@ export class ColumnIndexer {
    */
   static calculateZoneSlotInfo(spaceInfo: SpaceInfo, customColumnCount?: number, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false) {
     const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-    const MAX_SLOT_WIDTH = 800; // 슬롯 최대 너비 제한
+    const MAX_SLOT_WIDTH = 600; // 슬롯 최대 너비 제한
     
     if (!spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 비활성화된 경우 전체 영역을 일반 영역으로 반환
@@ -521,7 +521,7 @@ export class ColumnIndexer {
         columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
       }
       
-      // 슬롯 너비가 800mm를 초과하지 않도록 최소 슬롯 개수 보장
+      // 슬롯 너비가 600mm를 초과하지 않도록 최소 슬롯 개수 보장
       const minRequiredSlots = Math.ceil(internalWidth / MAX_SLOT_WIDTH);
       if (columnCount < minRequiredSlots) {
         columnCount = minRequiredSlots;
@@ -819,7 +819,7 @@ export class ColumnIndexer {
       normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaInternalWidth);
     }
     
-    // 메인 영역 슬롯 너비가 800mm를 초과하지 않도록 검증
+    // 메인 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
     const minRequiredNormalSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
     if (normalColumnCount < minRequiredNormalSlots) {
       normalColumnCount = minRequiredNormalSlots;
@@ -834,7 +834,7 @@ export class ColumnIndexer {
       console.log('🎯 단내림 컬럼 수 (자동계산):', droppedColumnCount, 'from width:', droppedAreaInternalWidth);
     }
     
-    // 단내림 영역 슬롯 너비가 800mm를 초과하지 않도록 검증
+    // 단내림 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
     const minRequiredDroppedSlots = Math.ceil(droppedAreaInternalWidth / MAX_SLOT_WIDTH);
     if (droppedColumnCount < minRequiredDroppedSlots) {
       droppedColumnCount = minRequiredDroppedSlots;
@@ -928,10 +928,10 @@ export class ColumnIndexer {
     
     // 최종 검증 (디버깅용)
     if (normalColumnWidth > MAX_SLOT_WIDTH) {
-      console.error(`⚠️ 메인 영역 슬롯 너비가 800mm를 초과합니다: ${normalColumnWidth}mm`);
+      console.error(`⚠️ 메인 영역 슬롯 너비가 600mm를 초과합니다: ${normalColumnWidth}mm`);
     }
     if (droppedColumnWidth > MAX_SLOT_WIDTH) {
-      console.error(`⚠️ 단내림 영역 슬롯 너비가 800mm를 초과합니다: ${droppedColumnWidth}mm`);
+      console.error(`⚠️ 단내림 영역 슬롯 너비가 600mm를 초과합니다: ${droppedColumnWidth}mm`);
     }
     
     
@@ -993,11 +993,11 @@ export class ColumnIndexer {
    * 내경 너비에 따른 컬럼 수 제한 계산
    */
   static getColumnLimits(internalWidth: number): { minColumns: number; maxColumns: number } {
-    // 슬롯 크기 제약 조건 (400mm ~ 800mm로 변경)
+    // 슬롯 크기 제약 조건 (400mm ~ 600mm)
     const MIN_SLOT_WIDTH = 400;
-    const MAX_SLOT_WIDTH = 800;
+    const MAX_SLOT_WIDTH = 600;
     
-    // 최소 컬럼 수: 슬롯이 800mm를 초과하지 않도록
+    // 최소 컬럼 수: 슬롯이 600mm를 초과하지 않도록
     const minColumns = Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH));
     
     // 최대 컬럼 수: 슬롯이 400mm 미만이 되지 않도록

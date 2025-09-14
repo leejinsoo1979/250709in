@@ -211,8 +211,9 @@ const Room: React.FC<RoomProps> = ({
   const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   
-  // 카메라 각도에 따라 벽 투명도 업데이트
+  // 카메라 각도에 따라 벽 투명도 업데이트 - orthographic 모드에서만
   useFrame(() => {
+    // 3D orthographic 모드에서만 각도에 따른 투명도 적용
     if (viewMode === '3D' && cameraMode === 'orthographic') {
       const cameraDirection = new THREE.Vector3();
       camera.getWorldDirection(cameraDirection);
@@ -240,17 +241,6 @@ const Room: React.FC<RoomProps> = ({
       }
       if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
         topWallMaterialRef.current.uniforms.opacity.value = topOpacity;
-      }
-    } else {
-      // perspective 모드나 2D 모드에서는 항상 불투명하게
-      if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
-        leftWallMaterialRef.current.uniforms.opacity.value = 1;
-      }
-      if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
-        rightWallMaterialRef.current.uniforms.opacity.value = 1;
-      }
-      if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
-        topWallMaterialRef.current.uniforms.opacity.value = 1;
       }
     }
   });
