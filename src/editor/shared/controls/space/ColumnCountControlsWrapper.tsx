@@ -1,6 +1,5 @@
 import React from 'react';
 import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
-import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import ColumnCountControls from '../customization/components/ColumnCountControls';
 
@@ -15,7 +14,8 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
   onUpdate,
   zone = 'main'
 }) => {
-  const internalSpace = calculateInternalSpace(spaceInfo);
+  // 뷰어와 동일한 계산 방식 사용
+  const calculatedInternalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
   
   // zone에 따라 다른 도어 개수와 너비 계산
   let columnCount: number;
@@ -33,14 +33,14 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
     if (spaceInfo.droppedCeiling?.enabled) {
       // 메인 구간의 내경폭 계산 (먼저 계산)
       const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
-      internalWidth = internalSpace.width - droppedCeilingWidth;
+      internalWidth = calculatedInternalWidth - droppedCeilingWidth;
       // 단내림이 활성화되면 mainDoorCount 사용, 없으면 메인 구간의 최소값 사용
       const mainLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
       columnCount = spaceInfo.mainDoorCount || mainLimits.minColumns;
     } else {
       // 단내림이 비활성화되면 customColumnCount 사용
-      columnCount = spaceInfo.customColumnCount || SpaceCalculator.getDefaultColumnCount(internalSpace.width);
-      internalWidth = internalSpace.width;
+      columnCount = spaceInfo.customColumnCount || SpaceCalculator.getDefaultColumnCount(calculatedInternalWidth);
+      internalWidth = calculatedInternalWidth;
     }
     
     // 자동 모드 체크
