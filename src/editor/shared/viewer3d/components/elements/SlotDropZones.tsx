@@ -1310,6 +1310,78 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       }
     };
   }, [currentDragData, camera, scene, spaceInfo, placedModules, columnSlots]);
+
+  // Click & Place 모드를 위한 클릭 핸들러
+  useEffect(() => {
+    // furniturePlacementMode가 true이고 currentDragData가 있을 때만 클릭 핸들러 활성화
+    const furniturePlacementMode = useFurnitureStore.getState().furniturePlacementMode;
+    if (!furniturePlacementMode || !currentDragData) {
+      return;
+    }
+
+    const handleClick = (e: MouseEvent) => {
+      // 캔버스가 아닌 다른 요소를 클릭한 경우 무시
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'CANVAS') {
+        return;
+      }
+
+      console.log('🎯 [SlotDropZones] Click & Place 클릭 감지:', {
+        furniturePlacementMode,
+        currentDragData: currentDragData?.moduleData?.id,
+        clientX: e.clientX,
+        clientY: e.clientY
+      });
+
+      const canvas = target as HTMLCanvasElement;
+      
+      // 클릭 이벤트를 드래그 이벤트처럼 처리
+      // DragEvent를 시뮬레이션하기 위한 객체 생성
+      const simulatedDragEvent = new DragEvent('drop', {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+
+      // DataTransfer를 시뮬레이션
+      Object.defineProperty(simulatedDragEvent, 'dataTransfer', {
+        value: {
+          getData: (format: string) => {
+            if (format === 'application/json') {
+              return JSON.stringify(currentDragData);
+            }
+            return '';
+          },
+          types: ['application/json']
+        },
+        writable: false
+      });
+
+      // handleSlotDrop 호출
+      const result = handleSlotDrop(simulatedDragEvent as any, canvas);
+      
+      console.log('🎯 [SlotDropZones] Click & Place 결과:', result);
+      
+      // 성공적으로 배치되면 placement mode 종료
+      if (result) {
+        useFurnitureStore.getState().setFurniturePlacementMode(false);
+      }
+    };
+
+    // 캔버스에 클릭 이벤트 리스너 추가
+    const canvasElement = document.querySelector('canvas');
+    if (canvasElement) {
+      canvasElement.addEventListener('click', handleClick);
+      console.log('✅ [SlotDropZones] Click & Place 핸들러 등록됨');
+    }
+
+    return () => {
+      if (canvasElement) {
+        canvasElement.removeEventListener('click', handleClick);
+      }
+    };
+  }, [currentDragData, handleSlotDrop]);
   
   // 슬롯 크기 및 위치 계산
   const slotDimensions = calculateSlotDimensions(spaceInfo);

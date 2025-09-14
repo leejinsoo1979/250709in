@@ -105,7 +105,17 @@ export const getModuleById = (
       생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id).slice(0, 3)
     });
     
-    const found = dynamicModules.find(module => module.id === id);
+    // 먼저 정확히 일치하는 모듈 찾기
+    let found = dynamicModules.find(module => module.id === id);
+    
+    // 정확히 일치하는 모듈이 없으면 반올림된 값으로 다시 시도
+    if (!found && requestedWidth) {
+      const roundedWidth = Math.round(requestedWidth * 10) / 10;
+      const alternativeId = `${baseType}-${roundedWidth}`;
+      console.log('🔄 반올림된 ID로 재시도:', alternativeId);
+      found = dynamicModules.find(module => module.id === alternativeId);
+    }
+    
     if (found) {
       console.log('✅ 모듈 찾음');
       return found;
