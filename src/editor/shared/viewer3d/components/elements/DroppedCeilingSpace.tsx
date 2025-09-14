@@ -81,7 +81,7 @@ const DroppedCeilingSpace: React.FC<DroppedCeilingSpaceProps> = ({ spaceInfo }) 
   }, []);
   
   const ceilingMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientCeilingMaterial('3D');
+    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
