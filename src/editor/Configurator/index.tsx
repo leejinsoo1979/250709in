@@ -9,7 +9,7 @@ import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFur
 import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
-import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -1562,11 +1562,30 @@ const Configurator: React.FC = () => {
       }
     }
     
+    // 노서라운드 빌트인 모드에서 컬럼 수 변경 시 자동 이격거리 계산
+    if (spaceInfo.surroundType === 'no-surround' && 
+        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') &&
+        (finalUpdates.customColumnCount !== undefined || finalUpdates.mainDoorCount !== undefined)) {
+      
+      const tempSpaceInfo = { ...spaceInfo, ...finalUpdates };
+      const indexing = calculateSpaceIndexing(tempSpaceInfo);
+      
+      if (indexing.optimizedGapConfig) {
+        console.log('📏 컬럼 수 변경 - 자동 이격거리 적용:', {
+          customColumnCount: finalUpdates.customColumnCount,
+          mainDoorCount: finalUpdates.mainDoorCount,
+          optimizedGap: indexing.optimizedGapConfig
+        });
+        finalUpdates.gapConfig = indexing.optimizedGapConfig;
+      }
+    }
+    
     console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
       hasWallConfig: !!finalUpdates.wallConfig,
       wallConfig: finalUpdates.wallConfig,
-      customColumnCount: finalUpdates.customColumnCount
+      customColumnCount: finalUpdates.customColumnCount,
+      gapConfig: finalUpdates.gapConfig
     });
     
     // installType 변경 감지

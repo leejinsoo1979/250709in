@@ -52,10 +52,10 @@ export const getModuleById = (
   internalSpace?: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
-  // baseModuleType 처리: ID에서 너비를 제외한 기본 타입 추출
-  const baseType = id.replace(/-\d+$/, '');
-  const widthMatch = id.match(/-(\d+)$/);
-  const requestedWidth = widthMatch ? parseInt(widthMatch[1]) : null;
+  // baseModuleType 처리: ID에서 너비를 제외한 기본 타입 추출 (소수점 포함)
+  const baseType = id.replace(/-[\d.]+$/, '');
+  const widthMatch = id.match(/-([\d.]+)$/);
+  const requestedWidth = widthMatch ? parseFloat(widthMatch[1]) : null;
   
   
   

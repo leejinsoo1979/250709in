@@ -184,9 +184,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             adjustedDimensions.width = isDualFurniture ? droppedColumnWidth * 2 : droppedColumnWidth;
           }
           
-          // 정확한 너비를 포함한 모듈 ID 생성
-          const baseType = module.id.replace(/-\d+$/, '');
-          dragModuleId = `${baseType}-${Math.round(adjustedDimensions.width)}`;
+          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 포함)
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = `${baseType}-${adjustedDimensions.width}`;
         }
       } else if (targetZone === 'normal' && zoneInfo.normal) {
         // 메인 영역의 개별 슬롯 너비 사용
@@ -224,9 +224,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             adjustedDimensions.width = isDualFurniture ? normalColumnWidth * 2 : normalColumnWidth;
           }
           
-          // 정확한 너비를 포함한 모듈 ID 생성
-          const baseType = module.id.replace(/-\d+$/, '');
-          dragModuleId = `${baseType}-${Math.round(adjustedDimensions.width)}`;
+          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 포함)
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = `${baseType}-${adjustedDimensions.width}`;
         }
       }
     } else {
@@ -270,14 +270,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             targetWidth,
             slotWidths: indexing.slotWidths
           });
-          const baseType = module.id.replace(/-\d+$/, '');
-          dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = `${baseType}-${targetWidth}`;
           adjustedDimensions.width = targetWidth;
         } else if (spaceInfo.surroundType === 'surround') {
           // 서라운드 모드 fallback
           targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
-          const baseType = module.id.replace(/-\d+$/, '');
-          dragModuleId = `${baseType}-${Math.round(targetWidth)}`;
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = `${baseType}-${targetWidth}`;
           adjustedDimensions.width = targetWidth;
         } else {
           // 노서라운드 모드: 원본 ID와 크기 사용
@@ -873,13 +873,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       
       if (isDualFurniture && zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
         customWidth = zoneIndexing.slotWidths[localSlotIndex] + (zoneIndexing.slotWidths[localSlotIndex + 1] || zoneIndexing.slotWidths[localSlotIndex]);
-        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성
-        const moduleBaseType = module.id.replace(/-\d+$/, '');
+        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 포함)
+        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
         targetModuleId = `${moduleBaseType}-${customWidth}`;
       } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
         customWidth = zoneIndexing.slotWidths[localSlotIndex];
-        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성
-        const moduleBaseType = module.id.replace(/-\d+$/, '');
+        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 포함)
+        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
         targetModuleId = `${moduleBaseType}-${customWidth}`;
       } else {
         customWidth = zoneIndexing.columnWidth;

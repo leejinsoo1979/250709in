@@ -843,7 +843,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   // width 변경 시 doorCount 범위 체크 및 자동 조정은 useEffect에서 처리
                   
                   // 노서라운드 빌트인 모드에서 공간 너비 변경 시 자동 이격거리 계산
-                  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'builtin') {
+                  if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
                     const tempSpaceInfo = { ...spaceInfo, spaceWidth: newWidth };
                     const indexing = calculateSpaceIndexing(tempSpaceInfo);
                     
