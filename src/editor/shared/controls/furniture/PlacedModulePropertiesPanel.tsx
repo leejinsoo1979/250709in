@@ -612,10 +612,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 모듈 데이터 가져오기 (조건부 렌더링 전에 미리 계산)
   const moduleData = currentPlacedModule 
     ? (() => {
-        // customWidth가 있으면 해당 너비로 모듈 ID 생성
+        // customWidth가 있으면 해당 너비로 모듈 ID 생성 (소수점 포함)
         let targetModuleId = currentPlacedModule.moduleId;
         if (currentPlacedModule.customWidth) {
-          const baseType = currentPlacedModule.moduleId.replace(/-\d+$/, '');
+          const baseType = currentPlacedModule.moduleId.replace(/-[\d.]+$/, '');
           targetModuleId = `${baseType}-${currentPlacedModule.customWidth}`;
         }
         return getModuleById(targetModuleId, calculateInternalSpace(spaceInfo), spaceInfo);
@@ -911,7 +911,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.moduleDetails}>
               <h4 className={styles.moduleName}>
                 {customWidth && customWidth !== moduleData.dimensions.width
-                  ? moduleData.name.replace(/\d+mm/, `${customWidth}mm`)
+                  ? moduleData.name.replace(/[\d.]+mm/, `${customWidth}mm`)
                   : moduleData.name}
               </h4>
               
