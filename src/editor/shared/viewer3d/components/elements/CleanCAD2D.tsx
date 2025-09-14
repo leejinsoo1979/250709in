@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Line, Text, Html } from '@react-three/drei';
+import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -239,6 +240,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   });
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
+  
+  // 그룹의 모든 자식 요소들에 renderOrder와 depthTest 설정
+  useEffect(() => {
+    if (groupRef.current) {
+      groupRef.current.traverse((child) => {
+        if (child instanceof THREE.Line || child instanceof THREE.LineSegments || child instanceof THREE.Mesh) {
+          child.renderOrder = 999999;
+          if (child.material) {
+            (child.material as any).depthTest = false;
+            (child.material as any).depthWrite = false;
+          }
+        }
+      });
+    }
+  });
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
 
@@ -622,24 +638,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           return (
             <>
               {/* 치수선 */}
-              <Line
+              <NativeLine
                 points={[[actualLeftEdge, topDimensionY, 0.002], [actualRightEdge, topDimensionY, 0.002]]}
                 color={dimensionColor}
-                lineWidth={1}
+                lineWidth={2}
+                renderOrder={100000}
+                depthTest={false}
               />
               
               {/* 좌측 화살표 */}
-              <Line
+              <NativeLine
                 points={createArrowHead([actualLeftEdge, topDimensionY, 0.002], [actualLeftEdge + 0.05, topDimensionY, 0.002])}
                 color={dimensionColor}
-                lineWidth={1}
+                lineWidth={2}
+                renderOrder={100000}
+                depthTest={false}
               />
               
               {/* 우측 화살표 */}
-              <Line
+              <NativeLine
                 points={createArrowHead([actualRightEdge, topDimensionY, 0.002], [actualRightEdge - 0.05, topDimensionY, 0.002])}
                 color={dimensionColor}
-                lineWidth={1}
+                lineWidth={2}
+                renderOrder={100000}
+                depthTest={false}
               />
               
               {/* 전체 폭 치수 텍스트 - Text 3D 사용 */}
@@ -656,17 +678,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               )}
               
               {/* 연장선 (좌측 프레임) - 간격 조정 */}
-              <Line
+              <NativeLine
                 points={[[actualLeftEdge, 0, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
               />
               
               {/* 연장선 (우측 프레임) - 간격 조정 */}
-              <Line
+              <NativeLine
                 points={[[actualRightEdge, 0, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
               />
             </>
           );

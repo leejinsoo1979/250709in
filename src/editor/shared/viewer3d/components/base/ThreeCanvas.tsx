@@ -299,11 +299,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 타겟 설정
       controls.target.set(...target);
       
-      // Orthographic 모드에서는 각도만 리셋 (정면 보기)
+      // Orthographic 모드에서는 각도만 리셋 (약간 위에서 보는 각도)
       if (isOrthographic) {
-        // 정면에서 바라보도록 설정 (각도만 변경)
+        // 약간 위에서 바라보도록 설정 (각도만 변경)
         const angle = 0; // 정면
-        const elevation = Math.PI / 6; // 30도 위에서
+        const elevation = Math.PI / 12; // 15도 위에서 (이전 30도에서 15도로 줄임)
         const x = Math.sin(angle) * Math.cos(elevation) * currentDistance;
         const y = Math.sin(elevation) * currentDistance + target[1];
         const z = Math.cos(angle) * Math.cos(elevation) * currentDistance;

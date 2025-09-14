@@ -1034,26 +1034,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             </group>
             
             {/* CAD 스타일 치수/가이드 표시 - 모든 것 위에 렌더링 */}
-            <group 
-              renderOrder={99999}
-              onUpdate={(self) => {
-                // 이 그룹의 모든 자식들에 대해 depthTest를 비활성화
-                self.traverse((child) => {
-                  if (child.type === 'Line' || child.type === 'LineSegments' || child.type === 'Mesh') {
-                    child.renderOrder = 99999;
-                    child.material.depthTest = false;
-                    child.material.depthWrite = false;
-                    child.material.transparent = true;
-                  }
-                });
-              }}
-            >
-              <CleanCAD2D 
-                viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
-                showDimensions={showDimensions}
-                isStep2={isStep2}
-              />
-            </group>
+            <CleanCAD2D 
+              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+              showDimensions={showDimensions}
+              isStep2={isStep2}
+            />
             
             {/* 상하부장 사이 백패널 렌더링 */}
             <BackPanelBetweenCabinets 
