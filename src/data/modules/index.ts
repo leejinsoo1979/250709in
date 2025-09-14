@@ -57,7 +57,20 @@ export const getModuleById = (
   const widthMatch = id.match(/-([\d.]+)$/);
   const requestedWidth = widthMatch ? parseFloat(widthMatch[1]) : null;
   
-  
+  console.log('🔎 getModuleById 디버그:', {
+    requestedId: id,
+    baseType,
+    requestedWidth,
+    internalSpace: internalSpace ? {
+      width: internalSpace.width,
+      height: internalSpace.height,
+      depth: internalSpace.depth
+    } : null,
+    spaceInfo: spaceInfo ? {
+      width: spaceInfo.width,
+      slotCount: spaceInfo.slotCount
+    } : null
+  });
   
   // ID로 직접 찾기
   if (internalSpace) {
@@ -94,14 +107,21 @@ export const getModuleById = (
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     
-    
+    console.log('🏭 생성된 모듈들:', {
+      총개수: dynamicModules.length,
+      요청ID: id,
+      매칭모듈: dynamicModules.filter(m => m.id.includes(baseType)).map(m => ({
+        id: m.id,
+        width: m.dimensions.width
+      }))
+    });
     
     const found = dynamicModules.find(module => module.id === id);
     if (found) {
-      
+      console.log('✅ 모듈 찾음:', found.id);
       return found;
     } else {
-      
+      console.log('❌ 모듈 못찾음:', id);
     }
   }
   

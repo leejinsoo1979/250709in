@@ -1175,7 +1175,9 @@ export const generateShelvingModules = (
     console.log('🎯 [generateShelvingModules] _tempSlotWidths 사용:', {
       slotWidths,
       columnWidth,
-      columnCount
+      columnCount,
+      '싱글가구생성너비': columnWidth,
+      '듀얼가구생성너비': slotWidths.length >= 2 ? slotWidths[0] + slotWidths[1] : columnWidth * 2
     });
   } else {
     // 단내림 구간인지 확인하고 zoneSlotInfo 사용
@@ -1292,6 +1294,11 @@ export const generateShelvingModules = (
   // 가구 높이는 internalSpace.height 사용 (이미 위에서 maxHeight 선언됨)
   
   // === 싱글 가구 생성 ===
+  console.log('🚀 싱글 가구 생성 시작:', {
+    columnWidth,
+    maxHeight,
+    '생성될ID예시': `single-2drawer-hanging-${columnWidth}`
+  });
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));
