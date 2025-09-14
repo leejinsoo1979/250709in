@@ -52,16 +52,22 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
   const currentColumnWidth = Math.floor(internalWidth / columnCount);
   
   const handleColumnCountChange = (newCount: number) => {
+    console.log('🎯 handleColumnCountChange 호출:', {
+      newCount,
+      zone,
+      currentMainDoorCount: spaceInfo.mainDoorCount,
+      currentCustomColumnCount: spaceInfo.customColumnCount
+    });
+    
     if (zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
       // 단내림 구간 도어 개수 변경
       onUpdate({ droppedCeilingDoorCount: newCount });
     } else {
-      // 메인 구간 - mainDoorCount가 있으면 mainDoorCount, 없으면 customColumnCount 업데이트
-      if (spaceInfo.mainDoorCount !== undefined) {
-        onUpdate({ mainDoorCount: newCount });
-      } else {
-        onUpdate({ customColumnCount: newCount });
-      }
+      // 메인 구간 - 항상 customColumnCount 업데이트 (mainDoorCount는 undefined로 유지)
+      onUpdate({ 
+        customColumnCount: newCount,
+        mainDoorCount: undefined  // mainDoorCount는 항상 undefined로 설정하여 자동 계산 비활성화
+      });
     }
   };
   
