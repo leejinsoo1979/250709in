@@ -1684,10 +1684,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           <Html
             position={[0, height/2 + 0.5, depth/2 + 0.1]}
             center
+            occlude={false}  // 메쉬에 가려지지 않도록 설정
             style={{
               userSelect: 'none',
               pointerEvents: 'none',
-              zIndex: 1000
+              zIndex: 10000  // zIndex도 더 높게 설정
             }}
           >
             <div
@@ -1712,10 +1713,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           <Html
             position={[0, 0, depth/2 + 0.1]}
             center
+            occlude={false}  // 메쉬에 가려지지 않도록 설정
             style={{
               userSelect: 'none',
               pointerEvents: 'none',
-              zIndex: 1000
+              zIndex: 10000  // zIndex도 더 높게 설정
             }}
           >
             <div

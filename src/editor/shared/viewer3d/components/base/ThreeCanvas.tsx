@@ -264,14 +264,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (controlsRef.current && viewMode === '3D') {
       const controls = controlsRef.current;
       
-      // 3D orthographic 모드인 경우 스페이스 키 동작 안함
+      // 3D orthographic 모드와 perspective 모드 모두 리셋 처리
       console.log('🎯 카메라 타입 체크:', controls.object.type, cameraMode);
-      if (controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic') {
-        console.log('🎯 3D Orthographic 모드에서 스페이스 키 - 아무 동작 안함');
-        return; // 아무것도 하지 않고 종료
-      }
       
-      // Perspective 카메라인 경우에만 리셋
+      // 모든 3D 모드에서 리셋
       // 저장된 3D 초기 상태가 있으면 사용
       if (initialCameraSetup.current.position0 && 
           initialCameraSetup.current.target0 && 
@@ -341,13 +337,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
         console.log('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
-        
-        // 3D orthographic 모드에서는 아무것도 하지 않음
-        if (viewMode === '3D' && cameraMode === 'orthographic') {
-          console.log('🚫 3D Orthographic 모드에서 스페이스 키 무시');
-          return;
-        }
-        
         resetCamera();
       }
     };
