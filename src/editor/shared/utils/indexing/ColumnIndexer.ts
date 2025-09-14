@@ -18,6 +18,10 @@ export interface SpaceIndexingResult {
   internalWidth: number;          // 내경 너비 (mm)
   internalStartX: number;         // 내경 시작 X좌표 (mm)
   threeUnitColumnWidth: number;   // Three.js 단위 슬롯 너비
+  optimizedGapConfig?: {          // 자동 최적화된 이격거리 (노서라운드 모드)
+    left: number;
+    right: number;
+  };
   zones?: {                       // 영역별 슬롯 정보 (단내림 활성화 시)
     normal: {
       startX: number;
@@ -276,13 +280,14 @@ export class ColumnIndexer {
         // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
         const optimalGapSum = validGapSums[0];
         
-        // 양쪽벽인 경우 균등 분배, 한쪽벽인 경우 해당 쪽만 설정
+        // 양쪽벽인 경우 정수로 분배, 한쪽벽인 경우 해당 쪽만 설정
         if (spaceInfo.wallConfig.left && spaceInfo.wallConfig.right) {
-          // 양쪽벽: 균등 분배
-          const halfGap = optimalGapSum / 2;
+          // 양쪽벽: 정수로 분배 (홀수면 좌측을 적게)
+          const leftGap = Math.floor(optimalGapSum / 2);
+          const rightGap = optimalGapSum - leftGap;
           optimizedGapConfig = {
-            left: halfGap,
-            right: halfGap
+            left: leftGap,
+            right: rightGap
           };
         } else if (spaceInfo.wallConfig.left) {
           // 왼쪽벽만: 왼쪽에만 이격
@@ -498,7 +503,8 @@ export class ColumnIndexer {
       slotWidths,             // 각 슬롯의 실제 너비 배열 (mm)
       internalWidth,          // 내경 너비 (mm)
       internalStartX,         // 내경 시작 X좌표 (mm)
-      threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(columnWidth) // Three.js 단위 슬롯 너비
+      threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(columnWidth), // Three.js 단위 슬롯 너비
+      ...(optimizedGapConfig && { optimizedGapConfig }) // 자동 최적화된 이격거리 (있으면 포함)
     };
   }
 
