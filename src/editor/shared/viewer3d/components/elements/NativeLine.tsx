@@ -12,6 +12,7 @@ interface NativeLineProps {
   transparent?: boolean;
   renderOrder?: number;
   depthTest?: boolean;
+  depthWrite?: boolean;
 }
 
 /**
@@ -28,7 +29,8 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   opacity = 1,
   transparent = false,
   renderOrder = 0,
-  depthTest = true
+  depthTest = true,
+  depthWrite = true
 }) => {
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -100,6 +102,7 @@ export const NativeLine: React.FC<NativeLineProps> = ({
           opacity={opacity}
           transparent={transparent}
           depthTest={depthTest}
+          depthWrite={depthWrite}
         />
       );
     } else {
@@ -109,10 +112,11 @@ export const NativeLine: React.FC<NativeLineProps> = ({
           opacity={opacity}
           transparent={transparent}
           depthTest={depthTest}
+          depthWrite={depthWrite}
         />
       );
     }
-  }, [color, dashed, dashSize, gapSize, opacity, transparent, depthTest]);
+  }, [color, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
   
   return (
     <line geometry={geometry} renderOrder={renderOrder}>

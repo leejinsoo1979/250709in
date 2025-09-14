@@ -26,17 +26,16 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
     // 단내림 구간
     const frameThickness = 50;
     internalWidth = spaceInfo.droppedCeiling.width - frameThickness;
-    const droppedLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
-    columnCount = spaceInfo.droppedCeilingDoorCount || droppedLimits.minColumns;
+    // 단내림 구간도 getDefaultColumnCount 사용
+    columnCount = spaceInfo.droppedCeilingDoorCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
   } else {
     // 메인 구간
     if (spaceInfo.droppedCeiling?.enabled) {
       // 메인 구간의 내경폭 계산 (먼저 계산)
       const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
       internalWidth = calculatedInternalWidth - droppedCeilingWidth;
-      // 단내림이 활성화되면 mainDoorCount 사용, 없으면 메인 구간의 최소값 사용
-      const mainLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
-      columnCount = spaceInfo.mainDoorCount || mainLimits.minColumns;
+      // 단내림이 활성화되어도 getDefaultColumnCount 사용
+      columnCount = spaceInfo.mainDoorCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
     } else {
       // 단내림이 비활성화되면 customColumnCount 사용
       columnCount = spaceInfo.customColumnCount || SpaceCalculator.getDefaultColumnCount(calculatedInternalWidth);

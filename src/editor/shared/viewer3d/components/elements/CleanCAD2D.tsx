@@ -1684,6 +1684,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={999999}
               depthTest={false}
               depthWrite={false}
+              transparent={true}
             />
             
             {/* 좌측 화살표 */}
@@ -1694,6 +1695,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={999999}
               depthTest={false}
               depthWrite={false}
+              transparent={true}
             />
             
             {/* 우측 화살표 */}
@@ -1704,6 +1706,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={999999}
               depthTest={false}
               depthWrite={false}
+              transparent={true}
             />
             
             {/* 가구 치수 텍스트 - Text 사용 */}
