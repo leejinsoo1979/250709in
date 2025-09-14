@@ -265,38 +265,55 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const controls = controlsRef.current;
       
       // 3D orthographic 모드와 perspective 모드 모두 리셋 처리
-      console.log('🎯 카메라 타입 체크:', controls.object.type, cameraMode);
+      console.log('🎯 카메라 리셋 시작:', {
+        type: controls.object.type,
+        cameraMode,
+        currentPosition: controls.object.position.toArray(),
+        currentTarget: controls.target.toArray()
+      });
       
       // Orthographic 카메라인 경우 현재 zoom 유지
-      const currentZoom = controls.object.type === 'OrthographicCamera' ? controls.object.zoom : null;
+      const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
+      const currentZoom = isOrthographic ? controls.object.zoom : null;
       
       // 현재 카메라와 타겟 사이의 거리 계산 (리셋 후에도 유지)
       const currentDistance = controls.object.position.distanceTo(controls.target);
       
       // 타겟 위치 계산
       const spaceHeight = spaceInfo?.height || 2400;
+      const spaceWidth = spaceInfo?.width || 3000;
       const target = calculateCameraTargetUtil(spaceHeight);
       
-      console.log('🎯 3D 카메라 위치만 리셋 (거리/줌 유지):', {
+      console.log('🎯 3D 카메라 리셋 계산:', {
         target,
         currentDistance,
         currentZoom,
         spaceHeight,
-        isOrthographic: controls.object.type === 'OrthographicCamera'
+        spaceWidth,
+        isOrthographic
       });
       
       // 타겟 설정
       controls.target.set(...target);
       
-      // 카메라를 정면에 위치시키되, 현재 거리는 유지
-      controls.object.position.set(0, target[1], currentDistance);
-      controls.object.up.set(0, 1, 0);
-      
-      // Orthographic 카메라인 경우 zoom 값 복원
-      if (currentZoom !== null) {
-        controls.object.zoom = currentZoom;
+      // Orthographic 모드에서는 각도만 리셋 (정면 보기)
+      if (isOrthographic) {
+        // 정면에서 바라보도록 설정 (각도만 변경)
+        const angle = 0; // 정면
+        const elevation = Math.PI / 6; // 30도 위에서
+        const x = Math.sin(angle) * Math.cos(elevation) * currentDistance;
+        const y = Math.sin(elevation) * currentDistance + target[1];
+        const z = Math.cos(angle) * Math.cos(elevation) * currentDistance;
+        
+        controls.object.position.set(x, y, z);
+        controls.object.zoom = currentZoom || controls.object.zoom;
         controls.object.updateProjectionMatrix();
+      } else {
+        // Perspective 모드에서는 기존 로직
+        controls.object.position.set(0, target[1], currentDistance);
       }
+      
+      controls.object.up.set(0, 1, 0);
       
       // 카메라가 타겟을 바라보도록 설정
       controls.object.lookAt(controls.target);
@@ -304,7 +321,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // OrbitControls 업데이트
       controls.update();
       
-      console.log('🎯 3D 카메라 리셋 완료 (거리/줌 유지됨)');
+      console.log('🎯 3D 카메라 리셋 완료:', {
+        newPosition: controls.object.position.toArray(),
+        newTarget: controls.target.toArray(),
+        zoom: controls.object.zoom
+      });
     } else if (controlsRef.current && viewMode === '2D') {
       // 2D 모드에서는 아무것도 하지 않음 - 현재 상태 그대로 유지
       console.log('🎯 2D 모드에서 스페이스 키 - 아무 동작 안함');
