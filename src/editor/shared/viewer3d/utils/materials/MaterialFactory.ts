@@ -281,10 +281,10 @@ export class MaterialFactory {
   /**
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
-  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode?: '2D' | '3D'): THREE.ShaderMaterial {
-    // viewMode가 명시적으로 '2D'가 아니면 3D로 처리
+  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D'): THREE.ShaderMaterial {
+    // viewMode 기본값을 '3D'로 설정하여 undefined 문제 해결
+    // 2D 모드일 때만 투명 처리, 나머지는 모두 불투명
     const is2DMode = viewMode === '2D';
-    console.log('🔍 createShaderGradientWallMaterial:', { viewMode, is2DMode, direction });
     const vertexShader = `
       varying vec2 vUv;
       varying vec3 vPosition;
@@ -372,7 +372,8 @@ export class MaterialFactory {
           isOrthographic: { value: is2DMode ? 1.0 : 0.0 }
         },
         side: THREE.DoubleSide,
-        transparent: is2DMode // 2D 모드에서만 투명 처리
+        transparent: is2DMode, // 2D 모드에서만 투명 처리
+        depthWrite: !is2DMode // 투명이 아닐 때만 depth buffer에 쓰기
       });
   }
 
