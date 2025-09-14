@@ -282,8 +282,61 @@ export class MaterialFactory {
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
   static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D'): THREE.ShaderMaterial {
-    // viewMode 기본값을 '3D'로 설정하여 undefined 문제 해결
-    // 2D 모드일 때만 투명 처리, 나머지는 모두 불투명
+    // 3D 모드에서는 간단한 그라데이션만 표시
+    if (viewMode === '3D' || viewMode === undefined) {
+      const isReverse = direction === 'horizontal-reverse' || direction === 'vertical-reverse';
+      const directionValue = direction === 'vertical' || direction === 'vertical-reverse' ? 1.0 : 0.0;
+      
+      const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `;
+      
+      const fragmentShader = `
+        uniform vec3 colorStart;
+        uniform vec3 colorEnd;
+        uniform float direction;
+        uniform float reverse;
+        
+        varying vec2 vUv;
+        
+        void main() {
+          float gradientFactor;
+          
+          if (direction < 0.5) {
+            gradientFactor = vUv.x;
+          } else {
+            gradientFactor = vUv.y;
+          }
+          
+          if (reverse > 0.5) {
+            gradientFactor = 1.0 - gradientFactor;
+          }
+          
+          vec3 color = mix(colorStart, colorEnd, gradientFactor);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+      
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          colorStart: { value: new THREE.Color('#ffffff') },
+          colorEnd: { value: new THREE.Color('#c0c0c0') },
+          direction: { value: directionValue },
+          reverse: { value: isReverse ? 1.0 : 0.0 }
+        },
+        side: THREE.DoubleSide,
+        transparent: false,
+        depthWrite: true
+      });
+    }
+    
+    // 2D 모드일 때 투명 처리 로직
     const is2DMode = viewMode === '2D';
     const vertexShader = `
       varying vec2 vUv;
