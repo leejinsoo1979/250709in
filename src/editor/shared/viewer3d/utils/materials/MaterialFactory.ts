@@ -281,7 +281,7 @@ export class MaterialFactory {
   /**
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
-  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D'): THREE.ShaderMaterial {
+  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D', isDroppedWall: boolean = false): THREE.ShaderMaterial {
     // 3D 모드에서는 간단한 그라데이션 셰이더
     if (viewMode === '3D' || viewMode === undefined) {
       const isReverse = direction === 'horizontal-reverse' || direction === 'vertical-reverse';

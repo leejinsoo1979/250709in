@@ -1110,7 +1110,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
+                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D', true)} />
                 </mesh>
               </>
             );
