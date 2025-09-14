@@ -339,17 +339,26 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault(); // 페이지 스크롤 방지
+        e.stopPropagation(); // 이벤트 전파 방지
         console.log('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
+        
+        // 3D orthographic 모드에서는 아무것도 하지 않음
+        if (viewMode === '3D' && cameraMode === 'orthographic') {
+          console.log('🚫 3D Orthographic 모드에서 스페이스 키 무시');
+          return;
+        }
+        
         resetCamera();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    // capture: true로 이벤트를 먼저 캡처
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [resetCamera]);
+  }, [resetCamera, viewMode, cameraMode]);
 
   // 기둥 드래그 관련 이벤트 처리
   useEffect(() => {
