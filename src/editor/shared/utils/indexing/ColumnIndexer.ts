@@ -260,9 +260,9 @@ export class ColumnIndexer {
       console.log('📐 Using auto-calculated columnCount:', columnCount);
     }
     
-    // 노서라운드 빌트인 모드에서 최적 이격거리 자동 선택
+    // 노서라운드 모드에서 최적 이격거리 자동 선택 (벽이 있는 경우만 적용)
     let optimizedGapConfig = spaceInfo.gapConfig;
-    if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
+    if (isNoSurround && spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right)) {
       const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
       if (validGapSums.length > 0) {
         // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
@@ -272,7 +272,7 @@ export class ColumnIndexer {
           left: halfGap,
           right: halfGap
         };
-        console.log('🎯 빌트인 노서라운드 최적 이격거리 자동 선택:', {
+        console.log('🎯 노서라운드 최적 이격거리 자동 선택:', {
           전체너비: totalWidth,
           슬롯수: columnCount,
           유효한_이격합: validGapSums,
