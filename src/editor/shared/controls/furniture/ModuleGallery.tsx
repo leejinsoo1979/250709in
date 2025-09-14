@@ -184,9 +184,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             adjustedDimensions.width = isDualFurniture ? droppedColumnWidth * 2 : droppedColumnWidth;
           }
           
-          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 포함)
+          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 1자리로 반올림)
+          const widthForId = Math.round(adjustedDimensions.width * 10) / 10;
           const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${adjustedDimensions.width}`;
+          dragModuleId = `${baseType}-${widthForId}`;
         }
       } else if (targetZone === 'normal' && zoneInfo.normal) {
         // 메인 영역의 개별 슬롯 너비 사용
@@ -224,9 +225,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             adjustedDimensions.width = isDualFurniture ? normalColumnWidth * 2 : normalColumnWidth;
           }
           
-          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 포함)
+          // 정확한 너비를 포함한 모듈 ID 생성 (소수점 1자리로 반올림)
+          const widthForId = Math.round(adjustedDimensions.width * 10) / 10;
           const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${adjustedDimensions.width}`;
+          dragModuleId = `${baseType}-${widthForId}`;
         }
       }
     } else {
