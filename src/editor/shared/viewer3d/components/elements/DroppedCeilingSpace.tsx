@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { getDroppedZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { mmToThreeUnits } from '../base/utils/threeUtils';
 import * as THREE from 'three';
 import { Box } from '@react-three/drei';
-import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 
 interface DroppedCeilingSpaceProps {
   spaceInfo: SpaceInfo;
@@ -68,56 +67,10 @@ const DroppedCeilingSpace: React.FC<DroppedCeilingSpaceProps> = ({ spaceInfo }) 
   // 프레임 위치 계산
   const frameY = (droppedAreaHeight - frameThickness) / 2;
   const wallY = droppedAreaHeight / 2;
-  
-  // 그라데이션 재질 생성
-  const wallMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
-    mat.transparent = false;
-    mat.depthWrite = true;
-    return mat;
-  }, []);
-  
-  const ceilingMaterial = useMemo(() => {
-    const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D');
-    if (mat.uniforms) {
-      mat.uniforms.opacity.value = 1.0;
-    }
-    mat.transparent = false;
-    mat.depthWrite = true;
-    return mat;
-  }, []);
 
   return (
     <group>
-      {/* 단내림 구간 내부 벽 (그라데이션) */}
-      <mesh
-        position={[
-          position === 'left' ? threeStartX + threeWidth : threeStartX,
-          wallY,
-          0
-        ]}
-        material={wallMaterial}
-        renderOrder={10}
-      >
-        <boxGeometry args={[wallThickness, droppedAreaHeight, threeDepth]} />
-      </mesh>
-
-      {/* 단내림 천장 (그라데이션) */}
-      <mesh
-        position={[
-          centerX,
-          droppedAreaHeight,
-          0
-        ]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        material={ceilingMaterial}
-        renderOrder={10}
-      >
-        <planeGeometry args={[threeWidth, threeDepth]} />
-      </mesh>
+      {/* 단내림 영역 매쉬 완전 제거 - 시각적 표현 없음 */}
     </group>
   );
 };

@@ -200,20 +200,27 @@ export class ColumnIndexer {
       const exactSlotWidth = internalWidth / columnCount;
       const slotWidth = Math.round(exactSlotWidth * 2) / 2;
       
-      // 전체 너비와의 차이를 계산
-      const totalCalculated = slotWidth * columnCount;
-      const difference = internalWidth - totalCalculated;
-      
+      // 모든 슬롯을 동일한 너비로 설정
       const slotWidths: number[] = [];
       for (let i = 0; i < columnCount; i++) {
-        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
-        let adjustedWidth = slotWidth;
-        if (difference > 0 && i < difference * 2) {
-          adjustedWidth += 0.5;
-        } else if (difference < 0 && i < Math.abs(difference) * 2) {
-          adjustedWidth -= 0.5;
+        slotWidths.push(slotWidth);
+      }
+      
+      // 전체 너비와의 차이를 계산하여 일부 슬롯에 0.5씩 추가
+      const totalCalculated = slotWidth * columnCount;
+      const difference = internalWidth - totalCalculated;
+      const adjustmentCount = Math.abs(Math.round(difference * 2));
+      
+      if (difference > 0) {
+        // 너비가 부족한 경우: 앞쪽 슬롯에 0.5씩 추가
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] += 0.5;
         }
-        slotWidths.push(adjustedWidth);
+      } else if (difference < 0) {
+        // 너비가 초과한 경우: 앞쪽 슬롯에서 0.5씩 차감
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] -= 0.5;
+        }
       }
       
       return {
@@ -270,19 +277,26 @@ export class ColumnIndexer {
       const exactSlotWidth = totalWidth / columnCount;
       const slotWidth = Math.round(exactSlotWidth * 2) / 2; // 0.5 단위로 반올림
       
-      // 전체 너비와의 차이를 계산
+      // 모든 슬롯을 동일한 너비로 설정
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(slotWidth);
+      }
+      
+      // 전체 너비와의 차이를 계산하여 일부 슬롯에 0.5씩 추가
       const totalCalculated = slotWidth * columnCount;
       const difference = totalWidth - totalCalculated;
+      const adjustmentCount = Math.abs(Math.round(difference * 2)); // 0.5 단위로 조정할 슬롯 개수
       
-      for (let i = 0; i < columnCount; i++) {
-        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
-        let adjustedWidth = slotWidth;
-        if (difference > 0 && i < difference * 2) {
-          adjustedWidth += 0.5;
-        } else if (difference < 0 && i < Math.abs(difference) * 2) {
-          adjustedWidth -= 0.5;
+      if (difference > 0) {
+        // 너비가 부족한 경우: 앞쪽 슬롯에 0.5씩 추가
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] += 0.5;
         }
-        slotWidths.push(adjustedWidth);
+      } else if (difference < 0) {
+        // 너비가 초과한 경우: 앞쪽 슬롯에서 0.5씩 차감
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] -= 0.5;
+        }
       }
       
       // 디버깅 로그
@@ -302,19 +316,26 @@ export class ColumnIndexer {
       const exactSlotWidth = usableWidth / columnCount;
       const slotWidth = Math.round(exactSlotWidth * 2) / 2;
       
-      // 전체 너비와의 차이를 계산
+      // 모든 슬롯을 동일한 너비로 설정
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(slotWidth);
+      }
+      
+      // 전체 너비와의 차이를 계산하여 일부 슬롯에 0.5씩 추가
       const totalCalculated = slotWidth * columnCount;
       const difference = usableWidth - totalCalculated;
+      const adjustmentCount = Math.abs(Math.round(difference * 2));
       
-      for (let i = 0; i < columnCount; i++) {
-        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
-        let adjustedWidth = slotWidth;
-        if (difference > 0 && i < difference * 2) {
-          adjustedWidth += 0.5;
-        } else if (difference < 0 && i < Math.abs(difference) * 2) {
-          adjustedWidth -= 0.5;
+      if (difference > 0) {
+        // 너비가 부족한 경우: 앞쪽 슬롯에 0.5씩 추가
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] += 0.5;
         }
-        slotWidths.push(adjustedWidth);
+      } else if (difference < 0) {
+        // 너비가 초과한 경우: 앞쪽 슬롯에서 0.5씩 차감
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] -= 0.5;
+        }
       }
       
       // 디버깅 로그
@@ -334,19 +355,26 @@ export class ColumnIndexer {
       const exactSlotWidth = internalWidth / columnCount;
       const slotWidth = Math.round(exactSlotWidth * 2) / 2;
       
-      // 전체 너비와의 차이를 계산
+      // 모든 슬롯을 동일한 너비로 설정
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(slotWidth);
+      }
+      
+      // 전체 너비와의 차이를 계산하여 일부 슬롯에 0.5씩 추가
       const totalCalculated = slotWidth * columnCount;
       const difference = internalWidth - totalCalculated;
+      const adjustmentCount = Math.abs(Math.round(difference * 2));
       
-      for (let i = 0; i < columnCount; i++) {
-        // 차이가 있으면 일부 슬롯에 0.5mm씩 조정
-        let adjustedWidth = slotWidth;
-        if (difference > 0 && i < difference * 2) {
-          adjustedWidth += 0.5;
-        } else if (difference < 0 && i < Math.abs(difference) * 2) {
-          adjustedWidth -= 0.5;
+      if (difference > 0) {
+        // 너비가 부족한 경우: 앞쪽 슬롯에 0.5씩 추가
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] += 0.5;
         }
-        slotWidths.push(adjustedWidth);
+      } else if (difference < 0) {
+        // 너비가 초과한 경우: 앞쪽 슬롯에서 0.5씩 차감  
+        for (let i = 0; i < Math.min(adjustmentCount, columnCount); i++) {
+          slotWidths[i] -= 0.5;
+        }
       }
     }
     
