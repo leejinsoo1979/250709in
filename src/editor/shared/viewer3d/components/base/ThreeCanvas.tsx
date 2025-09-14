@@ -587,7 +587,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       >
         <Canvas
         key={canvasKey}
-        shadows={viewMode === '3D' && cameraMode === 'perspective'}
+        shadows={viewMode === '3D' && shadowEnabled}
         style={{ 
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: 'default',
