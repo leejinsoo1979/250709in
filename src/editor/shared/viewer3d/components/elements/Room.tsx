@@ -214,11 +214,6 @@ const Room: React.FC<RoomProps> = ({
   
   // 카메라 각도에 따라 벽 투명도 업데이트 - orthographic 모드에서만
   useFrame(() => {
-    // 단내림 벽은 항상 불투명하게 유지
-    if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
-      droppedWallMaterialRef.current.uniforms.opacity.value = 1;
-    }
-    
     // 3D orthographic 모드에서만 각도에 따른 투명도 적용
     if (viewMode === '3D' && cameraMode === 'orthographic') {
       const cameraDirection = new THREE.Vector3();
@@ -247,6 +242,20 @@ const Room: React.FC<RoomProps> = ({
       }
       if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
         topWallMaterialRef.current.uniforms.opacity.value = topOpacity;
+      }
+    } else if (viewMode === '3D' && cameraMode === 'perspective') {
+      // Perspective 모드에서는 모든 벽을 불투명하게
+      if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
+        leftWallMaterialRef.current.uniforms.opacity.value = 1;
+      }
+      if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
+        rightWallMaterialRef.current.uniforms.opacity.value = 1;
+      }
+      if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
+        topWallMaterialRef.current.uniforms.opacity.value = 1;
+      }
+      if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
+        droppedWallMaterialRef.current.uniforms.opacity.value = 1;
       }
     }
   });

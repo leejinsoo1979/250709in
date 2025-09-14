@@ -220,6 +220,24 @@ export const getProject = async (projectId: string): Promise<ServiceResponse<Pro
       id: projectSnap.id,
       ...firebaseData,
     };
+    
+    // mainDoorCount와 droppedCeilingDoorCount 초기화 (자동 계산 모드로 전환)
+    if (projectData.spaceConfig) {
+      // 저장된 mainDoorCount가 있으면 undefined로 초기화하여 자동 계산 활성화
+      if (projectData.spaceConfig.mainDoorCount !== undefined) {
+        console.log('🔄 Firebase에서 불러온 mainDoorCount 초기화:', projectData.spaceConfig.mainDoorCount, '→ undefined');
+        projectData.spaceConfig.mainDoorCount = undefined;
+      }
+      if (projectData.spaceConfig.droppedCeilingDoorCount !== undefined) {
+        console.log('🔄 Firebase에서 불러온 droppedCeilingDoorCount 초기화:', projectData.spaceConfig.droppedCeilingDoorCount, '→ undefined');
+        projectData.spaceConfig.droppedCeilingDoorCount = undefined;
+      }
+      // customColumnCount도 초기화
+      if (projectData.spaceConfig.customColumnCount !== undefined) {
+        console.log('🔄 Firebase에서 불러온 customColumnCount 초기화:', projectData.spaceConfig.customColumnCount, '→ undefined');
+        projectData.spaceConfig.customColumnCount = undefined;
+      }
+    }
 
     // 마지막 접근 시간 업데이트 (비동기적으로)
     updateDoc(projectRef, {

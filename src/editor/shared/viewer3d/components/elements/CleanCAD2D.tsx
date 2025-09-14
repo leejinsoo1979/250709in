@@ -1806,17 +1806,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
-            <Line
+            <NativeLine
               points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
-            <Line
+            <NativeLine
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
           </group>
         );
