@@ -280,12 +280,34 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           dragModuleId = `${baseType}-${targetWidth}`;
           adjustedDimensions.width = targetWidth;
         } else {
-          // 노서라운드 모드: 원본 ID와 크기 사용
-          console.log('🚨 [ModuleGallery] 노서라운드 모드 - 원본 모듈 사용:', {
-            originalId: module.id,
-            originalWidth: module.dimensions.width
-          });
-          // dragModuleId와 adjustedDimensions는 변경하지 않음 (원본 사용)
+          // 노서라운드 모드에서도 정확한 슬롯 너비 사용
+          if (indexing.slotWidths && indexing.slotWidths.length > 0) {
+            if (isDualFurniture && indexing.slotWidths.length >= 2) {
+              targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
+            } else {
+              targetWidth = indexing.slotWidths[0];
+            }
+            const baseType = module.id.replace(/-[\d.]+$/, '');
+            dragModuleId = `${baseType}-${targetWidth}`;
+            adjustedDimensions.width = targetWidth;
+            console.log('🚨 [ModuleGallery] 노서라운드 모드 - 정확한 슬롯 너비 사용:', {
+              originalId: module.id,
+              targetWidth,
+              dragModuleId,
+              slotWidths: indexing.slotWidths
+            });
+          } else {
+            // fallback: 평균 너비 사용
+            targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+            const baseType = module.id.replace(/-[\d.]+$/, '');
+            dragModuleId = `${baseType}-${targetWidth}`;
+            adjustedDimensions.width = targetWidth;
+            console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
+              originalId: module.id,
+              targetWidth,
+              dragModuleId
+            });
+          }
         }
       }
     }
