@@ -1031,6 +1031,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 단내림 공간 렌더링 */}
             <DroppedCeilingSpace spaceInfo={spaceInfo} />
             
+            {/* CAD 스타일 치수/가이드 표시 - Room 다음에 렌더링하여 위에 표시 */}
+            <group renderOrder={10000}>
+              <CleanCAD2D 
+                viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+                showDimensions={showDimensions}
+                isStep2={isStep2}
+              />
+            </group>
+            
             {/* 상하부장 사이 백패널 렌더링 */}
             <BackPanelBetweenCabinets 
               placedModules={placedModules}
@@ -1210,13 +1219,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* Configurator에서 표시되는 요소들 */}
             {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
             {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
-            
-            {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
-            <CleanCAD2D 
-              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
-              showDimensions={showDimensions}
-              isStep2={isStep2}
-            />
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
