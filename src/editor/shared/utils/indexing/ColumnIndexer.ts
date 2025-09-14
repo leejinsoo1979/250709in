@@ -114,8 +114,8 @@ export class ColumnIndexer {
         console.log('📐 Using auto calculation:', columnCount);
       }
       
-      // 전체 영역 기준 컬럼 너비
-      const columnWidth = Math.floor(internalWidth / columnCount);
+      // 전체 영역 기준 컬럼 너비 (소수점 유지)
+      const columnWidth = internalWidth / columnCount;
       
       // 전체 영역의 경계와 위치 (호환성을 위해 유지)
       const columnBoundaries = [];
@@ -414,8 +414,8 @@ export class ColumnIndexer {
       });
     }
     
-    // 호환성을 위한 평균 너비
-    const columnWidth = Math.floor(internalWidth / columnCount);
+    // 호환성을 위한 평균 너비 (소수점 유지)
+    const columnWidth = internalWidth / columnCount;
     
     // 좌우 패딩은 0 (모든 공간을 슬롯에 할당)
     const leftPadding = 0;
@@ -640,7 +640,7 @@ export class ColumnIndexer {
         console.warn(`슬롯 너비 제한: ${minRequiredSlots}개 이상의 슬롯이 필요합니다.`);
       }
       
-      const columnWidth = Math.floor(internalWidth / columnCount);
+      const columnWidth = internalWidth / columnCount;
       
       // 노서라운드의 경우 사용 가능 너비 재계산
       let actualInternalWidth = internalWidth;
@@ -1019,9 +1019,9 @@ export class ColumnIndexer {
       }
     }
     
-    // 호환성을 위한 평균 너비 (기존 코드용)
-    const normalColumnWidth = Math.floor(normalAreaInternalWidth / normalColumnCount);
-    const droppedColumnWidth = Math.floor(droppedAreaInternalWidth / droppedColumnCount);
+    // 호환성을 위한 평균 너비 (소수점 유지)
+    const normalColumnWidth = normalAreaInternalWidth / normalColumnCount;
+    const droppedColumnWidth = droppedAreaInternalWidth / droppedColumnCount;
     
     // 실제 사용되는 너비 (반올림 오차 포함)
     const normalUsedWidth = normalColumnWidth * normalColumnCount;
