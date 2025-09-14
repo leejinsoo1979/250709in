@@ -21,6 +21,7 @@ import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/ind
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
+import { useThree, useFrame } from '@react-three/fiber';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -199,8 +200,58 @@ const Room: React.FC<RoomProps> = ({
   const { colors } = useThemeColors();
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
+  
+  // Three.js hooks for camera tracking
+  const { camera } = useThree();
+  
+  // 3D orthographic 모드에서 카메라 각도에 따른 벽 투명도
+  const [wallOpacity, setWallOpacity] = useState({
+    left: 1,
+    right: 1,
+    top: 1
+  });
+  
+  // 벽 재질 refs
+  const leftWallMaterialRef = useRef<THREE.Material>(null);
+  const rightWallMaterialRef = useRef<THREE.Material>(null);
+  const topWallMaterialRef = useRef<THREE.Material>(null);
+  
+  // 카메라 각도에 따라 벽 투명도 업데이트
+  useFrame(() => {
+    if (viewMode === '3D' && cameraMode === 'orthographic') {
+      const cameraDirection = new THREE.Vector3();
+      camera.getWorldDirection(cameraDirection);
+      
+      // 각도 계산
+      const angleY = Math.atan2(cameraDirection.x, cameraDirection.z);
+      const angleX = Math.atan2(cameraDirection.y, Math.sqrt(cameraDirection.x * cameraDirection.x + cameraDirection.z * cameraDirection.z));
+      
+      // 왼쪽 벽: 카메라가 오른쪽에서 볼 때 투명
+      const leftOpacity = angleY > 0 ? 0.1 : 1;
+      
+      // 오른쪽 벽: 카메라가 왼쪽에서 볼 때 투명
+      const rightOpacity = angleY < 0 ? 0.1 : 1;
+      
+      // 천장: 카메라가 위에서 볼 때 투명
+      const topOpacity = angleX < -0.3 ? 0.1 : 1;
+      
+      // 재질 투명도 직접 업데이트
+      if (leftWallMaterialRef.current) {
+        leftWallMaterialRef.current.opacity = leftOpacity;
+        leftWallMaterialRef.current.transparent = true;
+      }
+      if (rightWallMaterialRef.current) {
+        rightWallMaterialRef.current.opacity = rightOpacity;
+        rightWallMaterialRef.current.transparent = true;
+      }
+      if (topWallMaterialRef.current) {
+        topWallMaterialRef.current.opacity = topOpacity;
+        topWallMaterialRef.current.transparent = true;
+      }
+    }
+  });
   
   // 노서라운드 모드에서 엔드패널이 생성되는 위치 확인
   const getEndPanelPositions = () => {
@@ -766,6 +817,7 @@ const Room: React.FC<RoomProps> = ({
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
+          {/* 3D orthographic 모드에서 카메라 각도에 따라 숨김 */}
           {console.log('🔍 왼쪽 벽 installType 체크:', {
             installType: spaceInfo.installType,
             wallConfig,
@@ -814,7 +866,9 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
+                  <primitive 
+                    ref={leftWallMaterialRef}
+                    object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
                 </mesh>
               );
             }
@@ -827,7 +881,9 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <planeGeometry args={[extendedPanelDepth, height]} />
-                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
+                <primitive 
+                  ref={leftWallMaterialRef}
+                  object={MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode)} />
               </mesh>
               );
             }
@@ -837,6 +893,7 @@ const Room: React.FC<RoomProps> = ({
           
           {/* 오른쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 오른쪽 벽이 있거나 빌트인)일 때만 표시 */}
+          {/* 3D orthographic 모드에서 카메라 각도에 따라 숨김 */}
           {(spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
             (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
@@ -876,7 +933,9 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, -Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
+                  <primitive 
+                    ref={rightWallMaterialRef}
+                    object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
                 </mesh>
               );
             }
@@ -889,7 +948,9 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, -Math.PI / 2, 0]}
               >
                 <planeGeometry args={[extendedPanelDepth, height]} />
-                <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
+                <primitive 
+                  ref={rightWallMaterialRef}
+                  object={MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode)} />
               </mesh>
               );
             }
@@ -898,6 +959,7 @@ const Room: React.FC<RoomProps> = ({
           })()}
           
           {/* 상단 외부 벽면 (천장) - 단내림이 있는 경우 분할 - 탑뷰에서는 숨김 */}
+          {/* 3D orthographic 모드에서 카메라 각도에 따라 숨김 */}
           {viewMode !== '2D' && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const droppedWidth = hasDroppedCeiling && spaceInfo.droppedCeiling 
@@ -917,7 +979,9 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry args={[width, extendedPanelDepth]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
+                  <primitive 
+                    ref={topWallMaterialRef}
+                    object={MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode)} />
                 </mesh>
               );
             }
