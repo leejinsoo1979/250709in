@@ -987,15 +987,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 )}
                 {/* 연장선 */}
-                <Line
+                <NativeLine
                   points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
                   color={textColor}
-                  lineWidth={0.5}
+                  lineWidth={1.5}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
                 />
-                <Line
+                <NativeLine
                   points={[[leftOffset + mmToThreeUnits(leftValue), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(100), 0.001]]}
                   color={textColor}
-                  lineWidth={0.5}
+                  lineWidth={1.5}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
                 />
       </group>
             );
@@ -1037,15 +1045,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             {/* 연장선 */}
-            <Line
+            <NativeLine
               points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
-            <Line
+            <NativeLine
               points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
       </group>
       )}
@@ -1126,15 +1142,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </Text>
                 
                 {/* 연장선 */}
-                <Line
+                <NativeLine
                   points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(100), 0.001]]}
                   color={textColor}
-                  lineWidth={0.5}
+                  lineWidth={1.5}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
                 />
-                <Line
+                <NativeLine
                   points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
                   color={textColor}
-                  lineWidth={0.5}
+                  lineWidth={1.5}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
                 />
       </group>
             );
@@ -1176,15 +1200,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             {/* 연장선 */}
-            <Line
+            <NativeLine
               points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
-            <Line
+            <NativeLine
               points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
+              renderOrder={1000000}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
             />
       </group>
       )}
