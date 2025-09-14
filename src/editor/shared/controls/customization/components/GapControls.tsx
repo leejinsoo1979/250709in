@@ -21,20 +21,23 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
   // spaceInfo 변경 시 상태 업데이트
   useEffect(() => {
     if (optimizedGap) {
-      setLeftGap(optimizedGap.left);
-      setRightGap(optimizedGap.right);
-      // 자동 최적화된 값으로 즉시 업데이트
-      onUpdate({
-        gapConfig: {
-          left: optimizedGap.left,
-          right: optimizedGap.right
-        }
-      });
+      // 현재 값과 다를 때만 업데이트
+      if (spaceInfo?.gapConfig?.left !== optimizedGap.left || spaceInfo?.gapConfig?.right !== optimizedGap.right) {
+        setLeftGap(optimizedGap.left);
+        setRightGap(optimizedGap.right);
+        // 자동 최적화된 값으로 즉시 업데이트
+        onUpdate({
+          gapConfig: {
+            left: optimizedGap.left,
+            right: optimizedGap.right
+          }
+        });
+      }
     } else {
       setLeftGap(spaceInfo?.gapConfig?.left || 2);
       setRightGap(spaceInfo?.gapConfig?.right || 2);
     }
-  }, [optimizedGap?.left, optimizedGap?.right, spaceInfo?.gapConfig]);
+  }, [optimizedGap?.left, optimizedGap?.right, spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right]);
   
   // spaceInfo가 없거나 노서라운드가 아닌 경우 렌더링하지 않음
   if (!spaceInfo || spaceInfo.surroundType !== 'no-surround') {
