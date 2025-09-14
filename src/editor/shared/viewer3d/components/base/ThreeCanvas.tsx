@@ -344,10 +344,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const spaceHeight = spaceInfo?.height || 2400;
         const spaceDepth = spaceInfo?.depth || 600;
         
-        // useCameraManager와 동일한 방식으로 zoom 계산
+        // orthographic 모드에서는 훨씬 큰 zoom 값 필요
         const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, 0);
         const baseZoomDistance = Math.max(1200, spaceWidth * 0.4);
-        const appropriateZoom = baseZoomDistance / distance;
+        const appropriateZoom = (baseZoomDistance / distance) * 15; // 15배로 크게 설정하여 화면에 꽉 차도록
         
         console.log('🎯 2D 카메라 초기값으로 리셋 (고정 zoom):', {
           zoom: appropriateZoom,
