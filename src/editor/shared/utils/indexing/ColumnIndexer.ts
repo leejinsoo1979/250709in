@@ -356,7 +356,7 @@ export class ColumnIndexer {
       console.log('🔧 노서라운드 벽없음 슬롯 계산:', {
         '전체 공간 너비': totalWidth,
         '컬럼 수': columnCount,
-        '슬롯 너비': slotWidth,
+        '평균 슬롯 너비': totalWidth / columnCount,
         '슬롯 너비 배열': slotWidths,
         '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
       });
@@ -386,7 +386,7 @@ export class ColumnIndexer {
         '벽 이격': wallGap,
         '사용 가능 너비': usableWidth,
         '컬럼 수': columnCount,
-        '슬롯 너비': slotWidth,
+        '평균 슬롯 너비': exactSlotWidth,
         '슬롯 너비 배열': slotWidths,
         '벽 위치': spaceInfo.wallConfig?.left ? '좌측' : '우측',
         '엔드패널 위치': !spaceInfo.wallConfig?.left ? '좌측' : (!spaceInfo.wallConfig?.right ? '우측' : '없음')
