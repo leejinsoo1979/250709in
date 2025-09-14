@@ -4760,7 +4760,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   });
 
   return (
-    <group ref={groupRef} renderOrder={999999}>
+    <group 
+      ref={groupRef} 
+      renderOrder={999999}
+      onUpdate={(self) => {
+        // group 내부의 모든 메쉬와 라인에 대해 renderOrder와 depthTest 설정
+        self.traverse((child) => {
+          if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof THREE.LineSegments) {
+            child.renderOrder = 999999;
+            if (child.material) {
+              child.material.depthTest = false;
+              child.material.depthWrite = false;
+            }
+          }
+        });
+      }}
+    >
       {/* 치수선 렌더링 - 조건은 renderDimensions 내부에서 처리 */}
       {renderDimensions()}
       
