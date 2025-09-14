@@ -377,6 +377,12 @@ const Configurator: React.FC = () => {
           }
         }
         
+        // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
+        spaceConfig.mainDoorCount = undefined;
+        spaceConfig.droppedCeilingDoorCount = undefined;
+        spaceConfig.customColumnCount = undefined;
+        console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
+        
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture.placedModules);
         setCurrentProjectId(projectId);
@@ -1069,8 +1075,15 @@ const Configurator: React.FC = () => {
               
               // 공간 설정
               if (designFile.spaceConfig) {
-                setSpaceInfo(designFile.spaceConfig);
-                console.log('📐 공간 설정 데이터 설정:', designFile.spaceConfig);
+                // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
+                const spaceConfig = {
+                  ...designFile.spaceConfig,
+                  mainDoorCount: undefined,
+                  droppedCeilingDoorCount: undefined,
+                  customColumnCount: undefined
+                };
+                setSpaceInfo(spaceConfig);
+                console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
               
               // 가구 배치 데이터 설정
