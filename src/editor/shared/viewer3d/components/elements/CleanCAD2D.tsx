@@ -1273,7 +1273,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   pointerEvents: 'none'
                 }}
               >
-                {Math.round(columnWidth)}
+                {columnWidth}
               </div>
             </Html>
             
