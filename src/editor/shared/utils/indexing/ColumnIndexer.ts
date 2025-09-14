@@ -97,11 +97,17 @@ export class ColumnIndexer {
       }
       
       // 전체 영역의 컬럼 수 (호환성을 위해 유지)
+      // mainDoorCount > customColumnCount > 자동 계산 우선순위
       let columnCount;
-      if (spaceInfo.customColumnCount) {
+      if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+        console.log('📐 Using mainDoorCount:', spaceInfo.mainDoorCount);
+        columnCount = spaceInfo.mainDoorCount;
+      } else if (spaceInfo.customColumnCount) {
+        console.log('📐 Using customColumnCount:', spaceInfo.customColumnCount);
         columnCount = spaceInfo.customColumnCount;
       } else {
         columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
+        console.log('📐 Using auto calculation:', columnCount);
       }
       
       // 전체 영역 기준 컬럼 너비
