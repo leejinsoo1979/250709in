@@ -1677,27 +1677,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           <group key={`module-guide-${index}`} renderOrder={999999}>
             
             {/* 가구 치수선 */}
-            <Line
+            <NativeLine
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 좌측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 우측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 가구 치수 텍스트 - Text 사용 */}
@@ -1708,23 +1711,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               renderOrder={999999}
+              depthTest={false}
             >
               {Math.round(actualWidth)}
             </Text>
             
             
             {/* 연장선 - 하부 프레임에서 전체 가로 치수 보조선까지 확장 */}
-            <Line
+            <NativeLine
               points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
-            <Line
+            <NativeLine
               points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
           </group>
@@ -1741,27 +1747,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`column-dim-${column.id}`}>
             {/* 기둥 치수선 */}
-            <Line
+            <NativeLine
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 좌측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 우측 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color="#FF0000"
-              lineWidth={0.5}
+              lineWidth={1.5}
               renderOrder={999999}
+              depthTest={false}
             />
             
             {/* 기둥 치수 텍스트 */}
@@ -1772,6 +1781,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               anchorX="center"
               anchorY="middle"
               renderOrder={999999}
+              depthTest={false}
             >
               {Math.round(column.width)}
             </Text>
