@@ -280,14 +280,19 @@ export class ColumnIndexer {
       컬럼수: columnCount
     });
     
-    if (isNoSurround && spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right)) {
+    // 빌트인은 기본적으로 양쪽벽, 세미스탠딩은 한쪽벽
+    const hasWalls = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+                     (spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right));
+    
+    if (isNoSurround && hasWalls) {
       const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
       if (validGapSums.length > 0) {
         // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
         const optimalGapSum = validGapSums[0];
         
         // 양쪽벽인 경우 정수로 분배, 한쪽벽인 경우 해당 쪽만 설정
-        if (spaceInfo.wallConfig.left && spaceInfo.wallConfig.right) {
+        const isBuiltin = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
+        if (isBuiltin || (spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right)) {
           // 양쪽벽: 정수로 분배 (홀수면 좌측을 적게)
           const leftGap = Math.floor(optimalGapSum / 2);
           const rightGap = optimalGapSum - leftGap;
@@ -295,13 +300,13 @@ export class ColumnIndexer {
             left: leftGap,
             right: rightGap
           };
-        } else if (spaceInfo.wallConfig.left) {
+        } else if (spaceInfo.wallConfig?.left) {
           // 왼쪽벽만: 왼쪽에만 이격
           optimizedGapConfig = {
             left: optimalGapSum,
             right: 0
           };
-        } else if (spaceInfo.wallConfig.right) {
+        } else if (spaceInfo.wallConfig?.right) {
           // 오른쪽벽만: 오른쪽에만 이격
           optimizedGapConfig = {
             left: 0,
