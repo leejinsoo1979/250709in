@@ -1033,13 +1033,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <DroppedCeilingSpace spaceInfo={spaceInfo} />
             
             {/* CAD 스타일 치수/가이드 표시 - 모든 것 위에 렌더링 */}
-            <group renderOrder={10000}>
-              <CleanCAD2D 
-                viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
-                showDimensions={showDimensions}
-                isStep2={isStep2}
-              />
-            </group>
+            <CleanCAD2D 
+              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+              showDimensions={showDimensions}
+              isStep2={isStep2}
+            />
             
             {/* 상하부장 사이 백패널 렌더링 */}
             <BackPanelBetweenCabinets 
@@ -1369,13 +1367,11 @@ const QuadrantContent: React.FC<{
       {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
       
       {/* CAD 스타일 치수/가이드 표시 */}
-      <group renderOrder={10000}>
-        <CleanCAD2D 
-          viewDirection={viewDirection} 
-          showDimensions={showDimensions}
-          isStep2={isStep2}
-        />
-      </group>
+      <CleanCAD2D 
+        viewDirection={viewDirection} 
+        showDimensions={showDimensions}
+        isStep2={isStep2}
+      />
       
       {/* 투명 슬롯매쉬 - 탑뷰에서는 제외 */}
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}

@@ -29,23 +29,22 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
     // 단내림 구간도 getDefaultColumnCount 사용
     columnCount = spaceInfo.droppedCeilingDoorCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
   } else {
-    // 메인 구간
-    if (spaceInfo.droppedCeiling?.enabled) {
-      // 메인 구간의 내경폭 계산 (먼저 계산)
-      const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
-      internalWidth = calculatedInternalWidth - droppedCeilingWidth;
-      // 단내림이 활성화되어도 getDefaultColumnCount 사용
-      columnCount = spaceInfo.mainDoorCount || SpaceCalculator.getDefaultColumnCount(internalWidth);
+    // 메인 구간 - ColumnIndexer와 동일한 우선순위 적용
+    internalWidth = calculatedInternalWidth;
+    
+    // mainDoorCount가 설정되어 있으면 최우선 사용 (4분할 창 등)
+    if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+      columnCount = spaceInfo.mainDoorCount;
+    } else if (spaceInfo.customColumnCount) {
+      // 사용자 지정 컬럼 수가 있으면 사용
+      columnCount = spaceInfo.customColumnCount;
     } else {
-      // 단내림이 비활성화되면 customColumnCount 사용
-      columnCount = spaceInfo.customColumnCount || SpaceCalculator.getDefaultColumnCount(calculatedInternalWidth);
-      internalWidth = calculatedInternalWidth;
+      // 기본 자동 계산 로직
+      columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
     }
     
-    // 자동 모드 체크
-    isAutoMode = spaceInfo.droppedCeiling?.enabled 
-      ? spaceInfo.mainDoorCount === undefined
-      : spaceInfo.customColumnCount === undefined;
+    // 자동 모드 체크 - mainDoorCount와 customColumnCount 모두 없을 때만 자동
+    isAutoMode = spaceInfo.mainDoorCount === undefined && spaceInfo.customColumnCount === undefined;
   }
   
   // 컬럼 제한 계산
@@ -57,8 +56,8 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
       // 단내림 구간 도어 개수 변경
       onUpdate({ droppedCeilingDoorCount: newCount });
     } else {
-      // 메인 구간 도어 개수 변경
-      if (spaceInfo.droppedCeiling?.enabled) {
+      // 메인 구간 - mainDoorCount가 있으면 mainDoorCount, 없으면 customColumnCount 업데이트
+      if (spaceInfo.mainDoorCount !== undefined) {
         onUpdate({ mainDoorCount: newCount });
       } else {
         onUpdate({ customColumnCount: newCount });
@@ -71,12 +70,11 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
       // 단내림 구간은 리셋 시 최소값(1)으로
       onUpdate({ droppedCeilingDoorCount: 1 });
     } else {
-      // 메인 구간은 자동 모드로
-      if (spaceInfo.droppedCeiling?.enabled) {
-        onUpdate({ mainDoorCount: undefined });
-      } else {
-        onUpdate({ customColumnCount: undefined });
-      }
+      // 메인 구간은 자동 모드로 - mainDoorCount와 customColumnCount 모두 undefined로
+      onUpdate({ 
+        mainDoorCount: undefined,
+        customColumnCount: undefined 
+      });
     }
   };
   

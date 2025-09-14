@@ -210,9 +210,15 @@ const Room: React.FC<RoomProps> = ({
   const leftWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const droppedWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   
   // 카메라 각도에 따라 벽 투명도 업데이트 - orthographic 모드에서만
   useFrame(() => {
+    // 단내림 벽은 항상 불투명하게 유지
+    if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
+      droppedWallMaterialRef.current.uniforms.opacity.value = 1;
+    }
+    
     // 3D orthographic 모드에서만 각도에 따른 투명도 적용
     if (viewMode === '3D' && cameraMode === 'orthographic') {
       const cameraDirection = new THREE.Vector3();
@@ -722,6 +728,7 @@ const Room: React.FC<RoomProps> = ({
   const leftWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode), [viewMode]);
   const rightWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', viewMode), [viewMode]);
   const topWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', viewMode), [viewMode]);
+  const droppedWallMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('horizontal', viewMode), [viewMode]);
   
 
   
@@ -1100,7 +1107,9 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[0, Math.PI / 2, 0]}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                  <primitive object={MaterialFactory.createShaderGradientWallMaterial('horizontal', '3D', true)} />
+                  <primitive 
+                    ref={droppedWallMaterialRef}
+                    object={droppedWallMaterial} />
                 </mesh>
               </>
             );
