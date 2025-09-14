@@ -233,6 +233,7 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
     console.log('🎯 초기값 슬롯 정수화 자동 조정:', {
       슬롯너비: adjustmentResult.slotWidth,
       프레임크기: adjustmentResult.adjustedSpaceInfo.frameSize,
+      이격거리: adjustmentResult.adjustedSpaceInfo.gapConfig,
       조정여부: adjustmentResult.adjustmentMade
     });
     return adjustmentResult.adjustedSpaceInfo;

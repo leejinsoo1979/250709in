@@ -193,31 +193,52 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격거리 2~5mm 범위에서 조정
+        // 빌트인: selectOptimalGapSum을 사용하여 최적의 이격거리 찾기
         const baseWidth = spaceInfo.width;
         
-        // 2~5mm 범위에서 정수로 떨어지는 이격거리 찾기
-        for (let gap = 2; gap <= 5; gap++) {
-          const internalWidth = baseWidth - (gap * 2); // 양쪽 이격거리
-          const slotWidth = Math.floor(internalWidth / columnCount);
+        // selectOptimalGapSum을 사용하여 정수 슬롯을 만드는 gap 찾기
+        const validGapSums = SpaceCalculator.selectOptimalGapSum(baseWidth, columnCount);
+        
+        if (validGapSums.length > 0) {
+          // 첫 번째 유효한 gap sum 사용 (가장 작은 값)
+          const optimalGapSum = validGapSums[0];
+          const leftGap = Math.floor(optimalGapSum / 2);
+          const rightGap = optimalGapSum - leftGap;
+          const internalWidth = baseWidth - optimalGapSum;
+          const slotWidth = internalWidth / columnCount;
           
-          // 정수로 나누어떨어지는지 확인
-          if (internalWidth % columnCount === 0) {
-            return {
-              adjustedSpaceInfo: {
-                ...spaceInfo,
-                gapConfig: { left: gap, right: gap }
-              },
-              slotWidth,
-              adjustmentMade: true
-            };
-          }
+          console.log('🎯 adjustForIntegerSlotWidth - 최적 이격거리 찾음:', {
+            totalWidth: baseWidth,
+            slotCount: columnCount,
+            validGapSums,
+            selectedGapSum: optimalGapSum,
+            leftGap,
+            rightGap,
+            slotWidth
+          });
+          
+          return {
+            adjustedSpaceInfo: {
+              ...spaceInfo,
+              gapConfig: { left: leftGap, right: rightGap }
+            },
+            slotWidth,
+            adjustmentMade: true
+          };
         }
         
-        // 정수로 안 떨어지면 가장 가까운 값 선택 (기본 2mm)
+        // 정수로 안 떨어지면 기본 2mm 사용
         const gap = 2;
         const internalWidth = baseWidth - (gap * 2);
-        const slotWidth = Math.floor(internalWidth / columnCount);
+        const slotWidth = internalWidth / columnCount;
+        
+        console.log('⚠️ adjustForIntegerSlotWidth - 정수 슬롯 불가, 기본값 사용:', {
+          totalWidth: baseWidth,
+          slotCount: columnCount,
+          gap,
+          slotWidth
+        });
+        
         return {
           adjustedSpaceInfo: {
             ...spaceInfo,
