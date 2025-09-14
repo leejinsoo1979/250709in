@@ -258,7 +258,10 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
   setSpaceInfo: (info) => {
     console.log('🏪 [Store] setSpaceInfo 호출:', {
       customColumnCount: info.customColumnCount,
-      width: info.width
+      width: info.width,
+      surroundType: info.surroundType,
+      installType: info.installType,
+      gapConfig: info.gapConfig
     });
     set((state) => {
       // installType 하이픈 문제 수정
