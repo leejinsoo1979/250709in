@@ -228,9 +228,12 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
+  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+  const widthForId = Math.round(columnWidth * 10) / 10;
+  
   const base = createFurnitureBase(
-    `single-2drawer-hanging-${columnWidth}`,
-    `2단서랍+옷장 ${columnWidth}mm`,
+    `single-2drawer-hanging-${widthForId}`,
+    `2단서랍+옷장 ${widthForId}mm`,
     columnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -275,9 +278,12 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
+  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+  const widthForId = Math.round(columnWidth * 10) / 10;
+  
   const base = createFurnitureBase(
-    `single-2hanging-${columnWidth}`,
-    `2단 옷장 ${columnWidth}mm`,
+    `single-2hanging-${widthForId}`,
+    `2단 옷장 ${widthForId}mm`,
     columnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -322,9 +328,12 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
+  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+  const widthForId = Math.round(columnWidth * 10) / 10;
+  
   const base = createFurnitureBase(
-    `single-4drawer-hanging-${columnWidth}`,
-    `4단서랍+옷장 ${columnWidth}mm`,
+    `single-4drawer-hanging-${widthForId}`,
+    `4단서랍+옷장 ${widthForId}mm`,
     columnWidth, // columnWidth 사용 (500mm 대신)
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -374,9 +383,12 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
+  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  
   const base = createFurnitureBase(
-    `dual-2drawer-hanging-${dualColumnWidth}`,
-    `듀얼 2단서랍+옷장 ${dualColumnWidth}mm`,
+    `dual-2drawer-hanging-${widthForId}`,
+    `듀얼 2단서랍+옷장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -422,7 +434,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-2hanging-${dualColumnWidth}`,
+    `dual-2hanging-${Math.round(dualColumnWidth * 10) / 10}`,
     `듀얼 2단 옷장 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -470,7 +482,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-4drawer-hanging-${dualColumnWidth}`,
+    `dual-4drawer-hanging-${Math.round(dualColumnWidth * 10) / 10}`,
     `듀얼 4단서랍+옷장 ${dualColumnWidth}mm`,
     dualColumnWidth, // dualColumnWidth 사용 (1000mm 대신)
     maxHeight,
@@ -531,7 +543,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const rightSections = applySafetyShelf(rightBaseSections, maxHeight);
   
   const base = createFurnitureBase(
-    `dual-2drawer-styler-${dualColumnWidth}`,
+    `dual-2drawer-styler-${Math.round(dualColumnWidth * 10) / 10}`,
     `듀얼 서랍+스타일러 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -567,7 +579,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const topHangingHeight = maxHeight - bottomSectionHeight; // 상단 옷장 높이
   
   const base = createFurnitureBase(
-    `dual-4drawer-pantshanger-${dualColumnWidth}`,
+    `dual-4drawer-pantshanger-${Math.round(dualColumnWidth * 10) / 10}`,
     `듀얼 서랍+바지걸이 ${dualColumnWidth}mm`,
     dualColumnWidth,
     maxHeight,
@@ -841,7 +853,7 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
  */
 const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-shelf-${dualWidth}`,
+    `dual-upper-cabinet-shelf-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 상부장 선반형 ${dualWidth}mm`,
     dualWidth,
     600, // 상부장 기본 높이 600mm
@@ -881,7 +893,7 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-2tier-${dualWidth}`,
+    `dual-upper-cabinet-2tier-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 상부장 2단형 ${dualWidth}mm`,
     dualWidth,
     600, // 상부장 기본 높이 600mm
@@ -921,7 +933,7 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-open-${dualWidth}`,
+    `dual-upper-cabinet-open-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 상부장 오픈형 ${dualWidth}mm`,
     dualWidth,
     600,
@@ -959,7 +971,7 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
  */
 const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-upper-cabinet-mixed-${dualWidth}`,
+    `dual-upper-cabinet-mixed-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 상부장 혼합형 ${dualWidth}mm`,
     dualWidth,
     600,
@@ -1013,7 +1025,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
  */
 const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-lower-cabinet-basic-${dualWidth}`,
+    `dual-lower-cabinet-basic-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 하부장 ${dualWidth}mm`,
     dualWidth,
     1000, // 하부장 높이 1000mm
@@ -1057,7 +1069,7 @@ const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
  */
 const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
   const base = createFurnitureBase(
-    `dual-lower-cabinet-2tier-${dualWidth}`,
+    `dual-lower-cabinet-2tier-${Math.round(dualWidth * 10) / 10}`,
     `듀얼 하부장 2단형 ${dualWidth}mm`,
     dualWidth,
     1000, // 하부장 높이 1000mm
@@ -1172,11 +1184,6 @@ export const generateShelvingModules = (
     columnWidth = slotWidths[0];
     columnCount = slotWidths.length;
     
-    console.log('🎯 _tempSlotWidths 사용:', {
-      slotWidths,
-      columnWidth,
-      '정수인가': Number.isInteger(columnWidth)
-    });
   } else {
     // 단내림 구간인지 확인하고 zoneSlotInfo 사용
     zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
@@ -1292,11 +1299,6 @@ export const generateShelvingModules = (
   // 가구 높이는 internalSpace.height 사용 (이미 위에서 maxHeight 선언됨)
   
   // === 싱글 가구 생성 ===
-  console.log('🔨 싱글 가구 생성:', {
-    columnWidth,
-    '생성될ID': `single-2drawer-hanging-${columnWidth}`,
-    '정수인가': Number.isInteger(columnWidth)
-  });
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));

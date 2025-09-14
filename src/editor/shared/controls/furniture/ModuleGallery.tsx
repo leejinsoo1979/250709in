@@ -270,14 +270,18 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             targetWidth,
             slotWidths: indexing.slotWidths
           });
+          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+          const widthForId = Math.round(targetWidth * 10) / 10;
           const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${targetWidth}`;
+          dragModuleId = `${baseType}-${widthForId}`;
           adjustedDimensions.width = targetWidth;
         } else if (spaceInfo.surroundType === 'surround') {
           // 서라운드 모드 fallback
           targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+          const widthForId = Math.round(targetWidth * 10) / 10;
           const baseType = module.id.replace(/-[\d.]+$/, '');
-          dragModuleId = `${baseType}-${targetWidth}`;
+          dragModuleId = `${baseType}-${widthForId}`;
           adjustedDimensions.width = targetWidth;
         } else {
           // 노서라운드 모드에서도 정확한 슬롯 너비 사용
@@ -287,8 +291,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             } else {
               targetWidth = indexing.slotWidths[0];
             }
+            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+            const widthForId = Math.round(targetWidth * 10) / 10;
             const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${targetWidth}`;
+            dragModuleId = `${baseType}-${widthForId}`;
             adjustedDimensions.width = targetWidth;
             console.log('🚨 [ModuleGallery] 노서라운드 모드 - 정확한 슬롯 너비 사용:', {
               originalId: module.id,
@@ -299,8 +305,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           } else {
             // fallback: 평균 너비 사용
             targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+            const widthForId = Math.round(targetWidth * 10) / 10;
             const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${targetWidth}`;
+            dragModuleId = `${baseType}-${widthForId}`;
             adjustedDimensions.width = targetWidth;
             console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
               originalId: module.id,
@@ -432,13 +440,17 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           if (droppedSlotWidths.length > 0) {
             if (isDualFurniture && droppedSlotWidths.length >= 2) {
               const targetWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
+              // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+              const widthForId = Math.round(targetWidth * 10) / 10;
               const baseType = module.id.replace(/-[\d.]+$/, '');
-              dragModuleId = `${baseType}-${targetWidth}`;
+              dragModuleId = `${baseType}-${widthForId}`;
               adjustedDimensions.width = targetWidth;
             } else if (!isDualFurniture && droppedSlotWidths.length > 0) {
               const targetWidth = droppedSlotWidths[0];
+              // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+              const widthForId = Math.round(targetWidth * 10) / 10;
               const baseType = module.id.replace(/-[\d.]+$/, '');
-              dragModuleId = `${baseType}-${targetWidth}`;
+              dragModuleId = `${baseType}-${widthForId}`;
               adjustedDimensions.width = targetWidth;
             }
           }
@@ -456,8 +468,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             } else {
               targetWidth = indexing.slotWidths[0];
             }
+            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+            const widthForId = Math.round(targetWidth * 10) / 10;
             const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${targetWidth}`;
+            dragModuleId = `${baseType}-${widthForId}`;
             adjustedDimensions.width = targetWidth;
             console.log('🎯 [ModuleGallery] Click - 일반 모드 정확한 슬롯 너비 사용:', {
               originalId: module.id,
@@ -468,8 +482,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           } else {
             // fallback: 평균 너비 사용
             const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+            const widthForId = Math.round(targetWidth * 10) / 10;
             const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${targetWidth}`;
+            dragModuleId = `${baseType}-${widthForId}`;
             adjustedDimensions.width = targetWidth;
             console.log('🎯 [ModuleGallery] Click - 일반 모드 평균 너비 사용:', {
               originalId: module.id,
@@ -929,14 +945,16 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       
       if (isDualFurniture && zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
         customWidth = zoneIndexing.slotWidths[localSlotIndex] + (zoneIndexing.slotWidths[localSlotIndex + 1] || zoneIndexing.slotWidths[localSlotIndex]);
-        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 포함)
+        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 1자리로 반올림)
+        const widthForId = Math.round(customWidth * 10) / 10;
         const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
-        targetModuleId = `${moduleBaseType}-${customWidth}`;
+        targetModuleId = `${moduleBaseType}-${widthForId}`;
       } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
         customWidth = zoneIndexing.slotWidths[localSlotIndex];
-        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 포함)
+        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 1자리로 반올림)
+        const widthForId = Math.round(customWidth * 10) / 10;
         const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
-        targetModuleId = `${moduleBaseType}-${customWidth}`;
+        targetModuleId = `${moduleBaseType}-${widthForId}`;
       } else {
         customWidth = zoneIndexing.columnWidth;
       }
