@@ -58,8 +58,8 @@ export const useCameraManager = (
     const zoomMultiplier = isSplitView ? 0.5 : 1.0;
     // 공간 크기에 따라 동적으로 zoom 계산 (공간이 클수록 기준값도 크게)
     const baseZoomDistance = Math.max(1200, spaceInfo.width * 0.4);
-    // 2D 모드에서는 더 작은 zoom 값으로 멀리서 보기
-    const zoom = is2DMode ? 0.5 * zoomMultiplier : (baseZoomDistance / distance) * zoomMultiplier;
+    // zoom 계산 - 2D와 3D 동일하게 처리
+    const zoom = (baseZoomDistance / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
     
