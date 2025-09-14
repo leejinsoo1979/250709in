@@ -196,12 +196,11 @@ export class ColumnIndexer {
         }
       }
       
-      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해)
-      const baseWidth = Math.floor(internalWidth / columnCount);
-      const remainder = internalWidth % columnCount;
+      // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해) - 균등 분할
+      const slotWidth = internalWidth / columnCount;
       const slotWidths: number[] = [];
       for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+        slotWidths.push(slotWidth);
       }
       
       return {
@@ -253,24 +252,11 @@ export class ColumnIndexer {
     const slotWidths: number[] = [];
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 벽없음: 전체너비를 균등 분할 (엔드패널은 첫/마지막 슬롯에 포함)
-      const baseSlotWidth = Math.floor(totalWidth / columnCount);
-      const remainder = totalWidth % columnCount;
+      // 노서라운드 프리스탠딩: 전체너비를 균등 분할
+      // 모든 슬롯이 동일한 너비를 가지도록 설정
+      const slotWidth = totalWidth / columnCount;
       
-      // 나머지를 고르게 분배 (중앙부터 바깥쪽으로)
-      const middleIndex = Math.floor(columnCount / 2);
       for (let i = 0; i < columnCount; i++) {
-        let slotWidth = baseSlotWidth;
-        
-        // 나머지를 중앙 슬롯들부터 분배
-        if (remainder > 0) {
-          const distanceFromMiddle = Math.abs(i - middleIndex + 0.5);
-          const priority = columnCount - Math.floor(distanceFromMiddle * 2);
-          if (priority > (columnCount - remainder)) {
-            slotWidth += 1;
-          }
-        }
-        
         slotWidths.push(slotWidth);
       }
       
@@ -278,45 +264,37 @@ export class ColumnIndexer {
       console.log('🔧 노서라운드 벽없음 슬롯 계산:', {
         '전체 공간 너비': totalWidth,
         '컬럼 수': columnCount,
-        '기본 슬롯 너비': baseSlotWidth,
+        '슬롯 너비': slotWidth,
         '슬롯 너비 배열': slotWidths,
         '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
       });
     } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 한쪽벽: 프리스탠딩처럼 전체 너비 사용 (엔드패널도 슬롯에 포함)
-      const baseSlotWidth = Math.floor(totalWidth / columnCount);
-      const remainder = totalWidth % columnCount;
+      // 노서라운드 세미스탠딩: 이격거리를 고려한 균등 분할
+      const wallGap = spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left || 2) : (spaceInfo.gapConfig?.right || 2);
+      const usableWidth = totalWidth - wallGap;
+      const slotWidth = usableWidth / columnCount;
       
       for (let i = 0; i < columnCount; i++) {
-        let slotWidth = baseSlotWidth;
-        
-        // remainder 분배 (앞쪽부터)
-        if (i < remainder) {
-          slotWidth += 1;
-        }
-        
         slotWidths.push(slotWidth);
       }
       
       // 디버깅 로그
       console.log('🔧 노서라운드 한쪽벽 슬롯 계산:', {
         '전체 공간 너비': totalWidth,
+        '벽 이격': wallGap,
+        '사용 가능 너비': usableWidth,
         '컬럼 수': columnCount,
-        '기본 슬롯 너비': baseSlotWidth,
+        '슬롯 너비': slotWidth,
         '슬롯 너비 배열': slotWidths,
         '벽 위치': spaceInfo.wallConfig?.left ? '좌측' : '우측',
-        '첫 슬롯': slotWidths[0],
-        '마지막 슬롯': slotWidths[slotWidths.length - 1],
         '엔드패널 위치': !spaceInfo.wallConfig?.left ? '좌측' : (!spaceInfo.wallConfig?.right ? '우측' : '없음')
       });
     } else {
-      // 서라운드 모드 또는 노서라운드 빌트인: 기존 로직 (내경 기준)
-      const baseWidth = Math.floor(internalWidth / columnCount);
-      const remainder = internalWidth % columnCount;
+      // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할
+      const slotWidth = internalWidth / columnCount;
       
       for (let i = 0; i < columnCount; i++) {
-        // 앞쪽 remainder개 슬롯은 1mm씩 더 크게
-        slotWidths.push(i < remainder ? baseWidth + 1 : baseWidth);
+        slotWidths.push(slotWidth);
       }
     }
     
