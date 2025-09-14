@@ -106,7 +106,21 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         
         // 가구 데이터 조회하여 기본 깊이 계산
         const internalSpace = calculateInternalSpace(spaceInfo);
+        console.log('🎯 가구 배치 시도:', {
+          moduleId: currentDragData.moduleData.id,
+          internalSpace,
+          spaceInfo: {
+            width: spaceInfo.width,
+            slotCount: spaceInfo.slotCount
+          }
+        });
         const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
+        
+        if (!moduleData) {
+          console.error('❌ 모듈을 찾을 수 없음:', currentDragData.moduleData.id);
+          return;
+        }
+        
         const customDepth = getDefaultDepth(moduleData);
         
         // 기둥 슬롯 정보 확인
