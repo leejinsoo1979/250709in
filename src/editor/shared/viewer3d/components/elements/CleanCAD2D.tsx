@@ -650,7 +650,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (leftmostFurnitureX !== null && rightmostFurnitureX !== null) {
               actualLeftEdge = leftmostFurnitureX;
               actualRightEdge = rightmostFurnitureX;
-              displayWidth = Math.round((rightmostFurnitureX - leftmostFurnitureX) * 100);
+              displayWidth = (rightmostFurnitureX - leftmostFurnitureX) * 100;
             }
           }
           
@@ -947,7 +947,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (leftmostFurnitureX !== null) {
               // 가구가 있으면 실제 가구 위치까지의 거리 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
-              leftValue = Math.round(Math.abs(distanceFromLeft));
+              leftValue = Math.abs(distanceFromLeft);
               leftText = `${leftValue}`;
             }
             
@@ -1103,7 +1103,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 가구가 있으면 실제 가구 위치까지의 거리 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
-              rightValue = Math.round(Math.abs(distanceFromRight));
+              rightValue = Math.abs(distanceFromRight);
               rightText = `${rightValue}`;
             }
             
@@ -1760,7 +1760,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {Math.round(actualWidth)}
+              {actualWidth}
             </Text>
             
             
@@ -1834,7 +1834,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {Math.round(column.width)}
+              {column.width}
             </Text>
             
             {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
@@ -4270,7 +4270,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Math.round(actualWidth)}
+                {actualWidth}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}
@@ -4384,7 +4384,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Math.round(column.width)}
+                {column.width}
               </Text>
               
               {/* 연장선 - 가구와 동일한 길이로 수정 */}
