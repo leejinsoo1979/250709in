@@ -335,6 +335,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault(); // 페이지 스크롤 방지
+        console.log('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
         resetCamera();
       }
     };
