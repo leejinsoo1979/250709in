@@ -267,57 +267,33 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 3D orthographic 모드와 perspective 모드 모두 리셋 처리
       console.log('🎯 카메라 타입 체크:', controls.object.type, cameraMode);
       
-      // 모든 3D 모드에서 리셋
-      // 저장된 3D 초기 상태가 있으면 사용
-      if (initialCameraSetup.current.position0 && 
-          initialCameraSetup.current.target0 && 
-          initialCameraSetup.current.zoom0 !== null) {
-        
-        console.log('🎯 3D Perspective 카메라 저장된 초기 상태로 리셋:', {
-          position: initialCameraSetup.current.position0.toArray(),
-          target: initialCameraSetup.current.target0.toArray(),
-          zoom: initialCameraSetup.current.zoom0
-        });
-        
-        // OrbitControls의 저장된 초기 상태를 업데이트
-        controls.target0.copy(initialCameraSetup.current.target0);
-        controls.position0.copy(initialCameraSetup.current.position0);
-        controls.zoom0 = initialCameraSetup.current.zoom0;
-        
-        // reset()을 호출하면 target0, position0, zoom0으로 완전히 리셋됨
-        controls.reset();
-      } else {
-        // 초기 상태가 없으면 기본값으로 설정
-        const spaceHeight = spaceInfo?.height || 2400;
-        const spaceWidth = spaceInfo?.width || 3000;
-        const spaceDepth = spaceInfo?.depth || 600;
-        
-        // Space3DView와 완전히 동일한 거리 계산 사용 - placedModules 개수는 0으로 (초기 상태와 동일)
-        const defaultDistance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, 0);
-        
-        // 타겟 위치 계산 (calculateCameraTargetUtil 사용)
-        const target = calculateCameraTargetUtil(spaceHeight);
-        
-        console.log('🎯 3D 카메라 기본 위치로 리셋:', {
-          target,
-          distance: defaultDistance,
-          spaceHeight
-        });
-        
-        // 카메라를 정면에 위치
-        controls.object.position.set(0, target[1], defaultDistance);
-        controls.target.set(...target);
-        controls.object.up.set(0, 1, 0);
-        
-        // 카메라가 타겟을 바라보도록 설정
-        controls.object.lookAt(controls.target);
-        
-        // OrbitControls 업데이트
-        controls.update();
-        controls.saveState();
-      }
+      // 현재 카메라와 타겟 사이의 거리 계산 (리셋 후에도 유지)
+      const currentDistance = controls.object.position.distanceTo(controls.target);
       
-      console.log('🎯 3D 카메라 리셋 완료');
+      // 타겟 위치 계산
+      const spaceHeight = spaceInfo?.height || 2400;
+      const target = calculateCameraTargetUtil(spaceHeight);
+      
+      console.log('🎯 3D 카메라 위치만 리셋 (거리 유지):', {
+        target,
+        currentDistance,
+        spaceHeight
+      });
+      
+      // 타겟 설정
+      controls.target.set(...target);
+      
+      // 카메라를 정면에 위치시키되, 현재 거리는 유지
+      controls.object.position.set(0, target[1], currentDistance);
+      controls.object.up.set(0, 1, 0);
+      
+      // 카메라가 타겟을 바라보도록 설정
+      controls.object.lookAt(controls.target);
+      
+      // OrbitControls 업데이트
+      controls.update();
+      
+      console.log('🎯 3D 카메라 리셋 완료 (거리 유지됨)');
     } else if (controlsRef.current && viewMode === '2D') {
       // 2D 모드에서는 아무것도 하지 않음 - 현재 상태 그대로 유지
       console.log('🎯 2D 모드에서 스페이스 키 - 아무 동작 안함');
