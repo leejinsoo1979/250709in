@@ -886,7 +886,7 @@ const Room: React.FC<RoomProps> = ({
                 <mesh
                   position={[-width/2 - 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
                   rotation={[0, Math.PI / 2, 0]}
-                  renderOrder={-1}
+                  renderOrder={0}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 
@@ -955,7 +955,7 @@ const Room: React.FC<RoomProps> = ({
                 <mesh
                   position={[width/2 + 0.001, droppedCenterY, extendedZOffset + extendedPanelDepth/2]}
                   rotation={[0, -Math.PI / 2, 0]}
-                  renderOrder={-1}
+                  renderOrder={0}
                 >
                   <planeGeometry args={[extendedPanelDepth, droppedWallHeight]} />
                   <primitive 

@@ -336,7 +336,9 @@ export class MaterialFactory {
         },
         side: THREE.DoubleSide,
         transparent: true,
-        depthWrite: true
+        depthWrite: true,
+        depthTest: true,
+        alphaTest: 0.01  // 아주 작은 투명도는 무시
       });
     }
     
