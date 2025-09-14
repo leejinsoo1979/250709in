@@ -346,7 +346,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         
         // 2D 모드에서는 매우 큰 zoom 값 사용
         // 공간이 화면을 가득 채우도록 설정
-        const appropriateZoom = 300; // 화면을 가득 채우는 zoom 값
+        const appropriateZoom = 800; // 화면을 가득 채우는 zoom 값 (300 -> 800으로 증가)
         
         console.log('🎯 2D 카메라 초기값으로 리셋 (고정 zoom):', {
           zoom: appropriateZoom,
