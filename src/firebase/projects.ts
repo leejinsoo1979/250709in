@@ -162,11 +162,12 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     const now = serverTimestamp() as Timestamp;
 
     // undefined 필드들을 제외한 데이터 생성
-    // mainDoorCount와 droppedCeilingDoorCount가 undefined인 경우 0으로 설정
+    // mainDoorCount와 droppedCeilingDoorCount는 undefined로 유지하여 자동 계산 활성화
     const spaceConfigWithDefaults = {
       ...data.spaceConfig,
-      mainDoorCount: data.spaceConfig.mainDoorCount ?? 0,
-      droppedCeilingDoorCount: data.spaceConfig.droppedCeilingDoorCount ?? 0,
+      mainDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
+      droppedCeilingDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
+      customColumnCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
     };
     
     const baseData: any = {
@@ -663,11 +664,12 @@ export const updateDesignFile = async (
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
-    // spaceConfig가 있는 경우 mainDoorCount와 droppedCeilingDoorCount의 기본값 설정
+    // spaceConfig가 있는 경우 mainDoorCount와 droppedCeilingDoorCount는 undefined로 유지
     const spaceConfigWithDefaults = updates.spaceConfig ? {
       ...updates.spaceConfig,
-      mainDoorCount: updates.spaceConfig.mainDoorCount ?? 0,
-      droppedCeilingDoorCount: updates.spaceConfig.droppedCeilingDoorCount ?? 0,
+      mainDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
+      droppedCeilingDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
+      customColumnCount: updates.spaceConfig.customColumnCount,  // customColumnCount는 유지
     } : undefined;
     
     const updateData = {
