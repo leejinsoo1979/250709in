@@ -281,40 +281,60 @@ export class MaterialFactory {
   /**
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
-  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D'): THREE.ShaderMaterial | THREE.MeshBasicMaterial {
-    // 3D 모드에서는 간단한 MeshBasicMaterial 사용 (셰이더 에러 방지)
+  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D'): THREE.ShaderMaterial {
+    // 3D 모드에서는 간단한 그라데이션 셰이더
     if (viewMode === '3D' || viewMode === undefined) {
       const isReverse = direction === 'horizontal-reverse' || direction === 'vertical-reverse';
-      const isVertical = direction === 'vertical' || direction === 'vertical-reverse';
+      const directionValue = direction === 'vertical' || direction === 'vertical-reverse' ? 1.0 : 0.0;
       
-      // 그라데이션 텍스처 생성
-      const canvas = document.createElement('canvas');
-      canvas.width = isVertical ? 1 : 256;
-      canvas.height = isVertical ? 256 : 1;
-      const context = canvas.getContext('2d')!;
+      const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `;
       
-      const gradient = isVertical 
-        ? context.createLinearGradient(0, 0, 0, 256)
-        : context.createLinearGradient(0, 0, 256, 0);
+      const fragmentShader = `
+        uniform vec3 colorStart;
+        uniform vec3 colorEnd;
+        uniform float direction;
+        uniform float reverse;
+        
+        varying vec2 vUv;
+        
+        void main() {
+          float gradientFactor;
+          
+          if (direction < 0.5) {
+            // 수평 그라데이션
+            gradientFactor = vUv.x;
+          } else {
+            // 수직 그라데이션
+            gradientFactor = vUv.y;
+          }
+          
+          if (reverse > 0.5) {
+            gradientFactor = 1.0 - gradientFactor;
+          }
+          
+          vec3 color = mix(colorStart, colorEnd, gradientFactor);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
       
-      if (isReverse) {
-        gradient.addColorStop(0, '#c0c0c0');
-        gradient.addColorStop(1, '#ffffff');
-      } else {
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(1, '#c0c0c0');
-      }
-      
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      
-      return new THREE.MeshBasicMaterial({
-        map: texture,
+      return new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          colorStart: { value: new THREE.Color('#ffffff') },
+          colorEnd: { value: new THREE.Color('#c0c0c0') },
+          direction: { value: directionValue },
+          reverse: { value: isReverse ? 1.0 : 0.0 }
+        },
         side: THREE.DoubleSide,
-        transparent: false
+        transparent: false,
+        depthWrite: true
       });
     }
     
