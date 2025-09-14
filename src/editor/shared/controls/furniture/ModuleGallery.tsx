@@ -293,12 +293,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           const baseType = module.id.replace(/-[\d.]+$/, '');
           dragModuleId = `${baseType}-${widthForId}`;
           adjustedDimensions.width = targetWidth;
-            console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
-              originalId: module.id,
-              targetWidth,
-              dragModuleId
-            });
-          }
+          console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
+            originalId: module.id,
+            targetWidth,
+            dragModuleId
+          });
         }
       }
     }
@@ -1230,7 +1229,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       }, 100);
     }
   };
-
+  
+  // ThumbnailItem 컴포넌트 내부 계속...
+  
   // 상하부장 모듈인지 확인
   const isCabinetModule = module.category === 'upper' || module.category === 'lower';
 
