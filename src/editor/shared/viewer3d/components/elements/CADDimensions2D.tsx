@@ -877,7 +877,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {Math.round(displayWidth)}mm
+                {displayWidth}mm
               </div>
             </Html>
             
