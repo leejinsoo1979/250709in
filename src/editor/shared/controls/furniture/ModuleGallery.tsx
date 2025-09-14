@@ -286,32 +286,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           dragModuleId = `${baseType}-${widthForId}`;
           adjustedDimensions.width = targetWidth;
         } else {
-          // 노서라운드 모드에서도 정확한 슬롯 너비 사용
-          if (indexing.slotWidths && indexing.slotWidths.length > 0) {
-            if (isDualFurniture && indexing.slotWidths.length >= 2) {
-              targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
-            } else {
-              targetWidth = indexing.slotWidths[0];
-            }
-            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-            const widthForId = Math.round(targetWidth * 10) / 10;
-            const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${widthForId}`;
-            adjustedDimensions.width = targetWidth;
-            console.log('🚨 [ModuleGallery] 노서라운드 모드 - 정확한 슬롯 너비 사용:', {
-              originalId: module.id,
-              targetWidth,
-              dragModuleId,
-              slotWidths: indexing.slotWidths
-            });
-          } else {
-            // fallback: 평균 너비 사용
-            targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
-            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-            const widthForId = Math.round(targetWidth * 10) / 10;
-            const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${widthForId}`;
-            adjustedDimensions.width = targetWidth;
+          // 노서라운드 모드: 항상 columnWidth 사용 (균일한 슬롯)
+          targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+          // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+          const widthForId = Math.round(targetWidth * 10) / 10;
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = `${baseType}-${widthForId}`;
+          adjustedDimensions.width = targetWidth;
             console.log('🚨 [ModuleGallery] 노서라운드 모드 - 평균 너비 사용:', {
               originalId: module.id,
               targetWidth,
