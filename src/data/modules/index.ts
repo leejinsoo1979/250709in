@@ -68,11 +68,11 @@ export const getModuleById = (
       const isDual = baseType.includes('dual-');
       
       if (isDual) {
-        // 듀얼 가구의 경우 두 개의 슬롯 너비를 역산
-        const singleWidth = Math.floor(requestedWidth / 2);
+        // 듀얼 가구의 경우 두 개의 슬롯 너비를 역산 (소수점 유지)
+        const singleWidth = requestedWidth / 2;
         modifiedSpaceInfo = {
           ...spaceInfo,
-          _tempSlotWidths: [singleWidth, requestedWidth - singleWidth]
+          _tempSlotWidths: [singleWidth, singleWidth]
         };
       } else {
         // 싱글 가구의 경우

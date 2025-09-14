@@ -1326,7 +1326,7 @@ export const generateShelvingModules = (
     // 듀얼 가구 생성 시 개별 슬롯 너비 전달
     const dualSlotWidths = slotWidths && slotWidths.length >= 2 ? 
       [slotWidths[0], slotWidths[1]] : 
-      [Math.floor(dualWidth / 2), Math.ceil(dualWidth / 2)];
+      [dualWidth / 2, dualWidth / 2];
     
     console.log('🔥🔥🔥 듀얼 가구 슬롯 너비 정보:', {
       dualWidth,
