@@ -341,7 +341,17 @@ const Header: React.FC<HeaderProps> = ({
 
           <button 
             className={styles.actionButton}
-            onClick={onSave}
+            onClick={() => {
+              console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
+              console.log('💾💾💾 [Header] onSave 함수 존재 여부:', !!onSave);
+              console.log('💾💾💾 [Header] saving 상태:', saving);
+              if (onSave) {
+                console.log('💾💾💾 [Header] onSave 함수 호출 중...');
+                onSave();
+              } else {
+                console.error('💾💾💾 [Header] onSave 함수가 없습니다!');
+              }
+            }}
             disabled={saving}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
