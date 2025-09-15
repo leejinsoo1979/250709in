@@ -2921,9 +2921,88 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const previewDepth = mmToThreeUnits(customDepth);
         const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
         
-        // 단내림 구간에서 커스텀 너비 계산
+        // 기둥 정보를 고려한 커스텀 너비와 위치 계산
         let customWidth = undefined;
-        if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
+        let adjustedPreviewX = previewX;
+        
+        // 기둥 슬롯 정보 확인
+        const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+        const targetSlotInfo = columnSlots[hoveredSlotIndex];
+        
+        // 기둥이 있는 슬롯인 경우 실제 배치와 동일한 로직 적용
+        if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+          if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture && targetSlotInfo.subSlots) {
+            // Column C (300mm) 특별 처리 - 듀얼 가구는 표시하지 않음
+            if (isDual) {
+              console.log('👻 [Ghost Preview] Column C에 듀얼 가구는 미리보기 없음');
+              return null;
+            }
+            
+            // 싱글 가구를 Column C 슬롯에 표시하는 경우
+            // 기존 배치된 가구 확인
+            const existingModulesInSlot = placedModules.filter(m => 
+              m.slotIndex === hoveredSlotIndex
+            );
+            
+            let targetSubSlot: 'left' | 'right' = 'left';
+            if (existingModulesInSlot.some(m => m.subSlotPosition === 'left')) {
+              targetSubSlot = 'right';
+            }
+            
+            customWidth = targetSlotInfo.subSlots[targetSubSlot].availableWidth;
+            adjustedPreviewX = mmToThreeUnits(targetSlotInfo.subSlots[targetSubSlot].center);
+            
+            console.log('👻 [Ghost Preview] Column C 싱글 가구 위치:', {
+              targetSubSlot,
+              customWidth,
+              adjustedPreviewX,
+              subSlots: targetSlotInfo.subSlots
+            });
+          } else {
+            // 일반 기둥이 있는 경우 (Column A, B 등)
+            // 듀얼 가구는 기둥 슬롯에 배치 불가
+            if (isDual) {
+              console.log('👻 [Ghost Preview] 기둥 슬롯에 듀얼 가구는 미리보기 없음');
+              return null;
+            }
+            
+            const slotWidthM = indexing.columnWidth * 0.01;
+            const originalSlotBounds = {
+              left: previewX - mmToThreeUnits(indexing.columnWidth) / 2,
+              right: previewX + mmToThreeUnits(indexing.columnWidth) / 2,
+              center: previewX
+            };
+            
+            const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+            
+            // 공간이 부족한 경우 미리보기 표시 안함
+            if (furnitureBounds.renderWidth < 150) {
+              console.log('👻 [Ghost Preview] 기둥 슬롯 공간 부족:', furnitureBounds.renderWidth, 'mm');
+              return null;
+            }
+            
+            // 크기와 위치 조정
+            customWidth = furnitureBounds.renderWidth;
+            adjustedPreviewX = furnitureBounds.center;
+            
+            // Column C (300mm) 깊이 조정
+            if (furnitureBounds.depthAdjustmentNeeded && targetSlotInfo.column) {
+              customDepth = 730 - targetSlotInfo.column.depth; // 430mm
+              console.log('👻 [Ghost Preview] Column C 깊이 조정:', customDepth, 'mm');
+            }
+            
+            console.log('👻 [Ghost Preview] 기둥 슬롯 조정:', {
+              slotIndex: hoveredSlotIndex,
+              columnType: targetSlotInfo.columnType,
+              originalWidth: indexing.columnWidth,
+              adjustedWidth: customWidth,
+              originalX: previewX,
+              adjustedX: adjustedPreviewX,
+              furnitureBounds
+            });
+          }
+        } else if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
+          // 단내림 구간에서 커스텀 너비 계산
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
@@ -2941,7 +3020,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
           }
           
-          console.log('👻 [Ghost Preview] 커스텀 너비:', {
+          console.log('👻 [Ghost Preview] 단내림 커스텀 너비:', {
             effectiveZone,
             localIdx,
             isDual,
@@ -2954,6 +3033,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             }
           });
         }
+        
+        // 최종 위치 업데이트
+        previewX = adjustedPreviewX;
         
         // 고스트 높이 조정 (키큰장이 아닌 경우에도 단내림 구간에서 높이 조정)
         let customHeight = undefined;

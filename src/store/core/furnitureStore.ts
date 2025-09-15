@@ -10,6 +10,7 @@ import { useSpaceConfigStore } from './spaceConfigStore';
 interface FurnitureDataState {
   // 가구 데이터 상태
   placedModules: PlacedModule[];
+  hasUnsavedChanges?: boolean;
   
   // 선택 상태 (FurnitureSelectionProvider에서 이전)
   selectedLibraryModuleId: string | null;
