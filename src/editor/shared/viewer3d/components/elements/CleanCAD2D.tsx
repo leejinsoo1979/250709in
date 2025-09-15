@@ -847,12 +847,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 연장선 */}
             <Line
-              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(100), 0.001]}}
+              points={[[rightEdge - mmToThreeUnits(rightValue), spaceHeight, 0.001], [rightEdge - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
             <Line
-              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, topDimensionY - mmToThreeUnits(100), 0.001]}}
+              points={[[rightEdge, spaceHeight, 0.001], [rightEdge, topDimensionY - mmToThreeUnits(100), 0.001]]}
               color={dimensionColor}
               lineWidth={0.5}
             />
