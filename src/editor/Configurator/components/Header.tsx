@@ -319,26 +319,7 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Undo 버튼 */}
-          <button 
-            className={styles.actionButton}
-            onClick={handleUndo}
-            disabled={!canUndo()}
-            title="실행 취소 (Ctrl+Z)"
-          >
-            <Undo size={20} />
-          </button>
-          
-          {/* Redo 버튼 */}
-          <button 
-            className={styles.actionButton}
-            onClick={handleRedo}
-            disabled={!canRedo()}
-            title="다시 실행 (Ctrl+Y)"
-          >
-            <Redo size={20} />
-          </button>
-
+          {/* 저장 버튼 - 파일 메뉴 바로 옆으로 이동 */}
           <button 
             className={styles.actionButton}
             onClick={() => {
@@ -362,15 +343,25 @@ const Header: React.FC<HeaderProps> = ({
             {saving ? t('common.saving') : t('common.save')}
           </button>
 
-
-          {onPrevious && (
-            <button className={styles.actionButton} onClick={onPrevious}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <polyline points="15,18 9,12 15,6" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              {t('common.back')}
-            </button>
-          )}
+          {/* Undo 버튼 */}
+          <button 
+            className={styles.actionButton}
+            onClick={handleUndo}
+            disabled={!canUndo()}
+            title="실행 취소 (Ctrl+Z)"
+          >
+            <Undo size={20} />
+          </button>
+          
+          {/* Redo 버튼 */}
+          <button 
+            className={styles.actionButton}
+            onClick={handleRedo}
+            disabled={!canRedo()}
+            title="다시 실행 (Ctrl+Y)"
+          >
+            <Redo size={20} />
+          </button>
 
           {onNext && (
             <button className={styles.actionButton} onClick={onNext}>
