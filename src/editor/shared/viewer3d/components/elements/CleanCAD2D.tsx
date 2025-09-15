@@ -764,9 +764,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 좌측 치수 텍스트 */}
             <Text
-              position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-              fontSize={largeFontSize * 1.5}
-              color={textColor}
+              position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
               anchorX="center"
               anchorY="middle"
             >
@@ -836,9 +836,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 우측 치수 텍스트 */}
             <Text
-              position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-              fontSize={largeFontSize * 1.5}
-              color={textColor}
+              position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
               anchorX="center"
               anchorY="middle"
             >
@@ -1119,9 +1119,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 좌측 치수 텍스트 */}
                 {showDimensionsText && (
                   <Text
-                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-                    fontSize={largeFontSize * 1.8}
-                    color={textColor}
+                    position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
                     anchorX="center"
                     anchorY="middle"
                   >
@@ -1274,9 +1274,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 치수 텍스트 */}
                 <Text
-                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-                  fontSize={largeFontSize * 1.8}
-                  color={textColor}
+                  position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
+                  fontSize={baseFontSize}
+                  color={dimensionColor}
                   anchorX="center"
                   anchorY="middle"
                 >
