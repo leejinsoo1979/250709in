@@ -2584,6 +2584,16 @@ const Configurator: React.FC = () => {
   console.log('🔍 currentDesignFileName:', currentDesignFileName);
   console.log('🔍 basicInfo.title:', basicInfo.title);
 
+  // 디버깅용 전역 함수 노출
+  useEffect(() => {
+    (window as any).testSaveProject = async () => {
+      console.log('💾💾💾 [테스트] 직접 저장 함수 호출');
+      await saveProject();
+    };
+    console.log('💾 테스트용 저장 함수가 window.testSaveProject로 노출됨');
+    console.log('💾 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
+  }, [currentProjectId, currentDesignFileId]);
+
   return (
     <div className={styles.configurator}>
       {/* 헤더 */}
