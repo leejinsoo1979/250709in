@@ -142,7 +142,8 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
 // 디자인파일 생성
 export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id: string | null; error: string | null }> => {
   try {
-    console.log('💾 createDesignFile 함수 호출됨:', {
+    console.log('💾💾💾 [createDesignFile] 함수 시작!');
+    console.log('💾 [createDesignFile] 입력 데이터:', {
       name: data.name,
       projectId: data.projectId,
       hasSpaceConfig: !!data.spaceConfig,
@@ -150,13 +151,18 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       furnitureCount: data.furniture?.placedModules?.length || 0
     });
     
+    // Firebase 인증 상태 체크
+    console.log('💾 [createDesignFile] Firebase 인증 확인 중...');
     const user = await getCurrentUserAsync();
     if (!user) {
-      console.error('🚫 사용자 인증 실패');
+      console.error('🚫🚫🚫 [createDesignFile] 사용자 인증 실패 - 로그인되지 않음');
       return { id: null, error: '로그인이 필요합니다.' };
     }
 
-    console.log('👤 현재 사용자:', user.uid);
+    console.log('👤 [createDesignFile] 인증된 사용자:', {
+      uid: user.uid,
+      email: user.email
+    });
 
     const teamId = await getActiveTeamId();
     const now = serverTimestamp() as Timestamp;
@@ -241,9 +247,16 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       }
     } else {
       // Legacy path를 primary로 사용
-      docRef = await addDoc(collection(db, 'designFiles'), designFileData);
-      designId = docRef.id;
-      console.log('✅ Legacy path 저장 성공:', `designFiles/${designId}`);
+      console.log('💾 [createDesignFile] Firestore에 저장 시도 중...');
+      console.log('💾 [createDesignFile] Collection: designFiles');
+      console.log('💾 [createDesignFile] 저장할 데이터:', designFileData);
+      
+      try {
+        docRef = await addDoc(collection(db, 'designFiles'), designFileData);
+        designId = docRef.id;
+        console.log('✅✅✅ [createDesignFile] Firestore 저장 성공!');
+        console.log('✅ [createDesignFile] 생성된 문서 ID:', designId);
+        console.log('✅ [createDesignFile] 문서 경로:', `designFiles/${designId}`);
       
       // Dual-write if enabled
       if (FLAGS.dualWrite && teamId) {
@@ -273,15 +286,37 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
           console.warn('⚠️ Dual-write failed (non-critical):', dualWriteError);
         }
       }
+      } catch (saveError: any) {
+        console.error('🚫🚫🚫 [createDesignFile] Firestore 저장 실패!');
+        console.error('🚫 [createDesignFile] 에러 객체:', saveError);
+        console.error('🚫 [createDesignFile] 에러 코드:', saveError?.code);
+        console.error('🚫 [createDesignFile] 에러 메시지:', saveError?.message);
+        throw saveError;
+      }
     }
     
     // 프로젝트 통계 업데이트
     await updateProjectStats(data.projectId);
     
     return { id: designId, error: null };
-  } catch (error) {
-    console.error('❌ 디자인파일 생성 에러:', error);
-    const errorMessage = error instanceof Error ? error.message : '디자인파일 생성 중 오류가 발생했습니다.';
+  } catch (error: any) {
+    console.error('❌❌❌ [createDesignFile] 전체 함수 에러!');
+    console.error('❌ [createDesignFile] 에러 타입:', error?.constructor?.name);
+    console.error('❌ [createDesignFile] 에러 코드:', error?.code);
+    console.error('❌ [createDesignFile] 에러 메시지:', error?.message);
+    console.error('❌ [createDesignFile] 전체 에러 객체:', error);
+    
+    let errorMessage = '디자인파일 생성 중 오류가 발생했습니다.';
+    
+    // Firebase 권한 에러 체크
+    if (error?.code === 'permission-denied') {
+      errorMessage = 'Firebase 권한이 없습니다. 관리자에게 문의하세요.';
+    } else if (error?.code === 'unauthenticated') {
+      errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return { id: null, error: errorMessage };
   }
 };
