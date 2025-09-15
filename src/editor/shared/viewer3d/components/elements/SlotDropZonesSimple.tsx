@@ -2866,30 +2866,49 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             설명: '키큰장은 바닥부터 시작'
           });
         } else if (isUpperCabinet) {
-          // 상부장: 천장에 붙어있음
-          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
-          const ceilingY = floorY + mmToThreeUnits(zoneInternalSpace?.height || internalSpace.height);
-          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
+          // 상부장: 전체 공간 최상단에 배치 (실제 배치 로직과 동일)
+          const furnitureHeightMm = adjustedFurnitureHeightMm;
           
-          // 상부장은 천장에서 아래로
-          furnitureY = ceilingY - furnitureHeight / 2;
+          // 전체 높이에서 상단 프레임만 빼기
+          let totalHeightMm = spaceInfo.height;
+          const topFrameHeight = spaceInfo.topFrame?.height || 10;
+          totalHeightMm = totalHeightMm - topFrameHeight;
+          
+          // 상부장 Y 위치 계산 (mm 단위로 계산 후 Three.js 단위로 변환)
+          furnitureY = mmToThreeUnits(totalHeightMm - furnitureHeightMm / 2);
           
           console.log('👻 [Ghost Preview] 상부장 Y 위치:', {
-            floorY,
-            ceilingY,
-            furnitureHeightMm: adjustedFurnitureHeightMm,
-            furnitureHeight,
+            totalHeightMm,
+            topFrameHeight,
+            furnitureHeightMm,
             furnitureY,
+            furnitureY_mm: totalHeightMm - furnitureHeightMm / 2,
             category: moduleData.category,
-            설명: '상부장은 천장에서 아래로'
+            설명: '상부장은 전체 공간 최상단에 배치'
           });
         } else if (isLowerCabinet) {
-          // 하부장: 바닥에서 시작
-          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
-          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
+          // 하부장: 바닥에서 시작 (실제 배치 로직과 동일)
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+          let startHeightMm = floorFinishHeightMm;
           
-          // 하부장은 바닥에서 시작
-          furnitureY = floorY + furnitureHeight / 2;
+          if (spaceInfo.baseConfig?.type === 'floor') {
+            startHeightMm += spaceInfo.baseConfig?.height || 65;
+          } else if (spaceInfo.baseConfig?.placementType === 'float') {
+            startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+          }
+          
+          const furnitureHeightMm = adjustedFurnitureHeightMm;
+          furnitureY = mmToThreeUnits(startHeightMm + furnitureHeightMm / 2);
+          
+          console.log('👻 [Ghost Preview] 하부장 Y 위치:', {
+            floorFinishHeightMm,
+            startHeightMm,
+            furnitureHeightMm,
+            furnitureY,
+            furnitureY_mm: startHeightMm + furnitureHeightMm / 2,
+            category: moduleData.category,
+            설명: '하부장은 바닥에서 시작'
+          });
         } else {
           // 기본 가구: 바닥에서 시작
           const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
