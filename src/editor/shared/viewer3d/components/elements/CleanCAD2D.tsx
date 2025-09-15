@@ -978,7 +978,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {showDimensionsText && (
                   <Text
                     position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-                    fontSize={baseFontSize}
+                    fontSize={largeFontSize * 1.2}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
@@ -1133,7 +1133,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 우측 치수 텍스트 */}
                 <Text
                   position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
-                  fontSize={baseFontSize}
+                  fontSize={largeFontSize * 1.2}
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
