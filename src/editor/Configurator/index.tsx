@@ -451,12 +451,31 @@ const Configurator: React.FC = () => {
     console.log('💾 [DEBUG] 사용자 상태:', !!user);
     console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
     
-    // Firebase 연결 테스트
+    // Firebase 연결 및 인증 상태 테스트
     try {
-      const { db } = await import('@/firebase/config');
+      const { db, auth } = await import('@/firebase/config');
       console.log('💾 [DEBUG] Firestore db 객체:', !!db);
+      console.log('💾 [DEBUG] Auth 객체:', !!auth);
+      
+      // 현재 인증 상태 확인
+      const currentAuthUser = auth.currentUser;
+      console.log('💾 [DEBUG] auth.currentUser:', {
+        exists: !!currentAuthUser,
+        uid: currentAuthUser?.uid,
+        email: currentAuthUser?.email
+      });
+      
+      // 토큰 확인
+      if (currentAuthUser) {
+        try {
+          const token = await currentAuthUser.getIdToken();
+          console.log('💾 [DEBUG] 사용자 토큰 획득 성공');
+        } catch (tokenError) {
+          console.error('💾 [ERROR] 토큰 획득 실패:', tokenError);
+        }
+      }
     } catch (dbError) {
-      console.error('💾 [ERROR] Firestore 연결 실패:', dbError);
+      console.error('💾 [ERROR] Firebase 연결 실패:', dbError);
     }
     
     if (!currentProjectId) {
@@ -562,6 +581,16 @@ const Configurator: React.FC = () => {
             });
             
             console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', currentDesignFileId);
+            
+            if (!currentDesignFileId) {
+              console.error('💾 [ERROR] 디자인 파일 ID가 없습니다!');
+              console.error('💾 [ERROR] currentDesignFileId:', currentDesignFileId);
+              console.error('💾 [ERROR] designFileId (prop):', designFileId);
+              setSaveStatus('error');
+              alert('디자인 파일 ID가 없습니다. 새 디자인을 생성하거나 기존 디자인을 선택해주세요.');
+              return;
+            }
+            
             const result = await updateDesignFile(currentDesignFileId, updatePayload);
             console.log('💾 [DEBUG] updateDesignFile 결과:', result);
             
