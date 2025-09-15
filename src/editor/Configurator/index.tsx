@@ -451,6 +451,14 @@ const Configurator: React.FC = () => {
     console.log('💾 [DEBUG] 사용자 상태:', !!user);
     console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
     
+    // Firebase 연결 테스트
+    try {
+      const { db } = await import('@/firebase/config');
+      console.log('💾 [DEBUG] Firestore db 객체:', !!db);
+    } catch (dbError) {
+      console.error('💾 [ERROR] Firestore 연결 실패:', dbError);
+    }
+    
     if (!currentProjectId) {
       console.error('💾 [ERROR] 프로젝트 ID가 없습니다');
       alert('저장할 프로젝트가 없습니다. 새 프로젝트를 먼저 생성해주세요.');
@@ -553,12 +561,15 @@ const Configurator: React.FC = () => {
               })
             });
             
-            const { error } = await updateDesignFile(currentDesignFileId, updatePayload);
+            console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', currentDesignFileId);
+            const result = await updateDesignFile(currentDesignFileId, updatePayload);
+            console.log('💾 [DEBUG] updateDesignFile 결과:', result);
             
-            if (error) {
-              console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', error);
+            if (result.error) {
+              console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', result.error);
+              console.error('💾 [ERROR] 전체 결과 객체:', result);
               setSaveStatus('error');
-              alert('디자인 파일 저장에 실패했습니다: ' + error);
+              alert('디자인 파일 저장에 실패했습니다: ' + result.error);
             } else {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');

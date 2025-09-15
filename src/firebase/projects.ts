@@ -584,6 +584,7 @@ export const updateDesignFile = async (
     furniture?: any;
     thumbnail?: string;
     updatedAt?: string;
+    projectData?: any;  // 추가
   }
 ): Promise<{ error: string | null }> => {
   try {
@@ -593,14 +594,21 @@ export const updateDesignFile = async (
       hasSpaceConfig: !!updates.spaceConfig,
       hasFurniture: !!updates.furniture,
       hasThumbnail: !!updates.thumbnail,
+      hasProjectData: !!updates.projectData,
       furnitureCount: updates.furniture?.placedModules?.length || 0
     });
 
     const user = await getCurrentUserAsync();
     if (!user) {
       console.error('🔥 [updateDesignFile] 사용자 인증 실패');
+      console.error('🔥 [updateDesignFile] getCurrentUserAsync 결과:', user);
       return { error: '로그인이 필요합니다.' };
     }
+    
+    console.log('🔥 [updateDesignFile] 인증된 사용자:', {
+      uid: user.uid,
+      email: user.email
+    });
 
     // 디자인 파일을 찾기 위한 변수들
     let designDocRef = null;
@@ -675,6 +683,7 @@ export const updateDesignFile = async (
     const updateData = {
       updatedAt: serverTimestamp(),
       ...(updates.name && { name: updates.name }),
+      ...(updates.projectData && { projectData: updates.projectData }),
       ...(spaceConfigWithDefaults && { spaceConfig: spaceConfigWithDefaults }),
       ...(updates.furniture && { furniture: updates.furniture }),
       ...(updates.thumbnail && { thumbnail: updates.thumbnail })
@@ -695,7 +704,19 @@ export const updateDesignFile = async (
     });
 
     // 찾은 경로에 업데이트
-    await updateDoc(designDocRef, updateData);
+    console.log('🔥 [updateDesignFile] Firestore updateDoc 호출 직전');
+    console.log('🔥 [updateDesignFile] designDocRef path:', designDocRef.path);
+    console.log('🔥 [updateDesignFile] updateData keys:', Object.keys(updateData));
+    
+    try {
+      await updateDoc(designDocRef, updateData);
+      console.log('🔥 [updateDesignFile] Firestore updateDoc 성공');
+    } catch (updateError: any) {
+      console.error('🔥 [updateDesignFile] Firestore updateDoc 실패:', updateError);
+      console.error('🔥 [updateDesignFile] 에러 코드:', updateError.code);
+      console.error('🔥 [updateDesignFile] 에러 메시지:', updateError.message);
+      throw updateError;
+    }
     
     // Dual-write if enabled
     if (FLAGS.dualWrite) {
@@ -763,9 +784,26 @@ export const updateDesignFile = async (
     
     console.log(`디자인파일 업데이트 완료: ${designFileId}`);
     return { error: null };
-  } catch (error) {
-    console.error('디자인파일 업데이트 에러:', error);
-    return { error: '디자인파일 업데이트 중 오류가 발생했습니다.' };
+  } catch (error: any) {
+    console.error('🔥 [updateDesignFile] 최종 에러:', error);
+    console.error('🔥 [updateDesignFile] 에러 타입:', error.constructor.name);
+    console.error('🔥 [updateDesignFile] 에러 코드:', error.code);
+    console.error('🔥 [updateDesignFile] 에러 메시지:', error.message);
+    console.error('🔥 [updateDesignFile] 에러 스택:', error.stack);
+    
+    // Firebase 에러 코드에 따른 구체적인 메시지
+    let errorMessage = '디자인파일 업데이트 중 오류가 발생했습니다.';
+    if (error.code === 'permission-denied') {
+      errorMessage = '권한이 없습니다. 다시 로그인해주세요.';
+    } else if (error.code === 'not-found') {
+      errorMessage = '디자인파일을 찾을 수 없습니다.';
+    } else if (error.code === 'unavailable') {
+      errorMessage = 'Firebase 서비스에 연결할 수 없습니다.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    return { error: errorMessage };
   }
 };
 
