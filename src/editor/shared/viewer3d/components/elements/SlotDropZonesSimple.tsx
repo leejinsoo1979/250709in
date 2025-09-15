@@ -2686,8 +2686,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
           
-          // 슬롯 너비에 기반한 모듈 ID 생성
-          const baseType = activeModuleData.moduleData.id.replace(/-\d+$/, '');
+          // 슬롯 너비에 기반한 모듈 ID 생성 (소수점 포함)
+          const baseType = activeModuleData.moduleData.id.replace(/-[\d.]+$/, '');
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
@@ -2747,7 +2747,46 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
         } else {
-          moduleData = getModuleById(activeModuleData.moduleData.id, internalSpace, spaceInfo);
+          // 단내림이 없는 경우에도 슬롯별 너비를 고려한 모듈 ID 생성
+          const baseType = activeModuleData.moduleData.id.replace(/-[\d.]+$/, '');
+          let targetWidth;
+          
+          // 기둥 정보 확인
+          const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+          const targetSlotInfo = columnSlots[hoveredSlotIndex];
+          
+          if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+            // 기둥이 있는 슬롯의 경우 실제 사용 가능한 너비 계산
+            if (targetSlotInfo.availableWidth) {
+              targetWidth = targetSlotInfo.availableWidth;
+            } else {
+              // 기본 슬롯 너비에서 기둥 너비를 뺀 값
+              targetWidth = indexing.columnWidth - (targetSlotInfo.column.width || 0);
+            }
+          } else if (isDual && hoveredSlotIndex < indexing.columnCount - 1) {
+            // 듀얼 가구: 두 슬롯의 너비 합
+            targetWidth = indexing.columnWidth * 2;
+          } else {
+            // 싱글 가구: 해당 슬롯의 너비
+            targetWidth = indexing.columnWidth;
+          }
+          
+          const targetModuleId = `${baseType}-${targetWidth}`;
+          console.log('🎯 [Ghost Preview] 일반 구간 모듈 ID 생성:', {
+            baseType,
+            targetWidth,
+            targetModuleId,
+            originalId: activeModuleData.moduleData.id,
+            hasColumn: targetSlotInfo?.hasColumn,
+            columnWidth: targetSlotInfo?.column?.width
+          });
+          
+          moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
+          
+          // 못 찾으면 원래 ID로 다시 시도
+          if (!moduleData) {
+            moduleData = getModuleById(activeModuleData.moduleData.id, internalSpace, spaceInfo);
+          }
         }
         
         if (!moduleData) {
