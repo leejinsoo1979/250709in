@@ -117,6 +117,17 @@ export const getModuleById = (
     const upperCabinets = dynamicModules.filter(m => m.id.includes('upper-cabinet'));
     const lowerCabinets = dynamicModules.filter(m => m.id.includes('lower-cabinet'));
     
+    // 상하부장 요청인 경우 특별 처리
+    if (id.includes('upper-cabinet') || id.includes('lower-cabinet')) {
+      console.log('🗄️🗄️🗄️ 상하부장 요청 감지!', {
+        요청ID: id,
+        baseType,
+        requestedWidth,
+        생성된상부장: upperCabinets.map(m => m.id),
+        생성된하부장: lowerCabinets.map(m => m.id)
+      });
+    }
+    
     console.log('📦📦📦 생성된 모듈 중 매칭 시도:', {
       요청ID: id,
       전체개수: dynamicModules.length,
@@ -143,11 +154,37 @@ export const getModuleById = (
       found = dynamicModules.find(module => module.id === alternativeId);
     }
     
+    // 여전히 못 찾았고 상하부장인 경우 다른 패턴으로 시도
+    if (!found && (id.includes('upper-cabinet') || id.includes('lower-cabinet'))) {
+      console.log('🗄️ 상하부장 특별 검색 시도');
+      
+      // 정확한 ID 매칭 대신 baseType과 너비로 검색
+      found = dynamicModules.find(module => {
+        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
+        const moduleWidthMatch = module.id.match(/-([\d.]+)$/);
+        const moduleWidth = moduleWidthMatch ? parseFloat(moduleWidthMatch[1]) : null;
+        
+        return moduleBaseType === baseType && 
+               moduleWidth && requestedWidth &&
+               Math.abs(moduleWidth - requestedWidth) < 0.1;
+      });
+      
+      if (found) {
+        console.log('🗄️ 상하부장 특별 검색으로 찾음:', found.id);
+      }
+    }
+    
     if (found) {
-      console.log('✅ 모듈 찾음');
+      console.log('✅ 모듈 찾음:', found.id, 'category:', found.category);
       return found;
     } else {
-      console.log('❌ 모듈 못찾음');
+      console.log('❌ 모듈 못찾음, 요청ID:', id);
+      console.log('❌ 시도한 패턴들:', {
+        original: id,
+        rounded: requestedWidth ? `${baseType}-${Math.round(requestedWidth * 10) / 10}` : null,
+        baseType,
+        requestedWidth
+      });
     }
   }
   
