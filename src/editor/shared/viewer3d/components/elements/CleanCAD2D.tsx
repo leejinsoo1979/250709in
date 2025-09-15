@@ -3478,21 +3478,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   
                   {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
-                  <group
-                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight, frameDimZ - 0.15]}
-                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  <Text
+                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(70)]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    <Text
-                      fontSize={0.08}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      renderOrder={1000}
-                      depthTest={false}
-                    >
-                      {leftText}
-                    </Text>
-                  </group>
+                    {leftText}
+                  </Text>
                 </>
               );
             } else {
@@ -3596,21 +3591,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   
                   {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
-                  <group
-                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight, frameDimZ - 0.15]}
-                    rotation={[viewDirection === 'top' ? -Math.PI / 2 : 0, 0, 0]}
+                  <Text
+                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(70)]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[-Math.PI / 2, 0, 0]}
                   >
-                    <Text
-                      fontSize={0.08}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      renderOrder={1000}
-                      depthTest={false}
-                    >
-                      {rightText}
-                    </Text>
-                  </group>
+                    {rightText}
+                  </Text>
                 </>
               );
             } else {
