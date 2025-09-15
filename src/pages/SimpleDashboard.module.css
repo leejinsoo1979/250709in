@@ -913,7 +913,8 @@
 /* 프로젝트 내부 뷰에서 폴더와 디자인 카드 통일 */
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard,
 .designGrid.folderView:not(.listView) .designCard {
-  height: 280px !important;
+  min-height: 320px !important;
+  height: 320px !important;
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 16px;
@@ -1243,14 +1244,15 @@
 
 .designGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
   width: 100%;
+  grid-auto-rows: 320px;
 }
 
-/* When tree is collapsed, show 5 columns */
+/* When tree is collapsed, adjust grid */
 .projectTree.collapsed ~ .designArea .designGrid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
 }
 
@@ -1558,7 +1560,8 @@
 .designGrid.folderView:not(.listView) .designCard.newDesign {
   border: 2px solid var(--theme-primary) !important;
   background: var(--theme-background-secondary, #f5f5f5) !important;
-  height: 280px !important;
+  min-height: 320px !important;
+  height: 320px !important;
   position: relative;
   display: flex;
   align-items: center;
@@ -1573,11 +1576,12 @@
   background: transparent !important;
 }
 
-/* 폴더 뷰에서 모든 카드의 썸네일 영역 - 폴더 카드와 동일하게 200px */
+/* 폴더 뷰에서 모든 카드의 썸네일 영역 - 고정 비율 유지 */
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardThumbnail,
 .designGrid.folderView:not(.listView) .designCard .cardThumbnail {
   width: 100% !important;
-  height: 200px !important;
+  height: 220px !important;
+  min-height: 220px !important;
   background: var(--theme-background-secondary, #f8f9fa);
   display: flex !important;
   align-items: center !important;
@@ -1610,8 +1614,9 @@
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard .cardInfo,
 .designGrid.folderView:not(.listView) .designCard .cardInfo {
   padding: 12px !important;
-  height: auto !important;
-  min-height: 80px !important;
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
   border-top: 1px solid var(--theme-border) !important;
   display: flex;
   flex-direction: column;
@@ -1645,7 +1650,8 @@
 .designCard.newDesign {
   border: 2px solid var(--theme-primary);
   background: var(--theme-background-secondary, #f5f5f5);
-  height: 280px !important;
+  min-height: 320px !important;
+  height: 320px !important;
   padding: 0;
   display: flex;
   flex-direction: column;
