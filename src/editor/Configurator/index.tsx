@@ -1143,6 +1143,30 @@ const Configurator: React.FC = () => {
               
               // 가구 배치 데이터 설정
               if (designFile.furniture?.placedModules) {
+                // 상하부장 필터링 확인
+                const upperCabinets = designFile.furniture.placedModules.filter(m => 
+                  m.moduleId?.includes('upper-cabinet')
+                );
+                const lowerCabinets = designFile.furniture.placedModules.filter(m => 
+                  m.moduleId?.includes('lower-cabinet')
+                );
+                
+                console.log('🗄️ [Configurator] 불러온 상하부장 데이터:', {
+                  totalModules: designFile.furniture.placedModules.length,
+                  upperCabinets: upperCabinets.length,
+                  lowerCabinets: lowerCabinets.length,
+                  upperDetails: upperCabinets.map(m => ({
+                    id: m.id,
+                    moduleId: m.moduleId,
+                    slotIndex: m.slotIndex
+                  })),
+                  lowerDetails: lowerCabinets.map(m => ({
+                    id: m.id,
+                    moduleId: m.moduleId,
+                    slotIndex: m.slotIndex
+                  }))
+                });
+                
                 setPlacedModules(designFile.furniture.placedModules);
                 console.log('🪑 가구 배치 데이터 설정:', {
                   count: designFile.furniture.placedModules.length,

@@ -1032,6 +1032,34 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       placedModulesCount: data.furniture?.placedModules?.length || 0
     });
     
+    // 상하부장 데이터 상세 확인
+    if (data.furniture?.placedModules) {
+      const upperCabinets = data.furniture.placedModules.filter((m: any) => 
+        m.moduleId?.includes('upper-cabinet')
+      );
+      const lowerCabinets = data.furniture.placedModules.filter((m: any) => 
+        m.moduleId?.includes('lower-cabinet')
+      );
+      
+      console.log('🗄️ [Firebase] 상하부장 데이터 확인:', {
+        totalModules: data.furniture.placedModules.length,
+        upperCabinets: upperCabinets.length,
+        lowerCabinets: lowerCabinets.length,
+        upperCabinetDetails: upperCabinets.map((m: any) => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          position: m.position
+        })),
+        lowerCabinetDetails: lowerCabinets.map((m: any) => ({
+          id: m.id,
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          position: m.position
+        }))
+      });
+    }
+    
     const designFile: DesignFile = {
       id: docSnap.id,
       name: data.name,
