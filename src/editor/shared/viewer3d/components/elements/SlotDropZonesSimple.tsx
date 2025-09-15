@@ -2754,9 +2754,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           console.error('❌ [Ghost Preview] 미리보기 모듈을 찾을 수 없음:', {
             targetModuleId,
             effectiveZone,
-            zoneInternalSpace,
-            baseType,
-            targetWidth,
             originalModuleId: activeModuleData.moduleData.id
           });
           // 폴백: 원래 모듈 사용
