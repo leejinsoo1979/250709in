@@ -1167,12 +1167,19 @@ const Configurator: React.FC = () => {
                   }))
                 });
                 
-                setPlacedModules(designFile.furniture.placedModules);
+                // baseModuleType이 없는 경우 추가
+                const modulesWithBaseType = designFile.furniture.placedModules.map(m => ({
+                  ...m,
+                  baseModuleType: m.baseModuleType || m.moduleId.replace(/-\d+(\.\d+)?$/, '')
+                }));
+                
+                setPlacedModules(modulesWithBaseType);
                 console.log('🪑 가구 배치 데이터 설정:', {
-                  count: designFile.furniture.placedModules.length,
-                  modules: designFile.furniture.placedModules.map(m => ({
+                  count: modulesWithBaseType.length,
+                  modules: modulesWithBaseType.map(m => ({
                     id: m.id,
                     moduleId: m.moduleId,
+                    baseModuleType: m.baseModuleType,
                     slotIndex: m.slotIndex,
                     zone: m.zone,
                     position: m.position
