@@ -33,7 +33,7 @@
   background: white;
   border-radius: 16px;
   width: 90vw;
-  max-width: 1200px;  /* Step1과 동일한 크기 */
+  max-width: 1500px;  /* Increased to 1500px for better visibility */
   max-height: 92vh;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);

@@ -100,10 +100,8 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
   };
 
   return (
-    <div className={styles.container} data-theme="light" style={{ colorScheme: 'light' }}>
-      <div className={styles.modalContent}>
-        <StepContainer onClose={handleClose} projectId={projectId} projectTitle={projectTitle} />
-      </div>
+    <div data-theme="light" style={{ colorScheme: 'light' }}>
+      <StepContainer onClose={handleClose} projectId={projectId} projectTitle={projectTitle} />
     </div>
   );
 };
