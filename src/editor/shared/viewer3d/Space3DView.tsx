@@ -1378,9 +1378,6 @@ const QuadrantContent: React.FC<{
       {/* 투명 슬롯매쉬 - 탑뷰에서는 제외 */}
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
-      {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" />
-      
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🔵 QuadrantContent - Room 렌더링:', {
         viewDirection,
