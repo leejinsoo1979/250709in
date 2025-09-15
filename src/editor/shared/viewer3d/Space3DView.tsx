@@ -259,6 +259,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   // 기둥 드롭 핸들러
   const handleColumnDrop = (e: React.DragEvent, columnData: any) => {
+    // 이벤트 전파 방지 - 중복 실행 방지
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 이미 처리 중인지 확인 (중복 방지)
+    if ((window as any).__columnDropProcessing) {
+      console.log('⚠️ 기둥 드롭이 이미 처리 중입니다.');
+      return;
+    }
+    (window as any).__columnDropProcessing = true;
+    
     // 캔버스 중앙에 기둥 배치 (임시)
     const rect = e.currentTarget.getBoundingClientRect();
     const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
@@ -279,17 +290,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       material: columnData.material || 'concrete'
     };
 
-    console.log('🏗️ 기둥 드롭 배치:', {
+    console.log('🏗️ 기둥 드롭 배치 (단일):', {
       centerX,
       zPosition,
       spaceDepthM,
       columnDepthM,
-      column: newColumn
+      column: newColumn,
+      timestamp: Date.now()
     });
     
     // 스토어에 기둥 추가
     const { addColumn } = useSpaceConfigStore.getState();
     addColumn(newColumn);
+    
+    // 처리 완료 후 플래그 리셋
+    setTimeout(() => {
+      delete (window as any).__columnDropProcessing;
+    }, 100);
   };
 
   // 가벽 드롭 핸들러
