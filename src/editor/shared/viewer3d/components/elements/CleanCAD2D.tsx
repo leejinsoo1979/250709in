@@ -3431,7 +3431,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 좌측 프레임 폭 치수선 - 외부로 이동 */}
         <group>
           {(() => {
-            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
             // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
@@ -3479,7 +3479,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
-                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(70)]}
+                    position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"
@@ -3544,7 +3544,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
         <group>
           {(() => {
-            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
+            const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
             // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
@@ -3592,7 +3592,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
-                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(70)]}
+                    position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"
@@ -4369,8 +4369,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
           
-          // 캐비넷 외부로 치수선 이동 (앞쪽으로)
-          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 120 : 80);
+          // 캐비넷 외부로 치수선 이동 (가이드라인보다 안쪽으로)
+          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60);
           
           return (
             <group key={`top-module-dim-${index}`}>
@@ -4482,7 +4482,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const columnWidthM = column.width * 0.01;
           const leftX = column.position[0] - columnWidthM / 2;
           const rightX = column.position[0] + columnWidthM / 2;
-          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 120 : 80); // 가구 치수와 동일한 레벨
+          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60); // 가구 치수와 동일한 레벨
           
           return (
             <group key={`top-column-dim-${column.id}`}>
