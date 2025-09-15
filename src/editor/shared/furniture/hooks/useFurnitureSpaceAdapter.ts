@@ -92,7 +92,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           // 영역에 맞는 새로운 moduleId 생성
           // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
-          const baseType = module.moduleId.replace(/-\d+$/, '');
+          const baseType = module.baseModuleType || module.moduleId.replace(/-\d+(\.\d+)?$/, ''); // baseModuleType 우선 사용
           const newModuleId = `${baseType}-${targetZone.columnWidth * (isDual ? 2 : 1)}`;
           
           console.log('🔄 Zone 가구 업데이트:', {
@@ -148,16 +148,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         
         // 듀얼 모듈 패턴 처리 (숫자가 컬럼폭*2인 경우)
         const dualPatterns = [
-          /^dual-([^-]+(?:-[^-]+)*)-(\d+)$/,  // dual-open-1200, dual-hang-shelf2-1200 등 (하이픈 포함)
+          /^(dual-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-2drawer-hanging-1200, dual-2tier-hanging-1200 등
+          /^(dual-upper-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-upper-cabinet-shelf-1200 등
+          /^(dual-lower-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-lower-cabinet-2tier-1200 등
         ];
         
         for (const pattern of dualPatterns) {
           const match = module.moduleId.match(pattern);
           if (match) {
-            const oldWidth = parseInt(match[2]); // 두 번째 캡처 그룹이 숫자
+            const oldWidth = parseFloat(match[2]); // 두 번째 캡처 그룹이 숫자 (소수점 포함)
             // 듀얼 모듈인지 확인 (기존 폭이 컬럼폭*2와 유사한지)
             if (Math.abs(oldWidth - (oldIndexing.columnWidth * 2)) < 50) {
-              newModuleId = module.moduleId.replace(pattern, `dual-$1-${newIndexing.columnWidth * 2}`);
+              newModuleId = `${match[1]}-${newIndexing.columnWidth * 2}`;
               isDualModule = true;
               break;
             }
@@ -167,14 +169,16 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         // 싱글 모듈 패턴 처리 (듀얼이 아닌 경우)
         if (!isDualModule) {
           const singlePatterns = [
-            /^single-([^-]+(?:-[^-]+)*)-(\d+)$/,  // single-open-600, single-hang-shelf2-600 등 (하이픈 포함)
+            /^(single-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // single-2drawer-hanging-600, single-2tier-hanging-600 등
+            /^(upper-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // upper-cabinet-shelf-600 등
+            /^(lower-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // lower-cabinet-2tier-600 등
           ];
           
           let patternMatched = false;
           for (const pattern of singlePatterns) {
             const match = module.moduleId.match(pattern);
             if (match) {
-              newModuleId = module.moduleId.replace(pattern, `single-$1-${newIndexing.columnWidth}`);
+              newModuleId = `${match[1]}-${newIndexing.columnWidth}`;
               patternMatched = true;
               break;
             }
@@ -182,7 +186,10 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           // 패턴 매칭 실패 시 기본 패턴으로 폴백
           if (!patternMatched) {
-            newModuleId = `single-open-${newIndexing.columnWidth}`;
+            // baseModuleType이 있으면 사용, 없으면 기본값
+            const baseType = module.baseModuleType || 'single-2drawer-hanging';
+            console.warn(`❌ 패턴 매칭 실패: ${module.moduleId}, ${baseType}으로 폴백`);
+            newModuleId = `${baseType}-${newIndexing.columnWidth}`;
           }
         }
         

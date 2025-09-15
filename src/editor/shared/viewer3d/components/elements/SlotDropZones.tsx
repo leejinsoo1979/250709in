@@ -701,9 +701,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         }
         
         // 새 모듈 설정 업데이트
+        const baseModuleType = actualModuleId.replace(/-\d+(\.\d+)?$/, ''); // 너비를 제외한 기본 타입
         const newModule = {
           id: placedId,
           moduleId: actualModuleId,
+          baseModuleType: baseModuleType, // 기본 모듈 타입 저장
           position: finalPosition,
           rotation: 0,
           hasDoor: shouldHaveDoor, // 첫 번째 모듈만 도어
@@ -767,9 +769,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       let adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
       // 새 모듈 배치
+      const baseModuleType = actualModuleId.replace(/-\d+(\.\d+)?$/, ''); // 너비를 제외한 기본 타입
       const newModule = {
         id: placedId,
         moduleId: actualModuleId,
+        baseModuleType: baseModuleType, // 기본 모듈 타입 저장
         position: finalPosition,
         rotation: 0,
         hasDoor: false,
