@@ -114,8 +114,76 @@ function Scene() {
   );
 }
 
+// Canvas 래퍼 컴포넌트 - 에러 처리 추가
+const CanvasWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  if (hasError) {
+    // WebGL 에러 발생 시 대체 UI 표시
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          zIndex: 0,
+        }}
+      />
+    );
+  }
+
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 5], fov: 75 }}
+      style={{ background: 'transparent' }}
+      onCreated={({ gl }) => {
+        // WebGL 컨텍스트 생성 성공
+        console.log('WebGL context created successfully');
+      }}
+      onError={(error) => {
+        console.error('Canvas error:', error);
+        setHasError(true);
+      }}
+    >
+      {children}
+    </Canvas>
+  );
+};
+
 // 인터랙티브 3D 배경 컴포넌트
 export const Interactive3DBackground: React.FC = () => {
+  const [mounted, setMounted] = React.useState(false);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 후 렌더링
+    setMounted(true);
+    
+    return () => {
+      // cleanup
+      setMounted(false);
+    };
+  }, []);
+
+  if (!mounted) {
+    // 마운트 전에는 대체 배경 표시
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          zIndex: 0,
+        }}
+      />
+    );
+  }
+
   return (
     <div
       style={{
@@ -127,12 +195,9 @@ export const Interactive3DBackground: React.FC = () => {
         zIndex: 0,
       }}
     >
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        style={{ background: 'transparent' }}
-      >
+      <CanvasWrapper>
         <Scene />
-      </Canvas>
+      </CanvasWrapper>
     </div>
   );
 };

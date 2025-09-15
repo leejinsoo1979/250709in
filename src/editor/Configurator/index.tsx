@@ -2660,10 +2660,10 @@ const Configurator: React.FC = () => {
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
               <DashboardFileTree 
-                onFileSelect={(projectId, designFileName) => {
-                  console.log('🗂️ 파일트리에서 선택된 파일:', projectId, designFileName);
+                onFileSelect={(projectId, designFileId, designFileName) => {
+                  console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
                   // 디자인 파일 선택 시 해당 프로젝트 로드
-                  navigate(`/configurator?projectId=${projectId}&designFileName=${encodeURIComponent(designFileName)}`);
+                  navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`);
                   setIsFileTreeOpen(false); // 파일트리 닫기
                   // 페이지 새로고침하여 새 디자인 파일 로드
                   window.location.reload();
