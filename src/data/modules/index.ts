@@ -62,6 +62,10 @@ export const getModuleById = (
     baseType,
     requestedWidth,
     '소수점1자리': requestedWidth ? Math.round(requestedWidth * 10) / 10 : null,
+    '상하부장여부': {
+      isUpperCabinet: id.includes('upper-cabinet'),
+      isLowerCabinet: id.includes('lower-cabinet')
+    },
     internalSpace: internalSpace ? {
       width: internalSpace.width,
       height: internalSpace.height
@@ -109,8 +113,17 @@ export const getModuleById = (
     
     const dynamicModules = generateDynamicModules(internalSpace, modifiedSpaceInfo);
     
+    // 상하부장 모듈 확인
+    const upperCabinets = dynamicModules.filter(m => m.id.includes('upper-cabinet'));
+    const lowerCabinets = dynamicModules.filter(m => m.id.includes('lower-cabinet'));
+    
     console.log('📦📦📦 생성된 모듈 중 매칭 시도:', {
       요청ID: id,
+      전체개수: dynamicModules.length,
+      상부장개수: upperCabinets.length,
+      하부장개수: lowerCabinets.length,
+      상부장ID: upperCabinets.map(m => m.id),
+      하부장ID: lowerCabinets.map(m => m.id),
       생성된모든ID: dynamicModules.map(m => m.id),
       생성된싱글: dynamicModules.filter(m => m.id.includes('single-')).map(m => m.id),
       modifiedSpaceInfo: modifiedSpaceInfo ? {
