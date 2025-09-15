@@ -742,23 +742,29 @@ export const updateDesignFile = async (
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
-    // spaceConfig가 있는 경우 mainDoorCount와 droppedCeilingDoorCount는 undefined로 유지
-    const spaceConfigWithDefaults = updates.spaceConfig ? {
-      ...updates.spaceConfig,
-      mainDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
-      droppedCeilingDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
-      customColumnCount: updates.spaceConfig.customColumnCount,  // customColumnCount는 유지
-    } : undefined;
+    // spaceConfig가 있는 경우 자동 계산 필드들을 제거
+    let spaceConfigClean = undefined;
+    if (updates.spaceConfig) {
+      spaceConfigClean = { ...updates.spaceConfig };
+      // Firebase는 undefined 값을 허용하지 않으므로 필드를 제거
+      delete spaceConfigClean.mainDoorCount;
+      delete spaceConfigClean.droppedCeilingDoorCount;
+      delete spaceConfigClean.customColumnCount;
+    }
     
-    const updateData = {
+    const updateDataRaw = {
       updatedAt: serverTimestamp(),
       ...(updates.name && { name: updates.name }),
       ...(updates.projectData && { projectData: updates.projectData }),
-      ...(spaceConfigWithDefaults && { spaceConfig: spaceConfigWithDefaults }),
+      ...(spaceConfigClean && { spaceConfig: spaceConfigClean }),
       ...(updates.furniture && { furniture: updates.furniture }),
       ...(updates.thumbnail && { thumbnail: updates.thumbnail })
     };
-
+    
+    // Firebase는 undefined 값을 허용하지 않으므로 모든 undefined 값을 제거
+    const updateData = removeUndefinedValues(updateDataRaw);
+    
+    console.log('🧹 [updateDesignFile] undefined 값 제거 완료');
     console.log('🔥 [updateDesignFile] 업데이트 데이터:', {
       foundPath,
       hasUpdatedAt: !!updateData.updatedAt,
