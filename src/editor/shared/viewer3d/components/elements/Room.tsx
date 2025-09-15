@@ -1833,37 +1833,25 @@ const Room: React.FC<RoomProps> = ({
             
             if ((columns.length === 0 || !hasDeepColumns) && !hasDroppedCeiling) {
               // 기둥도 없고 단내림도 없으면 기존처럼 하나의 프레임으로 렌더링
-              // 엔드패널이 있는 경우 해당 부분만큼 프레임 너비 조정
-              let adjustedFrameWidth = frameWidth;
-              let adjustedFrameX = frameX;
-              
-              if (spaceInfo.surroundType === 'no-surround') {
-                // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
-                const leftAdjustment = endPanelPositions.left ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                const rightAdjustment = endPanelPositions.right ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                
-                adjustedFrameWidth = frameWidth - leftAdjustment - rightAdjustment;
-                adjustedFrameX = frameX + (leftAdjustment - rightAdjustment) / 2;
-                
-                console.log('🔧 상부프레임 엔드패널 조정:', {
-                  원래너비: frameWidth,
-                  조정된너비: adjustedFrameWidth,
-                  왼쪽엔드패널: endPanelPositions.left,
-                  오른쪽엔드패널: endPanelPositions.right,
-                  왼쪽조정값: leftAdjustment,
-                  오른쪽조정값: rightAdjustment
-                });
-              }
+              console.log('🔧 상부프레임 엔드패널 조정:', {
+                원래너비: normalZone.width,
+                조정된너비: frameWidth,
+                왼쪽엔드패널: endPanelPositions.left,
+                오른쪽엔드패널: endPanelPositions.right,
+                frameStartX,
+                frameEndX,
+                frameX
+              });
               
               return (
                 <BoxWithEdges
                   args={[
-                    adjustedFrameWidth, // 엔드패널이 있으면 조정된 너비 사용
+                    frameWidth, // 이미 엔드패널이 조정된 너비
                     topBottomFrameHeight, 
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[
-                    adjustedFrameX, // 엔드패널이 있으면 조정된 위치 사용
+                    frameX, // 이미 엔드패널이 조정된 위치
                     topElementsY, 
                     // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                     furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
@@ -2016,28 +2004,16 @@ const Room: React.FC<RoomProps> = ({
               x: number;
             }> = [];
             
-            // 엔드패널이 있는 경우 프레임 범위 조정
-            let adjustedFrameStartX = frameX - frameWidth / 2;
-            let adjustedFrameEndX = frameX + frameWidth / 2;
+            // 프레임 범위는 이미 엔드패널이 조정되어 있음
+            const adjustedFrameStartX = frameStartX;
+            const adjustedFrameEndX = frameEndX;
             
-            if (spaceInfo.surroundType === 'no-surround') {
-              // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
-              if (endPanelPositions.left) {
-                adjustedFrameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
-              }
-              if (endPanelPositions.right) {
-                adjustedFrameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
-              }
-              
-              console.log('🔧 상부프레임 분절 엔드패널 조정:', {
-                원래시작: frameX - frameWidth / 2,
-                원래끝: frameX + frameWidth / 2,
-                조정된시작: adjustedFrameStartX,
-                조정된끝: adjustedFrameEndX,
-                왼쪽엔드패널: endPanelPositions.left,
-                오른쪽엔드패널: endPanelPositions.right
-              });
-            }
+            console.log('🔧 상부프레임 분절 엔드패널 조정:', {
+              조정된시작: adjustedFrameStartX,
+              조정된끝: adjustedFrameEndX,
+              왼쪽엔드패널: endPanelPositions.left,
+              오른쪽엔드패널: endPanelPositions.right
+            });
             
             // 기둥들을 X 위치 기준으로 정렬
             const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
@@ -2478,9 +2454,22 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 영역에 대해 하부프레임 렌더링
             return renderZones.map((renderZone, zoneIndex) => {
-              // mm 단위를 Three.js 단위로 변환
-              const frameStartX = mmToThreeUnits(renderZone.startX);
-              const frameEndX = mmToThreeUnits(renderZone.endX);
+              // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
+              let frameStartX = mmToThreeUnits(renderZone.startX);
+              let frameEndX = mmToThreeUnits(renderZone.endX);
+              
+              // 노서라운드 모드에서 세미스탠딩/프리스탠딩은 엔드패널을 제외한 프레임 범위 계산
+              if (spaceInfo.surroundType === 'no-surround' && 
+                  (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing' || 
+                   spaceInfo.installType === 'freestanding')) {
+                // 엔드패널이 있는 쪽은 프레임 범위에서 제외
+                if (endPanelPositions.left) {
+                  frameStartX += mmToThreeUnits(END_PANEL_THICKNESS);
+                }
+                if (endPanelPositions.right) {
+                  frameEndX -= mmToThreeUnits(END_PANEL_THICKNESS);
+                }
+              }
               
               const frameWidth = frameEndX - frameStartX;
               const frameX = (frameStartX + frameEndX) / 2;
@@ -2496,38 +2485,26 @@ const Room: React.FC<RoomProps> = ({
               
               if (columns.length === 0 || !hasDeepColumns) {
                 // 기둥이 없거나 모든 기둥이 729mm 이하면 기존처럼 하나의 프레임으로 렌더링
-                // 엔드패널이 있는 경우 해당 부분만큼 프레임 너비 조정
-                let adjustedFrameWidth = frameWidth;
-                let adjustedFrameX = frameX;
-                
-                if (spaceInfo.surroundType === 'no-surround') {
-                  // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
-                  const leftAdjustment = endPanelPositions.left ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                  const rightAdjustment = endPanelPositions.right ? mmToThreeUnits(END_PANEL_THICKNESS) : 0;
-                  
-                  adjustedFrameWidth = frameWidth - leftAdjustment - rightAdjustment;
-                  adjustedFrameX = frameX + (leftAdjustment - rightAdjustment) / 2;
-                  
-                  console.log('🔧 하부프레임 엔드패널 조정:', {
-                    원래너비: frameWidth,
-                    조정된너비: adjustedFrameWidth,
-                    왼쪽엔드패널: endPanelPositions.left,
-                    오른쪽엔드패널: endPanelPositions.right,
-                    왼쪽조정값: leftAdjustment,
-                    오른쪽조정값: rightAdjustment
-                  });
-                }
+                console.log('🔧 하부프레임 엔드패널 조정:', {
+                  원래너비: renderZone.width,
+                  조정된너비: frameWidth,
+                  왼쪽엔드패널: endPanelPositions.left,
+                  오른쪽엔드패널: endPanelPositions.right,
+                  frameStartX,
+                  frameEndX,
+                  frameX
+                });
                 
                 return (
                   <BoxWithEdges
                     key={`base-frame-zone-${zoneIndex}`}
                     args={[
-                      adjustedFrameWidth, // 엔드패널이 있으면 조정된 너비 사용
+                      frameWidth, // 이미 엔드패널이 조정된 너비
                       baseFrameHeight, 
                       mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 두께로 ㄱ자 메인 프레임
                     ]}
                     position={[
-                      adjustedFrameX, // 엔드패널이 있으면 조정된 위치 사용
+                      frameX, // 이미 엔드패널이 조정된 위치
                       panelStartY + baseFrameHeight/2, 
                       // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
@@ -2547,28 +2524,16 @@ const Room: React.FC<RoomProps> = ({
                 x: number;
               }> = [];
               
-              // 엔드패널이 있는 경우 프레임 범위 조정
-              let adjustedFrameStartXCalc = frameX - frameWidth / 2;
-              let adjustedFrameEndXCalc = frameX + frameWidth / 2;
+              // 프레임 범위는 이미 엔드패널이 조정되어 있음
+              const adjustedFrameStartXCalc = frameStartX;
+              const adjustedFrameEndXCalc = frameEndX;
               
-              if (spaceInfo.surroundType === 'no-surround') {
-                // 엔드패널이 있는 쪽의 프레임을 18mm씩 안쪽으로 조정
-                if (endPanelPositions.left) {
-                  adjustedFrameStartXCalc += mmToThreeUnits(END_PANEL_THICKNESS);
-                }
-                if (endPanelPositions.right) {
-                  adjustedFrameEndXCalc -= mmToThreeUnits(END_PANEL_THICKNESS);
-                }
-                
-                console.log('🔧 하부프레임 분절 엔드패널 조정:', {
-                  원래시작: frameX - frameWidth / 2,
-                  원래끝: frameX + frameWidth / 2,
-                  조정된시작: adjustedFrameStartXCalc,
-                  조정된끝: adjustedFrameEndXCalc,
-                  왼쪽엔드패널: endPanelPositions.left,
-                  오른쪽엔드패널: endPanelPositions.right
-                });
-              }
+              console.log('🔧 하부프레임 분절 엔드패널 조정:', {
+                조정된시작: adjustedFrameStartXCalc,
+                조정된끝: adjustedFrameEndXCalc,
+                왼쪽엔드패널: endPanelPositions.left,
+                오른쪽엔드패널: endPanelPositions.right
+              });
               
               // 기둥들을 X 위치 기준으로 정렬
               const sortedColumns = [...columns].sort((a, b) => a.position[0] - b.position[0]);
