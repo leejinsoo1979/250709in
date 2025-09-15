@@ -139,6 +139,29 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
   }
 };
 
+// Helper function to recursively remove undefined values from an object
+const removeUndefinedValues = (obj: any): any => {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(removeUndefinedValues);
+  }
+  
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = removeUndefinedValues(value);
+      }
+    }
+    return cleaned;
+  }
+  
+  return obj;
+};
+
 // 디자인파일 생성
 export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id: string | null; error: string | null }> => {
   try {
@@ -168,13 +191,21 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     const now = serverTimestamp() as Timestamp;
 
     // undefined 필드들을 제외한 데이터 생성
-    // mainDoorCount와 droppedCeilingDoorCount는 undefined로 유지하여 자동 계산 활성화
-    const spaceConfigWithDefaults = {
-      ...data.spaceConfig,
-      mainDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
-      droppedCeilingDoorCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
-      customColumnCount: undefined,  // 항상 undefined로 설정하여 자동 계산 활성화
-    };
+    // Firebase는 undefined 값을 허용하지 않으므로, 자동 계산이 필요한 필드는 제거
+    const spaceConfigWithDefaults = { ...data.spaceConfig };
+    
+    // undefined 값을 가진 필드들을 제거 (Firebase는 undefined를 허용하지 않음)
+    // 이 필드들은 나중에 자동 계산됨
+    delete spaceConfigWithDefaults.mainDoorCount;
+    delete spaceConfigWithDefaults.droppedCeilingDoorCount;
+    delete spaceConfigWithDefaults.customColumnCount;
+    
+    console.log('🔧 [createDesignFile] undefined 필드 제거 후 spaceConfig:', {
+      hasMainDoorCount: 'mainDoorCount' in spaceConfigWithDefaults,
+      hasDroppedCeilingDoorCount: 'droppedCeilingDoorCount' in spaceConfigWithDefaults,
+      hasCustomColumnCount: 'customColumnCount' in spaceConfigWithDefaults,
+      keys: Object.keys(spaceConfigWithDefaults)
+    });
     
     const baseData: any = {
       name: data.name,
@@ -193,10 +224,14 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
     }
 
     // folderId가 있을 때만 추가
-    const designFileData: any = data.folderId 
+    const designFileDataRaw: any = data.folderId 
       ? { ...baseData, folderId: data.folderId }
       : baseData;
-      
+    
+    // Firebase는 undefined 값을 허용하지 않으므로 모든 undefined 값을 제거
+    const designFileData = removeUndefinedValues(designFileDataRaw);
+    
+    console.log('🧹 [createDesignFile] undefined 값 제거 완료');
     console.log('📋 최종 Firestore 저장 데이터:', {
       ...designFileData,
       furnitureModulesCount: designFileData.furniture?.placedModules?.length || 0,
