@@ -146,31 +146,47 @@ export const getModuleById = (
     // 먼저 정확히 일치하는 모듈 찾기
     let found = dynamicModules.find(module => module.id === id);
     
-    // 정확히 일치하는 모듈이 없으면 반올림된 값으로 다시 시도
+    // 정확히 일치하는 모듈이 없으면 정확한 baseType과 너비로 매칭
     if (!found && requestedWidth) {
-      const roundedWidth = Math.round(requestedWidth * 10) / 10;
-      const alternativeId = `${baseType}-${roundedWidth}`;
-      console.log('🔄 반올림된 ID로 재시도:', alternativeId);
-      found = dynamicModules.find(module => module.id === alternativeId);
-    }
-    
-    // 여전히 못 찾았고 상하부장인 경우 다른 패턴으로 시도
-    if (!found && (id.includes('upper-cabinet') || id.includes('lower-cabinet'))) {
-      console.log('🗄️ 상하부장 특별 검색 시도');
+      // 소수점 1자리로 정규화된 너비
+      const normalizedWidth = Math.round(requestedWidth * 10) / 10;
       
-      // 정확한 ID 매칭 대신 baseType과 너비로 검색
+      // baseType과 정규화된 너비가 모두 일치하는 모듈 찾기
       found = dynamicModules.find(module => {
         const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
         const moduleWidthMatch = module.id.match(/-([\d.]+)$/);
         const moduleWidth = moduleWidthMatch ? parseFloat(moduleWidthMatch[1]) : null;
         
         return moduleBaseType === baseType && 
-               moduleWidth && requestedWidth &&
-               Math.abs(moduleWidth - requestedWidth) < 0.1;
+               moduleWidth !== null && 
+               Math.round(moduleWidth * 10) / 10 === normalizedWidth;
       });
       
       if (found) {
-        console.log('🗄️ 상하부장 특별 검색으로 찾음:', found.id);
+        console.log('🔄 정확한 baseType과 너비 매칭으로 찾음:', found.id);
+      }
+    }
+    
+    // 여전히 못 찾았고 상하부장인 경우 정확한 ID로만 매칭
+    if (!found && (id.includes('upper-cabinet') || id.includes('lower-cabinet'))) {
+      console.log('🗄️ 상하부장 정확한 매칭 시도');
+      
+      // 정확한 ID 매칭만 허용 (baseType과 너비가 정확히 일치)
+      found = dynamicModules.find(module => {
+        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
+        const moduleWidthMatch = module.id.match(/-([\d.]+)$/);
+        const moduleWidth = moduleWidthMatch ? parseFloat(moduleWidthMatch[1]) : null;
+        
+        // 정확한 너비 매칭 (소수점 1자리까지 정확히 일치)
+        const widthMatches = moduleWidth === requestedWidth || 
+                            (moduleWidth && requestedWidth && 
+                             Math.round(moduleWidth * 10) / 10 === Math.round(requestedWidth * 10) / 10);
+        
+        return moduleBaseType === baseType && widthMatches;
+      });
+      
+      if (found) {
+        console.log('🗄️ 상하부장 정확한 매칭으로 찾음:', found.id);
       }
     }
     
