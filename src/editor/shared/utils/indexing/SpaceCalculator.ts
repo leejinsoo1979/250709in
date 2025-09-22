@@ -189,14 +189,46 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 좌우 이격거리를 독립적으로 조정하여 균등분할
+        // 빌트인: 이격거리 조정하여 균등분할
         const baseWidth = spaceInfo.width;
         let bestConfig = null;
         let bestSlotWidth = null;
         
-        // 좌우 이격거리를 독립적으로 조정 (2~5mm 범위)
+        // 먼저 대칭 이격거리로 시도 (이격 합이 짝수인 경우)
+        for (let gap = 2; gap <= 5; gap++) {
+          const internalWidth = baseWidth - (gap * 2);
+          const slotWidth = internalWidth / columnCount;
+          
+          // 정수로 완벽하게 떨어지는지 체크
+          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+          
+          if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: { left: gap, right: gap }
+              },
+              slotWidth: Math.round(slotWidth),
+              adjustmentMade: true
+            };
+          }
+          
+          // 0.5 단위로 떨어지는 경우도 기록
+          const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+          const remainder = Math.abs(slotWidth - roundedSlotWidth);
+          
+          if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+            bestSlotWidth = roundedSlotWidth;
+            bestConfig = { left: gap, right: gap };
+          }
+        }
+        
+        // 대칭으로 안되면 비대칭 이격거리 시도 (이격 합이 홀수인 경우)
         for (let leftGap = 2; leftGap <= 5; leftGap++) {
           for (let rightGap = 2; rightGap <= 5; rightGap++) {
+            // 대칭은 이미 검사했으므로 스킵
+            if (leftGap === rightGap) continue;
+            
             const internalWidth = baseWidth - leftGap - rightGap;
             const slotWidth = internalWidth / columnCount;
             
