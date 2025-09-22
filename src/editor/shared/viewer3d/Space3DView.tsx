@@ -93,7 +93,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
-    const centerX = 0;
+    
+    // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
+    let centerX = 0;
+    if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
+      // 서라운드 모드: 프레임 차이 고려
+      const leftFrame = spaceInfo.frameSize.left || 50;
+      const rightFrame = spaceInfo.frameSize.right || 50;
+      centerX = mmToThreeUnits((leftFrame - rightFrame) / 2);
+    } else if (spaceInfo.surroundType === 'no-surround') {
+      if (spaceInfo.installType === 'builtin' && spaceInfo.gapConfig) {
+        // 빌트인: 이격거리 차이 고려
+        const leftGap = spaceInfo.gapConfig.left || 2;
+        const rightGap = spaceInfo.gapConfig.right || 2;
+        centerX = mmToThreeUnits((leftGap - rightGap) / 2);
+      }
+      // 세미스탠딩, 프리스탠딩은 대칭이므로 centerX = 0 유지
+    }
+    
     const centerY = mmToThreeUnits(height * 0.5);
     const centerZ = 0;
 
@@ -480,11 +497,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const spaceHeight = spaceInfo?.height || 2400;
     const spaceDepth = spaceInfo?.depth || 1500;
     
+    // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
+    let actualCenterX = 0;
+    if (spaceInfo?.surroundType === 'surround' && spaceInfo.frameSize) {
+      const leftFrame = spaceInfo.frameSize.left || 50;
+      const rightFrame = spaceInfo.frameSize.right || 50;
+      actualCenterX = mmToThreeUnits((leftFrame - rightFrame) / 2);
+    } else if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.installType === 'builtin' && spaceInfo.gapConfig) {
+      const leftGap = spaceInfo.gapConfig.left || 2;
+      const rightGap = spaceInfo.gapConfig.right || 2;
+      actualCenterX = mmToThreeUnits((leftGap - rightGap) / 2);
+    }
+    
     if (!bounds) {
       // 가구가 없을 때는 공간 중심과 크기 사용
       // calculateCameraTarget과 동일한 계산 사용
       const center = { 
-        x: 0, 
+        x: actualCenterX, 
         y: mmToThreeUnits(spaceHeight * 0.5), // calculateCameraTarget과 동일
         z: 0 
       };
@@ -983,7 +1012,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       >
         <ThreeCanvas 
           cameraPosition={cameraPosition}
-          cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
+          cameraTarget={[centerX, mmToThreeUnits((spaceInfo?.height || 2400) * 0.5), 0]}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
           renderMode={renderMode}
