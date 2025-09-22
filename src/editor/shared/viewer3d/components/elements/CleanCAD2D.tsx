@@ -719,7 +719,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
 
       {/* 노서라운드 모드 좌측 엔드패널 치수선 */}
-      {spaceInfo.surroundType === 'no-surround' && (() => {
+      {spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 양쪽 벽이 모두 있는지 확인
@@ -734,7 +734,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           leftValue = spaceInfo.gapConfig?.left || 2;
           leftText = `이격 ${leftValue}`;
         } else {
-          // 벽이 없으면 엔드패널 표시
+          // 벽이 없고 가구가 있으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
           leftText = `${leftValue}`;
         }
@@ -789,7 +789,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
       
       {/* 노서라운드 모드 우측 엔드패널 치수선 */}
-      {spaceInfo.surroundType === 'no-surround' && (() => {
+      {spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 양쪽 벽이 모두 있는지 확인
