@@ -329,14 +329,10 @@ export class ColumnIndexer {
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
       // 노서라운드 프리스탠딩: 전체너비를 균등 분할 (소수점 2자리)
       const exactSlotWidth = Math.round((totalWidth / columnCount) * 100) / 100;
-      const slotsWithHalf = remainder * 2; // 0.5를 받을 슬롯 개수
       
+      // 모든 슬롯을 동일한 너비로 설정
       for (let i = 0; i < columnCount; i++) {
-        if (i < slotsWithHalf) {
-          slotWidths.push(baseSlotWidth + 0.5);
-        } else {
-          slotWidths.push(baseSlotWidth);
-        }
+        slotWidths.push(exactSlotWidth);
       }
       
       // 디버깅 로그
@@ -352,19 +348,12 @@ export class ColumnIndexer {
       const wallGap = spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left || 2) : (spaceInfo.gapConfig?.right || 2);
       const usableWidth = totalWidth - wallGap;
       
-      const exactSlotWidth = usableWidth / columnCount;
-      const baseSlotWidth = Math.floor(exactSlotWidth);
-      const remainder = usableWidth - (baseSlotWidth * columnCount);
+      // 소수점 2자리로 균등 분할
+      const exactSlotWidth = Math.round((usableWidth / columnCount) * 100) / 100;
       
-      // remainder를 0.5 단위로 분배
-      const slotsWithHalf = remainder * 2;
-      
+      // 모든 슬롯을 동일한 너비로 설정
       for (let i = 0; i < columnCount; i++) {
-        if (i < slotsWithHalf) {
-          slotWidths.push(baseSlotWidth + 0.5);
-        } else {
-          slotWidths.push(baseSlotWidth);
-        }
+        slotWidths.push(exactSlotWidth);
       }
       
       // 디버깅 로그
