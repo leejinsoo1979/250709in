@@ -1213,15 +1213,24 @@ export const generateShelvingModules = (
   
   if (indexingSpaceInfo && '_tempSlotWidths' in indexingSpaceInfo && indexingSpaceInfo._tempSlotWidths) {
     slotWidths = indexingSpaceInfo._tempSlotWidths as number[];
-    // 소수점 1자리로 정규화 (599.0 → 599)
-    columnWidth = Math.round(slotWidths[0] * 10) / 10;
     columnCount = slotWidths.length;
+    
+    // 모든 슬롯이 같은 너비인지 확인
+    const uniqueWidths = [...new Set(slotWidths.map(w => Math.round(w * 10) / 10))];
+    if (uniqueWidths.length === 1) {
+      // 모든 슬롯이 같은 너비면 그 값을 사용
+      columnWidth = uniqueWidths[0];
+    } else {
+      // 다른 너비가 있으면 첫 번째 슬롯 너비 사용
+      columnWidth = Math.round(slotWidths[0] * 10) / 10;
+    }
     
     console.log('🎯 _tempSlotWidths 사용:', {
       slotWidths,
       columnWidth,
       '원본첫번째슬롯': slotWidths[0],
-      '정규화된너비': columnWidth
+      '정규화된너비': columnWidth,
+      'uniqueWidths': uniqueWidths
     });
   } else {
     // 단내림 구간인지 확인하고 zoneSlotInfo 사용

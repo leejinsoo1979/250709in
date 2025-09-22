@@ -1335,6 +1335,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
       : indexing.slotWidths
   };
   
+  console.log('🔥🔥🔥 [ModuleGallery] _tempSlotWidths 설정:', {
+    '_tempSlotWidths': spaceInfoWithSlotWidths._tempSlotWidths,
+    'adjustedResult.adjustmentMade': adjustedResult.adjustmentMade,
+    'adjustedResult.slotWidth': adjustedResult.slotWidth,
+    'indexing.slotWidths': indexing.slotWidths,
+    'indexing.columnCount': indexing.columnCount
+  });
+  
   // 카테고리에 따라 모듈 가져오기 (슬롯 너비 정보가 포함된 spaceInfo 사용)
   let categoryModules: ModuleData[] = [];
   if (moduleCategory === 'upper') {
