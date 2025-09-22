@@ -194,9 +194,9 @@ export class SpaceCalculator {
         let bestConfig = null;
         let bestSlotWidth = null;
         
-        // 좌우 이격거리를 독립적으로 조정 (0~15mm 범위)
-        for (let leftGap = 0; leftGap <= 15; leftGap++) {
-          for (let rightGap = 0; rightGap <= 15; rightGap++) {
+        // 좌우 이격거리를 독립적으로 조정 (2~5mm 범위)
+        for (let leftGap = 2; leftGap <= 5; leftGap++) {
+          for (let rightGap = 2; rightGap <= 5; rightGap++) {
             const internalWidth = baseWidth - leftGap - rightGap;
             const slotWidth = internalWidth / columnCount;
             
@@ -227,14 +227,12 @@ export class SpaceCalculator {
         
         // 정수가 없으면 0.5 단위 사용
         if (bestConfig && bestSlotWidth) {
-          
-          
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
-              gapConfig: { left: leftGap, right: rightGap }
+              gapConfig: bestConfig
             },
-            slotWidth,
+            slotWidth: bestSlotWidth,
             adjustmentMade: true
           };
         }
