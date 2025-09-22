@@ -144,31 +144,39 @@ export class SpaceCalculator {
 
   /**
    * 균등분할을 위한 이격거리 자동 선택 (노서라운드 빌트인)
-   * 슬롯폭이 400~600이며 균등분할되도록 이격합을 2~20에서 탐색
+   * 정수 슬롯폭을 우선으로, 없으면 0.5 단위 슬롯폭 선택
    */
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
     const validGapSums: number[] = [];
     
     console.log('🔍 selectOptimalGapSum 시작:', { totalWidth, slotCount });
     
-    // 더 넓은 범위에서 탐색 (2~20mm)
-    for (let gapSum = 2; gapSum <= 20; gapSum++) {
+    // 먼저 정수 슬롯폭을 만드는 이격거리 찾기
+    for (let gapSum = 0; gapSum <= 20; gapSum++) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
       
-      // 슬롯 너비를 0.5 단위로 반올림
+      // 정수인지 체크
+      const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+      
+      if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+        console.log(`  ✅ 정수 슬롯폭 발견! gapSum=${gapSum}, 슬롯폭=${Math.round(slotWidth)}mm`);
+        return [gapSum]; // 정수를 찾으면 바로 반환
+      }
+    }
+    
+    // 정수가 없으면 0.5 단위 찾기
+    for (let gapSum = 0; gapSum <= 20; gapSum++) {
+      const internalWidth = totalWidth - gapSum;
+      const slotWidth = internalWidth / slotCount;
+      
+      // 0.5 단위로 반올림
       const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
       const remainder = Math.abs(slotWidth - roundedSlotWidth);
       
-      console.log(`  gapSum=${gapSum}: 내경=${internalWidth}, 슬롯폭=${slotWidth.toFixed(2)}, 반올림=${roundedSlotWidth}`);
-      
-      // 0.5 단위로 깔끔하게 떨어지는지 체크
-      if (remainder < 0.01) {
-        // 슬롯폭이 400~600 범위인지 체크
-        if (roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
-          validGapSums.push(gapSum);
-          console.log(`    ✅ 유효한 이격거리: ${gapSum}, 슬롯폭: ${roundedSlotWidth}`);
-        }
+      if (remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+        validGapSums.push(gapSum);
+        console.log(`  ✅ 0.5 단위 슬롯폭: gapSum=${gapSum}, 슬롯폭=${roundedSlotWidth}mm`);
       }
     }
     
@@ -190,20 +198,45 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: selectOptimalGapSum을 사용하여 최적의 이격거리 찾기
+        // 빌트인: 좌우 이격거리를 독립적으로 조정하여 균등분할
         const baseWidth = spaceInfo.width;
+        let bestConfig = null;
+        let bestSlotWidth = null;
         
-        // selectOptimalGapSum을 사용하여 정수 슬롯을 만드는 gap 찾기
-        const validGapSums = SpaceCalculator.selectOptimalGapSum(baseWidth, columnCount);
+        // 좌우 이격거리를 독립적으로 조정 (0~15mm 범위)
+        for (let leftGap = 0; leftGap <= 15; leftGap++) {
+          for (let rightGap = 0; rightGap <= 15; rightGap++) {
+            const internalWidth = baseWidth - leftGap - rightGap;
+            const slotWidth = internalWidth / columnCount;
+            
+            // 정수로 완벽하게 떨어지는지 체크
+            const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+            
+            if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+              console.log(`✅ 정수 슬롯폭 발견! leftGap=${leftGap}, rightGap=${rightGap}, 슬롯폭=${Math.round(slotWidth)}mm`);
+              return {
+                adjustedSpaceInfo: {
+                  ...spaceInfo,
+                  gapConfig: { left: leftGap, right: rightGap }
+                },
+                slotWidth: Math.round(slotWidth),
+                adjustmentMade: true
+              };
+            }
+            
+            // 0.5 단위로 떨어지는 경우도 기록
+            const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+            const remainder = Math.abs(slotWidth - roundedSlotWidth);
+            
+            if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+              bestSlotWidth = roundedSlotWidth;
+              bestConfig = { left: leftGap, right: rightGap };
+            }
+          }
+        }
         
-        if (validGapSums.length > 0) {
-          // 첫 번째 유효한 gap sum 사용 (가장 작은 값)
-          const optimalGapSum = validGapSums[0];
-          const leftGap = Math.floor(optimalGapSum / 2);
-          const rightGap = optimalGapSum - leftGap;
-          const internalWidth = baseWidth - optimalGapSum;
-          // 0.5 단위로 반올림
-          const slotWidth = Math.round((internalWidth / columnCount) * 2) / 2;
+        // 정수가 없으면 0.5 단위 사용
+        if (bestConfig && bestSlotWidth) {
           
           console.log('🎯 adjustForIntegerSlotWidth - 최적 이격거리 찾음:', {
             totalWidth: baseWidth,
@@ -330,43 +363,76 @@ export class SpaceCalculator {
       const baseLeft = canAdjustLeft ? currentFrameSize.left : END_PANEL_THICKNESS;
       const baseRight = canAdjustRight ? currentFrameSize.right : END_PANEL_THICKNESS;
       
-      // 조정 가능한 범위 내에서 균등 분할되는 프레임 크기 찾기
+      // 먼저 대칭 조정으로 시도 (프레임 합이 짝수인 경우)
+      if (canAdjustLeft && canAdjustRight) {
+        for (let adjust = -10; adjust <= 10; adjust++) {
+          const leftFrame = Math.max(40, Math.min(60, baseLeft + adjust));
+          const rightFrame = Math.max(40, Math.min(60, baseRight + adjust));
+          
+          const internalWidth = spaceInfo.width - leftFrame - rightFrame;
+          const slotWidth = internalWidth / columnCount;
+          
+          // 정수로 완벽하게 떨어지는지 체크
+          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+          if (isInteger) {
+            console.log(`✅ 대칭 프레임으로 정수 슬롯폭! leftFrame=${leftFrame}, rightFrame=${rightFrame}, 슬롯폭=${Math.round(slotWidth)}mm`);
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                frameSize: {
+                  ...currentFrameSize,
+                  left: leftFrame,
+                  right: rightFrame
+                }
+              },
+              slotWidth: Math.round(slotWidth),
+              adjustmentMade: true
+            };
+          }
+        }
+      }
+      
+      // 대칭으로 안되면 비대칭 조정 시도 (프레임 합이 홀수인 경우)
       let bestConfig = null;
       let bestSlotWidth = null;
       let smallestRemainder = Number.MAX_VALUE;
       
-      for (let adjustment = -10; adjustment <= 10; adjustment++) {
-        const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + adjustment)) : baseLeft;
-        const rightFrame = canAdjustRight ? Math.max(40, Math.min(60, baseRight + adjustment)) : baseRight;
-        
-        const internalWidth = spaceInfo.width - leftFrame - rightFrame;
-        const slotWidth = internalWidth / columnCount;
-        
-        // 정수 또는 0.5 단위로 떨어지는지 체크
-        const roundedSlotWidth = Math.round(slotWidth * 2) / 2; // 0.5 단위로 반올림
-        const remainder = Math.abs(slotWidth - roundedSlotWidth);
-        
-        // 가장 깔끔하게 떨어지는 설정 찾기
-        if (remainder < smallestRemainder) {
-          smallestRemainder = remainder;
-          bestSlotWidth = roundedSlotWidth;
-          bestConfig = { left: leftFrame, right: rightFrame };
-        }
-        
-        // 완벽하게 떨어지면 바로 반환
-        if (remainder < 0.001) {
-          return {
-            adjustedSpaceInfo: {
-              ...spaceInfo,
-              frameSize: {
-                ...currentFrameSize,
-                left: leftFrame,
-                right: rightFrame
-              }
-            },
-            slotWidth: roundedSlotWidth,
-            adjustmentMade: true
-          };
+      // 왼쪽 프레임 40~60mm, 오른쪽 프레임 40~60mm 범위에서 모든 조합 시도
+      for (let leftAdjust = -10; leftAdjust <= 10; leftAdjust++) {
+        for (let rightAdjust = -10; rightAdjust <= 10; rightAdjust++) {
+          const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + leftAdjust)) : baseLeft;
+          const rightFrame = canAdjustRight ? Math.max(40, Math.min(60, baseRight + rightAdjust)) : baseRight;
+          
+          const internalWidth = spaceInfo.width - leftFrame - rightFrame;
+          const slotWidth = internalWidth / columnCount;
+          
+          // 정수로 완벽하게 떨어지는지 먼저 체크
+          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+          if (isInteger) {
+            console.log(`✅ 비대칭 프레임으로 정수 슬롯폭! leftFrame=${leftFrame}, rightFrame=${rightFrame}, 슬롯폭=${Math.round(slotWidth)}mm`);
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                frameSize: {
+                  ...currentFrameSize,
+                  left: leftFrame,
+                  right: rightFrame
+                }
+              },
+              slotWidth: Math.round(slotWidth),
+              adjustmentMade: true
+            };
+          }
+          
+          // 0.5 단위로 떨어지는지 체크
+          const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+          const remainder = Math.abs(slotWidth - roundedSlotWidth);
+          
+          if (remainder < smallestRemainder) {
+            smallestRemainder = remainder;
+            bestSlotWidth = roundedSlotWidth;
+            bestConfig = { left: leftFrame, right: rightFrame };
+          }
         }
       }
       
