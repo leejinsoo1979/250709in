@@ -1319,14 +1319,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 인덱싱 정보 계산 (컬럼 정보) - 영역별 공간 정보 사용
   const indexing = calculateSpaceIndexing(zoneSpaceInfo);
   
-  // 단일 컬럼의 너비 계산
-  const columnWidth = indexing.columnWidth;
+  // adjustForIntegerSlotWidth로 조정된 spaceInfo 가져오기
+  const adjustedResult = SpaceCalculator.adjustForIntegerSlotWidth(zoneSpaceInfo);
+  const adjustedSpaceInfo = adjustedResult.adjustmentMade ? adjustedResult.adjustedSpaceInfo : zoneSpaceInfo;
+  const adjustedInternalSpace = calculateInternalSpace(adjustedSpaceInfo);
   
-  // 카테고리에 따라 모듈 가져오기
+  // 단일 컬럼의 너비 계산 (조정된 슬롯 너비 사용)
+  const columnWidth = adjustedResult.slotWidth || indexing.columnWidth;
+  
+  // 카테고리에 따라 모듈 가져오기 (조정된 spaceInfo 사용)
   let categoryModules: ModuleData[] = [];
   if (moduleCategory === 'upper') {
     // 상부장 카테고리 선택시
-    categoryModules = getModulesByCategory('upper', zoneInternalSpace, zoneSpaceInfo);
+    categoryModules = getModulesByCategory('upper', adjustedInternalSpace, adjustedSpaceInfo);
     
     console.log('🎯 상부장 모듈 로드:', {
       count: categoryModules.length,
@@ -1334,7 +1339,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
     });
   } else if (moduleCategory === 'lower') {
     // 하부장 카테고리 선택시
-    categoryModules = getModulesByCategory('lower', zoneInternalSpace, zoneSpaceInfo);
+    categoryModules = getModulesByCategory('lower', adjustedInternalSpace, adjustedSpaceInfo);
     
     console.log('🎯 하부장 모듈 로드:', {
       count: categoryModules.length,
@@ -1342,7 +1347,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
     });
   } else {
     // 키큰장(전체형) 모듈
-    categoryModules = getModulesByCategory('full', zoneInternalSpace, zoneSpaceInfo);
+    categoryModules = getModulesByCategory('full', adjustedInternalSpace, adjustedSpaceInfo);
   }
   
   const fullModules = categoryModules;
