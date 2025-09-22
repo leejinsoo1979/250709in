@@ -701,7 +701,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         }
         
         // 새 모듈 설정 업데이트
-        const baseModuleType = actualModuleId.replace(/-\d+(\.\d+)?$/, ''); // 너비를 제외한 기본 타입
+        // 소수점 포함 숫자만 정확히 제거하는 패턴
+        const baseModuleType = actualModuleId.replace(/-[\d.]+$/, ''); // 너비를 제외한 기본 타입
         const newModule = {
           id: placedId,
           moduleId: actualModuleId,
@@ -769,7 +770,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       let adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
       // 새 모듈 배치
-      const baseModuleType = actualModuleId.replace(/-\d+(\.\d+)?$/, ''); // 너비를 제외한 기본 타입
+      // 소수점 포함 숫자만 정확히 제거하는 패턴
+      const baseModuleType = actualModuleId.replace(/-[\d.]+$/, ''); // 너비를 제외한 기본 타입
       const newModule = {
         id: placedId,
         moduleId: actualModuleId,

@@ -1170,7 +1170,7 @@ const Configurator: React.FC = () => {
                 // baseModuleType이 없는 경우 추가
                 const modulesWithBaseType = designFile.furniture.placedModules.map(m => ({
                   ...m,
-                  baseModuleType: m.baseModuleType || m.moduleId.replace(/-\d+(\.\d+)?$/, '')
+                  baseModuleType: m.baseModuleType || m.moduleId.replace(/-[\d.]+$/, '')
                 }));
                 
                 setPlacedModules(modulesWithBaseType);

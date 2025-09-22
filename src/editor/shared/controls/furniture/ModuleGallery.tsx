@@ -1101,7 +1101,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const newModule = {
         id: placedId,
         moduleId: targetModuleId, // 정확한 너비의 모듈 ID 사용
-        baseModuleType: module.id.replace(/-\d+$/, ''), // 너비를 제외한 기본 타입
+        baseModuleType: module.id.replace(/-[\d.]+$/, ''), // 소수점 포함 숫자만 정확히 제거
         moduleWidth: module.dimensions.width, // 실제 모듈 너비 저장
         position: {
           x: positionX,

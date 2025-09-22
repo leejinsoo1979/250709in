@@ -92,8 +92,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           // 영역에 맞는 새로운 moduleId 생성
           // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
-          const baseType = module.baseModuleType || module.moduleId.replace(/-\d+(\.\d+)?$/, ''); // baseModuleType 우선 사용
-          const newModuleId = `${baseType}-${targetZone.columnWidth * (isDual ? 2 : 1)}`;
+          // 소수점 포함 숫자만 정확히 제거하는 패턴
+          const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, ''); // baseModuleType 우선 사용
+          const newModuleId = `${baseType}-${Math.round(targetZone.columnWidth * (isDual ? 2 : 1) * 10) / 10}`;
           
           console.log('🔄 Zone 가구 업데이트:', {
             originalModuleId: module.moduleId,
@@ -159,7 +160,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             const oldWidth = parseFloat(match[2]); // 두 번째 캡처 그룹이 숫자 (소수점 포함)
             // 듀얼 모듈인지 확인 (기존 폭이 컬럼폭*2와 유사한지)
             if (Math.abs(oldWidth - (oldIndexing.columnWidth * 2)) < 50) {
-              newModuleId = `${match[1]}-${newIndexing.columnWidth * 2}`;
+              // 소수점 1자리까지 정확히 처리
+              newModuleId = `${match[1]}-${Math.round(newIndexing.columnWidth * 2 * 10) / 10}`;
               isDualModule = true;
               break;
             }
@@ -178,7 +180,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           for (const pattern of singlePatterns) {
             const match = module.moduleId.match(pattern);
             if (match) {
-              newModuleId = `${match[1]}-${newIndexing.columnWidth}`;
+              // 소수점 1자리까지 정확히 처리
+              newModuleId = `${match[1]}-${Math.round(newIndexing.columnWidth * 10) / 10}`;
               patternMatched = true;
               break;
             }
@@ -189,7 +192,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             // baseModuleType이 있으면 사용, 없으면 기본값
             const baseType = module.baseModuleType || 'single-2drawer-hanging';
             console.warn(`❌ 패턴 매칭 실패: ${module.moduleId}, ${baseType}으로 폴백`);
-            newModuleId = `${baseType}-${newIndexing.columnWidth}`;
+            // 소수점 1자리까지 정확히 처리
+            newModuleId = `${baseType}-${Math.round(newIndexing.columnWidth * 10) / 10}`;
           }
         }
         
@@ -223,7 +227,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         
         if (isDualModule && (slotIndex + 1) >= maxColumnCount) {
           // 듀얼 가구를 싱글로 변환 시도
-          newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-(\d+)$/, `-${newIndexing.columnWidth}`);
+          // 소수점 1자리까지 정확히 처리
+          const normalizedWidth = Math.round(newIndexing.columnWidth * 10) / 10;
+          newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-[\d.]+$/, `-${normalizedWidth}`);
           isDualModule = false;
         }
         
