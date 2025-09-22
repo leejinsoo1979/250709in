@@ -96,6 +96,17 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, ''); // baseModuleType 우선 사용
           const newModuleId = `${baseType}-${Math.round(targetZone.columnWidth * (isDual ? 2 : 1) * 10) / 10}`;
           
+          // 디버깅: baseModuleType 확인
+          if (module.moduleId.includes('hanging')) {
+            console.log('🎯🎯🎯 Hanging 타입 가구 업데이트:', {
+              originalModuleId: module.moduleId,
+              baseModuleType: module.baseModuleType,
+              extractedBaseType: baseType,
+              newModuleId,
+              isDual
+            });
+          }
+          
           console.log('🔄 Zone 가구 업데이트:', {
             originalModuleId: module.moduleId,
             baseType,
@@ -163,6 +174,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               // 소수점 1자리까지 정확히 처리
               newModuleId = `${match[1]}-${Math.round(newIndexing.columnWidth * 2 * 10) / 10}`;
               isDualModule = true;
+              
+              // 디버깅: hanging 타입 체크
+              if (module.moduleId.includes('hanging')) {
+                console.log('🚨🚨🚨 Dual Hanging 패턴 매칭:', {
+                  originalModuleId: module.moduleId,
+                  baseModuleType: module.baseModuleType,
+                  match1: match[1],
+                  oldWidth,
+                  newModuleId,
+                  oldColumnWidth: oldIndexing.columnWidth,
+                  newColumnWidth: newIndexing.columnWidth
+                });
+              }
               break;
             }
           }
