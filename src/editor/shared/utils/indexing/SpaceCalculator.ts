@@ -67,7 +67,8 @@ export class SpaceCalculator {
       maxColumns,
       canUseSingle,
       canUseDual,
-      columnWidthWillBe: (columns: number) => Math.floor(internalWidth / columns)
+      // 소수점 1자리까지 정확히 계산
+      columnWidthWillBe: (columns: number) => Math.round((internalWidth / columns) * 10) / 10
     };
   }
 
@@ -76,7 +77,8 @@ export class SpaceCalculator {
    */
   static validateColumnCount(columnCount: number, internalWidth: number) {
     const limits = SpaceCalculator.getColumnCountLimits(internalWidth);
-    const columnWidth = Math.floor(internalWidth / columnCount);
+    // 소수점 1자리까지 정확히 계산
+    const columnWidth = Math.round((internalWidth / columnCount) * 10) / 10;
     
     return {
       isValid: columnCount >= limits.minColumns && 
@@ -257,7 +259,8 @@ export class SpaceCalculator {
           const internalWidth = hasLeftWall 
             ? baseWidth - gap  // 왼쪽 벽: 왼쪽만 이격거리
             : baseWidth - gap; // 오른쪽 벽: 오른쪽만 이격거리
-          const slotWidth = Math.floor(internalWidth / columnCount);
+          // 소수점 1자리까지 정확히 계산
+          const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
           
           if (internalWidth % columnCount === 0) {
             return {
@@ -279,7 +282,8 @@ export class SpaceCalculator {
         const internalWidth = hasLeftWall 
           ? baseWidth - gap
           : baseWidth - gap;
-        const slotWidth = Math.floor(internalWidth / columnCount);
+        // 소수점 1자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
         return {
           adjustedSpaceInfo: {
             ...spaceInfo,
@@ -295,7 +299,8 @@ export class SpaceCalculator {
       } else {
         // 프리스탠딩: 양쪽 엔드패널 18mm 고정, 조정 불가
         const internalWidth = spaceInfo.width - (END_PANEL_THICKNESS * 2);
-        const slotWidth = Math.floor(internalWidth / columnCount);
+        // 소수점 1자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
         return {
           adjustedSpaceInfo: spaceInfo,
           slotWidth,
@@ -316,7 +321,8 @@ export class SpaceCalculator {
       if (!canAdjustLeft && !canAdjustRight) {
         // 조정 불가능 (양쪽 모두 엔드패널)
         const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-        const slotWidth = Math.floor(internalWidth / columnCount);
+        // 소수점 1자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
         return {
           adjustedSpaceInfo: spaceInfo,
           slotWidth,
@@ -334,7 +340,8 @@ export class SpaceCalculator {
         const rightFrame = canAdjustRight ? Math.max(40, Math.min(60, baseRight + adjustment)) : baseRight;
         
         const internalWidth = spaceInfo.width - leftFrame - rightFrame;
-        const slotWidth = Math.floor(internalWidth / columnCount);
+        // 소수점 1자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
         
         if (internalWidth % columnCount === 0) {
           return {
@@ -354,7 +361,8 @@ export class SpaceCalculator {
       
       // 정수로 안 떨어지면 원래 값 유지
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-      const slotWidth = Math.floor(internalWidth / columnCount);
+      // 소수점 1자리까지 정확히 계산
+      const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
       return {
         adjustedSpaceInfo: spaceInfo,
         slotWidth,

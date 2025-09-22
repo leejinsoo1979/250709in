@@ -1166,7 +1166,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       // 단내림 영역의 실제 내경 계산
                       const droppedInternalWidth = SpaceCalculator.calculateDroppedZoneInternalWidth(spaceInfo);
                       const doorCount = spaceInfo.droppedCeilingDoorCount || 1; // 기본값 1
-                      const slotWidth = droppedInternalWidth ? Math.floor(droppedInternalWidth / doorCount) : 0;
+                      // 소수점 1자리까지 정확히 계산
+                      const slotWidth = droppedInternalWidth ? Math.round((droppedInternalWidth / doorCount) * 10) / 10 : 0;
                       
                       return (
                         <div className={styles.zoneInfoItem}>
@@ -1212,7 +1213,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       // 일반 영역의 실제 내경 계산
                       const normalInternalWidth = SpaceCalculator.calculateNormalZoneInternalWidth(spaceInfo);
                       const doorCount = spaceInfo.mainDoorCount || spaceInfo.customColumnCount || 3;
-                      const slotWidth = normalInternalWidth ? Math.floor(normalInternalWidth / doorCount) : 0;
+                      // 소수점 1자리까지 정확히 계산
+                      const slotWidth = normalInternalWidth ? Math.round((normalInternalWidth / doorCount) * 10) / 10 : 0;
                       
                       return (
                         <div className={styles.zoneInfoItem}>

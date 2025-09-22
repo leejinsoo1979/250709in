@@ -49,7 +49,8 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
   
   // 컬럼 제한 계산
   const columnLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
-  const currentColumnWidth = Math.floor(internalWidth / columnCount);
+  // 소수점 1자리까지 정확히 계산
+  const currentColumnWidth = Math.round((internalWidth / columnCount) * 10) / 10;
   
   const handleColumnCountChange = (newCount: number) => {
     console.log('🎯 handleColumnCountChange 호출:', {
