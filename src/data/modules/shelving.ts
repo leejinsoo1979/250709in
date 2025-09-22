@@ -1361,10 +1361,11 @@ export const generateShelvingModules = (
   let dualWidth: number;
   if (slotWidths && slotWidths.length >= 2) {
     // 실제 슬롯 너비들의 합계 사용 (예: 449 + 449 = 898)
-    dualWidth = slotWidths[0] + slotWidths[1];
+    // 소수점 1자리로 정규화 (514.5 + 514.5 = 1029.0 → 1029)
+    dualWidth = Math.round((slotWidths[0] + slotWidths[1]) * 10) / 10;
   } else {
     // 기본값: 평균 너비의 2배
-    dualWidth = columnWidth * 2;
+    dualWidth = Math.round(columnWidth * 2 * 10) / 10;
   }
   
   console.log('🎯🔥 듀얼 가구 생성 체크:', {
