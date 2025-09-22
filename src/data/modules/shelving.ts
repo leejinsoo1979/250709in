@@ -229,7 +229,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `single-2drawer-hanging-${widthForId}`,
@@ -279,7 +279,7 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `single-2hanging-${widthForId}`,
@@ -329,7 +329,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `single-4drawer-hanging-${widthForId}`,
@@ -384,7 +384,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const sections = applySafetyShelf(baseSections, maxHeight);
   
   // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-2drawer-hanging-${widthForId}`,
@@ -433,7 +433,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
-  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-2hanging-${widthForId}`,
@@ -483,7 +483,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   // 안전선반 적용
   const sections = applySafetyShelf(baseSections, maxHeight);
   
-  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-4drawer-hanging-${widthForId}`,
@@ -546,7 +546,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const leftSections = applySafetyShelf(leftBaseSections, maxHeight);
   const rightSections = applySafetyShelf(rightBaseSections, maxHeight);
   
-  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-2drawer-styler-${widthForId}`,
@@ -584,7 +584,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const bottomSectionHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT; // 하단부 총 높이
   const topHangingHeight = maxHeight - bottomSectionHeight; // 상단 옷장 높이
   
-  const widthForId = Math.round(dualColumnWidth * 10) / 10;
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-4drawer-pantshanger-${widthForId}`,
@@ -649,7 +649,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
  * 상부장 기본형 - 선반 2단
  */
 const createUpperCabinet1 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `upper-cabinet-shelf-${widthForId}`,
@@ -684,7 +684,7 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
  * 상부장 2단형 - 중간 선반 1개
  */
 const createUpperCabinet4 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `upper-cabinet-2tier-${widthForId}`,
@@ -718,7 +718,7 @@ const createUpperCabinet4 = (columnWidth: number): ModuleData => {
  * 상부장 오픈형 - 선반 없음
  */
 const createUpperCabinet2 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `upper-cabinet-open-${widthForId}`,
@@ -751,7 +751,7 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
  * 상부장 혼합형 - 상단 오픈 + 하단 선반
  */
 const createUpperCabinet3 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `upper-cabinet-mixed-${widthForId}`,
@@ -792,7 +792,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
  * 슬롯 너비에 따라 동적으로 조절
  */
 const createLowerCabinet1 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `lower-cabinet-basic-${widthForId}`,
@@ -830,7 +830,7 @@ const createLowerCabinet1 = (columnWidth: number): ModuleData => {
  * 하부장 2단형 - 중간 선반 1개
  */
 const createLowerCabinet2 = (columnWidth: number): ModuleData => {
-  const widthForId = Math.round(columnWidth * 10) / 10;
+  const widthForId = Math.round(columnWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `lower-cabinet-2tier-${widthForId}`,
@@ -872,7 +872,7 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
  * 듀얼 상부장 선반형 - 선반 2단
  */
 const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-upper-cabinet-shelf-${widthForId}`,
@@ -914,7 +914,7 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
  * 듀얼 상부장 2단형 - 중간 선반 1개
  */
 const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-upper-cabinet-2tier-${widthForId}`,
@@ -956,7 +956,7 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
  * 듀얼 상부장 오픈형 - 선반 없음
  */
 const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-upper-cabinet-open-${widthForId}`,
@@ -996,7 +996,7 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
  * 듀얼 상부장 혼합형 - 상단 오픈 + 하단 선반
  */
 const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-upper-cabinet-mixed-${widthForId}`,
@@ -1052,7 +1052,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
  * 듀얼 하부장 기본형 - 선반 2단
  */
 const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-lower-cabinet-basic-${widthForId}`,
@@ -1098,7 +1098,7 @@ const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
  * 듀얼 하부장 2단형 - 중간 선반 1개
  */
 const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
-  const widthForId = Math.round(dualWidth * 10) / 10;
+  const widthForId = Math.round(dualWidth * 100) / 100;
   
   const base = createFurnitureBase(
     `dual-lower-cabinet-2tier-${widthForId}`,
@@ -1216,13 +1216,13 @@ export const generateShelvingModules = (
     columnCount = slotWidths.length;
     
     // 모든 슬롯이 같은 너비인지 확인
-    const uniqueWidths = [...new Set(slotWidths.map(w => Math.round(w * 10) / 10))];
+    const uniqueWidths = [...new Set(slotWidths.map(w => Math.round(w * 100) / 100))];
     if (uniqueWidths.length === 1) {
       // 모든 슬롯이 같은 너비면 그 값을 사용
       columnWidth = uniqueWidths[0];
     } else {
       // 다른 너비가 있으면 첫 번째 슬롯 너비 사용
-      columnWidth = Math.round(slotWidths[0] * 10) / 10;
+      columnWidth = Math.round(slotWidths[0] * 100) / 100;
     }
     
     console.log('🎯 _tempSlotWidths 사용:', {
@@ -1257,7 +1257,7 @@ export const generateShelvingModules = (
       });
       
       if (zone === 'dropped' && zoneSlotInfo.dropped) {
-        columnWidth = Math.round(zoneSlotInfo.dropped.columnWidth * 10) / 10;
+        columnWidth = Math.round(zoneSlotInfo.dropped.columnWidth * 100) / 100;
         columnCount = zoneSlotInfo.dropped.columnCount;
         slotWidths = zoneSlotInfo.dropped.slotWidths;
         console.log('✅ [generateShelvingModules] 단내림 영역 사용:', {
@@ -1269,7 +1269,7 @@ export const generateShelvingModules = (
           internalSpaceHeight: internalSpace.height
         });
       } else if (zone === 'normal' && zoneSlotInfo.normal) {
-        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 10) / 10;
+        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 100) / 100;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
         console.log('✅ [generateShelvingModules] 메인 영역 사용:', {
@@ -1289,7 +1289,7 @@ export const generateShelvingModules = (
             normal: !!zoneSlotInfo.normal
           }
         });
-        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 10) / 10;
+        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 100) / 100;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
       }
@@ -1349,8 +1349,8 @@ export const generateShelvingModules = (
   // === 싱글 가구 생성 ===
   console.log('🔨 싱글 가구 생성 시작:', {
     columnWidth,
-    '반올림된너비': Math.round(columnWidth * 10) / 10,
-    '생성될ID예시': `single-2drawer-hanging-${Math.round(columnWidth * 10) / 10}`
+    '반올림된너비': Math.round(columnWidth * 100) / 100,
+    '생성될ID예시': `single-2drawer-hanging-${Math.round(columnWidth * 100) / 100}`
   });
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
@@ -1361,11 +1361,11 @@ export const generateShelvingModules = (
   let dualWidth: number;
   if (slotWidths && slotWidths.length >= 2) {
     // 실제 슬롯 너비들의 합계 사용 (예: 449 + 449 = 898)
-    // 소수점 1자리로 정규화 (514.5 + 514.5 = 1029.0 → 1029)
-    dualWidth = Math.round((slotWidths[0] + slotWidths[1]) * 10) / 10;
+    // 소수점 2자리로 정규화
+    dualWidth = Math.round((slotWidths[0] + slotWidths[1]) * 100) / 100;
   } else {
     // 기본값: 평균 너비의 2배
-    dualWidth = Math.round(columnWidth * 2 * 10) / 10;
+    dualWidth = Math.round(columnWidth * 2 * 100) / 100;
   }
   
   console.log('🎯🔥 듀얼 가구 생성 체크:', {

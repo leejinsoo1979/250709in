@@ -201,20 +201,13 @@ export class ColumnIndexer {
       }
       
       // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해) - 0.5 단위 균등 분할
-      const exactSlotWidth = internalWidth / columnCount;
-      const baseSlotWidth = Math.floor(exactSlotWidth);
-      const remainder = internalWidth - (baseSlotWidth * columnCount);
-      
-      // remainder를 0.5 단위로 분배
-      const slotsWithHalf = remainder * 2;
+      // 소수점 2자리까지 정확한 균등분할
+      const exactSlotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
       const slotWidths: number[] = [];
       
+      // 모든 슬롯을 동일한 너비로 설정 (소수점 2자리)
       for (let i = 0; i < columnCount; i++) {
-        if (i < slotsWithHalf) {
-          slotWidths.push(baseSlotWidth + 0.5);
-        } else {
-          slotWidths.push(baseSlotWidth);
-        }
+        slotWidths.push(exactSlotWidth);
       }
       
       return {
@@ -334,14 +327,8 @@ export class ColumnIndexer {
     const slotWidths: number[] = [];
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 프리스탠딩: 전체너비를 균등 분할
-      const exactSlotWidth = totalWidth / columnCount;
-      const baseSlotWidth = Math.floor(exactSlotWidth); // 정수 부분
-      const remainder = totalWidth - (baseSlotWidth * columnCount); // 남은 너비
-      
-      // remainder를 0.5 단위로 분배
-      // 예: 2321 / 4 = 580.25 → base 580, remainder 1
-      // → 580.5 × 2개, 580 × 2개
+      // 노서라운드 프리스탠딩: 전체너비를 균등 분할 (소수점 2자리)
+      const exactSlotWidth = Math.round((totalWidth / columnCount) * 100) / 100;
       const slotsWithHalf = remainder * 2; // 0.5를 받을 슬롯 개수
       
       for (let i = 0; i < columnCount; i++) {
@@ -691,13 +678,8 @@ export class ColumnIndexer {
       const slotWidths: number[] = [];
       
       if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
-        // 노서라운드 벽없음: 전체너비를 균등 분할 (엔드패널은 첫/마지막 슬롯에 포함)
-        const exactSlotWidth = spaceInfo.width / columnCount;
-        const baseSlotWidth = Math.floor(exactSlotWidth);
-        const remainder = spaceInfo.width - (baseSlotWidth * columnCount);
-        
-        // remainder를 0.5 단위로 분배
-        const slotsWithHalf = remainder * 2;
+        // 노서라운드 벽없음: 전체너비를 균등 분할 (소수점 2자리)
+        const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
           if (i < slotsWithHalf) {
