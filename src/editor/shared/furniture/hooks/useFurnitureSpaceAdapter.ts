@@ -19,11 +19,6 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
 
   // 새로운 공간에 맞게 가구 업데이트 함수 (간단한 버전)
   const updateFurnitureForNewSpace = useCallback((oldSpaceInfo: SpaceInfo, newSpaceInfo: SpaceInfo) => {
-    console.log('🚨 updateFurnitureForNewSpace 호출됨:', {
-      oldSpaceInfo,
-      newSpaceInfo,
-      caller: new Error().stack
-    });
     setPlacedModules(currentModules => {
       if (currentModules.length === 0) return currentModules;
       
@@ -32,7 +27,6 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       
       // 컬럼 변경이 있을 때만 로그 출력
       if (oldIndexing.columnCount !== newIndexing.columnCount || oldIndexing.columnWidth !== newIndexing.columnWidth) {
-        console.log(`🔄 컬럼 변경: ${oldIndexing.columnCount}개(${oldIndexing.columnWidth}mm) → ${newIndexing.columnCount}개(${newIndexing.columnWidth}mm)`);
       }
       
       const updatedModules: PlacedModule[] = [];
@@ -40,12 +34,6 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       currentModules.forEach(module => {
         // 가구가 이미 zone 정보를 가지고 있는 경우 해당 영역 내에서만 처리
         if (module.zone && newSpaceInfo.droppedCeiling?.enabled) {
-          console.log('🔍 Zone 가구 처리 시작:', {
-            moduleId: module.moduleId,
-            zone: module.zone,
-            customWidth: module.customWidth,
-            isDualSlot: module.isDualSlot
-          });
           const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(newSpaceInfo, newSpaceInfo.customColumnCount);
           
           if (!zoneInfo.dropped && module.zone === 'dropped') {
@@ -98,28 +86,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           // 디버깅: baseModuleType 확인
           if (module.moduleId.includes('hanging')) {
-            console.log('🎯🎯🎯 Hanging 타입 가구 업데이트:', {
-              originalModuleId: module.moduleId,
-              baseModuleType: module.baseModuleType,
-              extractedBaseType: baseType,
-              newModuleId,
-              isDual
-            });
           }
           
-          console.log('🔄 Zone 가구 업데이트:', {
-            originalModuleId: module.moduleId,
-            baseType,
-            isDual,
-            zone: module.zone,
-            targetZone: targetZone,
-            slotIndex,
-            newX: newX * 0.01,
-            newModuleId,
-            oldWidth: module.customWidth || module.adjustedWidth,
-            newWidth: targetZone.columnWidth * (isDual ? 2 : 1),
-            targetZoneSlotWidths: targetZone.slotWidths
-          });
           
           updatedModules.push({
             ...module,
@@ -177,15 +145,6 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               
               // 디버깅: hanging 타입 체크
               if (module.moduleId.includes('hanging')) {
-                console.log('🚨🚨🚨 Dual Hanging 패턴 매칭:', {
-                  originalModuleId: module.moduleId,
-                  baseModuleType: module.baseModuleType,
-                  match1: match[1],
-                  oldWidth,
-                  newModuleId,
-                  oldColumnWidth: oldIndexing.columnWidth,
-                  newColumnWidth: newIndexing.columnWidth
-                });
               }
               break;
             }
@@ -215,7 +174,6 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           if (!patternMatched) {
             // baseModuleType이 있으면 사용, 없으면 기본값
             const baseType = module.baseModuleType || 'single-2drawer-hanging';
-            console.warn(`❌ 패턴 매칭 실패: ${module.moduleId}, ${baseType}으로 폴백`);
             // 소수점 1자리까지 정확히 처리
             newModuleId = `${baseType}-${Math.round(newIndexing.columnWidth * 10) / 10}`;
           }
