@@ -224,35 +224,44 @@ export class SpaceCalculator {
         }
         
         // 대칭으로 안되면 비대칭 이격거리 시도 (이격 합이 홀수인 경우)
-        for (let leftGap = 2; leftGap <= 5; leftGap++) {
-          for (let rightGap = 2; rightGap <= 5; rightGap++) {
-            // 대칭은 이미 검사했으므로 스킵
-            if (leftGap === rightGap) continue;
+        // 차이가 작은 것부터 시도 (예: 3,4 먼저 시도하고 그 다음 2,5)
+        for (let diff = 1; diff <= 3; diff++) {
+          for (let leftGap = 2; leftGap <= 5; leftGap++) {
+            const rightGap = leftGap + diff;
+            if (rightGap > 5) continue;
             
-            const internalWidth = baseWidth - leftGap - rightGap;
-            const slotWidth = internalWidth / columnCount;
+            // 두 가지 경우 모두 시도: (left, right) 및 (right, left)
+            const configs = [
+              { left: leftGap, right: rightGap },
+              { left: rightGap, right: leftGap }
+            ];
             
-            // 정수로 완벽하게 떨어지는지 체크
-            const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
-            
-            if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
-              return {
-                adjustedSpaceInfo: {
-                  ...spaceInfo,
-                  gapConfig: { left: leftGap, right: rightGap }
-                },
-                slotWidth: Math.round(slotWidth),
-                adjustmentMade: true
-              };
-            }
-            
-            // 0.5 단위로 떨어지는 경우도 기록
-            const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
-            const remainder = Math.abs(slotWidth - roundedSlotWidth);
-            
-            if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
-              bestSlotWidth = roundedSlotWidth;
-              bestConfig = { left: leftGap, right: rightGap };
+            for (const config of configs) {
+              const internalWidth = baseWidth - config.left - config.right;
+              const slotWidth = internalWidth / columnCount;
+              
+              // 정수로 완벽하게 떨어지는지 체크
+              const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+              
+              if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+                return {
+                  adjustedSpaceInfo: {
+                    ...spaceInfo,
+                    gapConfig: config
+                  },
+                  slotWidth: Math.round(slotWidth),
+                  adjustmentMade: true
+                };
+              }
+              
+              // 0.5 단위로 떨어지는 경우도 기록
+              const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+              const remainder = Math.abs(slotWidth - roundedSlotWidth);
+              
+              if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+                bestSlotWidth = roundedSlotWidth;
+                bestConfig = config;
+              }
             }
           }
         }
