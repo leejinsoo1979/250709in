@@ -671,43 +671,21 @@ export class ColumnIndexer {
         const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
-          if (i < slotsWithHalf) {
-            slotWidths.push(baseSlotWidth + 0.5);
-          } else {
-            slotWidths.push(baseSlotWidth);
-          }
+          slotWidths.push(exactSlotWidth);
         }
       } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-        // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨
-        const exactSlotWidth = spaceInfo.width / columnCount;
-        const baseSlotWidth = Math.floor(exactSlotWidth);
-        const remainder = spaceInfo.width - (baseSlotWidth * columnCount);
-        
-        // remainder를 0.5 단위로 분배
-        const slotsWithHalf = remainder * 2;
+        // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨 (소수점 2자리)
+        const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
-          if (i < slotsWithHalf) {
-            slotWidths.push(baseSlotWidth + 0.5);
-          } else {
-            slotWidths.push(baseSlotWidth);
-          }
+          slotWidths.push(exactSlotWidth);
         }
       } else {
-        // 서라운드 모드 또는 빌트인: 기존 로직
-        const exactSlotWidth = internalWidth / columnCount;
-        const baseSlotWidth = Math.floor(exactSlotWidth);
-        const remainder = internalWidth - (baseSlotWidth * columnCount);
-        
-        // remainder를 0.5 단위로 분배
-        const slotsWithHalf = remainder * 2;
+        // 서라운드 모드 또는 빌트인: 소수점 2자리 균등분할
+        const exactSlotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
-          if (i < slotsWithHalf) {
-            slotWidths.push(baseSlotWidth + 0.5);
-          } else {
-            slotWidths.push(baseSlotWidth);
-          }
+          slotWidths.push(exactSlotWidth);
         }
       }
       
