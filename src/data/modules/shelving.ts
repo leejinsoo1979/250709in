@@ -1181,13 +1181,15 @@ export const generateShelvingModules = (
   
   if (indexingSpaceInfo && '_tempSlotWidths' in indexingSpaceInfo && indexingSpaceInfo._tempSlotWidths) {
     slotWidths = indexingSpaceInfo._tempSlotWidths as number[];
-    columnWidth = slotWidths[0];
+    // 소수점 1자리로 정규화 (599.0 → 599)
+    columnWidth = Math.round(slotWidths[0] * 10) / 10;
     columnCount = slotWidths.length;
     
     console.log('🎯 _tempSlotWidths 사용:', {
       slotWidths,
       columnWidth,
-      '반올림된너비': Math.round(columnWidth * 10) / 10
+      '원본첫번째슬롯': slotWidths[0],
+      '정규화된너비': columnWidth
     });
   } else {
     // 단내림 구간인지 확인하고 zoneSlotInfo 사용
@@ -1214,7 +1216,7 @@ export const generateShelvingModules = (
       });
       
       if (zone === 'dropped' && zoneSlotInfo.dropped) {
-        columnWidth = zoneSlotInfo.dropped.columnWidth;
+        columnWidth = Math.round(zoneSlotInfo.dropped.columnWidth * 10) / 10;
         columnCount = zoneSlotInfo.dropped.columnCount;
         slotWidths = zoneSlotInfo.dropped.slotWidths;
         console.log('✅ [generateShelvingModules] 단내림 영역 사용:', {
@@ -1226,7 +1228,7 @@ export const generateShelvingModules = (
           internalSpaceHeight: internalSpace.height
         });
       } else if (zone === 'normal' && zoneSlotInfo.normal) {
-        columnWidth = zoneSlotInfo.normal.columnWidth;
+        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 10) / 10;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
         console.log('✅ [generateShelvingModules] 메인 영역 사용:', {
@@ -1246,7 +1248,7 @@ export const generateShelvingModules = (
             normal: !!zoneSlotInfo.normal
           }
         });
-        columnWidth = zoneSlotInfo.normal.columnWidth;
+        columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 10) / 10;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
       }
