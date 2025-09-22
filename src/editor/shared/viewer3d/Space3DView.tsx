@@ -1012,7 +1012,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       >
         <ThreeCanvas 
           cameraPosition={cameraPosition}
-          cameraTarget={[centerX, mmToThreeUnits((spaceInfo?.height || 2400) * 0.5), 0]}
+          cameraTarget={(() => {
+            // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
+            let centerX = 0;
+            if (spaceInfo?.surroundType === 'surround' && spaceInfo.frameSize) {
+              const leftFrame = spaceInfo.frameSize.left || 50;
+              const rightFrame = spaceInfo.frameSize.right || 50;
+              centerX = mmToThreeUnits((leftFrame - rightFrame) / 2);
+            } else if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.installType === 'builtin' && spaceInfo.gapConfig) {
+              const leftGap = spaceInfo.gapConfig.left || 2;
+              const rightGap = spaceInfo.gapConfig.right || 2;
+              centerX = mmToThreeUnits((leftGap - rightGap) / 2);
+            }
+            return [centerX, mmToThreeUnits((spaceInfo?.height || 2400) * 0.5), 0];
+          })()}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
           renderMode={renderMode}
