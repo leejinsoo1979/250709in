@@ -406,11 +406,50 @@ export class SpaceCalculator {
       }
       
       // 대칭으로 안되면 비대칭 조정 시도 (프레임 합이 홀수인 경우)
+      // 차이가 작은 것부터 시도하여 극단적인 차이 방지
       let bestConfig = null;
       let bestSlotWidth = null;
       let smallestRemainder = Number.MAX_VALUE;
       
-      // 왼쪽 프레임 40~60mm, 오른쪽 프레임 40~60mm 범위에서 모든 조합 시도
+      // 프레임 차이가 작은 것부터 시도 (차이 1mm부터 최대 20mm까지)
+      for (let diff = 1; diff <= 20; diff++) {
+        for (let leftAdjust = -10; leftAdjust <= 10; leftAdjust++) {
+          // 차이를 고려한 오른쪽 조정값들
+          const rightAdjusts = [leftAdjust + diff, leftAdjust - diff];
+          
+          for (const rightAdjust of rightAdjusts) {
+            if (rightAdjust < -10 || rightAdjust > 10) continue;
+            
+            const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + leftAdjust)) : baseLeft;
+            const rightFrame = canAdjustRight ? Math.max(40, Math.min(60, baseRight + rightAdjust)) : baseRight;
+            
+            // 실제 차이가 범위 내인지 확인
+            if (Math.abs(leftFrame - rightFrame) !== diff) continue;
+            
+            const internalWidth = spaceInfo.width - leftFrame - rightFrame;
+            const slotWidth = internalWidth / columnCount;
+            
+            // 정수로 완벽하게 떨어지는지 먼저 체크
+            const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+            if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+              return {
+                adjustedSpaceInfo: {
+                  ...spaceInfo,
+                  frameSize: {
+                    ...currentFrameSize,
+                    left: leftFrame,
+                    right: rightFrame
+                  }
+                },
+                slotWidth: Math.round(slotWidth),
+                adjustmentMade: true
+              };
+            }
+          }
+        }
+      }
+      
+      // 0.5 단위 폴백을 위한 전체 범위 검색
       for (let leftAdjust = -10; leftAdjust <= 10; leftAdjust++) {
         for (let rightAdjust = -10; rightAdjust <= 10; rightAdjust++) {
           const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + leftAdjust)) : baseLeft;
@@ -419,28 +458,11 @@ export class SpaceCalculator {
           const internalWidth = spaceInfo.width - leftFrame - rightFrame;
           const slotWidth = internalWidth / columnCount;
           
-          // 정수로 완벽하게 떨어지는지 먼저 체크
-          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
-          if (isInteger) {
-            return {
-              adjustedSpaceInfo: {
-                ...spaceInfo,
-                frameSize: {
-                  ...currentFrameSize,
-                  left: leftFrame,
-                  right: rightFrame
-                }
-              },
-              slotWidth: Math.round(slotWidth),
-              adjustmentMade: true
-            };
-          }
-          
           // 0.5 단위로 떨어지는지 체크
           const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
           const remainder = Math.abs(slotWidth - roundedSlotWidth);
           
-          if (remainder < smallestRemainder) {
+          if (remainder < smallestRemainder && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
             smallestRemainder = remainder;
             bestSlotWidth = roundedSlotWidth;
             bestConfig = { left: leftFrame, right: rightFrame };
