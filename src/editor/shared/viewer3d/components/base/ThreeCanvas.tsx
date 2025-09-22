@@ -354,7 +354,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [resetCamera, viewMode, cameraMode]);
 
-  // 기둥 드래그 관련 이벤트 처리
+  // 기둥 드래그 및 설정 변경 관련 이벤트 처리
   useEffect(() => {
     // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋
     const handleResetCameraForColumn = () => {
@@ -366,13 +366,21 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       console.log('🎯 기둥 드래그 종료');
       // 드래그 종료 시에는 특별한 처리 없음
     };
+    
+    // 공간 설정 변경 시 카메라 리셋
+    const handleResetCameraForSettings = () => {
+      console.log('🎯 공간 설정 변경 - 카메라 리셋');
+      resetCamera();
+    };
 
     window.addEventListener('reset-camera-for-column', handleResetCameraForColumn);
     window.addEventListener('column-drag-end', handleColumnDragEnd);
+    window.addEventListener('reset-camera-for-settings', handleResetCameraForSettings);
     
     return () => {
       window.removeEventListener('reset-camera-for-column', handleResetCameraForColumn);
       window.removeEventListener('column-drag-end', handleColumnDragEnd);
+      window.removeEventListener('reset-camera-for-settings', handleResetCameraForSettings);
     };
   }, [resetCamera]);
   

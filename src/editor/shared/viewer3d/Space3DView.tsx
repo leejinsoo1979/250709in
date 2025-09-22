@@ -148,6 +148,37 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
   }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
   
+  // spaceInfo 변경 시 카메라 리셋
+  useEffect(() => {
+    if (!spaceInfo) return;
+    
+    // 카메라 리셋 이벤트 발생
+    const event = new CustomEvent('reset-camera-for-settings');
+    window.dispatchEvent(event);
+    
+    console.log('🎯 Space3DView: spaceInfo 변경됨 - 카메라 리셋 이벤트 발생', {
+      width: spaceInfo.width,
+      height: spaceInfo.height,
+      surroundType: spaceInfo.surroundType,
+      frameSize: spaceInfo.frameSize,
+      gapConfig: spaceInfo.gapConfig,
+      customColumnCount: spaceInfo.customColumnCount
+    });
+  }, [
+    spaceInfo?.width,
+    spaceInfo?.height,
+    spaceInfo?.depth,
+    spaceInfo?.surroundType,
+    spaceInfo?.installType,
+    spaceInfo?.frameSize?.left,
+    spaceInfo?.frameSize?.right,
+    spaceInfo?.gapConfig?.left,
+    spaceInfo?.gapConfig?.right,
+    spaceInfo?.customColumnCount,
+    spaceInfo?.droppedCeiling?.enabled,
+    spaceInfo?.droppedCeiling?.dropHeight
+  ]);
+  
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
   
