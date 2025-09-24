@@ -535,8 +535,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
     if (showDimensions) {
       positions.forEach((xPos, index) => {
-        // 실제 슬롯 너비 계산
-        const actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        // 실제 슬롯 너비 계산 (소수점 2자리로 반올림)
+        const rawWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+        const actualWidth = Math.round(rawWidth * 100) / 100;
         
         // 탑뷰와 다른 뷰에 따라 텍스트 위치와 회전 조정
         let textPosition: [number, number, number];
@@ -579,42 +580,45 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         // 2D 다크모드일 때 텍스트 색상 처리
         const textColor = view2DTheme === 'dark' ? '#FFFFFF' : zoneColor;
         
-        // 실제 슬롯 너비 계산
-        let actualWidth: number;
+        // 실제 슬롯 너비 계산 (소수점 2자리로 반올림)
+        let rawWidth: number;
         
         // 노서라운드 모드에서 엔드판넬 옆 슬롯인지 확인
         if (spaceInfo.surroundType === 'no-surround') {
           // slotWidths가 있으면 사용 (이미 조정된 값)
           if (slotWidths && slotWidths[index] !== undefined) {
-            actualWidth = slotWidths[index];
-            console.log(`🎯 슬롯 ${index} 너비 (slotWidths 사용):`, actualWidth);
+            rawWidth = slotWidths[index];
+            console.log(`🎯 슬롯 ${index} 너비 (slotWidths 사용):`, rawWidth);
           } else {
             // slotWidths가 없으면 직접 계산
             if (spaceInfo.installType === 'freestanding') {
               // 양쪽 벽 없음: 첫 번째와 마지막 슬롯 조정
               if (index === 0 || index === columnCount - 1) {
-                actualWidth = columnWidth - END_PANEL_THICKNESS; // 엔드판넬 두께 빼기
+                rawWidth = columnWidth - END_PANEL_THICKNESS; // 엔드판넬 두께 빼기
               } else {
-                actualWidth = columnWidth;
+                rawWidth = columnWidth;
               }
             } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
               // 한쪽 벽: 벽이 없는 쪽만 조정
               if (index === 0 && !spaceInfo.wallConfig?.left) {
-                actualWidth = columnWidth - 18;
+                rawWidth = columnWidth - 18;
               } else if (index === columnCount - 1 && !spaceInfo.wallConfig?.right) {
-                actualWidth = columnWidth - 18;
+                rawWidth = columnWidth - 18;
               } else {
-                actualWidth = columnWidth;
+                rawWidth = columnWidth;
               }
             } else {
               // 빌트인: 조정 없음
-              actualWidth = columnWidth;
+              rawWidth = columnWidth;
             }
           }
         } else {
           // 다른 모드에서는 기존 로직 사용
-          actualWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
+          rawWidth = slotWidths && slotWidths[index] ? slotWidths[index] : columnWidth;
         }
+        
+        // 소수점 2자리로 반올림
+        const actualWidth = Math.round(rawWidth * 100) / 100;
         
         guides.push(
           <Text
