@@ -353,9 +353,10 @@ export class ColumnIndexer {
       if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
         actualInternalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
       }
-      const exactSlotWidth = actualInternalWidth / columnCount;
+      const rawSlotWidth = actualInternalWidth / columnCount;
+      const exactSlotWidth = Math.round(rawSlotWidth * 100) / 100;
       
-      // 정확한 슬롯 너비를 그대로 사용 (반올림하지 않음)
+      // 슬롯 너비를 소수점 2자리로 반올림하여 사용
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(exactSlotWidth);
       }
@@ -891,10 +892,10 @@ export class ColumnIndexer {
     
     // 각 영역의 컬럼 너비 계산 - 0.5 단위 균등 분할
     const normalExactWidth = normalAreaInternalWidth / normalColumnCount;
-    const normalSlotWidth = Math.round(normalExactWidth * 2) / 2;
+    const normalSlotWidth = Math.round(normalExactWidth * 100) / 100;
     
     const droppedExactWidth = droppedAreaInternalWidth / droppedColumnCount;
-    const droppedSlotWidth = Math.round(droppedExactWidth * 2) / 2;
+    const droppedSlotWidth = Math.round(droppedExactWidth * 100) / 100;
     
     // 슬롯별 실제 너비 배열 생성
     const normalSlotWidths: number[] = [];
