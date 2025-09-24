@@ -860,6 +860,13 @@ const Room: React.FC<RoomProps> = ({
     rightFrame: frameThickness.right > 0 && wallConfig?.right ? 1 : 0
   };
   
+  // 실제 렌더링 카운터 초기화 (전역 변수로 추적)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.renderCounter = { leftEndPanel: 0, rightEndPanel: 0, leftFrame: 0, rightFrame: 0 };
+    }
+  }, []);
+  
   const logData = {
     installType: spaceInfo.installType,
     surroundType: spaceInfo.surroundType,
@@ -880,11 +887,25 @@ const Room: React.FC<RoomProps> = ({
   
   console.log('🎯🎯🎯 [한쪽벽모드 총괄] 엔드패널/프레임 생성 개수:', logData);
   
-  // 창 제목에도 표시 (디버그용)
-  if (typeof window !== 'undefined' && spaceInfo.installType === 'semistanding') {
-    const title = `엔드패널: L${endPanelCount.left} R${endPanelCount.right} | 프레임: L${endPanelCount.leftFrame} R${endPanelCount.rightFrame}`;
-    document.title = title;
-  }
+  // 창 제목에도 표시 (디버그용) - useEffect로 렌더링 후 업데이트
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && spaceInfo.installType === 'semistanding') {
+      setTimeout(() => {
+        const actual = window.renderCounter || { leftEndPanel: 0, rightEndPanel: 0, leftFrame: 0, rightFrame: 0 };
+        const title = `예상: 엔드L${endPanelCount.left}R${endPanelCount.right} 프레임L${endPanelCount.leftFrame}R${endPanelCount.rightFrame} | 실제: 엔드L${actual.leftEndPanel}R${actual.rightEndPanel} 프레임L${actual.leftFrame}R${actual.rightFrame}`;
+        document.title = title;
+        
+        if (actual.leftEndPanel > 1 || actual.rightEndPanel > 1) {
+          console.error('🚨🚨🚨 중복 렌더링 감지!', {
+            왼쪽엔드패널: actual.leftEndPanel,
+            오른쪽엔드패널: actual.rightEndPanel,
+            왼쪽프레임: actual.leftFrame, 
+            오른쪽프레임: actual.rightFrame
+          });
+        }
+      }, 100);
+    }
+  }, [spaceInfo.installType, endPanelCount.left, endPanelCount.right, endPanelCount.leftFrame, endPanelCount.rightFrame]);
 
   return (
     <group position={[0, 0, groupZOffset]}>
@@ -1644,6 +1665,17 @@ const Room: React.FC<RoomProps> = ({
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
           
+          // 단내림 영역 렌더링 카운터
+          if (typeof window !== 'undefined' && window.renderCounter) {
+            if (!wallConfig?.left) {
+              window.renderCounter.leftEndPanel++;
+              console.log('🚨🚨🚨 [단내림] 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
+            } else {
+              window.renderCounter.leftFrame++;
+              console.log('🚨🚨🚨 [단내림] 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
+            }
+          }
+          
           return (
             <>
               {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
@@ -1693,6 +1725,18 @@ const Room: React.FC<RoomProps> = ({
           깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
           위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
         });
+        
+        // 렌더링 카운터 증가
+        if (typeof window !== 'undefined' && window.renderCounter) {
+          if (!wallConfig?.left) {
+            window.renderCounter.leftEndPanel++;
+            console.log('🚨🚨🚨 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
+          } else {
+            window.renderCounter.leftFrame++;
+            console.log('🚨🚨🚨 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
+          }
+        }
+        
         return (
           <BoxWithEdges
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
@@ -1772,6 +1816,17 @@ const Room: React.FC<RoomProps> = ({
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
           
+          // 단내림 영역 렌더링 카운터
+          if (typeof window !== 'undefined' && window.renderCounter) {
+            if (!wallConfig?.right) {
+              window.renderCounter.rightEndPanel++;
+              console.log('🚨🚨🚨 [단내림] 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
+            } else {
+              window.renderCounter.rightFrame++;
+              console.log('🚨🚨🚨 [단내림] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
+            }
+          }
+          
           return (
             <>
               {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
@@ -1813,6 +1868,17 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 좌측 단내림인 경우 기존 렌더링
+        // 렌더링 카운터 증가
+        if (typeof window !== 'undefined' && window.renderCounter) {
+          if (!wallConfig?.right) {
+            window.renderCounter.rightEndPanel++;
+            console.log('🚨🚨🚨 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
+          } else {
+            window.renderCounter.rightFrame++;
+            console.log('🚨🚨🚨 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
+          }
+        }
+        
         return (
           <BoxWithEdges
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
