@@ -849,10 +849,10 @@ const Room: React.FC<RoomProps> = ({
   // 서라운드 엔드패널 중심 Z 위치
   const surroundEndPanelZ = roomBackZ + surroundEndPanelDepth/2;
   
-  // 노서라운드 엔드패널: 가구 뒷면에서 가구 앞면-20mm까지
-  const noSurroundEndPanelDepth = furnitureDepth - mmToThreeUnits(20);
-  // 노서라운드 엔드패널 중심 Z 위치 (가구 중심과 거의 동일)
-  const noSurroundEndPanelZ = furnitureZOffset - mmToThreeUnits(10);
+  // 노서라운드 엔드패널: 슬롯 깊이와 동일 (730mm)
+  const noSurroundEndPanelDepth = slotFloorDepth;
+  // 노서라운드 엔드패널 중심 Z 위치
+  const noSurroundEndPanelZ = roomBackZ + noSurroundEndPanelDepth/2;
   
   // 디버그용 - 엔드패널 깊이 차이 확인
   if (spaceInfo.installType === 'freestanding' || 
