@@ -2500,11 +2500,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               </>
             );
         } else {
-          // 단내림이 없는 경우 전체 영역 표시
-          const leftX = indexing.threeUnitBoundaries[0];
-          const rightX = indexing.threeUnitBoundaries[indexing.threeUnitBoundaries.length - 1];
-          const centerX = (leftX + rightX) / 2;
-          const width = rightX - leftX;
+          // 단내림이 없는 경우 전체 영역 표시 - zoneSlotInfo 사용
+          const startX = mmToThreeUnits(zoneSlotInfo.normal.startX);
+          const endX = mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width);
+          const centerX = (startX + endX) / 2;
+          const width = endX - startX;
+          
+          console.log('🎯🎯🎯 SlotDropZonesSimple - 단내림 없는 경우 투명 슬롯 메쉬 경계:', {
+            'zoneSlotInfo.normal.startX': zoneSlotInfo.normal.startX,
+            'zoneSlotInfo.normal.width': zoneSlotInfo.normal.width,
+            'startX_three': startX,
+            'endX_three': endX,
+            'centerX_three': centerX,
+            'width_three': width
+          });
           
           return (
             <group key="full-zone-group">
