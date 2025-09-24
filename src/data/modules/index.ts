@@ -148,8 +148,8 @@ export const getModuleById = (
     
     // 정확히 일치하는 모듈이 없으면 정확한 baseType과 너비로 매칭
     if (!found && requestedWidth) {
-      // 소수점 1자리로 정규화된 너비
-      const normalizedWidth = Math.round(requestedWidth * 10) / 10;
+      // 소수점 2자리로 정규화된 너비 (599.67mm 같은 값 정확히 매칭)
+      const normalizedWidth = Math.round(requestedWidth * 100) / 100;
       
       // baseType과 정규화된 너비가 모두 일치하는 모듈 찾기
       found = dynamicModules.find(module => {
@@ -159,7 +159,7 @@ export const getModuleById = (
         
         return moduleBaseType === baseType && 
                moduleWidth !== null && 
-               Math.round(moduleWidth * 10) / 10 === normalizedWidth;
+               Math.round(moduleWidth * 100) / 100 === normalizedWidth;
       });
       
       if (found) {
@@ -177,10 +177,10 @@ export const getModuleById = (
         const moduleWidthMatch = module.id.match(/-([\d.]+)$/);
         const moduleWidth = moduleWidthMatch ? parseFloat(moduleWidthMatch[1]) : null;
         
-        // 정확한 너비 매칭 (소수점 1자리까지 정확히 일치)
+        // 정확한 너비 매칭 (소수점 2자리까지 정확히 일치)
         const widthMatches = moduleWidth === requestedWidth || 
                             (moduleWidth && requestedWidth && 
-                             Math.round(moduleWidth * 10) / 10 === Math.round(requestedWidth * 10) / 10);
+                             Math.round(moduleWidth * 100) / 100 === Math.round(requestedWidth * 100) / 100);
         
         return moduleBaseType === baseType && widthMatches;
       });
