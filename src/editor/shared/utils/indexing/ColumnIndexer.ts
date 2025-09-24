@@ -404,15 +404,31 @@ export class ColumnIndexer {
         // 빌트인은 양쪽 벽을 기준으로 하므로 gapConfig 기반으로 계산
         leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 2;
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 한쪽 벽 모드에서는 실제 벽이 있는 쪽의 이격거리를 그대로 적용
-        leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 0;
+        // 한쪽 벽 모드: 벽이 있는 쪽만 이격거리 적용
+        // 좌측 벽이면 좌측 이격거리, 우측 벽이면 우측은 이격거리가 있지만 좌측 시작점은 0
+        if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+          // 좌측 벽: 좌측 이격거리 적용
+          leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 2;
+        } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
+          // 우측 벽: 좌측은 엔드패널이므로 이격거리 없음
+          leftReduction = 0;
+        } else {
+          // fallback (wallConfig가 없는 경우 wallPosition 사용)
+          if (spaceInfo.wallPosition === 'left') {
+            leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 2;
+          } else {
+            leftReduction = 0;
+          }
+        }
         
         console.log('🚨 [ColumnIndexer] 한쪽벽 노서라운드 이격거리 계산:', {
           installType: spaceInfo.installType,
+          wallConfig: spaceInfo.wallConfig,
+          wallPosition: spaceInfo.wallPosition,
           gapConfig: spaceInfo.gapConfig,
           optimizedGapConfig,
           leftReduction,
-          wallPosition: spaceInfo.wallPosition
+          '벽위치': spaceInfo.wallConfig?.left ? '좌측' : '우측'
         });
       } else {
         // 프리스탠딩: 엔드패널 두께를 gapConfig로 전달받으므로 그대로 반영
