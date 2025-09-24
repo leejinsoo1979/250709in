@@ -843,11 +843,10 @@ const Room: React.FC<RoomProps> = ({
   const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
   const slotFloorDepth = frameEndZ - backZ; // 바닥 슬롯 메쉬 깊이
   
-  // 노서라운드 엔드패널 깊이 계산 (공간 뒷벽부터 가구 앞면-20mm까지)
-  // 공간 뒷벽에서 가구 앞면(받침대 제외)까지의 거리
-  const noSurroundEndPanelDepth = (frameEndZ - mmToThreeUnits(20)) - spaceBackWallZ;
-  // 노서라운드 엔드패널 중심 Z 위치 (공간 뒷벽에서 시작)
-  const noSurroundEndPanelZ = spaceBackWallZ + noSurroundEndPanelDepth/2;
+  // 노서라운드 엔드패널 깊이 계산 (슬롯과 동일한 깊이에서 받침대 제외)
+  const noSurroundEndPanelDepth = slotFloorDepth - mmToThreeUnits(20);
+  // 노서라운드 엔드패널 중심 Z 위치 (슬롯과 동일한 위치에서 받침대 절반만큼 앞으로)
+  const noSurroundEndPanelZ = backZ + noSurroundEndPanelDepth/2;
   
   // 디버그용 - 엔드패널 깊이 차이 확인
   if (spaceInfo.installType === 'freestanding' || 
