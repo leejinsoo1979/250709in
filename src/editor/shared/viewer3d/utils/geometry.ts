@@ -82,10 +82,27 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   let internalWidth;
   
   if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: gapConfig에서 좌우 감산값을 가져와 내경 폭을 산출
-    const leftGap = spaceInfo.gapConfig?.left || 0;
-    const rightGap = spaceInfo.gapConfig?.right || 0;
-    internalWidth = spaceInfo.width - leftGap - rightGap;
+    // 노서라운드: 설치 타입에 따라 다르게 처리
+    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 양쪽 벽 이격거리 적용
+      const leftGap = spaceInfo.gapConfig?.left || 2;
+      const rightGap = spaceInfo.gapConfig?.right || 2;
+      internalWidth = spaceInfo.width - leftGap - rightGap;
+    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 있는 쪽만 이격거리 적용
+      if (spaceInfo.wallConfig?.left) {
+        // 좌측 벽: 좌측만 이격거리
+        const leftGap = spaceInfo.gapConfig?.left || 2;
+        internalWidth = spaceInfo.width - leftGap;
+      } else {
+        // 우측 벽: 우측만 이격거리
+        const rightGap = spaceInfo.gapConfig?.right || 2;
+        internalWidth = spaceInfo.width - rightGap;
+      }
+    } else {
+      // 프리스탠딩: 이격거리 적용하지 않음 (엔드패널이 외부에 있음)
+      internalWidth = spaceInfo.width;
+    }
   } else {
     // 서라운드: 내경 너비 = 전체 너비 - 좌측 프레임 - 우측 프레임
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
@@ -111,9 +128,23 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   
   // 시작 위치 계산 (X 좌표)
   let startX;
-  if (spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig) {
-    // 노서라운드: 시작 위치 = 좌측 이격거리
-    startX = spaceInfo.gapConfig.left;
+  if (spaceInfo.surroundType === 'no-surround') {
+    if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+      // 세미스탠딩: 벽이 있는 쪽에만 이격거리 적용
+      if (spaceInfo.wallConfig?.left) {
+        // 좌측 벽: 좌측 이격거리에서 시작
+        startX = spaceInfo.gapConfig?.left || 2;
+      } else {
+        // 우측 벽: 좌측은 0에서 시작 (엔드패널 바로 안쪽)
+        startX = 0;
+      }
+    } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+      // 빌트인: 좌측 이격거리에서 시작
+      startX = spaceInfo.gapConfig?.left || 2;
+    } else {
+      // 프리스탠딩: 0에서 시작 (엔드패널 바로 안쪽)
+      startX = 0;
+    }
   } else {
     // 서라운드: 시작 위치 = 좌측 프레임 두께
     startX = frameThickness.left;

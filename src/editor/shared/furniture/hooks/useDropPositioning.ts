@@ -49,7 +49,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     const columnBoundaries = indexing.columnBoundaries;
     const leftBoundaryMm = columnBoundaries?.[0] ?? -(spaceInfo.width / 2);
     const rightBoundaryMm = columnBoundaries?.[columnBoundaries.length - 1] ?? (spaceInfo.width / 2);
-    const usableWidthMm = rightBoundaryMm - leftBoundaryMm || spaceInfo.width;
+    const usableWidthMm = Math.max(1, rightBoundaryMm - leftBoundaryMm || spaceInfo.width);
 
     const worldXMm = leftBoundaryMm + ((normalizedX + 1) / 2) * usableWidthMm;
     const worldX = worldXMm * 0.01; // mm to Three.js units
@@ -124,7 +124,7 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     
     // 단내림이 없는 경우 기존 로직
     const columnCount = indexing.columnCount;
-    const columnIndex = Math.floor((normalizedX + 1) * columnCount / 2);
+    const columnIndex = ColumnIndexer.findClosestColumnIndex({ x: worldX }, indexing);
     const clampedColumnIndex = Math.max(0, Math.min(columnIndex, columnCount - 1));
     
     const columnWidth = indexing.columnWidth;

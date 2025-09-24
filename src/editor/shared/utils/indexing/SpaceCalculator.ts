@@ -36,10 +36,22 @@ export class SpaceCalculator {
         // 빌트인은 최소 2mm 이격을 유지하고 나머지는 gapConfig 사용
         leftReduction = leftGap ?? 2;
         rightReduction = rightGap ?? 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 벽이 있는 쪽만 이격거리, 반대쪽은 엔드패널
+        // wallConfig를 확인하여 어느 쪽에 벽이 있는지 판단
+        if (spaceInfo.wallConfig?.left) {
+          // 좌측 벽: 좌측은 이격거리, 우측은 엔드패널
+          leftReduction = leftGap || 0;
+          rightReduction = 0;  // 우측은 엔드패널이므로 내경에서 빼지 않음
+        } else {
+          // 우측 벽: 우측은 이격거리, 좌측은 엔드패널
+          leftReduction = 0;  // 좌측은 엔드패널이므로 내경에서 빼지 않음
+          rightReduction = rightGap || 0;
+        }
       } else {
-        // 세미스탠딩/프리스탠딩: gapConfig 값이 있으면 그대로 활용 (엔드패널 포함)
-        leftReduction = leftGap || 0;
-        rightReduction = rightGap || 0;
+        // 프리스탠딩: 양쪽 모두 엔드패널이므로 내경에서 빼지 않음
+        leftReduction = 0;
+        rightReduction = 0;
       }
 
       return totalWidth - (leftReduction + rightReduction);
