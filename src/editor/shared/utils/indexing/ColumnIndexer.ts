@@ -609,8 +609,19 @@ export class ColumnIndexer {
           // 벽없음: 전체 너비 사용 (엔드패널도 슬롯에 포함)
           actualInternalWidth = spaceInfo.width;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 전체 너비 사용 (엔드패널도 슬롯에 포함)
-          actualInternalWidth = spaceInfo.width;
+          // 세미스탠딩: 이격거리를 고려한 너비 계산
+          let leftGap = 0;
+          let rightGap = 0;
+          
+          if (spaceInfo.wallConfig?.left) {
+            leftGap = spaceInfo.gapConfig?.left || 2;
+          }
+          if (spaceInfo.wallConfig?.right) {
+            rightGap = spaceInfo.gapConfig?.right || 2;
+          }
+          
+          // 전체 너비에서 이격거리를 뺀 실제 사용 가능 너비
+          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
         }
       }
       
@@ -654,15 +665,15 @@ export class ColumnIndexer {
       // 슬롯별 실제 너비 배열 생성
       const slotWidths: number[] = [];
       
-      if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
-        // 노서라운드 벽없음: 전체너비를 균등 분할 (소수점 2자리)
-        const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
+      if (spaceInfo.surroundType === 'no-surround') {
+        // 노서라운드: actualInternalWidth를 균등 분할
+        const exactSlotWidth = Math.round((actualInternalWidth / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(exactSlotWidth);
         }
       } else {
-        // 서라운드 모드 또는 빌트인: 소수점 2자리 균등분할
+        // 서라운드 모드: 소수점 2자리 균등분할
         const exactSlotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {
@@ -670,7 +681,7 @@ export class ColumnIndexer {
         }
       }
       
-      console.log('🔍 calculateZoneSlotInfo (단내림 없음):', {
+      console.log('🚨🚨🚨 calculateZoneSlotInfo - 한쪽벽모드 최종 경계:', {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
         totalWidth: spaceInfo.width,
