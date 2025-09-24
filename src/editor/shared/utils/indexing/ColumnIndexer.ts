@@ -609,18 +609,11 @@ export class ColumnIndexer {
           // 벽없음: 전체 너비 사용 (엔드패널도 슬롯에 포함)
           actualInternalWidth = spaceInfo.width;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 이격거리를 고려한 너비 계산
-          let leftGap = 0;
-          let rightGap = 0;
+          // 세미스탠딩: gapConfig 값을 그대로 사용 (벽 있으면 2, 없으면 18)
+          const leftGap = spaceInfo.gapConfig?.left || 0;
+          const rightGap = spaceInfo.gapConfig?.right || 0;
           
-          if (spaceInfo.wallConfig?.left) {
-            leftGap = spaceInfo.gapConfig?.left || 2;
-          }
-          if (spaceInfo.wallConfig?.right) {
-            rightGap = spaceInfo.gapConfig?.right || 2;
-          }
-          
-          // 전체 너비에서 이격거리를 뺀 실제 사용 가능 너비
+          // 전체 너비에서 좌우 gap을 뺀 실제 사용 가능 너비
           actualInternalWidth = spaceInfo.width - leftGap - rightGap;
         }
       }
@@ -635,15 +628,11 @@ export class ColumnIndexer {
           // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
           leftReduction = spaceInfo.gapConfig?.left || 2;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 벽이 있는 쪽은 이격거리 적용, 없는 쪽은 0
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
-            leftReduction = 0;
-          }
+          // 세미스탠딩: gapConfig 값을 그대로 사용 (벽 있으면 2, 없으면 18)
+          leftReduction = spaceInfo.gapConfig?.left || 0;
         } else {
-          // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
-          leftReduction = 0;
+          // 프리스탠딩: gapConfig 값을 그대로 사용 (양쪽 다 18)
+          leftReduction = spaceInfo.gapConfig?.left || 0;
         }
         
         // mm 단위로 계산: 중심이 0이므로 좌측 끝은 -width/2
@@ -688,9 +677,11 @@ export class ColumnIndexer {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
         wallConfig: spaceInfo.wallConfig,
+        gapConfig: spaceInfo.gapConfig,
         totalWidth: spaceInfo.width,
         internalWidth,
         actualInternalWidth,
+        leftReduction,
         internalStartX,
         '시작X(mm)': internalStartX,
         '너비(mm)': actualInternalWidth,
