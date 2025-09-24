@@ -124,7 +124,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 전체 내경 정보와 비교
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
     
-    console.log('🔍 ColumnGuides - 슬롯 정보 비교:', {
+    console.log('🔍🔍🔍 ColumnGuides - 슬롯 가이드 라인 경계:', {
       전체인덱싱: {
         내경시작X: fullIndexing.internalStartX,
         내경너비: fullIndexing.internalWidth,

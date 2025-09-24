@@ -2367,7 +2367,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         if (hasDroppedCeiling && zoneSlotInfo.dropped) {
           // 단내림 활성화된 경우 양쪽 영역 모두 표시
-          console.log('🎯 SlotDropZonesSimple - 바닥 메쉬 위치 계산:', {
+          console.log('🎯🎯🎯 SlotDropZonesSimple - 투명 슬롯 메쉬 경계:', {
             메인영역: {
               시작X_mm: zoneSlotInfo.normal.startX,
               너비_mm: zoneSlotInfo.normal.width,
