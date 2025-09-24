@@ -43,10 +43,16 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
-    const normalizedX = (mouseX / rect.width) * 2 - 1;
-    
-    // Three.js 좌표로 변환 (중앙이 0인 좌표계)
-    const worldX = normalizedX * (spaceInfo.width / 2) * 0.01; // mm to Three.js units
+    const normalizedX = Math.max(-1, Math.min(1, (mouseX / rect.width) * 2 - 1));
+
+    // 컬럼 경계 기반 좌표계 계산 (gap/프레임 반영)
+    const columnBoundaries = indexing.columnBoundaries;
+    const leftBoundaryMm = columnBoundaries?.[0] ?? -(spaceInfo.width / 2);
+    const rightBoundaryMm = columnBoundaries?.[columnBoundaries.length - 1] ?? (spaceInfo.width / 2);
+    const usableWidthMm = rightBoundaryMm - leftBoundaryMm || spaceInfo.width;
+
+    const worldXMm = leftBoundaryMm + ((normalizedX + 1) / 2) * usableWidthMm;
+    const worldX = worldXMm * 0.01; // mm to Three.js units
     
     // 가구 데이터를 가져와서 폭 확인
     const moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
@@ -58,9 +64,6 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     // 단내림이 활성화된 경우 영역별 처리
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-      
-      // mm 단위로 변환하여 영역 확인
-      const worldXMm = worldX * 100; // Three.js to mm
       
       // 어느 영역에 속하는지 확인
       let zone: 'normal' | 'dropped';

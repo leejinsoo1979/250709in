@@ -420,6 +420,15 @@ export class ColumnIndexer {
       }
 
       internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
+      
+      console.log('🚨🚨 [ColumnIndexer] 노서라운드 시작 위치 계산:', {
+        totalWidth,
+        leftReduction,
+        leftPadding,
+        internalStartX,
+        '좌측벽경계': -(totalWidth / 2),
+        '이격거리적용후': -(totalWidth / 2) + leftReduction
+      });
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
