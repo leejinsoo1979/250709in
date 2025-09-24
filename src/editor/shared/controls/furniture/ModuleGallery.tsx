@@ -1319,28 +1319,26 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 인덱싱 정보 계산 (컬럼 정보) - 영역별 공간 정보 사용
   const indexing = calculateSpaceIndexing(zoneSpaceInfo);
   
-  // adjustForIntegerSlotWidth로 조정된 spaceInfo 가져오기
-  const adjustedResult = SpaceCalculator.adjustForIntegerSlotWidth(zoneSpaceInfo);
-  const adjustedSpaceInfo = adjustedResult.adjustmentMade ? adjustedResult.adjustedSpaceInfo : zoneSpaceInfo;
+  // adjustForIntegerSlotWidth 비활성화 - 소수점 2자리 유지를 위해
+  // const adjustedResult = SpaceCalculator.adjustForIntegerSlotWidth(zoneSpaceInfo);
+  // const adjustedSpaceInfo = adjustedResult.adjustmentMade ? adjustedResult.adjustedSpaceInfo : zoneSpaceInfo;
+  const adjustedSpaceInfo = zoneSpaceInfo;
   const adjustedInternalSpace = calculateInternalSpace(adjustedSpaceInfo);
   
-  // 단일 컬럼의 너비 계산 (조정된 슬롯 너비 사용)
-  const columnWidth = adjustedResult.slotWidth || indexing.columnWidth;
+  // 단일 컬럼의 너비 계산 (indexing의 슬롯 너비 사용)
+  const columnWidth = indexing.columnWidth;
   
   // 조정된 spaceInfo에 슬롯 너비 정보 추가
   const spaceInfoWithSlotWidths = {
     ...adjustedSpaceInfo,
-    _tempSlotWidths: adjustedResult.adjustmentMade && adjustedResult.slotWidth
-      ? Array(indexing.columnCount).fill(adjustedResult.slotWidth)
-      : indexing.slotWidths
+    _tempSlotWidths: indexing.slotWidths
   };
   
   console.log('🔥🔥🔥 [ModuleGallery] _tempSlotWidths 설정:', {
     '_tempSlotWidths': spaceInfoWithSlotWidths._tempSlotWidths,
-    'adjustedResult.adjustmentMade': adjustedResult.adjustmentMade,
-    'adjustedResult.slotWidth': adjustedResult.slotWidth,
     'indexing.slotWidths': indexing.slotWidths,
-    'indexing.columnCount': indexing.columnCount
+    'indexing.columnCount': indexing.columnCount,
+    'indexing.columnWidth': indexing.columnWidth
   });
   
   // 카테고리에 따라 모듈 가져오기 (슬롯 너비 정보가 포함된 spaceInfo 사용)
