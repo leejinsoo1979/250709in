@@ -650,17 +650,16 @@ export class ColumnIndexer {
           
           // 벽이 있는 쪽 확인하고 2-5mm 범위에서 조정
           if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-            // 좌측 벽: 좌측 이격거리 조정 (2-5mm)
-            const rightFixed = 18; // 우측 엔드패널 고정
+            // 좌측 벽: 좌측 이격거리만 조정 (2-5mm), 우측은 엔드패널 포함
             
             // 2-5mm 범위에서 정수 슬롯 너비가 되는 값 찾기
             for (let gap = 2; gap <= 5; gap++) {
-              const availableWidth = baseWidth - gap - rightFixed;
+              const availableWidth = baseWidth - gap;  // 좌측 이격거리만 뺌
               const slotWidth = availableWidth / columnCount;
               
               if (Number.isInteger(slotWidth)) {
                 leftGap = gap;
-                rightGap = rightFixed;
+                rightGap = 0;  // 우측은 엔드패널 포함이므로 0
                 console.log('✅ 좌측벽 정수 슬롯 너비 조정:', {
                   조정된이격거리: gap,
                   슬롯너비: slotWidth,
@@ -673,20 +672,19 @@ export class ColumnIndexer {
             // 정수가 안되면 가장 가까운 값 사용
             if (leftGap === spaceInfo.gapConfig?.left) {
               leftGap = 2; // 기본값
-              rightGap = rightFixed;
+              rightGap = 0;  // 우측은 엔드패널 포함
             }
             
           } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
-            // 우측 벽: 우측 이격거리 조정 (2-5mm)
-            const leftFixed = 18; // 좌측 엔드패널 고정
+            // 우측 벽: 우측 이격거리만 조정 (2-5mm), 좌측은 엔드패널 포함
             
             // 2-5mm 범위에서 정수 슬롯 너비가 되는 값 찾기
             for (let gap = 2; gap <= 5; gap++) {
-              const availableWidth = baseWidth - leftFixed - gap;
+              const availableWidth = baseWidth - gap;  // 우측 이격거리만 뺌
               const slotWidth = availableWidth / columnCount;
               
               if (Number.isInteger(slotWidth)) {
-                leftGap = leftFixed;
+                leftGap = 0;  // 좌측은 엔드패널 포함이므로 0
                 rightGap = gap;
                 console.log('✅ 우측벽 정수 슬롯 너비 조정:', {
                   조정된이격거리: gap,
@@ -699,10 +697,18 @@ export class ColumnIndexer {
             
             // 정수가 안되면 가장 가까운 값 사용
             if (rightGap === spaceInfo.gapConfig?.right) {
-              leftGap = leftFixed;
+              leftGap = 0;  // 좌측은 엔드패널 포함
               rightGap = 2; // 기본값
             }
+          } else if (spaceInfo.installType === 'freestanding') {
+            // 프리스탠딩: 양쪽 모두 엔드패널 포함이므로 gap 0
+            leftGap = 0;
+            rightGap = 0;
           }
+        } else if (spaceInfo.installType === 'freestanding') {
+          // 프리스탠딩: 엔드패널 포함
+          leftGap = 0;
+          rightGap = 0;
         }
         
         adjustedLeftGap = leftGap;
