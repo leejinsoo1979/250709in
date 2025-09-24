@@ -839,23 +839,20 @@ const Room: React.FC<RoomProps> = ({
   // 공간의 실제 뒷벽 위치 (노서라운드 엔드패널이 시작하는 위치)
   const spaceBackWallZ = zOffset - panelDepth/2; // 공간 뒷벽 Z 위치 (가장 뒤)
   
-  // 바닥 슬롯 메쉬와 동일한 깊이 계산
+  // SlotDropZonesSimple과 동일한 방식으로 계산
+  const roomBackZ = -panelDepth / 2; // 공간 중심 기준 뒷면
   const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
-  const slotFloorDepth = frameEndZ - backZ; // 바닥 슬롯 메쉬 깊이
+  const slotFloorDepth = frameEndZ - roomBackZ - mmToThreeUnits(20); // 슬롯 깊이 (730mm)
   
-  // 엔드패널은 공간 뒷벽에서 가구 앞면까지 연결해야 함
-  // 가구 앞면 위치 (frameEndZ와 동일)
-  const furnitureFrontZ = frameEndZ;
-  
-  // 서라운드 엔드패널: 공간 뒷벽에서 가구 앞면까지
-  const surroundEndPanelDepth = furnitureFrontZ - spaceBackWallZ;
+  // 서라운드 엔드패널: 슬롯 깊이 + 20mm (슬롯은 20mm 줄어들어 있으므로)
+  const surroundEndPanelDepth = slotFloorDepth + mmToThreeUnits(20);
   // 서라운드 엔드패널 중심 Z 위치
-  const surroundEndPanelZ = spaceBackWallZ + surroundEndPanelDepth/2;
+  const surroundEndPanelZ = roomBackZ + surroundEndPanelDepth/2;
   
-  // 노서라운드 엔드패널: 공간 뒷벽에서 가구 앞면-20mm까지
-  const noSurroundEndPanelDepth = furnitureFrontZ - spaceBackWallZ - mmToThreeUnits(20);
+  // 노서라운드 엔드패널: 슬롯 깊이와 동일 (730mm)
+  const noSurroundEndPanelDepth = slotFloorDepth;
   // 노서라운드 엔드패널 중심 Z 위치
-  const noSurroundEndPanelZ = spaceBackWallZ + noSurroundEndPanelDepth/2;
+  const noSurroundEndPanelZ = roomBackZ + noSurroundEndPanelDepth/2;
   
   // 디버그용 - 엔드패널 깊이 차이 확인
   if (spaceInfo.installType === 'freestanding' || 
@@ -863,16 +860,14 @@ const Room: React.FC<RoomProps> = ({
     console.log('🔍 노서라운드 엔드패널 계산:', {
       가구깊이mm: furnitureDepthMm,
       공간깊이mm: panelDepthMm,
-      spaceBackWallZ,
-      furnitureFrontZ,
-      backZ_가구뒷면: backZ,
+      roomBackZ,
       frameEndZ,
-      받침대제외앞면: frameEndZ - mmToThreeUnits(20),
-      noSurroundEndPanelDepth,
+      slotFloorDepth,
+      slotFloorDepth_mm: slotFloorDepth / 0.01,
+      surroundEndPanelDepth_mm: surroundEndPanelDepth / 0.01,
       noSurroundEndPanelDepth_mm: noSurroundEndPanelDepth / 0.01,
+      surroundEndPanelZ,
       noSurroundEndPanelZ,
-      패널시작점: spaceBackWallZ,
-      패널끝점: furnitureFrontZ - mmToThreeUnits(20),
       끝점: frameEndZ - mmToThreeUnits(20),
       가구와공간뒷벽차이: (spaceBackWallZ - backZ) / 0.01
     });
