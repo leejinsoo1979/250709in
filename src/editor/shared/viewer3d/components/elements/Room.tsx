@@ -1124,13 +1124,10 @@ const Room: React.FC<RoomProps> = ({
                 leftReduction = 2;
                 rightReduction = 2;
               } else if (spaceInfo.installType === 'semistanding') {
-                if (spaceInfo.wallConfig?.left) {
-                  leftReduction = 2;
-                  rightReduction = END_PANEL_THICKNESS;
-                } else {
-                  leftReduction = END_PANEL_THICKNESS;
-                  rightReduction = 2;
-                }
+                // 한쪽벽 모드: 좌우 대칭적으로 처리
+                // 엔드패널 두께의 절반씩 양쪽에 적용
+                leftReduction = END_PANEL_THICKNESS / 2;
+                rightReduction = END_PANEL_THICKNESS / 2;
               } else {
                 leftReduction = 20;
                 rightReduction = 20;
