@@ -277,7 +277,10 @@ export class ColumnIndexer {
     const hasWalls = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
                      (spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right));
     
-    if (isNoSurround && hasWalls) {
+    // 노서라운드 최적 이격거리 자동 선택 비활성화
+    // 슬롯 너비와 가구 너비를 정확히 일치시키기 위해 자동 최적화 제거
+    // 사용자가 지정한 이격거리를 그대로 사용
+    if (false && isNoSurround && hasWalls) { // 비활성화됨
       const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
       if (validGapSums.length > 0) {
         // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
