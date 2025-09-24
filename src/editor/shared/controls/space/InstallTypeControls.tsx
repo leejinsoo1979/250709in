@@ -74,17 +74,17 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       // 세미스탠딩/프리스탠딩에서만 이격거리 설정
       if (type === 'semistanding' || type === 'freestanding') {
         updates.gapConfig = {
-          left: wallConfig.left ? 2 : 20,
-          right: wallConfig.right ? 2 : 20,
+          left: wallConfig.left ? 2 : 18,  // 벽있으면 2mm, 없으면 엔드패널 18mm
+          right: wallConfig.right ? 2 : 18,  // 벽있으면 2mm, 없으면 엔드패널 18mm
         };
         console.log('🚨🚨 한쪽벽모드 gapConfig 설정:', {
           type,
           wallConfig,
           gapConfig: updates.gapConfig,
           '좌측벽있음': wallConfig.left,
-          '좌측gap': wallConfig.left ? 2 : 20,
+          '좌측gap': wallConfig.left ? 2 : 18,
           '우측벽있음': wallConfig.right,
-          '우측gap': wallConfig.right ? 2 : 20
+          '우측gap': wallConfig.right ? 2 : 18
         });
       }
       // builtin의 경우 스토어의 adjustForIntegerSlotWidth가 자동으로 처리
@@ -107,17 +107,17 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     
     if (spaceInfo.surroundType === 'no-surround') {
       // 벽 유무에 따라 이격거리 설정
-      // 벽이 있으면 2mm, 벽이 없으면 20mm (엔드패널)
+      // 벽이 있으면 2mm, 벽이 없으면 18mm (엔드패널)
       updates.gapConfig = {
-        left: newWallConfig.left ? 2 : 20,
-        right: newWallConfig.right ? 2 : 20
+        left: newWallConfig.left ? 2 : 18,
+        right: newWallConfig.right ? 2 : 18
       };
       
       console.log('🚨🚨 벽 위치 변경 시 gapConfig:', {
         newWallConfig,
         gapConfig: updates.gapConfig,
-        '좌측': newWallConfig.left ? '벽있음(2mm)' : '엔드패널(20mm)',
-        '우측': newWallConfig.right ? '벽있음(2mm)' : '엔드패널(20mm)'
+        '좌측': newWallConfig.left ? '벽있음(2mm)' : '엔드패널(18mm)',
+        '우측': newWallConfig.right ? '벽있음(2mm)' : '엔드패널(18mm)'
       });
       // frameSize도 업데이트하여 자동 계산이 작동하도록 함
       updates.frameSize = { left: 0, right: 0, top: 0 };
