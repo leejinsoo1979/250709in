@@ -1875,7 +1875,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 position={[
                   xOffset + width - (spaceInfo.surroundType === 'no-surround' && !wallConfig?.right 
-                    ? frameThickness.right/2 - mmToThreeUnits(2)  // 노서라운드 엔드패널: 2mm 왼쪽으로 이동
+                    ? frameThickness.right/2 + mmToThreeUnits(2)  // 노서라운드 엔드패널: 2mm 왼쪽으로 이동 (더 빼서 왼쪽으로)
                     : frameThickness.right/2), 
                   droppedCenterY, // 단내림 구간 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
@@ -1927,7 +1927,7 @@ const Room: React.FC<RoomProps> = ({
             ]}
             position={[
               xOffset + width - (spaceInfo.surroundType === 'no-surround' && !wallConfig?.right 
-                ? frameThickness.right/2 - mmToThreeUnits(2)  // 노서라운드 엔드패널: 2mm 왼쪽으로 이동
+                ? frameThickness.right/2 + mmToThreeUnits(2)  // 노서라운드 엔드패널: 2mm 왼쪽으로 이동 (더 빼서 왼쪽으로)
                 : frameThickness.right/2), 
               sideFrameCenterY, 
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
