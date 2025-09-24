@@ -722,19 +722,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
-        // 양쪽 벽이 모두 있는지 확인
-        const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+        // 왼쪽 벽이 있는지 확인
+        const hasLeftWall = spaceInfo.wallConfig?.left;
         
         // 왼쪽 엔드패널 값 결정
         let leftValue: number;
         let leftText: string;
         
-        if (hasBothWalls) {
-          // 양쪽 벽이 있으면 이격거리 표시
+        if (hasLeftWall) {
+          // 왼쪽 벽이 있으면 이격거리 표시
           leftValue = spaceInfo.gapConfig?.left || 2;
           leftText = `이격 ${leftValue}`;
         } else {
-          // 벽이 없고 가구가 있으면 엔드패널 표시
+          // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
           leftText = `${leftValue}`;
         }
@@ -792,19 +792,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
-        // 양쪽 벽이 모두 있는지 확인
-        const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+        // 오른쪽 벽이 있는지 확인
+        const hasRightWall = spaceInfo.wallConfig?.right;
         
         // 오른쪽 엔드패널 값 결정
         let rightValue: number;
         let rightText: string;
         
-        if (hasBothWalls) {
-          // 양쪽 벽이 있으면 이격거리 표시
+        if (hasRightWall) {
+          // 오른쪽 벽이 있으면 이격거리 표시
           rightValue = spaceInfo.gapConfig?.right || 2;
           rightText = `이격 ${rightValue}`;
         } else {
-          // 벽이 없으면 엔드패널 표시
+          // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
           rightText = `${rightValue}`;
         }
@@ -1055,8 +1055,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
-            // 양쪽 벽이 모두 있는지 확인
-            const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+            // 왼쪽 벽이 있는지 확인
+            const hasLeftWall = spaceInfo.wallConfig?.left;
             
             // 가장 왼쪽 가구 위치 찾기
             let leftmostFurnitureX = null;
@@ -1075,19 +1075,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             
             // 벽이 없고 가구도 없으면 치수 표시하지 않음
-            if (!hasBothWalls && leftmostFurnitureX === null) {
+            if (!hasLeftWall && leftmostFurnitureX === null) {
               return null;
             }
             
             let leftValue: number;
             let leftText: string;
             
-            if (hasBothWalls) {
-              // 양쪽 벽이 있으면 이격거리 표시
+            if (hasLeftWall) {
+              // 왼쪽 벽이 있으면 이격거리 표시
               leftValue = spaceInfo.gapConfig?.left || 2;
               leftText = `이격 ${leftValue}`;
             } else if (leftmostFurnitureX !== null) {
-              // 가구가 있으면 실제 가구 위치까지의 거리 표시
+              // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const distanceFromLeft = (leftmostFurnitureX - leftOffset) * 100; // mm 단위로 변환
               leftValue = Math.abs(distanceFromLeft);
               leftText = `${leftValue}`;
@@ -1210,8 +1210,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
       {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
-            // 양쪽 벽이 모두 있는지 확인
-            const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+            // 오른쪽 벽이 있는지 확인
+            const hasRightWall = spaceInfo.wallConfig?.right;
             
             // 가장 오른쪽 가구 위치 찾기
             let rightmostFurnitureX = null;
@@ -1230,19 +1230,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             
             // 벽이 없고 가구도 없으면 치수 표시하지 않음
-            if (!hasBothWalls && rightmostFurnitureX === null) {
+            if (!hasRightWall && rightmostFurnitureX === null) {
               return null;
             }
             
             let rightValue: number;
             let rightText: string;
             
-            if (hasBothWalls) {
-              // 양쪽 벽이 있으면 이격거리 표시
+            if (hasRightWall) {
+              // 오른쪽 벽이 있으면 이격거리 표시
               rightValue = spaceInfo.gapConfig?.right || 2;
               rightText = `이격 ${rightValue}`;
             } else if (rightmostFurnitureX !== null) {
-              // 가구가 있으면 실제 가구 위치까지의 거리 표시
+              // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
               const distanceFromRight = (rightEdge - rightmostFurnitureX) * 100; // mm 단위로 변환
               rightValue = Math.abs(distanceFromRight);
@@ -3433,25 +3433,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
-            // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
+            // 노서라운드일 때는 왼쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
-              const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+              const hasLeftWall = spaceInfo.wallConfig?.left;
               
               let leftValue: number;
               let leftText: string;
               
-              if (hasBothWalls) {
-                // 양쪽 벽이 있으면 이격거리 표시
+              if (hasLeftWall) {
+                // 왼쪽 벽이 있으면 이격거리 표시
                 leftValue = spaceInfo.gapConfig?.left || 2;
                 leftText = `이격 ${leftValue}`;
               } else {
-                // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+                // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                
-                // 왼쪽 벽만 있으면 표시하지 않음
-                if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-                  return null;
-                }
                 
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
                 leftText = `${leftValue}`;
@@ -3546,25 +3541,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
-            // 노서라운드일 때는 양쪽 벽 유무에 따라 처리
+            // 노서라운드일 때는 오른쪽 벽 유무에 따라 처리
             if (spaceInfo.surroundType === 'no-surround') {
-              const hasBothWalls = spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right;
+              const hasRightWall = spaceInfo.wallConfig?.right;
               
               let rightValue: number;
               let rightText: string;
               
-              if (hasBothWalls) {
-                // 양쪽 벽이 있으면 이격거리 표시
+              if (hasRightWall) {
+                // 오른쪽 벽이 있으면 이격거리 표시
                 rightValue = spaceInfo.gapConfig?.right || 2;
                 rightText = `이격 ${rightValue}`;
               } else {
-                // 한쪽 벽만 있거나 벽이 없으면 엔드패널 표시
+                // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                
-                // 오른쪽 벽만 있으면 표시하지 않음
-                if (spaceInfo.wallConfig?.right && !spaceInfo.wallConfig?.left) {
-                  return null;
-                }
                 
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
                 rightText = `${rightValue}`;
