@@ -324,7 +324,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'semistanding' as InstallType,
                       };
                       updates.wallConfig = { left: true, right: false };
-                      updates.gapConfig = { left: 2, right: 20 };
+                      updates.gapConfig = { left: 2, right: 18 };
                       handleUpdate(updates);
                     }}
                     title={t('space.semistandingDesc')}
@@ -338,7 +338,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'freestanding' as InstallType,
                       };
                       updates.wallConfig = { left: false, right: false };
-                      updates.gapConfig = { left: 20, right: 20 };
+                      updates.gapConfig = { left: 18, right: 18 };
                       handleUpdate(updates);
                     }}
                     title={t('space.freestandingDesc')}
@@ -357,7 +357,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: true, right: false },
-                        gapConfig: { left: 2, right: 20 }
+                        gapConfig: { left: 2, right: 18 }
                       })}
                     >
                       {t('furniture.left')}
@@ -366,7 +366,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: false, right: true },
-                        gapConfig: { left: 20, right: 2 }
+                        gapConfig: { left: 18, right: 2 }
                       })}
                     >
                       {t('furniture.right')}

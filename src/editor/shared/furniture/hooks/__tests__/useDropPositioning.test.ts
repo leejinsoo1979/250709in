@@ -19,7 +19,7 @@ const createSpaceInfo = (): SpaceInfo => ({
   installType: 'semistanding',
   surroundType: 'no-surround',
   wallConfig: { left: true, right: false },
-  gapConfig: { left: 2, right: 20 },
+  gapConfig: { left: 2, right: 18 },
   hasFloorFinish: false,
   baseConfig: { type: 'floor', height: 65 },
   frameSize: { left: 50, right: 50, top: 50 },

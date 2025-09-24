@@ -50,7 +50,7 @@ const END_PANEL_THICKNESS = 18; // 18mm로 통일
 const calculateNoSurroundOffset = (spaceInfo: SpaceInfo, side: 'left' | 'right'): number => {
   if (spaceInfo.surroundType !== 'no-surround') return 0;
   
-  const gapConfig = spaceInfo.gapConfig || { left: 20, right: 20 };
+  const gapConfig = spaceInfo.gapConfig || { left: 18, right: 18 };
   const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
   
   if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {

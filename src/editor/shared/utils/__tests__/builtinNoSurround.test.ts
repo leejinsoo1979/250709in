@@ -79,7 +79,7 @@ describe('Builtin No-Surround Position Calculation', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       spaceInfo.installType = 'semistanding';
       spaceInfo.wallConfig = { left: true, right: false };
-      spaceInfo.gapConfig = { left: 2, right: 20 };
+      spaceInfo.gapConfig = { left: 2, right: 18 };
 
       const indexing = ColumnIndexer.calculateSpaceIndexing(spaceInfo);
       const expectedInternalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
@@ -108,12 +108,12 @@ describe('Builtin No-Surround Position Calculation', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       spaceInfo.installType = 'semistanding';
       spaceInfo.wallConfig = { left: true, right: false }; // Left wall only
-      spaceInfo.gapConfig = { left: 2, right: 20 };
+      spaceInfo.gapConfig = { left: 2, right: 18 };
       
       const internalSpace = calculateInternalSpace(spaceInfo);
       
       // Internal width should subtract both the wall clearance and end panel thickness
-      expect(internalSpace.width).toBe(2978); // 3000 - 2 - 20
+      expect(internalSpace.width).toBe(2980); // 3000 - 2 - 18
       
       // Start X should follow the wall-side clearance
       expect(internalSpace.startX).toBe(2);
@@ -123,15 +123,15 @@ describe('Builtin No-Surround Position Calculation', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       spaceInfo.installType = 'freestanding';
       spaceInfo.wallConfig = { left: false, right: false }; // No walls
-      spaceInfo.gapConfig = { left: 20, right: 20 };
+      spaceInfo.gapConfig = { left: 18, right: 18 };
       
       const internalSpace = calculateInternalSpace(spaceInfo);
       
       // Internal width should be reduced by end panels on both sides
-      expect(internalSpace.width).toBe(2960); // 3000 - 20 - 20
+      expect(internalSpace.width).toBe(2964); // 3000 - 18 - 18
       
       // Start X should account for left end panel thickness
-      expect(internalSpace.startX).toBe(20);
+      expect(internalSpace.startX).toBe(18);
     });
   });
 
