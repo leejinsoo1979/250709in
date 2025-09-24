@@ -621,7 +621,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
         distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length);
         position = [center.x, center.y + distance, center.z];
-        up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위 (앞쪽이 위)
+        up = [0, 0, 1]; // 상부뷰에서는 Z축이 위 (뒤쪽이 위)
         break;
         
       case 'left':
