@@ -1621,7 +1621,7 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {(() => {
-        const willRender = showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture);
+        const willRender = showFrame && frameThickness.left > 0;
         const elementType = !wallConfig?.left ? '엔드패널' : '프레임';
         
         if (willRender && spaceInfo.installType === 'semistanding') {
@@ -1651,7 +1651,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture) && (() => {
+      {showFrame && frameThickness.left > 0 && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1779,7 +1779,7 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
       {(() => {
-        const willRender = showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture);
+        const willRender = showFrame && frameThickness.right > 0;
         const elementType = !wallConfig?.right ? '엔드패널' : '프레임';
         
         if (willRender && spaceInfo.installType === 'semistanding') {
@@ -1802,7 +1802,7 @@ const Room: React.FC<RoomProps> = ({
         
         return null;
       })()}
-      {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture) && (() => {
+      {showFrame && frameThickness.right > 0 && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
