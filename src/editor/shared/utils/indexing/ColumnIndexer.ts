@@ -605,17 +605,21 @@ export class ColumnIndexer {
       // 노서라운드의 경우 사용 가능 너비 재계산
       let actualInternalWidth = internalWidth;
       if (spaceInfo.surroundType === 'no-surround') {
-        if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 전체 너비 사용 (엔드패널도 슬롯에 포함)
-          actualInternalWidth = spaceInfo.width;
-        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: gapConfig 값을 그대로 사용 (벽 있으면 2, 없으면 18)
-          const leftGap = spaceInfo.gapConfig?.left || 0;
-          const rightGap = spaceInfo.gapConfig?.right || 0;
-          
-          // 전체 너비에서 좌우 gap을 뺀 실제 사용 가능 너비
-          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
-        }
+        // 노서라운드는 모두 gapConfig 값을 사용
+        const leftGap = spaceInfo.gapConfig?.left || 0;
+        const rightGap = spaceInfo.gapConfig?.right || 0;
+        
+        // 전체 너비에서 좌우 gap을 뺀 실제 사용 가능 너비
+        actualInternalWidth = spaceInfo.width - leftGap - rightGap;
+        
+        console.log('🔍 노서라운드 너비 계산:', {
+          installType: spaceInfo.installType,
+          totalWidth: spaceInfo.width,
+          leftGap,
+          rightGap,
+          actualInternalWidth,
+          '계산식': `${spaceInfo.width} - ${leftGap} - ${rightGap} = ${actualInternalWidth}`
+        });
       }
       
       // 프레임을 고려한 내부 시작점 (노서라운드의 경우 엔드패널과 gapConfig 고려)
@@ -673,11 +677,18 @@ export class ColumnIndexer {
         }
       }
       
+      // 한쪽벽모드 체크
+      const isSemistanding = spaceInfo.surroundType === 'no-surround' && 
+        (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing');
+      const isLeftWall = spaceInfo.wallConfig?.left === true && spaceInfo.wallConfig?.right === false;
+      
       console.log('🚨🚨🚨 calculateZoneSlotInfo - 한쪽벽모드 최종 경계:', {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
         wallConfig: spaceInfo.wallConfig,
         gapConfig: spaceInfo.gapConfig,
+        '한쪽벽모드': isSemistanding,
+        '좌측벽': isLeftWall,
         totalWidth: spaceInfo.width,
         internalWidth,
         actualInternalWidth,
@@ -686,6 +697,8 @@ export class ColumnIndexer {
         '시작X(mm)': internalStartX,
         '너비(mm)': actualInternalWidth,
         '끝X(mm)': internalStartX + actualInternalWidth,
+        '중심0기준_좌측끝': -(spaceInfo.width / 2),
+        '중심0기준_우측끝': spaceInfo.width / 2,
         columnCount,
         columnWidth,
         slotWidths,
