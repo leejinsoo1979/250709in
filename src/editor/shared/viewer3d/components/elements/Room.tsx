@@ -860,7 +860,7 @@ const Room: React.FC<RoomProps> = ({
     rightFrame: frameThickness.right > 0 && wallConfig?.right ? 1 : 0
   };
   
-  console.log('🎯🎯🎯 [한쪽벽모드 총괄] 엔드패널/프레임 생성 개수:', {
+  const logData = {
     installType: spaceInfo.installType,
     surroundType: spaceInfo.surroundType,
     wallConfig,
@@ -876,7 +876,15 @@ const Room: React.FC<RoomProps> = ({
       총개수: endPanelCount.leftFrame + endPanelCount.rightFrame
     },
     '총합': endPanelCount.left + endPanelCount.right + endPanelCount.leftFrame + endPanelCount.rightFrame
-  });
+  };
+  
+  console.log('🎯🎯🎯 [한쪽벽모드 총괄] 엔드패널/프레임 생성 개수:', logData);
+  
+  // 창 제목에도 표시 (디버그용)
+  if (typeof window !== 'undefined' && spaceInfo.installType === 'semistanding') {
+    const title = `엔드패널: L${endPanelCount.left} R${endPanelCount.right} | 프레임: L${endPanelCount.leftFrame} R${endPanelCount.rightFrame}`;
+    document.title = title;
+  }
 
   return (
     <group position={[0, 0, groupZOffset]}>
@@ -1589,19 +1597,30 @@ const Room: React.FC<RoomProps> = ({
       })}
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {console.log('🔴🔴🔴 [한쪽벽모드] 왼쪽 프레임/엔드패널 렌더링 체크:', {
-        showFrame,
-        frameThicknessLeft: frameThickness.left,
-        frameThicknessLeftMm: frameThicknessMm.left,
-        condition: showFrame && frameThickness.left > 0,
-        surroundType: spaceInfo.surroundType,
-        installType: spaceInfo.installType,
-        wallConfigLeft: wallConfig?.left,
-        wallConfigRight: wallConfig?.right,
-        '렌더링여부': showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture),
-        '예상타입': !wallConfig?.left ? '엔드패널' : (wallConfig?.left ? '프레임' : '없음'),
-        hasLeftFurniture
-      })}
+      {(() => {
+        const willRender = showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture);
+        const elementType = !wallConfig?.left ? '엔드패널' : '프레임';
+        
+        if (willRender && spaceInfo.installType === 'semistanding') {
+          console.log('🔴🔴🔴 [렌더링됨] 왼쪽 ' + elementType);
+        }
+        
+        console.log('🔴🔴🔴 [한쪽벽모드] 왼쪽 프레임/엔드패널 렌더링 체크:', {
+          showFrame,
+          frameThicknessLeft: frameThickness.left,
+          frameThicknessLeftMm: frameThicknessMm.left,
+          condition: showFrame && frameThickness.left > 0,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          wallConfigLeft: wallConfig?.left,
+          wallConfigRight: wallConfig?.right,
+          '렌더링여부': willRender,
+          '예상타입': elementType,
+          hasLeftFurniture
+        });
+        
+        return null;
+      })()}
       {console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', {
         frameThicknessLeft: frameThickness.left,
         frameThicknessLeftMm: frameThicknessMm.left,
@@ -1713,19 +1732,30 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {console.log('🔵🔵🔵 [한쪽벽모드] 오른쪽 프레임/엔드패널 렌더링 체크:', {
-        showFrame,
-        frameThicknessRight: frameThickness.right,
-        frameThicknessRightMm: frameThicknessMm.right,
-        condition: showFrame && frameThickness.right > 0,
-        surroundType: spaceInfo.surroundType,
-        installType: spaceInfo.installType,
-        wallConfigLeft: wallConfig?.left,
-        wallConfigRight: wallConfig?.right,
-        '렌더링여부': showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture),
-        '예상타입': !wallConfig?.right ? '엔드패널' : (wallConfig?.right ? '프레임' : '없음'),
-        hasRightFurniture
-      })}
+      {(() => {
+        const willRender = showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture);
+        const elementType = !wallConfig?.right ? '엔드패널' : '프레임';
+        
+        if (willRender && spaceInfo.installType === 'semistanding') {
+          console.log('🔵🔵🔵 [렌더링됨] 오른쪽 ' + elementType);
+        }
+        
+        console.log('🔵🔵🔵 [한쪽벽모드] 오른쪽 프레임/엔드패널 렌더링 체크:', {
+          showFrame,
+          frameThicknessRight: frameThickness.right,
+          frameThicknessRightMm: frameThicknessMm.right,
+          condition: showFrame && frameThickness.right > 0,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          wallConfigLeft: wallConfig?.left,
+          wallConfigRight: wallConfig?.right,
+          '렌더링여부': willRender,
+          '예상타입': elementType,
+          hasRightFurniture
+        });
+        
+        return null;
+      })()}
       {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture) && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
