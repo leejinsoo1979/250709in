@@ -88,12 +88,8 @@ export class ColumnIndexer {
           // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
           leftReduction = spaceInfo.gapConfig?.left || 2;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 벽이 있는 쪽은 이격거리 적용, 없는 쪽은 0
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
-            leftReduction = 0;
-          }
+          // 세미스탠딩: gapConfig의 left 값을 그대로 사용
+          leftReduction = spaceInfo.gapConfig?.left || 0;
         } else {
           // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
           leftReduction = 0;
@@ -893,12 +889,8 @@ export class ColumnIndexer {
           leftReduction = 0;
           rightReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 벽이 있는 쪽은 이격거리 적용, 없는 쪽은 0
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
-            leftReduction = 0;
-          }
+          // 세미스탠딩: gapConfig의 left 값을 그대로 사용
+          leftReduction = spaceInfo.gapConfig?.left || 0;
           
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
@@ -963,12 +955,8 @@ export class ColumnIndexer {
           leftReduction = 0;
           rightReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: 벽이 있는 쪽은 이격거리 적용, 없는 쪽은 0
-          if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
-          } else {
-            leftReduction = 0;
-          }
+          // 세미스탠딩: gapConfig의 left 값을 그대로 사용
+          leftReduction = spaceInfo.gapConfig?.left || 0;
           
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
