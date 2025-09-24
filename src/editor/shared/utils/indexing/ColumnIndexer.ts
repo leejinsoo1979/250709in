@@ -741,8 +741,23 @@ export class ColumnIndexer {
         adjustedLeftGap = leftGap;
         adjustedRightGap = rightGap;
         
-        // 전체 너비에서 좌우 gap을 뺀 실제 사용 가능 너비
-        actualInternalWidth = spaceInfo.width - leftGap - rightGap;
+        // 전체 너비에서 gap을 뺀 실제 사용 가능 너비
+        // 세미스탠딩의 경우 벽이 있는 쪽만 빼야 함
+        if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+            // 좌측 벽: 좌측 이격거리만 뺌
+            actualInternalWidth = spaceInfo.width - leftGap;
+          } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
+            // 우측 벽: 우측 이격거리만 뺌
+            actualInternalWidth = spaceInfo.width - rightGap;
+          } else {
+            // 기본값 (양쪽 모두 뺌)
+            actualInternalWidth = spaceInfo.width - leftGap - rightGap;
+          }
+        } else {
+          // 빌트인, 프리스탠딩 등: 양쪽 모두 뺌
+          actualInternalWidth = spaceInfo.width - leftGap - rightGap;
+        }
         
         console.log('🔍 노서라운드 너비 계산:', {
           installType: spaceInfo.installType,
