@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import * as THREE from 'three';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -93,24 +92,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     
     // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
-    
-    // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
-    let centerX = 0;
-    if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
-      // 서라운드 모드: 프레임 차이 고려
-      const leftFrame = spaceInfo.frameSize.left || 50;
-      const rightFrame = spaceInfo.frameSize.right || 50;
-      centerX = mmToThreeUnits((leftFrame - rightFrame) / 2);
-    } else if (spaceInfo.surroundType === 'no-surround') {
-      if (spaceInfo.installType === 'builtin' && spaceInfo.gapConfig) {
-        // 빌트인: 이격거리 차이 고려
-        const leftGap = spaceInfo.gapConfig.left || 2;
-        const rightGap = spaceInfo.gapConfig.right || 2;
-        centerX = mmToThreeUnits((leftGap - rightGap) / 2);
-      }
-      // 세미스탠딩, 프리스탠딩은 대칭이므로 centerX = 0 유지
-    }
-    
+    const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
     const centerZ = 0;
 
@@ -147,31 +129,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         return frontPosition;
     }
   }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
-  
-  // spaceInfo의 주요 크기 변경 시에만 카메라 리셋 (installType 변경 시 제외)
-  useEffect(() => {
-    if (!spaceInfo) return;
-    
-    // 카메라 리셋 이벤트 발생
-    const event = new CustomEvent('reset-camera-for-settings');
-    window.dispatchEvent(event);
-    
-    console.log('🎯 Space3DView: spaceInfo 크기 변경됨 - 카메라 리셋 이벤트 발생', {
-      width: spaceInfo.width,
-      height: spaceInfo.height,
-      depth: spaceInfo.depth,
-      customColumnCount: spaceInfo.customColumnCount
-    });
-  }, [
-    // 크기와 기둥 수 변경 시에만 카메라 리셋
-    spaceInfo?.width,
-    spaceInfo?.height,
-    spaceInfo?.depth,
-    spaceInfo?.customColumnCount,
-    spaceInfo?.droppedCeiling?.enabled,
-    spaceInfo?.droppedCeiling?.dropHeight
-    // installType, surroundType, frameSize, gapConfig 변경 시에는 카메라 유지
-  ]);
   
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
@@ -301,17 +258,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   // 기둥 드롭 핸들러
   const handleColumnDrop = (e: React.DragEvent, columnData: any) => {
-    // 이벤트 전파 방지 - 중복 실행 방지
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // 이미 처리 중인지 확인 (중복 방지)
-    if ((window as any).__columnDropProcessing) {
-      console.log('⚠️ 기둥 드롭이 이미 처리 중입니다.');
-      return;
-    }
-    (window as any).__columnDropProcessing = true;
-    
     // 캔버스 중앙에 기둥 배치 (임시)
     const rect = e.currentTarget.getBoundingClientRect();
     const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
@@ -332,23 +278,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       material: columnData.material || 'concrete'
     };
 
-    console.log('🏗️ 기둥 드롭 배치 (단일):', {
+    console.log('🏗️ 기둥 드롭 배치:', {
       centerX,
       zPosition,
       spaceDepthM,
       columnDepthM,
-      column: newColumn,
-      timestamp: Date.now()
+      column: newColumn
     });
     
     // 스토어에 기둥 추가
     const { addColumn } = useSpaceConfigStore.getState();
     addColumn(newColumn);
-    
-    // 처리 완료 후 플래그 리셋
-    setTimeout(() => {
-      delete (window as any).__columnDropProcessing;
-    }, 100);
   };
 
   // 가벽 드롭 핸들러
@@ -522,23 +462,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const spaceHeight = spaceInfo?.height || 2400;
     const spaceDepth = spaceInfo?.depth || 1500;
     
-    // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
-    let actualCenterX = 0;
-    if (spaceInfo?.surroundType === 'surround' && spaceInfo.frameSize) {
-      const leftFrame = spaceInfo.frameSize.left || 50;
-      const rightFrame = spaceInfo.frameSize.right || 50;
-      actualCenterX = mmToThreeUnits((leftFrame - rightFrame) / 2);
-    } else if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.installType === 'builtin' && spaceInfo.gapConfig) {
-      const leftGap = spaceInfo.gapConfig.left || 2;
-      const rightGap = spaceInfo.gapConfig.right || 2;
-      actualCenterX = mmToThreeUnits((leftGap - rightGap) / 2);
-    }
-    
     if (!bounds) {
       // 가구가 없을 때는 공간 중심과 크기 사용
       // calculateCameraTarget과 동일한 계산 사용
       const center = { 
-        x: actualCenterX, 
+        x: 0, 
         y: mmToThreeUnits(spaceHeight * 0.5), // calculateCameraTarget과 동일
         z: 0 
       };
@@ -563,7 +491,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         case 'top':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
           distance = calculateOptimalDistance(spaceWidth, spaceDepth, spaceHeight, placedModules.length);
-          // 정확한 직교 탑뷰를 위해 x, z는 정확히 center와 일치시킴
           position = [center.x, center.y + distance, center.z];
           up = [0, 0, -1];
           break;
@@ -615,9 +542,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       case 'top':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
         distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length);
-        // 정확한 직교 탑뷰를 위해 x, z는 정확히 center와 일치시킴
         position = [center.x, center.y + distance, center.z];
-        up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위
+        up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위 (앞쪽이 위)
         break;
         
       case 'left':
@@ -1039,20 +965,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       >
         <ThreeCanvas 
           cameraPosition={cameraPosition}
-          cameraTarget={(() => {
-            // 실제 공간의 중심 계산 (좌우 프레임/이격거리 고려)
-            let centerX = 0;
-            if (spaceInfo?.surroundType === 'surround' && spaceInfo.frameSize) {
-              const leftFrame = spaceInfo.frameSize.left || 50;
-              const rightFrame = spaceInfo.frameSize.right || 50;
-              centerX = mmToThreeUnits((leftFrame - rightFrame) / 2);
-            } else if (spaceInfo?.surroundType === 'no-surround' && spaceInfo?.installType === 'builtin' && spaceInfo.gapConfig) {
-              const leftGap = spaceInfo.gapConfig.left || 2;
-              const rightGap = spaceInfo.gapConfig.right || 2;
-              centerX = mmToThreeUnits((leftGap - rightGap) / 2);
-            }
-            return [centerX, mmToThreeUnits((spaceInfo?.height || 2400) * 0.5), 0];
-          })()}
+          cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
           renderMode={renderMode}
@@ -1099,34 +1012,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
             {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
             
-            {/* 기본 요소들 - 낮은 renderOrder로 설정 */}
+            {/* 기본 요소들 */}
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
-            <group renderOrder={-100}>
-              <Room 
-                key={`room-${viewMode}-${view2DDirection}-${spaceInfo.surroundType}-${spaceInfo.installType}`}
-                spaceInfo={spaceInfo} 
-                viewMode={viewMode} 
-                view2DDirection={view2DDirection}
-                renderMode={renderMode}
-                materialConfig={materialConfig} 
-                showAll={showAll} 
-                showFrame={showFrame}
-                showDimensions={showDimensions}
-                showGuides={showGuides}
-                isStep2={isStep2}
-                activeZone={activeZone}
-              />
-              
-              {/* 단내림 공간 렌더링 */}
-              <DroppedCeilingSpace spaceInfo={spaceInfo} />
-            </group>
-            
-            {/* CAD 스타일 치수/가이드 표시 - 모든 것 위에 렌더링 */}
-            <CleanCAD2D 
-              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+            <Room 
+              spaceInfo={spaceInfo} 
+              viewMode={viewMode} 
+              view2DDirection={view2DDirection}
+              renderMode={renderMode}
+              materialConfig={materialConfig} 
+              showAll={showAll} 
+              showFrame={showFrame}
               showDimensions={showDimensions}
+              showGuides={showGuides}
               isStep2={isStep2}
+              activeZone={activeZone}
             />
+            
+            {/* 단내림 공간 렌더링 */}
+            <DroppedCeilingSpace spaceInfo={spaceInfo} />
             
             {/* 상하부장 사이 백패널 렌더링 */}
             <BackPanelBetweenCabinets 
@@ -1308,6 +1211,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
             {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
             
+            {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 */}
+            <CleanCAD2D 
+              viewDirection={viewMode === '3D' ? '3D' : view2DDirection} 
+              showDimensions={showDimensions}
+              isStep2={isStep2}
+            />
+            
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
             <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
@@ -1465,23 +1375,8 @@ const QuadrantContent: React.FC<{
       {/* 투명 슬롯매쉬 - 탑뷰에서는 제외 */}
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
       
-      {/* SlotDropZonesSimple - 슬롯 가이드 및 투명 매쉬 */}
+      {/* 슬롯 드롭존 */}
       <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" />
-      
-      {/* 내경 치수 표시 */}
-      <InternalDimensionDisplay />
-      
-      {/* 상하부장 사이 백패널 렌더링 */}
-      <BackPanelBetweenCabinets 
-        placedModules={placedModules}
-        spaceInfo={spaceInfo}
-      />
-      
-      {/* 상부장 간접조명 */}
-      <UpperCabinetIndirectLight
-        placedModules={placedModules}
-        spaceInfo={spaceInfo}
-      />
       
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🔵 QuadrantContent - Room 렌더링:', {
@@ -1491,7 +1386,6 @@ const QuadrantContent: React.FC<{
         placedModulesCount: placedModules?.length || 0
       })}
       <Room
-        key={`room-split-${viewDirection}-${spaceInfo.surroundType}-${spaceInfo.installType}`}
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}

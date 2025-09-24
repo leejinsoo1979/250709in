@@ -168,22 +168,26 @@ export const calculatePanelDepth = (spaceInfo?: SpaceInfo) => {
  * 배치된 가구 중 가장 깊은 가구의 깊이를 반환
  * 가구가 없으면 기본값 600mm 반환
  */
-export const calculateFurnitureDepth = (placedModules?: any[]) => {
+export const calculateFurnitureDepth = (placedModules?: any[], spaceInfo?: any) => {
+  // 노서라운드 모드에서는 도어가 없으므로 580mm
+  const baseDepth = spaceInfo?.surroundType === 'no-surround' ? 580 : 600;
+  
   if (!placedModules || placedModules.length === 0) {
-    return 600; // 기본 가구 깊이
+    return baseDepth; // 기본 가구 깊이
   }
   
   // 동적 import를 피하기 위해 직접 깊이 확인
-  let maxDepth = 600;
+  let maxDepth = baseDepth;
   
   placedModules.forEach(module => {
     // customDepth가 있으면 우선 사용
     if (module.customDepth && module.customDepth > maxDepth) {
       maxDepth = module.customDepth;
     }
-    // 스타일러는 660mm 깊이
+    // 스타일러는 660mm 깊이 (노서라운드에서는 640mm)
     else if (module.moduleId && module.moduleId.includes('styler')) {
-      maxDepth = Math.max(maxDepth, 660);
+      const stylerDepth = spaceInfo?.surroundType === 'no-surround' ? 640 : 660;
+      maxDepth = Math.max(maxDepth, stylerDepth);
     }
     // 기타 특수 가구 깊이 처리 가능
   });
