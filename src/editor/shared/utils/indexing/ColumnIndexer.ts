@@ -604,10 +604,109 @@ export class ColumnIndexer {
       
       // 노서라운드의 경우 사용 가능 너비 재계산
       let actualInternalWidth = internalWidth;
+      let adjustedLeftGap = 0;
+      let adjustedRightGap = 0;
+      
       if (spaceInfo.surroundType === 'no-surround') {
-        // 노서라운드는 모두 gapConfig 값을 사용
-        const leftGap = spaceInfo.gapConfig?.left || 0;
-        const rightGap = spaceInfo.gapConfig?.right || 0;
+        // 기본 gap 값 가져오기
+        let leftGap = spaceInfo.gapConfig?.left || 0;
+        let rightGap = spaceInfo.gapConfig?.right || 0;
+        
+        // 벽이 있는 경우 이격거리를 정수 슬롯을 위해 조정
+        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 빌트인: 양쪽 벽 모두 2-5mm 범위에서 조정
+          const baseWidth = spaceInfo.width;
+          
+          // 양쪽 모두 2-5mm 범위에서 정수 슬롯이 되는 조합 찾기
+          let found = false;
+          for (let leftG = 2; leftG <= 5 && !found; leftG++) {
+            for (let rightG = 2; rightG <= 5 && !found; rightG++) {
+              const availableWidth = baseWidth - leftG - rightG;
+              const slotWidth = availableWidth / columnCount;
+              
+              if (Number.isInteger(slotWidth)) {
+                leftGap = leftG;
+                rightGap = rightG;
+                found = true;
+                console.log('✅ 빌트인 정수 슬롯 너비 조정:', {
+                  좌측이격거리: leftG,
+                  우측이격거리: rightG,
+                  슬롯너비: slotWidth,
+                  사용가능너비: availableWidth
+                });
+                break;
+              }
+            }
+          }
+          
+          // 정수가 안되면 기본값
+          if (!found) {
+            leftGap = 2;
+            rightGap = 2;
+          }
+          
+        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          const baseWidth = spaceInfo.width;
+          
+          // 벽이 있는 쪽 확인하고 2-5mm 범위에서 조정
+          if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
+            // 좌측 벽: 좌측 이격거리 조정 (2-5mm)
+            const rightFixed = 18; // 우측 엔드패널 고정
+            
+            // 2-5mm 범위에서 정수 슬롯 너비가 되는 값 찾기
+            for (let gap = 2; gap <= 5; gap++) {
+              const availableWidth = baseWidth - gap - rightFixed;
+              const slotWidth = availableWidth / columnCount;
+              
+              if (Number.isInteger(slotWidth)) {
+                leftGap = gap;
+                rightGap = rightFixed;
+                console.log('✅ 좌측벽 정수 슬롯 너비 조정:', {
+                  조정된이격거리: gap,
+                  슬롯너비: slotWidth,
+                  사용가능너비: availableWidth
+                });
+                break;
+              }
+            }
+            
+            // 정수가 안되면 가장 가까운 값 사용
+            if (leftGap === spaceInfo.gapConfig?.left) {
+              leftGap = 2; // 기본값
+              rightGap = rightFixed;
+            }
+            
+          } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
+            // 우측 벽: 우측 이격거리 조정 (2-5mm)
+            const leftFixed = 18; // 좌측 엔드패널 고정
+            
+            // 2-5mm 범위에서 정수 슬롯 너비가 되는 값 찾기
+            for (let gap = 2; gap <= 5; gap++) {
+              const availableWidth = baseWidth - leftFixed - gap;
+              const slotWidth = availableWidth / columnCount;
+              
+              if (Number.isInteger(slotWidth)) {
+                leftGap = leftFixed;
+                rightGap = gap;
+                console.log('✅ 우측벽 정수 슬롯 너비 조정:', {
+                  조정된이격거리: gap,
+                  슬롯너비: slotWidth,
+                  사용가능너비: availableWidth
+                });
+                break;
+              }
+            }
+            
+            // 정수가 안되면 가장 가까운 값 사용
+            if (rightGap === spaceInfo.gapConfig?.right) {
+              leftGap = leftFixed;
+              rightGap = 2; // 기본값
+            }
+          }
+        }
+        
+        adjustedLeftGap = leftGap;
+        adjustedRightGap = rightGap;
         
         // 전체 너비에서 좌우 gap을 뺀 실제 사용 가능 너비
         actualInternalWidth = spaceInfo.width - leftGap - rightGap;
@@ -615,10 +714,13 @@ export class ColumnIndexer {
         console.log('🔍 노서라운드 너비 계산:', {
           installType: spaceInfo.installType,
           totalWidth: spaceInfo.width,
-          leftGap,
-          rightGap,
+          '원래leftGap': spaceInfo.gapConfig?.left,
+          '원래rightGap': spaceInfo.gapConfig?.right,
+          '조정leftGap': leftGap,
+          '조정rightGap': rightGap,
           actualInternalWidth,
-          '계산식': `${spaceInfo.width} - ${leftGap} - ${rightGap} = ${actualInternalWidth}`
+          '계산식': `${spaceInfo.width} - ${leftGap} - ${rightGap} = ${actualInternalWidth}`,
+          '슬롯너비': actualInternalWidth / columnCount
         });
       }
       
@@ -628,16 +730,8 @@ export class ColumnIndexer {
       let leftReduction = 0; // 변수를 if 블록 밖에 선언
       
       if (spaceInfo.surroundType === 'no-surround') {
-        if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽이 있으므로 이격거리만 고려
-          leftReduction = spaceInfo.gapConfig?.left || 2;
-        } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-          // 세미스탠딩: gapConfig 값을 그대로 사용 (벽 있으면 2, 없으면 18)
-          leftReduction = spaceInfo.gapConfig?.left || 0;
-        } else {
-          // 프리스탠딩: gapConfig 값을 그대로 사용 (양쪽 다 18)
-          leftReduction = spaceInfo.gapConfig?.left || 0;
-        }
+        // 노서라운드에서는 조정된 gap 값 사용
+        leftReduction = adjustedLeftGap;
         
         // mm 단위로 계산: 중심이 0이므로 좌측 끝은 -width/2
         internalStartX = -(spaceInfo.width / 2) + leftReduction;
@@ -686,7 +780,8 @@ export class ColumnIndexer {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
         wallConfig: spaceInfo.wallConfig,
-        gapConfig: spaceInfo.gapConfig,
+        '원래gapConfig': spaceInfo.gapConfig,
+        '조정된Gap': { left: adjustedLeftGap, right: adjustedRightGap },
         '한쪽벽모드': isSemistanding,
         '좌측벽': isLeftWall,
         totalWidth: spaceInfo.width,
@@ -697,8 +792,8 @@ export class ColumnIndexer {
         '시작X(mm)': internalStartX,
         '너비(mm)': actualInternalWidth,
         '끝X(mm)': internalStartX + actualInternalWidth,
-        '중심0기준_좌측끝': -(spaceInfo.width / 2),
-        '중심0기준_우측끝': spaceInfo.width / 2,
+        '슬롯너비': actualInternalWidth / columnCount,
+        '정수체크': Number.isInteger(actualInternalWidth / columnCount),
         columnCount,
         columnWidth,
         slotWidths,
