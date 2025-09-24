@@ -208,16 +208,16 @@ export class SpaceCalculator {
                 ...spaceInfo,
                 gapConfig: { left: gap, right: gap }
               },
-              slotWidth: Math.round(slotWidth),
+              slotWidth: Math.round(slotWidth * 100) / 100,
               adjustmentMade: true
             };
           }
           
-          // 0.5 단위로 떨어지는 경우도 기록
-          const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+          // 소수점 2자리로 반올림한 경우도 기록
+          const roundedSlotWidth = Math.round(slotWidth * 100) / 100;
           const remainder = Math.abs(slotWidth - roundedSlotWidth);
           
-          if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+          if (!bestSlotWidth && remainder < 0.001 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
             bestSlotWidth = roundedSlotWidth;
             bestConfig = { left: gap, right: gap };
           }
@@ -249,16 +249,16 @@ export class SpaceCalculator {
                     ...spaceInfo,
                     gapConfig: config
                   },
-                  slotWidth: Math.round(slotWidth),
+                  slotWidth: Math.round(slotWidth * 100) / 100,
                   adjustmentMade: true
                 };
               }
               
-              // 0.5 단위로 떨어지는 경우도 기록
-              const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+              // 소수점 2자리로 반올림한 경우도 기록
+              const roundedSlotWidth = Math.round(slotWidth * 100) / 100;
               const remainder = Math.abs(slotWidth - roundedSlotWidth);
               
-              if (!bestSlotWidth && remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+              if (!bestSlotWidth && remainder < 0.001 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
                 bestSlotWidth = roundedSlotWidth;
                 bestConfig = config;
               }
@@ -266,7 +266,7 @@ export class SpaceCalculator {
           }
         }
         
-        // 정수가 없으면 0.5 단위 사용
+        // 정수가 없으면 소수점 2자리 사용
         if (bestConfig && bestSlotWidth) {
           return {
             adjustedSpaceInfo: {
@@ -281,7 +281,7 @@ export class SpaceCalculator {
         // 정수로 안 떨어지면 기본 2mm 사용
         const gap = 2;
         const internalWidth = baseWidth - (gap * 2);
-        const slotWidth = internalWidth / columnCount;
+        const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         
         
         return {
@@ -302,8 +302,8 @@ export class SpaceCalculator {
           const internalWidth = hasLeftWall 
             ? baseWidth - gap  // 왼쪽 벽: 왼쪽만 이격거리
             : baseWidth - gap; // 오른쪽 벽: 오른쪽만 이격거리
-          // 소수점 1자리까지 정확히 계산
-          const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
+          // 소수점 2자리까지 정확히 계산
+          const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
           
           if (internalWidth % columnCount === 0) {
             return {
@@ -325,8 +325,8 @@ export class SpaceCalculator {
         const internalWidth = hasLeftWall 
           ? baseWidth - gap
           : baseWidth - gap;
-        // 소수점 1자리까지 정확히 계산  
-        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
+        // 소수점 2자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
           adjustedSpaceInfo: {
             ...spaceInfo,
@@ -342,8 +342,8 @@ export class SpaceCalculator {
       } else {
         // 프리스탠딩: 양쪽 엔드패널 18mm 고정, 조정 불가
         const internalWidth = spaceInfo.width - (END_PANEL_THICKNESS * 2);
-        // 소수점 1자리까지 정확히 계산  
-        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
+        // 소수점 2자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
           adjustedSpaceInfo: spaceInfo,
           slotWidth,
@@ -364,8 +364,8 @@ export class SpaceCalculator {
       if (!canAdjustLeft && !canAdjustRight) {
         // 조정 불가능 (양쪽 모두 엔드패널)
         const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-        // 소수점 1자리까지 정확히 계산  
-        const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
+        // 소수점 2자리까지 정확히 계산  
+        const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
           adjustedSpaceInfo: spaceInfo,
           slotWidth,
@@ -398,7 +398,7 @@ export class SpaceCalculator {
                   right: rightFrame
                 }
               },
-              slotWidth: Math.round(slotWidth),
+              slotWidth: Math.round(slotWidth * 100) / 100,
               adjustmentMade: true
             };
           }
@@ -441,7 +441,7 @@ export class SpaceCalculator {
                     right: rightFrame
                   }
                 },
-                slotWidth: Math.round(slotWidth),
+                slotWidth: Math.round(slotWidth * 100) / 100,
                 adjustmentMade: true
               };
             }
@@ -449,7 +449,7 @@ export class SpaceCalculator {
         }
       }
       
-      // 0.5 단위 폴백을 위한 전체 범위 검색
+      // 소수점 2자리 폴백을 위한 전체 범위 검색
       for (let leftAdjust = -10; leftAdjust <= 10; leftAdjust++) {
         for (let rightAdjust = -10; rightAdjust <= 10; rightAdjust++) {
           const leftFrame = canAdjustLeft ? Math.max(40, Math.min(60, baseLeft + leftAdjust)) : baseLeft;
@@ -458,8 +458,8 @@ export class SpaceCalculator {
           const internalWidth = spaceInfo.width - leftFrame - rightFrame;
           const slotWidth = internalWidth / columnCount;
           
-          // 0.5 단위로 떨어지는지 체크
-          const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
+          // 소수점 2자리로 반올림
+          const roundedSlotWidth = Math.round(slotWidth * 100) / 100;
           const remainder = Math.abs(slotWidth - roundedSlotWidth);
           
           if (remainder < smallestRemainder && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
@@ -488,8 +488,8 @@ export class SpaceCalculator {
       
       // 조정이 어려우면 원래 값 유지
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-      // 소수점 1자리까지 정확히 계산
-      const slotWidth = Math.round((internalWidth / columnCount) * 10) / 10;
+      // 소수점 2자리까지 정확히 계산
+      const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
       return {
         adjustedSpaceInfo: spaceInfo,
         slotWidth,
