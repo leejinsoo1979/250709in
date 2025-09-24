@@ -646,6 +646,7 @@ export class ColumnIndexer {
           leftReduction = 0;
         }
         
+        // mm 단위로 계산: 중심이 0이므로 좌측 끝은 -width/2
         internalStartX = -(spaceInfo.width / 2) + leftReduction;
       } else {
         internalStartX = -(spaceInfo.width / 2) + frameThickness.left;
@@ -658,7 +659,9 @@ export class ColumnIndexer {
         gapConfig: spaceInfo.gapConfig,
         leftReduction,
         internalStartX,
+        '시작점(mm)': internalStartX * 100, // Three.js 단위를 mm로 변환
         actualInternalWidth,
+        '끝점(mm)': (internalStartX * 100) + actualInternalWidth,
         전체너비: spaceInfo.width
       });
       
@@ -684,10 +687,14 @@ export class ColumnIndexer {
       console.log('🚨🚨🚨 calculateZoneSlotInfo - 한쪽벽모드 최종 경계:', {
         surroundType: spaceInfo.surroundType,
         installType: spaceInfo.installType,
+        wallConfig: spaceInfo.wallConfig,
         totalWidth: spaceInfo.width,
         internalWidth,
         actualInternalWidth,
         internalStartX,
+        '시작X(mm)': internalStartX,
+        '너비(mm)': actualInternalWidth,
+        '끝X(mm)': internalStartX + actualInternalWidth,
         columnCount,
         columnWidth,
         slotWidths,
@@ -698,8 +705,8 @@ export class ColumnIndexer {
       
       return {
         normal: {
-          startX: internalStartX,
-          width: actualInternalWidth,  // 노서라운드의 경우 조정된 너비 사용
+          startX: internalStartX,  // 이미 mm 단위
+          width: actualInternalWidth,  // mm 단위
           columnCount,
           columnWidth,
           slotWidths
