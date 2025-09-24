@@ -285,16 +285,21 @@ export const calculateFurniturePosition = (
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isDual = isDualFurniture(moduleId, spaceInfo);
   
-  // 빌트인+노서라운드 디버깅
-  if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in')) {
-    console.log('🎯 [calculateFurniturePosition] 빌트인+노서라운드 위치 상세:', {
+  // 노서라운드 모드 디버깅
+  if (spaceInfo.surroundType === 'no-surround') {
+    console.log('🎯 [calculateFurniturePosition] 노서라운드 위치 상세:', {
       slotIndex,
       moduleId,
       isDual,
+      installType: spaceInfo.installType,
+      wallPosition: spaceInfo.wallPosition,
+      gapConfig: spaceInfo.gapConfig,
       indexingType: indexing.threeUnitPositions ? 'getThreeUnitPositions' : 'calculateSpaceIndexing',
       threeUnitPositions: indexing.threeUnitPositions,
       slotWidths: indexing.slotWidths,
-      selectedPosition: indexing.threeUnitPositions?.[slotIndex]
+      selectedPosition: indexing.threeUnitPositions?.[slotIndex],
+      '첫번째슬롯위치': indexing.threeUnitPositions?.[0],
+      '마지막슬롯위치': indexing.threeUnitPositions?.[indexing.threeUnitPositions.length - 1]
     });
   }
   
