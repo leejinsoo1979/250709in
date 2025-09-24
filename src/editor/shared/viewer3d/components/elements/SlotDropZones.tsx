@@ -323,12 +323,28 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     // 가구 데이터 조회 - 기본 타입만 있는 경우 실제 너비 계산
     let moduleId = dragData.moduleData.id;
     
-    // ID에 너비가 없는 경우 (기본 타입만 있는 경우) 실제 너비 추가
+    // ID에 너비가 없는 경우 (기본 타입만 있는 경우) 실제 슬롯 너비 추가
     if (!moduleId.match(/-[\d.]+$/)) {
       const originalId = moduleId;  // 원래 ID 저장
       const isDual = moduleId.includes('dual-');
-      const targetWidth = isDual ? indexing.columnWidth * 2 : indexing.columnWidth;
-      const widthForId = Math.round(targetWidth * 10) / 10;
+      
+      // 실제 슬롯 너비 사용 (평균이 아닌 정확한 슬롯 너비)
+      let targetWidth: number;
+      if (indexing.slotWidths && indexing.slotWidths[zoneSlotIndex] !== undefined) {
+        if (isDual && zoneSlotIndex < indexing.slotWidths.length - 1) {
+          // 듀얼 가구: 두 슬롯 너비의 합
+          targetWidth = indexing.slotWidths[zoneSlotIndex] + indexing.slotWidths[zoneSlotIndex + 1];
+        } else {
+          // 싱글 가구: 해당 슬롯 너비
+          targetWidth = indexing.slotWidths[zoneSlotIndex];
+        }
+      } else {
+        // fallback: 평균 너비 사용
+        targetWidth = isDual ? indexing.columnWidth * 2 : indexing.columnWidth;
+      }
+      
+      // 너비를 소수점 2자리까지 유지 (599.67mm 같은 값 보존)
+      const widthForId = Math.round(targetWidth * 100) / 100;
       moduleId = `${moduleId}-${widthForId}`;
       
       // dragData도 업데이트

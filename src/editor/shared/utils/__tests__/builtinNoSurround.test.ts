@@ -74,6 +74,22 @@ describe('Builtin No-Surround Position Calculation', () => {
       const expectedFirstDualX = (indexing.columnPositions[0] + indexing.columnPositions[1]) / 2;
       expect(indexing.dualColumnPositions[0]).toBeCloseTo(expectedFirstDualX, 1);
     });
+
+    it('should respect left wall gap in semistanding+no-surround mode', () => {
+      const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
+      spaceInfo.installType = 'semistanding';
+      spaceInfo.wallConfig = { left: true, right: false };
+      spaceInfo.gapConfig = { left: 2, right: 20 };
+
+      const indexing = ColumnIndexer.calculateSpaceIndexing(spaceInfo);
+      const expectedInternalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const expectedStartX = -(spaceInfo.width / 2) + (spaceInfo.gapConfig?.left || 0);
+
+      expect(indexing.internalWidth).toBeCloseTo(expectedInternalWidth, 5);
+      expect(indexing.columnBoundaries[0]).toBeCloseTo(expectedStartX, 5);
+      expect(indexing.zones?.normal?.startX).toBeCloseTo(expectedStartX, 5);
+      expect(indexing.zones?.normal?.width).toBeCloseTo(expectedInternalWidth, 5);
+    });
   });
 
   describe('geometry.ts calculateInternalSpace', () => {
