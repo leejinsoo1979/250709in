@@ -1652,6 +1652,11 @@ const Room: React.FC<RoomProps> = ({
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
       {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture) && (() => {
+        console.log('🔥🔥🔥 [좌측 프레임/엔드패널 메인 렌더링 블록]', {
+          surroundType: spaceInfo.surroundType,
+          wallConfigLeft: wallConfig?.left,
+          isEndPanel: !wallConfig?.left
+        });
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
