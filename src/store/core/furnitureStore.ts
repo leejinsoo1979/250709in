@@ -401,9 +401,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         
         const slotInfo = columnSlots[globalSlotIndex];
 
-        // 기둥이 있는 슬롯인 경우 adjustedWidth 설정
+        // 기둥이 있는 슬롯인 경우 adjustedWidth 설정 (소수점 2자리로 반올림)
         if (slotInfo?.hasColumn) {
-          const newAdjustedWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+          const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+          const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
           
           return {
             ...module,

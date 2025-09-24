@@ -222,10 +222,10 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
             // 가구는 오른쪽 슬롯 경계까지 확장 (기둥 오른쪽부터 슬롯 끝까지)
             const rightSpace = Math.max(0, rightGap);
             return {
-              availableWidth: rightSpace,
+              availableWidth: Math.round(rightSpace * 100) / 100,
               intrusionDirection: 'from-left' as const,
               furniturePosition: 'right-aligned' as const,
-              adjustedWidth: rightSpace
+              adjustedWidth: Math.round(rightSpace * 100) / 100
             };
           } 
           // 오른쪽 공간이 더 작으면 오른쪽에서 침범
@@ -233,10 +233,10 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
             // 가구는 왼쪽 슬롯 경계까지 확장 (슬롯 시작부터 기둥 왼쪽까지)
             const leftSpace = Math.max(0, leftGap);
             return {
-              availableWidth: leftSpace,
+              availableWidth: Math.round(leftSpace * 100) / 100,
               intrusionDirection: 'from-right' as const,
               furniturePosition: 'left-aligned' as const,
-              adjustedWidth: leftSpace
+              adjustedWidth: Math.round(leftSpace * 100) / 100
             };
           }
         };
@@ -250,8 +250,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           columnPosition: 'edge',
           intrusionDirection: intrusionAnalysis.intrusionDirection,
           furniturePosition: intrusionAnalysis.furniturePosition,
-          availableWidth: intrusionAnalysis.availableWidth,
-          adjustedWidth: intrusionAnalysis.adjustedWidth,
+          availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
+          adjustedWidth: Math.round((intrusionAnalysis.adjustedWidth || 0) * 100) / 100,
           doorWidth: indexing.columnWidth - 3, // 커버도어는 원래 슬롯 너비 사용
           needsMullion: false
         });
@@ -261,7 +261,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           columnWidth: columnInSlot.width,
           columnDepth: columnInSlot.depth,
           intrusionDirection: intrusionAnalysis.intrusionDirection,
-          availableWidth: intrusionAnalysis.availableWidth,
+          availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
           originalSlotWidth: indexing.columnWidth
         });
       }
@@ -443,7 +443,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         availableWidth,
         intrusionDirection: intrusionAnalysis.intrusionDirection,
         furniturePosition: intrusionAnalysis.furniturePosition,
-        adjustedWidth: intrusionAnalysis.adjustedWidth
+        adjustedWidth: Math.round((intrusionAnalysis.adjustedWidth || 0) * 100) / 100
       } as ColumnSlotInfo;
       
       const furnitureBounds = calculateFurnitureBounds(tempSlotInfo, originalSlotBounds, spaceInfo);
@@ -485,7 +485,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         columnDepth: columnInSlot.depth,
         columnType: 'C (300mm)',
         columnProcessingMethod: 'depth-adjustment',
-        availableWidth: intrusionAnalysis.availableWidth,
+        availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
         adjustedDepth: depthAnalysis.depthAdjustment.adjustedDepth,
         canPlaceSingle: depthAnalysis.depthAdjustment.canPlaceSingle,
         canPlaceDual: depthAnalysis.depthAdjustment.canPlaceDual
@@ -681,7 +681,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           availableWidth,
           intrusionDirection: intrusionAnalysis.intrusionDirection,
           furniturePosition: intrusionAnalysis.furniturePosition,
-          adjustedWidth: intrusionAnalysis.adjustedWidth
+          adjustedWidth: Math.round((intrusionAnalysis.adjustedWidth || 0) * 100) / 100
         } as ColumnSlotInfo;
         
         const furnitureBounds = calculateFurnitureBounds(tempSlotInfo, originalSlotBounds, spaceInfo);
@@ -721,7 +721,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           columnDepth: columnInSlot.depth,
           columnType: 'C (300mm)',
           columnProcessingMethod: 'depth-adjustment',
-          availableWidth: intrusionAnalysis.availableWidth,
+          availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
           adjustedDepth: depthAnalysis.depthAdjustment.adjustedDepth,
           canPlaceSingle: depthAnalysis.depthAdjustment.canPlaceSingle,
           canPlaceDual: depthAnalysis.depthAdjustment.canPlaceDual
@@ -746,12 +746,12 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         slotIndex,
         hasColumn: true,
         columnPosition,
-        availableWidth: intrusionAnalysis.availableWidth,
+        availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
         actualRenderWidth,
         배치가능여부: actualRenderWidth >= 150 ? '✅ 배치 가능' : '❌ 배치 불가',
         intrusionDirection: intrusionAnalysis.intrusionDirection,
         furniturePosition: intrusionAnalysis.furniturePosition,
-        adjustedWidth: intrusionAnalysis.adjustedWidth,
+        adjustedWidth: Math.round((intrusionAnalysis.adjustedWidth || 0) * 100) / 100,
         doorWidth: indexing.columnWidth - 3,
         columnType,
         hasDepthAnalysis: columnType !== undefined
@@ -768,7 +768,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         mullionSide,
         intrusionDirection: intrusionAnalysis.intrusionDirection,
         furniturePosition: intrusionAnalysis.furniturePosition,
-        adjustedWidth: actualRenderWidth, // 실제 렌더링 가능한 크기로 업데이트
+        adjustedWidth: Math.round(actualRenderWidth * 100) / 100, // 실제 렌더링 가능한 크기로 업데이트 (소수점 2자리)
         columnType,
         columnProcessingMethod,
         depthAdjustment,
@@ -1565,7 +1565,7 @@ export const autoSplitDualFurnitureByColumns = (
         slotIndex: splitResult.leftSlotIndex,
         isDualSlot: false,
         isValidInCurrentSpace: true,
-        adjustedWidth: leftFurnitureWidth,
+        adjustedWidth: Math.round(leftFurnitureWidth * 100) / 100,
         hingePosition: leftSlotInfo ? calculateOptimalHingePosition(leftSlotInfo) : 'right'
       };
       
@@ -1602,7 +1602,7 @@ export const autoSplitDualFurnitureByColumns = (
         slotIndex: splitResult.rightSlotIndex,
         isDualSlot: false,
         isValidInCurrentSpace: true,
-        adjustedWidth: rightFurnitureWidth,
+        adjustedWidth: Math.round(rightFurnitureWidth * 100) / 100,
         hingePosition: rightSlotInfo ? calculateOptimalHingePosition(rightSlotInfo) : 'right'
       };
       
