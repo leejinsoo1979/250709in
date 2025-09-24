@@ -1126,9 +1126,9 @@ const Room: React.FC<RoomProps> = ({
               } else if (spaceInfo.installType === 'semistanding') {
                 if (spaceInfo.wallConfig?.left) {
                   leftReduction = 2;
-                  rightReduction = END_PANEL_THICKNESS;
+                  rightReduction = 0;  // 엔드패널 위치에는 이격거리 불필요
                 } else {
-                  leftReduction = END_PANEL_THICKNESS;
+                  leftReduction = 0;  // 엔드패널 위치에는 이격거리 불필요
                   rightReduction = 2;
                 }
               } else {
@@ -1874,9 +1874,7 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  xOffset + width - (spaceInfo.surroundType === 'no-surround' && !wallConfig?.right && spaceInfo.installType === 'freestanding'
-                    ? frameThickness.right/2 + mmToThreeUnits(2)  // 노서라운드 벽없음 모드에서만: 2mm 왼쪽으로 이동
-                    : frameThickness.right/2), 
+                  xOffset + width - frameThickness.right/2, 
                   droppedCenterY, // 단내림 구간 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
@@ -1926,9 +1924,7 @@ const Room: React.FC<RoomProps> = ({
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
-              xOffset + width - (spaceInfo.surroundType === 'no-surround' && !wallConfig?.right && spaceInfo.installType === 'freestanding'
-                ? frameThickness.right/2 + mmToThreeUnits(2)  // 노서라운드 벽없음 모드에서만: 2mm 왼쪽으로 이동
-                : frameThickness.right/2), 
+              xOffset + width - frameThickness.right/2, 
               sideFrameCenterY, 
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
