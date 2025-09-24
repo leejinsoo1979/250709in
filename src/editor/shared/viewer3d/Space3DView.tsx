@@ -563,6 +563,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         case 'top':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
           distance = calculateOptimalDistance(spaceWidth, spaceDepth, spaceHeight, placedModules.length);
+          // 정확한 직교 탑뷰를 위해 x, z는 정확히 center와 일치시킴
           position = [center.x, center.y + distance, center.z];
           up = [0, 0, -1];
           break;
@@ -614,6 +615,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       case 'top':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
         distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length);
+        // 정확한 직교 탑뷰를 위해 x, z는 정확히 center와 일치시킴
         position = [center.x, center.y + distance, center.z];
         up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위
         break;
