@@ -851,8 +851,8 @@ const Room: React.FC<RoomProps> = ({
   
   // 노서라운드 엔드패널: 슬롯 깊이와 동일 (730mm)
   const noSurroundEndPanelDepth = slotFloorDepth;
-  // 노서라운드 엔드패널 중심 Z 위치 - 갭 제거를 위해 약간 앞으로
-  const noSurroundEndPanelZ = roomBackZ + noSurroundEndPanelDepth/2 + mmToThreeUnits(10);
+  // 노서라운드 엔드패널 중심 Z 위치
+  const noSurroundEndPanelZ = roomBackZ + noSurroundEndPanelDepth/2;
   
   // 디버그용 - 엔드패널 깊이 차이 확인
   if (spaceInfo.installType === 'freestanding' || 
