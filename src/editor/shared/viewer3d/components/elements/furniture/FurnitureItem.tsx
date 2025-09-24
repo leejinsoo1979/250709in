@@ -181,9 +181,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
-  const { isFurnitureDragging, showDimensions, view2DTheme } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId } = useUIStore();
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
+  const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
+  const selectionHighlightColor = '#FFD54F';
+  const highlightPadding = 0.02; // ≒2mm 추가 여유
+  const highlightMeshRef = React.useRef<THREE.Mesh>(null);
   
   // 렌더링 추적 및 클린업
   React.useEffect(() => {
@@ -192,6 +196,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 무거운 클린업 제거 - React Three Fiber가 자동으로 처리
     };
   }, [placedModule.id]);
+
+  React.useEffect(() => {
+    if (!isSelected) return;
+    if (!highlightMeshRef.current) return;
+    // 강조용 보조 메쉬는 입력 이벤트에서 제외한다.
+    highlightMeshRef.current.raycast = () => null;
+    highlightMeshRef.current.traverse(child => {
+      child.raycast = () => null;
+    });
+  }, [isSelected]);
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
@@ -1563,6 +1577,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
+        {isSelected && width > 0 && height > 0 && depth > 0 && (
+          <mesh
+            ref={highlightMeshRef}
+            position={[0, 0, 0]}
+            renderOrder={999}
+            userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
+          >
+            <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+            <meshBasicMaterial
+              color={selectionHighlightColor}
+              transparent
+              opacity={0.12}
+              depthWrite={false}
+              depthTest={false}
+              toneMapped={false}
+            />
+            <Edges
+              color={selectionHighlightColor}
+              scale={1.001}
+            />
+          </mesh>
+        )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
         {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && (() => {
           return null;
