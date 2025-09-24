@@ -1651,7 +1651,7 @@ const Room: React.FC<RoomProps> = ({
         showFrame,
         'showFrame && frameThickness.left > 0': showFrame && frameThickness.left > 0
       })}
-      {showFrame && frameThickness.left > 0 && (() => {
+      {showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture) && (() => {
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1802,7 +1802,7 @@ const Room: React.FC<RoomProps> = ({
         
         return null;
       })()}
-      {showFrame && frameThickness.right > 0 && (() => {
+      {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture) && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
