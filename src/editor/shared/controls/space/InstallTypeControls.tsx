@@ -20,7 +20,7 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
         wallConfig = { left: true, right: true };
         break;
       case 'semistanding':
-        wallConfig = { left: true, right: false };
+        wallConfig = { left: false, right: false };  // 한쪽벽모드는 양쪽 벽이 없음 (양쪽 엔드패널)
         break;
       case 'freestanding':
         wallConfig = { left: false, right: false };
