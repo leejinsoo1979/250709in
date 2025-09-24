@@ -76,9 +76,9 @@ export const useCameraManager = (
     const viewportTop = 1;
     const viewportBottom = -1;
 
-    // 2D 탑뷰일 때는 up vector를 [0, 0, 1]로 설정
+    // 2D 탑뷰일 때는 up vector를 [0, 0, -1]로 설정
     const defaultUp: [number, number, number] = (viewMode === '2D' && view2DDirection === 'top') 
-      ? [0, 0, 1] 
+      ? [0, 0, -1] 
       : [0, 1, 0];
 
     return {
