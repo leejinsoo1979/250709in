@@ -837,30 +837,34 @@ const Room: React.FC<RoomProps> = ({
   // backZ는 가구가 배치되는 공간의 뒷면 (가구 뒷면이 닿는 위치)
   const backZ = furnitureZOffset - furnitureDepth/2; // 가구 뒷면 위치
   // 공간의 실제 뒷벽 위치 (노서라운드 엔드패널이 시작하는 위치)
-  const spaceBackWallZ = zOffset + panelDepth/2; // 공간 뒷벽 Z 위치
+  const spaceBackWallZ = zOffset - panelDepth/2; // 공간 뒷벽 Z 위치 (가장 뒤)
   
   // 바닥 슬롯 메쉬와 동일한 깊이 계산
   const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
   const slotFloorDepth = frameEndZ - backZ; // 바닥 슬롯 메쉬 깊이
   
-  // 노서라운드 엔드패널 깊이 계산 (가구 뒷면부터 가구 앞면-20mm까지)
-  const noSurroundEndPanelDepth = furnitureDepth - mmToThreeUnits(20);
-  // 노서라운드 엔드패널 중심 Z 위치 (가구 뒷면에서 시작)
-  const noSurroundEndPanelZ = backZ + noSurroundEndPanelDepth/2;
+  // 노서라운드 엔드패널 깊이 계산 (공간 뒷벽부터 가구 앞면-20mm까지)
+  // 공간 뒷벽에서 가구 앞면(받침대 제외)까지의 거리
+  const noSurroundEndPanelDepth = (frameEndZ - mmToThreeUnits(20)) - spaceBackWallZ;
+  // 노서라운드 엔드패널 중심 Z 위치 (공간 뒷벽에서 시작)
+  const noSurroundEndPanelZ = spaceBackWallZ + noSurroundEndPanelDepth/2;
   
   // 디버그용 - 엔드패널 깊이 차이 확인
   if (spaceInfo.installType === 'freestanding' || 
       (spaceInfo.installType === 'semistanding' && (!wallConfig?.left || !wallConfig?.right))) {
     console.log('🔍 노서라운드 엔드패널 계산:', {
       가구깊이mm: furnitureDepthMm,
-      backZ: backZ,
+      공간깊이mm: panelDepthMm,
+      spaceBackWallZ,
+      backZ_가구뒷면: backZ,
       frameEndZ,
       받침대제외앞면: frameEndZ - mmToThreeUnits(20),
       noSurroundEndPanelDepth,
       noSurroundEndPanelDepth_mm: noSurroundEndPanelDepth / 0.01,
       noSurroundEndPanelZ,
-      시작점: backZ,
-      끝점: frameEndZ - mmToThreeUnits(20)
+      시작점_공간뒷벽: spaceBackWallZ,
+      끝점: frameEndZ - mmToThreeUnits(20),
+      가구와공간뒷벽차이: (spaceBackWallZ - backZ) / 0.01
     });
   }
 
