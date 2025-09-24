@@ -10,6 +10,8 @@ export const useFurnitureSelection = () => {
   const setEditingModuleId = useFurnitureStore(state => state.setEditingModuleId);
   const removeModule = useFurnitureStore(state => state.removeModule);
   const { openFurnitureEditPopup } = useUIStore();
+  const setSelectedFurnitureId = useUIStore(state => state.setSelectedFurnitureId);
+  const viewMode = useUIStore(state => state.viewMode);
   const [dragMode, setDragMode] = useState(false);
   const isDragging = useRef(false);
 
@@ -26,9 +28,18 @@ export const useFurnitureSelection = () => {
     
     e.stopPropagation();
     
+    if (viewMode === '3D') {
+      setSelectedFurnitureId(placedModuleId);
+    } else {
+      setSelectedFurnitureId(null);
+    }
+
     if (dragMode) {
       // 드래그 모드에서는 삭제
       removeModule(placedModuleId);
+      if (useUIStore.getState().selectedFurnitureId === placedModuleId) {
+        setSelectedFurnitureId(null);
+      }
       setDragMode(false);
     } else {
       // 가구 클릭하면 가구 편집 팝업 열기

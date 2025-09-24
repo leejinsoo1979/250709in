@@ -312,47 +312,11 @@ export class SpaceCalculator {
         };
         
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 벽 있는 쪽만 이격거리 조정 (2~5mm)
-        const hasLeftWall = spaceInfo.wallConfig?.left;
-        const baseWidth = spaceInfo.width - END_PANEL_THICKNESS; // 엔드패널 18mm는 고정
-        
-        for (let gap = 2; gap <= 5; gap++) {
-          const internalWidth = hasLeftWall 
-            ? baseWidth - gap  // 왼쪽 벽: 왼쪽만 이격거리
-            : baseWidth - gap; // 오른쪽 벽: 오른쪽만 이격거리
-          // 소수점 2자리까지 정확히 계산
-          const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
-          
-          if (internalWidth % columnCount === 0) {
-            return {
-              adjustedSpaceInfo: {
-                ...spaceInfo,
-                gapConfig: {
-                  left: hasLeftWall ? gap : 0,
-                  right: hasLeftWall ? 0 : gap
-                }
-              },
-              slotWidth,
-              adjustmentMade: true
-            };
-          }
-        }
-        
-        // 기본값 사용
-        const gap = 2;
-        const internalWidth = hasLeftWall 
-          ? baseWidth - gap
-          : baseWidth - gap;
-        // 소수점 2자리까지 정확히 계산  
+        // 세미스탠딩: 사용자 정의 gapConfig (예: 벽측 2mm, 반대측 20mm)를 그대로 존중한다.
+        const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
         const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
-          adjustedSpaceInfo: {
-            ...spaceInfo,
-            gapConfig: {
-              left: hasLeftWall ? gap : 0,
-              right: hasLeftWall ? 0 : gap
-            }
-          },
+          adjustedSpaceInfo: spaceInfo,
           slotWidth,
           adjustmentMade: false
         };

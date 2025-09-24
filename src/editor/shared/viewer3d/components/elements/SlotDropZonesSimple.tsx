@@ -1112,25 +1112,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         }
       } else {
-        // 기둥이 없는 경우 기존 로직
-        // 노서라운드 모드에서는 customWidth도 설정하지 않음
-        if (spaceInfo.surroundType !== 'no-surround') {
-          if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-            customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
-          } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
-            // 싱글 가구의 경우 실제 슬롯 너비 사용
-            customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
-          } else {
-            customWidth = actualSlotWidth;
-          }
+        // 기둥이 없는 경우 슬롯 내경 그대로 사용
+        if (isDual && zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+          customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
+        } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
+          customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
         } else {
-          customWidth = undefined;
+          customWidth = actualSlotWidth;
         }
-        // 노서라운드 모드에서는 adjustedWidth를 설정하지 않음
+        // 노서라운드 모드에서는 adjustedWidth를 설정하지 않음 (엔드패널 조정은 FurnitureItem에서 처리)
         // adjustedWidth는 기둥 침범 시에만 사용
-        adjustedWidth = undefined;
+        adjustedWidth = customWidth;
       }
-      
+
+      const normalizeWidth = (value?: number | null) =>
+        typeof value === 'number' && !Number.isNaN(value)
+          ? Number(value.toFixed(2))
+          : undefined;
+      customWidth = normalizeWidth(customWidth);
+      adjustedWidth = normalizeWidth(adjustedWidth);
+
       console.log('🎯 가구 배치 정보:', {
         zone: zoneToUse,
         슬롯인덱스: zoneSlotIndex,
@@ -1156,9 +1157,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 정확한 너비를 포함한 moduleId 생성
       // 원본 모듈의 타입(single/dual)을 유지
-      const originalBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
-      const zoneTargetModuleId = `${originalBaseType}-${customWidth}`;
-      
+      const originalBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
+      const zoneTargetModuleId = customWidth !== undefined
+        ? `${originalBaseType}-${customWidth}`
+        : dragData.moduleData.id;
+
       console.log('🎯 단내림 구간 모듈 ID 생성:', {
         originalDragId: dragData.moduleData.id,
         foundModuleId: moduleData.id,
@@ -1281,10 +1284,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: (slotInfo?.hasColumn || hasColumnInAnySlot) && effectiveColumnType !== 'medium' ? adjustedWidth : undefined, // 기둥 C가 아닌 경우에만 조정된 너비 사용
+        adjustedWidth: adjustedWidth,
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
-        customWidth: customWidth, // 실제 슬롯 너비 사용
+        customWidth: customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined // 단내림 구간의 줄어든 높이 저장
       };
       

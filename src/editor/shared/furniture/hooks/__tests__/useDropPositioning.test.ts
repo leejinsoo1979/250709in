@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useDropPositioning } from '../useDropPositioning';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { getModulesByCategory } from '@/data/modules';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 
 const mockGetModuleById = vi.fn(() => ({
@@ -67,5 +69,19 @@ describe('useDropPositioning', () => {
     expect(result?.x).toBeCloseTo(expectedX, 5);
 
     canvas.remove();
+  });
+
+  it('generates gallery modules that keep fractional slot width for semistanding no-surround', () => {
+    const spaceInfo = createSpaceInfo();
+    const indexing = calculateSpaceIndexing(spaceInfo);
+    const internalSpace = calculateInternalSpace(spaceInfo);
+
+    const modules = getModulesByCategory('full', internalSpace, {
+      ...spaceInfo,
+      _tempSlotWidths: indexing.slotWidths,
+    } as any);
+
+    expect(modules.length).toBeGreaterThan(0);
+    expect(modules[0].dimensions.width).toBeCloseTo(indexing.slotWidths?.[0] ?? 0, 2);
   });
 });

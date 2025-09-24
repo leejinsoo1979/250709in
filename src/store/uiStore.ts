@@ -83,6 +83,7 @@ interface UIState {
   
   // 강조된 가구 칸 (가구ID-칸인덱스 형식)
   highlightedCompartment: string | null;
+  selectedFurnitureId: string | null;
   
   // 클릭 배치 상태 (Click & Place)
   selectedModuleForPlacement: string | null;
@@ -155,6 +156,7 @@ interface UIState {
   setCameraFov: (fov: number) => void;
   setCameraZoom: (zoom: number) => void;
   setShadowEnabled: (enabled: boolean) => void;
+  setSelectedFurnitureId: (id: string | null) => void;
   resetUI: () => void;
 }
 
@@ -186,6 +188,7 @@ const initialUIState = {
   isSlotDragging: false,  // 기본값: 슬롯 드래그 비활성화
   activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
+  selectedFurnitureId: null,
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
   hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
   indirectLightEnabled: false,  // 기본값: 간접조명 비활성화 (띄워서 배치 포함)
@@ -295,7 +298,8 @@ export const useUIStore = create<UIState>()(
         });
         set({ 
           activePopup: { type: 'furnitureEdit', id: moduleId },
-          highlightedCompartment: moduleId // 가구 편집 시 해당 가구도 강조
+          highlightedCompartment: moduleId,
+          selectedFurnitureId: moduleId // 가구 편집 시 해당 가구도 강조
         });
       },
       
@@ -342,7 +346,8 @@ export const useUIStore = create<UIState>()(
       closeAllPopups: () =>
         set({ 
           activePopup: { type: null, id: null },
-          highlightedCompartment: null // 팝업 닫을 때 강조도 제거
+          highlightedCompartment: null,
+          selectedFurnitureId: null // 팝업 닫을 때 강조도 제거
         }),
       
       setHighlightedFrame: (frame) =>
@@ -404,7 +409,10 @@ export const useUIStore = create<UIState>()(
       
       setShadowEnabled: (enabled) =>
         set({ shadowEnabled: enabled }),
-      
+
+      setSelectedFurnitureId: (id) =>
+        set({ selectedFurnitureId: id }),
+
       resetUI: () =>
         set(initialUIState),
       };
