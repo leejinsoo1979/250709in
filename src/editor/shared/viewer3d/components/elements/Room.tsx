@@ -1709,7 +1709,7 @@ const Room: React.FC<RoomProps> = ({
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left 
                         ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
-                        : -mmToThreeUnits(10))  // 벽이 없는 경우: 공간 중심에서 받침대 절반 뺀 위치
+                        : 0)  // 벽이 없는 경우: 공간 중심 (공간 뒷벽에서 시작)
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
@@ -1768,7 +1768,7 @@ const Room: React.FC<RoomProps> = ({
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.left 
                     ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
-                    : furnitureZOffset - mmToThreeUnits(10))  // 벽이 없는 경우: 가구 중심에서 받침대 절반 뺀 위치
+                    : 0)  // 벽이 없는 경우: 공간 중심 (공간 뒷벽에서 시작)
                 : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
@@ -1860,7 +1860,7 @@ const Room: React.FC<RoomProps> = ({
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right 
                         ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
-                        : -mmToThreeUnits(10))  // 벽이 없는 경우: 공간 중심에서 받침대 절반 뺀 위치
+                        : 0)  // 벽이 없는 경우: 공간 중심 (공간 뒷벽에서 시작)
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
@@ -1910,7 +1910,7 @@ const Room: React.FC<RoomProps> = ({
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.right 
                     ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2  // 벽이 있는 경우: 프레임 위치
-                    : furnitureZOffset - mmToThreeUnits(10))  // 벽이 없는 경우: 가구 중심에서 받침대 절반 뺀 위치
+                    : 0)  // 벽이 없는 경우: 공간 중심 (공간 뒷벽에서 시작)
                 : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? backZ + slotFloorDepth/2  // 서라운드 엔드패널
