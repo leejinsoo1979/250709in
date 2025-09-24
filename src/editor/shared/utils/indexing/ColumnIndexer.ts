@@ -139,9 +139,18 @@ export class ColumnIndexer {
         columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
       }
       
-      // Three.js 단위 변환
-      const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
-      const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
+      // Three.js 단위 변환 - Room 좌표계에 맞춰 변환
+      // Room은 중앙이 0이고, 내부 시작점이 -width/2 + leftReduction
+      const roomInternalStartX = -(totalWidth / 2) + internalStartX;
+      const threeUnitPositions = columnPositions.map(pos => {
+        // Room 좌표계 = -width/2 + pos (pos는 이미 leftReduction을 포함)
+        const roomPos = -(totalWidth / 2) + pos;
+        return SpaceCalculator.mmToThreeUnits(roomPos);
+      });
+      const threeUnitBoundaries = columnBoundaries.map(pos => {
+        const roomPos = -(totalWidth / 2) + pos;
+        return SpaceCalculator.mmToThreeUnits(roomPos);
+      });
       
       // 듀얼 가구용 위치 계산
       const dualColumnPositions = [];
@@ -153,7 +162,9 @@ export class ColumnIndexer {
         const rightColumnCenter = columnPositions[i + 1];
         const dualCenterPosition = (leftColumnCenter + rightColumnCenter) / 2;
         dualColumnPositions.push(dualCenterPosition);
-        threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
+        // Room 좌표계로 변환
+        const roomDualPos = -(totalWidth / 2) + dualCenterPosition;
+        threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(roomDualPos));
       }
       
       // 영역별 정보 추가
@@ -169,13 +180,16 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.normal.columnCount; i++) {
           const slotWidth = zones.normal.slotWidths?.[i] || zones.normal.columnWidth;
           const slotCenterX = currentX + (slotWidth / 2);
-          zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
+          // Room 좌표계로 변환
+          const roomSlotX = -(totalWidth / 2) + slotCenterX;
+          zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(roomSlotX));
           
           console.log(`🎯 Normal Zone Slot ${i}:`, {
             startX: currentX,
             width: slotWidth,
             centerX: slotCenterX,
-            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX)
+            roomX: roomSlotX,
+            threeUnits: SpaceCalculator.mmToThreeUnits(roomSlotX)
           });
           
           currentX += slotWidth;
@@ -199,7 +213,9 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.dropped.columnCount; i++) {
           const slotWidth = zones.dropped.slotWidths?.[i] || zones.dropped.columnWidth;
           const slotCenterX = currentX + (slotWidth / 2);
-          zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
+          // Room 좌표계로 변환
+          const roomSlotX = -(totalWidth / 2) + slotCenterX;
+          zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(roomSlotX));
           currentX += slotWidth;
         }
         
