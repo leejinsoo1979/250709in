@@ -852,6 +852,32 @@ const Room: React.FC<RoomProps> = ({
     });
   }
 
+  // 한쪽벽모드 엔드패널/프레임 개수 카운팅
+  const endPanelCount = {
+    left: frameThickness.left > 0 && !wallConfig?.left ? 1 : 0,
+    right: frameThickness.right > 0 && !wallConfig?.right ? 1 : 0,
+    leftFrame: frameThickness.left > 0 && wallConfig?.left ? 1 : 0,
+    rightFrame: frameThickness.right > 0 && wallConfig?.right ? 1 : 0
+  };
+  
+  console.log('🎯🎯🎯 [한쪽벽모드 총괄] 엔드패널/프레임 생성 개수:', {
+    installType: spaceInfo.installType,
+    surroundType: spaceInfo.surroundType,
+    wallConfig,
+    frameThicknessMm,
+    '엔드패널개수': {
+      왼쪽: endPanelCount.left,
+      오른쪽: endPanelCount.right,
+      총개수: endPanelCount.left + endPanelCount.right
+    },
+    '프레임개수': {
+      왼쪽: endPanelCount.leftFrame,
+      오른쪽: endPanelCount.rightFrame,
+      총개수: endPanelCount.leftFrame + endPanelCount.rightFrame
+    },
+    '총합': endPanelCount.left + endPanelCount.right + endPanelCount.leftFrame + endPanelCount.rightFrame
+  });
+
   return (
     <group position={[0, 0, groupZOffset]}>
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D 모드에서만 표시) */}
@@ -1563,7 +1589,7 @@ const Room: React.FC<RoomProps> = ({
       })}
       
       {/* 왼쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
-      {console.log('🔍 왼쪽 프레임/엔드패널 렌더링 체크:', {
+      {console.log('🔴🔴🔴 [한쪽벽모드] 왼쪽 프레임/엔드패널 렌더링 체크:', {
         showFrame,
         frameThicknessLeft: frameThickness.left,
         frameThicknessLeftMm: frameThicknessMm.left,
@@ -1572,7 +1598,9 @@ const Room: React.FC<RoomProps> = ({
         installType: spaceInfo.installType,
         wallConfigLeft: wallConfig?.left,
         wallConfigRight: wallConfig?.right,
-        '예상': !wallConfig?.left ? '왼쪽에 엔드패널 있어야 함' : '왼쪽에 프레임 없음'
+        '렌더링여부': showFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || hasLeftFurniture),
+        '예상타입': !wallConfig?.left ? '엔드패널' : (wallConfig?.left ? '프레임' : '없음'),
+        hasLeftFurniture
       })}
       {console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', {
         frameThicknessLeft: frameThickness.left,
@@ -1685,6 +1713,19 @@ const Room: React.FC<RoomProps> = ({
       
       
       {/* 오른쪽 프레임/엔드 패널 - 바닥재료 위에서 시작 */}
+      {console.log('🔵🔵🔵 [한쪽벽모드] 오른쪽 프레임/엔드패널 렌더링 체크:', {
+        showFrame,
+        frameThicknessRight: frameThickness.right,
+        frameThicknessRightMm: frameThicknessMm.right,
+        condition: showFrame && frameThickness.right > 0,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+        wallConfigLeft: wallConfig?.left,
+        wallConfigRight: wallConfig?.right,
+        '렌더링여부': showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture),
+        '예상타입': !wallConfig?.right ? '엔드패널' : (wallConfig?.right ? '프레임' : '없음'),
+        hasRightFurniture
+      })}
       {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || hasRightFurniture) && (() => {
         // 단내림 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
