@@ -346,30 +346,6 @@ export class ColumnIndexer {
         '슬롯 너비 배열': slotWidths,
         '예시': `${slotWidths[0]} / ${slotWidths[1] || '...'} / ... / ${slotWidths[slotWidths.length - 1]}`
       });
-    } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 세미스탠딩: 이격거리를 고려한 균등 분할
-      const wallGap = spaceInfo.wallConfig?.left ? (spaceInfo.gapConfig?.left || 2) : (spaceInfo.gapConfig?.right || 2);
-      const usableWidth = totalWidth - wallGap;
-      
-      // 소수점 2자리로 균등 분할
-      const exactSlotWidth = Math.round((usableWidth / columnCount) * 100) / 100;
-      
-      // 모든 슬롯을 동일한 너비로 설정
-      for (let i = 0; i < columnCount; i++) {
-        slotWidths.push(exactSlotWidth);
-      }
-      
-      // 디버깅 로그
-      console.log('🔧 노서라운드 한쪽벽 슬롯 계산:', {
-        '전체 공간 너비': totalWidth,
-        '벽 이격': wallGap,
-        '사용 가능 너비': usableWidth,
-        '컬럼 수': columnCount,
-        '평균 슬롯 너비': exactSlotWidth,
-        '슬롯 너비 배열': slotWidths,
-        '벽 위치': spaceInfo.wallConfig?.left ? '좌측' : '우측',
-        '엔드패널 위치': !spaceInfo.wallConfig?.left ? '좌측' : (!spaceInfo.wallConfig?.right ? '우측' : '없음')
-      });
     } else {
       // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할
       // 빌트인의 경우 최적화된 이격거리 사용
@@ -671,13 +647,6 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround' && spaceInfo.installType === 'freestanding') {
         // 노서라운드 벽없음: 전체너비를 균등 분할 (소수점 2자리)
-        const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
-        
-        for (let i = 0; i < columnCount; i++) {
-          slotWidths.push(exactSlotWidth);
-        }
-      } else if (spaceInfo.surroundType === 'no-surround' && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-        // 노서라운드 한쪽벽: 엔드패널도 슬롯에 포함됨 (소수점 2자리)
         const exactSlotWidth = Math.round((spaceInfo.width / columnCount) * 100) / 100;
         
         for (let i = 0; i < columnCount; i++) {

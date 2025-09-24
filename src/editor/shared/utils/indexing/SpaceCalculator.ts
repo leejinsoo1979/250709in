@@ -33,8 +33,15 @@ export class SpaceCalculator {
         // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
         leftReduction = spaceInfo.gapConfig?.left || 2;
         rightReduction = spaceInfo.gapConfig?.right || 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 세미스탠딩: 벽이 있는 쪽의 이격거리만 반영
+        if (spaceInfo.wallConfig?.left) {
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+        } else if (spaceInfo.wallConfig?.right) {
+          rightReduction = spaceInfo.gapConfig?.right || 2;
+        }
       }
-      // 세미스탠딩, 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함)
+      // 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함)
       
       return totalWidth - (leftReduction + rightReduction);
     } else {
