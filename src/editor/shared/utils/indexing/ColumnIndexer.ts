@@ -139,18 +139,10 @@ export class ColumnIndexer {
         columnPositions.push(internalStartX + (i * columnWidth) + (columnWidth / 2));
       }
       
-      // Three.js 단위 변환 - Room 좌표계에 맞춰 변환
-      // Room은 중앙이 0이고, 내부 시작점이 -width/2 + leftReduction
-      const roomInternalStartX = -(totalWidth / 2) + internalStartX;
-      const threeUnitPositions = columnPositions.map(pos => {
-        // Room 좌표계 = -width/2 + pos (pos는 이미 leftReduction을 포함)
-        const roomPos = -(totalWidth / 2) + pos;
-        return SpaceCalculator.mmToThreeUnits(roomPos);
-      });
-      const threeUnitBoundaries = columnBoundaries.map(pos => {
-        const roomPos = -(totalWidth / 2) + pos;
-        return SpaceCalculator.mmToThreeUnits(roomPos);
-      });
+      // Three.js 단위 변환
+      // columnPositions는 이미 Room 좌표계 (internalStartX가 이미 변환됨)
+      const threeUnitPositions = columnPositions.map(pos => SpaceCalculator.mmToThreeUnits(pos));
+      const threeUnitBoundaries = columnBoundaries.map(pos => SpaceCalculator.mmToThreeUnits(pos));
       
       // 듀얼 가구용 위치 계산
       const dualColumnPositions = [];
@@ -162,9 +154,8 @@ export class ColumnIndexer {
         const rightColumnCenter = columnPositions[i + 1];
         const dualCenterPosition = (leftColumnCenter + rightColumnCenter) / 2;
         dualColumnPositions.push(dualCenterPosition);
-        // Room 좌표계로 변환
-        const roomDualPos = -(totalWidth / 2) + dualCenterPosition;
-        threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(roomDualPos));
+        // 이미 Room 좌표계이므로 그대로 변환
+        threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
       }
       
       // 영역별 정보 추가
@@ -180,16 +171,14 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.normal.columnCount; i++) {
           const slotWidth = zones.normal.slotWidths?.[i] || zones.normal.columnWidth;
           const slotCenterX = currentX + (slotWidth / 2);
-          // Room 좌표계로 변환
-          const roomSlotX = -(totalWidth / 2) + slotCenterX;
-          zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(roomSlotX));
+          // 이미 Room 좌표계이므로 그대로 변환
+          zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
           
           console.log(`🎯 Normal Zone Slot ${i}:`, {
             startX: currentX,
             width: slotWidth,
             centerX: slotCenterX,
-            roomX: roomSlotX,
-            threeUnits: SpaceCalculator.mmToThreeUnits(roomSlotX)
+            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX)
           });
           
           currentX += slotWidth;
@@ -213,9 +202,8 @@ export class ColumnIndexer {
         for (let i = 0; i < zones.dropped.columnCount; i++) {
           const slotWidth = zones.dropped.slotWidths?.[i] || zones.dropped.columnWidth;
           const slotCenterX = currentX + (slotWidth / 2);
-          // Room 좌표계로 변환
-          const roomSlotX = -(totalWidth / 2) + slotCenterX;
-          zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(roomSlotX));
+          // 이미 Room 좌표계이므로 그대로 변환
+          zones.dropped.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
           currentX += slotWidth;
         }
         
@@ -409,36 +397,29 @@ export class ColumnIndexer {
     // 슬롯 가이드용 시작점 계산 - 엔드패널 바로 안쪽에서 시작
     let internalStartX;
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 이격거리만 고려
+      // 노서라운드: 설치 형태에 따라 좌측 감산값을 결정
       let leftReduction = 0;
-      
+
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 최적화된 이격거리 사용
+        // 빌트인은 양쪽 벽을 기준으로 하므로 gapConfig 기반으로 계산
         leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 2;
+      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+        // 한쪽 벽 모드에서는 실제 벽이 있는 쪽의 이격거리를 그대로 적용
+        leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 0;
+      } else {
+        // 프리스탠딩: 엔드패널 두께를 gapConfig로 전달받으므로 그대로 반영
+        leftReduction = optimizedGapConfig?.left || spaceInfo.gapConfig?.left || 0;
       }
-      // 세미스탠딩, 프리스탠딩: 엔드패널이 슬롯에 포함되므로 reduction 없음
-      
+
       internalStartX = -(totalWidth / 2) + leftReduction + leftPadding;
     } else {
       // 서라운드: 좌측 프레임 두께 + 좌측 패딩 고려
       internalStartX = -(totalWidth / 2) + frameThickness.left + leftPadding;
     }
-    
+
     // 각 컬럼 경계의 위치 계산 (실제 슬롯 너비 사용)
     const columnBoundaries = [];
-    let currentX: number;
-    
-    if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 프리스탠딩: 전체 공간의 왼쪽 끝에서 시작
-      // 엔드패널도 슬롯 안에 포함되므로 절대 왼쪽 끝에서 시작
-      currentX = -(totalWidth / 2);
-    } else if (isNoSurround && (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing')) {
-      // 노서라운드 세미스탠딩: 프리스탠딩처럼 전체 공간 사용
-      currentX = -(totalWidth / 2);
-    } else {
-      // 서라운드 또는 빌트인: 내경 시작점
-      currentX = internalStartX;
-    }
+    let currentX = internalStartX;
     
     columnBoundaries.push(currentX);
     

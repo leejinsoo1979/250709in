@@ -22,13 +22,12 @@ describe('Builtin No-Surround Position Calculation', () => {
   });
 
   describe('SpaceCalculator', () => {
-    it('should not apply gap spacing for builtin+no-surround mode', () => {
+    it('should apply gap spacing for builtin+no-surround mode', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
       
-      // In builtin+no-surround mode, the internal width should equal the total width
-      // Gap spacing should be ignored
-      expect(internalWidth).toBe(3000);
+      // Builtin + no-surround honours the configured gap on both sides (default 2mm)
+      expect(internalWidth).toBe(2996);
     });
 
     it('should apply gap spacing for builtin+surround mode', () => {
@@ -49,15 +48,14 @@ describe('Builtin No-Surround Position Calculation', () => {
       const indexing = ColumnIndexer.calculateSpaceIndexing(spaceInfo);
       
       // Check that internal width is correct
-      expect(indexing.internalWidth).toBe(3000);
+      expect(indexing.internalWidth).toBe(2996);
       
       // Check that the first slot position is correct (should start from left edge)
-      // First slot center should be at -1500 + (slot_width / 2)
-      const expectedFirstSlotX = -1500 + (indexing.columnWidth / 2);
+      const expectedFirstSlotX = indexing.internalStartX + (indexing.columnWidth / 2);
       expect(indexing.columnPositions[0]).toBeCloseTo(expectedFirstSlotX, 1);
       
       // Check that internal start X is correct (should be at left edge)
-      expect(indexing.internalStartX).toBe(-1500);
+      expect(indexing.internalStartX).toBe(-1498);
     });
 
     it('should handle dual furniture positions correctly in builtin+no-surround', () => {
@@ -79,43 +77,45 @@ describe('Builtin No-Surround Position Calculation', () => {
   });
 
   describe('geometry.ts calculateInternalSpace', () => {
-    it('should not apply gap spacing for builtin+no-surround mode', () => {
+    it('should apply gap spacing for builtin+no-surround mode', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       const internalSpace = calculateInternalSpace(spaceInfo);
       
-      // Internal width should equal total width (no gap reduction)
-      expect(internalSpace.width).toBe(3000);
+      // Internal width and start X reflect the configured 2mm gaps on both sides
+      expect(internalSpace.width).toBe(2996);
       
-      // Start X should be 0 (no gap offset)
-      expect(internalSpace.startX).toBe(0);
+      // Start X should respect the left gap
+      expect(internalSpace.startX).toBe(2);
     });
 
     it('should apply correct spacing for semistanding+no-surround mode', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       spaceInfo.installType = 'semistanding';
       spaceInfo.wallConfig = { left: true, right: false }; // Left wall only
+      spaceInfo.gapConfig = { left: 2, right: 20 };
       
       const internalSpace = calculateInternalSpace(spaceInfo);
       
-      // Internal width should be reduced by end panel on right (18mm)
-      expect(internalSpace.width).toBe(2982); // 3000 - 18
+      // Internal width should subtract both the wall clearance and end panel thickness
+      expect(internalSpace.width).toBe(2978); // 3000 - 2 - 20
       
-      // Start X should be 0 (wall on left)
-      expect(internalSpace.startX).toBe(0);
+      // Start X should follow the wall-side clearance
+      expect(internalSpace.startX).toBe(2);
     });
 
     it('should apply correct spacing for freestanding+no-surround mode', () => {
       const spaceInfo = createBuiltinNoSurroundSpaceInfo(3000);
       spaceInfo.installType = 'freestanding';
       spaceInfo.wallConfig = { left: false, right: false }; // No walls
+      spaceInfo.gapConfig = { left: 20, right: 20 };
       
       const internalSpace = calculateInternalSpace(spaceInfo);
       
-      // Internal width should be reduced by end panels on both sides (18mm each)
-      expect(internalSpace.width).toBe(2964); // 3000 - 18 - 18
+      // Internal width should be reduced by end panels on both sides
+      expect(internalSpace.width).toBe(2960); // 3000 - 20 - 20
       
-      // Start X should account for left end panel
-      expect(internalSpace.startX).toBe(0); // Gap config should be 0 for freestanding
+      // Start X should account for left end panel thickness
+      expect(internalSpace.startX).toBe(20);
     });
   });
 
@@ -128,14 +128,16 @@ describe('Builtin No-Surround Position Calculation', () => {
       
       // First slot should start at the left edge
       const firstSlotPosition = indexing.threeUnitPositions[0];
-      const expectedFirstSlotX = SpaceCalculator.mmToThreeUnits(-1500 + indexing.columnWidth / 2);
+      const expectedFirstSlotX = SpaceCalculator.mmToThreeUnits(indexing.internalStartX + indexing.columnWidth / 2);
       
       expect(firstSlotPosition).toBeCloseTo(expectedFirstSlotX, 3);
       
       // Last slot should end at the right edge
       const lastSlotPosition = indexing.threeUnitPositions[4];
-      const expectedLastSlotX = SpaceCalculator.mmToThreeUnits(1500 - indexing.columnWidth / 2);
-      
+      const expectedLastSlotX = SpaceCalculator.mmToThreeUnits(
+        indexing.internalStartX + indexing.internalWidth - indexing.columnWidth / 2,
+      );
+
       expect(lastSlotPosition).toBeCloseTo(expectedLastSlotX, 3);
     });
 

@@ -82,16 +82,10 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   let internalWidth;
   
   if (spaceInfo.surroundType === 'no-surround') {
-    // 노서라운드: 설치 타입에 따라 다르게 처리
-    if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-      // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-      const leftGap = spaceInfo.gapConfig?.left || 2;
-      const rightGap = spaceInfo.gapConfig?.right || 2;
-      internalWidth = spaceInfo.width - leftGap - rightGap;
-    } else {
-      // 세미스탠딩, 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함)
-      internalWidth = spaceInfo.width;
-    }
+    // 노서라운드: gapConfig에서 좌우 감산값을 가져와 내경 폭을 산출
+    const leftGap = spaceInfo.gapConfig?.left || 0;
+    const rightGap = spaceInfo.gapConfig?.right || 0;
+    internalWidth = spaceInfo.width - leftGap - rightGap;
   } else {
     // 서라운드: 내경 너비 = 전체 너비 - 좌측 프레임 - 우측 프레임
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;

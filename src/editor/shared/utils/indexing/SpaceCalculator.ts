@@ -25,21 +25,23 @@ export class SpaceCalculator {
     
     // 내경 계산: 노서라운드인 경우 전체 너비 사용, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 전체 너비를 내경으로 사용 (엔드패널이 슬롯에 포함됨)
+      // 노서라운드: gapConfig를 기반으로 내경 계산 (엔드패널 및 벽 이격 반영)
+      const leftGap = spaceInfo.gapConfig?.left;
+      const rightGap = spaceInfo.gapConfig?.right;
+
       let leftReduction = 0;
       let rightReduction = 0;
-      
+
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 양쪽 벽이 있으므로 이격거리 반영
-        leftReduction = spaceInfo.gapConfig?.left || 2;
-        rightReduction = spaceInfo.gapConfig?.right || 2;
-      } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: gapConfig 값을 그대로 사용 (벽쪽 2mm, 엔드패널쪽 20mm)
-        leftReduction = spaceInfo.gapConfig?.left || 0;
-        rightReduction = spaceInfo.gapConfig?.right || 0;
+        // 빌트인은 최소 2mm 이격을 유지하고 나머지는 gapConfig 사용
+        leftReduction = leftGap ?? 2;
+        rightReduction = rightGap ?? 2;
+      } else {
+        // 세미스탠딩/프리스탠딩: gapConfig 값이 있으면 그대로 활용 (엔드패널 포함)
+        leftReduction = leftGap || 0;
+        rightReduction = rightGap || 0;
       }
-      // 프리스탠딩: 전체 너비 사용 (엔드패널이 슬롯에 포함)
-      
+
       return totalWidth - (leftReduction + rightReduction);
     } else {
       // 서라운드: 내경 = 전체 폭 - 좌측 프레임 - 우측 프레임

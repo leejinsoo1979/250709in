@@ -55,9 +55,10 @@ describe('파생 상태 계산 로직', () => {
       const spaceInfo = createBasicSpaceInfo({
         width: 3600,
         surroundType: 'no-surround',
-        gapConfig: { size: 3 }
+        gapConfig: { left: 3, right: 3 },
+        installType: 'built-in'
       })
-      
+
       const internalWidth = calculateInternalWidth(spaceInfo)
       
       // 3600 - 3(좌) - 3(우) = 3594
