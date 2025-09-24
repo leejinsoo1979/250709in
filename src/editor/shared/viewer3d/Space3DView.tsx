@@ -1101,6 +1101,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
             <group renderOrder={-100}>
               <Room 
+                key={`room-${viewMode}-${view2DDirection}-${spaceInfo.surroundType}-${spaceInfo.installType}`}
                 spaceInfo={spaceInfo} 
                 viewMode={viewMode} 
                 view2DDirection={view2DDirection}
@@ -1488,6 +1489,7 @@ const QuadrantContent: React.FC<{
         placedModulesCount: placedModules?.length || 0
       })}
       <Room
+        key={`room-split-${viewDirection}-${spaceInfo.surroundType}-${spaceInfo.installType}`}
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}
