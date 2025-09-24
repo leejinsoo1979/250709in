@@ -90,12 +90,24 @@ export class ColumnIndexer {
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: gapConfig의 left 값을 그대로 사용
           leftReduction = spaceInfo.gapConfig?.left || 0;
+          console.log('🚨 [ColumnIndexer] 세미스탠딩 좌측 reduction 계산:', {
+            wallConfig: spaceInfo.wallConfig,
+            gapConfig: spaceInfo.gapConfig,
+            leftReduction,
+            totalWidth
+          });
         } else {
           // 프리스탠딩: 엔드패널도 슬롯에 포함되므로 0
           leftReduction = 0;
         }
         
         internalStartX = -(totalWidth / 2) + leftReduction;
+        console.log('🚨 [ColumnIndexer] internalStartX 계산:', {
+          totalWidth,
+          leftReduction,
+          internalStartX,
+          '가구 시작 위치': internalStartX
+        });
       } else {
         internalStartX = -(totalWidth / 2) + frameThickness.left;
       }
