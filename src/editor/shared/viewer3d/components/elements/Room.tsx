@@ -1126,9 +1126,9 @@ const Room: React.FC<RoomProps> = ({
               } else if (spaceInfo.installType === 'semistanding') {
                 if (spaceInfo.wallConfig?.left) {
                   leftReduction = 2;
-                  rightReduction = 0;  // 엔드패널 위치에는 이격거리 불필요
+                  rightReduction = END_PANEL_THICKNESS;
                 } else {
-                  leftReduction = 0;  // 엔드패널 위치에는 이격거리 불필요
+                  leftReduction = END_PANEL_THICKNESS;
                   rightReduction = 2;
                 }
               } else {
