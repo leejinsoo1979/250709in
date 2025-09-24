@@ -860,12 +860,14 @@ const Room: React.FC<RoomProps> = ({
     rightFrame: frameThickness.right > 0 && wallConfig?.right ? 1 : 0
   };
   
-  // 실제 렌더링 카운터 초기화 (전역 변수로 추적)
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+  // 실제 렌더링 카운터 초기화 (매 렌더링마다 리셋)
+  if (typeof window !== 'undefined') {
+    if (!window.renderCounter) {
       window.renderCounter = { leftEndPanel: 0, rightEndPanel: 0, leftFrame: 0, rightFrame: 0 };
     }
-  }, []);
+    // 매 렌더링 시작 시 카운터 리셋
+    window.renderCounter = { leftEndPanel: 0, rightEndPanel: 0, leftFrame: 0, rightFrame: 0 };
+  }
   
   const logData = {
     installType: spaceInfo.installType,
