@@ -198,9 +198,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외, 2단 옷장 전체 제외 */}
+          {/* 섹션 내경 치수 표시 - 2단 옷장 전체 제외 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           section.type === 'hanging' && 
+           (section.type === 'hanging' || section.type === 'drawer') && 
            !(furnitureId?.includes('2hanging') && allSections.length === 2) && (
             <group>
               {(() => {
@@ -280,6 +280,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   }
                   
                   // 실제 내경 계산 (가이드선 사이의 거리)
+                  actualInternalHeight = (topY - bottomY) / 0.01;
+                } else if (section.type === 'drawer') {
+                  // drawer 섹션: 바닥판 상단부터 상판 하단까지
+                  const sectionBottomY = sectionCenterY - sectionHeight/2;
+                  const sectionTopY = sectionCenterY + sectionHeight/2;
+                  
+                  bottomY = sectionBottomY + basicThickness;
+                  topY = sectionTopY - basicThickness;
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else {
                   // 다른 타입은 기본값 사용
