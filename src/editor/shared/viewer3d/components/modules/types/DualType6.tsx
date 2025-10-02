@@ -66,6 +66,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
+  const { renderMode } = useSpace3DView();
 
   // 좌우 폭 분할 계산 - 실제 렌더링되는 가구의 innerWidth 기반
   let leftWidth, rightWidth, leftXOffset, rightXOffset;
