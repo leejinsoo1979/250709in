@@ -269,8 +269,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
                       const safetyShelfPositionMm = section.shelfPositions.find(pos => pos !== 0);
                       if (safetyShelfPositionMm !== undefined) {
-                        // 안전선반 하단 Y 위치 = 바닥판 상단 + 안전선반 위치 - 안전선반 두께/2
-                        topY = bottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2;
+                        // 안전선반 하단 Y 위치 = 섹션 하단 + 안전선반 위치(mm) - 안전선반 두께/2
+                        topY = sectionBottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2;
                       } else {
                         topY = height/2 - basicThickness;
                       }
