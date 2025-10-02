@@ -335,24 +335,32 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      const initialZoom = 1.0; // 초기 줌 레벨
-      
-      // 공간 정보 계산
-      const spaceHeight = spaceInfo?.height || 2400;
-      const spaceWidth = spaceInfo?.width || 3000;
-      // 2D 모드는 더 가까운 고정 거리 사용
-      const initialDistance = 5;
-      
-      // 타겟 위치 계산
-      const target = calculateCameraTargetUtil(spaceHeight);
-      
-      // 타겟 설정
-      controls.target.set(...target);
-      
-      // 2D는 OrthographicCamera이므로 줌과 거리 모두 초기값으로 리셋
-      controls.object.position.set(0, target[1], initialDistance);
-      controls.object.zoom = initialZoom;
-      controls.object.updateProjectionMatrix();
+      if (initialCameraSetup.current.position2D && 
+          initialCameraSetup.current.target2D && 
+          initialCameraSetup.current.zoom2D !== null) {
+        // 저장된 초기 상태가 있으면 그대로 복원
+        console.log('📸 2D 모드 저장된 초기 상태로 복원', {
+          position: initialCameraSetup.current.position2D.toArray(),
+          target: initialCameraSetup.current.target2D.toArray(),
+          zoom: initialCameraSetup.current.zoom2D
+        });
+        
+        controls.target.copy(initialCameraSetup.current.target2D);
+        controls.object.position.copy(initialCameraSetup.current.position2D);
+        controls.object.zoom = initialCameraSetup.current.zoom2D;
+        controls.object.updateProjectionMatrix();
+      } else {
+        // 초기 상태가 없으면 기본값으로 리셋
+        const initialZoom = 1.0;
+        const spaceHeight = spaceInfo?.height || 2400;
+        const target = calculateCameraTargetUtil(spaceHeight);
+        const initialDistance = cameraPosition?.[2] || 10;
+        
+        controls.target.set(...target);
+        controls.object.position.set(0, target[1], initialDistance);
+        controls.object.zoom = initialZoom;
+        controls.object.updateProjectionMatrix();
+      }
       
       controls.object.up.set(0, 1, 0);
       controls.object.lookAt(controls.target);
