@@ -532,19 +532,19 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   ];
   
   // 우측 섹션 (스타일러장)에 안전선반 적용
-  // 좌측 섹션들의 총 높이와 동일하게 설정
-  const rightSectionHeight = leftDrawerWithFinishHeight + leftHangingHeight; // 600 + (maxHeight - 600) = maxHeight
+  // 우측은 전체 높이 단일 hanging 구역
   const rightBaseSections: SectionConfig[] = [
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: rightSectionHeight
+      height: maxHeight
     }
   ];
   
-  // 좌우 각각 안전선반 적용
+  // 좌측 섹션에만 안전선반 적용
   const leftSections = applySafetyShelf(leftBaseSections, maxHeight);
-  const rightSections = applySafetyShelf(rightBaseSections, maxHeight);
+  // 우측 스타일러장에는 안전선반 적용하지 않음 (오픈형 구조)
+  const rightSections = rightBaseSections;
   
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
