@@ -271,8 +271,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {moduleData?.id?.includes('4drawer-hanging') ? (
-              // Type4 전용: 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
+            {(moduleData?.id?.includes('4drawer-hanging') && !moduleData?.id?.includes('dual')) ? (
+              // Type4 전용 (SingleType4만): 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
               (() => {
                 // 하부 측판이 1000mm, 상판을 18mm 아래로
                 const drawerSectionHeight = mmToThreeUnits(1000);
