@@ -349,8 +349,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             </group>
           )}
           
-          {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
+          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - Type4는 제외 */}
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && !(furnitureId?.includes('4drawer-hanging')) && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
