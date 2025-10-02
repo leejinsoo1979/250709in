@@ -90,7 +90,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               height={adjustedHeight}
               isDragging={isDragging} 
               isEditMode={isEditMode} 
-              hasBackPanel={hasBackPanel}>
+              hasBackPanel={hasBackPanel}
+              spaceInfo={spaceInfo}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
               <>

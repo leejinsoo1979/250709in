@@ -6,6 +6,7 @@ interface AdjustableFootProps {
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
+  baseHeight?: number; // 받침대 높이 (mm)
 }
 
 /**
@@ -18,6 +19,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   material,
   renderMode = 'solid',
   isHighlighted = false,
+  baseHeight = 65, // 기본값 65mm
 }) => {
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -27,7 +29,9 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   
   // 원통 크기
   const cylinderRadius = mmToThreeUnits(56) / 2; // 지름 56mm
-  const cylinderHeight = mmToThreeUnits(65); // 발통 높이 (받침대 높이 65mm와 동일)
+  // 전체 발통 높이 = 받침대 높이
+  // 실린더 높이 = 받침대 높이 - 플레이트 두께(7mm)
+  const cylinderHeight = mmToThreeUnits(baseHeight - 7);
   
   // 기본 재질
   const defaultMaterial = new THREE.MeshStandardMaterial({

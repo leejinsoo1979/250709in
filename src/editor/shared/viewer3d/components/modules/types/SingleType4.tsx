@@ -70,7 +70,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <SectionsRenderer

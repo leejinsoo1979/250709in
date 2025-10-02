@@ -10,6 +10,7 @@ interface AdjustableFootsRendererProps {
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
   isFloating?: boolean; // 띄움배치 여부
+  baseHeight?: number; // 받침대 높이 (mm)
 }
 
 /**
@@ -25,6 +26,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   renderMode = 'solid',
   isHighlighted = false,
   isFloating = false,
+  baseHeight = 65, // 기본값 65mm
 }) => {
   // 띄움배치일 때는 발통 렌더링 안 함
   if (isFloating) {
@@ -63,6 +65,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          baseHeight={baseHeight}
         />
       ))}
     </group>

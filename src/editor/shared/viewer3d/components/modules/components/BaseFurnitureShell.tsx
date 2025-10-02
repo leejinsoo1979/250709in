@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
 import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
 
@@ -112,6 +113,9 @@ interface BaseFurnitureShellProps {
   // 띄움배치 여부
   isFloating?: boolean;
   
+  // 공간 정보 (받침대 높이 확인용)
+  spaceInfo?: SpaceInfo;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -141,6 +145,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isHighlighted = false,
   hasBackPanel = true, // 기본값은 true (백패널 있음)
   isFloating = false, // 기본값은 false (바닥 배치)
+  spaceInfo,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -284,6 +289,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         renderMode={renderMode}
         isHighlighted={isHighlighted}
         isFloating={isFloating}
+        baseHeight={spaceInfo?.baseConfig?.height || 65}
       />
     </group>
   );
