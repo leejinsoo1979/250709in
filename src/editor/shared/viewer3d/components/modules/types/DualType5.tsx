@@ -69,7 +69,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = getThemeColor();
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (theme.mode === 'dark' ? '#ffffff' : getThemeColor());
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
 
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
