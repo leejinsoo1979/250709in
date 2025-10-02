@@ -188,7 +188,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                         color="rgba(0, 0, 0, 0.3)"
                         anchorX="center"
                         anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
+                        rotation={[0, 0, Math.PI / 2 + Math.PI]}
                         renderOrder={998}
                       >
                         {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2) - (sectionCenterY - sectionHeight/2))))}
@@ -204,7 +204,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       color={dimensionColor}
                       anchorX="center"
                       anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
+                      rotation={[0, 0, Math.PI / 2 + Math.PI]}
                       renderOrder={999}
                       depthTest={false}
                     >
@@ -246,7 +246,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           anchorX="center"
                           anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
+                          rotation={[0, 0, Math.PI / 2 + Math.PI]}
                           renderOrder={999}
                           depthTest={false}
                         >
