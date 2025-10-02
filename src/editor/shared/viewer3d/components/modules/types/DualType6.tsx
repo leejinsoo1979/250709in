@@ -63,7 +63,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
 
-  const { viewMode, view2DDirection, showDimensions } = useUIStore();
+  const { viewMode, view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { theme } = useTheme();
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
@@ -181,7 +181,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             
             {/* 좌측 섹션 치수 표시 */}
-            {showDimensions && (section.type === 'drawer' || section.type === 'hanging') && (
+            {showDimensions && showDimensionsText && (section.type === 'drawer' || section.type === 'hanging') && (
               <group>
                 {section.type === 'drawer' ? (
                   <>
@@ -484,7 +484,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             />
             
             {/* 중단선반 두께 치수 표시 */}
-            {showDimensions && (
+            {showDimensions && showDimensionsText && (
               <group>
                 {/* 중단선반 두께 텍스트 */}
                 <Text
@@ -540,7 +540,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             />
             
             {/* 안전선반 두께 치수 표시 */}
-            {showDimensions && (
+            {showDimensions && showDimensionsText && (
               <group>
                 {/* 안전선반 두께 텍스트 */}
                 <Text
@@ -584,7 +584,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         )}
         
         {/* 상단 프레임 두께 치수 표시 */}
-        {showDimensions && (
+        {showDimensions && showDimensionsText && (
           <group>
             {/* 상단 프레임 두께 텍스트 */}
             <Text
@@ -681,7 +681,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         />
         
         {/* 우측 하단 가로 치수 표시 - 하부장(서랍영역) 내부에 표시 */}
-        {showDimensions && hasSharedMiddlePanel && middlePanelHeight > 0 && (
+        {showDimensions && showDimensionsText && hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <group>
             {/* 가로 내경 수평선 - 중간 칸막이 우측면부터 우측 측판 내측면까지 */}
             <Line

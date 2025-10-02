@@ -59,7 +59,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     modelConfig
   } = baseFurniture;
 
-  const { viewMode, view2DDirection, showDimensions } = useUIStore();
+  const { viewMode, view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { theme } = useTheme();
   const { renderMode } = useSpace3DView();
 
@@ -286,7 +286,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {separatorPanel}
             
             {/* 좌측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
-            {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
+            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
               <>
                 {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
                 {index < allSections.length - 1 && (
@@ -560,7 +560,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             
             {/* 우측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
-            {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
+            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
               <group>
                 {/* 하부 프레임 두께 텍스트 */}
                 {viewMode === '3D' && (
