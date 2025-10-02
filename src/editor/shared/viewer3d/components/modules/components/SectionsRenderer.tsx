@@ -193,19 +193,38 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           // 서랍 구역
           if (section.count && section.count > 0) {
             sectionContent = (
-              <DrawerRenderer
-                drawerCount={section.count}
-                innerWidth={innerWidth}
-                innerHeight={sectionHeight}
-                depth={depth}
-                basicThickness={basicThickness}
-                yOffset={sectionCenterY}
-                drawerHeights={section.drawerHeights}
-                gapHeight={section.gapHeight}
-                material={material}
-                renderMode={renderMode}
-                isHighlighted={isHighlighted}
-              />
+              <>
+                {/* 서랍 렌더링 */}
+                <DrawerRenderer
+                  drawerCount={section.count}
+                  innerWidth={innerWidth}
+                  innerHeight={sectionHeight}
+                  depth={depth}
+                  basicThickness={basicThickness}
+                  yOffset={sectionCenterY}
+                  drawerHeights={section.drawerHeights}
+                  gapHeight={section.gapHeight}
+                  material={material}
+                  renderMode={renderMode}
+                  isHighlighted={isHighlighted}
+                />
+                {/* 바닥판 두께 치수 표시용 ShelfRenderer */}
+                <ShelfRenderer
+                  shelfCount={0}
+                  innerWidth={innerWidth}
+                  innerHeight={sectionHeight}
+                  depth={adjustedDepthForShelves}
+                  basicThickness={basicThickness}
+                  material={material}
+                  yOffset={sectionCenterY}
+                  zOffset={shelfZOffset}
+                  shelfPositions={[0]}
+                  renderMode={renderMode}
+                  furnitureId={furnitureId}
+                  sectionType={section.type}
+                  isHighlighted={isHighlighted}
+                />
+              </>
             );
           }
           break;
@@ -275,9 +294,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
-                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.length > 1) {
+                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)) {
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
-                      const safetyShelfPositionMm = section.shelfPositions.find(pos => pos !== 0);
+                      const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                       if (safetyShelfPositionMm !== undefined) {
                         // 안전선반 하단 Y 위치 = 섹션 하단 + 안전선반 위치(mm) - 안전선반 두께/2
                         topY = sectionBottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2;
