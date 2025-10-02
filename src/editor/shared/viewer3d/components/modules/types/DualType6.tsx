@@ -63,8 +63,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
 
-  const { viewMode, view2DDirection, showDimensions, showDimensionsText } = useUIStore();
-  const { theme } = useTheme();
+  const { viewMode, view2DDirection, showDimensions, showDimensionsText, view2DTheme } = useUIStore();
 
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -72,7 +71,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (theme.mode === 'dark' ? '#ffffff' : '#000000');
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
 
   // 좌우 폭 분할 계산 - 실제 렌더링되는 가구의 innerWidth 기반
