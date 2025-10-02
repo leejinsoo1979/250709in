@@ -2231,9 +2231,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 좌측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderLeftView = () => {
-    // 좌측 뷰에서 공간 치수 숨김
-    return null;
-    // if (viewDirection !== 'left') return null;
+    if (viewDirection !== 'left') return null;
     
     // Room.tsx와 동일한 계산 - 실제 spaceInfo 값 사용
     const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
@@ -2255,30 +2253,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     
     return (
       <group>
-        {/* 상단 전체 깊이 치수선 */}
-        <group>
-          {/* 치수선 */}
+        {/* 상단 전체 깊이 치수선 - 숨김 */}
+        {/* <group>
+          {/* 치수선 *}
           <Line
             points={[[leftDimensionX, topDimensionY, spaceZOffset], [leftDimensionX, topDimensionY, spaceZOffset + panelDepth]]}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 전면 화살표 */}
+          {/* 전면 화살표 *}
           <Line
             points={createArrowHead([leftDimensionX, topDimensionY, spaceZOffset], [leftDimensionX, topDimensionY, spaceZOffset + 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 후면 화살표 */}
+          {/* 후면 화살표 *}
           <Line
             points={createArrowHead([leftDimensionX, topDimensionY, spaceZOffset + panelDepth], [leftDimensionX, topDimensionY, spaceZOffset + panelDepth - 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 전체 깊이 치수 텍스트 */}
+          {/* 전체 깊이 치수 텍스트 *}
           {(showDimensionsText || isStep2) && (
             <Text
                   renderOrder={1000}
@@ -2294,7 +2292,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
           )}
           
-          {/* 연장선 (전면) */}
+          {/* 연장선 (전면) *}
           <Line
             points={[[0, 0, spaceZOffset], [leftDimensionX - mmToThreeUnits(20), 0, spaceZOffset]]}
             color={dimensionColor}
@@ -2306,7 +2304,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
           
-          {/* 연장선 (후면) */}
+          {/* 연장선 (후면) *}
           <Line
             points={[[0, 0, spaceZOffset + panelDepth], [leftDimensionX - mmToThreeUnits(20), 0, spaceZOffset + panelDepth]]}
             color={dimensionColor}
@@ -2317,7 +2315,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={dimensionColor}
             lineWidth={1}
           />
-        </group>
+        </group> */}
         
         {/* 좌측 전체 높이 치수선 */}
         <group>
@@ -2947,9 +2945,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 우측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderRightView = () => {
-    // 우측 뷰에서 공간 치수 숨김
-    return null;
-    // if (viewDirection !== 'right') return null;
+    if (viewDirection !== 'right') return null;
     
     // Room.tsx와 동일한 계산
     const panelDepthMm = spaceInfo.depth || 600;
@@ -2973,30 +2969,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     
     return (
       <group renderOrder={1000000}>
-        {/* 상단 전체 깊이 치수선 */}
-        <group>
-          {/* 치수선 */}
+        {/* 상단 전체 깊이 치수선 - 숨김 */}
+        {/* <group>
+          {/* 치수선 *}
           <Line
             points={[[rightDimensionX, topDimensionY, spaceZOffset], [rightDimensionX, topDimensionY, spaceZOffset + panelDepth]]}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 전면 화살표 */}
+          {/* 전면 화살표 *}
           <Line
             points={createArrowHead([rightDimensionX, topDimensionY, spaceZOffset], [rightDimensionX, topDimensionY, spaceZOffset + 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 후면 화살표 */}
+          {/* 후면 화살표 *}
           <Line
             points={createArrowHead([rightDimensionX, topDimensionY, spaceZOffset + panelDepth], [rightDimensionX, topDimensionY, spaceZOffset + panelDepth - 0.05])}
             color={dimensionColor}
             lineWidth={1}
           />
           
-          {/* 전체 깊이 치수 텍스트 */}
+          {/* 전체 깊이 치수 텍스트 *}
           {(showDimensionsText || isStep2) && (
             <Text
                   renderOrder={1000}
@@ -3012,7 +3008,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
           )}
           
-          {/* 연장선 (전면) */}
+          {/* 연장선 (전면) *}
           <Line
             points={[[actualSpaceWidth, 0, spaceZOffset], [rightDimensionX + mmToThreeUnits(20), 0, spaceZOffset]]}
             color={dimensionColor}
@@ -3024,7 +3020,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
           
-          {/* 연장선 (후면) */}
+          {/* 연장선 (후면) *}
           <Line
             points={[[actualSpaceWidth, 0, spaceZOffset + panelDepth], [rightDimensionX + mmToThreeUnits(20), 0, spaceZOffset + panelDepth]]}
             color={dimensionColor}
@@ -3035,7 +3031,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={dimensionColor}
             lineWidth={1}
           />
-        </group>
+        </group> */}
         
         {/* 우측 전체 높이 치수선 */}
         <group>
