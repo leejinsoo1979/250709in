@@ -252,17 +252,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       lineWidth={1}
                       dashed={false}
                     />
-                    {/* 선반 두께 수직선 양끝 점 - 바닥판(position 0)은 아래쪽 점 제외 */}
+                    {/* 선반 두께 수직선 양끝 점 - 위쪽 점만 렌더링 */}
                     <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    {shelfPos !== 0 && (
-                      <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={dimensionColor} />
-                      </mesh>
-                    )}
                   </group>
                 );
               });
