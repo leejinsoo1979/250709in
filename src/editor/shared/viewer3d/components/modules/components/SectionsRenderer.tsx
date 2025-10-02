@@ -241,9 +241,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외 */}
+          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외, 2단 옷장 상부섹션도 제외 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           section.type === 'hanging' && (
+           section.type === 'hanging' && 
+           !(furnitureId?.includes('2hanging') && allSections.length === 2 && index === 1) && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
