@@ -202,7 +202,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   zOffset={leftShelfZOffset}
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
-                  renderMode={useSpace3DView().renderMode}
+                  renderMode={renderMode}
                   furnitureId={moduleData.id}
                 />
               );
@@ -223,7 +223,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   zOffset={leftShelfZOffset}
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
-                  renderMode={useSpace3DView().renderMode}
+                  renderMode={renderMode}
                   furnitureId={moduleData.id}
                 />
               );
@@ -246,7 +246,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   drawerHeights={section.drawerHeights}
                   gapHeight={section.gapHeight}
                   material={material}
-                  renderMode={useSpace3DView().renderMode}
+                  renderMode={renderMode}
                 />
               );
             }
@@ -261,7 +261,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               args={[leftWidth, basicThickness, leftAdjustedDepthForShelves - basicThickness]}
               position={[0, sectionCenterY + sectionHeight/2 - basicThickness/2, basicThickness/2 + leftShelfZOffset]}
               material={material}
-              renderMode={useSpace3DView().renderMode}
+              renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
             />
@@ -569,7 +569,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   zOffset={rightShelfZOffset}
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
-                  renderMode={useSpace3DView().renderMode}
+                  renderMode={renderMode}
                   furnitureId={rightFurnitureId}
                 />
               );
@@ -593,7 +593,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   zOffset={rightShelfZOffset}
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
-                  renderMode={useSpace3DView().renderMode}
+                  renderMode={renderMode}
                   furnitureId={moduleData.id}
                 />
               );
@@ -823,7 +823,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               args={[basicThickness, sectionHeight, middlePanelDepth]}
               position={[(leftWidth - rightWidth) / 2, sectionCenterY, middlePanelZOffset]}
               material={material}
-              renderMode={useSpace3DView().renderMode}
+              renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
             />
@@ -852,7 +852,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             args={[basicThickness, sectionHeight, leftDepth]}
             position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
             material={material}
-            renderMode={useSpace3DView().renderMode}
+            renderMode={renderMode}
             isDragging={isDragging}
             isEditMode={isEditMode}
           />
@@ -876,7 +876,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[leftWidth, basicThickness, leftDepth]}
           position={[leftXOffset, height/2 - basicThickness/2, 0]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
         />
@@ -886,7 +886,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[rightWidth, basicThickness, rightDepth]}
           position={[rightXOffset, height/2 - basicThickness/2, (leftDepth - rightDepth) / 2]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
         />
@@ -899,7 +899,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[leftWidth, basicThickness, leftDepth]}
           position={[leftXOffset, -height/2 + basicThickness/2, 0]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
         />
@@ -909,7 +909,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[rightWidth, basicThickness, rightDepth]}
           position={[rightXOffset, -height/2 + basicThickness/2, (leftDepth - rightDepth) / 2]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
         />
@@ -922,7 +922,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
           position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
           hideEdges={false} // 엣지는 표시하되
@@ -934,7 +934,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
           position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
           material={material}
-          renderMode={useSpace3DView().renderMode}
+          renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
           hideEdges={false} // 엣지는 표시하되
