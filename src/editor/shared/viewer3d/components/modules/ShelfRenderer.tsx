@@ -66,6 +66,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
   // 절대 위치 모드: 마감 패널 또는 절대 위치 지정
   if (isTopFinishPanel && shelfCount === 1) {
+    console.log('🔥 isTopFinishPanel 상판 렌더링:', { furnitureId, sectionType, innerHeight, yOffset });
     // 최상단 마감 패널 모드 (기존 18mm에서 추가로 18mm 위로, 총 0mm)
     const topPosition = innerHeight / 2 - basicThickness / 2;
     
