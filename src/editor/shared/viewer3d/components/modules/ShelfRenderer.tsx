@@ -412,7 +412,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       color={isHighlighted ? "#FFD700" : textColor}
                       anchorX="center"
                       anchorY="middle"
-                      rotation={[0, 0, Math.PI]} // 텍스트를 180도 회전
+                      rotation={[0, 0, Math.PI / 2]} // 텍스트를 270도 회전하여 세로로 표시 (읽기 쉽게)
                       renderOrder={999}
                       onClick={(e: ThreeEvent<MouseEvent>) => {
                         e.stopPropagation();
