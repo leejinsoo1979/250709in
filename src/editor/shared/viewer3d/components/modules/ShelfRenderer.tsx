@@ -190,6 +190,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
+                // Type4(4drawer-hanging) 상부섹션은 모든 선반 두께 치수 제외
+                const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
+                if (isType4Hanging) {
+                  return; // Type4 상부섹션 선반 두께 표시 안함
+                }
+                
                 // shelfPos === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
                 const shelfY = shelfPos === 0 
                   ? (-innerHeight / 2) + basicThickness / 2
