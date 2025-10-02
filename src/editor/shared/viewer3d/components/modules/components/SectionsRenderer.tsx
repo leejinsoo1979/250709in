@@ -240,8 +240,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 첫 번째 섹션: 하부 프레임 상단
                     bottomY = -height/2 + basicThickness;
                   } else {
-                    // 이전 섹션과의 경계: 중간 구분 패널 상단
-                    bottomY = sectionBottomY + basicThickness;
+                    // 이전 섹션과의 경계: 상부 섹션 바닥판 상단 (중간 구분 패널 + 바닥판 18mm)
+                    bottomY = sectionBottomY + basicThickness * 2;
                     
                     console.log('🟡 섹션 bottomY 계산:', {
                       index,
@@ -249,17 +249,16 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       shelfPositions: section.shelfPositions,
                       'includes(0)': section.shelfPositions?.includes(0),
                       sectionBottomY: sectionBottomY * 100 + 'mm',
-                      bottomY: bottomY * 100 + 'mm'
+                      bottomY: bottomY * 100 + 'mm',
+                      '바닥판포함': '중간구분패널(18mm) + 상부바닥판(18mm)'
                     });
                     
-                    // hanging 섹션에서 바닥판(shelfPositions: [0])이 있는 경우, bottomY를 바닥판 상단 + 9mm로 설정
+                    // hanging 섹션에서 안전선반(shelfPositions: [0])이 있는 경우, bottomY를 안전선반 상단 + 9mm로 설정
                     if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.includes(0)) {
-                      // 바닥판 두께 + 9mm 추가
-                      bottomY = sectionBottomY + basicThickness * 2 + mmToThreeUnits(9);
-                      console.log('🔵 바닥판 있음 - bottomY 조정:', bottomY * 100 + 'mm');
+                      // 안전선반 두께 + 9mm 추가
+                      bottomY = sectionBottomY + basicThickness * 3 + mmToThreeUnits(9);
+                      console.log('🔵 안전선반 있음 - bottomY 조정:', bottomY * 100 + 'mm');
                     }
-                    // hanging 섹션에서 안전선반이 없는 경우에도 중간 구분 패널 상단 유지
-                    // (별도 조정 없음 - bottomY = sectionBottomY + basicThickness 그대로 사용)
                   }
                   
                   // 디버깅: hanging 섹션의 치수 계산 확인
