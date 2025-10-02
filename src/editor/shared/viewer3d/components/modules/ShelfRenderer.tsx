@@ -372,9 +372,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   {compartmentHeights.map((compartment, i) => {
                     // DualType5 스타일러장 우측의 마지막 칸(상단)은 치수 표시 제외
                     const isDualType5Right = furnitureId && furnitureId.includes('-right-section');
+                    // Type4 상부섹션의 첫 번째 칸(바닥판부터 안전선반까지)은 SectionsRenderer에서 표시
+                    const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
                     
                     // 안전선반이 있는 경우(칸이 2개 이상) 마지막 칸은 치수 표시 안함
                     if (isDualType5Right && compartmentHeights.length >= 2 && i === compartmentHeights.length - 1) {
+                      return null;
+                    }
+                    
+                    // Type4 상부섹션의 모든 칸 치수 제외 (SectionsRenderer에서 통합 표시)
+                    if (isType4Hanging) {
                       return null;
                     }
                     // 각 칸의 상단과 하단 Y 좌표 계산
