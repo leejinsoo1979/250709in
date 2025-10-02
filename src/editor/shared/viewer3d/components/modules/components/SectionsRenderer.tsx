@@ -350,16 +350,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 position={[
                   viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                   -height/2 + basicThickness/2, 
-                  viewMode === '3D' 
-                    ? depth/2 + 0.1
-                    : basicThickness/2 + 0.8
+                  viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                 ]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 2]}
-                renderOrder={999}
+                renderOrder={1000}
                 depthTest={false}
               >
                 {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
@@ -368,19 +366,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
               <NativeLine
                 points={[
-                  [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5],
-                  [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]
+                  [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                  [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                 ]}
                 color={dimensionColor}
                 lineWidth={1}
                 dashed={false}
               />
               {/* 하단 프레임 두께 수직선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                 <sphereGeometry args={[0.05, 8, 8]} />
                 <meshBasicMaterial color={dimensionColor} />
               </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : basicThickness/2 + 0.5]}>
+              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                 <sphereGeometry args={[0.05, 8, 8]} />
                 <meshBasicMaterial color={dimensionColor} />
               </mesh>
