@@ -61,7 +61,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
-  const { renderMode } = useSpace3DView();
+  const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
 
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
@@ -973,6 +973,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         isHighlighted={false}
         isFloating={false}
         baseHeight={spaceInfo?.baseConfig?.height || 65}
+        viewMode={viewMode}
+        view2DDirection={view2DDirection}
       />
     </>
   );
