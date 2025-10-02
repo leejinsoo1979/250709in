@@ -7,8 +7,8 @@ import DrawerRenderer from '../DrawerRenderer';
 import { Html, Text } from '@react-three/drei';
 import NativeLine from '../../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
-import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import DimensionText from './DimensionText';
+import { useDimensionColor } from '../hooks/useDimensionColor';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -66,17 +66,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
-  const view2DTheme = useUIStore(state => state.view2DTheme);
-  const { viewMode } = useSpace3DView();
-  
-  // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
-  const getThemeColor = () => {
-    const computedStyle = getComputedStyle(document.documentElement);
-    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
-  };
-  
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
+  const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   
   // sections 기반 내부 구조 렌더링
   const renderSections = () => {

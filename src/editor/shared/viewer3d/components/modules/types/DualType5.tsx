@@ -5,11 +5,10 @@ import { useBaseFurniture, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
-import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
-// import { SectionConfig } from '@/data/modules/shelving'; // 사용되지 않음
+import { useDimensionColor } from '../hooks/useDimensionColor';
 
 
 /**
@@ -59,17 +58,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     modelConfig
   } = baseFurniture;
 
-  const { viewMode, view2DDirection, showDimensions, showDimensionsText, view2DTheme } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { renderMode } = useSpace3DView();
-
-  // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
-  const getThemeColor = () => {
-    const computedStyle = getComputedStyle(document.documentElement);
-    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
-  };
-  
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
+  const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
 
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
   // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();

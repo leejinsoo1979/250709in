@@ -1,12 +1,12 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { Text } from '@react-three/drei';
 import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import { ThreeEvent } from '@react-three/fiber';
 import BoxWithEdges from './components/BoxWithEdges';
+import { useDimensionColor } from './hooks/useDimensionColor';
 
 
 interface ShelfRendererProps {
@@ -52,23 +52,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
-  const view2DTheme = useUIStore(state => state.view2DTheme);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
   const setHighlightedCompartment = useUIStore(state => state.setHighlightedCompartment);
-  const { theme } = useViewerTheme();
-  const { viewMode } = useSpace3DView();
-  const mmToThreeUnits = (mm: number) => mm / 100;
-  
-  
-  // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
-  const getThemeColor = () => {
-    const computedStyle = getComputedStyle(document.documentElement);
-    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
-  };
-  
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
+  const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   const textColor = dimensionColor;
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
+  const mmToThreeUnits = (mm: number) => mm / 100;
   
   if (shelfCount <= 0) {
     return null;
