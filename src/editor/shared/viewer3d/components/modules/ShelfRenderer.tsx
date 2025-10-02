@@ -197,6 +197,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
+                console.log(`🟣 선반 ${i} 엔드포인트 (shelfPos=${shelfPos}):`, {
+                  'shelfTopY_mm': shelfTopY * 100,
+                  'shelfBottomY_mm': shelfBottomY * 100,
+                  '위점렌더링': 'O',
+                  '아래점렌더링': shelfPos !== 0 ? 'O' : 'X'
+                });
+                
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
                     {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
@@ -293,6 +300,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 상단 프레임 치수는 showTopFrameDimension이 true일 때만 표시
               if (showTopFrameDimension) {
+                console.log('🟣 상단 프레임 엔드포인트:', {
+                  'topFrameTopY_mm': topFrameTopY * 100,
+                  'topFrameBottomY_mm': topFrameBottomY * 100,
+                  '위점렌더링': 'O',
+                  '아래점렌더링': 'O'
+                });
                 shelfThicknessElements.push(
                 <group key="top-frame-thickness">
                   {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
