@@ -351,7 +351,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             color={dimensionColor}
             anchorX="center"
             anchorY="middle"
-            rotation={[0, 0, Math.PI / 2 + Math.PI]}
+            rotation={[0, 0, Math.PI / 2]}
             renderOrder={999}
           >
             {Math.round(basicThickness * 100)}
