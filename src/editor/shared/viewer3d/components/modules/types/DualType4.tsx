@@ -78,13 +78,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               currentYPosition += getSectionHeights()[i];
             }
             
-            const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+            // 섹션별 측판 높이 조정 (하부 +18mm, 상부 -18mm)
+            const heightAdjustment = mmToThreeUnits(18);
+            const adjustedSectionHeight = index === 0 
+              ? sectionHeight + heightAdjustment  // 하부 섹션: 18mm 늘림
+              : sectionHeight - heightAdjustment; // 상부 섹션: 18mm 줄임
+            
+            // 섹션 중심 Y 위치 조정
+            const sectionCenterY = index === 0
+              ? currentYPosition + adjustedSectionHeight / 2 - basicThickness  // 하부: 위쪽으로 이동
+              : currentYPosition + adjustedSectionHeight / 2 - basicThickness + heightAdjustment; // 상부: 아래쪽으로 이동
             
             return (
               <React.Fragment key={`side-panels-${index}`}>
-                {/* 왼쪽 측면 판재 - 섹션별로 분할 */}
+                {/* 왼쪽 측면 판재 - 섹션별로 분할, 높이 조정 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
+                  args={[basicThickness, adjustedSectionHeight, depth]}
                   position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
@@ -92,9 +101,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                 />
                 
-                {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
+                {/* 오른쪽 측면 판재 - 섹션별로 분할, 높이 조정 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
+                  args={[basicThickness, adjustedSectionHeight, depth]}
                   position={[width/2 - basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
