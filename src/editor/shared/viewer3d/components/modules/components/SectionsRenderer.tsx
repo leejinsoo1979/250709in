@@ -203,9 +203,26 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {sectionContent}
           
           {/* 섹션 내경 치수 표시 - 2단 옷장은 첫 번째 섹션만 표시, 듀얼 타입 중복 방지 */}
-          {!hideSectionDimensions && showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           (section.type === 'hanging' || section.type === 'drawer') && 
-           (!(furnitureId?.includes('2hanging') && allSections.length === 2) || index === 0) && (
+          {(() => {
+            const is2HangingFurniture = furnitureId?.includes('2hanging');
+            const hasTwoSections = allSections.length === 2;
+            const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText && 
+                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
+                              (section.type === 'hanging' || section.type === 'drawer') && 
+                              (!(is2HangingFurniture && hasTwoSections) || index === 0);
+            
+            if (is2HangingFurniture && hasTwoSections) {
+              console.log(`🔍 2hanging 치수 표시 체크:`, {
+                furnitureId,
+                index,
+                sectionType: section.type,
+                allSectionsLength: allSections.length,
+                shouldShow,
+                hideSectionDimensions
+              });
+            }
+            
+            return shouldShow && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
@@ -363,7 +380,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 );
               })()}
             </group>
-          )}
+            );
+          })()}
           
           {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
