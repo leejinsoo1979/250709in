@@ -346,18 +346,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       
       // useCameraManager와 동일한 줌 계산 공식 사용
       const initialZoom = 1200 / distance;
-      const initialDistance = cameraPosition?.[2] || distance;
       
       console.log('📸 2D 모드 초기화', {
         target,
         distance,
-        initialDistance,
         initialZoom
       });
       
-      // 항상 계산된 정중앙과 초기 거리/줌 사용
+      // 항상 계산된 정중앙과 거리/줌 사용
       controls.target.set(...target);
-      controls.object.position.set(0, target[1], initialDistance);
+      controls.object.position.set(0, target[1], distance);
       controls.object.zoom = initialZoom;
       controls.object.updateProjectionMatrix();
       
