@@ -71,15 +71,14 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {(() => {
-            // 1000mm = 상판18 + 내경964 + 바닥판18
-            // 하부 측판 높이 = 내경만 = 964mm
-            const drawerInternalHeight = mmToThreeUnits(1000) - basicThickness * 2;
+            // 하부 측판 높이 = 1000mm
+            const drawerSectionHeight = mmToThreeUnits(1000);
             const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
             const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
-            const lowerPanelY = -height/2 + basicThickness + drawerInternalHeight/2;
-            const upperPanelY = -height/2 + basicThickness + drawerInternalHeight + basicThickness * 2 + hangingSectionHeight/2;
+            const lowerPanelY = -height/2 + drawerSectionHeight/2;
+            const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
@@ -98,7 +97,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerInternalHeight, depth]}
+                        args={[basicThickness, drawerSectionHeight, depth]}
                         position={[-width/2 + basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
@@ -108,7 +107,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerInternalHeight, depth]}
+                        args={[basicThickness, drawerSectionHeight, depth]}
                         position={[width/2 - basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
