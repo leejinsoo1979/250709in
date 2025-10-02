@@ -532,19 +532,26 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   ];
   
   // 우측 섹션 (스타일러장)에 안전선반 적용
-  // 우측은 전체 높이 단일 hanging 구역
+  // 좌측과 동일한 높이 분할 구조로 변경 (하단 구역 + 상단 구역)
+  const rightBottomHeight = leftDrawerWithFinishHeight; // 좌측 서랍장과 동일한 높이 (600mm)
+  const rightTopHeight = leftHangingHeight; // 좌측 옷장과 동일한 높이
+  
   const rightBaseSections: SectionConfig[] = [
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: maxHeight
+      height: rightBottomHeight // 하단 구역
+    },
+    { 
+      type: 'hanging', 
+      heightType: 'absolute', 
+      height: rightTopHeight // 상단 구역
     }
   ];
   
-  // 좌측 섹션에만 안전선반 적용
+  // 좌우 각각 안전선반 적용
   const leftSections = applySafetyShelf(leftBaseSections, maxHeight);
-  // 우측 스타일러장에는 안전선반 적용하지 않음 (오픈형 구조)
-  const rightSections = rightBaseSections;
+  const rightSections = applySafetyShelf(rightBaseSections, maxHeight);
   
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
   
