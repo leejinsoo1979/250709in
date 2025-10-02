@@ -339,7 +339,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const initialZoom = 1.0;
       const spaceHeight = spaceInfo?.height || 2400;
       const target = calculateCameraTargetUtil(spaceHeight);
-      const initialDistance = cameraPosition?.[2] || 10;
+      const initialDistance = 3; // 2D 모드는 가까운 고정 거리 사용
       
       console.log('📸 2D 모드 초기화', {
         target,
