@@ -185,14 +185,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 }
               }
               
-              // Type4 상부섹션은 shelfThicknessElements 자체를 비워둠
-              const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
-              
               // 선반 프레임 두께 치수 추가
               const shelfThicknessElements = [];
               
-              // Type4 상부섹션이 아닐 때만 선반 두께 표시
-              if (!isType4Hanging) {
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
                 
@@ -261,7 +256,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   </group>
                 );
               });
-              } // Type4 체크 종료
               
               // 상단 프레임 두께 표시 추가
               // BaseFurnitureShell에서 상단 프레임은 height/2 - basicThickness/2 위치에 있음
@@ -374,7 +368,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     // DualType5 스타일러장 우측의 마지막 칸(상단)은 치수 표시 제외
                     const isDualType5Right = furnitureId && furnitureId.includes('-right-section');
                     // Type4 상부섹션의 첫 번째 칸(바닥판부터 안전선반까지)은 SectionsRenderer에서 표시
-                    const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
+                    const isType4Hanging = furnitureId && (furnitureId.includes('4drawer-hanging') || furnitureId.includes('dual-4drawer-hanging'));
                     
                     // 안전선반이 있는 경우(칸이 2개 이상) 마지막 칸은 치수 표시 안함
                     if (isDualType5Right && compartmentHeights.length >= 2 && i === compartmentHeights.length - 1) {
