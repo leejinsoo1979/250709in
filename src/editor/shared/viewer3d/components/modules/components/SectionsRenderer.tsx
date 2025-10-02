@@ -279,8 +279,16 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       topY = height/2 - basicThickness;
                     }
                   } else {
-                    // 다음 섹션과의 경계: 상판 하단면
-                    // 상판 중심 = 섹션 상단이고, 상판 하단 = 상판 중심 - basicThickness/2
+                    // 다음 섹션과의 경계: 섹션 상단에서 상판 두께를 뺀 위치 (내경 상단)
+                    console.log('🔴 Drawer 섹션 내경 계산:', {
+                      index,
+                      sectionHeight: sectionHeight * 100 + 'mm',
+                      sectionTopY: sectionTopY * 100 + 'mm',
+                      bottomY: bottomY * 100 + 'mm',
+                      basicThickness: basicThickness * 100 + 'mm',
+                      'topY = sectionTopY - basicThickness': (sectionTopY - basicThickness) * 100 + 'mm',
+                      '내경계산': ((sectionTopY - basicThickness) - bottomY) * 100 + 'mm'
+                    });
                     topY = sectionTopY - basicThickness;
                     
                     // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
