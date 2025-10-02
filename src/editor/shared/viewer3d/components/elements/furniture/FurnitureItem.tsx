@@ -1622,34 +1622,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               position={[0, 0, 0]}
               renderOrder={998}
             >
-              <boxGeometry args={[width + highlightPadding * 2.5, height + highlightPadding * 2.5, depth + highlightPadding * 2.5]} />
+              <boxGeometry args={[width + highlightPadding * 3, height + highlightPadding * 3, depth + highlightPadding * 3]} />
               <meshBasicMaterial
                 color={selectionHighlightColor}
                 transparent
-                opacity={0.15}
+                opacity={0.1}
                 depthWrite={false}
                 side={THREE.BackSide}
                 blending={THREE.AdditiveBlending}
               />
             </mesh>
             
-            {/* 두번째 발광 레이어 */}
-            <mesh
-              position={[0, 0, 0]}
-              renderOrder={997}
-            >
-              <boxGeometry args={[width + highlightPadding * 4, height + highlightPadding * 4, depth + highlightPadding * 4]} />
-              <meshBasicMaterial
-                color={selectionHighlightColor}
-                transparent
-                opacity={0.08}
-                depthWrite={false}
-                side={THREE.BackSide}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-            
-            {/* 메인 하이라이트 박스 - 모든 엣지 표시 */}
+            {/* 메인 하이라이트 박스와 엣지 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1660,43 +1644,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshBasicMaterial
                 color={selectionHighlightColor}
                 transparent
-                opacity={0.0}
+                opacity={0.05}
                 depthWrite={false}
-                depthTest={false}
-                toneMapped={false}
-              />
-            </mesh>
-            
-            {/* 모든 엣지 라인 강조 */}
-            <Edges
-              geometry={new THREE.BoxGeometry(width, height, depth)}
-              renderOrder={1000}
-              threshold={15}
-            >
-              <lineBasicMaterial
-                color={selectionHighlightColor}
-                linewidth={4}
-                transparent={false}
                 depthTest={true}
                 toneMapped={false}
               />
-            </Edges>
-            
-            {/* 추가 엣지 라인 (더 밝게) */}
-            <Edges
-              geometry={new THREE.BoxGeometry(width + 0.001, height + 0.001, depth + 0.001)}
-              renderOrder={1001}
-              threshold={15}
-            >
-              <lineBasicMaterial
+              {/* 모든 엣지 라인 강조 */}
+              <Edges
                 color={selectionHighlightColor}
-                linewidth={2}
-                transparent={true}
-                opacity={0.8}
-                depthTest={false}
-                toneMapped={false}
+                scale={1.0}
+                threshold={15}
+                linewidth={3}
               />
-            </Edges>
+            </mesh>
+            
+            {/* 외곽 엣지 라인 (더 크게) */}
+            <Box args={[width + 0.005, height + 0.005, depth + 0.005]}>
+              <meshBasicMaterial
+                transparent
+                opacity={0}
+                depthWrite={false}
+              />
+              <Edges
+                color={selectionHighlightColor}
+                scale={1.0}
+                threshold={15}
+                linewidth={2}
+              />
+            </Box>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
