@@ -225,16 +225,27 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 />
                 
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
-                {index < getSectionHeights().length - 1 && (
-                  <BoxWithEdges
-                    args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
-                    material={material}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                  />
-                )}
+                {index < getSectionHeights().length - 1 && (() => {
+                  const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
+                  console.log(`🟨 섹션 ${index} 중간 패널 위치:`, {
+                    middlePanelY_mm: middlePanelY * 100,
+                    sectionCenterY_mm: sectionCenterY * 100,
+                    sectionHeight_mm: sectionHeight * 100,
+                    basicThickness_mm: basicThickness * 100,
+                    계산식: `(${sectionCenterY * 100}) + (${sectionHeight * 100}/2) + (${basicThickness * 100}/2) = ${middlePanelY * 100}mm`
+                  });
+                  
+                  return (
+                    <BoxWithEdges
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                      position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                    />
+                  );
+                })()}
               </React.Fragment>
             );
           })}
