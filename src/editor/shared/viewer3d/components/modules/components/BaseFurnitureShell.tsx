@@ -159,6 +159,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   // 디버깅용 로그
   console.log('🔍🔍🔍 BaseFurnitureShell 실제 렌더링:', {
+    furnitureId: moduleData?.id,
     width: width * 100 + 'mm',
     innerWidth: innerWidth * 100 + 'mm',
     basicThickness: basicThickness * 100 + 'mm',
