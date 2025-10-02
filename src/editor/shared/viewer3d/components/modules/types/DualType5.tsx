@@ -49,6 +49,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const {
     width,
     height,
+    depth,
     innerWidth,
     innerHeight,
     basicThickness,
