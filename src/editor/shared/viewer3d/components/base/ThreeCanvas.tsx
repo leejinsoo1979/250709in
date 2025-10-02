@@ -335,32 +335,28 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      if (initialCameraSetup.current.position2D && 
-          initialCameraSetup.current.target2D && 
-          initialCameraSetup.current.zoom2D !== null) {
-        // 저장된 초기 상태가 있으면 그대로 복원
-        console.log('📸 2D 모드 저장된 초기 상태로 복원', {
-          position: initialCameraSetup.current.position2D.toArray(),
-          target: initialCameraSetup.current.target2D.toArray(),
-          zoom: initialCameraSetup.current.zoom2D
-        });
-        
-        controls.target.copy(initialCameraSetup.current.target2D);
-        controls.object.position.copy(initialCameraSetup.current.position2D);
-        controls.object.zoom = initialCameraSetup.current.zoom2D;
-        controls.object.updateProjectionMatrix();
-      } else {
-        // 초기 상태가 없으면 기본값으로 리셋
-        const initialZoom = 1.0;
-        const spaceHeight = spaceInfo?.height || 2400;
-        const target = calculateCameraTargetUtil(spaceHeight);
-        const initialDistance = cameraPosition?.[2] || 10;
-        
-        controls.target.set(...target);
-        controls.object.position.set(0, target[1], initialDistance);
-        controls.object.zoom = initialZoom;
-        controls.object.updateProjectionMatrix();
-      }
+      // 현재 공간의 정중앙을 타겟으로 설정
+      const initialZoom = 1.0;
+      const spaceHeight = spaceInfo?.height || 2400;
+      const target = calculateCameraTargetUtil(spaceHeight);
+      
+      // 저장된 초기 위치와 줌이 있으면 사용, 없으면 기본값
+      const initialPosition = initialCameraSetup.current.position2D 
+        ? initialCameraSetup.current.position2D.clone() 
+        : new THREE.Vector3(0, target[1], cameraPosition?.[2] || 10);
+      
+      const initialZoomValue = initialCameraSetup.current.zoom2D ?? initialZoom;
+      
+      console.log('📸 2D 모드 초기화', {
+        target,
+        position: initialPosition.toArray(),
+        zoom: initialZoomValue
+      });
+      
+      controls.target.set(...target);
+      controls.object.position.copy(initialPosition);
+      controls.object.zoom = initialZoomValue;
+      controls.object.updateProjectionMatrix();
       
       controls.object.up.set(0, 1, 0);
       controls.object.lookAt(controls.target);
