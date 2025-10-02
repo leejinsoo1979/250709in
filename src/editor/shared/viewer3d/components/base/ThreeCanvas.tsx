@@ -335,26 +335,29 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 항상 공간의 정중앙(0,0,0)과 고정된 거리/줌 사용
+      // 저장된 초기 상태 사용 (없으면 계산)
       const spaceHeight = spaceInfo?.height || 2400;
+      const centerY = spaceHeight / 2000;
       
-      // 타겟은 항상 공간의 정중앙 (0, centerY, 0)
-      const centerY = spaceHeight / 2000; // mm를 Three.js 단위로 변환
-      const target: [number, number, number] = [0, centerY, 0];
-      
-      // 2D 모드는 고정 거리와 큰 줌 사용
-      const distance = 5;
-      const initialZoom = 50;
+      // 초기 저장값 사용, 없으면 기본값
+      const target = initialCameraSetup.current.target2D || [0, centerY, 0];
+      const position = initialCameraSetup.current.position2D || [0, centerY, 5];
+      const zoom = initialCameraSetup.current.zoom2D || 1.0;
       
       console.log('📸 2D 카메라 정중앙 리셋', {
         target,
-        distance,
-        initialZoom
+        position,
+        zoom,
+        saved: {
+          target2D: initialCameraSetup.current.target2D,
+          position2D: initialCameraSetup.current.position2D,
+          zoom2D: initialCameraSetup.current.zoom2D
+        }
       });
       
       controls.target.set(...target);
-      controls.object.position.set(0, centerY, distance);
-      controls.object.zoom = initialZoom;
+      controls.object.position.set(...position);
+      controls.object.zoom = zoom;
       controls.object.updateProjectionMatrix();
       
       controls.object.up.set(0, 1, 0);
