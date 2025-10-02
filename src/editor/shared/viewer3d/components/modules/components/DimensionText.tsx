@@ -78,7 +78,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   };
   
   // 색상 결정
-  const textColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : getThemeColor()));
+  const textColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
   
   // 폰트 크기
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
