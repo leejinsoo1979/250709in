@@ -117,26 +117,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
               if (shelfPositions.length > 0) {
-                // positionMm === 0인 경우 (바닥판) 패널 두께만 표시
+                // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
                 if (shelfPositions[0] === 0) {
-                  const height = basicThickness; // 바닥판 두께
-                  // 바닥판이 9mm 위에 있으므로 centerY도 9mm 올림
-                  const centerY = (-innerHeight / 2) + mmToThreeUnits(9) + height / 2;
-                  
-                  console.log('🟢 바닥판 치수:', {
-                    shelfPositions_0: shelfPositions[0],
-                    basicThickness,
-                    basicThickness_mm: basicThickness * 100,
-                    height,
-                    height_mm: height * 100,
-                    centerY_mm: centerY * 100,
-                    표시될값: Math.round(height * 100)
-                  });
-                  
-                  compartmentHeights.push({
-                    height,
-                    centerY
-                  });
+                  // 바닥판은 shelfThicknessElements에서 처리
                 } else {
                   const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
                   firstCompartmentHeightMm = firstShelfBottomMm;
@@ -203,7 +186,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                const shelfY = (-innerHeight / 2) + mmToThreeUnits(shelfPos);
+                // positionMm === 0인 경우 바닥판이 9mm 위에 있음
+                const actualShelfPos = shelfPos === 0 ? 9 : shelfPos;
+                const shelfY = (-innerHeight / 2) + mmToThreeUnits(actualShelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
