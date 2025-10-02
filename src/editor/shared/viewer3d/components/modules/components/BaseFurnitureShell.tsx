@@ -322,6 +322,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       />
       
       {/* Type4 상단 상판 두께 치수 표시 */}
+      {(() => {
+        const isType4 = moduleData?.id?.includes('4drawer-hanging');
+        if (isType4) {
+          console.log('🔍🔍🔍 Type4 상단 상판 두께 조건:', {
+            isType4,
+            showDimensions,
+            showDimensionsText,
+            viewMode,
+            dimensionColor,
+            height,
+            innerWidth,
+            basicThickness
+          });
+        }
+        return null;
+      })()}
       {moduleData?.id?.includes('4drawer-hanging') && showDimensions && (
         <group>
           {/* 상판 두께 텍스트 */}
