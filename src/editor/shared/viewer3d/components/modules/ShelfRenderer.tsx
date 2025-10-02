@@ -193,6 +193,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 */}
                     {viewMode === '3D' && (
                       <Text
+                        renderOrder={1000}
+                        depthTest={false}
                         position={[
                           -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                           shelfY - 0.01, 
@@ -209,6 +211,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       </Text>
                     )}
                     <Text
+                        renderOrder={1000}
+                        depthTest={false}
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         shelfY, 
@@ -285,6 +289,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 */}
                   {viewMode === '3D' && (
                     <Text
+                        renderOrder={1000}
+                        depthTest={false}
                       position={[
                         -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                         topFrameY - 0.01, 
@@ -301,6 +307,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     </Text>
                   )}
                   <Text
+                        renderOrder={1000}
+                        depthTest={false}
                     position={[
                       viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                       topFrameY, 
@@ -386,6 +394,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 치수 텍스트 - 수직 가이드선 좌측에 표시 */}
                     {viewMode === '3D' && (
                       <Text
+                        renderOrder={1000}
+                        depthTest={false}
                         position={[
                           -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                           compartment.centerY - 0.01, 
@@ -402,6 +412,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       </Text>
                     )}
                     <Text
+                        renderOrder={1000}
+                        depthTest={false}
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         compartment.centerY, 
@@ -541,6 +553,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 치수 텍스트 - CleanCAD2D 스타일로 칸 중앙에 표시 */}
                 {viewMode === '3D' && (
                   <Text
+                        renderOrder={1000}
+                        depthTest={false}
                     position={[
                       -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                       compartmentCenterY - 0.01, 
@@ -557,6 +571,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   </Text>
                 )}
                 <Text
+                        renderOrder={1000}
+                        depthTest={false}
                   position={[
                     viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : 0, 
                     compartmentCenterY, 

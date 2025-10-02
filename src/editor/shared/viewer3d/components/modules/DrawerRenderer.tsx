@@ -180,6 +180,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               {/* 3D 모드일 때 그림자 효과 */}
               {viewMode === '3D' && (
                 <Text
+                        renderOrder={1000}
+                        depthTest={false}
                   position={[
                     centerX + 0.01,
                     centerY - 0.01,
@@ -195,6 +197,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                 </Text>
               )}
               <Text
+                        renderOrder={1000}
+                        depthTest={false}
                 position={[
                   centerX,
                   centerY,
