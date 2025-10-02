@@ -251,10 +251,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           
           {/* 상판 두께 수직선 */}
           <NativeLine
-            start={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}
-            end={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}
+            points={[
+              [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+              [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+            ]}
             color={dimensionColor}
-            linewidth={1}
+            lineWidth={1}
             renderOrder={999}
           />
           {/* 수직선 양끝 점 */}
