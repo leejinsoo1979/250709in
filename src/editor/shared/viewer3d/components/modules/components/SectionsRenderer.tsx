@@ -460,9 +460,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           
           
           {/* 마지막 섹션의 상단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
-            section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)
-          ) && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && (
             <group>
               {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
