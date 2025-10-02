@@ -117,32 +117,52 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
               if (shelfPositions.length > 0) {
-                const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
-                firstCompartmentHeightMm = firstShelfBottomMm;
-                
-                // 선반이 1개이고 상단 근처에 있으며, 첫 번째 칸이 100mm 미만인 경우만 제외
-                if (shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9 && firstCompartmentHeightMm < 100) {
-                  shouldShowDimensions = false;
-                }
-                
-                if (shouldShowDimensions) {
-                  const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
+                // positionMm === 0인 경우 (바닥판) 패널 두께만 표시
+                if (shelfPositions[0] === 0) {
+                  const height = basicThickness; // 바닥판 두께
                   const centerY = (-innerHeight / 2) + height / 2;
-                
-                console.log('🔴 절대위치모드 - 첫 번째 칸:', {
-                  shelfPositions_0: shelfPositions[0],
-                  basicThickness,
-                  basicThickness_mm: basicThickness * 100,
-                  firstShelfBottomMm,
-                  height,
-                  height_mm: height * 100,
-                  표시될값: Math.round(height * 100)
-                });
-                
+                  
+                  console.log('🟢 바닥판 치수:', {
+                    shelfPositions_0: shelfPositions[0],
+                    basicThickness,
+                    basicThickness_mm: basicThickness * 100,
+                    height,
+                    height_mm: height * 100,
+                    표시될값: Math.round(height * 100)
+                  });
+                  
                   compartmentHeights.push({
                     height,
                     centerY
                   });
+                } else {
+                  const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
+                  firstCompartmentHeightMm = firstShelfBottomMm;
+                  
+                  // 선반이 1개이고 상단 근처에 있으며, 첫 번째 칸이 100mm 미만인 경우만 제외
+                  if (shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9 && firstCompartmentHeightMm < 100) {
+                    shouldShowDimensions = false;
+                  }
+                  
+                  if (shouldShowDimensions) {
+                    const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
+                    const centerY = (-innerHeight / 2) + height / 2;
+                  
+                  console.log('🔴 절대위치모드 - 첫 번째 칸:', {
+                    shelfPositions_0: shelfPositions[0],
+                    basicThickness,
+                    basicThickness_mm: basicThickness * 100,
+                    firstShelfBottomMm,
+                    height,
+                    height_mm: height * 100,
+                    표시될값: Math.round(height * 100)
+                  });
+                  
+                    compartmentHeights.push({
+                      height,
+                      centerY
+                    });
+                  }
                 }
               }
               
