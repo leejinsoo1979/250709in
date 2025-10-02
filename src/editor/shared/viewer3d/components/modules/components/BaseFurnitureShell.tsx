@@ -272,15 +272,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
             {moduleData?.id?.includes('4drawer-hanging') ? (
-              // Type4 전용: 하부 섹션 상판 + 상부 섹션 바닥판
+              // Type4 전용: 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
               (() => {
-                const lowerSectionHeight = getSectionHeights()[0];
-                const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
-                const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
+                // 하부 측판이 1000mm, 서랍이 18mm 아래 → 상판도 18mm 아래
+                const drawerSectionHeight = mmToThreeUnits(1000);
+                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2 - basicThickness;
                 
                 return (
                   <>
-                    {/* 하부 섹션 상판 */}
+                    {/* 하부 섹션 상판 (18mm 아래) */}
                     <BoxWithEdges
                       args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
                       position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
