@@ -195,6 +195,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   return;
                 }
                 
+                // Type4 hanging 섹션의 바닥판(shelfPos === 0) 두께는 표시하지 않음
+                const isType4HangingFloor = furnitureId?.includes('4drawer-hanging') && sectionType === 'hanging' && shelfPos === 0;
+                if (isType4HangingFloor) {
+                  return;
+                }
+                
                 // shelfPos === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
                 const shelfY = shelfPos === 0 
                   ? (-innerHeight / 2) + basicThickness / 2
