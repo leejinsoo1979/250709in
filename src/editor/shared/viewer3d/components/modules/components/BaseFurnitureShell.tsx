@@ -302,8 +302,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               })()
             ) : (
               // 기존 로직
-              getSectionHeights().map((sectionHeight: number, index: number) => {
-                if (index >= getSectionHeights().length - 1) return null;
+              (() => {
+                console.log('🟦🟦🟦 BaseFurnitureShell 중간 패널 렌더링:', {
+                  furnitureId: moduleData?.id,
+                  isMultiSection: isMultiSectionFurniture(),
+                  sectionCount: getSectionHeights().length,
+                  sectionHeights: getSectionHeights().map(h => h * 100 + 'mm')
+                });
+                
+                return getSectionHeights().map((sectionHeight: number, index: number) => {
+                  console.log(`🟦 섹션 ${index} 처리:`, {
+                    sectionHeight: sectionHeight * 100 + 'mm',
+                    isLastSection: index >= getSectionHeights().length - 1
+                  });
+                  
+                  if (index >= getSectionHeights().length - 1) return null;
                 
                 let currentYPosition = -height/2 + basicThickness;
                 
@@ -313,6 +326,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 }
                 
                 const dividerY = currentYPosition - basicThickness/2;
+                
+                console.log(`🟦 섹션 ${index} 중간 패널:`, {
+                  dividerY_mm: dividerY * 100,
+                  currentYPosition_mm: currentYPosition * 100
+                });
                 
                 return (
                   <BoxWithEdges
@@ -324,7 +342,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isDragging={isDragging}
                   />
                 );
-              })
+              });
+              })()
             )}
           </>
         )}
