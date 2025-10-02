@@ -264,8 +264,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
-                    // 마지막 섹션: 상부 프레임의 하단면을 가리켜야 함
-                    topY = height/2 - basicThickness;
+                    // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
+                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.length > 1) {
+                      const safetyShelfPos = section.shelfPositions.find(pos => pos !== 0);
+                      if (safetyShelfPos !== undefined) {
+                        topY = sectionBottomY + mmToThreeUnits(safetyShelfPos) - basicThickness / 2;
+                      } else {
+                        topY = height/2 - basicThickness;
+                      }
+                    } else {
+                      // 마지막 섹션: 상부 프레임의 하단면을 가리켜야 함
+                      topY = height/2 - basicThickness;
+                    }
                   } else {
                     // 다음 섹션과의 경계: 중간 구분 패널의 하단면을 가리켜야 함
                     topY = sectionTopY - basicThickness;
