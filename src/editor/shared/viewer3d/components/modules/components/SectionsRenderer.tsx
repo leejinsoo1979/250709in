@@ -297,24 +297,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 return (
                   <>
                     {/* 치수 텍스트 - 수직선 좌측에 표시 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -innerWidth/2 * 0.3 - 0.8 + 0.01, 
-                          centerY - 0.01, 
-                          depth/2 + 0.1 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(actualInternalHeight)}
-                      </Text>
-                    )}
-                    <Text
+                    <DimensionText
+                      value={actualInternalHeight}
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         centerY, 
@@ -322,16 +306,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           ? depth/2 + 0.1
                           : basicThickness + 0.2
                       ]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
-                    renderOrder={999}
-                    depthTest={false}
-                    >
-                      {Math.round(actualInternalHeight)}
-                    </Text>
+                      forceShow={true}
+                    />
                     
                     {/* 수직 연결선 - 왼쪽으로 이동 */}
                     <NativeLine

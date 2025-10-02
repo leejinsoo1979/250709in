@@ -28,6 +28,12 @@ interface DimensionTextProps {
   
   // 강제 표시 (showDimensions 무시)
   forceShow?: boolean;
+  
+  // 회전 (Euler 각도)
+  rotation?: [number, number, number];
+  
+  // 그림자 오프셋 (3D 모드)
+  shadowOffset?: [number, number, number];
 }
 
 /**
@@ -45,7 +51,9 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   sizeMultiplier = 1.0,
   prefix = '',
   showShadow = true,
-  forceShow = false
+  forceShow = false,
+  rotation,
+  shadowOffset = [0.01, -0.01, 0]
 }) => {
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
   const { viewMode } = useSpace3DView();
@@ -84,17 +92,18 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       {/* 3D 모드에서 그림자 효과 */}
       {showShadow && viewMode === '3D' && (
         <Text
-          renderOrder={1000}
+          renderOrder={998}
           depthTest={false}
           position={[
-            position[0] + 0.01,
-            position[1] - 0.01,
-            position[2]
+            position[0] + shadowOffset[0],
+            position[1] + shadowOffset[1],
+            position[2] + shadowOffset[2]
           ]}
           fontSize={fontSize}
           color="rgba(0, 0, 0, 0.3)"
           anchorX={anchorX}
           anchorY={anchorY}
+          rotation={rotation}
         >
           {displayText}
         </Text>
@@ -102,13 +111,14 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       
       {/* 메인 텍스트 */}
       <Text
-        renderOrder={1000}
+        renderOrder={999}
         depthTest={false}
         position={position}
         fontSize={fontSize}
         color={textColor}
         anchorX={anchorX}
         anchorY={anchorY}
+        rotation={rotation}
       >
         {displayText}
       </Text>
