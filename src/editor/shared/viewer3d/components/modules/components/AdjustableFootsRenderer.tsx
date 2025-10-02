@@ -11,6 +11,8 @@ interface AdjustableFootsRendererProps {
   isHighlighted?: boolean;
   isFloating?: boolean; // 띄움배치 여부
   baseHeight?: number; // 받침대 높이 (mm)
+  viewMode?: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top';
 }
 
 /**
@@ -28,9 +30,18 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   isHighlighted = false,
   isFloating = false,
   baseHeight = 65, // 기본값 65mm
+  viewMode = '3D',
+  view2DDirection = 'front',
 }) => {
   // 띄움배치일 때는 발통 렌더링 안 함
   if (isFloating) {
+    return null;
+  }
+  
+  // 2D 탑뷰일 때는 발통 렌더링 안 함
+  console.log('🦶🦶🦶 조절발 렌더링 체크:', { viewMode, view2DDirection, shouldHide: viewMode === '2D' && view2DDirection === 'top' });
+  if (viewMode === '2D' && view2DDirection === 'top') {
+    console.log('🦶❌ 2D 탑뷰 - 조절발 숨김');
     return null;
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
