@@ -335,18 +335,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 항상 공간의 정중앙(0,0,0)과 계산된 줌 사용
+      // 항상 공간의 정중앙(0,0,0)과 고정된 거리/줌 사용
       const spaceHeight = spaceInfo?.height || 2400;
-      const spaceWidth = spaceInfo?.width || 3000;
-      const spaceDepth = spaceInfo?.depth || 600;
       
       // 타겟은 항상 공간의 정중앙 (0, centerY, 0)
       const centerY = spaceHeight / 2000; // mm를 Three.js 단위로 변환
       const target: [number, number, number] = [0, centerY, 0];
       
-      // 거리와 줌 계산
-      const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
-      const initialZoom = 1200 / distance;
+      // 2D 모드는 고정 거리와 줌 사용
+      const distance = 5;
+      const initialZoom = 1.0;
       
       console.log('📸 2D 카메라 정중앙 리셋', {
         target,
