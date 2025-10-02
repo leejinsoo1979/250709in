@@ -393,7 +393,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   // 발통 심볼을 그리는 헬퍼 함수
   const renderFootstoolSymbol = (x: number, y: number, z: number, rotation: [number, number, number] = [0, 0, 0]) => {
-    const symbolSize = mmToThreeUnits(30); // 30mm 크기
+    const symbolSize = mmToThreeUnits(100); // 100mm 크기로 확대
     const circleRadius = symbolSize / 4;
     const arcRadius = symbolSize / 3;
     
@@ -2302,7 +2302,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           <group key={`footstool-front-${module.id || index}`}>
             {renderFootstoolSymbol(
               moduleX, 
-              -mmToThreeUnits(50), // 바닥에서 50mm 위
+              mmToThreeUnits(100), // 바닥에서 100mm 위
               0.01
             )}
           </group>
@@ -3035,7 +3035,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <group key={`footstool-left-${module.id || index}`}>
               {renderFootstoolSymbol(
                 leftDimensionX + mmToThreeUnits(100), 
-                -mmToThreeUnits(50), 
+                mmToThreeUnits(100), 
                 spaceZOffset + moduleZ,
                 [0, -Math.PI / 2, 0] // Y축 -90도 회전 (좌측뷰)
               )}
@@ -3521,7 +3521,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <group key={`footstool-right-${module.id || index}`}>
               {renderFootstoolSymbol(
                 rightDimensionX - mmToThreeUnits(100), 
-                -mmToThreeUnits(50), 
+                mmToThreeUnits(100), 
                 spaceZOffset + moduleZ,
                 [0, Math.PI / 2, 0] // Y축 +90도 회전 (우측뷰)
               )}
