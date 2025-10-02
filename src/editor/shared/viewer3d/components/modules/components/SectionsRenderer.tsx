@@ -198,10 +198,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외, 2단 옷장 상부섹션도 제외 */}
+          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외, 2단 옷장 전체 제외 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
            section.type === 'hanging' && 
-           !(furnitureId?.includes('2hanging') && allSections.length === 2 && index === 1) && (
+           !(furnitureId?.includes('2hanging') && allSections.length === 2) && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
@@ -224,10 +224,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 첫 번째 섹션: 하부 프레임 상단
                     bottomY = -height/2 + basicThickness;
                   } else if (isType4HangingSection) {
-                    // Type4 상부 섹션: 중간 패널 2개 위 (바닥판 상단)
-                    // 하부섹션 바닥판(18) + 내경(964) + 상판(18) + 상부 바닥판(18) = 1018
-                    // 서랍이 18mm 아래로 내려갔으므로 상판도 18mm 아래
-                    bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
+                    // Type4 상부 섹션: 하부 1000mm 구간 + 중간 패널을 기준으로 계산
+                    // 하부섹션 상판과 상부섹션 바닥판이 겹치는 지점이 정확한 기준 (18mm 추가 불필요)
+                    bottomY = -height/2 + mmToThreeUnits(1000);
                   } else {
                     // 일반 hanging 섹션: 바닥판 상단부터
                     bottomY = sectionBottomY + basicThickness;
@@ -355,8 +354,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             </group>
           )}
           
-          {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
+          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - Type4(4drawer-hanging)는 제외 */}
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && !(furnitureId?.includes('4drawer-hanging')) && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
