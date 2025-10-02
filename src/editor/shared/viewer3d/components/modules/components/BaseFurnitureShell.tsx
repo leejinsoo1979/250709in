@@ -193,8 +193,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               // 하부 측판: 바닥부터 시작
               const lowerPanelY = -height/2 + drawerSectionHeight/2;
               
-              // 상부 측판: 중간 구분 패널 위에서 시작 (18mm 아래로)
-              const upperPanelY = -height/2 + drawerSectionHeight + basicThickness + hangingSectionHeight/2;
+              // 상부 측판: 중간 구분 패널부터 시작 (높이만 줄임)
+              const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
               
               return (
                 <>
