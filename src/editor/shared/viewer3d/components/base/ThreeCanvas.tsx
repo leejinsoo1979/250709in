@@ -339,20 +339,24 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const spaceHeight = spaceInfo?.height || 2400;
       const centerY = spaceHeight / 2000;
       
-      // 초기 저장값 사용, 없으면 기본값
-      const target = initialCameraSetup.current.target2D || [0, centerY, 0];
-      const position = initialCameraSetup.current.position2D || [0, centerY, 5];
+      // Vector3 객체를 배열로 변환
+      const savedTarget = initialCameraSetup.current.target2D;
+      const savedPosition = initialCameraSetup.current.position2D;
+      
+      const target: [number, number, number] = savedTarget 
+        ? [savedTarget.x, savedTarget.y, savedTarget.z]
+        : [0, centerY, 0];
+      
+      const position: [number, number, number] = savedPosition
+        ? [savedPosition.x, savedPosition.y, savedPosition.z]
+        : [0, centerY, 5];
+      
       const zoom = initialCameraSetup.current.zoom2D || 1.0;
       
       console.log('📸 2D 카메라 정중앙 리셋', {
         target,
         position,
-        zoom,
-        saved: {
-          target2D: initialCameraSetup.current.target2D,
-          position2D: initialCameraSetup.current.position2D,
-          zoom2D: initialCameraSetup.current.zoom2D
-        }
+        zoom
       });
       
       controls.target.set(...target);
