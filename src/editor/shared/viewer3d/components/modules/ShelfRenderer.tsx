@@ -86,9 +86,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       <group position={[0, yOffset, 0]}>
         {shelfPositions.map((positionMm, i) => {
           // 섹션 하단 기준 위치를 Three.js 좌표로 변환
-          // positionMm이 0이면 바닥판(섹션 하단에서 9mm 위로)
+          // positionMm이 0이면 바닥판(섹션 하단에 배치)
           const relativeYPosition = positionMm === 0 
-            ? (-innerHeight / 2) + basicThickness / 2 + mmToThreeUnits(9)  // 바닥판: 섹션 하단 + 9mm
+            ? (-innerHeight / 2) + basicThickness / 2  // 바닥판: 섹션 하단
             : (-innerHeight / 2) + mmToThreeUnits(positionMm);
           
           return (
@@ -186,9 +186,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                // positionMm === 0인 경우 바닥판이 9mm 위에 있음
-                const actualShelfPos = shelfPos === 0 ? 9 : shelfPos;
-                const shelfY = (-innerHeight / 2) + mmToThreeUnits(actualShelfPos);
+                const shelfY = (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
