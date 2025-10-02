@@ -1617,7 +1617,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 빛나는 윤곽선 효과 */}
+            {/* 발광 효과를 위한 외부 메쉬 */}
+            <mesh
+              position={[0, 0, 0]}
+              renderOrder={998}
+            >
+              <boxGeometry args={[width + highlightPadding * 2, height + highlightPadding * 2, depth + highlightPadding * 2]} />
+              <meshBasicMaterial
+                color={selectionHighlightColor}
+                transparent
+                opacity={0.2}
+                depthWrite={false}
+                side={THREE.BackSide}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+            
+            {/* 메인 하이라이트 박스 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1628,44 +1644,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshBasicMaterial
                 color={selectionHighlightColor}
                 transparent
-                opacity={0.08}
+                opacity={0.1}
                 depthWrite={false}
                 depthTest={false}
                 toneMapped={false}
               />
-            </mesh>
-            
-            {/* 외곽 빛나는 윤곽선 (더 두껍게) */}
-            <lineSegments>
-              <edgesGeometry args={[new THREE.BoxGeometry(width + highlightPadding * 1.5, height + highlightPadding * 1.5, depth + highlightPadding * 1.5)]} />
-              <lineBasicMaterial 
+              {/* 윤곽선 */}
+              <Edges
                 color={selectionHighlightColor}
+                scale={1.001}
                 linewidth={3}
-                transparent
-                opacity={0.9}
-              />
-            </lineSegments>
-            
-            {/* 내부 윤곽선 (기본) */}
-            <Edges
-              color={selectionHighlightColor}
-              scale={1.002}
-              linewidth={2}
-            />
-            
-            {/* 발광 효과를 위한 추가 메쉬 */}
-            <mesh
-              position={[0, 0, 0]}
-              renderOrder={998}
-            >
-              <boxGeometry args={[width + highlightPadding * 2, height + highlightPadding * 2, depth + highlightPadding * 2]} />
-              <meshBasicMaterial
-                color={selectionHighlightColor}
-                transparent
-                opacity={0.15}
-                depthWrite={false}
-                side={THREE.BackSide}
-                blending={THREE.AdditiveBlending}
               />
             </mesh>
           </>
