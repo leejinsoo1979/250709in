@@ -71,10 +71,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {(() => {
-            // 먼저 하부 섹션 상판 Y 위치 계산 (모든 섹션에서 사용)
+            // 먼저 하부 섹션 상판 Y 위치 계산 (9mm 위로 올림)
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
-            const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2 - mmToThreeUnits(9);
+            const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
@@ -112,22 +112,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                     </>
                   ) : (
-                    // 상부 섹션: 바닥판(18mm) 위에서 시작, 18mm 줄어든 높이
+                    // 상부 섹션: 측판을 18mm 아래로 확장 (원래 높이 유지)
                     <>
-                      {/* 왼쪽 측면 판재 - 바닥판 위에서 시작 */}
+                      {/* 왼쪽 측면 판재 - 18mm 아래로 확장 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
-                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
+                        args={[basicThickness, sectionHeight, depth]}
+                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9), 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                       />
                       
-                      {/* 오른쪽 측면 판재 - 바닥판 위에서 시작 */}
+                      {/* 오른쪽 측면 판재 - 18mm 아래로 확장 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
-                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
+                        args={[basicThickness, sectionHeight, depth]}
+                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9), 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -136,7 +136,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
                   
-                  {/* 중간 구분 패널 (하부 섹션 상판) - 9mm 내림 */}
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 원래 위치 */}
                   {index === 0 && (
                     <BoxWithEdges
                       args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
