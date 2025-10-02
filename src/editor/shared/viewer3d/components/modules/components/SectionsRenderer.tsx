@@ -211,22 +211,17 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               (section.type === 'hanging' || section.type === 'drawer') && 
                               !(is2HangingFurniture && hasTwoSections && index === 1);
             
-            if (is2HangingFurniture && hasTwoSections) {
-              console.log(`🔍🔍🔍 2hanging 섹션 ${index} 치수 표시:`, shouldShow ? '✅ 표시함' : '❌ 숨김', {
-                furnitureId,
-                index,
-                sectionType: section.type,
-                allSectionsLength: allSections.length,
-                shouldShow,
-                hideSectionDimensions,
-                '조건체크': {
-                  'is2HangingFurniture': is2HangingFurniture,
-                  'hasTwoSections': hasTwoSections,
-                  'index === 0': index === 0,
-                  '최종조건': !(is2HangingFurniture && hasTwoSections && index === 0)
-                }
-              });
-            }
+            // 2hanging 디버그
+            console.log(`🚨🚨🚨 섹션 치수 체크:`, {
+              furnitureId,
+              index,
+              sectionType: section.type,
+              is2HangingFurniture,
+              hasTwoSections,
+              'index === 1': index === 1,
+              '숨김조건': is2HangingFurniture && hasTwoSections && index === 1,
+              shouldShow
+            });
             
             return shouldShow && (
             <group>
