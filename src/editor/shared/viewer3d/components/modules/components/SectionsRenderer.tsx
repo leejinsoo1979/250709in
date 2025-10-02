@@ -296,7 +296,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           ? depth/2 + 0.1
                           : depth/2 + 1.0
                       ]}
-                      rotation={[0, 0, Math.PI / 2]}
+                      rotation={[0, 0, Math.PI]}
                       forceShow={true}
                     />
                     
