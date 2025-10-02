@@ -27,7 +27,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   
   // 원통 크기
   const cylinderRadius = mmToThreeUnits(56) / 2; // 지름 56mm
-  const cylinderHeight = mmToThreeUnits(100); // 발통 높이 (임의 설정)
+  const cylinderHeight = mmToThreeUnits(65); // 발통 높이 (받침대 높이 65mm와 동일)
   
   // 기본 재질
   const defaultMaterial = new THREE.MeshStandardMaterial({
