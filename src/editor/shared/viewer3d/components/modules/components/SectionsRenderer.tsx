@@ -223,8 +223,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {sectionContent}
           
           {/* 섹션 내경 치수 표시 */}
+          {/* Type4의 하부섹션(drawer)은 내경 치수 표시 안함 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           (section.type === 'drawer' || section.type === 'hanging') && (
+           (section.type === 'drawer' || section.type === 'hanging') && 
+           !(furnitureId?.includes('4drawer-hanging') && section.type === 'drawer') && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
