@@ -75,6 +75,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         renderMode={renderMode}
+                        furnitureId={moduleData.id}
                       />
                     </group>
                     
@@ -84,6 +85,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                       position={[0, 0, baseFurniture.shelfZOffset]}
                       material={baseFurniture.material}
                       renderMode={renderMode}
+                        furnitureId={moduleData.id}
                     />
                     
                     {/* 오른쪽 섹션 - 오른쪽 구획의 중앙에서 오른쪽으로 basicThickness/2만큼 이동 */}
@@ -99,6 +101,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         renderMode={renderMode}
+                        furnitureId={moduleData.id}
                       />
                     </group>
                   </>
@@ -115,6 +118,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     material={baseFurniture.material}
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     renderMode={renderMode}
+                        furnitureId={moduleData.id}
                   />
                 )}
               </>
@@ -135,6 +139,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}
               renderMode={renderMode}
+                        furnitureId={moduleData.id}
             />
           )}
         </>

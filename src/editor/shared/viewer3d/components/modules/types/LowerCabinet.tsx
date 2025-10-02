@@ -110,6 +110,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         renderMode={renderMode}
+                        furnitureId={moduleData.id}
                       />
                     </group>
                     
@@ -134,6 +135,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         renderMode={renderMode}
+                        furnitureId={moduleData.id}
                       />
                     </group>
                   </>
@@ -148,6 +150,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     basicThickness={baseFurniture.basicThickness}
                     shelfZOffset={baseFurniture.shelfZOffset}
                     material={baseFurniture.material}
+                    furnitureId={moduleData.id}
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     renderMode={renderMode}
                   />

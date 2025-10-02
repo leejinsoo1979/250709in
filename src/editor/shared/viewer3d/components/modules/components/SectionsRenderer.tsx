@@ -68,6 +68,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   
+  // 상하부장 여부 확인 (upper-cabinet, lower-cabinet 패턴)
+  const isUpperLowerCabinet = furnitureId?.includes('upper-cabinet') || furnitureId?.includes('lower-cabinet');
+  
   // sections 기반 내부 구조 렌더링
   const renderSections = () => {
     const { sections } = modelConfig;
@@ -296,7 +299,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           ? depth/2 + 0.1
                           : depth/2 + 1.0
                       ]}
-                      rotation={[0, 0, Math.PI / 2]}
+                      rotation={[0, 0, isUpperLowerCabinet ? (Math.PI / 2 + Math.PI) : (Math.PI / 2)]}
                       forceShow={true}
                     />
                     
