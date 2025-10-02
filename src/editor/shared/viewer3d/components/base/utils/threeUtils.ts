@@ -107,8 +107,8 @@ export const calculateCameraPosition = (
     // 2D 모드: 3D와 동일한 동적 거리 계산 사용
     const depth = spaceDepth || 600; // 기본 깊이 600mm
     const distance = calculateOptimalDistance(spaceWidth, spaceHeight, depth, placedModulesCount || 0);
-    const yCenter = mmToThreeUnits(spaceHeight * 0.5);
-    return [0, yCenter, distance];
+    // 카메라는 바닥(y=0)을 보도록 설정
+    return [0, 0, distance];
   }
   
   // 3D 모드에서는 기본 위치 사용
@@ -121,7 +121,6 @@ export const calculateCameraPosition = (
  * @returns 카메라 타겟 위치
  */
 export const calculateCameraTarget = (spaceHeight: number): [number, number, number] => {
-  // 공간 높이의 절반 위치를 타겟으로 설정 (가구 유무와 관계없이 일정)
-  const yCenter = mmToThreeUnits(spaceHeight * 0.5);
-  return [0, yCenter, 0];
+  // 공간의 바닥을 기준점으로 설정 (y=0)
+  return [0, 0, 0];
 }; 
