@@ -976,7 +976,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         ) : (
                           `${panel.width || panel.height || panel.depth}mm`
                         )}
-                        {panel.thickness && !panel.diameter && ` (T:${panel.thickness})`}
+                        {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
                         {panel.material && ` [${panel.material}]`}
                       </span>
                     </div>

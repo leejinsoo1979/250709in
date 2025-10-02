@@ -119,16 +119,17 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
               height={baseFurniture.height}
               innerWidth={baseFurniture.innerWidth}
               depth={baseFurniture.depth}
-              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-              basicThickness={baseFurniture.basicThickness}
-              shelfZOffset={baseFurniture.shelfZOffset}
-              material={baseFurniture.material}
-              calculateSectionHeight={baseFurniture.calculateSectionHeight}
-              renderMode={renderMode}
-              furnitureId={moduleData.id}
-              isHighlighted={isHighlighted}
-            />
-          )}
+          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+          basicThickness={baseFurniture.basicThickness}
+          shelfZOffset={baseFurniture.shelfZOffset}
+          material={baseFurniture.material}
+          calculateSectionHeight={baseFurniture.calculateSectionHeight}
+          mmToThreeUnits={baseFurniture.mmToThreeUnits}
+          renderMode={renderMode}
+          furnitureId={moduleData.id}
+          isHighlighted={isHighlighted}
+        />
+      )}
         </BaseFurnitureShell>
       )}
       

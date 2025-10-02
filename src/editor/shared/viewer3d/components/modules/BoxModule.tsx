@@ -466,6 +466,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               shelfZOffset={baseFurniture.shelfZOffset}
               material={baseFurniture.material}
               calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode || useSpace3DView().renderMode}
               furnitureId={furnitureId}
             />

@@ -71,6 +71,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     
     
     // 섹션 사이 구분판 (안전선반/칸막이) - 상부장과 하부장 사이
+    const shouldHideUpperFloorThickness = moduleData.id.includes('dual-4drawer-hanging');
+
     if (sections.length > 1 && moduleData.id.includes('2hanging')) {
       // 2단 옷장의 경우 안전선반으로 표시
       panels.common.push({
@@ -87,7 +89,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
         thickness: basicThickness,
-        material: 'PB'  // 기본 재질
+        material: 'PB',  // 기본 재질
+        showThickness: shouldHideUpperFloorThickness ? false : undefined
       });
     }
     

@@ -7,8 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
 import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
-import { Text } from '@react-three/drei';
-import NativeLine from '../../elements/NativeLine';
+import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 
@@ -160,7 +159,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { theme } = useTheme(); // 테마 정보 가져오기
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
-  const dimensionColor = useDimensionColor();
+  const { dimensionColor, baseFontSize } = useDimensionColor();
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
@@ -332,54 +331,49 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 height/2 - basicThickness/2 - 0.01,
                 adjustedDepthForShelves/2 + 0.1 - 0.01
               ]}
-              fontSize={0.12}
+              fontSize={baseFontSize}
               color="rgba(0, 0, 0, 0.3)"
               anchorX="center"
               anchorY="middle"
               rotation={[0, 0, Math.PI / 2 + Math.PI]}
               renderOrder={998}
-              depthTest={false}
             >
               {Math.round(basicThickness * 100)}
             </Text>
           )}
-          {showDimensionsText && (
-            <Text
-              position={[
-                viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                height/2 - basicThickness/2,
-                viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-              ]}
-              fontSize={0.12}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[0, 0, Math.PI / 2 + Math.PI]}
-              renderOrder={999}
-              depthTest={false}
-            >
-              {Math.round(basicThickness * 100)}
-            </Text>
-          )}
+          <Text
+            position={[
+              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
+              height/2 - basicThickness/2,
+              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+            ]}
+            fontSize={baseFontSize}
+            color={dimensionColor}
+            anchorX="center"
+            anchorY="middle"
+            rotation={[0, 0, Math.PI / 2 + Math.PI]}
+            renderOrder={999}
+          >
+            {Math.round(basicThickness * 100)}
+          </Text>
           
           {/* 상판 두께 수직선 */}
-          <NativeLine
+          <Line
             points={[
               [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
               [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
             ]}
             color={dimensionColor}
             lineWidth={1}
-            renderOrder={999}
           />
           {/* 수직선 양끝 점 */}
           <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
             <sphereGeometry args={[0.03, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+            <meshBasicMaterial color={dimensionColor} />
           </mesh>
           <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
             <sphereGeometry args={[0.03, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+            <meshBasicMaterial color={dimensionColor} />
           </mesh>
         </group>
       )}

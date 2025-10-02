@@ -245,7 +245,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
               polygonOffset={viewMode === '3D'}
               polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
               polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-              linewidth={isHighlighted ? 3 : (viewMode === '2D' ? 2 : 1)} 
+              linewidth={isHighlighted ? 3 : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)} 
             />
           </lineSegments>
         </>

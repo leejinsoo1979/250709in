@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, Line } from '@react-three/drei';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { useUIStore } from '@/store/uiStore';
-import NativeLine from '../../elements/NativeLine';
 
 
 /**
@@ -250,23 +249,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           )}
           
           {/* 상판 두께 수직선 */}
-          <NativeLine
+          <Line
             points={[
               [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
               [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
             ]}
             color={dimensionColor}
             lineWidth={1}
-            renderOrder={999}
           />
           {/* 수직선 양끝 점 */}
           <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
             <sphereGeometry args={[0.03, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+            <meshBasicMaterial color={dimensionColor} />
           </mesh>
           <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
             <sphereGeometry args={[0.03, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+            <meshBasicMaterial color={dimensionColor} />
           </mesh>
         </group>
       )}

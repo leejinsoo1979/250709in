@@ -429,7 +429,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
                         ) : (
                           `${panel.width || panel.height || panel.depth}mm`
                         )}
-                        {panel.thickness && !panel.diameter && ` (T:${panel.thickness})`}
+                        {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
                       </div>
                       <div className={styles.cell}>{panel.material || '-'}</div>
                     </div>
