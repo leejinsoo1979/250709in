@@ -159,7 +159,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
         
         {/* CAD 기호 (삼각형) 및 서랍 깊이 표시 */}
-        {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
+        {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
           <group>
             {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시, 2D 모드에서만 */}
             {isTopDrawer && viewMode === '2D' && (
