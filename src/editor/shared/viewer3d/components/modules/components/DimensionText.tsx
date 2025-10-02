@@ -1,0 +1,119 @@
+import React from 'react';
+import { Text } from '@react-three/drei';
+import { useUIStore } from '@/store/uiStore';
+import { useSpace3DView } from '../../../context/useSpace3DView';
+
+interface DimensionTextProps {
+  // 치수 값
+  value: number;
+  
+  // 위치
+  position: [number, number, number];
+  
+  // 텍스트 앵커
+  anchorX?: 'left' | 'center' | 'right';
+  anchorY?: 'top' | 'middle' | 'bottom';
+  
+  // 색상 (옵션, 기본값은 테마 색상)
+  color?: string;
+  
+  // 폰트 크기 배율 (옵션, 기본값 1.0)
+  sizeMultiplier?: number;
+  
+  // 접두사 (예: "D" for depth)
+  prefix?: string;
+  
+  // 그림자 효과 (3D 모드에서만)
+  showShadow?: boolean;
+  
+  // 강제 표시 (showDimensions 무시)
+  forceShow?: boolean;
+}
+
+/**
+ * DimensionText 통합 컴포넌트
+ * 
+ * 모든 치수 텍스트를 일관되게 렌더링합니다.
+ * showDimensions와 showDimensionsText 조건을 중앙에서 관리합니다.
+ */
+const DimensionText: React.FC<DimensionTextProps> = ({
+  value,
+  position,
+  anchorX = 'center',
+  anchorY = 'middle',
+  color,
+  sizeMultiplier = 1.0,
+  prefix = '',
+  showShadow = true,
+  forceShow = false
+}) => {
+  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
+  const { viewMode } = useSpace3DView();
+  
+  // 치수 표시 조건 체크 - 중앙 집중식
+  if (!forceShow && (!showDimensions || !showDimensionsText)) {
+    return null;
+  }
+  
+  // 2D 탑뷰에서는 숨김
+  if (viewMode === '2D' && view2DDirection === 'top') {
+    return null;
+  }
+  
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
+    }
+    return '#10b981';
+  };
+  
+  // 색상 결정
+  const textColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : getThemeColor()));
+  
+  // 폰트 크기
+  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
+  const fontSize = baseFontSize * sizeMultiplier;
+  
+  // 텍스트 내용
+  const displayText = `${prefix}${Math.round(value)}`;
+  
+  return (
+    <group>
+      {/* 3D 모드에서 그림자 효과 */}
+      {showShadow && viewMode === '3D' && (
+        <Text
+          renderOrder={1000}
+          depthTest={false}
+          position={[
+            position[0] + 0.01,
+            position[1] - 0.01,
+            position[2]
+          ]}
+          fontSize={fontSize}
+          color="rgba(0, 0, 0, 0.3)"
+          anchorX={anchorX}
+          anchorY={anchorY}
+        >
+          {displayText}
+        </Text>
+      )}
+      
+      {/* 메인 텍스트 */}
+      <Text
+        renderOrder={1000}
+        depthTest={false}
+        position={position}
+        fontSize={fontSize}
+        color={textColor}
+        anchorX={anchorX}
+        anchorY={anchorY}
+      >
+        {displayText}
+      </Text>
+    </group>
+  );
+};
+
+export default DimensionText;

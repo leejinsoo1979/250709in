@@ -6,6 +6,7 @@ import { Text } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
+import DimensionText from './components/DimensionText';
 
 
 interface DrawerRendererProps {
@@ -20,6 +21,7 @@ interface DrawerRendererProps {
   gapHeight?: number; // 서랍 간 공백 높이 (23.6mm)
   material: THREE.Material; // 가구 모듈과 동일한 재질 사용
   renderMode: 'solid' | 'wireframe'; // 렌더 모드 추가
+  isHighlighted?: boolean; // 가구 강조 여부
 }
 
 /**
@@ -44,20 +46,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   gapHeight = 0,
   material,
   renderMode,
+  isHighlighted = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { viewMode } = useSpace3DView();
-  
-  // 치수 표시용 색상 설정
-  const getThemeColor = () => {
-    const computedStyle = getComputedStyle(document.documentElement);
-    return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
-  };
-  
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : '#4CAF50';
-  const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
   
   if (drawerCount <= 0) {
     return null;
@@ -114,6 +108,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(15) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* 앞면 (얇은 판) - 손잡이 판보다 30mm 작게, 폭은 좌우 38mm씩 총 76mm 줄임 */}
@@ -122,6 +117,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - basicThickness/2]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* 뒷면 - 앞면 판과 높이 맞춤, 폭은 좌우 38mm씩 총 76mm 줄임 */}
@@ -130,6 +126,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + basicThickness/2]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* 왼쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
@@ -138,6 +135,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX - drawerWidth/2 + basicThickness/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* 오른쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
@@ -146,6 +144,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX + drawerWidth/2 - basicThickness/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* === 손잡이 판 (앞쪽, 20mm 두께) === */}
@@ -154,6 +153,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           position={[centerX, centerY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
         
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
@@ -176,45 +176,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               />
             )}
             
-            {/* 서랍 깊이 표시 - 서랍 전면에 표시 */}
-            <group>
-              {/* 3D 모드일 때 그림자 효과 */}
-              {viewMode === '3D' && (
-                <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                  position={[
-                    centerX + 0.01,
-                    centerY - 0.01,
-                    viewMode === '3D' ? depth/2 + 0.1 - 0.01 : centerZ + actualDrawerDepth/2 + 0.1
-                  ]}
-                  fontSize={baseFontSize}
-                  color="rgba(0, 0, 0, 0.3)"
-                  anchorX="center"
-                  anchorY="middle"
-                  renderOrder={998}
-                >
-                  D{Math.round((actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100)}
-                </Text>
-              )}
-              <Text
-                        renderOrder={1000}
-                        depthTest={false}
-                position={[
-                  centerX,
-                  centerY,
-                  viewMode === '3D' ? depth/2 + 0.1 : centerZ + actualDrawerDepth/2 + 0.1
-                ]}
-                fontSize={baseFontSize}
-                color="#008B8B"
-                anchorX="center"
-                anchorY="middle"
-                renderOrder={999}
-                depthTest={false}
-              >
-                D{Math.round((actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100)}
-              </Text>
-            </group>
+            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 */}
+            <DimensionText
+              value={(actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100}
+              position={[
+                centerX,
+                centerY,
+                viewMode === '3D' ? depth/2 + 0.1 : centerZ + actualDrawerDepth/2 + 0.1
+              ]}
+              prefix="D"
+              color="#008B8B"
+              forceShow={true}
+            />
           </group>
         )}
       </group>
