@@ -199,11 +199,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           />
           {/* 수직선 양끝 점 */}
           <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-            <sphereGeometry args={[0.03, 8, 8]} />
+            <sphereGeometry args={[0.02, 8, 8]} />
             <meshBasicMaterial color={dimensionColor} />
           </mesh>
           <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-            <sphereGeometry args={[0.03, 8, 8]} />
+            <sphereGeometry args={[0.02, 8, 8]} />
             <meshBasicMaterial color={dimensionColor} />
           </mesh>
         </group>
