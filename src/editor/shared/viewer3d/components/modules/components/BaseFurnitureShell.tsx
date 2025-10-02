@@ -321,7 +321,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       />
       
       {/* Type4 상단 상판 두께 치수 표시 */}
-      {moduleData?.id?.includes('4drawer-hanging') && showDimensions && showDimensionsText && (
+      {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showDimensions && showDimensionsText && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
