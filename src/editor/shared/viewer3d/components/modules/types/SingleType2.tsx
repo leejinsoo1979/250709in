@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../shared';
+import { Text, Line } from '@react-three/drei';
+import { useDimensionColor } from '../hooks/useDimensionColor';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
@@ -158,7 +160,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
-  const { view2DDirection, indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions } = useUIStore();
+  const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
   return (
@@ -303,6 +306,64 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
+      
+      {/* 상단 상판 두께 치수 표시 */}
+      {showDimensions && (
+        <group>
+          {/* 상판 두께 텍스트 */}
+          {viewMode === '3D' && (
+            <Text
+              position={[
+                -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                height/2 - basicThickness/2 - 0.01,
+                adjustedDepthForShelves/2 + 0.1 - 0.01
+              ]}
+              fontSize={baseFontSize}
+              color="rgba(0, 0, 0, 0.3)"
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={998}
+            >
+              {Math.round(basicThickness * 100)}
+            </Text>
+          )}
+          <Text
+            position={[
+              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
+              height/2 - basicThickness/2,
+              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+            ]}
+            fontSize={baseFontSize}
+            color={dimensionColor}
+            anchorX="center"
+            anchorY="middle"
+            rotation={[0, 0, Math.PI / 2]}
+            renderOrder={999}
+          >
+            {Math.round(basicThickness * 100)}
+          </Text>
+          
+          {/* 상판 두께 수직선 */}
+          <Line
+            points={[
+              [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+              [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+            ]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          {/* 수직선 양끝 점 */}
+          <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+            <sphereGeometry args={[0.03, 8, 8]} />
+            <meshBasicMaterial color={dimensionColor} />
+          </mesh>
+          <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+            <sphereGeometry args={[0.03, 8, 8]} />
+            <meshBasicMaterial color={dimensionColor} />
+          </mesh>
+        </group>
+      )}
       
       {/* 하단 판재 */}
       <BoxWithEdges
