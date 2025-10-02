@@ -160,7 +160,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
-  const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions } = useUIStore();
+  const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions, showDimensionsText } = useUIStore();
   const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
