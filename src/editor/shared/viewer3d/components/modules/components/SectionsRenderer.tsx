@@ -212,13 +212,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               !(is2HangingFurniture && hasTwoSections && index === 0);
             
             if (is2HangingFurniture && hasTwoSections) {
-              console.log(`🔍 2hanging 치수 표시 체크:`, {
+              console.log(`🔍🔍🔍 2hanging 섹션 ${index} 치수 표시:`, shouldShow ? '✅ 표시함' : '❌ 숨김', {
                 furnitureId,
                 index,
                 sectionType: section.type,
                 allSectionsLength: allSections.length,
                 shouldShow,
-                hideSectionDimensions
+                hideSectionDimensions,
+                '조건체크': {
+                  'is2HangingFurniture': is2HangingFurniture,
+                  'hasTwoSections': hasTwoSections,
+                  'index === 0': index === 0,
+                  '최종조건': !(is2HangingFurniture && hasTwoSections && index === 0)
+                }
               });
             }
             
