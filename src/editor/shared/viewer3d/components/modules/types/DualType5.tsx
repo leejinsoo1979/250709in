@@ -6,6 +6,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
 import DoorModule from '../DoorModule';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
@@ -963,6 +964,17 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       )}
     </>
   );
+      
+      {/* 조절발통 (네 모서리) */}
+      <AdjustableFootsRenderer
+        width={width}
+        depth={depth}
+        yOffset={-height / 2}
+        renderMode={renderMode}
+        isHighlighted={false}
+        isFloating={false}
+        baseHeight={spaceInfo?.baseConfig?.height || 65}
+      />
 };
 
 export default DualType5; 

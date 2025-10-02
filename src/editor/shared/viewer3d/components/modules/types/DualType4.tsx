@@ -5,6 +5,7 @@ import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } 
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { useUIStore } from '@/store/uiStore';
 
 
@@ -207,6 +208,17 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       )}
     </group>
   );
+      
+      {/* 조절발통 (네 모서리) */}
+      <AdjustableFootsRenderer
+        width={width}
+        depth={depth}
+        yOffset={-height / 2}
+        renderMode={renderMode}
+        isHighlighted={false}
+        isFloating={false}
+        baseHeight={spaceInfo?.baseConfig?.height || 65}
+      />
 };
 
 export default DualType4; 
