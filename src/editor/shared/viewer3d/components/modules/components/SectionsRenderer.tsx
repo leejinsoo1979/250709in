@@ -241,9 +241,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 */}
+          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           (section.type === 'drawer' || section.type === 'hanging') && (
+           section.type === 'hanging' && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
@@ -251,6 +251,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 let actualInternalHeight;
                 
                 // 섹션 타입별로 가이드선 위치 계산
+                const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
+
                 if (section.type === 'hanging' || section.type === 'drawer') {
                   // 섹션의 절대 위치 계산
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
@@ -294,7 +296,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
-                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)) {
+                    if (hasSafetyShelf) {
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
                       const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                       if (safetyShelfPositionMm !== undefined) {
@@ -458,7 +460,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           
           
           {/* 마지막 섹션의 상단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
+            section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)
+          ) && (
             <group>
               {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
