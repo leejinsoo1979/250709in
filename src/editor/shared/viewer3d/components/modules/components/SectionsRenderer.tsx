@@ -279,11 +279,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       topY = height/2 - basicThickness;
                     }
                   } else {
-                    // 다음 섹션과의 경계: 섹션 내부 상단 (섹션 높이에 이미 상하판 포함)
-                    // 섹션 높이 = 상판 + 내경 + 바닥판이므로, 내경 = 섹션 높이 - 상판 - 바닥판
-                    // topY = sectionTopY (섹션 상단 = 내경 상단, 상판은 그 위)
-                    // bottomY = 바닥판 상단 (이미 계산됨)
-                    topY = sectionTopY - basicThickness * 2;
+                    // 다음 섹션과의 경계: 상판 하단
+                    // 섹션 높이는 내경만 포함 (상하판 제외)
+                    // topY = sectionTopY - basicThickness (섹션 상단 - 상판 두께)
+                    topY = sectionTopY - basicThickness;
                     
                     // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
                     if (section.isTopFinishPanel) {
