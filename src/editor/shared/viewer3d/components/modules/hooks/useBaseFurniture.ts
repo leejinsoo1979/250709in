@@ -195,8 +195,8 @@ export const useBaseFurniture = (
                         (isDragging ? 0.6 : 
                         (isEditMode ? 0.3 : 1.0));
       
-      // 은선모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
-      material.depthWrite = renderMode !== 'wireframe';
+      // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
+      material.depthWrite = renderMode !== 'wireframe' && !(viewMode === '2D' && renderMode === 'solid');
       
       material.needsUpdate = true;
       
