@@ -218,13 +218,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 height/2 - basicThickness/2 - 0.01,
                 adjustedDepthForShelves/2 + 0.1 - 0.01
               ]}
-              fontSize={0.12}
+              fontSize={baseFontSize}
               color="rgba(0, 0, 0, 0.3)"
               anchorX="center"
               anchorY="middle"
               rotation={[0, 0, Math.PI / 2]}
               renderOrder={998}
-              depthTest={false}
             >
               {Math.round(basicThickness * 100)}
             </Text>
@@ -240,7 +239,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               color={dimensionColor}
               anchorX="center"
               anchorY="middle"
-              rotation={[0, 0, Math.PI / 2]}
+              rotation={[0, 0, Math.PI / 2 + Math.PI]}
               renderOrder={999}
               depthTest={false}
             >
