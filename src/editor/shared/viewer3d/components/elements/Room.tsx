@@ -973,9 +973,9 @@ const Room: React.FC<RoomProps> = ({
 
   return (
     <group position={[0, 0, groupZOffset]}>
-      {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D 모드에서만 표시) */}
+      {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
       {console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode)}
-      {viewMode !== '2D' && (
+      {viewMode !== '2D' && cameraMode === 'perspective' && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
