@@ -169,38 +169,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           // 서랍 구역
           if (section.count && section.count > 0) {
             sectionContent = (
-              <>
-                {/* 서랍 렌더링 */}
-                <DrawerRenderer
-                  drawerCount={section.count}
-                  innerWidth={innerWidth}
-                  innerHeight={sectionHeight}
-                  depth={depth}
-                  basicThickness={basicThickness}
-                  yOffset={sectionCenterY}
-                  drawerHeights={section.drawerHeights}
-                  gapHeight={section.gapHeight}
-                  material={material}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                />
-                {/* 바닥판 두께 치수 표시용 ShelfRenderer */}
-                <ShelfRenderer
-                  shelfCount={1}
-                  innerWidth={innerWidth}
-                  innerHeight={sectionHeight}
-                  depth={adjustedDepthForShelves}
-                  basicThickness={basicThickness}
-                  material={material}
-                  yOffset={sectionCenterY}
-                  zOffset={shelfZOffset}
-                  shelfPositions={[0]}
-                  renderMode={renderMode}
-                  furnitureId={furnitureId}
-                  sectionType={section.type}
-                  isHighlighted={isHighlighted}
-                />
-              </>
+              <DrawerRenderer
+                drawerCount={section.count}
+                innerWidth={innerWidth}
+                innerHeight={sectionHeight}
+                depth={depth}
+                basicThickness={basicThickness}
+                yOffset={sectionCenterY}
+                drawerHeights={section.drawerHeights}
+                gapHeight={section.gapHeight}
+                material={material}
+                renderMode={renderMode}
+                isHighlighted={isHighlighted}
+              />
             );
           }
           break;
