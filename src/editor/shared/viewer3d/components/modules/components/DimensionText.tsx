@@ -63,8 +63,8 @@ const DimensionText: React.FC<DimensionTextProps> = ({
     return null;
   }
   
-  // 2D 탑뷰에서는 숨김
-  if (viewMode === '2D' && view2DDirection === 'top') {
+  // 2D 모드에서 좌측/우측/탑 뷰에서는 숨김 (정면 뷰에서만 표시)
+  if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) {
     return null;
   }
   
