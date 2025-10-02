@@ -184,43 +184,52 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {/* 좌우 측면 판재 - Type4는 상하 분할, 나머지는 통짜 */}
       <>
         {moduleData?.id?.includes('4drawer-hanging') && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
-          // Type4: 좌우 측판을 상부/하부로 분할
+          // Type4: 좌우 측판을 상부/하부로 분할 (하부 1000mm 고정)
           <>
-            {/* 왼쪽 하부 측판 (서랍 구역) */}
-            <BoxWithEdges
-              args={[basicThickness, getSectionHeights()[0], depth]}
-              position={[-innerWidth/2 - basicThickness/2, -height/2 + basicThickness + getSectionHeights()[0]/2, 0]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
-            
-            {/* 왼쪽 상부 측판 (옷장 구역) */}
-            <BoxWithEdges
-              args={[basicThickness, getSectionHeights()[1], depth]}
-              position={[-innerWidth/2 - basicThickness/2, height/2 - basicThickness - getSectionHeights()[1]/2, 0]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
-            
-            {/* 오른쪽 하부 측판 (서랍 구역) */}
-            <BoxWithEdges
-              args={[basicThickness, getSectionHeights()[0], depth]}
-              position={[innerWidth/2 + basicThickness/2, -height/2 + basicThickness + getSectionHeights()[0]/2, 0]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
-            
-            {/* 오른쪽 상부 측판 (옷장 구역) */}
-            <BoxWithEdges
-              args={[basicThickness, getSectionHeights()[1], depth]}
-              position={[innerWidth/2 + basicThickness/2, height/2 - basicThickness - getSectionHeights()[1]/2, 0]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
+            {(() => {
+              const drawerSectionHeight = mmToThreeUnits(1000); // 하부 서랍 구역 1000mm
+              const hangingSectionHeight = getSectionHeights()[1]; // 상부 옷장 구역
+              
+              return (
+                <>
+                  {/* 왼쪽 하부 측판 (서랍 구역 1000mm) */}
+                  <BoxWithEdges
+                    args={[basicThickness, drawerSectionHeight, depth]}
+                    position={[-innerWidth/2 - basicThickness/2, -height/2 + basicThickness + drawerSectionHeight/2, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                  />
+                  
+                  {/* 왼쪽 상부 측판 (옷장 구역) */}
+                  <BoxWithEdges
+                    args={[basicThickness, hangingSectionHeight, depth]}
+                    position={[-innerWidth/2 - basicThickness/2, height/2 - basicThickness - hangingSectionHeight/2, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                  />
+                  
+                  {/* 오른쪽 하부 측판 (서랍 구역 1000mm) */}
+                  <BoxWithEdges
+                    args={[basicThickness, drawerSectionHeight, depth]}
+                    position={[innerWidth/2 + basicThickness/2, -height/2 + basicThickness + drawerSectionHeight/2, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                  />
+                  
+                  {/* 오른쪽 상부 측판 (옷장 구역) */}
+                  <BoxWithEdges
+                    args={[basicThickness, hangingSectionHeight, depth]}
+                    position={[innerWidth/2 + basicThickness/2, height/2 - basicThickness - hangingSectionHeight/2, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                  />
+                </>
+              );
+            })()}
           </>
         ) : (
           // 기존: 통짜 측판
