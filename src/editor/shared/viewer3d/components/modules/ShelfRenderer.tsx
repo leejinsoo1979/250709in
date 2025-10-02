@@ -166,10 +166,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               // 마지막 칸은 일반적인 선반 구성에서만 계산
               // Type2의 하단 섹션처럼 상단 마감 패널만 있는 경우는 제외
               // DualType5 스타일러장 우측의 경우도 상단 칸 치수 제외
+              // Type4(4drawer-hanging)의 경우도 안전선반까지만 표시하고 상단 칸 치수 제외
               const isDualType5Right = furnitureId && furnitureId.includes('dual-2drawer-styler') && innerHeight > 2000;
+              const isType4 = furnitureId && furnitureId.includes('4drawer-hanging');
               if (shelfPositions.length > 0 && !(shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9)) {
-                // 스타일러장 우측이 아닌 경우에만 마지막 칸 추가
-                if (!isDualType5Right) {
+                // 스타일러장 우측과 Type4가 아닌 경우에만 마지막 칸 추가
+                if (!isDualType5Right && !isType4) {
                   const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                   const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
                   // 섹션의 상단에서 프레임 두께의 2배만큼 아래가 정확한 위치
