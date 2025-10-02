@@ -110,6 +110,9 @@ interface BaseFurnitureShellProps {
   // 백패널 유무
   hasBackPanel?: boolean;
   
+  // 가구 데이터 (ID 확인용)
+  moduleData?: { id: string };
+  
   // 띄움배치 여부
   isFloating?: boolean;
   
@@ -144,6 +147,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isEditMode = false,
   isHighlighted = false,
   hasBackPanel = true, // 기본값은 true (백패널 있음)
+  moduleData,
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
   children
@@ -177,25 +181,69 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   return (
     <group>
-      {/* 좌우 측면 판재 - 항상 통짜로 렌더링 */}
+      {/* 좌우 측면 판재 - Type4는 상하 분할, 나머지는 통짜 */}
       <>
-        {/* 왼쪽 측면 판재 */}
-        <BoxWithEdges
-          args={[basicThickness, height, depth]}
-          position={[-innerWidth/2 - basicThickness/2, 0, 0]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-        />
-        
-        {/* 오른쪽 측면 판재 */}
-        <BoxWithEdges
-          args={[basicThickness, height, depth]}
-          position={[innerWidth/2 + basicThickness/2, 0, 0]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-        />
+        {moduleData?.id?.includes('4drawer-hanging') && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          // Type4: 좌우 측판을 상부/하부로 분할
+          <>
+            {/* 왼쪽 하부 측판 (서랍 구역) */}
+            <BoxWithEdges
+              args={[basicThickness, getSectionHeights()[0], depth]}
+              position={[-innerWidth/2 - basicThickness/2, -height/2 + basicThickness + getSectionHeights()[0]/2, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+            
+            {/* 왼쪽 상부 측판 (옷장 구역) */}
+            <BoxWithEdges
+              args={[basicThickness, getSectionHeights()[1], depth]}
+              position={[-innerWidth/2 - basicThickness/2, height/2 - basicThickness - getSectionHeights()[1]/2, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+            
+            {/* 오른쪽 하부 측판 (서랍 구역) */}
+            <BoxWithEdges
+              args={[basicThickness, getSectionHeights()[0], depth]}
+              position={[innerWidth/2 + basicThickness/2, -height/2 + basicThickness + getSectionHeights()[0]/2, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+            
+            {/* 오른쪽 상부 측판 (옷장 구역) */}
+            <BoxWithEdges
+              args={[basicThickness, getSectionHeights()[1], depth]}
+              position={[innerWidth/2 + basicThickness/2, height/2 - basicThickness - getSectionHeights()[1]/2, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+          </>
+        ) : (
+          // 기존: 통짜 측판
+          <>
+            {/* 왼쪽 측면 판재 */}
+            <BoxWithEdges
+              args={[basicThickness, height, depth]}
+              position={[-innerWidth/2 - basicThickness/2, 0, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+            
+            {/* 오른쪽 측면 판재 */}
+            <BoxWithEdges
+              args={[basicThickness, height, depth]}
+              position={[innerWidth/2 + basicThickness/2, 0, 0]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+            />
+          </>
+        )}
         
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
