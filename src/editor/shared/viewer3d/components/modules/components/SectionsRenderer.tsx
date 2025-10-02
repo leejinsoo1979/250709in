@@ -274,6 +274,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   } else {
                     // 다음 섹션과의 경계: 중간 구분 패널의 하단면을 가리켜야 함
                     topY = sectionTopY - basicThickness;
+                    
+                    // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
+                    if (section.isTopFinishPanel) {
+                      topY -= basicThickness;
+                    }
                   }
                   
                   // 실제 내경 계산 (가이드선 사이의 거리)
