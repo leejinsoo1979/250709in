@@ -74,8 +74,10 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         shelfZOffset={baseFurniture.shelfZOffset}
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                        mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
+                        hideSectionDimensions={true}
                       />
                     </group>
                     
@@ -100,8 +102,10 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         shelfZOffset={baseFurniture.shelfZOffset}
                         material={baseFurniture.material}
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                        mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
+                        hideSectionDimensions={true}
                       />
                     </group>
                   </>
@@ -117,8 +121,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     shelfZOffset={baseFurniture.shelfZOffset}
                     material={baseFurniture.material}
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                    mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
-                        furnitureId={moduleData.id}
+                    furnitureId={moduleData.id}
                   />
                 )}
               </>

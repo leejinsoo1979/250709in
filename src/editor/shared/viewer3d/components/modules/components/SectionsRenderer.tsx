@@ -42,6 +42,9 @@ interface SectionsRendererProps {
   
   // 강조 상태
   isHighlighted?: boolean;
+  
+  // 섹션 내경 치수 숨김 (듀얼 타입 중복 방지용)
+  hideSectionDimensions?: boolean;
 }
 
 /**
@@ -62,7 +65,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   calculateSectionHeight,
   mmToThreeUnits,
   furnitureId,
-  isHighlighted = false
+  isHighlighted = false,
+  hideSectionDimensions = false
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -198,8 +202,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - 2단 옷장 전체 제외 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
+          {/* 섹션 내경 치수 표시 - 2단 옷장 전체 제외, 듀얼 타입 중복 방지 */}
+          {!hideSectionDimensions && showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
            (section.type === 'hanging' || section.type === 'drawer') && 
            !(furnitureId?.includes('2hanging') && allSections.length === 2) && (
             <group>
