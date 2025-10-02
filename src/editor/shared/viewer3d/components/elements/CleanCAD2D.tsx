@@ -391,6 +391,68 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
+  // 발통 심볼을 그리는 헬퍼 함수
+  const renderFootstoolSymbol = (x: number, y: number, z: number, rotation: [number, number, number] = [0, 0, 0]) => {
+    const symbolSize = mmToThreeUnits(30); // 30mm 크기
+    const circleRadius = symbolSize / 4;
+    const arcRadius = symbolSize / 3;
+    
+    // 원형 2개 생성 (상단)
+    const createCircle = (centerX: number, centerY: number, centerZ: number) => {
+      const points: [number, number, number][] = [];
+      const segments = 16;
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        points.push([
+          centerX + Math.cos(angle) * circleRadius,
+          centerY + Math.sin(angle) * circleRadius,
+          centerZ
+        ]);
+      }
+      return points;
+    };
+    
+    // 호(arc) 형태 생성 (하단)
+    const createArc = (centerX: number, centerY: number, centerZ: number) => {
+      const points: [number, number, number][] = [];
+      const segments = 12;
+      for (let i = 0; i <= segments; i++) {
+        const angle = Math.PI + (i / segments) * Math.PI; // 하단 반원
+        points.push([
+          centerX + Math.cos(angle) * arcRadius,
+          centerY + Math.sin(angle) * arcRadius,
+          centerZ
+        ]);
+      }
+      return points;
+    };
+    
+    return (
+      <group position={[x, y, z]} rotation={rotation}>
+        {/* 좌측 원 */}
+        <Line
+          points={createCircle(-symbolSize / 3, symbolSize / 4, 0)}
+          color="#FF6B00"
+          lineWidth={1.5}
+        />
+        
+        {/* 우측 원 */}
+        <Line
+          points={createCircle(symbolSize / 3, symbolSize / 4, 0)}
+          color="#FF6B00"
+          lineWidth={1.5}
+        />
+        
+        {/* 하단 호 */}
+        <Line
+          points={createArc(0, -symbolSize / 4, 0)}
+          color="#FF6B00"
+          lineWidth={1.5}
+        />
+      </group>
+    );
+  };
+  
   // 공간 크기 (Three.js 단위) - furnitureDimensions 전에 선언
   const spaceWidth = mmToThreeUnits(spaceInfo.width);
   const spaceHeight = mmToThreeUnits(spaceInfo.height);
@@ -2226,6 +2288,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
         </>
       )}
+      
+      {/* 발통 심볼 - 정면뷰 */}
+      {placedModules.map((module, index) => {
+        const moduleData = getModuleById(module.moduleId);
+        if (!moduleData) return null;
+        
+        const moduleX = module.position.x;
+        const moduleWidth = (module.adjustedWidth || moduleData.dimensions.width) * 0.01;
+        
+        // 가구 하단 중앙에 발통 심볼 배치
+        return (
+          <group key={`footstool-front-${module.id || index}`}>
+            {renderFootstoolSymbol(
+              moduleX, 
+              -mmToThreeUnits(50), // 바닥에서 50mm 위
+              0.01
+            )}
+          </group>
+        );
+      })}
     </group>
   );
 
@@ -2939,6 +3021,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             })()}
           </group>
         )}
+        
+        {/* 발통 심볼 - 좌측뷰 */}
+        {placedModules.map((module, index) => {
+          const moduleData = getModuleById(module.moduleId);
+          if (!moduleData) return null;
+          
+          const moduleZ = module.position.z || 0;
+          const moduleDepth = (moduleData.dimensions.depth || 600) * 0.01;
+          
+          // 가구 좌측면 하단 중앙에 발통 심볼 배치
+          return (
+            <group key={`footstool-left-${module.id || index}`}>
+              {renderFootstoolSymbol(
+                leftDimensionX + mmToThreeUnits(100), 
+                -mmToThreeUnits(50), 
+                spaceZOffset + moduleZ,
+                [0, -Math.PI / 2, 0] // Y축 -90도 회전 (좌측뷰)
+              )}
+            </group>
+          );
+        })}
       </group>
     );
   };
@@ -3401,6 +3504,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor}
                 lineWidth={0.5}
               />
+            </group>
+          );
+        })}
+        
+        {/* 발통 심볼 - 우측뷰 */}
+        {placedModules.map((module, index) => {
+          const moduleData = getModuleById(module.moduleId);
+          if (!moduleData) return null;
+          
+          const moduleZ = module.position.z || 0;
+          const moduleDepth = (moduleData.dimensions.depth || 600) * 0.01;
+          
+          // 가구 우측면 하단 중앙에 발통 심볼 배치
+          return (
+            <group key={`footstool-right-${module.id || index}`}>
+              {renderFootstoolSymbol(
+                rightDimensionX - mmToThreeUnits(100), 
+                -mmToThreeUnits(50), 
+                spaceZOffset + moduleZ,
+                [0, Math.PI / 2, 0] // Y축 +90도 회전 (우측뷰)
+              )}
             </group>
           );
         })}
