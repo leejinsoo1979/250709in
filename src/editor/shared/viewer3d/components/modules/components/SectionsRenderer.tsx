@@ -237,12 +237,20 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
                   
+                  // Type4 hanging 섹션 특별 처리
+                  const isType4HangingSection = furnitureId?.includes('4drawer-hanging') && section.type === 'hanging' && index === 1;
+                  
                   // 하단 가이드선 위치 결정
                   if (index === 0) {
                     // 첫 번째 섹션: 하부 프레임 상단
                     bottomY = -height/2 + basicThickness;
+                  } else if (isType4HangingSection) {
+                    // Type4 상부 섹션: 중간 패널 2개 위 (바닥판 상단)
+                    // 하부섹션 바닥판(18) + 내경(964) + 상판(18) + 상부 바닥판(18) = 1018
+                    // 서랍이 18mm 아래로 내려갔으므로 상판도 18mm 아래
+                    bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                   } else {
-                    // hanging 섹션: 바닥판 상단부터 (안전선반 포함한 전체 내경)
+                    // 일반 hanging 섹션: 바닥판 상단부터
                     bottomY = sectionBottomY + basicThickness;
                   }
                   
