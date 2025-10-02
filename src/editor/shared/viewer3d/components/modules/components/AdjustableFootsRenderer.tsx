@@ -43,12 +43,15 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const plateSize = mmToThreeUnits(64);
   const plateHalf = plateSize / 2; // 플레이트 크기의 절반 (32mm)
   
-  // X축, Z축 위치 (플레이트 바깥쪽 모서리가 가구 모서리에 맞도록)
+  // X축 위치 (플레이트 바깥쪽 모서리가 가구 모서리에 맞도록)
   const leftX = -furnitureWidth / 2 + plateHalf;
   const rightX = furnitureWidth / 2 - plateHalf;
   
-  const frontZ = furnitureDepth / 2 - plateHalf;
-  const backZ = -furnitureDepth / 2 + plateHalf;
+  // Z축 위치
+  // 앞쪽: 기본 위치에서 70mm 더 뒤로
+  // 뒤쪽: 기본 위치에서 60mm 더 안쪽으로
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(70);
+  const backZ = -furnitureDepth / 2 + plateHalf + mmToThreeUnits(60);
   
   console.log('🦶 조절발통 위치 계산:', {
     'width(units)': width.toFixed(2),
