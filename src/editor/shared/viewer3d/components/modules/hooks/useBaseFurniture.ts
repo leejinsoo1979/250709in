@@ -196,7 +196,15 @@ export const useBaseFurniture = (
                         (isEditMode ? 0.3 : 1.0));
       
       // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
-      material.depthWrite = renderMode !== 'wireframe' && !(viewMode === '2D' && renderMode === 'solid');
+      const shouldDisableDepthWrite = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
+      material.depthWrite = !shouldDisableDepthWrite;
+      
+      console.log('🎨 Material depthWrite 설정:', {
+        viewMode,
+        renderMode,
+        shouldDisableDepthWrite,
+        depthWrite: material.depthWrite
+      });
       
       material.needsUpdate = true;
       
