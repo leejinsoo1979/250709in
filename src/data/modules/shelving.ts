@@ -266,7 +266,8 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
       type: 'hanging', // 하부장도 옷걸이 구역
       heightType: 'absolute', 
       height: bottomHeight,
-      shelfPositions: [] // 하부장에는 선반 없음
+      count: 1, // 상판 1개
+      isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
     },
     { 
       type: 'hanging', 
