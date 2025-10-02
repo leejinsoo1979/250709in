@@ -220,9 +220,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer 섹션만 표시 (hanging은 ShelfRenderer에서 처리) */}
+          {/* 섹션 내경 치수 표시 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           section.type === 'drawer' && (
+           (section.type === 'drawer' || section.type === 'hanging') && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
@@ -279,8 +279,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       topY = height/2 - basicThickness;
                     }
                   } else {
-                    // 다음 섹션과의 경계: 중간 구분 패널의 하단면을 가리켜야 함
-                    topY = sectionTopY - basicThickness;
+                    // 다음 섹션과의 경계: 상판 하단면
+                    // 상판 중심 = 섹션 상단 + basicThickness/2이므로, 상판 하단 = 섹션 상단 - basicThickness/2
+                    topY = sectionTopY - basicThickness / 2;
                     
                     // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
                     if (section.isTopFinishPanel) {
