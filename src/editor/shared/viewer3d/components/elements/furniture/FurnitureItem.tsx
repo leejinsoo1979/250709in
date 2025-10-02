@@ -1622,40 +1622,81 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               position={[0, 0, 0]}
               renderOrder={998}
             >
-              <boxGeometry args={[width + highlightPadding * 2, height + highlightPadding * 2, depth + highlightPadding * 2]} />
+              <boxGeometry args={[width + highlightPadding * 2.5, height + highlightPadding * 2.5, depth + highlightPadding * 2.5]} />
               <meshBasicMaterial
                 color={selectionHighlightColor}
                 transparent
-                opacity={0.2}
+                opacity={0.15}
                 depthWrite={false}
                 side={THREE.BackSide}
                 blending={THREE.AdditiveBlending}
               />
             </mesh>
             
-            {/* 메인 하이라이트 박스 */}
+            {/* 두번째 발광 레이어 */}
+            <mesh
+              position={[0, 0, 0]}
+              renderOrder={997}
+            >
+              <boxGeometry args={[width + highlightPadding * 4, height + highlightPadding * 4, depth + highlightPadding * 4]} />
+              <meshBasicMaterial
+                color={selectionHighlightColor}
+                transparent
+                opacity={0.08}
+                depthWrite={false}
+                side={THREE.BackSide}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+            
+            {/* 메인 하이라이트 박스 - 모든 엣지 표시 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
               renderOrder={999}
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
-              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+              <boxGeometry args={[width, height, depth]} />
               <meshBasicMaterial
                 color={selectionHighlightColor}
                 transparent
-                opacity={0.1}
+                opacity={0.0}
                 depthWrite={false}
                 depthTest={false}
                 toneMapped={false}
               />
-              {/* 윤곽선 */}
-              <Edges
-                color={selectionHighlightColor}
-                scale={1.001}
-                linewidth={3}
-              />
             </mesh>
+            
+            {/* 모든 엣지 라인 강조 */}
+            <Edges
+              geometry={new THREE.BoxGeometry(width, height, depth)}
+              renderOrder={1000}
+              threshold={15}
+            >
+              <lineBasicMaterial
+                color={selectionHighlightColor}
+                linewidth={4}
+                transparent={false}
+                depthTest={true}
+                toneMapped={false}
+              />
+            </Edges>
+            
+            {/* 추가 엣지 라인 (더 밝게) */}
+            <Edges
+              geometry={new THREE.BoxGeometry(width + 0.001, height + 0.001, depth + 0.001)}
+              renderOrder={1001}
+              threshold={15}
+            >
+              <lineBasicMaterial
+                color={selectionHighlightColor}
+                linewidth={2}
+                transparent={true}
+                opacity={0.8}
+                depthTest={false}
+                toneMapped={false}
+              />
+            </Edges>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}

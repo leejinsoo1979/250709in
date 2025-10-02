@@ -87,6 +87,16 @@ const PlacedFurnitureList: React.FC = () => {
           // 가구 ID에서 기본 타입 추출 (너비 정보 제거)
           // baseModuleType 필드를 우선적으로 사용 (소수점 너비 대응)
           const baseModuleType = placedModule.baseModuleType || placedModule.moduleId.replace(/-[\d.]+$/, '');
+          
+          console.log('🔍 [섬네일 매칭]', {
+            id: placedModule.id,
+            moduleId: placedModule.moduleId,
+            baseModuleTypeField: placedModule.baseModuleType,
+            extractedType: baseModuleType,
+            hasIcon: FURNITURE_ICONS[baseModuleType] ? '✅' : '❌',
+            fallbackUsed: !FURNITURE_ICONS[baseModuleType]
+          });
+          
           const iconPath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
           
           // 가구 클릭 시 팝업 열기
