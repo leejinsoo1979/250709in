@@ -588,7 +588,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 안전선반 두께 텍스트 */}
                 <Text
                   position={[
-                    innerWidth/2 * 0.3 + 0.5, 
+                    rightWidth/2 * 0.3 + 0.5, 
                     -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight),
                     viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5
                   ]}
@@ -606,18 +606,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 안전선반 두께 수직선 */}
                 <Line
                   points={[
-                    [innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
-                    [innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
+                    [rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
+                    [rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
                 />
                 {/* 수직선 양끝 점 */}
-                <mesh position={[innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
+                <mesh position={[rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
                   <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
-                <mesh position={[innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
+                <mesh position={[rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
                   <sphereGeometry args={[0.02, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
@@ -632,7 +632,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {/* 상단 프레임 두께 텍스트 */}
             <Text
               position={[
-                innerWidth/2 * 0.3 + 0.5, 
+                rightWidth/2 * 0.3 + 0.5, 
                 height/2 - basicThickness/2,
                 viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5
               ]}
@@ -650,18 +650,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {/* 상단 프레임 두께 수직선 */}
             <Line
               points={[
-                [innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
-                [innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
+                [rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5],
+                [rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]
               ]}
               color={dimensionColor}
               lineWidth={1}
             />
             {/* 수직선 양끝 점 */}
-            <mesh position={[innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
+            <mesh position={[rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshBasicMaterial color={dimensionColor} />
             </mesh>
-            <mesh position={[innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
+            <mesh position={[rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : basicThickness/2 + shelfZOffset + 0.5]}>
               <sphereGeometry args={[0.02, 8, 8]} />
               <meshBasicMaterial color={dimensionColor} />
             </mesh>
