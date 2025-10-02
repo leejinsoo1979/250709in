@@ -335,23 +335,49 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 뷰어 정중앙 (0,0,0)으로 리셋 + 기본 zoom
+      // 현재 뷰 방향에 맞는 초기 위치로 리셋
       const target: [number, number, number] = [0, 0, 0];
-      const position: [number, number, number] = [0, 0, 10];
+      let position: [number, number, number];
+      let up: [number, number, number];
+      
+      // view2DDirection에 따라 카메라 위치와 up 벡터 설정
+      switch (view2DDirection) {
+        case 'front':
+          position = [0, 0, 10];
+          up = [0, 1, 0];
+          break;
+        case 'left':
+          position = [-10, 0, 0];
+          up = [0, 1, 0];
+          break;
+        case 'right':
+          position = [10, 0, 0];
+          up = [0, 1, 0];
+          break;
+        case 'top':
+          position = [0, 10, 0];
+          up = [0, 0, -1];
+          break;
+        default:
+          position = [0, 0, 10];
+          up = [0, 1, 0];
+      }
+      
       const zoom = 1.0;
       
-      console.log('📸 2D 카메라 정중앙 리셋', {
+      console.log('📸 2D 카메라 리셋', {
+        view: view2DDirection,
         target,
         position,
+        up,
         zoom
       });
       
       controls.target.set(...target);
       controls.object.position.set(...position);
+      controls.object.up.set(...up);
       controls.object.zoom = zoom;
       controls.object.updateProjectionMatrix();
-      
-      controls.object.up.set(0, 1, 0);
       controls.object.lookAt(controls.target);
       controls.update();
       
@@ -361,7 +387,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         zoom: controls.object.zoom
       });
     }
-  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo, cameraMode]);
+  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo, cameraMode, view2DDirection]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
