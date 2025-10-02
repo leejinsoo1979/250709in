@@ -212,7 +212,11 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 {index < getSectionHeights().length - 1 && (
                   <BoxWithEdges
                     args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
+                    position={[
+                      0, 
+                      sectionCenterY + sectionHeight/2 + basicThickness/2, 
+                      viewMode === '3D' ? basicThickness/2 + shelfZOffset : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
+                    ]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
