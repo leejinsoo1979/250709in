@@ -121,7 +121,7 @@ export const calculateCameraPosition = (
  * @returns 카메라 타겟 위치
  */
 export const calculateCameraTarget = (spaceHeight: number): [number, number, number] => {
-  // 가구가 바닥에 있으므로 공간 높이의 1/3 지점을 타겟으로 설정
-  const yTarget = mmToThreeUnits(spaceHeight * 0.33);
-  return [0, yTarget, 0];
+  // 공간 높이의 절반 위치를 타겟으로 설정 (가구 유무와 관계없이 일정)
+  const yCenter = mmToThreeUnits(spaceHeight * 0.5);
+  return [0, yCenter, 0];
 }; 
