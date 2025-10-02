@@ -164,7 +164,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           // 옷걸이 구역 - 안전선반이 없어도 ShelfRenderer 호출 (치수 표시를 위해)
           sectionContent = (
             <ShelfRenderer
-              shelfCount={section.shelfPositions ? section.shelfPositions.length : 0}
+              shelfCount={section.count || (section.shelfPositions ? section.shelfPositions.length : 0)}
               innerWidth={innerWidth}
               innerHeight={sectionHeight}
               depth={adjustedDepthForShelves}
