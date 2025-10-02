@@ -332,39 +332,32 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         type: controls.object.type,
         currentPosition: controls.object.position.toArray(),
         currentTarget: controls.target.toArray(),
-        currentZoom: controls.object.zoom,
-        savedPosition2D: initialCameraSetup.current.position2D?.toArray(),
-        savedTarget2D: initialCameraSetup.current.target2D?.toArray(),
-        savedZoom2D: initialCameraSetup.current.zoom2D
+        currentZoom: controls.object.zoom
       });
       
-      // 저장된 초기 상태가 있으면 그대로 복원
-      if (initialCameraSetup.current.position2D && 
-          initialCameraSetup.current.target2D && 
-          initialCameraSetup.current.zoom2D !== null) {
-        
-        console.log('📸 저장된 2D 초기 상태로 복원');
-        
-        controls.target.copy(initialCameraSetup.current.target2D);
-        controls.object.position.copy(initialCameraSetup.current.position2D);
-        controls.object.zoom = initialCameraSetup.current.zoom2D;
-        controls.object.updateProjectionMatrix();
-      } else {
-        // 저장된 상태가 없으면 계산
-        console.log('⚠️ 저장된 초기 상태 없음 - 계산값 사용');
-        
-        const spaceHeight = spaceInfo?.height || 2400;
-        const spaceWidth = spaceInfo?.width || 3000;
-        const spaceDepth = spaceInfo?.depth || 600;
-        const target = calculateCameraTargetUtil(spaceHeight);
-        const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
-        const initialZoom = 1200 / distance;
-        
-        controls.target.set(...target);
-        controls.object.position.set(0, target[1], distance);
-        controls.object.zoom = initialZoom;
-        controls.object.updateProjectionMatrix();
-      }
+      // 항상 공간의 정중앙(0,0,0)과 계산된 줌 사용
+      const spaceHeight = spaceInfo?.height || 2400;
+      const spaceWidth = spaceInfo?.width || 3000;
+      const spaceDepth = spaceInfo?.depth || 600;
+      
+      // 타겟은 항상 공간의 정중앙 (0, centerY, 0)
+      const centerY = spaceHeight / 2000; // mm를 Three.js 단위로 변환
+      const target: [number, number, number] = [0, centerY, 0];
+      
+      // 거리와 줌 계산
+      const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+      const initialZoom = 1200 / distance;
+      
+      console.log('📸 2D 카메라 정중앙 리셋', {
+        target,
+        distance,
+        initialZoom
+      });
+      
+      controls.target.set(...target);
+      controls.object.position.set(0, centerY, distance);
+      controls.object.zoom = initialZoom;
+      controls.object.updateProjectionMatrix();
       
       controls.object.up.set(0, 1, 0);
       controls.object.lookAt(controls.target);
