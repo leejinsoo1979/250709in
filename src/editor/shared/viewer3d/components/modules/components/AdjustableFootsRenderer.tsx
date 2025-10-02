@@ -39,24 +39,6 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const furnitureWidth = width;
   const furnitureDepth = depth;
   
-  // Z축 위치 계산
-  const frontOffset = mmToThreeUnits(27); // 앞면에서 27mm 안쪽
-  const backOffset = mmToThreeUnits(20);  // 뒷면에서 20mm 안쪽
-  
-  const frontZ = furnitureDepth / 2 - frontOffset;
-  const backZ = -furnitureDepth / 2 + backOffset;
-  
-  console.log('🦶 조절발통 위치 계산:', {
-    'width(units)': width.toFixed(2),
-    'depth(units)': depth.toFixed(2),
-    'width(mm)': (width * 100).toFixed(0) + 'mm',
-    'depth(mm)': (depth * 100).toFixed(0) + 'mm',
-    frontOffset: frontOffset.toFixed(2) + ' units (27mm)',
-    backOffset: backOffset.toFixed(2) + ' units (20mm)',
-    frontZ: frontZ.toFixed(2) + ' units',
-    backZ: backZ.toFixed(2) + ' units',
-  });
-  
   // 64×64mm 정사각형 플레이트의 바깥쪽 모서리가 가구 모서리에 맞도록
   const plateSize = mmToThreeUnits(64);
   const plateHalf = plateSize / 2; // 플레이트 크기의 절반 (32mm)
@@ -67,6 +49,18 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   
   const frontZ = furnitureDepth / 2 - plateHalf;
   const backZ = -furnitureDepth / 2 + plateHalf;
+  
+  console.log('🦶 조절발통 위치 계산:', {
+    'width(units)': width.toFixed(2),
+    'depth(units)': depth.toFixed(2),
+    'width(mm)': (width * 100).toFixed(0) + 'mm',
+    'depth(mm)': (depth * 100).toFixed(0) + 'mm',
+    'plateHalf': plateHalf.toFixed(2) + ' units (32mm)',
+    leftX: leftX.toFixed(2) + ' units',
+    rightX: rightX.toFixed(2) + ' units',
+    frontZ: frontZ.toFixed(2) + ' units',
+    backZ: backZ.toFixed(2) + ' units',
+  });
   
   // 발통 위치 배열 (네 모서리, 회전 없음)
   const footPositions: Array<{pos: [number, number, number], rot: number}> = [
