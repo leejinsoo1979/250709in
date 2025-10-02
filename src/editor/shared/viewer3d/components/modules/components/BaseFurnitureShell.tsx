@@ -187,11 +187,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           // Type4: 좌우 측판을 상부/하부로 분할 (하부 1000mm 고정)
           <>
             {(() => {
-              const drawerSectionHeight = mmToThreeUnits(1000); // 하부 서랍 구역 1000mm
+              const drawerSectionHeight = mmToThreeUnits(1000) + basicThickness; // 하부 서랍 구역 1000mm + 바닥판 18mm
               const hangingSectionHeight = getSectionHeights()[1] - basicThickness; // 상부 옷장 구역 (높이 18mm 감소)
               
-              // 하부 측판: 바닥 프레임 위에서 시작
-              const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
+              // 하부 측판: 바닥부터 시작
+              const lowerPanelY = -height/2 + drawerSectionHeight/2;
               
               // 상부 측판: 중간 구분 패널 위에서 시작
               const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + hangingSectionHeight/2;
