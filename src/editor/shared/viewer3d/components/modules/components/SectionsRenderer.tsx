@@ -241,9 +241,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외 */}
+          {/* 섹션 내경 치수 표시 - drawer 섹션은 제외, Type2 상부섹션도 제외 (ShelfRenderer에서 칸 높이로 표시) */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           section.type === 'hanging' && (
+           section.type === 'hanging' && 
+           !(furnitureId?.includes('2hanging') && index === 1) && 
+           !(furnitureId?.includes('2drawer-hanging') && index === 1) && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
