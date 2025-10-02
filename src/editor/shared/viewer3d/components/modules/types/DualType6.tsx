@@ -72,8 +72,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (theme.mode === 'dark' ? '#ffffff' : getThemeColor());
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (theme.mode === 'dark' ? '#ffffff' : '#000000');
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
+  
+  console.log('[DualType6] viewMode:', viewMode, 'theme.mode:', theme.mode, 'dimensionColor:', dimensionColor, 'baseFontSize:', baseFontSize);
 
   // 좌우 폭 분할 계산 - 실제 렌더링되는 가구의 innerWidth 기반
   let leftWidth, rightWidth, leftXOffset, rightXOffset;
