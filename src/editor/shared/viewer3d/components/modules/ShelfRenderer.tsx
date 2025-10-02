@@ -120,7 +120,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 // positionMm === 0인 경우 (바닥판) 패널 두께만 표시
                 if (shelfPositions[0] === 0) {
                   const height = basicThickness; // 바닥판 두께
-                  const centerY = (-innerHeight / 2) + height / 2;
+                  // 바닥판이 9mm 위에 있으므로 centerY도 9mm 올림
+                  const centerY = (-innerHeight / 2) + mmToThreeUnits(9) + height / 2;
                   
                   console.log('🟢 바닥판 치수:', {
                     shelfPositions_0: shelfPositions[0],
@@ -128,6 +129,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     basicThickness_mm: basicThickness * 100,
                     height,
                     height_mm: height * 100,
+                    centerY_mm: centerY * 100,
                     표시될값: Math.round(height * 100)
                   });
                   
