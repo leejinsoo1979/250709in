@@ -80,7 +80,6 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
           key={`foot-${index}`}
           position={item.pos}
           rotation={item.rot}
-          material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           baseHeight={baseHeight}
