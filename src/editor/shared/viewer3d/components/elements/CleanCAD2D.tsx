@@ -2231,7 +2231,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 좌측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderLeftView = () => {
-    if (viewDirection !== 'left') return null;
+    // 좌측 뷰에서 공간 치수 숨김
+    return null;
+    // if (viewDirection !== 'left') return null;
     
     // Room.tsx와 동일한 계산 - 실제 spaceInfo 값 사용
     const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
@@ -2945,7 +2947,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 우측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderRightView = () => {
-    if (viewDirection !== 'right') return null;
+    // 우측 뷰에서 공간 치수 숨김
+    return null;
+    // if (viewDirection !== 'right') return null;
     
     // Room.tsx와 동일한 계산
     const panelDepthMm = spaceInfo.depth || 600;
