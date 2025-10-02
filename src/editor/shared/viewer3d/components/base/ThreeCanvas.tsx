@@ -335,54 +335,24 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 뷰어 정중앙 리셋
-      const savedZoom = initialCameraSetup.current.zoom2D;
+      // 카메라 위치 버튼 눌렀을 때의 초기 상태로 리셋
+      // cameraPosition, cameraTarget, cameraUp은 Space3DView에서 전달된 초기값
+      const initialPosition = cameraPosition;
+      const initialTarget = cameraTarget || [0, 0, 0];
+      const initialUp = cameraUp || [0, 1, 0];
+      const savedZoom = initialCameraSetup.current.zoom2D || 1.0;
       
-      if (!savedZoom) {
-        console.warn('⚠️ 저장된 zoom 없음');
-        return;
-      }
-      
-      // target은 항상 뷰어 정중앙 (0, 0, 0)
-      const target: [number, number, number] = [0, 0, 0];
-      
-      // 뷰 방향에 따른 고정 position (뷰어 정중앙을 바라보는 위치)
-      let position: [number, number, number];
-      let up: [number, number, number];
-      
-      switch (view2DDirection) {
-        case 'front':
-          position = [0, 0, 10];
-          up = [0, 1, 0];
-          break;
-        case 'left':
-          position = [-10, 0, 0];
-          up = [0, 1, 0];
-          break;
-        case 'right':
-          position = [10, 0, 0];
-          up = [0, 1, 0];
-          break;
-        case 'top':
-          position = [0, 10, 0];
-          up = [0, 0, -1];
-          break;
-        default:
-          position = [0, 0, 10];
-          up = [0, 1, 0];
-      }
-      
-      console.log('📸 2D 카메라 리셋 (뷰어 정중앙)', {
+      console.log('📸 2D 카메라 초기 상태로 리셋', {
         view: view2DDirection,
-        target,
-        position,
-        up,
+        position: initialPosition,
+        target: initialTarget,
+        up: initialUp,
         zoom: savedZoom
       });
       
-      controls.target.set(...target);
-      controls.object.position.set(...position);
-      controls.object.up.set(...up);
+      controls.target.set(...initialTarget);
+      controls.object.position.set(...initialPosition);
+      controls.object.up.set(...initialUp);
       controls.object.zoom = savedZoom;
       controls.object.updateProjectionMatrix();
       controls.object.lookAt(controls.target);
