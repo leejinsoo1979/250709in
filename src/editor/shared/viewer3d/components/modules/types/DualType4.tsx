@@ -112,22 +112,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                     </>
                   ) : (
-                    // 상부 섹션: 측판을 18mm 아래로 확장 (원래 높이 유지)
+                    // 상부 섹션: 측판을 18mm 아래로 내림 (높이 18mm 증가)
                     <>
-                      {/* 왼쪽 측면 판재 - 18mm 아래로 확장 */}
+                      {/* 왼쪽 측면 판재 - 18mm 아래로 내림 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9), 0]}
+                        args={[basicThickness, sectionHeight + mmToThreeUnits(18), depth]}
+                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight + mmToThreeUnits(18))/2 - mmToThreeUnits(9), 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                       />
                       
-                      {/* 오른쪽 측면 판재 - 18mm 아래로 확장 */}
+                      {/* 오른쪽 측면 판재 - 18mm 아래로 내림 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9), 0]}
+                        args={[basicThickness, sectionHeight + mmToThreeUnits(18), depth]}
+                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight + mmToThreeUnits(18))/2 - mmToThreeUnits(9), 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
