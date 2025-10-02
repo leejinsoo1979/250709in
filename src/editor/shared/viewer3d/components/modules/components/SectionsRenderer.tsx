@@ -299,7 +299,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           ? depth/2 + 0.1
                           : depth/2 + 1.0
                       ]}
-                      rotation={[0, 0, isUpperLowerCabinet ? (Math.PI / 2 + Math.PI) : (Math.PI / 2)]}
+                      rotation={[0, 0, (viewMode === '2D' && isUpperLowerCabinet) ? (Math.PI / 2 + Math.PI) : (Math.PI / 2)]}
                       forceShow={true}
                     />
                     
