@@ -798,8 +798,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-    </group>
-  );
       
       {/* 조절발통 (네 모서리) */}
       <AdjustableFootsRenderer
@@ -811,6 +809,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         isFloating={false}
         baseHeight={spaceInfo?.baseConfig?.height || 65}
       />
+    </group>
+  );
 };
 
 export default DualType6; 
