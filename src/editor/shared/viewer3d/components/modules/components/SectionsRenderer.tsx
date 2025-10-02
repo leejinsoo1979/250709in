@@ -250,10 +250,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       bottomY: bottomY * 100 + 'mm'
                     });
                     
-                    // hanging 섹션에서 바닥판(shelfPositions: [0])이 있는 경우, bottomY를 바닥판 상단으로 설정
+                    // hanging 섹션에서 바닥판(shelfPositions: [0])이 있는 경우, bottomY를 바닥판 상단 + 9mm로 설정
                     if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.includes(0)) {
-                      // 바닥판 두께만큼 추가로 올림
-                      bottomY = sectionBottomY + basicThickness * 2;
+                      // 바닥판 두께 + 9mm 추가
+                      bottomY = sectionBottomY + basicThickness * 2 + mmToThreeUnits(9);
                       console.log('🔵 바닥판 있음 - bottomY 조정:', bottomY * 100 + 'mm');
                     }
                     // hanging 섹션에서 안전선반이 없는 경우, bottomY를 18mm 아래로 조정
