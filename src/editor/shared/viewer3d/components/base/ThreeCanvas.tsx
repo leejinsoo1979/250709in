@@ -264,6 +264,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 카메라 리셋 함수
   const resetCamera = useCallback(() => {
+    // 2D 모드에서는 리셋 비활성화
+    if (viewMode === '2D') {
+      return;
+    }
+    
     if (controlsRef.current && viewMode === '3D') {
       const controls = controlsRef.current;
       
@@ -320,45 +325,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       controls.update();
       
       console.log('🎯 3D 카메라 리셋 완료:', {
-        newPosition: controls.object.position.toArray(),
-        newTarget: controls.target.toArray(),
-        zoom: controls.object.zoom
-      });
-    } else if (controlsRef.current && viewMode === '2D') {
-      // 2D 모드에서도 3D와 동일하게 카메라 리셋
-      const controls = controlsRef.current;
-      
-      console.log('🎯 2D 카메라 리셋 시작:', {
-        type: controls.object.type,
-        currentPosition: controls.object.position.toArray(),
-        currentTarget: controls.target.toArray(),
-        currentZoom: controls.object.zoom
-      });
-      
-      // 카메라 위치 버튼 눌렀을 때의 초기 상태로 리셋
-      // cameraPosition, cameraTarget, cameraUp은 Space3DView에서 전달된 초기값
-      const initialPosition = cameraPosition;
-      const initialTarget = cameraTarget || [0, 0, 0];
-      const initialUp = cameraUp || [0, 1, 0];
-      const savedZoom = initialCameraSetup.current.zoom2D || 1.0;
-      
-      console.log('📸 2D 카메라 초기 상태로 리셋', {
-        view: view2DDirection,
-        position: initialPosition,
-        target: initialTarget,
-        up: initialUp,
-        zoom: savedZoom
-      });
-      
-      controls.target.set(...initialTarget);
-      controls.object.position.set(...initialPosition);
-      controls.object.up.set(...initialUp);
-      controls.object.zoom = savedZoom;
-      controls.object.updateProjectionMatrix();
-      controls.object.lookAt(controls.target);
-      controls.update();
-      
-      console.log('🎯 2D 카메라 리셋 완료:', {
         newPosition: controls.object.position.toArray(),
         newTarget: controls.target.toArray(),
         zoom: controls.object.zoom
