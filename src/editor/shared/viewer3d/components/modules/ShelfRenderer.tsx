@@ -190,6 +190,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
+                // Type4 상부섹션은 모든 선반 두께 치수 제외
+                const isType4Hanging = furnitureId && (furnitureId.includes('4drawer-hanging') || furnitureId.includes('dual-4drawer-hanging'));
+                if (isType4Hanging) {
+                  return; // Type4 상부섹션 선반 두께 표시 안함
+                }
                 
                 // shelfPos === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
                 const shelfY = shelfPos === 0 
@@ -197,6 +202,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   : (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
+                
+                console.log(`🟣 선반 ${i} 엔드포인트 (shelfPos=${shelfPos}):`, {
+                  'shelfTopY_mm': shelfTopY * 100,
+                  'shelfBottomY_mm': shelfBottomY * 100,
+                  '위점렌더링': 'O',
+                  '아래점렌더링': shelfPos !== 0 ? 'O' : 'X'
+                });
                 
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
@@ -283,6 +295,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 상단 프레임 치수는 showTopFrameDimension이 true일 때만 표시
               if (showTopFrameDimension) {
+                console.log('🟣 상단 프레임 엔드포인트:', {
+                  'topFrameTopY_mm': topFrameTopY * 100,
+                  'topFrameBottomY_mm': topFrameBottomY * 100,
+                  '위점렌더링': 'O',
+                  '아래점렌더링': 'O'
+                });
                 shelfThicknessElements.push(
                 <group key="top-frame-thickness">
                   {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
@@ -354,9 +372,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   {compartmentHeights.map((compartment, i) => {
                     // DualType5 스타일러장 우측의 마지막 칸(상단)은 치수 표시 제외
                     const isDualType5Right = furnitureId && furnitureId.includes('-right-section');
+                    // Type4 상부섹션의 첫 번째 칸(바닥판부터 안전선반까지)은 SectionsRenderer에서 표시
+                    const isType4Hanging = furnitureId && (furnitureId.includes('4drawer-hanging') || furnitureId.includes('dual-4drawer-hanging'));
                     
                     // 안전선반이 있는 경우(칸이 2개 이상) 마지막 칸은 치수 표시 안함
                     if (isDualType5Right && compartmentHeights.length >= 2 && i === compartmentHeights.length - 1) {
+                      return null;
+                    }
+                    
+                    // Type4 상부섹션의 모든 칸 치수 제외 (SectionsRenderer에서 통합 표시)
+                    if (isType4Hanging) {
                       return null;
                     }
                     // 각 칸의 상단과 하단 Y 좌표 계산
