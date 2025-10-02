@@ -481,7 +481,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   </>
                 )}
               </group>
-            )
+            )}
           </group>
         );
         
