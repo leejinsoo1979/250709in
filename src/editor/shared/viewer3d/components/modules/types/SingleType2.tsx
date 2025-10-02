@@ -59,6 +59,9 @@ const BoxWithEdges: React.FC<{
         {renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 완전히 투명한 재질
           <meshBasicMaterial transparent={true} opacity={0} />
+        ) : isBackPanel && viewMode === '2D' && view2DDirection === 'front' ? (
+          // 2D 정면뷰에서 백패널은 완전히 투명하게
+          <meshBasicMaterial transparent={true} opacity={0} />
         ) : (
           <primitive object={processedMaterial} attach="material" />
         )}
