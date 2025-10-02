@@ -356,15 +356,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     lineWidth={1}
                     dashed={false}
                   />
-                  {/* 상단 프레임 두께 수직선 양끝 점 */}
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
-                  </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
-                  </mesh>
                 </group>
                 );
               }
