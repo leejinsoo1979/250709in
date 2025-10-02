@@ -282,7 +282,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 공간 정보 계산
       const spaceHeight = spaceInfo?.height || 2400;
       const spaceWidth = spaceInfo?.width || 3000;
-      const initialDistance = Math.max(spaceHeight, spaceWidth) * 2;
+      // 초기 거리: cameraPosition의 Z 값 사용 (기본값 10)
+      const initialDistance = cameraPosition?.[2] || 10;
       
       // 타겟 위치 계산
       const target = calculateCameraTargetUtil(spaceHeight);
