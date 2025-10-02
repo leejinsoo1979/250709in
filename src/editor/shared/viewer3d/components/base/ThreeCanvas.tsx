@@ -275,22 +275,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentTarget: controls.target.toArray()
       });
       
-      // Orthographic 카메라인 경우 현재 zoom 유지
+      // Orthographic 카메라인 경우 zoom을 초기값(1.0)으로 리셋
       const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
-      const currentZoom = isOrthographic ? controls.object.zoom : null;
+      const initialZoom = 1.0; // 초기 줌 레벨
       
-      // 현재 카메라와 타겟 사이의 거리 계산 (리셋 후에도 유지)
-      const currentDistance = controls.object.position.distanceTo(controls.target);
-      
-      // 타겟 위치 계산
+      // 공간 정보 계산
       const spaceHeight = spaceInfo?.height || 2400;
       const spaceWidth = spaceInfo?.width || 3000;
+      const initialDistance = Math.max(spaceHeight, spaceWidth) * 2;
+      
+      // 타겟 위치 계산
       const target = calculateCameraTargetUtil(spaceHeight);
       
       console.log('🎯 3D 카메라 리셋 계산:', {
         target,
-        currentDistance,
-        currentZoom,
+        initialDistance,
+        initialZoom,
         spaceHeight,
         spaceWidth,
         isOrthographic
@@ -299,15 +299,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 타겟 설정
       controls.target.set(...target);
       
-      // Orthographic 모드에서는 각도만 리셋 (정면 보기)
+      // Orthographic 모드에서는 줌과 거리 모두 초기값으로 리셋
       if (isOrthographic) {
-        // 완전 정면에서 바라보도록 설정
-        controls.object.position.set(0, target[1], currentDistance);
-        controls.object.zoom = currentZoom || controls.object.zoom;
+        // 완전 정면에서 바라보도록 설정 (초기 거리 사용)
+        controls.object.position.set(0, target[1], initialDistance);
+        controls.object.zoom = initialZoom; // 줌을 초기값(1.0)으로 리셋
         controls.object.updateProjectionMatrix();
       } else {
-        // Perspective 모드에서는 기존 로직
-        controls.object.position.set(0, target[1], currentDistance);
+        // Perspective 모드에서도 초기 거리 사용
+        controls.object.position.set(0, target[1], initialDistance);
       }
       
       controls.object.up.set(0, 1, 0);
