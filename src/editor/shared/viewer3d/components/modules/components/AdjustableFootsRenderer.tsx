@@ -38,10 +38,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     return null;
   }
   
-  // 2D 탑뷰일 때는 발통 렌더링 안 함
-  console.log('🦶🦶🦶 조절발 렌더링 체크:', { viewMode, view2DDirection, shouldHide: viewMode === '2D' && view2DDirection === 'top' });
-  if (viewMode === '2D' && view2DDirection === 'top') {
-    console.log('🦶❌ 2D 탑뷰 - 조절발 숨김');
+  // 2D일 때는 발통 렌더링 안 함
+  if (viewMode === '2D') {
     return null;
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;

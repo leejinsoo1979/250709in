@@ -66,6 +66,13 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  console.log('🔥 DualType2 렌더링:', {
+    furnitureId: moduleData.id,
+    isMulti: isMultiSectionFurniture(),
+    sectionCount: getSectionHeights().length,
+    sections: baseFurniture.modelConfig.sections
+  });
+
   return (
     <group>
       {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
@@ -107,6 +114,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
                 {index < getSectionHeights().length - 1 && (
                   <>
+                    {console.log('🟢 중간판 렌더링:', { index, sectionCount: getSectionHeights().length, position: sectionCenterY + sectionHeight/2 + basicThickness/2 })}
                     <BoxWithEdges
                       args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
                       position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
