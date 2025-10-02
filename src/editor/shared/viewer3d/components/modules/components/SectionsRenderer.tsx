@@ -37,6 +37,9 @@ interface SectionsRendererProps {
   
   // 가구 ID (칸 강조용)
   furnitureId?: string;
+  
+  // 강조 상태
+  isHighlighted?: boolean;
 }
 
 /**
@@ -55,10 +58,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   material,
   renderMode,
   calculateSectionHeight,
-  furnitureId
+  furnitureId,
+  isHighlighted = false
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
+  const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { viewMode } = useSpace3DView();
   const viewerTheme = useViewerTheme();
@@ -155,6 +160,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 showTopFrameDimension={index === 0}
                 renderMode={renderMode}
                 furnitureId={furnitureId}
+                isHighlighted={isHighlighted}
               />
             );
           }
@@ -180,6 +186,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               sectionType={section.type}
               sectionInternalHeight={section.internalHeight}
               isLastSection={index === allSections.length - 1}
+              isHighlighted={isHighlighted}
             />
           );
           break;
@@ -199,6 +206,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 gapHeight={section.gapHeight}
                 material={material}
                 renderMode={renderMode}
+                isHighlighted={isHighlighted}
               />
             );
           }
@@ -217,7 +225,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {sectionContent}
           
           {/* 섹션 내경 치수 표시 - 서랍과 선반 없는 hanging 섹션 표시 */}
-          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && 
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && 
            ((section.type === 'drawer') || 
             (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0))) && (
             <group>
@@ -350,7 +358,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
-          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === 0 && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && index === 0 && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
@@ -412,7 +420,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           {/* 중간 구분 패널 두께 표시 */}
-          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && hasDividerPanel && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && hasDividerPanel && (
             <group>
               {/* 중간 패널 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
@@ -474,7 +482,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           )}
           
           {/* 마지막 섹션의 상단 프레임 두께 표시 */}
-          {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && index === allSections.length - 1 && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && index === allSections.length - 1 && (
             <group>
               {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
